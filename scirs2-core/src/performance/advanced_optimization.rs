@@ -182,7 +182,7 @@ impl CacheInfo {
                 }
 
                 // Try to get L3 cache info
-                let extended_info = __cpuid(0x80000008);
+                let _extended_info = __cpuid(0x80000008);
                 if cache_info.edx != 0 {
                     l3_cache_size = (((cache_info.edx >> 18) & 0x3FFF) * 512 * 1024) as usize;
                 }
@@ -240,7 +240,7 @@ impl CacheInfo {
     /// Calculate optimal blocking size for matrix operations
     pub fn optimal_block_size(&self, element_size: usize) -> usize {
         // Target square blocks that fit in L1 cache
-        let elements_per_line = self.cache_line_size / element_size;
+        let _elements_per_line = self.cache_line_size / element_size;
         let target_elements = self.l1_cache_size / (3 * element_size); // A, B, C matrices
         (target_elements as f64).sqrt() as usize
     }
@@ -446,7 +446,7 @@ impl AdvancedPerformanceOptimizer {
             .min_by_key(|result| (result.input_size as i64 - input_size as i64).abs())
     }
 
-    fn generate_initial_settings(&self, algorithm: &str, input_size: usize,
+    fn generate_initial_settings(&self, _algorithm: &str, input_size: usize,
     ) -> OptimizationSettings {
         let simd_instruction_set = self.profile.simd_capabilities.highest_available();
         let use_simd = input_size >= self.adaptive_thresholds.simd_threshold;
@@ -621,7 +621,7 @@ impl AdvancedPerformanceOptimizer {
         let b = Array1::from_elem(size, 2.0f64);
 
         // Run benchmark
-        let (_, duration_throughput, _) = measure_performance(|| {
+        let (_, _duration_throughput, _) = measure_performance(|| {
             if settings.use_simd {
                 // Use SIMD implementation
                 simd_ops::simd_vector_add(a.view(), b.view(), settings.simd_instruction_set)
@@ -696,7 +696,7 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Generic benchmark for unknown algorithms
-    fn benchmark_generic_operation(&mut self, size: usize, settings: &OptimizationSettings,
+    fn benchmark_generic_operation(&mut self, size: usize, _settings: &OptimizationSettings,
     ) -> Option<f64> {
         use crate::performance::advanced_optimization::profiling::measure_performance;
 
@@ -893,9 +893,9 @@ where
             for j in j_block..j_end {
                 let mut sum = T::default();
                 for k in 0..a.dim().1 {
-                    sum = sum + a[[0, k]] * b[[k, j]];
+                    sum = sum + a[[i, k]] * b[[k, j]];
                 }
-                c[[0, j]] = sum;
+                c[[i, j]] = sum;
             }
         }
     }

@@ -157,7 +157,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sharpened = pan_sharpen(
         panchromatic.view(),
         multispectral.view(),
-        scirs2_ndimage::domain, _specific::satellite::PanSharpenMethod::Brovey,
+        scirs2_ndimage::domain,
+        _specific::satellite::PanSharpenMethod::Brovey,
     )?;
 
     println!("✓ Satellite image processing completed");

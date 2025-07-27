@@ -14,7 +14,8 @@ pub struct MaxPool2D<F: Float + Debug + Send + Sync> {
     pool_size: (usize, usize),
     #[allow(dead_code)]
     stride: (usize, usize),
-    name: Option<String>, _phantom: PhantomData<F>,
+    name: Option<String>,
+    _phantom: PhantomData<F>,
 }
 
 impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> MaxPool2D<F> {
@@ -26,7 +27,8 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> MaxPool2D<F> {
         Ok(Self {
             pool_size,
             stride,
-            name: name.map(String::from), _phantom: PhantomData,
+            name: name.map(String::from),
+            _phantom: PhantomData,
         })
     }
 }

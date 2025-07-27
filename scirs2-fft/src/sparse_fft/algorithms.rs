@@ -600,7 +600,7 @@ where
 /// 2D sparse FFT (placeholder implementation)
 #[allow(dead_code)]
 pub fn sparse_fft2<T>(
-    _signal: &[Vec<T>], _k: usize_algorithm: Option<SparseFFTAlgorithm>,
+    _signal: &[Vec<T>], _k: usize, _algorithm: Option<SparseFFTAlgorithm>,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -614,7 +614,7 @@ where
 /// N-dimensional sparse FFT (placeholder implementation)
 #[allow(dead_code)]
 pub fn sparse_fftn<T>(
-    _signal: &[T], _shape: &[usize], _k: usize_algorithm: Option<SparseFFTAlgorithm>,
+    _signal: &[T], _shape: &[usize], _k: usize, _algorithm: Option<SparseFFTAlgorithm>,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,

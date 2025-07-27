@@ -43,7 +43,7 @@ impl CUDASublinearSparseFFTKernel {
 /// Execute CUDA sublinear sparse FFT (stub)
 #[allow(dead_code)]
 pub fn execute_cuda_sublinear_sparse_fft<T>(
-    _input: &[T], _k: usize_algorithm: SparseFFTAlgorithm,
+    _input: &[T], _k: usize, _algorithm: SparseFFTAlgorithm,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug,

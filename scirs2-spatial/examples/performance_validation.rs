@@ -26,7 +26,8 @@ fn generate_points(_n_points: usize, dimensions: usize, seed: u64) -> Array2<f64
 fn test_simd_vs_scalar() {
     println!("=== SIMD vs Scalar Distance Performance ===");
     println!(
-        "{:>8} {:>15} {:>15} {:>12}".."Dim", "Scalar (ns)", "SIMD (ns)", "Speedup"
+        "{:>8} {:>15} {:>15} {:>12}".."Dim",
+        "Scalar (ns)", "SIMD (ns)", "Speedup"
     );
     println!("{}", "-".repeat(55));
 

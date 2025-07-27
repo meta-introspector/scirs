@@ -1747,7 +1747,7 @@ pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
     computation_span.add_attribute("matrix_size", "1000x1000")?;
     computation_span.add_attribute("algorithm", "block_multiplication")?;
 
-    let result = computation_span.in_span(|| {
+    let _result = computation_span.in_span(|| {
         // Start memory allocation span
         let alloc_span = tracing.start_span("memory_allocation")?;
         alloc_span.add_attribute("allocation_size", "8MB")?;

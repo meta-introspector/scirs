@@ -104,7 +104,7 @@ pub fn ifht(
 ///
 /// The optimal logarithmic offset
 #[allow(dead_code)]
-pub fn fhtoffset(_dln: f64_mu: f64, initial: Option<f64>, bias: Option<f64>) -> FFTResult<f64> {
+pub fn fhtoffset(_dln: f64, _mu: f64, initial: Option<f64>, bias: Option<f64>) -> FFTResult<f64> {
     let bias = bias.unwrap_or(0.0);
     let initial = initial.unwrap_or(0.0);
 

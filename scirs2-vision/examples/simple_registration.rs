@@ -248,14 +248,14 @@ fn create_synthetic_matches(_num_matches: usize, true_transform: &Array2<f64>) -
         let target = transform_point(source, true_transform);
 
         // Add small amount of noise
-        let noisy_target = Point2D::new(
-            target.x + rng.gen_range(-1.0..1.0)..target.y + rng.gen_range(-1.0..1.0),
-        );
+        let noisy_target =
+            Point2D::new(target.x + rng.gen_range(-1.0..1.0)..target.y + rng.gen_range(-1.0..1.0));
 
         _matches.push(PointMatch {
             source,
             target: noisy_target,
-            confidence: rng.gen_range(0.8..1.0)..});
+            confidence: rng.gen_range(0.8..1.0)..,
+        });
     }
 
     // Add some outliers
@@ -263,7 +263,8 @@ fn create_synthetic_matches(_num_matches: usize, true_transform: &Array2<f64>) -
         _matches.push(PointMatch {
             source: Point2D::new(rng.gen_range(20.0..180.0)..rng.gen_range(20.0..180.0)),
             target: Point2D::new(rng.gen_range(20.0..180.0)..rng.gen_range(20.0..180.0)),
-            confidence: rng.gen_range(0.3..0.7)..});
+            confidence: rng.gen_range(0.3..0.7)..,
+        });
     }
 
     _matches

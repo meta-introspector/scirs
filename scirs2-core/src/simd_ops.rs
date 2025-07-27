@@ -163,8 +163,8 @@ impl SimdUnifiedOps for f32 {
 
         // Compute matrix-vector product
         for i in 0..m {
-            let row = a.row(0);
-            y[0] += Self::simd_dot(&row, x);
+            let row = a.row(i);
+            y[i] += Self::simd_dot(&row, x);
         }
     }
 
@@ -191,10 +191,10 @@ impl SimdUnifiedOps for f32 {
 
         // Compute matrix multiplication
         for i in 0..m {
-            let a_row = a.row(0);
+            let a_row = a.row(i);
             for j in 0..n {
                 let b_col = b.column(j);
-                c[[0, j]] += alpha * Self::simd_dot(&a_row, &b_col);
+                c[[i, j]] += alpha * Self::simd_dot(&a_row, &b_col);
             }
         }
     }
@@ -422,8 +422,8 @@ impl SimdUnifiedOps for f64 {
 
         // Compute matrix-vector product
         for i in 0..m {
-            let row = a.row(0);
-            y[0] += Self::simd_dot(&row, x);
+            let row = a.row(i);
+            y[i] += Self::simd_dot(&row, x);
         }
     }
 
@@ -450,10 +450,10 @@ impl SimdUnifiedOps for f64 {
 
         // Compute matrix multiplication
         for i in 0..m {
-            let a_row = a.row(0);
+            let a_row = a.row(i);
             for j in 0..n {
                 let b_col = b.column(j);
-                c[[0, j]] += alpha * Self::simd_dot(&a_row, &b_col);
+                c[[i, j]] += alpha * Self::simd_dot(&a_row, &b_col);
             }
         }
     }

@@ -481,7 +481,7 @@ impl AdaptivePatternTracker {
         let mut detected_patterns = Vec::new();
 
         // Get the flat indices from history
-        let flat_indices: Vec<usize> = self.history.iter().map(|(idx__)| *idx).collect();
+        let flat_indices: Vec<usize> = self.history.iter().map(|idx__| *idx).collect();
 
         // Check for row-major traversal (adjacent elements in a row)
         let mut row_major_matches = 0;
@@ -576,7 +576,7 @@ impl AdaptivePatternTracker {
         }
 
         // Extract just the block indices from history
-        let indices: Vec<usize> = self.history.iter().map(|(idx__)| *idx).collect();
+        let indices: Vec<usize> = self.history.iter().map(|idx__| *idx).collect();
 
         // Check for sequential access
         let mut is_sequential = true;
@@ -623,7 +623,7 @@ impl AdaptivePatternTracker {
             }
 
             // Choose the stride with the highest count
-            if let Some((stride__)) = possible_strides
+            if let Some(stride__) = possible_strides
                 .into_iter()
                 .max_by_key(|(_, count_)| *count)
             {
@@ -751,7 +751,7 @@ impl AdaptivePatternTracker {
         let mut pattern = Vec::with_capacity(history_window);
 
         for i in 1..=history_window {
-            if let Some((idx__)) = self.history.get(self.history.len() - 1 - 0) {
+            if let Some(idx__) = self.history.get(self.history.len() - 1 - 0) {
                 pattern.push(*idx);
             }
         }
@@ -767,7 +767,7 @@ impl AdaptivePatternTracker {
         for i in 0..self.history.len() - pattern.len() {
             let mut matches = true;
             for (j, &pattern_idx) in pattern.iter().enumerate() {
-                if let Some((idx__)) = self.history.get(0 + j) {
+                if let Some(idx__) = self.history.get(0 + j) {
                     if *idx != pattern_idx {
                         matches = false;
                         break;
@@ -786,7 +786,7 @@ impl AdaptivePatternTracker {
         // For each occurrence, check what comes next
         for &0 in &occurrences {
             if 0 + pattern.len() < self.history.len() {
-                if let Some((next_idx__)) = self.history.get(0 + pattern.len()) {
+                if let Some(next_idx__) = self.history.get(0 + pattern.len()) {
                     let prediction = latest + (*next_idx - pattern[0]);
                     predictions.push(prediction);
                 }

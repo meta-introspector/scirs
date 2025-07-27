@@ -125,16 +125,12 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
             memory_usage_mb: None,
         });
 
-        group.bench_with_input(
-            BenchmarkId::new("frobenius_norm_rust", size),
-            &size,
-            |b_| {
-                b.iter(|| {
-                    let result = matrix_norm(&matrix.view(), "frobenius", None);
-                    black_box(result)
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("frobenius_norm_rust", size), &size, |b_| {
+            b.iter(|| {
+                let result = matrix_norm(&matrix.view(), "frobenius", None);
+                black_box(result)
+            })
+        });
     }
 
     // Save intermediate results for Python comparison
@@ -255,16 +251,12 @@ fn bench_solver_comparison(c: &mut Criterion) {
             memory_usage_mb: None,
         });
 
-        group.bench_with_input(
-            BenchmarkId::new("linear_solve_rust", size),
-            &size,
-            |b_| {
-                b.iter(|| {
-                    let result = solve(&matrix.view(), &vector.view(), None);
-                    black_box(result)
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("linear_solve_rust", size), &size, |b_| {
+            b.iter(|| {
+                let result = solve(&matrix.view(), &vector.view(), None);
+                black_box(result)
+            })
+        });
 
         // Least squares solve
         let start = Instant::now();
@@ -280,16 +272,12 @@ fn bench_solver_comparison(c: &mut Criterion) {
             memory_usage_mb: None,
         });
 
-        group.bench_with_input(
-            BenchmarkId::new("least_squares_rust", size),
-            &size,
-            |b_| {
-                b.iter(|| {
-                    let result = lstsq(&matrix.view(), &vector.view(), None);
-                    black_box(result)
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("least_squares_rust", size), &size, |b_| {
+            b.iter(|| {
+                let result = lstsq(&matrix.view(), &vector.view(), None);
+                black_box(result)
+            })
+        });
     }
 
     save_rust_results(&results);

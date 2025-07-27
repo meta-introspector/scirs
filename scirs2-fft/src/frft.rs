@@ -137,7 +137,7 @@ where
                 "Could not convert {val:?} to numeric type"
             )))
         })
-        .collect::<Result<Vec<_>_>>()?;
+        .collect::<Result<Vec<_>, _>>()?;
 
     // Helper function to try extracting Complex values using Any
     fn try_as_complex<U: 'static + Copy>(_val: U) -> Option<Complex64> {
@@ -205,7 +205,7 @@ fn frft_decomposition(x: &[Complex64], alpha: f64, d: f64) -> FFTResult<Vec<Comp
 /// Special case implementation for α near 0, 1, 2, or 3.
 /// Uses linear interpolation between the special cases.
 #[allow(dead_code)]
-fn frft_near_special_case(x: &[Complex64], alpha: f64_d: f64) -> FFTResult<Vec<Complex64>> {
+fn frft_near_special_case(x: &[Complex64], alpha: f64, _d: f64) -> FFTResult<Vec<Complex64>> {
     let n = x.len();
 
     // Determine which special case we're near and the interpolation factor

@@ -69,7 +69,8 @@ impl FromStr for Window {
             "nuttall" => Ok(Window::Nuttall),
             "barthann" => Ok(Window::Barthann),
             "cosine" | "cos" => Ok(Window::Cosine),
-            "exponential" | "exp" => Ok(Window::Exponential, _ => Err(FFTError::ValueError(format!("Unknown window type: {s}"))),
+            "exponential" | "exp" => Ok(Window::Exponential),
+            _ => Err(FFTError::ValueError(format!("Unknown window type: {s}"))),
         }
     }
 }
@@ -117,7 +118,7 @@ where
     let window_param = _window.into();
     let window_type = match window_param {
         WindowParam::Type(wt) => wt,
-        WindowParam::Name(s) =>, Window::from_str(&s)?,
+        WindowParam::Name(s) => Window::from_str(&s)?,
     };
 
     match window_type {

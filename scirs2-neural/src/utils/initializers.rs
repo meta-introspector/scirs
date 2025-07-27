@@ -65,7 +65,9 @@ impl Initializer {
                     .map(|_| {
                         let val = rng.random_range(*min..*max);
                         F::from(val).ok_or_else(|| {
-                            NeuralError::InvalidArchitecture("Failed to convert random value".to_string())
+                            NeuralError::InvalidArchitecture(
+                                "Failed to convert random value".to_string(),
+                            )
                         })
                     })
                     .collect::<Result<Vec<F>>>()?;
@@ -84,7 +86,8 @@ impl Initializer {
                         let val0 = mean + std * z0;
                         let val1 = mean + std * z1;
                         vec![
-                            F::from(val0).unwrap_or(F::zero()), F::from(val1).unwrap_or(F::zero()),
+                            F::from(val0).unwrap_or(F::zero()),
+                            F::from(val1).unwrap_or(F::zero()),
                         ]
                     })
                     .take(size)
@@ -117,7 +120,8 @@ impl Initializer {
                         let val0 = std * z0;
                         let val1 = std * z1;
                         vec![
-                            F::from(val0).unwrap_or(F::zero()), F::from(val1).unwrap_or(F::zero()),
+                            F::from(val0).unwrap_or(F::zero()),
+                            F::from(val1).unwrap_or(F::zero()),
                         ]
                     })
                     .take(size)
@@ -138,7 +142,8 @@ impl Initializer {
                         let val0 = std * z0;
                         let val1 = std * z1;
                         vec![
-                            F::from(val0).unwrap_or(F::zero()), F::from(val1).unwrap_or(F::zero()),
+                            F::from(val0).unwrap_or(F::zero()),
+                            F::from(val1).unwrap_or(F::zero()),
                         ]
                     })
                     .take(size)

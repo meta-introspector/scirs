@@ -74,7 +74,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         save_convergence_history: true,
         omega: 1.5, // Relaxation parameter (1 < omega < 2 for over-relaxation)
         verbose: true,
-        fd_scheme: scirs2, _integrate: FiniteDifferenceScheme::CentralDifference,
+        fd_scheme: scirs2,
+        _integrate: FiniteDifferenceScheme::CentralDifference,
     };
 
     // Create the Laplace solver
@@ -103,7 +104,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         save_convergence_history: true,
         omega: 1.5,
         verbose: true,
-        fd_scheme: scirs2, _integrate: FiniteDifferenceScheme::CentralDifference,
+        fd_scheme: scirs2,
+        _integrate: FiniteDifferenceScheme::CentralDifference,
     };
 
     let laplace_solver_refined = LaplaceSolver2D::new(domain, bcs, Some(options_refined))?;

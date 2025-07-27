@@ -196,7 +196,7 @@ pub fn matrix_exp_action<F>(
 where
     F: Float + NumAssign + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
 {
-    let (n, k) = b.dim();
+    let (n, _k) = b.dim();
     if a.nrows() != n || a.ncols() != n {
         return Err(LinalgError::DimensionError(
             "Matrix A must be square and compatible with B".to_string(),
@@ -218,7 +218,7 @@ fn high_precision_exp_action<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
     t: F,
-    config: &DynamicsConfig,
+    _config: &DynamicsConfig,
 ) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + 'static + ndarray::ScalarOperand,

@@ -9,8 +9,8 @@
 //! - Numerical stability testing
 
 use ndarray::{Array, IxDyn};
-use scirs2_autograd as ag;
 use scirs2__autograd::tensor_ops as T;
+use scirs2_autograd as ag;
 
 /// Test advanced tensor indexing operations
 #[cfg(test)]

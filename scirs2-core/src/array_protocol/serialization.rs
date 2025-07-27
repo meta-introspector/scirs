@@ -534,9 +534,9 @@ impl ModelSerializer {
                         file.read_to_string(&mut json_str)?;
 
                         let load_data: serde_json::Value = serde_json::from_str(&json_str)?;
-                        let shape: Vec<usize> =
+                        let _shape: Vec<usize> =
                             serde_json::from_value(load_data["shape"].clone())?;
-                        let data: Vec<f64> = serde_json::from_value(load_data["data"].clone())?;
+                        let _data: Vec<f64> = serde_json::from_value(load_data["data"].clone())?;
 
                         // Load data into the parameter
                         // Since we can't mutate the existing array, we'll need to skip actual loading
@@ -602,9 +602,9 @@ impl OnnxExporter {
     /// Export a model to ONNX format.
     pub fn export(
         &self,
-        model: &Sequential,
+        _model: &Sequential,
         path: impl AsRef<Path>,
-        input_shape: &[usize],
+        _input_shape: &[usize],
     ) -> CoreResult<()> {
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would convert the model to ONNX format.

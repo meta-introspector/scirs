@@ -5,13 +5,13 @@
 //! automatic differentiation operations.
 
 use ndarray::{Array, IxDyn};
-use scirs2_autograd as ag;
 use scirs2__autograd::optimization::{GraphOptimizer, OptimizationLevel};
 use scirs2__autograd::parallel::{init_thread_pool_with_config, ThreadPoolConfig};
 use scirs2__autograd::tensor_ops as T;
 use scirs2__autograd::tracing::{
     configure_tracing, end_trace_session, start_trace_session, TracingConfig,
 };
+use scirs2_autograd as ag;
 use std::f32;
 
 /// Tolerance levels for numerical comparisons
@@ -407,11 +407,8 @@ fn test_optimization_numerical_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Create a computation with optimization opportunities
         let x = T::convert_to_tensor(
-            Array::<f32>::from_shape_vec(
-                IxDyn(&[10]),
-                (0..10).map(|i| i as f32 * 0.1).collect(),
-            )
-            .unwrap(),
+            Array::<f32>::from_shape_vec(IxDyn(&[10]), (0..10).map(|i| i as f32 * 0.1).collect())
+                .unwrap(),
             ctx,
         );
 

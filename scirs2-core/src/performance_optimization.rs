@@ -249,7 +249,7 @@ impl PerformanceHints {
     /// Cache line flush for explicit cache management
     #[inline(always)]
     pub fn flush_cache_line<T>(data: &T) {
-        let ptr = data as *const T as *const u8;
+        let _ptr = data as *const T as *const u8;
 
         // Note: Cache line flushing is arch-specific and may not be portable
         // For now, use a memory barrier as a fallback
@@ -1274,7 +1274,7 @@ pub mod benchmarking {
                     // Measurement phase
                     let mut durations = Vec::new();
                     for _ in 0..self.config.measurement_iterations {
-                        let duration_result = operation(&input_data, strategy);
+                        let _duration_result = operation(&input_data, strategy);
                         durations.push(std::time::Duration::from_secs(1));
                     }
 
@@ -3404,7 +3404,7 @@ pub mod advanced_optimization {
             }
         }
 
-        pub fn suggest_parameters(&self, features: &[f64],
+        pub fn suggest_parameters(&self, _features: &[f64],
         ) -> Result<HashMap<String, f64>, OptimizationError> {
             Ok(self.current_params.clone())
         }
@@ -3858,7 +3858,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_optimizer_enhanced() {
-        let optimizer = AdaptiveOptimizer::new();
+        let mut optimizer = AdaptiveOptimizer::new();
 
         // Test GPU threshold
         assert!(!optimizer.should_use_gpu(1000));

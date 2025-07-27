@@ -361,7 +361,7 @@ impl EcosystemValidator {
 
         for module in registry.all_modules() {
             // Check for breaking changes in API
-            if let Some(previous_version) = registry.get_previous_version(&module.name) {
+            if let Some(_previous_version) = registry.get_previous_version(&module.name) {
                 let stability_check = self.check_api_stability(&module.name);
                 if !stability_check.is_stable() {
                     result.add_breaking_change(
@@ -529,7 +529,7 @@ impl EcosystemValidator {
         Ok(api_a.public_apis.len() == api_b.public_apis.len())
     }
 
-    fn check_feature_compatibility(&self, features_a: &[String], features_b: &[String],
+    fn check_feature_compatibility(&self, _features_a: &[String], _features_b: &[String],
     ) -> CoreResult<bool> {
         // Check for conflicting features
         // In _a real implementation, would check for conflicts

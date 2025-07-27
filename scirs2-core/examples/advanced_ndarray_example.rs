@@ -30,9 +30,9 @@ use scirs2_core::ufuncs::{
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
-fn title( &str) {
-    println!("\n{}", _title);
-    println!("{}", "=".repeat(_title.len()));
+fn print_title(title: &str) {
+    println!("\n{}", title);
+    println!("{}", "=".repeat(title.len()));
 }
 
 #[allow(dead_code)]

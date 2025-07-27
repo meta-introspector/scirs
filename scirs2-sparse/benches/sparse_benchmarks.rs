@@ -196,23 +196,19 @@ fn bench_linear_solvers(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(*size as u64));
 
-        group.bench_with_input(
-            BenchmarkId::new("conjugate_gradient", size),
-            size,
-            |b_| {
-                b.iter(|| {
-                    let _options = CGOptions {
-                        max_iter: 100,
-                        rtol: 1e-6,
-                        atol: 1e-12,
-                        x0: None,
-                        preconditioner: None,
-                    };
-                    // Skip CG for now - needs LinearOperator trait implementation
-                    black_box(0.0)
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("conjugate_gradient", size), size, |b_| {
+            b.iter(|| {
+                let _options = CGOptions {
+                    max_iter: 100,
+                    rtol: 1e-6,
+                    atol: 1e-12,
+                    x0: None,
+                    preconditioner: None,
+                };
+                // Skip CG for now - needs LinearOperator trait implementation
+                black_box(0.0)
+            })
+        });
     }
 
     group.finish();

@@ -5,9 +5,9 @@ use num__complex::Complex64;
 use rand::{rng, Rng};
 use rand__distr::{Distribution, Normal};
 use scirs2__signal::{interpolate, SignalError, SignalResult};
+use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> SignalResult<()> {
@@ -522,7 +522,8 @@ fn interpolate_2d_data() -> SignalResult<()> {
     let linear_result = interpolate::interpolate_2d(
         &missing_image,
         interpolate::InterpolationMethod::Linear,
-        &config,)?;
+        &config,
+    )?;
 
     let spline_result = interpolate::interpolate_2d(
         &missing_image,

@@ -66,16 +66,12 @@ fn bench_performance_validation(c: &mut Criterion) {
     for &size in &[50, 100, 200] {
         let points = generate_test_data(size, 5);
 
-        group.bench_with_input(
-            BenchmarkId::new("scaling_euclidean", size),
-            &size,
-            |b_| {
-                b.iter(|| {
-                    let distances = pdist(&points, euclidean);
-                    black_box(distances.sum())
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("scaling_euclidean", size), &size, |b_| {
+            b.iter(|| {
+                let distances = pdist(&points, euclidean);
+                black_box(distances.sum())
+            })
+        });
     }
 
     group.finish();

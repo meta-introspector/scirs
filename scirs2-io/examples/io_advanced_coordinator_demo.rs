@@ -294,8 +294,8 @@ fn demonstrate_cross_domain_intelligence(_coordinator: &mut AdvancedCoordinator)
 
     // Analyze cross-domain patterns
     println!("🔍 Cross-Domain Analysis:");
-    let avg_efficiency = domain_performances.iter().map(|(_, e_)| e).sum::<f32>()
-        / domain_performances.len() as f32;
+    let avg_efficiency =
+        domain_performances.iter().map(|(_, e_)| e).sum::<f32>() / domain_performances.len() as f32;
     println!("   Average Cross-Domain Efficiency: {:.3}", avg_efficiency);
 
     // Find best performing domain
@@ -478,8 +478,8 @@ fn demonstrate_real_world_performance(_coordinator: &mut AdvancedCoordinator) ->
         (total_data_processed as f64) / (total_processing_time.as_secs_f64() * 1024.0 * 1024.0);
     println!("   Overall Throughput: {:.1} MB/s", overall_throughput);
 
-    let avg_efficiency = performance_metrics.iter().map(|(__, e)| e).sum::<f32>()
-        / performance_metrics.len() as f32;
+    let avg_efficiency =
+        performance_metrics.iter().map(|(__, e)| e).sum::<f32>() / performance_metrics.len() as f32;
     println!("   Average Efficiency: {:.3}", avg_efficiency);
 
     // Find best and worst performing scenarios

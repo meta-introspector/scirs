@@ -8,13 +8,13 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use ndarray::{Array1, Array2, Axis};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use scirs2_core::rng;
 use scirs2__stats::{
     correlation::*, descriptive::*, distributions::*, quantile::*, regression::linear::*, tests::*,
     traits::Distribution,
 };
-use std::time::Duration;
+use scirs2_core::rng;
 use statrs::statistics::Statistics;
+use std::time::Duration;
 
 /// Generate test data of various sizes for benchmarking
 #[allow(dead_code)]

@@ -72,7 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 4: Elliptic filter design
     println!("4. Elliptic Filter Design");
     use scirs2__signal::filter::ellip;
-use std::f64::consts::PI;
+    use std::f64::consts::PI;
 
     let ellip_order = 3;
     let passband_ripple = 1.0;

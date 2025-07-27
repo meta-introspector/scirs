@@ -212,7 +212,7 @@ impl GpuDevice {
     }
 
     /// Compile a kernel from source
-    pub fn compile_kernel(&self, source: &str, entry_point: &str) -> Result<GpuKernel, GpuError> {
+    pub fn compile_kernel(&self, _source: &str, entry_point: &str) -> Result<GpuKernel, GpuError> {
         // Placeholder implementation
         Ok(GpuKernel {
             backend: self.backend,
@@ -696,7 +696,7 @@ impl GpuContext {
     }
 
     /// Compile a kernel with metadata
-    fn compile_kernel_with_metadata(&self, source: &str, metadata: &kernels::KernelMetadata,
+    fn compile_kernel_with_metadata(&self, source: &str, _metadata: &kernels::KernelMetadata,
     ) -> Result<GpuKernelHandle, GpuError> {
         self.execute(|compiler| compiler.compile(source))
     }
@@ -927,7 +927,7 @@ impl GpuBufferImpl for CpuBuffer {
 struct CpuCompiler;
 
 impl GpuCompilerImpl for CpuCompiler {
-    fn compile(&self, source: &str) -> Result<Arc<dyn GpuKernelImpl>, GpuError> {
+    fn compile(&self, _source: &str) -> Result<Arc<dyn GpuKernelImpl>, GpuError> {
         // In a real implementation, we would parse and execute the kernel
         // For now, just return a dummy implementation
         Ok(Arc::new(CpuKernel))
@@ -944,23 +944,23 @@ impl GpuCompilerImpl for CpuCompiler {
 struct CpuKernel;
 
 impl GpuKernelImpl for CpuKernel {
-    fn set_buffer(&self, name: &str, buffer: &Arc<dyn GpuBufferImpl>) {
+    fn set_buffer(&self, _name: &str, _buffer: &Arc<dyn GpuBufferImpl>) {
         // In a real implementation, we would store the buffer
     }
 
-    fn set_u32(&self, name: &str, value: u32) {
+    fn set_u32(&self, _name: &str, _value: u32) {
         // In a real implementation, we would store the value
     }
 
-    fn set_i32(&self, name: &str, value: i32) {
+    fn set_i32(&self, _name: &str, _value: i32) {
         // In a real implementation, we would store the value
     }
 
-    fn set_f32(&self, name: &str, value: f32) {
+    fn set_f32(&self, _name: &str, _value: f32) {
         // In a real implementation, we would store the value
     }
 
-    fn set_f64(&self, name: &str, value: f64) {
+    fn set_f64(&self, _name: &str, _value: f64) {
         // In a real implementation, we would store the value
     }
 

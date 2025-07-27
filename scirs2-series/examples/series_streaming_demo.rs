@@ -11,9 +11,9 @@ use scirs2__series::streaming::{
     },
     MultiSeriesAnalyzer, StreamConfig, StreamingAnalyzer,
 };
+use statrs::statistics::Statistics;
 use std::thread;
 use std::time::{Duration, Instant};
-use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() {
@@ -151,7 +151,11 @@ fn generate_streaming_value(_time: f64, pattern: i32) -> f64 {
         }
         1 => {
             // Step function with noise
-            let step = if (_time as i32) % 40 < 20 { 10.0 } else { -10.0 };
+            let step = if (_time as i32) % 40 < 20 {
+                10.0
+            } else {
+                -10.0
+            };
             base + step + 5.0 * rand_noise()
         }
         2 => {

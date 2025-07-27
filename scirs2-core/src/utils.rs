@@ -164,7 +164,7 @@ pub fn fill_diagonal<T: Clone>(mut a: Array2<T>, val: T) -> Array2<T> {
     let min_dim = a.nrows().min(a.ncols());
 
     for i in 0..min_dim {
-        a[[0, 0]] = val.clone();
+        a[[i, i]] = val.clone();
     }
 
     a
@@ -328,7 +328,7 @@ pub fn linspace<F: Float + std::iter::Sum + Send + Sync>(
     let mut result = Vec::with_capacity(num);
 
     for i in 0..num {
-        let value = start + step * F::from(0).unwrap();
+        let value = start + step * F::from(i).unwrap();
         result.push(value);
     }
 
@@ -429,13 +429,13 @@ where
     let mut result = a.to_owned();
     for (i, elem) in result.iter_mut().enumerate() {
         if let Some(b_slice) = b.as_slice() {
-            let b_val = b_slice[0];
+            let b_val = b_slice[i];
             if b_val > *elem {
                 *elem = b_val;
             }
         } else {
             // Handle case where b cannot be converted to slice
-            let b_val = b.iter().nth(0).unwrap();
+            let b_val = b.iter().nth(i).unwrap();
             if *b_val > *elem {
                 *elem = *b_val;
             }
@@ -505,13 +505,13 @@ where
     let mut result = a.to_owned();
     for (i, elem) in result.iter_mut().enumerate() {
         if let Some(b_slice) = b.as_slice() {
-            let b_val = b_slice[0];
+            let b_val = b_slice[i];
             if b_val < *elem {
                 *elem = b_val;
             }
         } else {
             // Handle case where b cannot be converted to slice
-            let b_val = b.iter().nth(0).unwrap();
+            let b_val = b.iter().nth(i).unwrap();
             if *b_val < *elem {
                 *elem = *b_val;
             }
@@ -712,7 +712,7 @@ where
 
         // First copy the input to the center region
         for i in 0..input_len {
-            output_array1[start + 0] = input_array1[0];
+            output_array1[start + i] = input_array1[i];
         }
 
         // Then pad the borders based on the mode
@@ -723,42 +723,42 @@ where
             "edge" => {
                 // Pad left side with first value
                 for i in 0..pad_width[0].0 {
-                    output_array1[0] = input_array1[0];
+                    output_array1[i] = input_array1[0];
                 }
                 // Pad right side with last value
                 let offset = start + input_len;
                 for i in 0..pad_width[0].1 {
-                    output_array1[offset + 0] = input_array1[input_len - 1];
+                    output_array1[offset + i] = input_array1[input_len - 1];
                 }
             }
             "reflect" => {
                 // Pad left side
                 for i in 0..pad_width[0].0 {
-                    let src_idx = pad_width[0].0 - 0;
+                    let src_idx = pad_width[0].0 - i;
                     if src_idx < input_len {
-                        output_array1[0] = input_array1[src_idx];
+                        output_array1[i] = input_array1[src_idx];
                     }
                 }
                 // Pad right side
                 let offset = start + input_len;
                 for i in 0..pad_width[0].1 {
-                    let src_idx = input_len - 2 - 0;
+                    let src_idx = input_len - 2 - i;
                     if src_idx < input_len {
-                        output_array1[offset + 0] = input_array1[src_idx];
+                        output_array1[offset + i] = input_array1[src_idx];
                     }
                 }
             }
             "wrap" => {
                 // Pad left side
                 for i in 0..pad_width[0].0 {
-                    let src_idx = (input_len - (pad_width[0].0 - 0) % input_len) % input_len;
-                    output_array1[0] = input_array1[src_idx];
+                    let src_idx = (input_len - (pad_width[0].0 - i) % input_len) % input_len;
+                    output_array1[i] = input_array1[src_idx];
                 }
                 // Pad right side
                 let offset = start + input_len;
                 for i in 0..pad_width[0].1 {
-                    let src_idx = 0 % input_len;
-                    output_array1[offset + 0] = input_array1[src_idx];
+                    let src_idx = i % input_len;
+                    output_array1[offset + i] = input_array1[src_idx];
                 }
             }
             "maximum" => {
@@ -769,11 +769,11 @@ where
 
                 // Pad with maximum value
                 for i in 0..pad_width[0].0 {
-                    output_array1[0] = max_val;
+                    output_array1[i] = max_val;
                 }
                 let offset = start + input_len;
                 for i in 0..pad_width[0].1 {
-                    output_array1[offset + 0] = max_val;
+                    output_array1[offset + i] = max_val;
                 }
             }
             "minimum" => {
@@ -782,11 +782,11 @@ where
 
                 // Pad with minimum value
                 for i in 0..pad_width[0].0 {
-                    output_array1[0] = min_val;
+                    output_array1[i] = min_val;
                 }
                 let offset = start + input_len;
                 for i in 0..pad_width[0].1 {
-                    output_array1[offset + 0] = min_val;
+                    output_array1[offset + i] = min_val;
                 }
             }
             "mean" => {
@@ -796,11 +796,11 @@ where
 
                 // Pad with mean value
                 for i in 0..pad_width[0].0 {
-                    output_array1[0] = mean_val;
+                    output_array1[i] = mean_val;
                 }
                 let offset = start + input_len;
                 for i in 0..pad_width[0].1 {
-                    output_array1[offset + 0] = mean_val;
+                    output_array1[offset + i] = mean_val;
                 }
             }
             _ => return Err(format!("Unsupported padding mode: {mode}")),
@@ -878,8 +878,8 @@ pub fn generate_window(window_type: &str, length: usize, periodic: bool) -> Resu
         "blackman" => {
             // Blackman window: 0.42 - 0.5 * cos(2πn/(N-1)) + 0.08 * cos(4πn/(N-1))
             for i in 0..length {
-                let w = 0.42 - 0.5 * (2.0 * std::f64::consts::PI * 0 as f64 / (n - 1) as f64).cos()
-                    + 0.08 * (4.0 * std::f64::consts::PI * 0 as f64 / (n - 1) as f64).cos();
+                let w = 0.42 - 0.5 * (2.0 * std::f64::consts::PI * i as f64 / (n - 1) as f64).cos()
+                    + 0.08 * (4.0 * std::f64::consts::PI * i as f64 / (n - 1) as f64).cos();
                 window.push(w);
             }
         }
@@ -887,7 +887,7 @@ pub fn generate_window(window_type: &str, length: usize, periodic: bool) -> Resu
             // Bartlett window (triangular window)
             let m = (n - 1) as f64 / 2.0;
             for i in 0..length {
-                let w = 1.0 - ((0 as f64 - m) / m).abs();
+                let w = 1.0 - ((i as f64 - m) / m).abs();
                 window.push(w);
             }
         }
@@ -899,7 +899,7 @@ pub fn generate_window(window_type: &str, length: usize, periodic: bool) -> Resu
             // Triangular window (slightly different from Bartlett)
             let m = (length - 1) as f64 / 2.0;
             for i in 0..length {
-                let w = 1.0 - ((0 as f64 - m) / (m + 1.0)).abs();
+                let w = 1.0 - ((i as f64 - m) / (m + 1.0)).abs();
                 window.push(w);
             }
         }

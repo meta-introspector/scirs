@@ -2,23 +2,23 @@ use ndarray::Array2;
 use rand::Rng;
 use scirs2_core::array::{mask_array, MaskedArray};
 use scirs2_core::memory_efficient::{create_disk_array, ChunkingStrategy};
+use statrs::statistics::Statistics;
 use std::time::Instant;
 use tempfile::tempdir;
-use statrs::statistics::Statistics;
 
 /// Simulates loading a chunk of a large dataset
 #[allow(dead_code)]
-fn features( usize) -> Array2<f64> {
+fn load_dataset_chunk(chunk_size: usize, n_features: usize) -> Array2<f64> {
     let mut rng = rand::rng();
     Array2::from_shape_fn((chunk_size, n_features), |_| rng.gen_range(0.0..100.0))
 }
 
 /// Normalizes data (center and scale)
 #[allow(dead_code)]
-fn chunk( &Array2<f64>) -> Array2<f64> {
-    let mut normalized = _chunk.clone();
-    for col in 0.._chunk.shape()[1] {
-        let column = _chunk.slice(ndarray::s![....col]);
+fn normalize_chunk(chunk: &Array2<f64>) -> Array2<f64> {
+    let mut normalized = chunk.clone();
+    for col in 0..chunk.shape()[1] {
+        let column = chunk.slice(ndarray::s![.., col]);
         let mean = column.mean().unwrap_or(0.0);
         let std_dev = column.std(0.0);
 

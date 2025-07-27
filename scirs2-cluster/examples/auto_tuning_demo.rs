@@ -102,7 +102,8 @@ fn test_individual_algorithm_tuning(
             TuningConfig {
                 strategy: SearchStrategy::BayesianOptimization {
                     n_initial_points: 10,
-                    acquisition_function: scirs2, _cluster: AcquisitionFunction::ExpectedImprovement,
+                    acquisition_function: scirs2,
+                    _cluster: AcquisitionFunction::ExpectedImprovement,
                 },
                 max_evaluations: 40,
                 metric: EvaluationMetric::DaviesBouldinIndex,

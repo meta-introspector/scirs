@@ -10,7 +10,6 @@
 //! - Memory optimization under stress
 
 use ndarray::{Array, IxDyn};
-use scirs2_autograd as ag;
 use scirs2__autograd::optimization::{
     memory_optimization::{MemoryOptimizationConfig, MemoryOptimizer},
     GraphOptimizer, OptimizationLevel,
@@ -22,6 +21,7 @@ use scirs2__autograd::parallel::{
 };
 use scirs2__autograd::tensor_ops as T;
 use scirs2__autograd::visualization::{GraphVisualizer, OutputFormat, VisualizationConfig};
+use scirs2_autograd as ag;
 use std::f32;
 
 /// Test graph visualization with extremely large graphs

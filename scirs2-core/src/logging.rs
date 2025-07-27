@@ -83,12 +83,12 @@ impl LogLevel {
     /// Convert a log level to a string
     pub const fn as_str(&self) -> &'static str {
         match self {
-            LogLevel::Trace => TRACE,
-            LogLevel::Debug => DEBUG,
-            LogLevel::Info => INFO,
-            LogLevel::Warn => WARN,
-            LogLevel::Error => ERROR,
-            LogLevel::Critical => CRITICAL,
+            LogLevel::Trace => "TRACE",
+            LogLevel::Debug => "DEBUG",
+            LogLevel::Info => "INFO",
+            LogLevel::Warn => "WARN",
+            LogLevel::Error => "ERROR",
+            LogLevel::Critical => "CRITICAL",
         }
     }
 }
@@ -465,7 +465,7 @@ impl ProgressTracker {
     /// Create a new progress tracker
     pub fn new(name: &str, total: usize) -> Self {
         let now = Instant::now();
-        let logger = Logger::new(progress).with_field("operation", name);
+        let logger = Logger::new("progress").with_field("operation", name);
 
         logger.info(&format!("Starting operation: {name}"));
 
@@ -599,13 +599,13 @@ pub mod distributed {
 
     impl NodeId {
         /// Create a new node identifier
-        pub fn with_id(id: String) -> Self {
+        pub fn new(name: String, instance_id: String) -> Self {
             Self { name, instance_id }
         }
 
         /// Create from hostname and process ID
         pub fn from_hostname() -> Self {
-            let hostname = std::env::var(HOSTNAME).unwrap_or_else(|_| unknown.to_string());
+            let hostname = std::env::var("HOSTNAME").unwrap_or_else(|_| "unknown".to_string());
             let pid = std::process::id();
             Self::new(hostname, pid.to_string())
         }
@@ -651,7 +651,7 @@ pub mod distributed {
 
     impl DistributedLogEntry {
         /// Create a new distributed log entry
-        pub fn with_id(id: NodeId,
+        pub fn new(node_id: NodeId,
             level: LogLevel,
             logger: String,
             message: String,
@@ -708,9 +708,10 @@ pub mod distributed {
 
     impl LogAggregator {
         /// Create a new log aggregator
-        pub fn with_window(duration: Duration) -> Self {
+        pub fn new(node_id: NodeId, max_entries: usize, aggregation_window: Duration) -> Self {
             Self {
-                node_id_entries: Arc::new(RwLock::new(VecDeque::new())),
+                node_id,
+                entries: Arc::new(RwLock::new(VecDeque::new())),
                 max_entries,
                 aggregation_window,
                 stats: Arc::new(RwLock::new(AggregationStats::default())),
@@ -782,7 +783,7 @@ pub mod distributed {
         }
 
         /// Get entries from specific node
-        pub fn get_entries_by_node_id(node_id: &NodeId) -> Vec<DistributedLogEntry> {
+        pub fn get_entries_by_node(&self, node_id: &NodeId) -> Vec<DistributedLogEntry> {
             self.entries
                 .read()
                 .unwrap()
@@ -818,8 +819,7 @@ pub mod distributed {
 
     impl AdaptiveRateLimiter {
         /// Create a new adaptive rate limiter
-        pub fn factor(f64: f64,
-        ) -> Self {
+        pub fn new(initial_max_rate: f64, window_duration: Duration, adaptation_factor: f64) -> Self {
             Self {
                 max_rate: Arc::new(Mutex::new(initial_max_rate)),
                 current_rate: Arc::new(Mutex::new(0.0)),
@@ -827,8 +827,8 @@ pub mod distributed {
                 message_count: Arc::new(AtomicUsize::new(0)),
                 window_duration,
                 adaptation_factor,
-                min_rate: initial_max_rate * 0.1, // 10% of initial _rate
-                max_rate_absolute: initial_max_rate * 10.0, // 10x initial _rate
+                min_rate: initial_max_rate * 0.1, // 10% of initial rate
+                max_rate_absolute: initial_max_rate * 10.0, // 10x initial rate
             }
         }
 
@@ -870,16 +870,16 @@ pub mod distributed {
         }
 
         /// Adapt the maximum rate based on observed patterns
-        fn update_rate(new_rate: f64) {
+        fn adapt_rate(&self, actual_rate: f64) {
             let mut max_rate = self.max_rate.lock().unwrap();
 
-            // If actual _rate is consistently lower, reduce max _rate
-            // If actual _rate hits the limit, increase max _rate
+            // If actual rate is consistently lower, reduce max rate
+            // If actual rate hits the limit, increase max rate
             if actual_rate < *max_rate * 0.5 {
-                // Reduce max _rate
+                // Reduce max rate
                 *max_rate = (*max_rate * (1.0 - self.adaptation_factor)).max(self.min_rate);
             } else if actual_rate >= *max_rate * 0.9 {
-                // Increase max _rate
+                // Increase max rate
                 *max_rate =
                     (*max_rate * (1.0 + self.adaptation_factor)).min(self.max_rate_absolute);
             }
@@ -926,7 +926,12 @@ pub mod distributed {
 
     impl DistributedLogger {
         /// Create a new distributed logger
-        pub fn limit(f64: f64,
+        pub fn new(
+            logger_name: &str,
+            node_id: NodeId,
+            max_entries: usize,
+            aggregation_window: Duration,
+            default_rate_limit: f64,
         ) -> Self {
             let local_logger = Logger::new(logger_name);
             let aggregator = Arc::new(LogAggregator::new(
@@ -1082,8 +1087,8 @@ pub mod distributed {
 
     impl MultiNodeCoordinator {
         /// Create a new multi-node coordinator
-        pub fn with_interval(interval: Duration) -> Self {
-            let global_node = NodeId::new(global.to_string(), coordinator.to_string());
+        pub fn new(coordination_interval: Duration) -> Self {
+            let global_node = NodeId::new("global".to_string(), "coordinator".to_string());
             let global_aggregator = Arc::new(LogAggregator::new(
                 global_node,
                 100000,                    // Large capacity for global aggregation
@@ -1093,19 +1098,19 @@ pub mod distributed {
             Self {
                 nodes: Arc::new(RwLock::new(HashMap::new())),
                 global_aggregator,
-                _coordination_interval,
+                coordination_interval,
                 running: Arc::new(AtomicUsize::new(0)),
             }
         }
 
         /// Register a distributed logger
-        pub fn with_id(id: NodeId, logger: Arc<DistributedLogger>) {
+        pub fn register_node(&self, node_id: NodeId, logger: Arc<DistributedLogger>) {
             let mut nodes = self.nodes.write().unwrap();
             nodes.insert(node_id, logger);
         }
 
         /// Unregister a node
-        pub fn get_entries_by_node_id(node_id: &NodeId) {
+        pub fn unregister_node(&self, node_id: &NodeId) {
             let mut nodes = self.nodes.write().unwrap();
             nodes.remove(node_id);
         }
@@ -1170,7 +1175,7 @@ pub mod distributed {
                     "total_entries": stats.total_entries,
                     "dropped_entries": stats.dropped_entries,
                     "nodes_count": self.nodes.read().unwrap().len(),
-                    "entries_by_level": stats.entries_by_level.iter().map(|(k, v)| (format!("{k:?}"), v)).collect::<HashMap<__>>()
+                    "entries_by_level": stats.entries_by_level.iter().map(|(k, v)| (format!("{k:?}"), *v)).collect::<HashMap<String, u64>>()
                 },
                 "entries": entries.iter().map(|entry| serde_json::json!({
                     "id": entry.id,

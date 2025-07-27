@@ -1,7 +1,7 @@
 use ndarray::{array, Array1};
 use scirs2__stats::distributions::multivariate::multinomial::Multinomial;
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

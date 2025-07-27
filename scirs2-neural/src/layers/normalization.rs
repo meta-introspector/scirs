@@ -291,7 +291,12 @@ pub struct BatchNorm<F: Float + Debug + Send + Sync> {
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> BatchNorm<F> {
     /// Create a new batch normalization layer
-    pub fn new<R: Rng>(_num_features: usize, momentum: f64, eps: f64, _rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(
+        _num_features: usize,
+        momentum: f64,
+        eps: f64,
+        _rng: &mut R,
+    ) -> Result<Self> {
         let gamma = Array::<F, IxDyn>::from_elem(IxDyn(&[_num_features]), F::one());
         let beta = Array::<F, IxDyn>::from_elem(IxDyn(&[_num_features]), F::zero());
 

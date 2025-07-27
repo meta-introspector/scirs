@@ -57,7 +57,8 @@ fn bench_integrators(c: &mut Criterion) {
             |b, &n_samples| {
                 let options = MonteCarloOptions {
                     n_samples,
-                    seed: Some(42), _phantom: PhantomData,
+                    seed: Some(42),
+                    _phantom: PhantomData,
                     ..Default::default()
                 };
 

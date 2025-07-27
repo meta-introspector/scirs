@@ -740,7 +740,7 @@ pub mod utils {
 
     /// Create a quick GPU uniform random array
     pub fn gpu_uniform_array(
-        device: Arc<GpuContext>,
+        _device: Arc<GpuContext>,
         shape: &[usize],
     ) -> CoreResult<Array<f32, IxDyn>> {
         let generator = GpuRandomGenerator::with_generator_type(GpuGeneratorType::XorShift)?;
@@ -750,7 +750,7 @@ pub mod utils {
 
     /// Create a quick GPU normal random array
     pub fn gpu_randn(
-        device: Arc<GpuContext>,
+        _device: Arc<GpuContext>,
         shape: &[usize],
         mean: f32,
         std_dev: f32,
@@ -762,7 +762,7 @@ pub mod utils {
 
     /// Benchmark GPU vs CPU random number generation
     pub fn benchmark_gpu_vs_cpu(
-        device: Arc<GpuContext>,
+        _device: Arc<GpuContext>,
         count: usize,
     ) -> CoreResult<BenchmarkResults> {
         use std::time::Instant;

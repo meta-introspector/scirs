@@ -302,7 +302,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for RNN<
 
     fn backward(
         &self,
-        input: &Array<F, IxDyn>, _grad_output: &Array<F, IxDyn>,
+        input: &Array<F, IxDyn>,
+        _grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Retrieve cached values
         let input_ref = match self.input_cache.read() {

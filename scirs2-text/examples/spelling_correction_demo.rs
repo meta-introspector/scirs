@@ -292,7 +292,9 @@ fn performance_test(
 
 // Demonstrate text-wide correction
 #[allow(dead_code)]
-fn text_correction_demo(_corrector: &DictionaryCorrector) -> Result<(), Box<dyn std::error::Error>> {
+fn text_correction_demo(
+    _corrector: &DictionaryCorrector,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Text Correction Demo ===\n");
 
     println!("Original text with misspellings:");

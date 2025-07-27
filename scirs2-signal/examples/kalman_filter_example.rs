@@ -4,9 +4,9 @@ use ndarray::{s, Array1, Array2};
 use rand::rng;
 use rand__distr::{Distribution, Normal};
 use scirs2__signal::{kalman, SignalError, SignalResult};
+use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> SignalResult<()> {

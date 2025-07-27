@@ -342,12 +342,16 @@ fn bench_least_squares(c: &mut Criterion) {
                     let result = least_squares(
                         residual,
                         x0,
-                        scirs2_optimize::least, _squares::Method::LevenbergMarquardt,
+                        scirs2_optimize::least,
+                        _squares::Method::LevenbergMarquardt,
                         None::<fn(&[f64], &[f64]) -> ndarray::Array2<f64>>,
                         data,
-                        Some(scirs2_optimize::least, _squares::Options {
-                            ..Default::default()
-                        }),
+                        Some(
+                            scirs2_optimize::least,
+                            _squares::Options {
+                                ..Default::default()
+                            },
+                        ),
                     );
                     black_box(result)
                 });

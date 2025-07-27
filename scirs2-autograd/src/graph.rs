@@ -299,7 +299,7 @@ impl<'graph, F: Float> Graph<F> {
     }
 }
 
-impl<T: Float>, fmt::Debug for Graph<T> {
+impl<T: Float> fmt::Debug for Graph<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let set = &*self.node_set.borrow();
         let mut buf = format!("graph size: {}\n", set.len());

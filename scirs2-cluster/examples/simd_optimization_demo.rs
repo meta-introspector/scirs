@@ -118,7 +118,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         tol: 1e-4,
         random_seed: Some(42),
         n_init: 1,
-        init_method: scirs2, _cluster: vq::KMeansInit::KMeansPlusPlus,
+        init_method: scirs2,
+        _cluster: vq::KMeansInit::KMeansPlusPlus,
     };
 
     let start = Instant::now();

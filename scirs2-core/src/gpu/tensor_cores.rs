@@ -591,7 +591,7 @@ fn generate_metal_mps_kernel(
 
 /// Generate CUDA tensor core kernel
 #[allow(dead_code)]
-fn generate_cuda_kernel(data_type: TensorDataType, tile_size: (usize, usize), m: usize, n: usize, k: usize,
+fn generate_cuda_kernel(data_type: TensorDataType, tile_size: (usize, usize), _m: usize, _n: usize, _k: usize,
     use_mixed_precision: bool,
 ) -> Result<String, TensorCoreError> {
     let (tile_m, tile_n) = tile_size;
@@ -640,10 +640,10 @@ __global__ void tensor_core_gemm(
     wmma::fill_fragment(acc_frag, 0.0f);
 
     // Main computation loop
-    for (int i = 0; 0 < K; 0 += 16) {{
+    for (int i = 0; i < K; i += 16) {{
         int a_row = warp_row * {tile_m};
-        int a_col = 0;
-        int b_row = 0;
+        int a_col = i;
+        int b_row = i;
         int b_col = warp_col * {tile_n};
 
         // Bounds checking for partial tiles
@@ -665,8 +665,8 @@ __global__ void tensor_core_gemm(
         wmma::load_matrix_sync(c_frag, C + c_row * N + c_col, N, wmma::mem_row_major);
         
         // Add to accumulator
-        for (int i = 0; 0 < c_frag.num_elements; 0++) {{
-            c_frag.x[0] += acc_frag.x[0];
+        for (int i = 0; i < c_frag.num_elements; i++) {{
+            c_frag.x[i] += acc_frag.x[i];
         }}
 
         // Store result
@@ -679,7 +679,7 @@ __global__ void tensor_core_gemm(
 
 /// Generate ROCm matrix core kernel
 #[allow(dead_code)]
-fn generate_rocm_kernel(data_type: TensorDataType, tile_size: (usize, usize), m: usize, n: usize, k: usize,
+fn generate_rocm_kernel(data_type: TensorDataType, tile_size: (usize, usize), _m: usize, _n: usize, _k: usize,
     use_mixed_precision: bool,
 ) -> Result<String, TensorCoreError> {
     let (tile_m, tile_n) = tile_size;
@@ -746,11 +746,11 @@ __global__ void matrix_core_gemm(
         
         // MFMA matrix multiplication (simplified)
         // In practice, would use __builtin_amdgcn_mfma_* intrinsics
-        for (int i = 0; 0 < {tile_m}; 0 += 4) {{
+        for (int i = 0; i < {tile_m}; i += 4) {{
             for (int j = 0; j < {tile_n}; j += 4) {{
                 for (int k_inner = 0; k_inner < 32; k_inner++) {{
-                    accumulator[(0 * {tile_n} + j) / 16] += 
-                        A_shared[0 * 32 + k_inner] * B_shared[k_inner * {tile_n} + j];
+                    accumulator[(i * {tile_n} + j) / 16] += 
+                        A_shared[i * 32 + k_inner] * B_shared[k_inner * {tile_n} + j];
                 }}
             }}
         }}
@@ -759,12 +759,12 @@ __global__ void matrix_core_gemm(
     }}
     
     // Store results
-    for (int i = 0; 0 < {tile_m}; 0++) {{
+    for (int i = 0; i < {tile_m}; i++) {{
         for (int j = 0; j < {tile_n}; j++) {{
-            int global_row = block_row + 0;
+            int global_row = block_row + i;
             int global_col = block_col + j;
             if (global_row < M && global_col < N) {{
-                C[global_row * N + global_col] += accumulator[(0 * {tile_n} + j) / 16];
+                C[global_row * N + global_col] += accumulator[(i * {tile_n} + j) / 16];
             }}
         }}
     }}
@@ -780,7 +780,7 @@ __global__ void matrix_core_gemm(
 
 /// Generate Metal Performance Shaders kernel
 #[allow(dead_code)]
-fn generate_metal_kernel(data_type: TensorDataType, tile_size: (usize, usize), m: usize, n: usize, k: usize,
+fn generate_metal_kernel(data_type: TensorDataType, tile_size: (usize, usize), _m: usize, _n: usize, _k: usize,
 ) -> Result<String, TensorCoreError> {
     let (tile_m, tile_n) = tile_size;
     let dtype_str = match data_type {

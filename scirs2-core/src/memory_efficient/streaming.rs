@@ -425,19 +425,19 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
 
     /// Get the number of items in the buffer
     fn len(&self) -> usize {
-        let guard = self.mutex.lock().unwrap();
+        let _guard = self.mutex.lock().unwrap();
         self.data.len()
     }
 
     /// Check if the buffer is empty
     fn is_empty(&self) -> bool {
-        let guard = self.mutex.lock().unwrap();
+        let _guard = self.mutex.lock().unwrap();
         self.data.is_empty()
     }
 
     /// Close the buffer
     fn close(&mut self) {
-        let guard = self.mutex.lock().unwrap();
+        let _guard = self.mutex.lock().unwrap();
         self.closed = true;
         self.condvar.notify_all();
     }
@@ -445,13 +445,13 @@ impl<T: Clone + Send + 'static> StreamBuffer<T> {
     /// Check if the buffer is closed
     #[allow(dead_code)]
     fn is_closed(&self) -> bool {
-        let guard = self.mutex.lock().unwrap();
+        let _guard = self.mutex.lock().unwrap();
         self.closed
     }
 
     /// Clear the buffer
     fn clear(&mut self) {
-        let guard = self.mutex.lock().unwrap();
+        let _guard = self.mutex.lock().unwrap();
         self.data.clear();
         self.condvar.notify_all();
     }

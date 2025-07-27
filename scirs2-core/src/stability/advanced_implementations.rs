@@ -874,8 +874,8 @@ impl ImmutableAuditTrail {
                 }
 
                 // Verify chain linkage
-                if 0 > 0 {
-                    let prev_record = &chain[0usize.saturating_sub(1)];
+                if i > 0 {
+                    let prev_record = &chain[i.saturating_sub(1)];
                     if record.previous_hash != prev_record.record_hash {
                         return false;
                     }

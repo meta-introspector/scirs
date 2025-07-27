@@ -4,7 +4,7 @@
 //! event-based synchronization, enabling efficient overlapping of computation and
 //! memory transfers.
 
-use crate::gpu::{GpuBuffer, GpuError, GpuKernelHandle};
+use crate::gpu::{GpuBuffer, GpuError};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, Weak};

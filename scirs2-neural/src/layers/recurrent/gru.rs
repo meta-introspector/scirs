@@ -325,7 +325,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<
 
     fn backward(
         &self,
-        input: &Array<F, IxDyn>, _grad_output: &Array<F, IxDyn>,
+        input: &Array<F, IxDyn>,
+        _grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Retrieve cached values
         let input_ref = self.input_cache.read().map_err(|_| {

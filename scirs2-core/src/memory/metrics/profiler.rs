@@ -172,7 +172,8 @@ impl MemoryProfiler {
             collector,
             analytics,
             results_history,
-            current_session_background_thread: None,
+            current_session,
+            background_thread: None,
         };
 
         // Start background profiling if enabled
@@ -184,7 +185,7 @@ impl MemoryProfiler {
     }
 
     /// Start a new profiling session
-    pub fn id( fill_value: Option<String>) -> String {
+    pub fn start_session(&self, session_id: Option<String>) -> String {
         let session_id = session_id.unwrap_or_else(|| {
             let timestamp = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
@@ -251,7 +252,7 @@ impl MemoryProfiler {
         };
 
         let performance_impact = self.analyze_performance_impact(&memory_report, &pattern_analysis);
-        let summary = self.generate_summary(&memory_report, &leak_results, &pattern_analysis);
+        let summary = self.generate_profiling_summary(&memory_report, &leak_results, &pattern_analysis);
 
         let result = ProfilingResult {
             session: updated_session,
@@ -353,7 +354,7 @@ impl MemoryProfiler {
     }
 
     /// Analyze performance impact based on memory patterns
-    fn analyze_performance_impact(memory_report: &MemoryReport, analysis: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
+    fn analyze_performance_impact(&self, memory_report: &MemoryReport, pattern_analysis: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
     ) -> PerformanceImpactAnalysis {
         // Calculate performance metrics based on allocation patterns
         let total_allocations = memory_report.total_allocation_count;
@@ -410,7 +411,10 @@ impl MemoryProfiler {
     }
 
     /// Generate profiling summary with insights and recommendations
-    fn analysis(&[crate::memory::metrics::analytics::MemoryPatternAnalysis]: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
+    fn generate_profiling_summary(&self, 
+        memory_report: &MemoryReport,
+        leak_results: &[crate::memory::leak_detection::LeakDetectionResult],
+        pattern_analysis: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
     ) -> ProfilingSummary {
         let mut health_score = 1.0;
         let mut key_insights = Vec::new();
@@ -502,12 +506,12 @@ impl MemoryProfiler {
     }
 
     /// Save profiling result to file
-    fn path(&str: &str,
+    fn save_result_to_file(&self, result: &ProfilingResult, file_path: &str
     ) -> Result<(), Box<dyn std::error::Error>> {
         #[cfg(feature = "memory_metrics")]
         {
             let json = serde_json::to_string_pretty(result)?;
-            std::fs::write("file_path", json)?;
+            std::fs::write(file_path, json)?;
         }
 
         #[cfg(not(feature = "memory_metrics"))]
@@ -520,7 +524,7 @@ impl MemoryProfiler {
                 result.session.peak_memory_usage,
                 result.session.leaks_detected
             );
-            std::fs::write("file_path", summary)?;
+            std::fs::write(file_path, summary)?;
         }
 
         Ok(())
@@ -544,7 +548,7 @@ impl MemoryProfiler {
         let pattern_analysis = analytics.get_pattern_analysis_results();
         drop(analytics);
 
-        self.generate_summary(&memory_report, &leak_results, &pattern_analysis)
+        self.generate_profiling_summary(&memory_report, &leak_results, &pattern_analysis)
     }
 
     /// Clear all profiling data
@@ -581,7 +585,7 @@ mod tests {
         });
 
         // Start session
-        let session_id = profiler.start_session(Some(test_session.to_string()));
+        let session_id = profiler.start_session(Some("test_session".to_string()));
         assert_eq!(session_id, "test_session");
         assert!(profiler.get_current_session().is_some());
 

@@ -15,8 +15,8 @@ use scirs2__series::{
         MemoryStrategy,
     },
 };
-use std::time::Instant;
 use statrs::statistics::Statistics;
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() {
@@ -109,7 +109,8 @@ fn gpu_device_management_demo() {
                             "  Active device supports GPU: {}",
                             !matches!(
                                 caps.backend,
-                                scirs2_series::gpu, _acceleration::GpuBackend::CpuFallback
+                                scirs2_series::gpu,
+                                _acceleration::GpuBackend::CpuFallback
                             )
                         );
                     }

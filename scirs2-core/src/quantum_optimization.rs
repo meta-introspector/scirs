@@ -457,9 +457,9 @@ impl QuantumOptimizer {
             for (i, particle) in particles.iter().enumerate() {
                 let fitness = objective_fn(particle);
 
-                if fitness < personal_best_fitness[0] {
-                    personal_best_fitness[0] = fitness;
-                    personal_best[0] = particle.clone();
+                if fitness < personal_best_fitness[i] {
+                    personal_best_fitness[i] = fitness;
+                    personal_best[i] = particle.clone();
                 }
 
                 if fitness < self.best_fitness {
@@ -474,9 +474,9 @@ impl QuantumOptimizer {
             let best_solution = self.best_solution.clone();
             for i in 0..self.population_size {
                 self.update_velocity(
-                    &mut velocities[0],
-                    &particles[0],
-                    &personal_best[0],
+                    &mut velocities[i],
+                    &particles[i],
+                    &personal_best[i],
                     &best_solution,
                     iteration,
                     max_iterations,
@@ -484,14 +484,14 @@ impl QuantumOptimizer {
 
                 // Update position with quantum superposition
                 for (d, bound) in bounds.iter().enumerate().take(self.dimensions) {
-                    particles[0][d] += velocities[0][d];
+                    particles[i][d] += velocities[i][d];
 
                     // Apply quantum interference
-                    let quantum_effect = self.calculate_quantum_interference(0, d);
-                    particles[0][d] += quantum_effect;
+                    let quantum_effect = self.calculate_quantum_interference(i, d);
+                    particles[i][d] += quantum_effect;
 
                     // Ensure bounds
-                    particles[0][d] = particles[0][d].clamp(bound.0, bound.1);
+                    particles[i][d] = particles[i][d].clamp(bound.0, bound.1);
                 }
             }
 
@@ -524,7 +524,7 @@ impl QuantumOptimizer {
             for i in 0..self.population_size {
                 // Select three random individuals (different from current)
                 let mut indices = (0..self.population_size)
-                    .filter(|&x| x != 0)
+                    .filter(|&x| x != i)
                     .collect::<Vec<_>>();
                 indices.sort_by(|_a, _b| {
                     if self.state.pseudo_random() > 0.5 {
@@ -603,7 +603,7 @@ impl QuantumOptimizer {
 
         // Apply Hadamard gates to create uniform superposition
         for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
-            self.state.apply_hadamard(0);
+            self.state.apply_hadamard(i);
         }
 
         for iteration in 0..max_iterations {
@@ -639,7 +639,7 @@ impl QuantumOptimizer {
             if iteration % 10 == 0 {
                 for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
                     let angle = 0.1 * self.state.pseudo_random();
-                    self.state.apply_rotation(angle, 0);
+                    self.state.apply_rotation(angle, i);
                 }
             }
         }
@@ -724,7 +724,7 @@ impl QuantumOptimizer {
         // Quantum tunneling allows escaping local minima
         for i in 0..self.dimensions {
             if self.state.pseudo_random() < 0.3 {
-                let range = bounds[0].1 - bounds[0].0;
+                let range = bounds[i].1 - bounds[i].0;
                 let tunnel_distance = range * 0.1 * self.state.pseudo_random();
 
                 if self.state.pseudo_random() < 0.5 {
@@ -733,7 +733,7 @@ impl QuantumOptimizer {
                     new_solution[0] -= tunnel_distance;
                 }
 
-                new_solution[0] = new_solution[0].clamp(bounds[0].0, bounds[0].1);
+                new_solution[i] = new_solution[i].clamp(bounds[i].0, bounds[i].1);
             }
         }
 
@@ -745,11 +745,11 @@ impl QuantumOptimizer {
 
         for i in 0..self.dimensions {
             if self.state.pseudo_random() < 0.5 {
-                let range = bounds[0].1 - bounds[0].0;
+                let range = bounds[i].1 - bounds[i].0;
                 let step_size = range * 0.01 * self.quantum_params.temperature;
 
-                new_solution[0] += step_size * (self.state.pseudo_random() - 0.5);
-                new_solution[0] = new_solution[0].clamp(bounds[0].0, bounds[0].1);
+                new_solution[i] += step_size * (self.state.pseudo_random() - 0.5);
+                new_solution[i] = new_solution[i].clamp(bounds[i].0, bounds[i].1);
             }
         }
 
@@ -851,8 +851,8 @@ impl QuantumOptimizer {
             let alpha = self.state.pseudo_random();
             let quantum_interference = (2.0 * PI * alpha).sin() * 0.1;
 
-            offspring[0] = alpha * parent1[0] + (1.0 - alpha) * parent2[0] + quantum_interference;
-            offspring[0] = offspring[0].clamp(bounds[0].0, bounds[0].1);
+            offspring[i] = alpha * parent1[i] + (1.0 - alpha) * parent2[i] + quantum_interference;
+            offspring[i] = offspring[i].clamp(bounds[i].0, bounds[i].1);
         }
 
         offspring
@@ -870,7 +870,7 @@ impl QuantumOptimizer {
         for individual in population.iter_mut() {
             for i in 0..self.dimensions {
                 if self.state.pseudo_random() < mutation_rate {
-                    let range = bounds[0].1 - bounds[0].0;
+                    let range = bounds[i].1 - bounds[i].0;
                     let quantum_step = range * 0.05 * self.state.pseudo_random();
 
                     if self.state.pseudo_random() < 0.5 {
@@ -895,15 +895,15 @@ impl QuantumOptimizer {
             let r2 = self.state.pseudo_random();
 
             // Quantum enhancement: add phase information
-            let quantum_phase = self.state.phases.get(0).unwrap_or(&0.0);
+            let quantum_phase = self.state.phases.get(i).unwrap_or(&0.0);
             let quantum_factor = 1.0 + 0.1 * quantum_phase.cos();
 
-            velocity[0] = w * velocity[0] * quantum_factor
-                + c1 * r1 * (personal_best[0] - position[0])
-                + c2 * r2 * (global_best[0] - position[0]);
+            velocity[i] = w * velocity[i] * quantum_factor
+                + c1 * r1 * (personal_best[i] - position[i])
+                + c2 * r2 * (global_best[i] - position[i]);
 
             // Velocity clamping
-            velocity[0] = velocity[0].clamp(-1.0, 1.0);
+            velocity[i] = velocity[i].clamp(-1.0, 1.0);
         }
     }
 
@@ -921,7 +921,7 @@ impl QuantumOptimizer {
         // Update quantum state based on swarm distribution
         if !particles.is_empty() && !particles[0].is_empty() {
             for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
-                let values: Vec<f64> = particles.iter().map(|p| p[0]).collect();
+                let values: Vec<f64> = particles.iter().map(|p| p.get(i).copied().unwrap_or(0.0)).collect();
                 let mean = values.iter().sum::<f64>() / values.len() as f64;
                 let variance =
                     values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
@@ -971,13 +971,13 @@ impl QuantumOptimizer {
         // Simplified adiabatic evolution
         #[allow(clippy::needless_range_loop)]
         for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
-            let energy_contribution = fitness * solution[0] * h_problem;
+            let energy_contribution = fitness * solution.get(i).copied().unwrap_or(0.0) * h_problem;
             let mixing_contribution = h_initial;
 
             let total_energy = energy_contribution + mixing_contribution;
             let rotation_angle = -total_energy * 0.01; // Small rotation
 
-            self.state.apply_rotation(rotation_angle, 0);
+            self.state.apply_rotation(rotation_angle, i);
         }
     }
 
@@ -990,15 +990,15 @@ impl QuantumOptimizer {
 
         #[allow(clippy::needless_range_loop)]
         for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
-            let rotation_angle = gamma * fitness * solution[0] * 0.001;
-            self.state.apply_rotation(rotation_angle, 0);
+            let rotation_angle = gamma * fitness * solution.get(i).copied().unwrap_or(0.0) * 0.001;
+            self.state.apply_rotation(rotation_angle, i);
         }
     }
 
     fn apply_mixer_hamiltonian(&mut self, beta: f64) {
         for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
             let rotation_angle = beta;
-            self.state.apply_rotation(rotation_angle, 0);
+            self.state.apply_rotation(rotation_angle, i);
         }
     }
 
@@ -1021,11 +1021,11 @@ impl QuantumOptimizer {
         let step_size = 0.01 * (1.0 - iteration as f64 / 1000.0);
 
         for i in 0..gamma_params.len() {
-            gamma_params[0] += step_size * (self.state.pseudo_random() - 0.5);
-            gamma_params[0] = gamma_params[0].clamp(0.0, PI);
+            gamma_params[i] += step_size * (self.state.pseudo_random() - 0.5);
+            gamma_params[i] = gamma_params[i].clamp(0.0, PI);
 
-            beta_params[0] += step_size * (self.state.pseudo_random() - 0.5);
-            beta_params[0] = beta_params[0].clamp(0.0, PI);
+            beta_params[i] += step_size * (self.state.pseudo_random() - 0.5);
+            beta_params[i] = beta_params[i].clamp(0.0, PI);
         }
     }
 
@@ -1189,7 +1189,7 @@ mod tests {
 
         // Check normalization
         let norm_squared: f64 = state.amplitudes.iter().map(|a| a * a).sum();
-        assert!((norm_squared.saturating_sub(1).0).abs() < 1e-10);
+        assert!((norm_squared - 1.0).abs() < 1e-10);
     }
 
     #[test]

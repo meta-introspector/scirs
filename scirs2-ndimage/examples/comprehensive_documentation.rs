@@ -187,12 +187,12 @@ fn demonstrate_filtering(_image: &Array2<f64>, noisy_image: &Array2<f64>) -> Ndi
     println!("  • Generic filters with custom functions:");
     let custom_filter = generic_filter(
         &_image.view(),
-        None,                       // use default 3x3 footprint
+        None,                        // use default 3x3 footprint
         filter__functions::variance, // use variance as the filter function
-        None,                       // mode
-        None,                       // cval
-        None,                       // origin
-        None,                       // axes
+        None,                        // mode
+        None,                        // cval
+        None,                        // origin
+        None,                        // axes
     )?;
     println!("    Custom variance filter applied");
 

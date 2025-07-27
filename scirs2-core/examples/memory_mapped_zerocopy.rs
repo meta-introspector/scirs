@@ -3,11 +3,11 @@ use scirs2_core::memory_efficient::{
     ArithmeticOps, BroadcastOps, ChunkingStrategy, MemoryMappedArray, MemoryMappedChunks,
     ZeroCopyOps,
 };
+use statrs::statistics::Statistics;
 use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
 use tempfile::tempdir;
-use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -261,7 +261,7 @@ pub fn project<F: Float + NumAssign + Sum + ScalarOperand>(
     components: &ArrayView2<F>,
 ) -> LinalgResult<Array2<F>> {
     let (_n_samples, n_features) = x.dim();
-    let (n_components, n_components_features) = components.dim();
+    let (_n_components, n_components_features) = components.dim();
 
     if n_features != n_components_features {
         return Err(LinalgError::DimensionError(format!(

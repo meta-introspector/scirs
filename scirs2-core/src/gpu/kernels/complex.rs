@@ -209,7 +209,7 @@ impl GpuKernel for ComplexMultiplyKernel {
         false
     }
 
-    fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
+    fn specialize(&self, _params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
         Err(GpuError::SpecializationNotSupported)
     }
 }
@@ -296,7 +296,7 @@ impl GpuKernel for ComplexConjugateKernel {
         false
     }
 
-    fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
+    fn specialize(&self, _params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
         Err(GpuError::SpecializationNotSupported)
     }
 }
@@ -447,7 +447,7 @@ impl GpuKernel for ComplexMatMulKernel {
         false
     }
 
-    fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
+    fn specialize(&self, _params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
         // Could specialize for specific matrix sizes (2x2, 4x4, etc.)
         Ok(Box::new(self.clone()))
     }

@@ -107,7 +107,9 @@ where
     T: Clone + Send + Sync + 'static,
     A: ArrayProtocol + Clone + Send + Sync + 'static,
 {
-    fn protocol(:ArrayFunction,
+    fn array_function(
+        &self,
+        func: ArrayFunction,
         types: &[TypeId],
         args: &[Box<dyn Any>],
         kwargs: &HashMap<String, Box<dyn Any>>,

@@ -55,9 +55,8 @@ fn bench_distance_transform_2d(c: &mut Criterion) {
             &input_dyn,
             |b, input| {
                 b.iter(|| {
-                    let (distances_) =
-                        distance_transform_edt(black_box(input), None, true, false)
-                            .expect("EDT failed");
+                    let (distances_) = distance_transform_edt(black_box(input), None, true, false)
+                        .expect("EDT failed");
                     black_box(distances)
                 })
             },
@@ -103,9 +102,8 @@ fn bench_distance_transform_3d(c: &mut Criterion) {
             &input_dyn,
             |b, input| {
                 b.iter(|| {
-                    let (distances_) =
-                        distance_transform_edt(black_box(input), None, true, false)
-                            .expect("EDT 3D failed");
+                    let (distances_) = distance_transform_edt(black_box(input), None, true, false)
+                        .expect("EDT 3D failed");
                     black_box(distances)
                 })
             },

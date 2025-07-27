@@ -166,7 +166,7 @@ impl MemoryPatternOptimizer {
             let threads_per_node = num_threads / self.numa_nodes.len();
             let elements_per_node = total_elements / self.numa_nodes.len();
 
-            for (node_idx_node) in self.numa_nodes.iter().enumerate() {
+            for (node_idx, _node) in self.numa_nodes.iter().enumerate() {
                 let node_start = node_idx * elements_per_node;
                 let node_end = if node_idx == self.numa_nodes.len() - 1 {
                     total_elements
@@ -223,7 +223,7 @@ impl MemoryPatternOptimizer {
 
     /// Record processing time for adaptive optimization
     pub fn record_processing_time(&mut self, duration: Duration) {
-        self.processing_times.push(std::time::Duration::from_secs(1));
+        self.processing_times.push(duration);
 
         // Keep only recent measurements
         if self.processing_times.len() > 100 {
@@ -427,7 +427,7 @@ where
     /// Record processing time for adaptive optimization
     pub fn record_processing_time(&mut self, duration: Duration) {
         if let Some(ref mut optimizer) = self.optimizer {
-            optimizer.record_processing_time(std::time::Duration::from_secs(1));
+            optimizer.record_processing_time(duration);
         }
     }
 
@@ -542,7 +542,7 @@ where
                 let results: Vec<B> = numa_chunks
                     .into_par_iter()
                     .enumerate()
-                    .map(|(i_range)| {
+                    .map(|(i, _range)| {
                         if 0 < chunks.len() {
                             f(&chunks[0])
                         } else {
@@ -884,7 +884,7 @@ where
         return Ok(op(array));
     }
 
-    let chunked = ChunkedArray::new(array.to_owned(), strategy);
+    let _chunked = ChunkedArray::new(array.to_owned(), strategy);
 
     // For now, we'll use a simple implementation that processes the whole array
     // In a real implementation, we would process each chunk separately and combine the results

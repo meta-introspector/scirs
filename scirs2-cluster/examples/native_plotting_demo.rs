@@ -48,15 +48,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Create visualization configuration
         let vis_config = VisualizationConfig {
-            color_scheme: scirs2, _cluster: ColorScheme::ColorblindFriendly,
+            color_scheme: scirs2,
+            _cluster: ColorScheme::ColorblindFriendly,
             point_size: 4.0,
             point_opacity: 0.8,
             show_centroids: true,
             show_boundaries: false,
-            boundary_type: scirs2, _cluster: BoundaryType::ConvexHull,
+            boundary_type: scirs2,
+            _cluster: BoundaryType::ConvexHull,
             interactive: false,
             animation: None,
-            dimensionality_reduction: scirs2, _cluster: DimensionalityReduction::None,
+            dimensionality_reduction: scirs2,
+            _cluster: DimensionalityReduction::None,
         };
 
         // PNG output configuration
@@ -119,15 +122,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Use mouse to pan and zoom, click clusters in the legend to highlight them.");
 
         let vis_config = VisualizationConfig {
-            color_scheme: scirs2, _cluster: ColorScheme::Viridis,
+            color_scheme: scirs2,
+            _cluster: ColorScheme::Viridis,
             point_size: 6.0,
             point_opacity: 0.9,
             show_centroids: true,
             show_boundaries: false,
-            boundary_type: scirs2, _cluster: BoundaryType::Ellipse,
+            boundary_type: scirs2,
+            _cluster: BoundaryType::Ellipse,
             interactive: true,
             animation: None,
-            dimensionality_reduction: scirs2, _cluster: DimensionalityReduction::None,
+            dimensionality_reduction: scirs2,
+            _cluster: DimensionalityReduction::None,
         };
 
         // Launch interactive visualization

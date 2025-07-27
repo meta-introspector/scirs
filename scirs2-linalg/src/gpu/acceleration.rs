@@ -405,7 +405,8 @@ where
         // Estimate GFLOPS (rough approximation)
         let operations = match operation {
             "matmul" => problem_size as f64 * 2.0, // Rough estimate
-            "matvec" => problem_size as f64_ => problem_size as f64,
+            "matvec" => problem_size as f64,
+            _ => problem_size as f64,
         };
         let gflops = operations / (execution_time * 1e9);
 
@@ -413,7 +414,7 @@ where
             operation: operation.to_string(),
             problem_size,
             execution_time,
-            memory_usage: problem_size * std::mem::_size, _of::<T>(),
+            memory_usage: problem_size * std::mem::size_of::<T>(),
             device_type,
             gflops,
             memory_bandwidth_util: 0.8, // Placeholder
@@ -903,7 +904,7 @@ where
             priority: StreamPriority::Normal,
             dependencies: vec![],
             estimated_time: self.estimate_operation_time("matmul", a.len() + b.len()),
-            memory_requirement: (a.len() + b.len()) * std::mem::size, _of::<T>(),
+            memory_requirement: (a.len() + b.len()) * std::mem::size_of::<T>(),
         };
 
         // Queue operation

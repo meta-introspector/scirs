@@ -60,7 +60,7 @@ where
             .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 
         // Serialize data to file (in chunks if data is large)
-        let chunked = ChunkedArray::new(data.to_owned(), strategy);
+        let _chunked = ChunkedArray::new(data.to_owned(), strategy);
 
         // Note: This is a simplified implementation that writes the entire array at once.
         // A real implementation would write chunks to save memory.
@@ -96,7 +96,7 @@ where
         let file_path = temp_file.path().to_path_buf();
 
         // Manually persist the temp file so it stays around after we return
-        let file = temp_file
+        let _file = temp_file
             .persist(&file_path)
             .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 

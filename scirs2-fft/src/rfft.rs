@@ -818,7 +818,7 @@ where
     // Recursive function to mark indices as processed
     fn mark_processed(
         idx: &mut Vec<usize>,
-        dim: usize_shape: &[usize],
+        dim: usize, shape: &[usize],
         x_shape: &[usize],
         processed: &mut std::collections::HashSet<Vec<usize>>,
     ) {
@@ -842,7 +842,7 @@ where
         // Recursive case: iterate through the current dimension
         for i in 0..x_shape[dim] {
             idx[dim] = i;
-            mark_processed(idx, dim + 1_shape, x_shape, processed);
+            mark_processed(idx, dim + 1, shape, x_shape, processed);
         }
     }
 

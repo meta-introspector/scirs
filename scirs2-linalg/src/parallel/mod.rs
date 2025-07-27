@@ -763,7 +763,7 @@ pub mod scheduler {
             &self,
             items: &[T],
             f: F,
-            chunk_size: usize,
+            _chunk_size: usize,
         ) -> Vec<R>
         where
             T: Send + Sync,
@@ -843,7 +843,7 @@ pub mod scheduler {
             &self,
             items: &[T],
             f: F,
-            initial_chunk_size: usize,
+            _initial_chunk_size: usize,
         ) -> Vec<R>
         where
             T: Send + Sync,

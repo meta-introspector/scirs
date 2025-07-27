@@ -354,7 +354,7 @@ impl ClusterHealthSummary {
 /// Initialize fault tolerance system
 #[allow(dead_code)]
 pub fn initialize_fault_tolerance() -> CoreResult<()> {
-    let manager = FaultToleranceManager::new(
+    let _manager = FaultToleranceManager::new(
         FaultDetectionStrategy::Heartbeat {
             interval: Duration::from_secs(30),
             timeout: Duration::from_secs(60),
@@ -398,7 +398,7 @@ mod tests {
             interval: Duration::from_secs(30),
             timeout: Duration::from_secs(60),
         };
-        let manager = FaultToleranceManager::new(strategy, 3);
+        let mut manager = FaultToleranceManager::new(strategy, 3);
 
         let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080);
         let node = NodeInfo::new("node1".to_string(), address);

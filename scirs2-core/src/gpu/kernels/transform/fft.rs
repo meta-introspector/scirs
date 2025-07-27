@@ -183,7 +183,7 @@ __kernel void fft_1d_forward(
     #[allow(dead_code)]
     fn specialized_for_size(
         &self,
-        size: usize,
+        _size: usize,
     ) -> Result<FftKernel, GpuError> {
         // In a real implementation, we would generate different kernels
         // optimized for different sizes (especially powers of 2)
@@ -223,7 +223,7 @@ impl GpuKernel for FftKernel {
         }
 
         // Extract FFT size from input dimensions
-        let size = *params
+        let _size = *params
             .input_dims
             .first()
             .ok_or_else(|| GpuError::InvalidParameter("input_dims cannot be empty".to_string()))?;

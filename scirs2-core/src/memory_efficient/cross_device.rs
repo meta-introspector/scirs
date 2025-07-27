@@ -568,7 +568,7 @@ impl DeviceMemoryManager {
         let mut removed_size = 0;
         let target_size = current_size - self.max_cache_size / 2; // Remove enough to get below half the limit
 
-        for (key_) in key_times {
+        for key_ in key_times {
             let entry = cache.remove(&key).unwrap();
 
             // Calculate the size of the entry based on its type

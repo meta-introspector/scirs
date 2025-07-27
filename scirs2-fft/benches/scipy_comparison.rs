@@ -172,7 +172,7 @@ fn bench_specialized_transforms(c: &mut Criterion) {
                                 1 => DCTType::Type1,
                                 2 => DCTType::Type2,
                                 3 => DCTType::Type3,
-                                4 => DCTType::Type4_ =>, DCTType::Type2,
+                                4 => DCTType::Type4,
                             }),
                             None,
                         )
@@ -194,7 +194,7 @@ fn bench_specialized_transforms(c: &mut Criterion) {
                                 1 => DSTType::Type1,
                                 2 => DSTType::Type2,
                                 3 => DSTType::Type3,
-                                4 => DSTType::Type4_ =>, DSTType::Type2,
+                                4 => DSTType::Type4,
                             }),
                             None,
                         )

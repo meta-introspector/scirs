@@ -422,7 +422,7 @@ fn simulate_coverage_recording(
 
 /// Simulate test execution with comprehensive coverage
 #[allow(dead_code)]
-fn analyzer( &CoverageAnalyzer) -> Result<(), Box<dyn std::error::Error>> {
+fn run_tests_with_coverage(analyzer: &CoverageAnalyzer) -> Result<(), Box<dyn std::error::Error>> {
     // Simulate multiple test files
     let test_files = [
         PathBuf::from("src/core.rs"),

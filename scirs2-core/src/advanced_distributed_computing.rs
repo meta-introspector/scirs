@@ -3246,10 +3246,10 @@ mod tests {
     #[test]
     fn test_distributed_computing_config() {
         let _config = DistributedComputingConfig::default();
-        assert!(config.enable_auto_discovery);
-        assert!(config.enable_load_balancing);
-        assert!(config.enable_fault_tolerance);
-        assert_eq!(config.max_nodes, 256);
+        assert!(_config.enable_auto_discovery);
+        assert!(_config.enable_load_balancing);
+        assert!(_config.enable_fault_tolerance);
+        assert_eq!(_config.max_nodes, 256);
     }
 
     #[test]
@@ -3332,14 +3332,14 @@ mod tests {
     #[test]
     fn test_cluster_manager_creation() {
         let _config = DistributedComputingConfig::default();
-        let manager = ClusterManager::new(&config);
+        let manager = ClusterManager::new(&_config);
         assert!(manager.is_ok());
     }
 
     #[test]
     fn test_task_scheduler_creation() {
         let _config = DistributedComputingConfig::default();
-        let scheduler = AdaptiveTaskScheduler::new(&config);
+        let scheduler = AdaptiveTaskScheduler::new(&_config);
         assert!(scheduler.is_ok());
     }
 }

@@ -29,7 +29,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_and_write_matrix(_temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
+fn create_and_write_matrix(
+    _temp_dir: &tempfile::TempDir,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📝 Creating and Writing Harwell-Boeing Matrix...");
 
     // Create a simple sparse matrix in CCS format
@@ -82,7 +84,9 @@ fn create_and_write_matrix(_temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn 
 }
 
 #[allow(dead_code)]
-fn read_and_analyze_matrix(_temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
+fn read_and_analyze_matrix(
+    _temp_dir: &tempfile::TempDir,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Reading and Analyzing Harwell-Boeing Matrix...");
 
     let hb_file = _temp_dir.path().join("example_matrix.hb");
@@ -264,7 +268,9 @@ fn demonstrate_different_matrix_types(
 }
 
 #[allow(dead_code)]
-fn verify_matrix_structure(_matrix: &HBSparseMatrix<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn verify_matrix_structure(
+    _matrix: &HBSparseMatrix<f64>,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Basic structural checks
     assert_eq!(
         _matrix.colptr.len(),

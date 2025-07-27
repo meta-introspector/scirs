@@ -292,7 +292,7 @@ impl PerformanceCounter for LinuxPerfCounter {
     }
 
     fn start_counter(&self, counter_type: &CounterType) -> CoreResult<()> {
-        if let Some((_event_type_config)) = self.counter_to_perf_config(counter_type) {
+        if let Some(_event_type_config) = self.counter_to_perf_config(counter_type) {
             // In a real implementation, we would:
             // 1. Create perf_event_attr structure
             // 2. Call perf_event_open syscall
@@ -357,15 +357,6 @@ impl PerformanceCounter for LinuxPerfCounter {
         }
     }
 
-    fn check_overflow(&self, counter_type: &CounterType) -> CoreResult<bool> {
-        let counters = self.active_counters.read().unwrap();
-        if counters.contains_key(counter_type) {
-            // In real implementation: check counter overflow flag
-            Ok(false)
-        } else {
-            Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
-        }
-    }
 }
 
 /// Windows Performance Data Helper (PDH) implementation
@@ -470,10 +461,6 @@ impl PerformanceCounter for WindowsPdhCounter {
         )
     }
 
-    fn check_overflow(&self, _counter_type: &CounterType) -> CoreResult<bool> {
-        // PDH handles overflow internally
-        Ok(false)
-    }
 }
 
 /// macOS performance counter implementation using system profiling
@@ -570,9 +557,6 @@ impl PerformanceCounter for MacOSCounter {
         Ok(())
     }
 
-    fn is_counter_overflowed(&self, counter_type: &CounterType) -> CoreResult<bool> {
-        Ok(false)
-    }
 }
 
 /// Hardware counter manager that provides a unified interface
@@ -807,9 +791,6 @@ impl PerformanceCounter for NoOpCounter {
         Err(HardwareCounterError::NotAvailable.into())
     }
 
-    fn is_counter_overflowed(&self, _counter_type: &CounterType) -> CoreResult<bool> {
-        Err(HardwareCounterError::NotAvailable.into())
-    }
 }
 
 /// Derived performance metrics calculated from raw counters

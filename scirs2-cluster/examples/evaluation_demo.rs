@@ -58,10 +58,11 @@ fn evaluate_clustering(_data: &Array2<f64>, labels: &Array1<usize>) {
     });
 
     // Calculate Davies-Bouldin score
-    let davies_bouldin = davies_bouldin_score(_data.view(), labels_i32.view()).unwrap_or_else(|e| {
-        eprintln!("Failed to calculate Davies-Bouldin score: {}", e);
-        f64::INFINITY
-    });
+    let davies_bouldin =
+        davies_bouldin_score(_data.view(), labels_i32.view()).unwrap_or_else(|e| {
+            eprintln!("Failed to calculate Davies-Bouldin score: {}", e);
+            f64::INFINITY
+        });
 
     println!("Evaluation Metrics:");
     println!("  Silhouette coefficient: {:.3}", silhouette);

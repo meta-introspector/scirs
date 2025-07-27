@@ -510,7 +510,10 @@ fn estimate_sparsity(_matrix: &ArrayView2<f64>) -> f64 {
     let total_elements = m * n;
     let tolerance = 1e-14;
 
-    let zero_elements = _matrix.iter().filter(|&&val| val.abs() <= tolerance).count();
+    let zero_elements = _matrix
+        .iter()
+        .filter(|&&val| val.abs() <= tolerance)
+        .count();
     zero_elements as f64 / total_elements as f64
 }
 

@@ -53,7 +53,7 @@ pub struct GpuMemoryManager;
 
 impl GpuMemoryManager {
     pub fn allocate(
-        &self_size: usize, _location: BufferLocation_buffer_type: BufferType,
+        &self, _size: usize, _location: BufferLocation, _buffer_type: BufferType,
     ) -> FFTResult<BufferDescriptor> {
         Err(FFTError::NotImplementedError(
             "GPU memory management needs to be implemented with scirs2-core::gpu abstractions"
@@ -113,7 +113,7 @@ impl GpuDeviceInfo {
 #[allow(dead_code)]
 pub struct FftGpuContext {
     /// Core GPU context
-    core_context: scirs2_core: gpu::GpuContext,
+    core_context: scirs2_core::gpu::GpuContext,
     /// Device ID
     device_id: i32,
     /// Device information
@@ -337,7 +337,7 @@ impl GpuSparseFFT {
 
         // Use the appropriate kernel based on the algorithm
         let result = match self.config.algorithm {
-            SparseFFTAlgorithm::Sublinear =>, crate::execute_cuda_sublinear_sparse_fft(
+            SparseFFTAlgorithm::Sublinear => crate::execute_cuda_sublinear_sparse_fft(
                 &signal_complex,
                 self.config.sparsity,
                 self.config.algorithm,

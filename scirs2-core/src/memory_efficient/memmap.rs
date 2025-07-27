@@ -187,7 +187,7 @@ where
     ///
     /// # Safety
     /// This method performs comprehensive validation before creating the slice
-    fn len(usize: TypeName) -> Result<&[A], CoreError> {
+    fn validate_and_create_slice<'a>(&self, ptr: *const A) -> Result<&'a [A], CoreError> {
         // Validate safety preconditions for from_raw_parts
         if ptr.is_null() {
             return Err(CoreError::MemoryError(
@@ -340,7 +340,7 @@ where
             (array.shape().to_vec(), array.len())
         } else {
             // If no data is provided, try to read the file header
-            let (header_) = read_header::<A>("file_path")?;
+            let header_ = read_header::<A>("file_path")?;
             (header.shape, header.total_elements)
         };
 
@@ -577,7 +577,7 @@ where
         let file_path = temp_file.path().to_path_buf();
 
         // Manually persist the temp file so it stays around after we return
-        let file = temp_file
+        let _file = temp_file
             .persist(&file_path)
             .map_err(|e| CoreError::IoError(ErrorContext::new(e.to_string())))?;
 

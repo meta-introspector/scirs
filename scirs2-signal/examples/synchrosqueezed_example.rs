@@ -70,7 +70,8 @@ fn generate_test_signal() -> Array1<f64> {
     let noise_level = 0.1;
     let mut rng = rand::rng();
     let noise = Array::from_iter(
-        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..);
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.gen_range(0.0..1.0) - 1.0))..,
+    );
 
     // Combine components
     &chirp_1 + &constant + &chirp_3 + &noise

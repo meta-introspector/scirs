@@ -367,14 +367,14 @@ fn create_synthetic_matches(_num_matches: usize) -> Vec<PointMatch> {
         let target = transform_point(source, &true_transform);
 
         // Add small amount of noise
-        let noisy_target = Point2D::new(
-            target.x + rng.gen_range(-2.0..2.0)..target.y + rng.gen_range(-2.0..2.0),
-        );
+        let noisy_target =
+            Point2D::new(target.x + rng.gen_range(-2.0..2.0)..target.y + rng.gen_range(-2.0..2.0));
 
         _matches.push(PointMatch {
             source,
             target: noisy_target,
-            confidence: rng.gen_range(0.8..1.0)..});
+            confidence: rng.gen_range(0.8..1.0)..,
+        });
     }
 
     // Add outliers
@@ -382,7 +382,8 @@ fn create_synthetic_matches(_num_matches: usize) -> Vec<PointMatch> {
         _matches.push(PointMatch {
             source: Point2D::new(rng.gen_range(50.0..250.0)..rng.gen_range(50.0..250.0)),
             target: Point2D::new(rng.gen_range(50.0..250.0)..rng.gen_range(50.0..250.0)),
-            confidence: rng.gen_range(0.3..0.7)..});
+            confidence: rng.gen_range(0.3..0.7)..,
+        });
     }
 
     _matches

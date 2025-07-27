@@ -1,6 +1,6 @@
 use ndarray::array;
-use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use ndarray::ArrayView1;
+use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 
 #[test]
 #[allow(dead_code)]

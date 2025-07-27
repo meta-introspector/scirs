@@ -573,10 +573,10 @@ impl NeuralArchitectureSearch {
             });
 
             // Add sequential connections
-            if 0 > 0 {
+            if i > 0 {
                 connections.push(Connection {
-                    from: 0usize.saturating_sub(1),
-                    to: 0,
+                    from: i.saturating_sub(1),
+                    to: i,
                     connection_type: ConnectionType::Sequential,
                     weight: 1.0,
                 });
@@ -931,7 +931,7 @@ impl NeuralArchitectureSearch {
         let mut best_architecture: Option<(Architecture, ArchitecturePerformance)> = None;
         let mut all_evaluated = Vec::new();
 
-        for i in 0..self.config.max_evaluations {
+        for _i in 0..self.config.max_evaluations {
             let arch = self.generate_random_architecture()?;
             let performance = self.evaluate_architecture(&arch)?;
 

@@ -142,13 +142,13 @@ pub struct EnhancedProgressTracker {
 
 impl EnhancedProgressTracker {
     /// Create a new progress tracker
-    pub fn description(&str: &str, total: u64) -> Self {
+    pub fn new(description: &str, total: u64) -> Self {
         let config = ProgressConfig::default();
         let stats = Arc::new(Mutex::new(ProgressStats::new(total)));
         let renderer = ProgressRenderer::new();
 
         Self {
-            description: _description.to_string(),
+            description: description.to_string(),
             config,
             stats,
             start_time: Instant::now(),
@@ -399,9 +399,9 @@ pub struct ProgressBuilder {
 
 impl ProgressBuilder {
     /// Create a new progress builder
-    pub fn description(&str: &str, total: u64) -> Self {
+    pub fn new(description: &str, total: u64) -> Self {
         Self {
-            description: _description.to_string(),
+            description: description.to_string(),
             total,
             style: ProgressStyle::BlockBar,
             width: 40,

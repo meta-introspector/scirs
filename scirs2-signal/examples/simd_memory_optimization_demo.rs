@@ -16,9 +16,9 @@ use scirs2__signal::{
         SimdMemoryConfig,
     },
 };
+use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> SignalResult<()> {

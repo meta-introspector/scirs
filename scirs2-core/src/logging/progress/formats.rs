@@ -258,7 +258,7 @@ impl ColorScheme {
     }
 
     /// Apply color to text
-    pub fn format_with_color(color_type: ColorType) -> String {
+    pub fn format_with_color(&self, text: &str, color_type: ColorType) -> String {
         let color = match color_type {
             ColorType::Fill => &self.fill_color,
             ColorType::Empty => &self.empty_color,
@@ -334,9 +334,9 @@ pub struct ProgressFormatter;
 
 impl ProgressFormatter {
     /// Format for JSON output
-    pub fn description(&str: &str, stats: &ProgressStats) -> String {
+    pub fn format_json(description: &str, stats: &ProgressStats) -> String {
         serde_json::json!({
-            "_description": _description,
+            "_description": description,
             "processed": stats.processed,
             "total": stats.total,
             "percentage": stats.percentage,
@@ -348,10 +348,10 @@ impl ProgressFormatter {
     }
 
     /// Format for CSV output
-    pub fn description_2(&str: &str, stats: &ProgressStats) -> String {
+    pub fn format_csv(description: &str, stats: &ProgressStats) -> String {
         format!(
             "{},{},{},{:.2},{:.2},{},{}",
-            _description,
+            description,
             stats.processed,
             stats.total,
             stats.percentage,
@@ -362,10 +362,10 @@ impl ProgressFormatter {
     }
 
     /// Format for machine-readable output
-    pub fn description_3(&str: &str, stats: &ProgressStats) -> String {
+    pub fn format_machine(description: &str, stats: &ProgressStats) -> String {
         format!(
             "PROGRESS|{}|{}|{}|{:.2}|{:.2}|{}|{}",
-            _description,
+            description,
             stats.processed,
             stats.total,
             stats.percentage,

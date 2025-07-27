@@ -29,7 +29,7 @@ impl Default for CUDAFrequencyPruningSparseFFTKernel {
 /// Execute CUDA frequency pruning sparse FFT (stub)
 #[allow(dead_code)]
 pub fn execute_cuda_frequency_pruning_sparse_fft<T>(
-    _input: &[T], _k: usize_threshold: f64,
+    _input: &[T], _k: usize, _threshold: f64,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug,

@@ -305,13 +305,11 @@ fn demonstrate_lossless_compression() -> Result<(), Box<dyn std::error::Error>> 
 
     // Analyze compression efficiency
     println!("  🔹 Compression efficiency analysis:");
-    if let Some((__, best_jpeg_size___)) = results
-        .iter()
-        .min_by_key(|(__, jpeg_size___)| *jpeg_size)
+    if let Some((__, best_jpeg_size___)) =
+        results.iter().min_by_key(|(__, jpeg_size___)| *jpeg_size)
     {
-        if let Some((__, worst_jpeg_size___)) = results
-            .iter()
-            .max_by_key(|(__, jpeg_size___)| *jpeg_size)
+        if let Some((__, worst_jpeg_size___)) =
+            results.iter().max_by_key(|(__, jpeg_size___)| *jpeg_size)
         {
             let compression_ratio = *worst_jpeg_size as f64 / *best_jpeg_size as f64;
             println!("    Best JPEG compression ratio: {:.1}x", compression_ratio);

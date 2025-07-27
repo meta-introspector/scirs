@@ -92,8 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Processed token statistics in {duration:.2?}");
     println!(
         "Average tokens per document: {:.2}",
-        token_stats.iter().map(|(count_)| *count).sum::<usize>() as f64
-            / token_stats.len() as f64
+        token_stats.iter().map(|(count_)| *count).sum::<usize>() as f64 / token_stats.len() as f64
     );
     println!(
         "Average token length: {:.2}",

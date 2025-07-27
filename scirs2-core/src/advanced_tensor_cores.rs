@@ -2365,7 +2365,7 @@ mod gpu_implementation {
             })?;
 
             let backend = gpu_context.backend();
-            let tensor_manager = tensor_managers.get(&backend).ok_or_else(|| {
+            let _tensor_manager = tensor_managers.get(&backend).ok_or_else(|| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                     "Tensor core manager not found for backend: {backend:?}"
                 )))
@@ -2471,7 +2471,7 @@ mod gpu_implementation {
         }
 
         /// Predict performance for a given configuration
-        pub fn predict_performance(&self, operation: &TensorOperation, config: &TensorCoreConfig, kernel_params: &KernelParameters,
+        pub fn predict_performance(&self, _operation: &TensorOperation, _config: &TensorCoreConfig, kernel_params: &KernelParameters,
         ) -> CoreResult<PerformancePrediction> {
             let performance_predictor = self.performance_predictor.read().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -2539,7 +2539,7 @@ mod gpu_implementation {
 
         fn ai_optimize_operation(&self, operation: &TensorOperation, tensor_manager: &TensorCoreManager,
         ) -> CoreResult<OptimizedTensorOperation> {
-            let mut ai_optimizer = self.ai_optimizer.lock().map_err(|e| {
+            let ai_optimizer = self.ai_optimizer.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                     "Failed to acquire AI optimizer lock: {e}"
                 )))
@@ -2599,7 +2599,7 @@ mod gpu_implementation {
             self.adapt_tuning_space(backend, base_space, problem_size)
         }
 
-        fn adapt_tuning_space(&self, backend: GpuBackend, mut base_space: TuningSpace, problem_size: &[usize],
+        fn adapt_tuning_space(&self, _backend: GpuBackend, mut base_space: TuningSpace, problem_size: &[usize],
         ) -> CoreResult<TuningSpace> {
             // Adapt work group sizes based on problem size
             let total_problem_size = problem_size.iter().product::<usize>();
@@ -2634,7 +2634,7 @@ mod gpu_implementation {
                 )))
             })?;
             
-            let tensor_manager = tensor_managers.get(&backend).ok_or_else(|| {
+            let _tensor_manager = tensor_managers.get(&backend).ok_or_else(|| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                     "Tensor manager not found for backend: {backend:?}"
                 )))
@@ -2996,7 +2996,7 @@ mod gpu_implementation {
             Ok(())
         }
 
-        fn generate_kernel_parameters(&self, operation: &TensorOperation, config: &TensorCoreConfig,
+        fn generate_kernel_parameters(&self, _operation: &TensorOperation, _config: &TensorCoreConfig,
         ) -> CoreResult<KernelParameters> {
             // Simplified implementation
             Ok(KernelParameters::default())
@@ -3582,7 +3582,7 @@ mod gpu_implementation {
             })
         }
 
-        pub fn update_scheduling_policy(&mut self, backend: GpuBackend, kernel: &str, result: &TuningResult,
+        pub fn update_scheduling_policy(&mut self, _backend: GpuBackend, _kernel: &str, _result: &TuningResult,
         ) -> CoreResult<()> {
             // Simplified implementation
             Ok(())
@@ -3780,7 +3780,7 @@ mod gpu_implementation {
             })
         }
 
-        pub fn record_optimization(&mut self, operation: &TensorOperation, result: &OptimizedTensorOperation,
+        pub fn record_optimization(&mut self, operation: &TensorOperation, _result: &OptimizedTensorOperation,
         ) -> CoreResult<()> {
             // Simplified implementation
             Ok(())
@@ -3862,7 +3862,7 @@ mod gpu_implementation {
             Ok(())
         }
 
-        pub fn get_power_information(&self, backend: GpuBackend) -> CoreResult<PowerInformation> {
+        pub fn get_power_information(&self, _backend: GpuBackend) -> CoreResult<PowerInformation> {
             Ok(PowerInformation {
                 current_power_watts: 150.0,
                 peak_power_watts: 300.0,
@@ -4082,24 +4082,24 @@ mod gpu_implementation {
 
             // Estimate gradient using quantum-inspired finite differences
             for i in 0..new_params.len() {
-                let epsilon = 1e-8 * self.quantum_state.amplitudes[0];
+                let epsilon = 1e-8 * self.quantum_state.amplitudes[i % self.quantum_state.amplitudes.len()];
 
-                new_params[0] += epsilon;
+                new_params[i] += epsilon;
                 let f_plus = objective_function(&new_params);
 
-                new_params[0] -= 2.0 * epsilon;
+                new_params[i] -= 2.0 * epsilon;
                 let f_minus = objective_function(&new_params);
 
-                gradient[0] = (f_plus - f_minus) / (2.0 * epsilon);
-                new_params[0] += epsilon; // restore original value
+                gradient[i] = (f_plus - f_minus) / (2.0 * epsilon);
+                new_params[i] += epsilon; // restore original value
             }
 
             // Apply quantum-inspired momentum with entanglement effects
             for i in 0..new_params.len() {
-                let momentum = self.calculate_quantum_momentum(0)?;
-                let entanglement_factor = self.calculate_entanglement_factor(0)?;
+                let momentum = self.calculate_quantum_momentum(i)?;
+                let entanglement_factor = self.calculate_entanglement_factor(i)?;
 
-                new_params[0] -= learning_rate * gradient[0] * momentum * entanglement_factor;
+                new_params[i] -= learning_rate * gradient[i] * momentum * entanglement_factor;
             }
 
             // Update quantum state evolution
@@ -4166,12 +4166,12 @@ mod gpu_implementation {
             for i in 0..self.quantum_state.amplitudes.len() {
                 // Simple evolution with decoherence
                 let decay = (-self.quantum_state.decoherence_rate * dt).exp();
-                self.quantum_state.amplitudes[0] *= decay;
+                self.quantum_state.amplitudes[i] *= decay;
 
                 // Phase evolution based on parameter gradients if available
                 if let Some(last_step) = self.optimization_history.last() {
-                    if 0 < last_step.gradient.len() {
-                        self.quantum_state.phases[0] += dt * last_step.gradient[0] * 0.1;
+                    if i < last_step.gradient.len() {
+                        self.quantum_state.phases[i] += dt * last_step.gradient[i] * 0.1;
                     }
                 }
             }

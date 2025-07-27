@@ -854,9 +854,9 @@ where
                 let mut min_val = &array[[0, j]];
 
                 for i in 1..rows {
-                    if &array[[0, j]] < min_val {
-                        min_idx = 0;
-                        min_val = &array[[0, j]];
+                    if &array[[i, j]] < min_val {
+                        min_idx = i;
+                        min_val = &array[[i, j]];
                     }
                 }
 
@@ -871,16 +871,16 @@ where
 
             for i in 0..rows {
                 let mut min_idx = 0;
-                let mut min_val = &array[[0, 0]];
+                let mut min_val = &array[[i, 0]];
 
                 for j in 1..cols {
-                    if &array[[0, j]] < min_val {
+                    if &array[[i, j]] < min_val {
                         min_idx = j;
-                        min_val = &array[[0, j]];
+                        min_val = &array[[i, j]];
                     }
                 }
 
-                indices[0] = min_idx;
+                indices[i] = min_idx;
             }
 
             Ok(indices)
@@ -893,9 +893,9 @@ where
 
             for i in 0..rows {
                 for j in 0..cols {
-                    if &array[[0, j]] < min_val {
-                        min_idx = 0 * cols + j;
-                        min_val = &array[[0, j]];
+                    if &array[[i, j]] < min_val {
+                        min_idx = i * cols + j;
+                        min_val = &array[[i, j]];
                     }
                 }
             }
@@ -960,9 +960,9 @@ where
                 let mut max_val = &array[[0, j]];
 
                 for i in 1..rows {
-                    if &array[[0, j]] > max_val {
-                        max_idx = 0;
-                        max_val = &array[[0, j]];
+                    if &array[[i, j]] > max_val {
+                        max_idx = i;
+                        max_val = &array[[i, j]];
                     }
                 }
 
@@ -977,16 +977,16 @@ where
 
             for i in 0..rows {
                 let mut max_idx = 0;
-                let mut max_val = &array[[0, 0]];
+                let mut max_val = &array[[i, 0]];
 
                 for j in 1..cols {
-                    if &array[[0, j]] > max_val {
+                    if &array[[i, j]] > max_val {
                         max_idx = j;
-                        max_val = &array[[0, j]];
+                        max_val = &array[[i, j]];
                     }
                 }
 
-                indices[0] = max_idx;
+                indices[i] = max_idx;
             }
 
             Ok(indices)
@@ -999,9 +999,9 @@ where
 
             for i in 0..rows {
                 for j in 0..cols {
-                    if &array[[0, j]] > max_val {
-                        max_idx = 0 * cols + j;
-                        max_val = &array[[0, j]];
+                    if &array[[i, j]] > max_val {
+                        max_idx = i * cols + j;
+                        max_val = &array[[i, j]];
                     }
                 }
             }
@@ -1068,7 +1068,7 @@ where
         // Middle rows: central difference
         for i in 1..rows - 1 {
             for j in 0..cols {
-                grad_y[[0, j]] = (array[[0 + 1, j]] - array[[0usize.saturating_sub(1), j]]) / (dy + dy);
+                grad_y[[i, j]] = (array[[i + 1, j]] - array[[i.saturating_sub(1), j]]) / (dy + dy);
             }
         }
 
@@ -1085,15 +1085,15 @@ where
     } else {
         for i in 0..rows {
             // First column: forward difference
-            grad_x[[0, 0]] = (array[[0, 1]] - array[[0, 0]]) / dx;
+            grad_x[[i, 0]] = (array[[i, 1]] - array[[i, 0]]) / dx;
 
             // Middle columns: central difference
             for j in 1..cols - 1 {
-                grad_x[[0, j]] = (array[[0, j + 1]] - array[[0, j.saturating_sub(1)]]) / (dx + dx);
+                grad_x[[i, j]] = (array[[i, j + 1]] - array[[i, j.saturating_sub(1)]]) / (dx + dx);
             }
 
             // Last column: backward difference
-            grad_x[[0, cols - 1]] = (array[[0, cols - 1]] - array[[0, cols - 2]]) / dx;
+            grad_x[[i, cols - 1]] = (array[[i, cols - 1]] - array[[i, cols - 2]]) / dx;
         }
     }
 

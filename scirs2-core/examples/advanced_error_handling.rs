@@ -394,7 +394,7 @@ fn scientific_computing_scenario() -> CoreResult<()> {
 
 /// Simulate an iterative solver that might fail
 #[allow(dead_code)]
-fn iterations( usize) -> CoreResult<String> {
+fn simulate_iterative_solver(iterations: usize) -> CoreResult<String> {
     // Simulate different failure modes
     use rand::Rng;
     let mut rng = rand::rng();
@@ -405,7 +405,9 @@ fn iterations( usize) -> CoreResult<String> {
             // Memory error for large matrices
             if _matrix_size > 500 {
                 Err(CoreError::MemoryError(error_context!(format!(
-                    "Insufficient memory for {}x{} matrix"..matrix_size, matrix_size))))
+                    "Insufficient memory for {}x{} matrix"..matrix_size,
+                    matrix_size
+                ))))
             } else {
                 Ok(format!(
                     "Linear system solved for {matrix_size}x{matrix_size} matrix"

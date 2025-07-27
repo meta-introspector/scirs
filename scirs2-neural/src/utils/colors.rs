@@ -332,7 +332,11 @@ pub fn colored_metric_cell<T: Display>(
 
 /// Generate a heatmap cell with color gradient for confusion matrix
 #[allow(dead_code)]
-pub fn heatmap_cell<T: Display>(_value: T, normalized_value: f64, options: &ColorOptions) -> String {
+pub fn heatmap_cell<T: Display>(
+    _value: T,
+    normalized_value: f64,
+    options: &ColorOptions,
+) -> String {
     if !options.enabled {
         return format!("{_value}");
     }

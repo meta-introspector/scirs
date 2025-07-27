@@ -10,8 +10,8 @@ use scirs2__series::{
     financial::{Distribution, GarchConfig, GarchModel, MeanModel},
     transformations::NormalizationMethod,
 };
-use std::time::Instant;
 use statrs::statistics::Statistics;
+use std::time::Instant;
 
 // TODO: Fix imports and re-enable this example
 /*

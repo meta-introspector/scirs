@@ -1,7 +1,7 @@
 use ndarray::array;
+use ndarray::ArrayView1;
 use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::time::Instant;
-use ndarray::ArrayView1;
 
 /// A helper function to time and report the result of an integration method
 #[allow(dead_code)]

@@ -43,9 +43,9 @@ where
 {
     /// Create a new TTL cache with specified size and TTL
     #[must_use]
-    pub fn seconds(seconds: u64) -> Self {
+    pub fn new(size: usize, ttl_seconds: u64) -> Self {
         Self {
-            cache: SizedCache::with_size(_size),
+            cache: SizedCache::with_size(size),
             ttl: Duration::from_secs(ttl_seconds),
         }
     }

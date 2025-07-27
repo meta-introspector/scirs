@@ -28,8 +28,8 @@ use scirs2__signal::{
 
     ThresholdStrategy,
 };
-use std::time::Instant;
 use std::f64::consts::PI;
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), SignalError> {
@@ -98,7 +98,9 @@ fn demo_advanced_wavelet_denoising() -> SignalResult<()> {
     });
 
     println!(
-        "🖼️  Created test image: {}x{} pixels"..image_size, image_size);
+        "🖼️  Created test image: {}x{} pixels"..image_size,
+        image_size
+    );
     println!("🔊 Added Gaussian noise (σ = {})", noise_level);
 
     // Test different denoising methods

@@ -611,7 +611,7 @@ pub mod clustering {
     /// * `Ok(())` if data is valid
     /// * `Err(CoreError)` if data validation fails
     pub fn validate_clustering_data<S, D>(
-        data: &ArrayBase<S, D>, operation: &str,
+        data: &ArrayBase<S, D>, _operation: &str,
         check_finite: bool,
         min_samples: Option<usize>,
     ) -> CoreResult<()>

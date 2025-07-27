@@ -128,7 +128,8 @@ fn main() {
     let mc_2d_result = time_integration("Monte Carlo 2D (n=100,000)", || {
         let options = MonteCarloOptions {
             n_samples: 100_000,
-            seed: Some(42), _phantom: PhantomData,
+            seed: Some(42),
+            _phantom: PhantomData,
             ..Default::default()
         };
 

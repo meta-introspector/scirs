@@ -292,20 +292,20 @@ fn create_sparse_signal(_length: usize, sparsity: f64) -> Array1<Complex64> {
 
 /// Estimate performance improvement from recommendation
 #[allow(dead_code)]
-fn estimate_performance_improvement(_recommendation: &scirs2_fft: :FftRecommendation) -> f64 {
+fn estimate_performance_improvement(_recommendation: &scirs2_fft::FftRecommendation) -> f64 {
     // This is a mock implementation - in reality, this would be based on
     // benchmark data and algorithm characteristics
     match _recommendation.recommended_algorithm {
         FftAlgorithmType::ChirpZTransform => 2.5,
         FftAlgorithmType::BluesteinAlgorithm => 2.0,
         FftAlgorithmType::GpuAcceleratedFft => 10.0,
-        FftAlgorithmType::QuantumInspiredFft => 5.0_ => 1.2,
+        FftAlgorithmType::QuantumInspiredFft => 5.0,
     }
 }
 
 /// Estimate memory efficiency gain from recommendation
 #[allow(dead_code)]
-fn estimate_memory_efficiency(_recommendation: &scirs2_fft: :FftRecommendation) -> f64 {
+fn estimate_memory_efficiency(_recommendation: &scirs2_fft::FftRecommendation) -> f64 {
     // Mock implementation based on memory strategy
     match _recommendation.memory_strategy.allocation_strategy {
         MemoryAllocationStrategy::Conservative => 3.0,

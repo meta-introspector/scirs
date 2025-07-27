@@ -153,17 +153,13 @@ fn bench_cubic_spline(c: &mut Criterion) {
         let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
 
         group.throughput(Throughput::Elements(queries.len() as u64));
-        group.bench_with_input(
-            BenchmarkId::new("evaluation", data_size),
-            data_size,
-            |b_| {
-                b.iter(|| {
-                    for &query in queries.iter() {
-                        let _ = black_box(spline.evaluate(black_box(query)));
-                    }
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("evaluation", data_size), data_size, |b_| {
+            b.iter(|| {
+                for &query in queries.iter() {
+                    let _ = black_box(spline.evaluate(black_box(query)));
+                }
+            });
+        });
     }
 
     // Test derivative evaluation
@@ -173,17 +169,13 @@ fn bench_cubic_spline(c: &mut Criterion) {
         let spline = CubicSpline::new(&x.view(), &y.view()).unwrap();
 
         group.throughput(Throughput::Elements(queries.len() as u64));
-        group.bench_with_input(
-            BenchmarkId::new("derivative", data_size),
-            data_size,
-            |b_| {
-                b.iter(|| {
-                    for &query in queries.iter() {
-                        let _ = black_box(spline.derivative(black_box(query)));
-                    }
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("derivative", data_size), data_size, |b_| {
+            b.iter(|| {
+                for &query in queries.iter() {
+                    let _ = black_box(spline.derivative(black_box(query)));
+                }
+            });
+        });
     }
 
     group.finish();

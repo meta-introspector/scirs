@@ -356,7 +356,7 @@ impl PatternRecognizer {
             return;
         }
 
-        let rows = dimensions[0];
+        let _rows = dimensions[0];
         let cols = dimensions[1];
         let indices: Vec<_> = self.history.iter().cloned().collect();
 
@@ -439,7 +439,7 @@ impl PatternRecognizer {
             return;
         }
 
-        let rows = dimensions[0];
+        let _rows = dimensions[0];
         let cols = dimensions[1];
         let indices: Vec<_> = self.history.iter().cloned().collect();
 
@@ -642,7 +642,7 @@ impl PatternRecognizer {
             return;
         }
 
-        let rows = dimensions[0];
+        let _rows = dimensions[0];
         let cols = dimensions[1];
         let indices: Vec<_> = self.history.iter().cloned().collect();
 

@@ -286,13 +286,13 @@ fn main() {
     let optimizer = Box::new(Adam::new(0.001, Some(0.9), Some(0.999), Some(1e-8)));
 
     // Helper function to create a new optimizer with the same parameters
-    fn original( &Adam) -> Box<Adam> {
+    fn clone_optimizer(_original: &Adam) -> Box<Adam> {
         // In a real implementation, we would properly clone the optimizer state
         // Here we just create a new instance with the same parameters
         // Note that learning_rate() is not accessible so we use the same values we used initially
         Box::new(Adam::new(
-            0.001,       // Using the same learning rate as the _original
-            Some(0.9),   // Beta1 (using default as we can't access the _original)
+            0.001,       // Using the same learning rate as the original
+            Some(0.9),   // Beta1 (using default as we can't access the original)
             Some(0.999), // Beta2 (using default as we can't access the _original)
             Some(1e-8),  // Epsilon (using default as we can't access the _original)
         ))
@@ -302,10 +302,10 @@ fn main() {
     let loss_fn = Box::new(CrossEntropyLoss::new(Some(mean)));
 
     // Create a helper function to work around the missing Clone implementation for Sequential
-    fn original( &Sequential) -> Sequential {
+    fn clone_model(original: &Sequential) -> Sequential {
         // In a real implementation, we would properly clone the model
         // Here we just create a new instance with the same structure for demonstration
-        let mut new_model = Sequential::new(&format!("{}_copy", _original.name()), Vec::new());
+        let mut new_model = Sequential::new(&format!("{}_copy", original.name()), Vec::new());
 
         // In practice, we'd need to properly clone each layer's weights
         // For this example, we'll use a simplified approach - recreate the structure

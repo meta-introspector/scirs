@@ -363,7 +363,7 @@ pub fn stft<T>(
     boundary: Option<&str>,
 ) -> FFTResult<(Vec<f64>, Vec<f64>, ndarray::Array2<num_complex::Complex64>)>
 where
-    T: num_traits: NumCast + Copy + std::fmt::Debug,
+    T: num_traits::NumCast + Copy + std::fmt::Debug,
 {
     spectrogram::stft(
         x,
@@ -427,7 +427,7 @@ where
 /// Helper function to try and extract a Complex value
 #[allow(dead_code)]
 fn try_as_complex<U: 'static + Copy>(_val: U) -> Option<num_complex::Complex64> {
-    use num__complex::Complex64;
+    use num_complex::Complex64;
     use std::any::Any;
 
     // Try to use runtime type checking with Any for _complex types
@@ -446,9 +446,9 @@ fn try_as_complex<U: 'static + Copy>(_val: U) -> Option<num_complex::Complex64> 
 #[allow(dead_code)]
 pub fn hilbert<T>(x: &[T]) -> FFTResult<Vec<num_complex::Complex64>>
 where
-    T: num_traits: NumCast + Copy + std::fmt::Debug + 'static,
+    T: num_traits::NumCast + Copy + std::fmt::Debug + 'static,
 {
-    use num__complex::Complex64;
+    use num_complex::Complex64;
 
     // Input length
     let n = x.len();

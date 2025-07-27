@@ -144,7 +144,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Compute L2 and maximum errors against exact solution
 #[allow(dead_code)]
 fn compute_errors(
-    result: &scirs2_integrate::pde::finite, _element::FEMResult,
+    result: &scirs2_integrate::pde::finite_element::FEMResult,
     exact_solution: &dyn Fn(f64, f64) -> f64,
 ) -> Result<(f64, f64), Box<dyn std::error::Error>> {
     let mut l2_error_squared = 0.0;

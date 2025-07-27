@@ -87,8 +87,7 @@ fn main() {
     println!("  Expected: 0 (by orthogonality)");
 
     // Y₂₂ ∝ (x² - y²)
-    let y22_result: f64 =
-        lebedev_integrate(|x, y_| x * x - y * y, LebedevOrder::Order14).unwrap();
+    let y22_result: f64 = lebedev_integrate(|x, y_| x * x - y * y, LebedevOrder::Order14).unwrap();
     println!("\nIntegrating Y₂₂ ∝ (x² - y²):");
     println!("  Result: {y22_result:.10e}");
     println!("  Expected: 0 (by orthogonality)");

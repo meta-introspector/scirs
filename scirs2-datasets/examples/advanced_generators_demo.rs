@@ -460,7 +460,7 @@ fn calculate_perturbation_norm(
 }
 
 #[allow(dead_code)]
-fn calculate_anomaly_separation(_dataset: &scirs2_datasets: :Dataset) -> f64 {
+fn calculate_anomaly_separation(_dataset: &scirs2_datasets::Dataset) -> f64 {
     // Simplified separation metric
     if let Some(target) = &_dataset.target {
         let normal_indices: Vec<usize> = target
@@ -620,14 +620,15 @@ fn calculate_class_balance(_target: &ndarray::Array1<f64>, n_classes: usize) -> 
 fn get_few_shot_use_case(_n_way: usize, k_shot: usize) -> &'static str {
     match (_n_way, k_shot) {
         (5, 1) => "Image classification with minimal examples",
-        (5, 5) => "Balanced few-_shot learning benchmark",
-        (10_) => "Multi-class few-_shot classification",
-        (_, 1) => "One-_shot learning scenario"_ => "General few-_shot learning",
+        (5, 5) => "Balanced few-shot learning benchmark",
+        (10, _) => "Multi-class few-shot classification",
+        (_, 1) => "One-shot learning scenario",
+        _ => "General few-shot learning",
     }
 }
 
 #[allow(dead_code)]
-fn analyze_concept_drift(_dataset: &scirs2_datasets: :ContinualLearningDataset) {
+fn analyze_concept_drift(_dataset: &scirs2_datasets::ContinualLearningDataset) {
     println!("    Task progression analysis:");
 
     for i in 1.._dataset.tasks.len() {

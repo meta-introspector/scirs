@@ -98,7 +98,8 @@ fn _generate_prediction_grid(_n_grid: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn anisotropic_kriging_example(
-    _points: &Array2<f64>, _values: &Array1<f64>,
+    _points: &Array2<f64>,
+    _values: &Array1<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Skip this example as EnhancedKrigingBuilder is not fully implemented
     println!("  EnhancedKrigingBuilder is not fully implemented in this version");
@@ -107,7 +108,8 @@ fn anisotropic_kriging_example(
 
 #[allow(dead_code)]
 fn universal_kriging_example(
-    _points: &Array2<f64>, _values: &Array1<f64>,
+    _points: &Array2<f64>,
+    _values: &Array1<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Skip this example as EnhancedKrigingBuilder is not fully implemented
     println!("  EnhancedKrigingBuilder is not fully implemented in this version");
@@ -116,7 +118,8 @@ fn universal_kriging_example(
 
 #[allow(dead_code)]
 fn bayesian_kriging_example(
-    _points: &Array2<f64>, _values: &Array1<f64>,
+    _points: &Array2<f64>,
+    _values: &Array1<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Skip this example as BayesianKrigingBuilder is not fully implemented
     println!("  BayesianKrigingBuilder is not fully implemented in this version");
@@ -125,7 +128,8 @@ fn bayesian_kriging_example(
 
 #[allow(dead_code)]
 fn model_comparison_example(
-    _points: &Array2<f64>, _values: &Array1<f64>,
+    _points: &Array2<f64>,
+    _values: &Array1<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Skip this example as model comparison is not fully implemented
     println!("  Model comparison is not fully implemented in this version");

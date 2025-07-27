@@ -882,7 +882,7 @@ impl ClusterManager {
 
         // Create task execution plan
         let task_id = TaskId::generate();
-        let execution_plan = ExecutionPlan {
+        let _execution_plan = ExecutionPlan {
             task_id: task_id.clone(),
             task,
             node_allocation: allocation,
@@ -1499,7 +1499,7 @@ impl ResourceAllocator {
 
         // Check resource balance (CPU:Memory:GPU ratio)
         let cpu_ratio = resources.cpu_cores as f64;
-        let memory_ratio = resources.memory_gb as f64 / 4.0f64; // Assume 4GB per CPU core is balanced
+        let _memory_ratio = resources.memory_gb as f64 / 4.0f64; // Assume 4GB per CPU core is balanced
         let gpu_ratio = resources.gpu_count as f64 * 8.0f64; // Each GPU equivalent to 8 CPU cores
 
         let total_compute = cpu_ratio + gpu_ratio;
@@ -1587,7 +1587,7 @@ impl ResourceAllocator {
             .collect()
     }
 
-    fn find_best_underloaded_node(&self, nodes: &[(String, f64, f64)], required_capacity: f64,
+    fn find_best_underloaded_node(&self, nodes: &[(String, f64, f64)], _required_capacity: f64,
     ) -> Option<(String, f64)> {
         // Find the best underloaded node to receive an allocation
         // For now, just return the most underloaded node

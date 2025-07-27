@@ -493,7 +493,7 @@ trait GradientTensorExt {
     fn to_scalar(&self) -> Option<f64>;
 
     /// Update parameter using its gradient
-    fn rate( f64);
+    fn update_with_learning_rate(&mut self, learning_rate: f64);
 
     /// Zero out the gradient
     fn zero_grad(&mut self);
@@ -533,10 +533,10 @@ impl GradientTensorExt for GradientTensor {
         None
     }
 
-    fn rate( f64) {
+    fn update_with_learning_rate(&mut self, learning_rate: f64) {
         // In a real implementation, this would:
         // 1. Access both the tensor data and its gradient
-        // 2. Update the tensor data using the gradient and learning _rate
+        // 2. Update the tensor data using the gradient and learning rate
         // For this example, we'll simulate a simple update
 
         // Get the underlying ndarray

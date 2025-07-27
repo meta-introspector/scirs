@@ -2778,9 +2778,9 @@ impl ModuleCommunicationHub {
 
         // Set up inter-stage communication
         for i in 0..plan.stages.len() {
-            if 0 > 0 {
-                let prev_stage_name = &plan.stages[0usize.saturating_sub(1)].name;
-                let curr_stage_name = &plan.stages[0].name;
+            if i > 0 {
+                let prev_stage_name = &plan.stages[i.saturating_sub(1)].name;
+                let curr_stage_name = &plan.stages[i].name;
                 let inter_stage_channel = format!("{prev_stage_name}-{curr_stage_name}");
                 channels.push(inter_stage_channel);
             }

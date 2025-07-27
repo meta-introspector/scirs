@@ -590,7 +590,7 @@ impl ContinuousPerformanceMonitor {
                         id: format!(
                             "cpu_{elapsed}_{random}",
                             elapsed = now.elapsed().as_secs(),
-                            random = rng.gen::<u32>()
+                            random = rng.random::<u32>()
                         ),
                         alert_type: AlertType::HighCpuUsage,
                         severity: if sys_metrics.cpu_usage > alert_config.cpu_threshold * 1.2 {
@@ -627,7 +627,7 @@ impl ContinuousPerformanceMonitor {
                         now,
                     ) {
                         let alert = PerformanceAlert {
-                            id: format!("mem_{}_{}", now.elapsed().as_secs(), rng.gen::<u32>()),
+                            id: format!("mem_{}_{}", now.elapsed().as_secs(), rng.random::<u32>()),
                             alert_type: AlertType::HighMemoryUsage,
                             severity: if memory_usage_percent > alert_config.memory_threshold * 1.1
                             {
@@ -667,7 +667,7 @@ impl ContinuousPerformanceMonitor {
                     id: format!(
                         "resp_{elapsed}_{random}",
                         elapsed = now.elapsed().as_secs(),
-                        random = rng.gen::<u32>()
+                        random = rng.random::<u32>()
                     ),
                     alert_type: AlertType::HighResponseTime,
                     severity: AlertSeverity::Warning,
@@ -899,7 +899,7 @@ impl ContinuousPerformanceMonitor {
     /// Get recent metrics history
     pub fn get_metrics_history(&self, duration: Duration) -> Vec<MetricsSnapshot> {
         let history = self.metrics_history.read().unwrap();
-        let cutoff = Instant::now() - std::time::Duration::from_secs(1);
+        let cutoff = Instant::now() - duration;
 
         history
             .iter()

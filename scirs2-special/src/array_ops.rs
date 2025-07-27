@@ -329,7 +329,7 @@ pub mod gpu {
             Ok(Self {
                 buffer: Some(buffer),
                 size: data.len(),
-                element_size: std::mem::size, _of::<T>(),
+                element_size: std::mem::size_of::<T>(),
                 shape: vec![data.len()],
                 allocated_size: byte_data.len(),
             })

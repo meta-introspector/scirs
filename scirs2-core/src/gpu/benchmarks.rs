@@ -351,7 +351,7 @@ impl BenchmarkSuite {
         &mut self,
         operation: BenchmarkOperation,
         problem_size: ProblemSize,
-        data_type: DataType,
+        _data_type: DataType,
     ) -> Result<(), BenchmarkError> {
         // Run CPU benchmark
         let cpu_result = self.run_cpu_benchmark(operation, problem_size, data_type)?;
@@ -377,7 +377,7 @@ impl BenchmarkSuite {
         &self,
         operation: BenchmarkOperation,
         problem_size: ProblemSize,
-        data_type: DataType,
+        _data_type: DataType,
     ) -> Result<BenchmarkResult, BenchmarkError> {
         // Warmup
         for _ in 0..self.config.warmup_iterations {
@@ -420,7 +420,7 @@ impl BenchmarkSuite {
         &self,
         operation: BenchmarkOperation,
         problem_size: ProblemSize,
-        data_type: DataType,
+        _data_type: DataType,
         backend: GpuBackend,
     ) -> Result<BenchmarkResult, BenchmarkError> {
         // Create GPU context
@@ -468,19 +468,19 @@ impl BenchmarkSuite {
         &self,
         operation: BenchmarkOperation,
         problem_size: ProblemSize,
-        data_type: DataType,
+        _data_type: DataType,
     ) -> Result<(), BenchmarkError> {
         match operation {
             BenchmarkOperation::MatrixMultiply => {
-                let n = problem_size.matrix_size();
+                let _n = problem_size.matrix_size();
                 // Simulate matrix multiplication
-                let result = (0..n * n).map(|i| i as f64).sum::<f64>();
+                let _result = (0..n * n).map(|i| i as f64).sum::<f64>();
                 Ok(())
             }
             BenchmarkOperation::VectorOperations => {
-                let n = problem_size.vector_size();
+                let _n = problem_size.vector_size();
                 // Simulate vector operation
-                let result = (0..n).map(|i| (i as f64).sin()).sum::<f64>();
+                let _result = (0..n).map(|i| (i as f64).sin()).sum::<f64>();
                 Ok(())
             }
             _ => {
@@ -496,18 +496,18 @@ impl BenchmarkSuite {
         &self,
         operation: BenchmarkOperation,
         problem_size: ProblemSize,
-        data_type: DataType,
-        backend: GpuBackend,
+        _data_type: DataType,
+        _backend: GpuBackend,
     ) -> Result<(), BenchmarkError> {
         match operation {
             BenchmarkOperation::MatrixMultiply => {
-                let n = problem_size.matrix_size();
+                let _n = problem_size.matrix_size();
                 // Would launch GPU kernel for matrix multiplication
                 std::thread::sleep(Duration::from_micros(100));
                 Ok(())
             }
             BenchmarkOperation::VectorOperations => {
-                let n = problem_size.vector_size();
+                let _n = problem_size.vector_size();
                 // Would launch GPU kernel for vector operations
                 std::thread::sleep(Duration::from_micros(50));
                 Ok(())
@@ -550,7 +550,7 @@ impl BenchmarkSuite {
         &self,
         operation: BenchmarkOperation,
         problem_size: ProblemSize,
-        data_type: DataType,
+        _data_type: DataType,
         results: &[&BenchmarkResult],
     ) -> Result<BenchmarkComparison, BenchmarkError> {
         let mut platform_results = HashMap::new();
@@ -661,7 +661,7 @@ impl BenchmarkSuite {
     ) -> f64 {
         let ops = match operation {
             BenchmarkOperation::MatrixMultiply => {
-                let n = problem_size.matrix_size();
+                let _n = problem_size.matrix_size();
                 2 * n * n * n // 2*N^3 operations for N x N matrix multiply
             }
             BenchmarkOperation::VectorOperations => {
@@ -678,12 +678,12 @@ impl BenchmarkSuite {
         &self,
         operation: BenchmarkOperation,
         problem_size: ProblemSize,
-        data_type: DataType,
+        _data_type: DataType,
         time: Duration,
     ) -> f64 {
         let bytes = match operation {
             BenchmarkOperation::MatrixMultiply => {
-                let n = problem_size.matrix_size();
+                let _n = problem_size.matrix_size();
                 (3 * n * n) * data_type.size_bytes() // A, B, C matrices
             }
             BenchmarkOperation::VectorOperations => {
@@ -700,11 +700,11 @@ impl BenchmarkSuite {
         &self,
         operation: BenchmarkOperation,
         problem_size: ProblemSize,
-        data_type: DataType,
+        _data_type: DataType,
     ) -> usize {
         match operation {
             BenchmarkOperation::MatrixMultiply => {
-                let n = problem_size.matrix_size();
+                let _n = problem_size.matrix_size();
                 3 * n * n * data_type.size_bytes() // Three N x N matrices
             }
             BenchmarkOperation::VectorOperations => {

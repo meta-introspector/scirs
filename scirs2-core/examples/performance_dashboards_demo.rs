@@ -574,8 +574,8 @@ fn demo_export_import() -> CoreResult<()> {
 }
 
 #[allow(dead_code)]
-fn source( &MetricSource) -> String {
-    match _source {
+fn metric_source_name(source: &MetricSource) -> String {
+    match source {
         MetricSource::SystemCpu => "System CPU".to_string(),
         MetricSource::SystemMemory => "System Memory".to_string(),
         MetricSource::NetworkIO => "Network I/O".to_string(),

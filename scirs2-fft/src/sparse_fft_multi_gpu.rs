@@ -441,7 +441,7 @@ impl MultiGPUSparseFFT {
         let chunks = self.split_signal(signal, &chunk_sizes)?;
 
         // Process chunks in parallel across devices
-        let chunk_results: Result<Vec<_>_> = chunks
+        let chunk_results: Result<Vec<_>, _> = chunks
             .par_iter()
             .zip(self.selected_devices.par_iter())
             .map(|(chunk, &device_idx)| {

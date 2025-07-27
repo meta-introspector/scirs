@@ -770,7 +770,9 @@ fn transformation_recipes() -> NdimageResult<()> {
 
     println!("```rust");
     println!("// Method 1: Translation-only registration");
-    println!("fn find_translation(_reference: &Array2<f64>, moving: &Array2<f64>) -> (f64, f64) {{");
+    println!(
+        "fn find_translation(_reference: &Array2<f64>, moving: &Array2<f64>) -> (f64, f64) {{"
+    );
     println!("    let mut best_correlation = -1.0;");
     println!("    let mut best_shift = (0.0, 0.0);");
     println!("    ");
@@ -1165,7 +1167,9 @@ fn find_local_maxima(_image: &Array2<f64>, threshold: f64) -> Array2<u32> {
 
 #[allow(dead_code)]
 fn apply_perspective_correction(
-    image: &Array2<f64>, _src_corners: &[(f64, f64)]_dst_corners: &[(f64, f64)],
+    image: &Array2<f64>,
+    _src_corners: &[(f64, f64)],
+    _dst_corners: &[(f64, f64)],
 ) -> NdimageResult<Array2<f64>> {
     // Simplified perspective correction
     Ok(image.clone())

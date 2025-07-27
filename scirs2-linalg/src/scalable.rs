@@ -178,7 +178,7 @@ pub fn tsqr<F>(
 where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
-    let (_m_n) = matrix.dim();
+    let _m_n = matrix.dim();
 
     // Verify this is actually a tall matrix
     if classify_aspect_ratio(matrix, config.aspect_threshold) != AspectRatio::TallSkinny {
@@ -279,7 +279,7 @@ pub fn lq_decomposition<F>(
 where
     F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
-    let (m, n) = matrix.dim();
+    let (m, _n) = matrix.dim();
 
     // Verify this is a short-and-fat matrix
     if classify_aspect_ratio(matrix, config.aspect_threshold) != AspectRatio::ShortFat {

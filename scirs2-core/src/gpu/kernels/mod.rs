@@ -205,7 +205,7 @@ impl GpuKernel for BaseKernel {
         false // Base implementation doesn't support specialization
     }
 
-    fn specialize(&self, params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
+    fn specialize(&self, _params: &KernelParams) -> Result<Box<dyn GpuKernel>, GpuError> {
         Err(GpuError::SpecializationNotSupported)
     }
 }

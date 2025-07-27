@@ -513,7 +513,7 @@ impl Layer for MaxPool2D {
 
     fn forward(
         &self,
-        inputs: &dyn ArrayProtocol,
+        _inputs: &dyn ArrayProtocol,
     ) -> Result<Box<dyn ArrayProtocol>, OperationError> {
         // TODO: Implement max_pool2d in ml_ops module
         Err(OperationError::NotImplemented(
@@ -1050,7 +1050,7 @@ impl Sequential {
     /// Backward pass through the model to compute gradients
     pub fn backward(
         &self,
-        output: &dyn ArrayProtocol,
+        _output: &dyn ArrayProtocol,
         _target: &dyn ArrayProtocol,
     ) -> Result<crate::array_protocol::grad::GradientDict, crate::error::CoreError> {
         // For now, return an empty gradient dictionary

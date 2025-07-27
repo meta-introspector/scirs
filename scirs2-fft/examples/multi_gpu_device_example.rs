@@ -137,7 +137,8 @@ fn test_workload_distribution_strategies() -> FFTResult<()> {
 #[allow(dead_code)]
 fn test_strategy(
     config: MultiGPUConfig,
-    signal: &[f64], _sparsity: usize,
+    signal: &[f64],
+    _sparsity: usize,
 ) -> FFTResult<(scirs2_fft::sparse, _fft::SparseFFTResult, String)> {
     let mut processor = MultiGPUSparseFFT::new(config);
     processor.initialize()?;
@@ -314,7 +315,10 @@ fn display_system_info() {
 
         let gpu_count = devices
             .iter()
-            .filter(|d| d.backend != scirs2_fft::sparse_fft, _gpu::GPUBackend::CPUFallback)
+            .filter(
+                |d| d.backend != scirs2_fft::sparse_fft,
+                _gpu::GPUBackend::CPUFallback,
+            )
             .count();
         let total_memory: usize = devices.iter().map(|d| d.memory_total).sum();
         let total_compute_units: usize = devices.iter().map(|d| d.compute_units).sum();

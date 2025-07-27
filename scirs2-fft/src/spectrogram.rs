@@ -132,7 +132,7 @@ where
                 FFTError::ValueError(format!("Could not convert value to f64: {val:?}"))
             })
         })
-        .collect::<Result<Vec<_>_>>()?;
+        .collect::<Result<Vec<_>, _>>()?;
 
     // Generate window function
     let win = get_window(window, nperseg, true)?;
@@ -350,7 +350,8 @@ where
     let scaling = scaling.unwrap_or("density");
     let scale_factor = match scaling {
         "density" => 1.0 / (fs * win_sum_sq),
-        "spectrum" => 1.0 / win_sum_sq_ => {
+        "spectrum" => 1.0 / win_sum_sq,
+        _ => {
             return Err(FFTError::ValueError(format!(
                 "Unknown scaling mode: {scaling}. Use 'density' or 'spectrum'."
             )));

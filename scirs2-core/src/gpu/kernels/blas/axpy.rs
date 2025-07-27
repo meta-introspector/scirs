@@ -151,7 +151,7 @@ extern "C" __global__ void axpy(
     }
 
     /// Create a specialized version of the kernel with a hardcoded alpha value
-    pub fn with_alpha(alpha: f32) -> Box<dyn GpuKernel> {
+    pub fn with_alpha(_alpha: f32) -> Box<dyn GpuKernel> {
         // In a full implementation, we'd generate a specialized kernel with
         // the _alpha value hardcoded for better performance
         Box::new(Self::new())

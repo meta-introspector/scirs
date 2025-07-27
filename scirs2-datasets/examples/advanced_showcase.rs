@@ -23,8 +23,8 @@ use scirs2__datasets::{
     TrendDirection,
     TrendIndicators,
 };
-use std::time::Instant;
 use statrs::statistics::Statistics;
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

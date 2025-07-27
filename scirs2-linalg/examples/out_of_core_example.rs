@@ -7,9 +7,9 @@ use ndarray::{Array1, Array2};
 use rand::Rng;
 use scirs2_linalg::quantization::{out_of_core::ChunkedQuantizedMatrix, QuantizationMethod};
 use std::env;
+use std::path::PathBuf;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
-use std::path::PathBuf;
 
 #[allow(dead_code)]
 fn main() {

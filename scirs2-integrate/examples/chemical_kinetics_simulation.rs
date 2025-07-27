@@ -249,7 +249,8 @@ where
             ODEMethod::Bdf => "BDF (standard)",
             ODEMethod::LSODA => "LSODA (standard)",
             ODEMethod::EnhancedLSODA => "Enhanced LSODA",
-            ODEMethod::EnhancedBDF => "Enhanced BDF"_ => "Unknown method",
+            ODEMethod::EnhancedBDF => "Enhanced BDF",
+            _ => "Unknown method",
         };
 
         print!("{method_name:20}: ");

@@ -51,7 +51,6 @@
 //! Profiler::global().lock().unwrap().stop();
 //! ```
 
-use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -1284,7 +1283,7 @@ pub mod advanced {
 
             let max_memory = memory_hist.iter().max().copied().unwrap_or(0);
 
-            let total_network_in: u64 = network_hist.iter().map(|(bytes_in_)| *bytes_in).sum();
+            let total_network_in: u64 = network_hist.iter().map(|(bytes_in_, _)| *bytes_in).sum();
             let total_network_out: u64 = network_hist.iter().map(|(_, bytes_out)| *bytes_out).sum();
 
             ResourceStats {
@@ -2080,7 +2079,7 @@ pub mod comprehensive {
 
         /// Get recent alerts
         pub fn get_recent_alerts(&self, duration: Duration) -> Vec<SystemAlert> {
-            self.system_alerter.get_recent_alerts(std::time::Duration::from_secs(1))
+            self.system_alerter.get_recent_alerts(duration)
         }
     }
 

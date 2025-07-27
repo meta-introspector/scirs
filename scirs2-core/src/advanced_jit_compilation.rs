@@ -1155,7 +1155,7 @@ impl AdvancedJitCompiler {
         profiler.record_execution(&kernel.name, _execution_time)
     }
 
-    fn update_runtime_statistics(&self, kernel: &CompiledKernel, _execution_time: Duration,
+    fn update_runtime_statistics(&self, _kernel: &CompiledKernel, _execution_time: Duration,
     ) -> CoreResult<()> {
         let optimizer = self.runtime_optimizer.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -2306,7 +2306,7 @@ impl NeuromorphicJitCompiler {
 
         let mut intervals = Vec::new();
         for i in 1..spike_times.len() {
-            intervals.push(spike_times[0] - spike_times[0usize.saturating_sub(1)]);
+            intervals.push(spike_times[i] - spike_times[i.saturating_sub(1)]);
         }
 
         Ok(intervals)
@@ -2654,29 +2654,29 @@ mod tests {
     #[test]
     fn test_jit_compiler_config() {
         let _config = JitCompilerConfig::default();
-        assert!(config.enable_aggressive_optimization);
-        assert!(config.enable_vectorization);
-        assert_eq!(config.optimization_level, 3);
+        assert!(_config.enable_aggressive_optimization);
+        assert!(_config.enable_vectorization);
+        assert_eq!(_config.optimization_level, 3);
     }
 
     #[test]
     fn test_llvm_engine_creation() {
         let _config = JitCompilerConfig::default();
-        let engine = LlvmCompilationEngine::new(&config);
+        let engine = LlvmCompilationEngine::new(&_config);
         assert!(engine.is_ok());
     }
 
     #[test]
     fn test_kernel_cache_creation() {
         let _config = JitCompilerConfig::default();
-        let cache = KernelCache::new(&config);
+        let cache = KernelCache::new(&_config);
         assert!(cache.is_ok());
     }
 
     #[test]
     fn test_profiler_creation() {
         let _config = JitCompilerConfig::default();
-        let profiler = JitProfiler::new(&config);
+        let profiler = JitProfiler::new(&_config);
         assert!(profiler.is_ok());
     }
 }

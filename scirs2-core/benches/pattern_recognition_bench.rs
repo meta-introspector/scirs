@@ -9,16 +9,16 @@ use std::hint::black_box;
 
 /// Simulate row-major access pattern
 #[allow(dead_code)]
-fn rows( usize, cols: usize) -> Vec<usize> {
-    (0.._rows * cols).collect()
+fn row_major_pattern(rows: usize, cols: usize) -> Vec<usize> {
+    (0..rows * cols).collect()
 }
 
 /// Simulate column-major access pattern
 #[allow(dead_code)]
-fn rows( usize, cols: usize) -> Vec<usize> {
-    let mut pattern = Vec::with_capacity(_rows * cols);
+fn column_major_pattern(rows: usize, cols: usize) -> Vec<usize> {
+    let mut pattern = Vec::with_capacity(rows * cols);
     for j in 0..cols {
-        for i in 0.._rows {
+        for i in 0..rows {
             pattern.push(i * cols + j);
         }
     }
@@ -27,9 +27,9 @@ fn rows( usize, cols: usize) -> Vec<usize> {
 
 /// Simulate zigzag access pattern
 #[allow(dead_code)]
-fn rows( usize, cols: usize) -> Vec<usize> {
-    let mut pattern = Vec::with_capacity(_rows * cols);
-    for row in 0.._rows {
+fn zigzag_pattern(rows: usize, cols: usize) -> Vec<usize> {
+    let mut pattern = Vec::with_capacity(rows * cols);
+    for row in 0..rows {
         if row % 2 == 0 {
             for col in 0..cols {
                 pattern.push(row * cols + col);
@@ -45,9 +45,9 @@ fn rows( usize, cols: usize) -> Vec<usize> {
 
 /// Simulate diagonal access pattern
 #[allow(dead_code)]
-fn rows( usize, cols: usize) -> Vec<usize> {
+fn diagonal_pattern(rows: usize, cols: usize) -> Vec<usize> {
     let mut pattern = Vec::new();
-    let min_dim = _rows.min(cols);
+    let min_dim = rows.min(cols);
     for i in 0..min_dim {
         pattern.push(i * cols + i);
     }
@@ -56,14 +56,14 @@ fn rows( usize, cols: usize) -> Vec<usize> {
 
 /// Simulate block access pattern
 #[allow(dead_code)]
-fn size( usize) -> Vec<usize> {
+fn block_pattern(rows: usize, cols: usize, block_size: usize) -> Vec<usize> {
     let mut pattern = Vec::new();
 
     // Access in blocks
-    for block_row in (0.._rows).step_by(block_size) {
+    for block_row in (0..rows).step_by(block_size) {
         for block_col in (0..cols).step_by(block_size) {
             // Access all elements within a block
-            for i in 0..block_size.min(_rows - block_row) {
+            for i in 0..block_size.min(rows - block_row) {
                 for j in 0..block_size.min(cols - block_col) {
                     pattern.push((block_row + i) * cols + (block_col + j));
                 }
@@ -75,21 +75,21 @@ fn size( usize) -> Vec<usize> {
 
 /// Simulate random access pattern
 #[allow(dead_code)]
-fn rows( usize, cols: usize, count: usize) -> Vec<usize> {
+fn random_pattern(rows: usize, cols: usize, count: usize) -> Vec<usize> {
     use rand::{rngs::StdRng, Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(42);
-    let max_idx = _rows * cols;
+    let max_idx = rows * cols;
 
     (0..count).map(|_| rng.gen_range(0..max_idx)).collect()
 }
 
 /// Simulate stencil access pattern (5-point stencil)
 #[allow(dead_code)]
-fn rows( usize..cols: usize) -> Vec<usize> {
+fn stencil_pattern(rows: usize, cols: usize) -> Vec<usize> {
     let mut pattern = Vec::new();
 
     // Access interior points with their 5-point stencil
-    for i in 1.._rows - 1 {
+    for i in 1..rows - 1 {
         for j in 1..cols - 1 {
             let center = i * cols + j;
             pattern.push(center);

@@ -383,7 +383,8 @@ fn demonstrate_stiff_reactions() -> Result<(), Box<dyn std::error::Error>> {
         "   Using {} integration method with dt = {} s",
         match stiff_method {
             StiffIntegrationMethod::BDF2 => "BDF2",
-            StiffIntegrationMethod::ImplicitEuler => "Implicit Euler"_ => "Other",
+            StiffIntegrationMethod::ImplicitEuler => "Implicit Euler",
+            _ => "Other",
         },
         dt
     );

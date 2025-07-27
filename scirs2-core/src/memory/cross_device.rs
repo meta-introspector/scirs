@@ -335,10 +335,9 @@ impl Device for GpuContextWrapper {
 
     fn allocate(&self, size: usize) -> CoreResult<usize> {
         // Use the GPU device's buffer allocation
-        let buffer = self.inner.create_buffer::<u8>(size);
+        let _buffer = self.inner.create_buffer::<u8>(size);
         // In a real implementation, we'd extract the actual device pointer
         // For now, we'll use a placeholder based on buffer properties
-        let buffer = buffer; // Store the buffer (in real implementation, we'd track this)
         Ok(size) // Return the size as a placeholder ID
     }
 

@@ -642,7 +642,8 @@ fn train_model(
     model: &mut BiLSTMClassifier,
     x_train: &Array2<usize>,
     y_train: &Array2<f32>,
-    num_epochs: usize, _learning_rate: f32,
+    num_epochs: usize,
+    _learning_rate: f32,
 ) {
     // Training loop
     for epoch in 0..num_epochs {

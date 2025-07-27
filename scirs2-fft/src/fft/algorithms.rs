@@ -34,7 +34,8 @@ impl From<&str> for NormMode {
         match s {
             "backward" => NormMode::Backward,
             "ortho" => NormMode::Ortho,
-            "forward" => NormMode::Forward_ =>, NormMode::None,
+            "forward" => NormMode::Forward,
+            _ => NormMode::None,
         }
     }
 }

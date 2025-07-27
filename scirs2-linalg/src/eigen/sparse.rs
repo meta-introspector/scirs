@@ -745,7 +745,7 @@ fn apply_householder_right_complex<F: Float + NumAssign>(
     tau: Complex<F>,
     k: usize,
 ) {
-    let (m, n) = matrix.dim();
+    let (m, _n) = matrix.dim();
     let house_len = house_vec.len();
 
     for i in 0..m {

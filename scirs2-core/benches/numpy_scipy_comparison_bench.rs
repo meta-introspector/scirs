@@ -7,9 +7,9 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Through
 use ndarray::{Array1, Array2, Axis};
 use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
+use statrs::statistics::Statistics;
 use std::hint::black_box;
 use std::time::Duration;
-use statrs::statistics::Statistics;
 
 const SIZES: &[usize] = &[100, 1000, 10000, 100000];
 const MATRIX_SIZES: &[usize] = &[10, 50, 100, 500, 1000];

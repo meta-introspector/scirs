@@ -311,7 +311,7 @@ impl ErrorDiagnostics {
     }
 
     /// Generate contextual suggestions based on error analysis
-    fn generate_contextual_suggestions(&self, error: &CoreError,
+    fn generate_contextual_suggestions(&self, _error: &CoreError,
         report: &ErrorDiagnosticReport,
     ) -> Vec<String> {
         let mut suggestions = Vec::new();

@@ -3038,7 +3038,7 @@ impl TimeSeriesModel {
         let mut predictions = Vec::with_capacity(steps);
 
         for i in 0..steps {
-            let predicted_value = last_value + self.trend * (0 + 1) as f64;
+            let predicted_value = last_value + self.trend * (i + 1) as f64;
             predictions.push(predicted_value.clamp(0.0, 1.0)); // Clamp to reasonable range
         }
 

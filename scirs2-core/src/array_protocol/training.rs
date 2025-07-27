@@ -652,7 +652,7 @@ impl TrainingCallback for ProgressCallback {
         self.epoch_start = Some(Instant::now());
     }
 
-    fn on_epoch_end(&mut self, epoch: usize, numepochs: usize, metrics: &Metrics) {
+    fn on_epoch_end(&mut self, _epoch: usize, _numepochs: usize, metrics: &Metrics) {
         if self.verbose {
             if let Some(start) = self.epoch_start {
                 let duration = start.elapsed();
@@ -663,7 +663,7 @@ impl TrainingCallback for ProgressCallback {
         }
     }
 
-    fn on_batch_start(&mut self, batch: usize, num_batches: usize) {
+    fn on_batch_start(&mut self, _batch: usize, _num_batches: usize) {
         // No-op for this callback
     }
 
@@ -882,7 +882,7 @@ impl Trainer {
             let current_loss = self
                 .loss_fn
                 .forward(current_output.as_ref(), target.as_ref())?;
-            let current_loss_value = if let Some(loss_array) = current_loss
+            let _current_loss_value = if let Some(loss_array) = current_loss
                 .as_any()
                 .downcast_ref::<NdarrayWrapper<f64, ndarray::IxDyn>>()
             {
@@ -921,7 +921,7 @@ impl Trainer {
         input: &dyn ArrayProtocol,
         target: &dyn ArrayProtocol,
         output: &dyn ArrayProtocol,
-        loss: &dyn ArrayProtocol,
+        _loss: &dyn ArrayProtocol,
     ) -> CoreResult<GradientDict> {
         // Start backpropagation from loss
         let mut gradients = GradientDict::new();

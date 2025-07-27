@@ -194,7 +194,8 @@ fn compare_methods(_problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResu
             ODEMethod::Bdf => "BDF (standard)",
             ODEMethod::LSODA => "LSODA (standard)",
             ODEMethod::EnhancedLSODA => "Enhanced LSODA",
-            ODEMethod::EnhancedBDF => "Enhanced BDF"_ => "Unknown method",
+            ODEMethod::EnhancedBDF => "Enhanced BDF",
+            _ => "Unknown method",
         };
 
         print!("{method_name:20}: ");
@@ -241,7 +242,8 @@ fn compare_methods(_problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResu
                     ODEMethod::Bdf => "BDF (standard)",
                     ODEMethod::LSODA => "LSODA (standard)",
                     ODEMethod::EnhancedLSODA => "Enhanced LSODA",
-                    ODEMethod::EnhancedBDF => "Enhanced BDF"_ => "Unknown",
+                    ODEMethod::EnhancedBDF => "Enhanced BDF",
+                    _ => "Unknown",
                 };
 
                 println!("  {method_name:20}: max diff = {max_diff:.2e}");

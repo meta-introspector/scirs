@@ -2,8 +2,8 @@
 
 use image::{DynamicImage, GenericImageView};
 use scirs2__vision::feature::{lbp, lbp_histogram, multi_scale_lbp, LBPType};
-use std::error::Error;
 use statrs::statistics::Statistics;
+use std::error::Error;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {

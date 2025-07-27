@@ -344,8 +344,8 @@ fn magnitude_only_processing() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
 fn parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
+    use std::f64::consts::PI;
     use std::time::Instant;
-use std::f64::consts::PI;
 
     let fs = 16000.0;
     let duration = 20.0;

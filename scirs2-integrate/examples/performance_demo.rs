@@ -4,11 +4,11 @@
 //! methods and provides a simple timing framework for basic comparisons.
 
 use ndarray::Array1;
+use ndarray::ArrayView1;
 use scirs2__integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
 use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use scirs2__integrate::quad::{quad, QuadOptions};
 use std::time::Instant;
-use ndarray::ArrayView1;
 
 /// Simple timing utility
 #[allow(dead_code)]

@@ -6,8 +6,8 @@
 use ndarray::{Array1, Array2};
 use scirs2__metrics::error::Result;
 use scirs2__metrics::optimization::hardware::*;
-use std::time::Instant;
 use statrs::statistics::Statistics;
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {

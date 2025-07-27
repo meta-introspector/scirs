@@ -66,7 +66,8 @@ impl Default for TripletLoss {
 impl<F: Float + Debug> Loss<F> for TripletLoss {
     fn forward(
         &self,
-        predictions: &Array<F, ndarray::IxDyn>, _targets: &Array<F, ndarray::IxDyn>,
+        predictions: &Array<F, ndarray::IxDyn>,
+        _targets: &Array<F, ndarray::IxDyn>,
     ) -> Result<F> {
         // Verify predictions shape: should be (batch_size, 3, embedding_dim)
         // Where the triplets are in the order: anchor, positive, negative
@@ -121,7 +122,8 @@ impl<F: Float + Debug> Loss<F> for TripletLoss {
 
     fn backward(
         &self,
-        predictions: &Array<F, ndarray::IxDyn>, _targets: &Array<F, ndarray::IxDyn>,
+        predictions: &Array<F, ndarray::IxDyn>,
+        _targets: &Array<F, ndarray::IxDyn>,
     ) -> Result<Array<F, ndarray::IxDyn>> {
         let batch_size = predictions.shape()[0];
         let embedding_dim = predictions.shape()[2];

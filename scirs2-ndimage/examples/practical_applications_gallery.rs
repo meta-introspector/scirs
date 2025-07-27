@@ -1083,7 +1083,10 @@ fn create_cloudy_satellite_simulation(_height: usize, width: usize) -> Array2<f6
 }
 
 #[allow(dead_code)]
-fn detect_cloud_shadows(_image: &Array2<f64>, cloud_mask: &Array2<u8>) -> NdimageResult<Array2<u8>> {
+fn detect_cloud_shadows(
+    _image: &Array2<f64>,
+    cloud_mask: &Array2<u8>,
+) -> NdimageResult<Array2<u8>> {
     // Simplified shadow detection
     Ok(Array2::zeros(_image.dim()))
 }

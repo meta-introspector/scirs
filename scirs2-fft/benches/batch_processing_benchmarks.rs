@@ -31,7 +31,8 @@ fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
 // Helper to create a batch of similar signals with different noise
 #[allow(dead_code)]
 fn create_signal_batch(
-    count: usize..n: usize,
+    count: usize,
+    n: usize,
     frequencies: &[(usize, f64)],
     noise_level: f64,
 ) -> Vec<Vec<f64>> {

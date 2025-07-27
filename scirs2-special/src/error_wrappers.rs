@@ -117,7 +117,7 @@ where
     }
 
     /// Try to recover from an error
-    fn try_recover(&self, x: T) -> Option<T> {
+    fn try_recover(&self, _x: T) -> Option<T> {
         match self.config.default_recovery {
             RecoveryStrategy::ReturnDefault => Some(T::zero()),
             RecoveryStrategy::ClampToRange => {

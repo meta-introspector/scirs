@@ -183,7 +183,7 @@ fn create_validation_configs() -> Vec<(String, EnhancedModernValidationConfig)> 
 /// Print a summary of validation results
 #[allow(dead_code)]
 fn print_validation_summary(
-    results: &scirs2_signal::wpt_enhanced_modern, _validation::EnhancedModernValidationResult,
+    results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
 ) {
     println!("   📊 Overall Score: {:.1}/100", results.overall_score);
     println!(

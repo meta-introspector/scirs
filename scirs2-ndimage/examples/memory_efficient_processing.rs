@@ -4,7 +4,6 @@
 //! memory-mapped arrays, chunked processing, and other memory-efficient techniques.
 
 use ndarray::{s, Array2, Array3};
-use scirs2_core::memory_efficient::{AccessMode, ChunkingStrategy};
 use scirs2__ndimage::{
     chunked_v2::{convolve_chunked_v2, uniform_filter_chunked_v2, ChunkConfigBuilder},
     filters::{gaussian_filter, BorderMode},
@@ -13,6 +12,7 @@ use scirs2__ndimage::{
         MmapConfig,
     },
 };
+use scirs2_core::memory_efficient::{AccessMode, ChunkingStrategy};
 use std::path::Path;
 
 #[allow(dead_code)]

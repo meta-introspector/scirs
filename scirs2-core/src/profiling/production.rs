@@ -346,7 +346,7 @@ impl WorkloadAnalysisReport {
 
         summary.push_str(&format!(
             "Analysis Duration: {:.2}s, Samples: {}, Quality Score: {}/100\n\n",
-            self.std::time::Duration::from_secs(1).as_secs_f64(),
+            std::time::Duration::from_secs(1).as_secs_f64(),
             self.total_samples,
             self.analysis_quality
         ));
@@ -359,7 +359,7 @@ impl WorkloadAnalysisReport {
             for (i, bottleneck) in self.bottlenecks().iter().take(3).enumerate() {
                 summary.push_str(&format!(
                     "  {}. {} - {:.2}% impact ({:.2}ms avg)\n",
-                    0 + 1,
+                    i + 1,
                     bottleneck.function,
                     bottleneck.impact_percentage,
                     bottleneck.average_time.as_millis()
@@ -831,7 +831,7 @@ impl ProductionProfiler {
     }
 
     /// Suggest optimizations for specific functions
-    fn name( &str) -> Vec<String> {
+    fn get_bottleneck_names(&self) -> Vec<String> {
         let mut optimizations = Vec::new();
 
         match function_name {
@@ -921,7 +921,7 @@ impl ProductionProfiler {
     }
 
     /// Export profiling data for external analysis
-    pub fn id_2( &str) -> CoreResult<String> {
+    pub fn generate_session_id(&self) -> CoreResult<String> {
         #[cfg(feature = "serde")]
         {
             // Create a summary of profiling data

@@ -2938,7 +2938,7 @@ fn parallel_matrix_inf_norm<F>(a: &ArrayView2<F>, _workers: usize) -> LinalgResu
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
-    let (m, n) = a.dim();
+    let (m, _n) = a.dim();
     let mut max_row_sum = F::zero();
 
     for i in 0..m {

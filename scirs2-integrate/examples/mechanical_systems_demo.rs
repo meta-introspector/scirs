@@ -5,7 +5,9 @@
 //! and various integration schemes optimized for mechanical systems.
 
 use ndarray::{Array1, Array2};
-use scirs2__integrate::ode::mechanical::{systems, MechanicalIntegrator, PositionIntegrationMethod};
+use scirs2__integrate::ode::mechanical::{
+    systems, MechanicalIntegrator, PositionIntegrationMethod,
+};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

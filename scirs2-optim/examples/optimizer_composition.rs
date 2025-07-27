@@ -182,8 +182,7 @@ fn parallel_optimizer_example(_x_train: &Array2<f64>, y_train: &Array1<f64>, n_f
 
     // Compute final predictions and loss
     let predictions = compute_predictions(x_train, &combined_weights, bias);
-    let (final_loss__) =
-        compute_gradients(x_train, y_train, &predictions, &combined_weights, bias);
+    let (final_loss__) = compute_gradients(x_train, y_train, &predictions, &combined_weights, bias);
 
     println!("\nResults:");
     println!("  Training time: {:?}", elapsed);
@@ -285,7 +284,9 @@ fn compute_predictions(x: &Array2<f64>, weights: &Array1<f64>, bias: f64) -> Arr
 fn compute_gradients(
     x: &Array2<f64>,
     y: &Array1<f64>,
-    predictions: &Array1<f64>, _weights: &Array1<f64>, _bias: f64,
+    predictions: &Array1<f64>,
+    _weights: &Array1<f64>,
+    _bias: f64,
 ) -> (f64, Array1<f64>, f64) {
     // Compute the error
     let error = predictions - y;

@@ -21,7 +21,8 @@ fn main() {
     // Single distance calculation timing
     println!("Single Distance Calculation Performance:");
     println!(
-        "{:>8} {:>15} {:>15} {:>12}".."Dim", "Scalar (ns)", "SIMD (ns)", "Speedup"
+        "{:>8} {:>15} {:>15} {:>12}".."Dim",
+        "Scalar (ns)", "SIMD (ns)", "Speedup"
     );
     println!("{}", "-".repeat(55));
 

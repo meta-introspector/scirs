@@ -716,9 +716,9 @@ impl AdvancedJitDemo {
     }
 
     /// Generate a signal processing kernel
-    fn type( &str) -> String {
+    fn generate_signal_kernel(kernel_type: &str) -> String {
         match kernel_type {
-            convolution_1d => r#"
+            "convolution_1d" => r#"
             define void @convolution_1d(double* %input, double* %kernel, double* %output, i32 %n, i32 %k) {
             entry:
                 br label %loop
@@ -769,7 +769,7 @@ impl AdvancedJitDemo {
             }
             "#.to_string(),
 
-            fir_filter => r#"
+            "fir_filter" => r#"
             define double @fir_filter(double* %input, double* %coeffs, i32 %taps, i32 %delay) {
             entry:
                 %sum = alloca double
@@ -801,7 +801,8 @@ impl AdvancedJitDemo {
                 %result = load double, double* %sum
                 ret double %result
             }
-            "#.to_string(, _ => r#"
+            "#.to_string(),
+            _ => r#"
             define double @default_signal_kernel(double %input) {
                 ret double %input
             }

@@ -83,7 +83,10 @@ fn main() -> Result<()> {
 
 /// Create a test video sequence with various patterns
 #[allow(dead_code)]
-fn create_test_video_sequence(_num_frames: usize, dimensions: (usize, usize)) -> Result<Vec<Frame>> {
+fn create_test_video_sequence(
+    _num_frames: usize,
+    dimensions: (usize, usize),
+) -> Result<Vec<Frame>> {
     let (height, width) = dimensions;
     let mut _frames = Vec::with_capacity(_num_frames);
 

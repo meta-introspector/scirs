@@ -146,7 +146,8 @@ fn demonstrate_gamma_correction(_img: &DynamicImage) -> Result<()> {
 
         match corrected {
             DynamicImage::ImageLuma8(gray) => gray.save(&output_path),
-            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path, _ => corrected.save(&output_path),
+            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path),
+            _ => corrected.save(&output_path),
         }
         .expect("Failed to save gamma corrected image");
 
@@ -163,7 +164,8 @@ fn demonstrate_gamma_correction(_img: &DynamicImage) -> Result<()> {
 
         match auto_corrected {
             DynamicImage::ImageLuma8(gray) => gray.save(&output_path),
-            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path, _ => auto_corrected.save(&output_path),
+            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path),
+            _ => auto_corrected.save(&output_path),
         }
         .expect("Failed to save auto gamma corrected image");
 
@@ -180,7 +182,8 @@ fn demonstrate_gamma_correction(_img: &DynamicImage) -> Result<()> {
 
         match adaptive {
             DynamicImage::ImageLuma8(gray) => gray.save(&output_path),
-            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path, _ => adaptive.save(&output_path),
+            DynamicImage::ImageRgb8(rgb) => rgb.save(&output_path),
+            _ => adaptive.save(&output_path),
         }
         .expect("Failed to save adaptive gamma corrected image");
 

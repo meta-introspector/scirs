@@ -114,11 +114,11 @@ pub fn fft_inplace(
     if use_simd {
         // Use the SIMD-accelerated FFT implementation
         let result = match mode {
-            FftMode::Forward =>, crate::simd_fft::fft_adaptive(
+            FftMode::Forward => crate::simd_fft::fft_adaptive(
                 input,
                 if normalize { Some("forward") } else { None },
             )?,
-            FftMode::Inverse =>, crate::simd_fft::ifft_adaptive(
+            FftMode::Inverse => crate::simd_fft::ifft_adaptive(
                 input,
                 if normalize { Some("backward") } else { None },
             )?,

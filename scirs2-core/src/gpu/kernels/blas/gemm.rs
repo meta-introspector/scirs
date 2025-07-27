@@ -109,7 +109,7 @@ impl GemmKernel {
     }
 
     /// Create a GEMM kernel with specific alpha and beta values
-    pub fn with_alpha_beta(alpha: f32, beta: f32) -> Box<dyn GpuKernel> {
+    pub fn with_alpha_beta(_alpha: f32, _beta: f32) -> Box<dyn GpuKernel> {
         let kernel = Self::new();
 
         // Generate specialized kernel sources with hard-coded alpha/beta values

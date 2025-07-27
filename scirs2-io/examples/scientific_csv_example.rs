@@ -1,9 +1,9 @@
 use scirs2__io::csv::{read_csv_typed, write_csv_typed, ColumnType, CsvReaderConfig, DataValue};
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{BufWriter, Write};
-use statrs::statistics::Statistics;
 
 /// This example demonstrates using CSV functionality for scientific data
 /// with various units, metadata, and mixed types.

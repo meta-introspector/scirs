@@ -115,11 +115,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let topics2 = lda2.get_topics(5, &word_index_map)?;
     println!("Discovered {} topics with top 5 words each:", topics2.len());
     for topic in &topics2 {
-        let words: Vec<String> = topic
-            .top_words
-            .iter()
-            .map(|(word_)| word.clone())
-            .collect();
+        let words: Vec<String> = topic.top_words.iter().map(|(word_)| word.clone()).collect();
         println!("Topic {}: {}", topic.id, words.join(", "));
     }
 

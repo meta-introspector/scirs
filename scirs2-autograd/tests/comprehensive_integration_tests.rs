@@ -8,7 +8,6 @@
 //! - Memory optimization and efficient operations
 
 use ndarray::{Array, IxDyn};
-use scirs2_autograd as ag;
 use scirs2__autograd::optimization::{
     memory_optimization::{MemoryOptimizationConfig, MemoryOptimizer},
     GraphOptimizer, OptimizationLevel,
@@ -16,6 +15,7 @@ use scirs2__autograd::optimization::{
 use scirs2__autograd::parallel::{init_thread_pool_with_config, ThreadPoolConfig};
 use scirs2__autograd::tensor_ops as T;
 use scirs2__autograd::visualization::{GraphVisualizer, OutputFormat, VisualizationConfig};
+use scirs2_autograd as ag;
 
 /// Test the complete Advanced feature integration pipeline
 #[test]

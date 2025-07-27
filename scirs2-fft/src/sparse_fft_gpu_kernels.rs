@@ -144,8 +144,8 @@ impl GPUKernel for FFTKernel {
             execution_time_ms,
             memory_bandwidth_gb_s: 500.0,
             compute_throughput_gflops: 10000.0,
-            bytes_transferred_to_device: self.input_size * std::mem::size, _of::<Complex64>(),
-            bytes_transferred_from_device: self.input_size * std::mem::size, _of::<Complex64>(),
+            bytes_transferred_to_device: self.input_size * std::mem::size_of::<Complex64>(),
+            bytes_transferred_from_device: self.input_size * std::mem::size_of::<Complex64>(),
             occupancy_percent: 80.0,
         };
 
@@ -282,8 +282,8 @@ impl GPUKernel for SparseFFTKernel {
             execution_time_ms,
             memory_bandwidth_gb_s: 450.0,
             compute_throughput_gflops: 9000.0,
-            bytes_transferred_to_device: self.input_size * std::mem::size, _of::<Complex64>(),
-            bytes_transferred_from_device: (self.sparsity * 2) * std::mem::size, _of::<Complex64>(),
+            bytes_transferred_to_device: self.input_size * std::mem::size_of::<Complex64>(),
+            bytes_transferred_from_device: (self.sparsity * 2) * std::mem::size_of::<Complex64>(),
             occupancy_percent: 75.0,
         };
 

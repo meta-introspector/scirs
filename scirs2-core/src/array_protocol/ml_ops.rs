@@ -403,7 +403,7 @@ array_function_dispatch!(
 
                 // Get dimensions
                 let _batch_size = input.shape()[0];
-                let height = input.shape()[1];
+                let _height = input.shape()[1];
                 let _width = input.shape()[2];
                 let channels = input.shape()[3];
 
@@ -427,11 +427,11 @@ array_function_dispatch!(
                 // y = scale * (x - mean) / sqrt(variance + epsilon) + offset
 
                 let batch_size = input.shape()[0];
-                let height = input.shape()[1];
+                let _height = input.shape()[1];
                 let _width = input.shape()[2];
 
                 for b in 0..batch_size {
-                    for h in 0..height {
+                    for h in 0.._height {
                         for w in 0.._width {
                             for c in 0..channels {
                                 let x = input[[b, h, w, c]];
@@ -727,7 +727,7 @@ array_function_dispatch!(
                 }
 
                 // Apply scaling
-                let scale_factor = scale.unwrap_or_else(|| {
+                let _scale_factor = scale.unwrap_or_else(|| {
                     // Default scale factor is 1/sqrt(d_k)
                     let d_k_f64 = d_k as f64;
                     if d_k_f64 > 0.0 {

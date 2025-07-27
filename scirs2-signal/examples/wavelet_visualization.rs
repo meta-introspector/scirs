@@ -61,9 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Arrange coefficients for visualization
     println!("\nArranging coefficients in standard layout (LL, HL, LH, HH)...");
     let _arranged_dwt = arrange_coefficients_2d(&dwt_decomp);
-    println!(
-        "Arranged coefficients have shape: {:?}"_arranged_dwt.shape()
-    );
+    println!("Arranged coefficients have shape: {:?}"_arranged_dwt.shape());
 
     // Calculate energy distribution
     println!("\nCalculating energy distribution in DWT subbands...");

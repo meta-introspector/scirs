@@ -138,17 +138,13 @@ fn bench_cached_bspline(c: &mut Criterion) {
         let queries = Array1::linspace(0.5, 9.5, 1000);
 
         group.throughput(Throughput::Elements(queries.len() as u64));
-        group.bench_with_input(
-            BenchmarkId::new("config", config_name),
-            config_name,
-            |b_| {
-                b.iter(|| {
-                    for &query in queries.iter() {
-                        let _ = black_box(cached_spline.evaluate_cached(black_box(query)));
-                    }
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("config", config_name), config_name, |b_| {
+            b.iter(|| {
+                for &query in queries.iter() {
+                    let _ = black_box(cached_spline.evaluate_cached(black_box(query)));
+                }
+            });
+        });
     }
 
     group.finish();

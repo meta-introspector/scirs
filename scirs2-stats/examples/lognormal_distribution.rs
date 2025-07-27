@@ -1,6 +1,6 @@
 use scirs2__stats::distributions::lognormal::Lognormal;
-use std::error::Error;
 use statrs::statistics::Statistics;
+use std::error::Error;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {

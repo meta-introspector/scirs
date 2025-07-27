@@ -131,7 +131,8 @@ fn create_benchmark_config(_dataset_name: &str) -> BenchmarkConfig {
             advanced_statistics: true,
             cross_platform: false,
             ..Default::default()
-        }_ => BenchmarkConfig {
+        },
+        _ => BenchmarkConfig {
             warmup_iterations: 5,
             measurement_iterations: 50,
             statistical_significance: 0.05,
@@ -148,7 +149,7 @@ fn create_benchmark_config(_dataset_name: &str) -> BenchmarkConfig {
 
 /// Display a concise summary of benchmark results
 #[allow(dead_code)]
-fn display_benchmark_summary(_results: &scirs2_cluster: :advanced, _benchmarking::BenchmarkResults) {
+fn display_benchmark_summary(_results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
     println!("   📈 Performance Summary:");
 
     // Find fastest and slowest algorithms
@@ -224,7 +225,7 @@ fn display_benchmark_summary(_results: &scirs2_cluster: :advanced, _benchmarking
 /// Demonstrate advanced analytics capabilities
 #[allow(dead_code)]
 fn demonstrate_advanced_analytics(
-    results: &scirs2_cluster::advanced, _benchmarking::BenchmarkResults,
+    results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
     dataset_name: &str,
 ) {
     println!("   🧠 Advanced Analytics for {dataset_name}:");
@@ -244,7 +245,7 @@ fn demonstrate_advanced_analytics(
 
 /// Analyze performance patterns across algorithms
 #[allow(dead_code)]
-fn analyze_performance_patterns(_results: &scirs2_cluster: :advanced, _benchmarking::BenchmarkResults) {
+fn analyze_performance_patterns(_results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
     println!("      📊 Performance Pattern Analysis:");
 
     // Calculate performance variance
@@ -289,7 +290,7 @@ fn analyze_performance_patterns(_results: &scirs2_cluster: :advanced, _benchmark
 /// Analyze optimization opportunities
 #[allow(dead_code)]
 fn analyze_optimization_opportunities(
-    results: &scirs2_cluster::advanced, _benchmarking::BenchmarkResults,
+    results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
 ) {
     println!("      🔧 Optimization Opportunity Analysis:");
 
@@ -326,7 +327,7 @@ fn analyze_optimization_opportunities(
 
 /// Analyze scalability insights
 #[allow(dead_code)]
-fn analyze_scalability_insights(_results: &scirs2_cluster: :advanced, _benchmarking::BenchmarkResults) {
+fn analyze_scalability_insights(_results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
     println!("      📈 Scalability Analysis:");
 
     let scalability_results: Vec<_> = _results
@@ -354,7 +355,7 @@ fn analyze_scalability_insights(_results: &scirs2_cluster: :advanced, _benchmark
             .iter()
             .filter(|(_, s)| {
                 s.complexity_estimate
-                    == scirs2_cluster::advanced, _benchmarking::ComplexityClass::Linear
+                    == scirs2_cluster::advanced_benchmarking::ComplexityClass::Linear
             })
             .map(|(name_)| name.as_str())
             .collect();
@@ -370,7 +371,7 @@ fn analyze_scalability_insights(_results: &scirs2_cluster: :advanced, _benchmark
 
 /// Analyze regression patterns
 #[allow(dead_code)]
-fn analyze_regression_patterns(_results: &scirs2_cluster: :advanced, _benchmarking::BenchmarkResults) {
+fn analyze_regression_patterns(_results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
     if _results.regression_alerts.is_empty() {
         println!(
             "      ✅ Regression Analysis: All algorithms performing within expected parameters"

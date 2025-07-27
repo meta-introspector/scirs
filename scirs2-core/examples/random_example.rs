@@ -1,7 +1,7 @@
 use ndarray::IxDyn;
+use rand::seq::SliceRandom;
 use rand_distr::{Bernoulli, Normal, Uniform};
 use scirs2_core::random::{get_rng, sampling, DistributionExt, Random};
-use rand::seq::SliceRandom;
 
 #[allow(dead_code)]
 fn main() {

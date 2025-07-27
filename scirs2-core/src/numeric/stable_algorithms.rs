@@ -297,7 +297,7 @@ pub fn conjugate_gradient<T: Float + StableComputation>(
     }
 
     let b_norm = stable_norm_2(&b.to_vec());
-    let initial_residual = r_norm_sq.sqrt();
+    let _initial_residual = r_norm_sq.sqrt();
 
     let mut history = if config.adaptive_tolerance {
         Some(Vec::with_capacity(config.max_iterations))

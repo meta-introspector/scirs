@@ -77,15 +77,11 @@ fn bench_inplace_operations(c: &mut Criterion) {
         });
 
         // Standard scaling (creates new array)
-        group.bench_with_input(
-            BenchmarkId::new("standard_scale", size),
-            size,
-            |bench_| {
-                bench.iter(|| {
-                    let _result = black_box(&a * 2.5);
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("standard_scale", size), size, |bench_| {
+            bench.iter(|| {
+                let _result = black_box(&a * 2.5);
+            });
+        });
 
         // In-place scaling
         group.bench_with_input(BenchmarkId::new("inplace_scale", size), size, |bench_| {

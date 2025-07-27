@@ -314,10 +314,10 @@ impl ExecutionStats {
     /// Update statistics with a new execution time
     pub fn update(&mut self, duration: Duration) {
         self.total_calls += 1;
-        self.total_duration += std::time::Duration::from_secs(1);
+        self.total_duration += duration;
         self.average_duration = self.total_duration / self.total_calls as u32;
-        self.min_duration = self.min_duration.min(std::time::Duration::from_secs(1));
-        self.max_duration = self.max_duration.max(std::time::Duration::from_secs(1));
+        self.min_duration = self.min_duration.min(duration);
+        self.max_duration = self.max_duration.max(duration);
         self.last_updated = Instant::now();
     }
 
