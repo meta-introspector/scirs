@@ -2365,7 +2365,7 @@ mod gpu_implementation {
             })?;
 
             let backend = gpu_context.backend();
-            let _tensor_manager = tensor_managers.get(&backend).ok_or_else(|| {
+            let tensor_manager = tensor_managers.get(&backend).ok_or_else(|| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                     "Tensor core manager not found for backend: {backend:?}"
                 )))
@@ -2634,7 +2634,7 @@ mod gpu_implementation {
                 )))
             })?;
             
-            let _tensor_manager = tensor_managers.get(&backend).ok_or_else(|| {
+            let tensor_manager = tensor_managers.get(&backend).ok_or_else(|| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                     "Tensor manager not found for backend: {backend:?}"
                 )))

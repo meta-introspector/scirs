@@ -29,7 +29,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::ai_driven_optimization::{AIAlgorithmSelector, MetaLearningOptimizer};
+//! use scirs2_spatial::ai_driven_optimization::{AIAlgorithmSelector, MetaLearningOptimizer};
 //! use ndarray::array;
 //!
 //! // AI-driven algorithm selection
@@ -580,7 +580,7 @@ pub struct TaskMetadata {
 }
 
 impl Default for AIAlgorithmSelector {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -602,25 +602,25 @@ impl AIAlgorithmSelector {
     }
 
     /// Enable meta-learning
-    pub fn with_meta_learning(mut enabled: bool) -> Self {
+    pub fn with_meta_learning(mut self, enabled: bool) -> Self {
         self.meta_learning = enabled;
         self
     }
 
     /// Enable neural architecture search
-    pub fn with_neural_architecture_search(mut enabled: bool) -> Self {
+    pub fn with_neural_architecture_search(mut self, enabled: bool) -> Self {
         self.neural_architecture_search = enabled;
         self
     }
 
     /// Enable real-time adaptation
-    pub fn with_real_time_adaptation(mut enabled: bool) -> Self {
+    pub fn with_real_time_adaptation(mut self, enabled: bool) -> Self {
         self.real_time_adaptation = enabled;
         self
     }
 
     /// Enable multi-objective optimization
-    pub fn with_multi_objective_optimization(mut enabled: bool) -> Self {
+    pub fn with_multi_objective_optimization(mut self, enabled: bool) -> Self {
         self.multi_objective = enabled;
         self
     }
@@ -1099,7 +1099,7 @@ impl AIAlgorithmSelector {
     }
 
     /// Get algorithms for specific task
-    fn get_algorithms_for_task(_task_type: &str) -> Vec<String> {
+    fn get_algorithms_for_task(&self, _task_type: &str) -> Vec<String> {
         match _task_type {
             "clustering" => vec![
                 "kmeans".to_string(),
@@ -1119,7 +1119,8 @@ impl AIAlgorithmSelector {
                 "simd_accelerated".to_string(),
                 "gpu_accelerated".to_string(),
                 "quantum_distance".to_string(),
-            ]_ => vec!["default".to_string()],
+            ],
+            _ => vec!["default".to_string()],
         }
     }
 
@@ -1205,7 +1206,8 @@ impl AIAlgorithmSelector {
             "dbscan" => 2.0,
             "hierarchical" => 3.0,
             "kdtree" => 4.0,
-            "ball_tree" => 5.0_ => 0.0,
+            "ball_tree" => 5.0,
+            _ => 0.0,
         };
         features.push(algorithm_id);
 
@@ -1370,7 +1372,7 @@ pub struct AdaptationRecord {
 }
 
 impl Default for MetaLearningOptimizer {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -1388,26 +1390,27 @@ impl MetaLearningOptimizer {
     }
 
     /// Enable continual learning
-    pub fn with_continual_learning(mut enabled: bool) -> Self {
+    pub fn with_continual_learning(mut self, enabled: bool) -> Self {
         self.continual_learning = enabled;
         self
     }
 
     /// Enable transformer embeddings
-    pub fn with_transformer_embeddings(mut enabled: bool) -> Self {
+    pub fn with_transformer_embeddings(mut self, enabled: bool) -> Self {
         self.transformer_embeddings = enabled;
         self
     }
 
     /// Enable graph neural networks
-    pub fn with_graph_neural_networks(mut enabled: bool) -> Self {
+    pub fn with_graph_neural_networks(mut self, enabled: bool) -> Self {
         self.graph_neural_networks = enabled;
         self
     }
 
     /// Optimize spatial task using meta-learning
     pub async fn optimize_spatial_task(
-        &mut self_data: &ArrayView2<'_, f64>,
+        &mut self,
+        data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<MetaOptimizationResult> {
         // Implement meta-learning optimization
         // This is a simplified implementation
@@ -1474,7 +1477,7 @@ impl NeuralNetwork {
         }
     }
 
-    fn predict(_input: &Array1<f64>) -> SpatialResult<Array1<f64>> {
+    fn predict(&self, _input: &Array1<f64>) -> SpatialResult<Array1<f64>> {
         // Simplified neural network prediction
         Ok(Array1::from(vec![0.5, 100.0, 50.0, 1.0, 0.8])) // Dummy prediction
     }

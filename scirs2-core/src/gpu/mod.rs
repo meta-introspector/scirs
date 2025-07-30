@@ -1014,7 +1014,7 @@ mod tests {
 
         #[cfg(all(feature = "metal", target_os = "macos"))]
         assert!(GpuBackend::Metal.is_available());
-        #[cfg(not(all(feature = metal, target_os = "macos")))]
+        #[cfg(not(all(feature = "metal", target_os = "macos")))]
         assert!(!GpuBackend::Metal.is_available());
     }
 

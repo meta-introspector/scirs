@@ -6,12 +6,12 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::StateSpace;
-use crate::sysid__enhanced::{NonlinearFunction, ParameterEstimate, SystemModel};
+use crate::sysid_enhanced::{NonlinearFunction, ParameterEstimate, SystemModel};
 use ndarray::{Array1, Array2, Axis, s};
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_shape;
-use scirs2__linalg::solve;
+use scirs2_linalg::solve;
 use statrs::statistics::Statistics;
 
 #[allow(unused_imports)]

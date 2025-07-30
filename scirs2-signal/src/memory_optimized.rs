@@ -5,8 +5,8 @@
 //! entirely in memory, or where memory usage needs to be carefully controlled.
 
 use crate::error::{SignalError, SignalResult};
-use num__complex::Complex;
-use rustfft::{FftPlanner, num_complex::Complex};
+use num_complex::Complex;
+use rustfft::FftPlanner;
 use scirs2_core::parallel_ops::*;
 use std::fs;
 use std::f64::consts::PI;
@@ -401,8 +401,8 @@ fn memory_fft_in_core(
     let total_time = start_time.elapsed().as_millis();
 
     let memory_stats = MemoryStats {
-        peak_memory: n * std::mem::size, _of::<Complex<f64>>(),
-        avg_memory: n * std::mem::size, _of::<Complex<f64>>() / 2,
+        peak_memory: n * std::mem::size_of::<Complex<f64>>(),
+        avg_memory: n * std::mem::size_of::<Complex<f64>>() / 2,
         cache_hits: 0,
         cache_misses: 0,
         disk_operations: 2, // Read and write
@@ -731,7 +731,7 @@ pub fn memory_optimized_spectrogram(
         .map_err(|e| SignalError::ComputationError(format!("Cannot get _file _size: {}", e)))?
         .len() as usize;
 
-    let n_samples = file_size / std::mem::_size_of::<f64>();
+    let n_samples = file_size / std::mem::size_of::<f64>();
     let n_frames = (n_samples - window_size) / hop_size + 1;
     let n_freqs = window_size / 2 + 1;
 
@@ -763,7 +763,7 @@ pub fn memory_optimized_spectrogram(
         let io_start = Instant::now();
 
         // Seek to frame position
-        let byte_offset = frame * hop_size * std::mem::_size_of::<f64>();
+        let byte_offset = frame * hop_size * std::mem::size_of::<f64>();
         input_reader
             .seek(SeekFrom::Start(byte_offset as u64))
             .map_err(|e| SignalError::ComputationError(format!("Seek error: {}", e)))?;
@@ -821,8 +821,8 @@ pub fn memory_optimized_spectrogram(
     let total_time = start_time.elapsed().as_millis();
 
     let memory_stats = MemoryStats {
-        peak_memory: (window_size * 2 + n_freqs) * std::mem::_size, _of::<f64>(),
-        avg_memory: (window_size * 2 + n_freqs) * std::mem::_size, _of::<f64>() / 2,
+        peak_memory: (window_size * 2 + n_freqs) * std::mem::size_of::<f64>(),
+        avg_memory: (window_size * 2 + n_freqs) * std::mem::size_of::<f64>() / 2,
         cache_hits: 0,
         cache_misses: 0,
         disk_operations: disk_ops,

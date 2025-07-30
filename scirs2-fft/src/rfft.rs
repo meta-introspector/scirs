@@ -6,7 +6,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
 use ndarray::{s, Array, Array2, ArrayView, ArrayView2, IxDyn};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{NumCast, Zero};
 use std::fmt::Debug;
 
@@ -24,8 +24,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::rfft;
-/// use num__complex::Complex64;
+/// use scirs2_fft::rfft;
+/// use num_complex::Complex64;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -73,8 +73,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{rfft, irfft};
-/// use num__complex::Complex64;
+/// use scirs2_fft::{rfft, irfft};
+/// use num_complex::Complex64;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -192,7 +192,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::rfft2;
+/// use scirs2_fft::rfft2;
 /// use ndarray::Array2;
 ///
 /// // Create a 2x2 array
@@ -219,7 +219,7 @@ where
     T: NumCast + Copy + Debug + 'static,
 {
     let (n_rows, n_cols) = x.dim();
-    let (n_rows_out_n_cols_out) = shape.unwrap_or((n_rows, n_cols));
+    let (n_rows_out, n_cols_out) = shape.unwrap_or((n_rows, n_cols));
 
     // Compute 2D FFT, then extract the relevant portion for real input
     let full_fft = crate::fft::fft2(&x.to_owned(), shape, None, None)?;
@@ -245,7 +245,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{rfft2, irfft2};
+/// use scirs2_fft::{rfft2, irfft2};
 /// use ndarray::Array2;
 ///
 /// // Create a 2x2 array
@@ -407,7 +407,7 @@ where
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__fft::rfftn;
+/// use scirs2_fft::rfftn;
 /// use ndarray::Array3;
 /// use ndarray::IxDyn;
 ///
@@ -487,7 +487,7 @@ where
 {
     // Delegate to fftn, but reshape the result for real input
     let full_result = crate::fft::fftn(
-        &_x.to_owned(),
+        &x.to_owned(),
         shape.clone(),
         axes.clone(),
         norm,
@@ -496,7 +496,7 @@ where
     )?;
 
     // Determine which axes to transform
-    let n_dims = _x.ndim();
+    let n_dims = x.ndim();
     let axes_to_transform = axes.unwrap_or_else(|| (0..n_dims).collect());
 
     // For a real input, the output shape is modified only along the last transformed axis
@@ -560,7 +560,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{rfftn, irfftn};
+/// use scirs2_fft::{rfftn, irfftn};
 /// use ndarray::Array2;
 /// use ndarray::IxDyn;
 ///
@@ -638,8 +638,8 @@ where
     // Ignore unused parameters for now
     let _overwrite_x = overwrite_x.unwrap_or(false);
 
-    let x_shape = _x.shape().to_vec();
-    let n_dims = _x.ndim();
+    let x_shape = x.shape().to_vec();
+    let n_dims = x.ndim();
 
     // Determine which axes to transform
     let axes_to_transform = match axes {
@@ -711,7 +711,7 @@ where
     // Reconstruct the full spectrum by using Hermitian symmetry
     // This is complex for arbitrary N-D arrays, so we'll delegate to a specialized function
     let full_spectrum =
-        reconstruct_hermitian_symmetry(_x, &out_shape, axes_to_transform.as_slice())?;
+        reconstruct_hermitian_symmetry(x, &out_shape, axes_to_transform.as_slice())?;
 
     // Compute the inverse FFT
     let complex_output = crate::fft::ifftn(
@@ -749,7 +749,7 @@ where
 
     // Copy the known values from input
     let mut input_idx = vec![0; out_shape.len()];
-    let x_shape = x._shape();
+    let x_shape = x.shape();
 
     // For simplicity, we'll use a recursive approach to iterate through the input array
     fn fill_known_values<T>(
@@ -907,14 +907,14 @@ where
 
 /// Helper function to attempt conversion to Complex64.
 #[allow(dead_code)]
-fn try_as_complex<T: Copy + Debug + 'static>(_val: T) -> Option<Complex64> {
+fn try_as_complex<T: Copy + Debug + 'static>(val: T) -> Option<Complex64> {
     // Attempt to cast the value to a complex number directly
     // This should work for types like Complex64 or Complex32
     if std::any::TypeId::of::<T>() == std::any::TypeId::of::<Complex64>() {
         // This is a bit of a hack, but it should work for the common case
         // We're trying to cast T to Complex64 if they are the same type
         unsafe {
-            let ptr = &_val as *const T as *const Complex64;
+            let ptr = &val as *const T as *const Complex64;
             return Some(*ptr);
         }
     }

@@ -26,7 +26,7 @@
 //! ## Dictionary-based Correction
 //!
 //! ```
-//! use scirs2__text::spelling::{DictionaryCorrector, SpellingCorrector};
+//! use scirs2_text::spelling::{DictionaryCorrector, SpellingCorrector};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a dictionary-based spelling corrector
@@ -43,7 +43,7 @@
 //! ## Statistical Correction
 //!
 //! ```
-//! use scirs2__text::spelling::{StatisticalCorrector, SpellingCorrector};
+//! use scirs2_text::spelling::{StatisticalCorrector, SpellingCorrector};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a statistical spelling corrector with added dictionary entries
@@ -71,7 +71,7 @@ mod statistical;
 mod utils;
 
 pub use dictionary::{DictionaryCorrector, DictionaryCorrectorConfig};
-pub use error__model::{EditOp, ErrorModel};
+pub use error_model::{EditOp, ErrorModel};
 pub use ngram::NGramModel;
 pub use statistical::{StatisticalCorrector, StatisticalCorrectorConfig};
 // Re-export utility functions that might be useful for users building custom correctors

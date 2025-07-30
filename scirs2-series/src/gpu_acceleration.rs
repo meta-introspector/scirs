@@ -711,14 +711,14 @@ pub mod utils {
 
     /// Get recommended batch size for GPU operations
     pub fn get_recommended_batch_size(_data_size: usize, memory_limit: usize) -> usize {
-        let element_size = std::mem::_size_of::<f64>(); // Assume f64 for estimation
+        let element_size = std::mem::size_of::<f64>(); // Assume f64 for estimation
         let max_batch = memory_limit / element_size;
         std::cmp::min(_data_size, max_batch)
     }
 
     /// Estimate GPU memory requirements for operation
     pub fn estimate_memory_usage(_data_size: usize, operation_overhead: f64) -> usize {
-        let base_memory = _data_size * std::mem::_size_of::<f64>();
+        let base_memory = _data_size * std::mem::size_of::<f64>();
         (base_memory as f64 * (1.0 + operation_overhead)) as usize
     }
 

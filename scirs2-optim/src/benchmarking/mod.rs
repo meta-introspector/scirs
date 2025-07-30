@@ -58,7 +58,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientFlowAnalyzer<A, D> 
             gradient_directions: VecDeque::with_capacity(_max_history),
             parameter_updates: VecDeque::with_capacity(_max_history),
             step_count: 0,
-            _max_history,
+            max_history: _max_history,
             stats_cache: None,
             cache_valid: false,
         }
@@ -142,7 +142,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientFlowAnalyzer<A, D> 
         let norm1 = norm1_sq.sqrt();
         let norm2 = norm2_sq.sqrt();
 
-        if norm1 > A::zero() && norm2 >, A::zero() {
+        if norm1 > A::zero() && norm2 > A::zero() {
             Ok(dot_product / (norm1 * norm2))
         } else {
             Ok(A::zero())
@@ -574,13 +574,13 @@ impl<A: Float + ScalarOperand + Debug> OptimizerBenchmark<A> {
 
             let result = BenchmarkResult {
                 optimizer_name: optimizer_name.clone(),
-                function_name: test_function._name.clone(),
+                function_name: test_function.name.clone(),
                 converged: convergence_step.is_some(),
                 convergence_step,
                 final_function_value: *function_values.last().unwrap(),
                 final_gradient_norm: *gradient_norms.last().unwrap(),
                 final_error,
-                _iterations_taken: function_values.len(),
+                iterations_taken: function_values.len(),
                 elapsed_time: elapsed,
                 function_evaluations: function_values.len(),
                 function_value_history: function_values,
@@ -793,7 +793,7 @@ pub mod visualization {
                 state_history: VecDeque::with_capacity(_max_history),
                 learning_rate_history: VecDeque::with_capacity(_max_history),
                 loss_history: VecDeque::with_capacity(_max_history),
-                _max_history,
+                max_history: _max_history,
                 step_count: 0,
             }
         }
@@ -1043,7 +1043,8 @@ pub mod visualization {
                             0 => ' ',
                             1 => '.',
                             2 => ':',
-                            3 => '*'_ => '#',
+                            3 => '*',
+                            _ => '#',
                         };
                         write!(plot, "{}", char).unwrap();
                     } else {

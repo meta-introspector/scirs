@@ -1520,7 +1520,7 @@ impl<T> ZeroCopyBuffer<T> {
             let new_ptr = self.allocator.reallocate(
                 self.data.cast::<u8>(),
                 self.layout._size(),
-                new_size * _size_of::<T>(),
+                new_size * size_of::<T>(),
                 self.layout.align(),
             )?;
 

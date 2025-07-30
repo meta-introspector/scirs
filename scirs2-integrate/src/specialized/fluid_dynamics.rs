@@ -75,7 +75,7 @@ pub struct NavierStokesParams {
 }
 
 impl Default for NavierStokesParams {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             nu: 0.01,
             rho: 1.0,
@@ -112,7 +112,7 @@ impl NavierStokesSolver {
         initial_state: FluidState,
         t_final: f64,
         save_interval: usize,
-    ) -> Result<Vec<FluidState>> {
+    ) -> IntegrateResult<Vec<FluidState>> {
         let mut states = vec![initial_state.clone()];
         let mut current = initial_state;
         let n_steps = (t_final / self.params.dt).ceil() as usize;
@@ -145,7 +145,7 @@ impl NavierStokesSolver {
     fn compute_intermediate_velocity_2d(
         &self,
         state: &FluidState,
-    ) -> Result<(Array2<f64>, Array2<f64>)> {
+    ) -> IntegrateResult<(Array2<f64>, Array2<f64>)> {
         let u = &state.velocity[0];
         let v = &state.velocity[1];
         let (_ny_nx) = u.dim();
@@ -179,7 +179,7 @@ impl NavierStokesSolver {
         v_new: &mut Array2<f64>,
         dx: f64,
         dy: f64,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         let (ny, nx) = u.dim();
 
         for j in 1..ny - 1 {
@@ -206,7 +206,7 @@ impl NavierStokesSolver {
         v_new: &mut Array2<f64>,
         dx: f64,
         dy: f64,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         let (ny, nx) = u.dim();
         let dt = self.params.dt;
 
@@ -287,7 +287,7 @@ impl NavierStokesSolver {
         v: &Array2<f64>,
         dx: f64,
         dy: f64,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         let (ny, nx) = u.dim();
         let nu_dt = self.params.nu * self.params.dt;
 
@@ -314,7 +314,7 @@ impl NavierStokesSolver {
         u_star: &Array2<f64>,
         v_star: &Array2<f64>,
         state: &FluidState,
-    ) -> Result<Array2<f64>> {
+    ) -> IntegrateResult<Array2<f64>> {
         let (ny, nx) = u_star.dim();
         let mut pressure = Array2::zeros((ny, nx));
         let mut rhs = Array2::zeros((ny, nx));
@@ -366,7 +366,7 @@ impl NavierStokesSolver {
         u_star: &Array2<f64>,
         v_star: &Array2<f64>,
         pressure: &Array2<f64>,
-    ) -> Result<(Array2<f64>, Array2<f64>)> {
+    ) -> IntegrateResult<(Array2<f64>, Array2<f64>)> {
         let (ny, nx) = u_star.dim();
         let mut u_new = u_star.clone();
         let mut v_new = v_star.clone();
@@ -391,7 +391,7 @@ impl NavierStokesSolver {
     }
 
     /// Apply boundary conditions to velocity
-    fn apply_boundary_conditions_2d(u: &mut Array2<f64>, v: &mut Array2<f64>) -> Result<()> {
+    fn apply_boundary_conditions_2d(u: &mut Array2<f64>, v: &mut Array2<f64>) -> IntegrateResult<()> {
         let (ny, nx) = u.dim();
 
         // Left and right boundaries (x-direction)
@@ -532,7 +532,7 @@ impl NavierStokesSolver {
     }
 
     /// Apply boundary conditions to pressure
-    fn apply_pressure_boundary_conditions(_pressure: &mut Array2<f64>) -> Result<()> {
+    fn apply_pressure_boundary_conditions(_pressure: &mut Array2<f64>) -> IntegrateResult<()> {
         let (ny, nx) = _pressure.dim();
 
         // Neumann boundary conditions (zero gradient) for _pressure
@@ -552,7 +552,7 @@ impl NavierStokesSolver {
     }
 
     /// Bilinear interpolation for semi-Lagrangian advection
-    fn bilinear_interpolate(_field: &Array2<f64>, x: f64, y: f64) -> Result<f64> {
+    fn bilinear_interpolate(_field: &Array2<f64>, x: f64, y: f64) -> IntegrateResult<f64> {
         let (ny, nx) = _field.dim();
 
         // Clamp to domain
@@ -675,7 +675,7 @@ use std::sync::{Arc, Mutex};
             params: &NavierStokesParams,
             dt: f64,
             n_steps: usize,
-        ) -> Result<Vec<FluidState3D>> {
+        ) -> IntegrateResult<Vec<FluidState3D>> {
             if self.use_gpu {
                 self.solve_with_gpu(initial_state, params, dt, n_steps)
             } else {
@@ -690,7 +690,7 @@ use std::sync::{Arc, Mutex};
             params: &NavierStokesParams,
             dt: f64,
             n_steps: usize,
-        ) -> Result<Vec<FluidState3D>> {
+        ) -> IntegrateResult<Vec<FluidState3D>> {
             let mut states = vec![initial_state.clone()];
             let mut current_state = initial_state.clone();
 
@@ -719,7 +719,7 @@ use std::sync::{Arc, Mutex};
             params: &NavierStokesParams,
             dt: f64,
             n_steps: usize,
-        ) -> Result<Vec<FluidState3D>> {
+        ) -> IntegrateResult<Vec<FluidState3D>> {
             let mut states = vec![initial_state.clone()];
             let mut current_state = initial_state.clone();
 
@@ -742,8 +742,9 @@ use std::sync::{Arc, Mutex};
         /// Simulate GPU pressure Poisson solver
         fn gpu_pressure_poisson_solve(
             &self,
-            state: &FluidState3D_params: &NavierStokesParams,
-        ) -> Result<FluidState3D> {
+            state: &FluidState3D,
+            _params: &NavierStokesParams,
+        ) -> IntegrateResult<FluidState3D> {
             let mut new_state = state.clone();
 
             // Simulate GPU multigrid solver for pressure Poisson equation
@@ -752,10 +753,10 @@ use std::sync::{Arc, Mutex};
 
             for _iter in 0..n_iterations {
                 // Simulate GPU kernel execution
-                new_state.pressure = self.simulate_gpu_kernel_pressure(&new_state.pressure)?;
+                new_state.pressure = GPUFluidSolver::simulate_gpu_kernel_pressure(&new_state.pressure)?;
 
                 // Check convergence (simplified)
-                let residual = self.compute_pressure_residual(&new_state)?;
+                let residual = GPUFluidSolver::compute_pressure_residual(&new_state)?;
                 if residual < tolerance {
                     break;
                 }
@@ -770,7 +771,7 @@ use std::sync::{Arc, Mutex};
             state: &FluidState3D,
             params: &NavierStokesParams,
             dt: f64,
-        ) -> Result<FluidState3D> {
+        ) -> IntegrateResult<FluidState3D> {
             let mut new_state = state.clone();
 
             // Simulate GPU kernels for velocity update
@@ -788,20 +789,20 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Simulate GPU boundary condition application
-        fn gpu_apply_boundary_conditions(_state: &FluidState3D) -> Result<FluidState3D> {
+        fn gpu_apply_boundary_conditions(_state: &FluidState3D) -> IntegrateResult<FluidState3D> {
             let mut new_state = _state.clone();
 
             // Simulate GPU kernel for boundary conditions
             for component in 0..3 {
                 new_state.velocity[component] =
-                    self.simulate_gpu_kernel_boundaries(&new_state.velocity[component])?;
+                    GPUFluidSolver::simulate_gpu_kernel_boundaries(&new_state.velocity[component])?;
             }
 
             Ok(new_state)
         }
 
         /// Simulate GPU kernel for pressure solving
-        fn simulate_gpu_kernel_pressure(_pressure: &Array3<f64>) -> Result<Array3<f64>> {
+        fn simulate_gpu_kernel_pressure(_pressure: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
             let mut new_pressure = _pressure.clone();
 
             // Simulate GPU thread blocks processing in parallel
@@ -833,7 +834,7 @@ use std::sync::{Arc, Mutex};
             params: &NavierStokesParams,
             dt: f64,
             component: usize,
-        ) -> Result<Array3<f64>> {
+        ) -> IntegrateResult<Array3<f64>> {
             let mut new_velocity = velocity.clone();
             let (nx, ny, nz) = velocity.dim();
 
@@ -878,7 +879,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Simulate GPU kernel for boundary conditions
-        fn simulate_gpu_kernel_boundaries(_velocity: &Array3<f64>) -> Result<Array3<f64>> {
+        fn simulate_gpu_kernel_boundaries(_velocity: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
             let mut new_velocity = _velocity.clone();
             let (nx, ny, nz) = _velocity.dim();
 
@@ -913,8 +914,9 @@ use std::sync::{Arc, Mutex};
         /// Parallel pressure solve using CPU
         fn parallel_pressure_solve(
             &self,
-            state: &FluidState3D_params: &NavierStokesParams,
-        ) -> Result<FluidState3D> {
+            state: &FluidState3D,
+            _params: &NavierStokesParams,
+        ) -> IntegrateResult<FluidState3D> {
             let mut new_state = state.clone();
 
             // Use parallel iteration for pressure solve
@@ -934,7 +936,7 @@ use std::sync::{Arc, Mutex};
             state: &FluidState3D,
             params: &NavierStokesParams,
             dt: f64,
-        ) -> Result<FluidState3D> {
+        ) -> IntegrateResult<FluidState3D> {
             let mut new_state = state.clone();
 
             // Process each velocity component in parallel
@@ -957,7 +959,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Parallel boundary condition application
-        fn parallel_boundary_conditions(_state: &FluidState3D) -> Result<FluidState3D> {
+        fn parallel_boundary_conditions(_state: &FluidState3D) -> IntegrateResult<FluidState3D> {
             let mut new_state = _state.clone();
 
             // Apply boundary conditions in parallel for each component
@@ -981,10 +983,10 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Compute pressure residual for convergence checking
-        fn compute_pressure_residual(_state: &FluidState3D) -> Result<f64> {
+        fn compute_pressure_residual(_state: &FluidState3D) -> IntegrateResult<f64> {
             let pressure = &_state.pressure;
             let (nx, ny, nz) = pressure.dim();
-            let mut residual = 0.0;
+            let mut residual: f64 = 0.0;
 
             for i in 1..nx - 1 {
                 for j in 1..ny - 1 {
@@ -1091,7 +1093,7 @@ use std::sync::{Arc, Mutex};
         }
 
         impl Default for SpalartAllmarasConstants {
-            fn default(&self) -> Self {
+            fn default() -> Self {
                 Self {
                     cb1: 0.1355,
                     cb2: 0.622,
@@ -1126,7 +1128,7 @@ use std::sync::{Arc, Mutex};
                 dx: f64,
                 dy: f64,
                 dz: f64,
-            ) -> Result<()> {
+            ) -> IntegrateResult<()> {
                 let (nx, ny, nz) = self.nu_tilde.dim();
 
                 // Update vorticity field
@@ -1178,7 +1180,7 @@ use std::sync::{Arc, Mutex};
                 dx: f64,
                 dy: f64,
                 dz: f64,
-            ) -> Result<()> {
+            ) -> IntegrateResult<()> {
                 let (nx, ny, nz) = self.vorticity.dim();
 
                 for i in 1..nx - 1 {
@@ -1217,7 +1219,7 @@ use std::sync::{Arc, Mutex};
                 j: usize,
                 k: usize,
                 d: f64,
-            ) -> Result<f64> {
+            ) -> IntegrateResult<f64> {
                 let s = self.vorticity[[i, j, k]];
                 let nu_tilde = self.nu_tilde[[i, j, k]];
 
@@ -1238,7 +1240,7 @@ use std::sync::{Arc, Mutex};
                 j: usize,
                 k: usize,
                 d: f64,
-            ) -> Result<f64> {
+            ) -> IntegrateResult<f64> {
                 let nu_tilde = self.nu_tilde[[i, j, k]];
                 let r = (nu_tilde
                     / (self.vorticity[[i, j, k]]
@@ -1267,7 +1269,7 @@ use std::sync::{Arc, Mutex};
                 dx: f64,
                 dy: f64,
                 dz: f64,
-            ) -> Result<f64> {
+            ) -> IntegrateResult<f64> {
                 let nu_tilde = self.nu_tilde[[i, j, k]];
                 let effective_viscosity = nu + nu_tilde;
 
@@ -1344,7 +1346,7 @@ use std::sync::{Arc, Mutex};
         }
 
         impl Default for KOmegaSSTConstants {
-            fn default(&self) -> Self {
+            fn default() -> Self {
                 Self {
                     beta_star: 0.09,
                     alpha_1: 5.0 / 9.0,
@@ -1382,7 +1384,7 @@ use std::sync::{Arc, Mutex};
                 dx: f64,
                 dy: f64,
                 dz: f64,
-            ) -> Result<()> {
+            ) -> IntegrateResult<()> {
                 // Update blending function
                 self.update_blending_function(wall_distance, molecular_viscosity, dx, dy, dz)?;
 
@@ -1390,7 +1392,7 @@ use std::sync::{Arc, Mutex};
                 self.solve_k_equation(velocity, molecular_viscosity, dt, dx, dy, dz)?;
 
                 // Solve omega equation
-                self.solve_omega_equation(velocity, molecular_viscosity, dt, dx, dy, dz)?;
+                KOmegaSSTModel::solve_omega_equation(velocity, molecular_viscosity, dt, dx, dy, dz)?;
 
                 Ok(())
             }
@@ -1403,7 +1405,7 @@ use std::sync::{Arc, Mutex};
                 dx: f64,
                 dy: f64,
                 dz: f64,
-            ) -> Result<()> {
+            ) -> IntegrateResult<()> {
                 let (nx, ny, nz) = self.f1.dim();
 
                 for i in 1..nx - 1 {
@@ -1455,7 +1457,7 @@ use std::sync::{Arc, Mutex};
                 dx: f64,
                 dy: f64,
                 dz: f64,
-            ) -> Result<()> {
+            ) -> IntegrateResult<()> {
                 let (nx, ny, nz) = self.k.dim();
 
                 for i in 1..nx - 1 {
@@ -1478,8 +1480,8 @@ use std::sync::{Arc, Mutex};
                                     + (velocity[1][[i + 1, j, k]] - velocity[1][[i - 1, j, k]])
                                         / (2.0 * dx));
 
-                            let strain_magnitude = (2.0
-                                * (s11 * s11 + s22 * s22 + s33 * s33 + 2.0 * s12 * s12))
+                            let strain_magnitude = (2.0_f64
+                                * (s11 * s11 + s22 * s22 + s33 * s33 + 2.0_f64 * s12 * s12))
                                 .sqrt();
 
                             // Turbulent viscosity
@@ -1524,7 +1526,7 @@ use std::sync::{Arc, Mutex};
                 dx: f64,
                 dy: f64,
                 dz: f64,
-            ) -> Result<()> {
+            ) -> IntegrateResult<()> {
                 let (nx, ny, nz) = self.omega.dim();
 
                 for i in 1..nx - 1 {
@@ -1614,7 +1616,7 @@ use std::sync::{Arc, Mutex};
         /// Create new multigrid solver
         pub fn new(_n_levels: usize, smoother: SmootherType, cycle_type: CycleType) -> Self {
             Self {
-                _n_levels,
+                n_levels: _n_levels,
                 n_smooth: 3,
                 smoother,
                 cycle_type,
@@ -1627,16 +1629,16 @@ use std::sync::{Arc, Mutex};
             &self,
             rhs: &Array3<f64>,
             initial_guess: &Array3<f64>,
-        ) -> Result<Array3<f64>> {
+        ) -> IntegrateResult<Array3<f64>> {
             let mut solution = initial_guess.clone();
-            let mut residual = self.compute_residual(&solution, rhs)?;
+            let mut residual = MultigridSolver::compute_residual(&solution, rhs)?;
 
             let mut iteration = 0;
             const MAX_ITERATIONS: usize = 100;
 
             while residual > self.tolerance && iteration < MAX_ITERATIONS {
-                solution = self.multigrid_cycle(&solution, rhs)?;
-                residual = self.compute_residual(&solution, rhs)?;
+                solution = MultigridSolver::multigrid_cycle(&solution, rhs)?;
+                residual = MultigridSolver::compute_residual(&solution, rhs)?;
                 iteration += 1;
             }
 
@@ -1650,7 +1652,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Perform one multigrid cycle
-        fn multigrid_cycle(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn multigrid_cycle(u: &Array3<f64>, f: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
             match self.cycle_type {
                 CycleType::VCycle => self.v_cycle(u, f, 0),
                 CycleType::WCycle => self.w_cycle(u, f, 0),
@@ -1659,7 +1661,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// V-cycle multigrid
-        fn v_cycle(u: &Array3<f64>, f: &Array3<f64>, level: usize) -> Result<Array3<f64>> {
+        fn v_cycle(u: &Array3<f64>, f: &Array3<f64>, level: usize) -> IntegrateResult<Array3<f64>> {
             if level == self.n_levels - 1 {
                 // Coarsest level - direct solve
                 return self.direct_solve(u, f);
@@ -1689,7 +1691,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// W-cycle multigrid
-        fn w_cycle(u: &Array3<f64>, f: &Array3<f64>, level: usize) -> Result<Array3<f64>> {
+        fn w_cycle(u: &Array3<f64>, f: &Array3<f64>, level: usize) -> IntegrateResult<Array3<f64>> {
             if level == self.n_levels - 1 {
                 return self.direct_solve(u, f);
             }
@@ -1715,7 +1717,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// F-cycle multigrid
-        fn f_cycle(u: &Array3<f64>, f: &Array3<f64>, level: usize) -> Result<Array3<f64>> {
+        fn f_cycle(u: &Array3<f64>, f: &Array3<f64>, level: usize) -> IntegrateResult<Array3<f64>> {
             if level == self.n_levels - 1 {
                 return self.direct_solve(u, f);
             }
@@ -1732,7 +1734,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Apply smoother
-        fn smooth(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn smooth(u: &Array3<f64>, f: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
             let mut result = u.clone();
 
             for _iter in 0..self.n_smooth {
@@ -1748,7 +1750,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Jacobi smoother
-        fn jacobi_smooth(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn jacobi_smooth(u: &Array3<f64>, f: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
             let mut new_u = u.clone();
             let (nx, ny, nz) = u.dim();
 
@@ -1771,7 +1773,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Gauss-Seidel smoother
-        fn gauss_seidel_smooth(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn gauss_seidel_smooth(u: &Array3<f64>, f: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
             let mut new_u = u.clone();
             let (nx, ny, nz) = u.dim();
 
@@ -1794,7 +1796,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// SOR smoother
-        fn sor_smooth(u: &Array3<f64>, f: &Array3<f64>, omega: f64) -> Result<Array3<f64>> {
+        fn sor_smooth(u: &Array3<f64>, f: &Array3<f64>, omega: f64) -> IntegrateResult<Array3<f64>> {
             let mut new_u = u.clone();
             let (nx, ny, nz) = u.dim();
 
@@ -1819,7 +1821,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Red-Black Gauss-Seidel smoother
-        fn red_black_gs_smooth(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn red_black_gs_smooth(u: &Array3<f64>, f: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
             let mut new_u = u.clone();
             let (nx, ny, nz) = u.dim();
 
@@ -1863,7 +1865,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Restrict to coarser grid
-        fn restrict(_fine: &Array3<f64>) -> Result<Array3<f64>> {
+        fn restrict(_fine: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
             let (nx, ny, nz) = _fine.dim();
             let coarse = Array3::zeros((nx / 2 + 1, ny / 2 + 1, nz / 2 + 1));
 
@@ -1875,7 +1877,7 @@ use std::sync::{Arc, Mutex};
         fn prolongate(
             &self_coarse: &Array3<f64>,
             fine_dim: (usize, usize, usize),
-        ) -> Result<Array3<f64>> {
+        ) -> IntegrateResult<Array3<f64>> {
             let fine = Array3::zeros(fine_dim);
 
             // Trilinear interpolation (simplified)
@@ -1883,16 +1885,16 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Direct solve on coarsest grid
-        fn direct_solve(_u: &Array3<f64>, _f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn direct_solve(_u: &Array3<f64>, _f: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
             // For very small grids, could use direct methods
             // For now, just return smoothed result
             Ok(Array3::zeros((3, 3, 3)))
         }
 
         /// Compute residual norm
-        fn compute_residual(u: &Array3<f64>, f: &Array3<f64>) -> Result<f64> {
+        fn compute_residual(u: &Array3<f64>, f: &Array3<f64>) -> IntegrateResult<f64> {
             let (nx, ny, nz) = u.dim();
-            let mut residual = 0.0;
+            let mut residual: f64 = 0.0;
 
             for i in 1..nx - 1 {
                 for j in 1..ny - 1 {
@@ -1914,7 +1916,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Compute residual as Array3
-        fn compute_residual_array(u: &Array3<f64>, f: &Array3<f64>) -> Result<Array3<f64>> {
+        fn compute_residual_array(u: &Array3<f64>, f: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
             let (nx, ny, nz) = u.dim();
             let mut residual = Array3::zeros((nx, ny, nz));
 
@@ -1983,11 +1985,11 @@ use std::sync::{Arc, Mutex};
         /// Create new adaptive CFD solver
         pub fn new(_base_levels: usize, max_level: usize, use_gpu: bool) -> Self {
             Self {
-                _base_levels,
+                base_levels: _base_levels,
                 max_level,
                 refinement_criterion: RefinementCriterion::Combined,
                 load_balancing: LoadBalancingStrategy::Dynamic,
-                _gpu_solver: if use_gpu {
+                gpu_solver: if use_gpu {
                     Some(GPUFluidSolver::new(64, 64, 64, true))
                 } else {
                     None
@@ -2007,16 +2009,16 @@ use std::sync::{Arc, Mutex};
             params: &NavierStokesParams,
             dt: f64,
             n_steps: usize,
-        ) -> Result<Vec<FluidState3D>> {
+        ) -> IntegrateResult<Vec<FluidState3D>> {
             let mut current_state = initial_state.clone();
             let mut states = vec![current_state.clone()];
 
             for _step in 0..n_steps {
                 // Assess refinement needs
-                let refinement_map = self.assess_refinement_needs(&current_state)?;
+                let refinement_map = AdaptiveCFDSolver::assess_refinement_needs(&current_state)?;
 
                 // Adapt mesh if necessary
-                if self.needs_refinement(&refinement_map) {
+                if AdaptiveCFDSolver::needs_refinement(&refinement_map) {
                     current_state = self.refine_mesh(&current_state, &refinement_map)?;
                 }
 
@@ -2039,7 +2041,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Assess where mesh refinement is needed
-        fn assess_refinement_needs(_state: &FluidState3D) -> Result<Array3<bool>> {
+        fn assess_refinement_needs(_state: &FluidState3D) -> IntegrateResult<Array3<bool>> {
             let (nx, ny, nz) = _state.velocity[0].dim();
             let mut refinement_map = Array3::from_elem((nx, ny, nz), false);
 
@@ -2068,14 +2070,14 @@ use std::sync::{Arc, Mutex};
             &self,
             state: &FluidState3D,
             refinement_map: &mut Array3<bool>,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let (nx, ny, nz) = state.velocity[0].dim();
             let threshold = 0.1; // Refinement threshold
 
             for i in 1..nx - 1 {
                 for j in 1..ny - 1 {
                     for k in 1..nz - 1 {
-                        let mut grad_magnitude = 0.0;
+                        let mut grad_magnitude: f64 = 0.0;
 
                         // Compute velocity gradient magnitude
                         for component in 0..3 {
@@ -2105,7 +2107,7 @@ use std::sync::{Arc, Mutex};
             &self,
             state: &FluidState3D,
             refinement_map: &mut Array3<bool>,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let (nx, ny, nz) = state.pressure.dim();
             let threshold = 0.1;
 
@@ -2140,7 +2142,7 @@ use std::sync::{Arc, Mutex};
             &self,
             state: &FluidState3D,
             refinement_map: &mut Array3<bool>,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let (nx, ny, nz) = state.velocity[0].dim();
             let threshold = 0.1;
 
@@ -2180,8 +2182,9 @@ use std::sync::{Arc, Mutex};
         /// Refine mesh based on refinement map
         fn refine_mesh(
             &self,
-            state: &FluidState3D_refinement_map: &Array3<bool>,
-        ) -> Result<FluidState3D> {
+            state: &FluidState3D,
+            _refinement_map: &Array3<bool>,
+        ) -> IntegrateResult<FluidState3D> {
             // For now, return the original state
             // In a full implementation, this would:
             // 1. Create finer grids where refinement is needed
@@ -2196,11 +2199,11 @@ use std::sync::{Arc, Mutex};
             state: &FluidState3D,
             params: &NavierStokesParams,
             dt: f64,
-        ) -> Result<FluidState3D> {
+        ) -> IntegrateResult<FluidState3D> {
             let mut new_state = state.clone();
 
             // Use multigrid solver for pressure
-            let pressure_rhs = self.compute_pressure_rhs(state)?;
+            let pressure_rhs = AdaptiveCFDSolver::compute_pressure_rhs(state)?;
             new_state.pressure = self
                 .multigrid_solver
                 .solve_pressure_poisson(&pressure_rhs, &state.pressure)?;
@@ -2212,7 +2215,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Compute pressure right-hand side
-        fn compute_pressure_rhs(_state: &FluidState3D) -> Result<Array3<f64>> {
+        fn compute_pressure_rhs(_state: &FluidState3D) -> IntegrateResult<Array3<f64>> {
             let (nx, ny, nz) = _state.velocity[0].dim();
             let mut rhs = Array3::zeros((nx, ny, nz));
 
@@ -2241,7 +2244,7 @@ use std::sync::{Arc, Mutex};
             state: &FluidState3D,
             params: &NavierStokesParams,
             dt: f64,
-        ) -> Result<FluidState3D> {
+        ) -> IntegrateResult<FluidState3D> {
             let mut new_state = state.clone();
 
             // Use SIMD operations for velocity update
@@ -2410,7 +2413,7 @@ pub mod turbulence_models {
             initial_state: FluidState3D,
             final_time: f64,
             n_steps: usize,
-        ) -> Result<Vec<FluidState3D>> {
+        ) -> IntegrateResult<Vec<FluidState3D>> {
             let dt = final_time / n_steps as f64;
             let mut _state = initial_state;
             let mut results = Vec::with_capacity(n_steps + 1);
@@ -2418,13 +2421,13 @@ pub mod turbulence_models {
 
             for _step in 0..n_steps {
                 // Compute SGS stress tensor
-                let sgs_stress = self.compute_sgs_stress(&_state)?;
+                let sgs_stress = LESolver::compute_sgs_stress(&_state)?;
 
                 // Update velocity using filtered Navier-Stokes equations
                 _state = self.update_velocity_3d(&_state, &sgs_stress, dt)?;
 
                 // Apply boundary conditions
-                _state = self.apply_boundary_conditions_3d(_state)?;
+                _state = LESolver::apply_boundary_conditions_3d(_state)?;
 
                 // Store result
                 results.push(_state.clone());
@@ -2433,7 +2436,7 @@ pub mod turbulence_models {
             Ok(results)
         }
 
-        fn compute_sgs_stress(_state: &FluidState3D) -> Result<Array4<f64>> {
+        fn compute_sgs_stress(_state: &FluidState3D) -> IntegrateResult<Array4<f64>> {
             let mut sgs_stress = Array4::zeros((3, 3, self.nx, self.ny));
 
             match self.sgs_model {
@@ -2458,16 +2461,16 @@ pub mod turbulence_models {
             &self,
             sgs_stress: &mut Array4<f64>,
             state: &FluidState3D,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let delta = (self.dx * self.dy * self.dz).powf(1.0 / 3.0); // Filter width
 
             // Compute strain rate tensor
-            let strain_rate = self.compute_strain_rate_tensor_3d(state)?;
+            let strain_rate = LESolver::compute_strain_rate_tensor_3d(state)?;
 
             for i in 0..self.nx {
                 for j in 0..self.ny {
                     // Compute magnitude of strain rate
-                    let mut s_mag = 0.0;
+                    let mut s_mag: f64 = 0.0;
                     for ii in 0..3 {
                         for jj in 0..3 {
                             s_mag += strain_rate[[ii, jj, i, j]] * strain_rate[[ii, jj, i, j]];
@@ -2495,14 +2498,14 @@ pub mod turbulence_models {
             &self,
             sgs_stress: &mut Array4<f64>,
             state: &FluidState3D,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             // Dynamic procedure to compute Smagorinsky coefficient
             let test_filter_ratio = 2.0;
             let delta = (self.dx * self.dy * self.dz).powf(1.0 / 3.0);
             let delta_test = test_filter_ratio * delta;
 
             // Apply test filter to velocity field
-            let filtered_velocity = self.apply_test_filter_3d(&state.velocity)?;
+            let filtered_velocity = LESolver::apply_test_filter_3d(&state.velocity)?;
 
             // Compute Leonard _stress (resolved _stress)
             let leonard_stress = self.compute_leonard_stress_3d(state, &filtered_velocity)?;
@@ -2515,10 +2518,10 @@ pub mod turbulence_models {
                 dy: state.dy,
                 dz: state.dz,
             };
-            let filtered_strain = self.compute_strain_rate_tensor_3d(&filtered_state)?;
+            let filtered_strain = LESolver::compute_strain_rate_tensor_3d(&filtered_state)?;
 
             // Original strain rate
-            let strain_rate = self.compute_strain_rate_tensor_3d(state)?;
+            let strain_rate = LESolver::compute_strain_rate_tensor_3d(state)?;
 
             for i in 0..self.nx {
                 for j in 0..self.ny {
@@ -2534,7 +2537,7 @@ pub mod turbulence_models {
                     )?;
 
                     // Compute magnitude of strain rate
-                    let mut s_mag = 0.0;
+                    let mut s_mag: f64 = 0.0;
                     for ii in 0..3 {
                         for jj in 0..3 {
                             s_mag += strain_rate[[ii, jj, i, j]] * strain_rate[[ii, jj, i, j]];
@@ -2562,12 +2565,12 @@ pub mod turbulence_models {
             &self,
             sgs_stress: &mut Array4<f64>,
             state: &FluidState3D,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let delta = (self.dx * self.dy * self.dz).powf(1.0 / 3.0);
             let cw = 0.5; // WALE constant
 
             // Compute velocity gradient tensor
-            let grad_u = self.compute_velocity_gradient_3d(state)?;
+            let grad_u = LESolver::compute_velocity_gradient_3d(state)?;
 
             for i in 0..self.nx {
                 for j in 0..self.ny {
@@ -2592,8 +2595,8 @@ pub mod turbulence_models {
                     }
 
                     // Compute invariants
-                    let mut s_d_mag_sq = 0.0;
-                    let mut omega_mag_sq = 0.0;
+                    let mut s_d_mag_sq: f64 = 0.0;
+                    let mut omega_mag_sq: f64 = 0.0;
 
                     for ii in 0..3 {
                         for jj in 0..3 {
@@ -2623,12 +2626,12 @@ pub mod turbulence_models {
             &self,
             sgs_stress: &mut Array4<f64>,
             state: &FluidState3D,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let delta = (self.dx * self.dy * self.dz).powf(1.0 / 3.0);
             let cv: f64 = 0.07; // Vreman constant
 
             // Compute velocity gradient tensor
-            let grad_u = self.compute_velocity_gradient_3d(state)?;
+            let grad_u = LESolver::compute_velocity_gradient_3d(state)?;
 
             for i in 0..self.nx {
                 for j in 0..self.ny {
@@ -2677,7 +2680,7 @@ pub mod turbulence_models {
             Ok(())
         }
 
-        fn compute_strain_rate_tensor_3d(_state: &FluidState3D) -> Result<Array4<f64>> {
+        fn compute_strain_rate_tensor_3d(_state: &FluidState3D) -> IntegrateResult<Array4<f64>> {
             let mut strain_rate = Array4::zeros((3, 3, self.nx, self.ny));
 
             // Compute derivatives using central differences
@@ -2708,7 +2711,7 @@ pub mod turbulence_models {
             Ok(strain_rate)
         }
 
-        fn compute_velocity_gradient_3d(_state: &FluidState3D) -> Result<Array4<f64>> {
+        fn compute_velocity_gradient_3d(_state: &FluidState3D) -> IntegrateResult<Array4<f64>> {
             let mut grad_u = Array4::zeros((3, 3, self.nx, self.ny));
 
             // Compute derivatives using central differences
@@ -2733,7 +2736,7 @@ pub mod turbulence_models {
             Ok(grad_u)
         }
 
-        fn apply_test_filter_3d(_velocity: &[Array2<f64>]) -> Result<Vec<Array2<f64>>> {
+        fn apply_test_filter_3d(_velocity: &[Array2<f64>]) -> IntegrateResult<Vec<Array2<f64>>> {
             let mut filtered = vec![Array2::zeros((self.nx, self.ny)); 3];
 
             // Simple box filter
@@ -2744,7 +2747,7 @@ pub mod turbulence_models {
                 // 2D case
                 for i in filter_width..(self.nx - filter_width) {
                     for j in filter_width..(self.ny - filter_width) {
-                        let mut sum = 0.0;
+                        let mut sum: f64 = 0.0;
                         for di in 0..filter_width {
                             for dj in 0..filter_width {
                                 sum += _velocity[comp]
@@ -2763,7 +2766,7 @@ pub mod turbulence_models {
             &self,
             state: &FluidState3D,
             filtered_velocity: &[Array2<f64>],
-        ) -> Result<Array4<f64>> {
+        ) -> IntegrateResult<Array4<f64>> {
             let mut leonard = Array4::zeros((3, 3, self.nx, self.ny));
 
             // Compute Leonard stress: L_ij = u_i * u_j - filtered(u_i) * filtered(u_j)
@@ -2773,7 +2776,7 @@ pub mod turbulence_models {
                         // 2D case
                         for jj in 0..2 {
                             let unfiltered_product =
-                                state._velocity[ii][[i, j]] * state._velocity[jj][[i, j]];
+                                state.velocity[ii][[i, j]] * state.velocity[jj][[i, j]];
                             let filtered_product =
                                 filtered_velocity[ii][[i, j]] * filtered_velocity[jj][[i, j]];
                             leonard[[ii, jj, i, j]] = unfiltered_product - filtered_product;
@@ -2794,10 +2797,10 @@ pub mod turbulence_models {
             j: usize,
             delta: f64,
             delta_test: f64,
-        ) -> Result<f64> {
+        ) -> IntegrateResult<f64> {
             // Simplified dynamic coefficient calculation
-            let mut numerator = 0.0;
-            let mut denominator = 0.0;
+            let mut numerator: f64 = 0.0;
+            let mut denominator: f64 = 0.0;
 
             for ii in 0..3 {
                 for jj in 0..3 {
@@ -2821,7 +2824,7 @@ pub mod turbulence_models {
             state: &FluidState3D,
             sgs_stress: &Array4<f64>,
             dt: f64,
-        ) -> Result<FluidState3D> {
+        ) -> IntegrateResult<FluidState3D> {
             let mut new_velocity = state.velocity.clone();
 
             // Update velocity using LES equations
@@ -2876,7 +2879,7 @@ pub mod turbulence_models {
             })
         }
 
-        fn apply_boundary_conditions_3d(mut state: FluidState3D) -> Result<FluidState3D> {
+        fn apply_boundary_conditions_3d(mut state: FluidState3D) -> IntegrateResult<FluidState3D> {
             // No-slip boundary conditions
             for j in 0..self.ny {
                 state.velocity[0][[0, j]] = 0.0;
@@ -2957,23 +2960,23 @@ pub mod turbulence_models {
             initial_state: RANSState,
             max_iterations: usize,
             tolerance: f64,
-        ) -> Result<RANSState> {
+        ) -> IntegrateResult<RANSState> {
             let mut _state = initial_state;
 
             for _iteration in 0..max_iterations {
-                let old_residual = self.compute_residual(&_state)?;
+                let old_residual = RANSSolver::compute_residual(&_state)?;
 
                 // Update turbulence quantities
-                _state = self.update_turbulence_quantities(&_state)?;
+                _state = RANSSolver::update_turbulence_quantities(&_state)?;
 
                 // Update mean flow
-                _state = self.update_mean_flow(&_state)?;
+                _state = RANSSolver::update_mean_flow(&_state)?;
 
                 // Apply boundary conditions
-                _state = self.apply_rans_boundary_conditions(_state)?;
+                _state = RANSSolver::apply_rans_boundary_conditions(_state)?;
 
                 // Check convergence
-                let new_residual = self.compute_residual(&_state)?;
+                let new_residual = RANSSolver::compute_residual(&_state)?;
                 if (old_residual - new_residual).abs() < tolerance {
                     break;
                 }
@@ -2982,7 +2985,7 @@ pub mod turbulence_models {
             Ok(_state)
         }
 
-        fn update_turbulence_quantities(_state: &RANSState) -> Result<RANSState> {
+        fn update_turbulence_quantities(_state: &RANSState) -> IntegrateResult<RANSState> {
             match self.turbulence_model {
                 RANSModel::KEpsilon => self.update_k_epsilon(_state),
                 RANSModel::KOmega => self.update_k_omega(_state),
@@ -2991,7 +2994,7 @@ pub mod turbulence_models {
             }
         }
 
-        fn update_k_epsilon(_state: &RANSState) -> Result<RANSState> {
+        fn update_k_epsilon(_state: &RANSState) -> IntegrateResult<RANSState> {
             let mut new_state = _state.clone();
 
             // k-ε model constants
@@ -3027,7 +3030,7 @@ pub mod turbulence_models {
             Ok(new_state)
         }
 
-        fn update_k_omega(_state: &RANSState) -> Result<RANSState> {
+        fn update_k_omega(_state: &RANSState) -> IntegrateResult<RANSState> {
             let mut new_state = _state.clone();
 
             // k-ω model constants
@@ -3069,7 +3072,7 @@ pub mod turbulence_models {
             Ok(new_state)
         }
 
-        fn update_k_omega_sst(_state: &RANSState) -> Result<RANSState> {
+        fn update_k_omega_sst(_state: &RANSState) -> IntegrateResult<RANSState> {
             // SST model combines k-ε and k-ω models using blending functions
             let f1 = self.compute_sst_blending_function(_state)?;
 
@@ -3095,7 +3098,7 @@ pub mod turbulence_models {
             Ok(new_state)
         }
 
-        fn update_reynolds_stress(_state: &RANSState) -> Result<RANSState> {
+        fn update_reynolds_stress(_state: &RANSState) -> IntegrateResult<RANSState> {
             // Simplified Reynolds Stress Model
             let mut new_state = _state.clone();
 
@@ -3147,7 +3150,7 @@ pub mod turbulence_models {
             i: usize,
             j: usize,
             nu_t: f64,
-        ) -> Result<f64> {
+        ) -> IntegrateResult<f64> {
             let s11 = self.compute_strain_component(state, i, j, 0, 0)?;
             let s12 = self.compute_strain_component(state, i, j, 0, 1)?;
             let s22 = self.compute_strain_component(state, i, j, 1, 1)?;
@@ -3161,7 +3164,7 @@ pub mod turbulence_models {
             i: usize,
             j: usize,
             nu_t: f64,
-        ) -> Result<f64> {
+        ) -> IntegrateResult<f64> {
             // Same as k-ε production for now
             self.compute_production_k_epsilon(state, i, j, nu_t)
         }
@@ -3173,7 +3176,7 @@ pub mod turbulence_models {
             j: usize,
             comp1: usize,
             comp2: usize,
-        ) -> Result<f64> {
+        ) -> IntegrateResult<f64> {
             let dx = state.dx;
             let dy = state.dy;
 
@@ -3206,7 +3209,7 @@ pub mod turbulence_models {
             }
         }
 
-        fn compute_sst_blending_function(_state: &RANSState) -> Result<Array2<f64>> {
+        fn compute_sst_blending_function(_state: &RANSState) -> IntegrateResult<Array2<f64>> {
             let mut f1 = Array2::ones((self.nx, self.ny));
 
             // Simplified blending function for SST model
@@ -3221,7 +3224,7 @@ pub mod turbulence_models {
             Ok(f1)
         }
 
-        fn update_mean_flow(_state: &RANSState) -> Result<RANSState> {
+        fn update_mean_flow(_state: &RANSState) -> IntegrateResult<RANSState> {
             let mut new_state = _state.clone();
 
             // Update mean velocity using RANS equations
@@ -3256,7 +3259,7 @@ pub mod turbulence_models {
             Ok(new_state)
         }
 
-        fn apply_rans_boundary_conditions(mut state: RANSState) -> Result<RANSState> {
+        fn apply_rans_boundary_conditions(mut state: RANSState) -> IntegrateResult<RANSState> {
             // Apply boundary conditions for all variables
             for j in 0..self.ny {
                 // Walls
@@ -3287,8 +3290,8 @@ pub mod turbulence_models {
             Ok(state)
         }
 
-        fn compute_residual(_state: &RANSState) -> Result<f64> {
-            let mut residual = 0.0;
+        fn compute_residual(_state: &RANSState) -> IntegrateResult<f64> {
+            let mut residual: f64 = 0.0;
             let mut count = 0;
 
             for i in 1..(self.nx - 1) {
@@ -3377,7 +3380,7 @@ pub mod turbulence_models {
         ) -> Self {
             let (ny, nx) = initial_grid.dim();
             let initial_level = MeshLevel {
-                _grid: initial_grid,
+                grid: initial_grid,
                 cell_sizes: Array2::from_elem((ny, nx), 1.0),
                 active_cells: Array2::from_elem((ny, nx), true),
                 level: 0,
@@ -3397,7 +3400,7 @@ pub mod turbulence_models {
             velocity: &[Array2<f64>],
             pressure: &Array2<f64>,
             turbulent_quantities: Option<&RANSState>,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             // Calculate refinement indicators
             let refinement_indicators =
                 self.calculate_refinement_indicators(velocity, pressure, turbulent_quantities)?;
@@ -3416,7 +3419,7 @@ pub mod turbulence_models {
                     for i in 0..nx {
                         if current_level.active_cells[[j, i]] {
                             let indicator = refinement_indicators[[j, i]];
-                            if self.should_refine(indicator) {
+                            if AdaptiveMeshRefinement::should_refine(indicator) {
                                 cells_to_refine.push((j, i));
                             }
                         }
@@ -3430,7 +3433,7 @@ pub mod turbulence_models {
             }
 
             // Coarsen cells that are below threshold
-            self.coarsen_mesh(&refinement_indicators)?;
+            AdaptiveMeshRefinement::coarsen_mesh(&refinement_indicators)?;
 
             Ok(())
         }
@@ -3441,7 +3444,7 @@ pub mod turbulence_models {
             velocity: &[Array2<f64>],
             pressure: &Array2<f64>,
             turbulent_quantities: Option<&RANSState>,
-        ) -> Result<Array2<f64>> {
+        ) -> IntegrateResult<Array2<f64>> {
             let (ny, nx) = velocity[0].dim();
             let mut indicators = Array2::zeros((ny, nx));
 
@@ -3532,7 +3535,7 @@ pub mod turbulence_models {
             &mut self,
             parent_level: usize,
             cells_to_refine: &[(usize, usize)],
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             if parent_level >= self.mesh_levels.len() {
                 return Err(IntegrateError::ValueError(
                     "Invalid parent _level index".to_string(),
@@ -3570,7 +3573,7 @@ pub mod turbulence_models {
                 grid: new_grid,
                 cell_sizes: new_cell_sizes,
                 active_cells: new_active_cells,
-                _level: parent_level + 1,
+                level: parent_level + 1,
             };
 
             // Add new _level or update existing one
@@ -3578,14 +3581,14 @@ pub mod turbulence_models {
                 self.mesh_levels.push(new_level);
             } else {
                 // Merge with existing _level
-                self.merge_mesh_levels(parent_level + 1, new_level)?;
+                AdaptiveMeshRefinement::merge_mesh_levels(parent_level + 1, new_level)?;
             }
 
             Ok(())
         }
 
         /// Merge new refined cells with existing mesh level
-        fn merge_mesh_levels(_level_idx: usize, new_level: MeshLevel) -> Result<()> {
+        fn merge_mesh_levels(_level_idx: usize, new_level: MeshLevel) -> IntegrateResult<()> {
             if _level_idx >= self.mesh_levels.len() {
                 return Err(IntegrateError::ValueError(
                     "Invalid _level index for merging".to_string(),
@@ -3610,7 +3613,7 @@ pub mod turbulence_models {
         }
 
         /// Coarsen mesh where refinement is no longer needed
-        fn coarsen_mesh(_indicators: &Array2<f64>) -> Result<()> {
+        fn coarsen_mesh(_indicators: &Array2<f64>) -> IntegrateResult<()> {
             // Remove fine level cells where indicator is below coarsening threshold
             for level_idx in (1..self.mesh_levels.len()).rev() {
                 let level = &mut self.mesh_levels[level_idx];
@@ -3638,7 +3641,7 @@ pub mod turbulence_models {
         }
 
         /// Get current active mesh points for a given level
-        pub fn get_active_mesh_points(_level: usize) -> Result<Vec<(usize, usize)>> {
+        pub fn get_active_mesh_points(_level: usize) -> IntegrateResult<Vec<(usize, usize)>> {
             if _level >= self.mesh_levels.len() {
                 return Err(IntegrateError::ValueError("Invalid mesh _level".to_string()));
             }
@@ -3741,7 +3744,7 @@ pub mod turbulence_models {
             turbulent_viscosity: &mut Array2<f64>,
             velocity: &[Array2<f64>],
             turbulent_quantities: &RANSState,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let (_ny_nx) = turbulent_viscosity.dim();
 
             match self.wall_treatment {
@@ -3773,18 +3776,18 @@ pub mod turbulence_models {
             turbulent_viscosity: &mut Array2<f64>,
             velocity: &[Array2<f64>],
             turbulent_quantities: &RANSState,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let (ny, nx) = turbulent_viscosity.dim();
 
             for j in 0..ny {
                 for i in 0..nx {
-                    let y_plus = self.calculate_y_plus(j, i, velocity)?;
+                    let y_plus = BoundaryLayerModel::calculate_y_plus(j, i, velocity)?;
                     let k = turbulent_quantities.turbulent_kinetic_energy[[j, i]];
                     let epsilon = turbulent_quantities.dissipation_rate[[j, i]];
 
                     // Low Reynolds number damping functions
                     let re_t = k * k / (0.01 * epsilon); // Turbulent Reynolds number
-                    let f_mu = self.calculate_viscosity_damping_function(re_t, y_plus);
+                    let f_mu = BoundaryLayerModel::calculate_viscosity_damping_function(re_t, y_plus);
 
                     turbulent_viscosity[[j, i]] *= f_mu;
                 }
@@ -3798,12 +3801,12 @@ pub mod turbulence_models {
             &self,
             turbulent_viscosity: &mut Array2<f64>,
             velocity: &[Array2<f64>], _turbulent_quantities: &RANSState,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let (ny, nx) = turbulent_viscosity.dim();
 
             for j in 0..ny {
                 for i in 0..nx {
-                    let y_plus = self.calculate_y_plus(j, i, velocity)?;
+                    let y_plus = BoundaryLayerModel::calculate_y_plus(j, i, velocity)?;
 
                     // Standard wall function approach
                     if y_plus > 11.225 {
@@ -3812,7 +3815,7 @@ pub mod turbulence_models {
                         let e_val = 9.8; // Roughness parameter
 
                         // Wall function modification
-                        let wall_function_factor = kappa * y_plus / (kappa * y_plus + e_val).ln();
+                        let wall_function_factor = kappa * y_plus / (kappa * y_plus + e_val as f64).ln();
                         turbulent_viscosity[[j, i]] *= wall_function_factor;
                     } else {
                         // Viscous sublayer
@@ -3830,12 +3833,12 @@ pub mod turbulence_models {
             turbulent_viscosity: &mut Array2<f64>,
             velocity: &[Array2<f64>],
             turbulent_quantities: &RANSState,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let (ny, nx) = turbulent_viscosity.dim();
 
             for j in 0..ny {
                 for i in 0..nx {
-                    let y_plus = self.calculate_y_plus(j, i, velocity)?;
+                    let y_plus = BoundaryLayerModel::calculate_y_plus(j, i, velocity)?;
 
                     // Automatic switching between low-Re and wall functions
                     if y_plus < 1.0 {
@@ -3843,22 +3846,22 @@ pub mod turbulence_models {
                         let k = turbulent_quantities.turbulent_kinetic_energy[[j, i]];
                         let epsilon = turbulent_quantities.dissipation_rate[[j, i]];
                         let re_t = k * k / (0.01 * epsilon);
-                        let f_mu = self.calculate_viscosity_damping_function(re_t, y_plus);
+                        let f_mu = BoundaryLayerModel::calculate_viscosity_damping_function(re_t, y_plus);
                         turbulent_viscosity[[j, i]] *= f_mu;
                     } else if y_plus > 30.0 {
                         // Use wall functions
                         let kappa = 0.41;
-                        let wall_function_factor = kappa * y_plus / (kappa * y_plus + 9.8).ln();
+                        let wall_function_factor = kappa * y_plus / (kappa * y_plus + 9.8_f64).ln();
                         turbulent_viscosity[[j, i]] *= wall_function_factor;
                     } else {
                         // Blending region
                         let k = turbulent_quantities.turbulent_kinetic_energy[[j, i]];
                         let epsilon = turbulent_quantities.dissipation_rate[[j, i]];
                         let re_t = k * k / (0.01 * epsilon);
-                        let f_mu_lowre = self.calculate_viscosity_damping_function(re_t, y_plus);
+                        let f_mu_lowre = BoundaryLayerModel::calculate_viscosity_damping_function(re_t, y_plus);
 
                         let kappa = 0.41;
-                        let f_mu_wf = kappa * y_plus / (kappa * y_plus + 9.8).ln();
+                        let f_mu_wf = kappa * y_plus / (kappa * y_plus + 9.8_f64).ln();
 
                         // Blend between approaches
                         let blend_factor = (y_plus - 1.0) / 29.0;
@@ -3872,7 +3875,7 @@ pub mod turbulence_models {
         }
 
         /// Calculate y+ value
-        fn calculate_y_plus(j: usize, i: usize, velocity: &[Array2<f64>]) -> Result<f64> {
+        fn calculate_y_plus(j: usize, i: usize, velocity: &[Array2<f64>]) -> IntegrateResult<f64> {
             let y = self.wall_distance[[j, i]];
 
             // Estimate wall shear velocity
@@ -3880,7 +3883,7 @@ pub mod turbulence_models {
 
             // Simplified wall shear velocity calculation
             let u_tau = if j > 0 && self.wall_distance[[j, i]] > 1e-10 {
-                (0.01 * u_wall.abs() / self.wall_distance[[j, i]]).sqrt()
+                (0.01_f64 * u_wall.abs() / self.wall_distance[[j, i]]).sqrt()
             } else {
                 1e-6
             };
@@ -3907,12 +3910,12 @@ pub mod turbulence_models {
             &mut self,
             velocity: &[Array2<f64>],
             x_locations: &Array1<f64>,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             // Update boundary layer thickness based on current flow field
             for (i, &x) in x_locations.iter().enumerate() {
                 if x > 0.0 {
                     // Find 99% velocity location
-                    let u_edge = self.find_edge_velocity(i, velocity)?;
+                    let u_edge = BoundaryLayerModel::find_edge_velocity(i, velocity)?;
                     let delta_99 =
                         self.find_boundary_layer_thickness(i, velocity, 0.99 * u_edge)?;
 
@@ -3926,7 +3929,7 @@ pub mod turbulence_models {
         }
 
         /// Find edge velocity (free stream velocity)
-        fn find_edge_velocity(i: usize, velocity: &[Array2<f64>]) -> Result<f64> {
+        fn find_edge_velocity(i: usize, velocity: &[Array2<f64>]) -> IntegrateResult<f64> {
             let (ny, nx) = velocity[0].dim();
 
             if i >= nx {
@@ -3948,7 +3951,7 @@ pub mod turbulence_models {
             i: usize,
             velocity: &[Array2<f64>],
             target_velocity: f64,
-        ) -> Result<f64> {
+        ) -> IntegrateResult<f64> {
             let (ny, nx) = _velocity[0].dim();
 
             if i >= nx {
@@ -4100,7 +4103,7 @@ impl CompressibleFlowSolver {
     #[allow(clippy::too_many_arguments)]
     pub fn new(_nx: usize, ny: usize, nz: usize, dx: f64, dy: f64, dz: f64) -> Self {
         Self {
-            _nx,
+            nx: _nx,
             ny,
             nz,
             dx,
@@ -4137,25 +4140,25 @@ impl CompressibleFlowSolver {
     }
 
     /// Solve compressible Euler/Navier-Stokes equations using SIMD
-    pub fn solve_step(&self, state: &mut CompressibleState, dt: f64) -> Result<()> {
+    pub fn solve_step(&self, state: &mut CompressibleState, dt: f64) -> IntegrateResult<()> {
         // Update derived quantities
         self.update_derived_quantities_simd(state)?;
 
         // Compute fluxes using SIMD
-        let fluxes = self.compute_fluxes_simd(state)?;
+        let fluxes = CompressibleFlowSolver::compute_fluxes_simd(state)?;
 
         // Apply Runge-Kutta 4th order time stepping with SIMD
         self.runge_kutta_step_simd(state, &fluxes, dt)?;
 
         // Apply boundary conditions
-        self.apply_compressible_boundary_conditions(state)?;
+        CompressibleFlowSolver::apply_compressible_boundary_conditions(state)?;
 
         self.time += dt;
         Ok(())
     }
 
     /// Update derived quantities (pressure, temperature, Mach) using SIMD
-    fn update_derived_quantities_simd(&self, state: &mut CompressibleState) -> Result<()> {
+    fn update_derived_quantities_simd(&self, state: &mut CompressibleState) -> IntegrateResult<()> {
         // Flatten arrays for SIMD processing
         let total_size = self.nx * self.ny * self.nz;
 
@@ -4218,7 +4221,7 @@ impl CompressibleFlowSolver {
     }
 
     /// Compute conservative fluxes using SIMD-optimized finite difference
-    fn compute_fluxes_simd(_state: &CompressibleState) -> Result<CompressibleFluxes> {
+    fn compute_fluxes_simd(_state: &CompressibleState) -> IntegrateResult<CompressibleFluxes> {
         let mut density_flux = Array3::zeros((self.nx, self.ny, self.nz));
         let mut momentum_flux = vec![
             Array3::zeros((self.nx, self.ny, self.nz)),
@@ -4290,7 +4293,7 @@ impl CompressibleFlowSolver {
         state: &mut CompressibleState,
         fluxes: &CompressibleFluxes,
         dt: f64,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         // RK4 implementation with SIMD
         let _dt_half = dt * 0.5;
         let _dt_sixth = dt / 6.0;
@@ -4333,7 +4336,7 @@ impl CompressibleFlowSolver {
     }
 
     /// Apply boundary conditions for compressible flow
-    fn apply_compressible_boundary_conditions(_state: &mut CompressibleState) -> Result<()> {
+    fn apply_compressible_boundary_conditions(_state: &mut CompressibleState) -> IntegrateResult<()> {
         // Reflective boundary conditions for solid walls
         // Zero gradient for outflow boundaries
         // Prescribed values for inflow boundaries
@@ -4435,7 +4438,7 @@ pub struct TurbulenceConstants {
 }
 
 impl Default for TurbulenceConstants {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             c_mu: 0.09,
             c_1: 1.44,
@@ -4451,7 +4454,7 @@ impl AdvancedTurbulenceModel {
     /// Create new turbulence model
     pub fn new(_model_type: TurbulenceModelType, nx: usize, ny: usize, nz: usize) -> Self {
         Self {
-            _model_type,
+            model_type: _model_type,
             constants: TurbulenceConstants::default(),
             wall_distance: Array3::ones((nx, ny, nz)),
         }
@@ -4467,7 +4470,7 @@ impl AdvancedTurbulenceModel {
         dx: f64,
         dy: f64,
         dz: f64,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         let (nx, ny, nz) = k.dim();
 
         // Calculate strain rate tensor using SIMD
@@ -4479,7 +4482,7 @@ impl AdvancedTurbulenceModel {
         for i in 0..nx {
             for j in 0..ny {
                 for k_idx in 0..nz {
-                    let mut s_squared = 0.0;
+                    let mut s_squared: f64 = 0.0;
                     for ii in 0..3 {
                         for jj in 0..3 {
                             s_squared += strain_rate[[i, j, k_idx]][[ii, jj]]
@@ -4509,7 +4512,7 @@ impl AdvancedTurbulenceModel {
         dx: f64,
         dy: f64,
         dz: f64,
-    ) -> Result<Array3<Array2<f64>>> {
+    ) -> IntegrateResult<Array3<Array2<f64>>> {
         let (nx, ny, nz) = velocity[0].dim();
         let mut strain_rate = Array3::from_elem((nx, ny, nz), Array2::zeros((3, 3)));
 
@@ -4572,7 +4575,7 @@ impl AdvancedTurbulenceModel {
         dx: f64,
         dy: f64,
         dz: f64,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         let (nx, ny, nz) = k.dim();
         let mut k_new = k.clone();
 
@@ -4619,7 +4622,7 @@ impl AdvancedTurbulenceModel {
         dx: f64,
         dy: f64,
         dz: f64,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         let (nx, ny, nz) = epsilon.dim();
         let mut epsilon_new = epsilon.clone();
 
@@ -4754,7 +4757,7 @@ impl SpectralNavierStokesSolver {
         &self,
         initial_vorticity: &Array2<f64>,
         t_final: f64,
-    ) -> Result<Vec<Array2<f64>>> {
+    ) -> IntegrateResult<Vec<Array2<f64>>> {
         let n_steps = (t_final / self.dt) as usize;
         let mut vorticity_history = Vec::with_capacity(n_steps + 1);
         vorticity_history.push(initial_vorticity.clone());
@@ -4762,8 +4765,8 @@ impl SpectralNavierStokesSolver {
         let mut omega = initial_vorticity.clone();
 
         // Wavenumber grids
-        let kx = self.wavenumber_grid_1d(self.nx, self.lx);
-        let ky = self.wavenumber_grid_1d(self.ny, self.ly);
+        let kx = SpectralNavierStokesSolver::wavenumber_grid_1d(self.nx, self.lx);
+        let ky = SpectralNavierStokesSolver::wavenumber_grid_1d(self.ny, self.ly);
 
         for _step in 0..n_steps {
             omega = self.rk4_step_2d(&omega, &kx, &ky)?;
@@ -4778,7 +4781,7 @@ impl SpectralNavierStokesSolver {
         &self,
         initial_velocity: &[Array3<f64>; 3],
         t_final: f64,
-    ) -> Result<Vec<[Array3<f64>; 3]>> {
+    ) -> IntegrateResult<Vec<[Array3<f64>; 3]>> {
         let nz = self.nz.ok_or_else(|| {
             IntegrateError::InvalidInput("3D solver requires nz to be specified".to_string())
         })?;
@@ -4793,9 +4796,9 @@ impl SpectralNavierStokesSolver {
         let mut u = initial_velocity.clone();
 
         // Wavenumber grids
-        let kx = self.wavenumber_grid_1d(self.nx, self.lx);
-        let ky = self.wavenumber_grid_1d(self.ny, self.ly);
-        let kz = self.wavenumber_grid_1d(nz, lz);
+        let kx = SpectralNavierStokesSolver::wavenumber_grid_1d(self.nx, self.lx);
+        let ky = SpectralNavierStokesSolver::wavenumber_grid_1d(self.ny, self.ly);
+        let kz = SpectralNavierStokesSolver::wavenumber_grid_1d(nz, lz);
 
         for _step in 0..n_steps {
             u = self.rk4_step_3d(&u, &kx, &ky, &kz)?;
@@ -4811,7 +4814,7 @@ impl SpectralNavierStokesSolver {
         omega: &Array2<f64>,
         kx: &Array1<f64>,
         ky: &Array1<f64>,
-    ) -> Result<Array2<f64>> {
+    ) -> IntegrateResult<Array2<f64>> {
         let k1 = self.vorticity_rhs_2d(omega, kx, ky)?;
 
         let omega_temp = omega + &(&k1 * (self.dt / 2.0));
@@ -4833,7 +4836,7 @@ impl SpectralNavierStokesSolver {
         kx: &Array1<f64>,
         ky: &Array1<f64>,
         kz: &Array1<f64>,
-    ) -> Result<[Array3<f64>; 3]> {
+    ) -> IntegrateResult<[Array3<f64>; 3]> {
         let k1 = self.velocity_rhs_3d(u, kx, ky, kz)?;
 
         let u_temp = [
@@ -4870,9 +4873,9 @@ impl SpectralNavierStokesSolver {
         omega: &Array2<f64>,
         kx: &Array1<f64>,
         ky: &Array1<f64>,
-    ) -> Result<Array2<f64>> {
+    ) -> IntegrateResult<Array2<f64>> {
         // Convert to Fourier space
-        let omega_hat = self.fft_2d_forward(omega)?;
+        let omega_hat = SpectralNavierStokesSolver::fft_2d_forward(omega)?;
 
         // Compute streamfunction by solving Poisson equation: ∇²ψ = -ω
         let psi_hat = self.solve_poisson_2d(&omega_hat, kx, ky)?;
@@ -4897,8 +4900,8 @@ impl SpectralNavierStokesSolver {
         let advection = &u * &dwdx + &v * &dwdy;
 
         // Apply dealiasing
-        let advection_dealiased = self.apply_dealiasing_2d(&advection)?;
-        let advection_hat = self.fft_2d_forward(&advection_dealiased)?;
+        let advection_dealiased = SpectralNavierStokesSolver::apply_dealiasing_2d(&advection)?;
+        let advection_hat = Self::fft_2d_forward(&advection_dealiased)?;
 
         // Compute diffusion term: ν∇²ω
         let diffusion_hat = self.laplacian_spectral_2d(&omega_hat, kx, ky)?;
@@ -4918,12 +4921,12 @@ impl SpectralNavierStokesSolver {
         kx: &Array1<f64>,
         ky: &Array1<f64>,
         kz: &Array1<f64>,
-    ) -> Result<[Array3<f64>; 3]> {
+    ) -> IntegrateResult<[Array3<f64>; 3]> {
         // Convert velocity to Fourier space
         let u_hat = [
-            self.fft_3d_forward(&u[0])?,
-            self.fft_3d_forward(&u[1])?,
-            self.fft_3d_forward(&u[2])?,
+            Self::fft_3d_forward(&u[0])?,
+            Self::fft_3d_forward(&u[1])?,
+            Self::fft_3d_forward(&u[2])?,
         ];
 
         // Compute pressure by solving Poisson equation from divergence-free condition
@@ -4957,9 +4960,9 @@ impl SpectralNavierStokesSolver {
 
         // Apply dealiasing and convert to spectral space
         let nonlinear_hat = [
-            self.fft_3d_forward(&self.apply_dealiasing_3d(&nonlinear[0])?)?,
-            self.fft_3d_forward(&self.apply_dealiasing_3d(&nonlinear[1])?)?,
-            self.fft_3d_forward(&self.apply_dealiasing_3d(&nonlinear[2])?)?,
+            Self::fft_3d_forward(&Self::apply_dealiasing_3d(&nonlinear[0])?)?,
+            Self::fft_3d_forward(&Self::apply_dealiasing_3d(&nonlinear[1])?)?,
+            Self::fft_3d_forward(&Self::apply_dealiasing_3d(&nonlinear[2])?)?,
         ];
 
         // Compute diffusion terms: ν∇²u
@@ -5006,7 +5009,7 @@ impl SpectralNavierStokesSolver {
         f_hat: &Array2<num_complex::Complex<f64>>,
         kx: &Array1<f64>,
         ky: &Array1<f64>,
-    ) -> Result<Array2<num_complex::Complex<f64>>> {
+    ) -> IntegrateResult<Array2<num_complex::Complex<f64>>> {
         let mut phi_hat = Array2::zeros(f_hat.dim());
 
         for (i, &kx_val) in kx.iter().enumerate() {
@@ -5028,7 +5031,7 @@ impl SpectralNavierStokesSolver {
         kx: &Array1<f64>,
         ky: &Array1<f64>,
         kz: &Array1<f64>,
-    ) -> Result<Array3<num_complex::Complex<f64>>> {
+    ) -> IntegrateResult<Array3<num_complex::Complex<f64>>> {
         let nz = self.nz.unwrap();
         let mut rhs = Array3::zeros((self.nx, self.ny, nz));
 
@@ -5072,7 +5075,7 @@ impl SpectralNavierStokesSolver {
         ky: &Array1<f64>,
         dx: usize,
         dy: usize,
-    ) -> Result<Array2<num_complex::Complex<f64>>> {
+    ) -> IntegrateResult<Array2<num_complex::Complex<f64>>> {
         let mut df_hat = Array2::zeros(f_hat.dim());
 
         for (i, &kx_val) in kx.iter().enumerate() {
@@ -5105,7 +5108,7 @@ impl SpectralNavierStokesSolver {
         dx: usize,
         dy: usize,
         dz: usize,
-    ) -> Result<Array3<num_complex::Complex<f64>>> {
+    ) -> IntegrateResult<Array3<num_complex::Complex<f64>>> {
         let nz = self.nz.unwrap();
         let mut df_hat = Array3::zeros((self.nx, self.ny, nz));
 
@@ -5141,7 +5144,7 @@ impl SpectralNavierStokesSolver {
         f_hat: &Array2<num_complex::Complex<f64>>,
         kx: &Array1<f64>,
         ky: &Array1<f64>,
-    ) -> Result<Array2<num_complex::Complex<f64>>> {
+    ) -> IntegrateResult<Array2<num_complex::Complex<f64>>> {
         let mut laplacian_hat = Array2::zeros(f_hat.dim());
 
         for (i, &kx_val) in kx.iter().enumerate() {
@@ -5161,7 +5164,7 @@ impl SpectralNavierStokesSolver {
         kx: &Array1<f64>,
         ky: &Array1<f64>,
         kz: &Array1<f64>,
-    ) -> Result<Array3<num_complex::Complex<f64>>> {
+    ) -> IntegrateResult<Array3<num_complex::Complex<f64>>> {
         let nz = self.nz.unwrap();
         let mut laplacian_hat = Array3::zeros((self.nx, self.ny, nz));
 
@@ -5178,7 +5181,7 @@ impl SpectralNavierStokesSolver {
     }
 
     /// Apply dealiasing in 2D
-    fn apply_dealiasing_2d(_field: &Array2<f64>) -> Result<Array2<f64>> {
+    fn apply_dealiasing_2d(_field: &Array2<f64>) -> IntegrateResult<Array2<f64>> {
         match self.dealiasing {
             DealiasingStrategy::None => Ok(_field.clone()),
             DealiasingStrategy::TwoThirds => {
@@ -5210,7 +5213,7 @@ impl SpectralNavierStokesSolver {
     }
 
     /// Apply dealiasing in 3D
-    fn apply_dealiasing_3d(_field: &Array3<f64>) -> Result<Array3<f64>> {
+    fn apply_dealiasing_3d(_field: &Array3<f64>) -> IntegrateResult<Array3<f64>> {
         match self.dealiasing {
             DealiasingStrategy::None => Ok(_field.clone()),
             DealiasingStrategy::TwoThirds => {
@@ -5252,7 +5255,7 @@ impl SpectralNavierStokesSolver {
 
     /// Forward 2D FFT (simplified implementation)
     #[allow(dead_code)]
-    fn fft_2d_forward(_field: &Array2<f64>) -> Result<Array2<num_complex::Complex<f64>>> {
+    fn fft_2d_forward(_field: &Array2<f64>) -> IntegrateResult<Array2<num_complex::Complex<f64>>> {
         let mut result = Array2::zeros((self.nx, self.ny));
 
         // Simplified FFT implementation using DFT for demonstration
@@ -5284,7 +5287,7 @@ impl SpectralNavierStokesSolver {
     fn fft_2d_backward(
         &self,
         field_hat: &Array2<num_complex::Complex<f64>>,
-    ) -> Result<Array2<f64>> {
+    ) -> IntegrateResult<Array2<f64>> {
         let mut result = Array2::zeros((self.nx, self.ny));
         let norm = 1.0 / (self.nx * self.ny) as f64;
 
@@ -5312,7 +5315,7 @@ impl SpectralNavierStokesSolver {
 
     /// Forward 3D FFT (simplified implementation)
     #[allow(dead_code)]
-    fn fft_3d_forward(_field: &Array3<f64>) -> Result<Array3<num_complex::Complex<f64>>> {
+    fn fft_3d_forward(_field: &Array3<f64>) -> IntegrateResult<Array3<num_complex::Complex<f64>>> {
         let nz = self.nz.unwrap();
         let mut result = Array3::zeros((self.nx, self.ny, nz));
 
@@ -5349,7 +5352,7 @@ impl SpectralNavierStokesSolver {
     fn fft_3d_backward(
         &self,
         field_hat: &Array3<num_complex::Complex<f64>>,
-    ) -> Result<Array3<f64>> {
+    ) -> IntegrateResult<Array3<f64>> {
         let nz = self.nz.unwrap();
         let mut result = Array3::zeros((self.nx, self.ny, nz));
         let norm = 1.0 / (self.nx * self.ny * nz) as f64;
@@ -5485,7 +5488,7 @@ pub mod advanced_gpu_acceleration {
         }
 
         /// Allocate GPU buffer from pool
-        pub fn allocate_buffer(_size: usize) -> Result<GPUBuffer> {
+        pub fn allocate_buffer(_size: usize) -> IntegrateResult<GPUBuffer> {
             let mut pool = self.buffer_pool.lock().unwrap();
             let mut current = self.current_usage.lock().unwrap();
 
@@ -5499,12 +5502,12 @@ pub mod advanced_gpu_acceleration {
 
             // Create new buffer
             let buffer = GPUBuffer {
-                _size,
-                id: (*current as u64) << 32 | (_size as u64 & 0xFFFFFFFF),
+                size,
+                id: (*current as u64) << 32 | (size as u64 & 0xFFFFFFFF),
                 in_use: true,
             };
 
-            *current += _size;
+            *current += size;
 
             // Update peak usage
             let mut peak = self.peak_usage.lock().unwrap();
@@ -5552,13 +5555,14 @@ pub mod advanced_gpu_acceleration {
         }
 
         /// Detect optimal work group size based on hardware
-        fn detect_optimal_work_group_size(&self) -> usize {
+        fn detect_optimal_work_group_size() -> usize {
             // Simulate GPU hardware detection
             let cores = num_cpus::get();
             match cores {
                 1..=8 => 64,
                 9..=16 => 128,
-                17..=32 => 256_ => 512,
+                17..=32 => 256,
+                _ => 512,
             }
         }
 
@@ -5570,7 +5574,7 @@ pub mod advanced_gpu_acceleration {
             dx: f64,
             dy: f64,
             dz: f64,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let (nx, ny, nz) = pressure.dim();
             let total_elements = nx * ny * nz;
 
@@ -5596,7 +5600,7 @@ pub mod advanced_gpu_acceleration {
             dx: f64,
             dy: f64,
             dz: f64,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let (nx, ny, nz) = pressure.dim();
             let dx2_inv = 1.0 / (dx * dx);
             let dy2_inv = 1.0 / (dy * dy);
@@ -5729,9 +5733,9 @@ pub mod neural_adaptive_solver {
 
             // Forward pass through neural network
             let hidden =
-                self.sigmoid(&(&self.weights_input_hidden.t().dot(&input) + &self.bias_hidden));
+                Self::sigmoid(&(&self.weights_input_hidden.t().dot(&input) + &self.bias_hidden));
             let output =
-                self.softmax(&(&self.weights_hidden_output.t().dot(&hidden) + &self.bias_output));
+                Self::softmax(&(&self.weights_hidden_output.t().dot(&hidden) + &self.bias_output));
 
             // Select algorithm based on highest probability
             let max_idx = output
@@ -5754,7 +5758,8 @@ pub mod neural_adaptive_solver {
                 },
                 2 => AlgorithmRecommendation::SemiImplicit {
                     theta: 0.5 + 0.3 * (characteristics.reynolds_number / 1000.0).min(1.0),
-                }_ => AlgorithmRecommendation::Spectral {
+                },
+                _ => AlgorithmRecommendation::Spectral {
                     dealiasing: characteristics.reynolds_number > 100.0,
                 },
             }
@@ -5829,8 +5834,8 @@ pub mod streaming_optimization {
         pub fn process_streaming(
             &mut self,
             total_domain: (usize, usize, usize),
-            mut chunk_processor: impl FnMut(&mut FluidState3D, (usize, usize, usize)) -> Result<()>,
-        ) -> Result<()> {
+            mut chunk_processor: impl FnMut(&mut FluidState3D, (usize, usize, usize)) -> IntegrateResult<()>,
+        ) -> IntegrateResult<()> {
             let (total_nx, total_ny, total_nz) = total_domain;
             let (chunk_nx, chunk_ny, chunk_nz) = self.chunk_size;
 
@@ -5848,7 +5853,7 @@ pub mod streaming_optimization {
 
                         // Create chunk fluid state
                         let chunk_size = (i_end - i_start, j_end - j_start, k_end - k_start);
-                        let mut chunk_state = self.create_chunk_state(chunk_size)?;
+                        let mut chunk_state = Self::create_chunk_state(chunk_size)?;
 
                         // Process this chunk
                         chunk_processor(&mut chunk_state, (i_start, j_start, k_start))?;
@@ -5863,7 +5868,7 @@ pub mod streaming_optimization {
         }
 
         /// Create fluid state for a chunk
-        fn create_chunk_state(_chunk_size: (usize, usize, usize)) -> Result<FluidState3D> {
+        fn create_chunk_state(_chunk_size: (usize, usize, usize)) -> IntegrateResult<FluidState3D> {
             let (nx, ny, nz) = _chunk_size;
             Ok(FluidState3D {
                 velocity: vec![
@@ -5881,7 +5886,7 @@ pub mod streaming_optimization {
         }
 
         /// Update memory usage tracking
-        fn update_memory_usage(_chunk_size: (usize, usize, usize)) {
+        fn update_memory_usage(&mut self, _chunk_size: (usize, usize, usize)) {
             let (nx, ny, nz) = _chunk_size;
             let chunk_memory = nx * ny * nz * 8 * 4; // 4 fields, 8 bytes each
             self.current_usage = chunk_memory;
@@ -6057,7 +6062,7 @@ pub mod multiphase_flow {
                 interface_normals: vec![Array3::zeros((nx, ny, nz)); 3],
                 interface_curvature: Array3::zeros((nx, ny, nz)),
                 time: 0.0,
-                _dx,
+                dx,
                 dy,
                 dz,
             }
@@ -6108,7 +6113,7 @@ pub mod multiphase_flow {
         }
 
         /// Evolve multiphase flow for one time step
-        pub fn step(_state: &mut MultiphaseFlowState) -> Result<()> {
+        pub fn step(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             // 1. Update interface tracking
             self.update_interface_tracking(_state)?;
 
@@ -6132,7 +6137,7 @@ pub mod multiphase_flow {
         }
 
         /// Update interface tracking based on chosen method
-        fn update_interface_tracking(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn update_interface_tracking(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             match self.tracking_method {
                 InterfaceTrackingMethod::VolumeOfFluid => {
                     self.update_vof_interface(_state)?;
@@ -6151,7 +6156,7 @@ pub mod multiphase_flow {
         }
 
         /// Update Volume of Fluid interface
-        fn update_vof_interface(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn update_vof_interface(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             let (nx, ny, nz) = self.grid_dims;
 
             // PLIC (Piecewise Linear Interface Calculation) reconstruction
@@ -6202,7 +6207,8 @@ pub mod multiphase_flow {
             let ny = dy_inv * (vf[[i, j + 1, k]] - vf[[i, j - 1, k]]);
             let nz = dz_inv * (vf[[i, j, k + 1]] - vf[[i, j, k - 1]]);
 
-            let norm = (nx * nx + ny * ny + nz * nz).sqrt();
+            let norm_squared: f64 = nx * nx + ny * ny + nz * nz;
+            let norm = norm_squared.sqrt();
             if norm > 1e-12 {
                 [nx / norm, ny / norm, nz / norm]
             } else {
@@ -6237,14 +6243,14 @@ pub mod multiphase_flow {
         }
 
         /// Update Level Set interface
-        fn update_level_set_interface(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn update_level_set_interface(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             // Level set advection and reinitialization
             // Implementation would include Hamilton-Jacobi equation solving
             Ok(())
         }
 
         /// Update Phase Field interface
-        fn update_phase_field_interface(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn update_phase_field_interface(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             // Cahn-Hilliard equation for phase field evolution
             let interface_width = 3.0 * _state.dx.min(_state.dy).min(_state.dz);
             let mobility = 1e-4;
@@ -6305,13 +6311,13 @@ pub mod multiphase_flow {
         }
 
         /// Update Coupled Level Set - Volume of Fluid interface
-        fn update_clsvof_interface(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn update_clsvof_interface(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             // Combine advantages of both VOF and Level Set methods
             Ok(())
         }
 
         /// Compute interface properties (normals and curvature)
-        fn compute_interface_properties(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn compute_interface_properties(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             let (nx, ny, nz) = self.grid_dims;
 
             // Compute interface normals and curvature
@@ -6394,7 +6400,7 @@ pub mod multiphase_flow {
         }
 
         /// Solve momentum equation with surface tension forces
-        fn solve_momentum_equation(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn solve_momentum_equation(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             let (_nx_ny_nz) = self.grid_dims;
 
             // Apply surface tension forces using Continuum Surface Force (CSF) model
@@ -6409,7 +6415,7 @@ pub mod multiphase_flow {
         }
 
         /// Apply surface tension forces using CSF model
-        fn apply_surface_tension_forces(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn apply_surface_tension_forces(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             let (nx, ny, nz) = self.grid_dims;
 
             for i in 1..nx - 1 {
@@ -6439,7 +6445,7 @@ pub mod multiphase_flow {
         }
 
         /// Apply body forces (gravity, etc.)
-        fn apply_body_forces(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn apply_body_forces(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             let gravity = -9.81; // m/s^2
             let (nx, ny, nz) = self.grid_dims;
 
@@ -6463,7 +6469,7 @@ pub mod multiphase_flow {
             j: usize,
             k: usize,
         ) -> f64 {
-            let mut density = 0.0;
+            let mut density: f64 = 0.0;
             for phase_idx in 0..self.n_phases {
                 let vf = state.volume_fractions[phase_idx][[i, j, k]];
                 density += vf * self.phase_properties[phase_idx].density;
@@ -6472,26 +6478,26 @@ pub mod multiphase_flow {
         }
 
         /// Solve pressure correction equation
-        fn solve_pressure_correction(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn solve_pressure_correction(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             // Pressure Poisson equation with variable density
             Ok(())
         }
 
         /// Advect interface using velocity field
-        fn advect_interface(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn advect_interface(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             // Interface advection based on tracking method
             Ok(())
         }
 
         /// Enforce mass conservation for each phase
-        fn enforce_mass_conservation(_state: &mut MultiphaseFlowState) -> Result<()> {
+        fn enforce_mass_conservation(_state: &mut MultiphaseFlowState) -> IntegrateResult<()> {
             let (nx, ny, nz) = self.grid_dims;
 
             // Normalize volume fractions to ensure sum = 1
             for i in 0..nx {
                 for j in 0..ny {
                     for k in 0..nz {
-                        let mut total_vf = 0.0;
+                        let mut total_vf: f64 = 0.0;
                         for phase_idx in 0..self.n_phases {
                             total_vf += _state.volume_fractions[phase_idx][[i, j, k]];
                         }

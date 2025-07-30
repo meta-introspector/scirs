@@ -804,7 +804,8 @@ pub mod analysis {
                             orfs.push(Orf {
                                 start_pos: start,
                                 end_pos: start + _length,
-                                frame: frame as i8_sequence: orf_seq.to_string(),
+                                frame: frame as i8,
+                                sequence: orf_seq.to_string(),
                                 protein: translate_dna(orf_seq),
                             });
                         }

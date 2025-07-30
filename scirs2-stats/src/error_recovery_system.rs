@@ -597,7 +597,8 @@ impl ErrorRecoverySystem {
     /// Generate suggestions for computation errors
     fn generate_computation_error_suggestions(
         &self,
-        msg: &str_context: &ErrorContext,
+        msg: &str,
+        context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         let mut suggestions = Vec::new();
 
@@ -728,19 +729,21 @@ impl ErrorRecoverySystem {
     }
 
     /// Assess error severity
-    fn assess_error_severity(&self, error: &StatsError_context: &ErrorContext) -> ErrorSeverity {
+    fn assess_error_severity(&self, error: &StatsError, context: &ErrorContext) -> ErrorSeverity {
         match error {
-            StatsError::InvalidArgument(_) =>, ErrorSeverity::Medium,
-            StatsError::DimensionMismatch(_) =>, ErrorSeverity::Medium,
-            StatsError::ComputationError(_) =>, ErrorSeverity::High,
-            StatsError::ConvergenceError(_) => ErrorSeverity::Medium_ =>, ErrorSeverity::Low,
+            StatsError::InvalidArgument(_) => ErrorSeverity::Medium,
+            StatsError::DimensionMismatch(_) => ErrorSeverity::Medium,
+            StatsError::ComputationError(_) => ErrorSeverity::High,
+            StatsError::ConvergenceError(_) => ErrorSeverity::Medium,
+            _ => ErrorSeverity::Low,
         }
     }
 
     /// Assess performance impact
     fn assess_performance_impact(
         &self,
-        error: &StatsError_context: &ErrorContext,
+        error: &StatsError,
+        context: &ErrorContext,
     ) -> PerformanceImpact {
         match error {
             StatsError::ComputationError(msg) if msg.contains("memory") => PerformanceImpact {
@@ -754,7 +757,8 @@ impl ErrorRecoverySystem {
                 time_impact: ImpactLevel::Major,
                 accuracy_impact: ImpactLevel::Moderate,
                 scalability_impact: ImpactLevel::Moderate,
-            }_ => PerformanceImpact {
+            },
+            _ => PerformanceImpact {
                 memory_impact: ImpactLevel::None,
                 time_impact: ImpactLevel::Minor,
                 accuracy_impact: ImpactLevel::Minor,

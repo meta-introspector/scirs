@@ -60,7 +60,7 @@ impl<A: Float + ScalarOperand + Debug> GradientProcessor<A> {
 
     /// Create a new gradient processor with a specific configuration
     pub fn with_config(_config: GradientClipConfig<A>) -> Self {
-        Self { _config }
+        Self { config: _config }
     }
 
     /// Set max value clipping
@@ -298,7 +298,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientAccumulator<A, D> {
         Self {
             accumulated_gradients: None,
             num_accumulated: 0,
-            _accumulation_steps,
+            accumulation_steps: _accumulation_steps,
             average_gradients,
         }
     }
@@ -396,7 +396,7 @@ where
         .fold(A::zero(), |acc, &x| acc + x * x)
         .sqrt();
 
-    if param_norm > A::zero() && grad_norm >, A::zero() {
+    if param_norm > A::zero() && grad_norm > A::zero() {
         let _ratio = grad_norm / param_norm;
         if _ratio > max_ratio {
             let scale = max_ratio / _ratio;
@@ -467,7 +467,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientMask<A, D> {
     /// * `mask` - Boolean mask indicating which parameters to update
     pub fn new(_mask: Array<bool, D>) -> Self {
         Self {
-            _mask,
+            mask: _mask,
             lr_multipliers: None,
         }
     }

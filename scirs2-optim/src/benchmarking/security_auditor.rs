@@ -1015,7 +1015,7 @@ impl SecurityAuditor {
     /// Create a new security auditor
     pub fn new(_config: SecurityAuditConfig) -> Result<Self> {
         Ok(Self {
-            _config,
+            config: _config,
             input_validator: InputValidationAnalyzer::new(),
             privacy_analyzer: PrivacyGuaranteesAnalyzer::new(),
             memory_analyzer: MemorySafetyAnalyzer::new(),
@@ -1128,21 +1128,22 @@ impl SecurityAuditor {
     /// Generate test payload based on payload type
     fn generate_test_payload(&self, payload_type: &PayloadType) -> TestPayload {
         match payload_type {
-            PayloadType::NaNPayload =>, TestPayload::FloatArray(vec![f64::NAN, 1.0, 2.0]),
+            PayloadType::NaNPayload => TestPayload::FloatArray(vec![f64::NAN, 1.0, 2.0]),
             PayloadType::InfinityPayload => {
                 TestPayload::FloatArray(vec![f64::INFINITY, f64::NEG_INFINITY])
             }
-            PayloadType::ExtremeValuePayload(val) =>, TestPayload::FloatArray(vec![*val, -*val]),
-            PayloadType::ZeroSizedPayload =>, TestPayload::EmptyArray,
-            PayloadType::DimensionMismatchPayload =>, TestPayload::MismatchedDimensions,
-            PayloadType::NegativeLearningRate =>, TestPayload::NegativeFloat(-1.0),
-            PayloadType::InvalidPrivacyParams =>, TestPayload::InvalidPrivacy,
+            PayloadType::ExtremeValuePayload(val) => TestPayload::FloatArray(vec![*val, -*val]),
+            PayloadType::ZeroSizedPayload => TestPayload::EmptyArray,
+            PayloadType::DimensionMismatchPayload => TestPayload::MismatchedDimensions,
+            PayloadType::NegativeLearningRate => TestPayload::NegativeFloat(-1.0),
+            PayloadType::InvalidPrivacyParams => TestPayload::InvalidPrivacy,
         }
     }
 
     /// Test input validation with specific payload
     fn test_input_validation(
-        &self_test: &InputValidationTest,
+        &self,
+        test: &InputValidationTest,
         payload: &TestPayload,
     ) -> Result<()> {
         match payload {
@@ -1349,7 +1350,8 @@ impl SecurityAuditor {
     }
 
     /// Test membership inference attack resistance
-    fn test_membership_inference(&mut self_test: &PrivacyTest) -> Result<()> {
+    fn test_membership_inference(&mut self,
+        test: &PrivacyTest) -> Result<()> {
         // Simulate membership inference _test
         // This would involve training models and testing if membership can be inferred
 
@@ -1373,10 +1375,11 @@ impl SecurityAuditor {
     }
 
     /// Test budget exhaustion attack
-    fn test_budget_exhaustion(&mut self_test: &PrivacyTest) -> Result<()> {
+    fn test_budget_exhaustion(&mut self,
+        test: &PrivacyTest) -> Result<()> {
         // Simulate budget exhaustion _test
         let verification_result = BudgetVerificationResult {
-            _test_name: "Budget Exhaustion Test".to_string(),
+            test_name: "Budget Exhaustion Test".to_string(),
             budget_status: BudgetStatus::Critical,
             remaining_budget: 0.1,
             projected_exhaustion: Some(10),
@@ -1560,7 +1563,8 @@ impl SecurityAuditor {
     }
 
     /// Test precision loss
-    fn test_precision_loss(&mut self_test: &NumericalStabilityTest) -> Result<()> {
+    fn test_precision_loss(&mut self,
+        test: &NumericalStabilityTest) -> Result<()> {
         // Simulate precision tracking
         let precision_measurement = PrecisionMeasurement {
             step: 1,
@@ -2145,10 +2149,10 @@ impl SecurityAuditor {
                 matrix.push(RiskMatrixEntry {
                     vulnerability_type: format!("{:?} Severity Issues", severity),
                     likelihood: match severity {
-                        SeverityLevel::Critical =>, RiskLikelihood::High,
-                        SeverityLevel::High =>, RiskLikelihood::Medium,
-                        SeverityLevel::Medium =>, RiskLikelihood::Medium,
-                        SeverityLevel::Low =>, RiskLikelihood::Low,
+                        SeverityLevel::Critical => RiskLikelihood::High,
+                        SeverityLevel::High => RiskLikelihood::Medium,
+                        SeverityLevel::Medium => RiskLikelihood::Medium,
+                        SeverityLevel::Low => RiskLikelihood::Low,
                     },
                     impact: RiskImpact::from_severity(&severity),
                     overall_risk: self.calculate_risk_score(&severity),
@@ -2304,10 +2308,10 @@ pub enum RiskImpact {
 impl RiskImpact {
     fn from_severity(_severity: &SeverityLevel) -> Self {
         match _severity {
-            SeverityLevel::Critical =>, RiskImpact::High,
-            SeverityLevel::High =>, RiskImpact::High,
-            SeverityLevel::Medium =>, RiskImpact::Medium,
-            SeverityLevel::Low =>, RiskImpact::Low,
+            SeverityLevel::Critical => RiskImpact::High,
+            SeverityLevel::High => RiskImpact::High,
+            SeverityLevel::Medium => RiskImpact::Medium,
+            SeverityLevel::Low => RiskImpact::Low,
         }
     }
 }

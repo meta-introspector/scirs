@@ -4,7 +4,7 @@
 //! operations with better memory access patterns and performance.
 
 use ndarray::{Array, ArrayView, Axis, Dimension};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::parallel_ops::*;
 use std::cmp::min;
@@ -49,7 +49,7 @@ where
     };
 
     // Optimize axis order based on memory layout
-    let optimized_order = optimize_axis_order(&axes_to_transform, result._shape());
+    let optimized_order = optimize_axis_order(&axes_to_transform, result.shape());
 
     // Apply FFT along each axis in optimized order
     for &axis in &optimized_order {
@@ -103,10 +103,10 @@ fn optimize_axis_order(_axes: &[usize], shape: &[usize]) -> Vec<usize> {
         .collect();
 
     // Sort by stride (smallest first) for better cache locality
-    axis_info.sort_by_key(|&(__, stride)| stride);
+    axis_info.sort_by_key(|&(_, _, stride)| stride);
 
     // Return optimized axis order
-    axis_info.into_iter().map(|(axis__)| axis).collect()
+    axis_info.into_iter().map(|(axis, _, _)| axis).collect()
 }
 
 /// Validate that axes are within bounds
@@ -195,7 +195,7 @@ where
 
     // Process each axis with chunking if needed
     for &axis in &axes_to_transform {
-        let axis_len = result.shape()[axis];
+        let axis_len: usize = result.shape()[axis];
 
         if axis_len > 1048576 {
             // For very large axes, use chunked processing

@@ -8,6 +8,7 @@
 
 use ndarray::{Array1, Array2};
 use num_traits::Float;
+use rand::Rng;
 use scirs2_core::random::Random;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
@@ -711,7 +712,7 @@ pub struct SearchStrategy<T: Float> {
     best_architectures: Vec<ArchitectureCandidate>,
 }
 
-impl<T: Float + std::fmt::Debug> + std::fmt::Debug for SearchStrategy<T> {
+impl<T: Float + std::fmt::Debug> std::fmt::Debug for SearchStrategy<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SearchStrategy")
             .field("strategy_type", &self.strategy_type)
@@ -1234,7 +1235,7 @@ impl<
         let multi_objective_optimizer = MultiObjectiveOptimizer::new(&_config)?;
 
         Ok(Self {
-            _config,
+            config: _config,
             search_space,
             search_strategy,
             evaluator,
@@ -2291,13 +2292,15 @@ impl<
         match iteration / stage_duration {
             0 => ProgressiveStage::Minimal,
             1 => ProgressiveStage::Small,
-            2 => ProgressiveStage::Medium_ =>, ProgressiveStage::Large,
+            2 => ProgressiveStage::Large,
+            _ => ProgressiveStage::Large, // Default to Large for iterations beyond stage 2
         }
     }
 
     async fn generate_progressive_architecture(
         &self,
-        stage: ProgressiveStage_progressive_state: &ProgressiveSearchState<T>,
+        stage: ProgressiveStage,
+        progressive_state: &ProgressiveSearchState<T>,
     ) -> Result<ArchitectureSpec> {
         let (min_layers, max_layers, base_width) = match stage {
             ProgressiveStage::Minimal => (1, 2, 32),
@@ -2395,14 +2398,24 @@ impl<
 
         // Select activation based on layer type and complexity
         let activation = match layer_type {
-            LayerType::Transformer | LayerType::Attention =>, ActivationType::GELU,
-            LayerType::LSTM | LayerType::GRU =>, ActivationType::Tanh_ => {
+            LayerType::Transformer | LayerType::Attention => ActivationType::GELU,
+            LayerType::LSTM | LayerType::GRU | LayerType::Recurrent => {
                 if complexity > 0.5 {
                     ActivationType::ReLU
                 } else {
                     ActivationType::Linear
                 }
             }
+            LayerType::Linear | LayerType::Dense | LayerType::Embedding => {
+                if complexity > 0.7 {
+                    ActivationType::ReLU
+                } else {
+                    ActivationType::Linear
+                }
+            }
+            LayerType::Convolutional1D => ActivationType::ReLU,
+            LayerType::Highway | LayerType::Residual => ActivationType::ReLU,
+            LayerType::Custom => ActivationType::ReLU, // Default for custom types
         };
 
         // Normalization becomes more sophisticated with complexity
@@ -2509,10 +2522,10 @@ impl<
         };
 
         let _memory_type = match stage {
-            ProgressiveStage::Minimal =>, MemoryType::None,
-            ProgressiveStage::Small =>, MemoryType::ShortTerm,
-            ProgressiveStage::Medium =>, MemoryType::LongTerm,
-            ProgressiveStage::Large =>, MemoryType::AdaptiveMemory,
+            ProgressiveStage::Minimal => MemoryType::None,
+            ProgressiveStage::Small => MemoryType::ShortTerm,
+            ProgressiveStage::Medium => MemoryType::LongTerm,
+            ProgressiveStage::Large => MemoryType::AdaptiveMemory,
         };
 
         Ok(GlobalArchitectureConfig {
@@ -2540,8 +2553,8 @@ impl<
                 ProgressiveStage::Minimal | ProgressiveStage::Small => {
                     MemoryManagementStrategy::Standard
                 }
-                ProgressiveStage::Medium =>, MemoryManagementStrategy::LowMemory,
-                ProgressiveStage::Large =>, MemoryManagementStrategy::Optimized,
+                ProgressiveStage::Medium => MemoryManagementStrategy::LowMemory,
+                ProgressiveStage::Large => MemoryManagementStrategy::Optimized,
             },
         })
     }
@@ -2796,8 +2809,8 @@ impl<
         Ok(())
     }
 
-    async fn update_rl_policy(_rl_state: &mut RLSearchState<T>) -> Result<()> {
-        if _rl_state.reward_history.len() < 2 {
+    async fn update_rl_policy(rl_state: &mut RLSearchState<T>) -> Result<()> {
+        if rl_state.reward_history.len() < 2 {
             return Ok(()); // Need at least 2 rewards for policy update
         }
 
@@ -2828,7 +2841,7 @@ impl<
             rl_state.controller.biases[layer_idx] =
                 rl_state.controller.biases[layer_idx].mapv(|b| {
                     b + gradient_scale
-                        * T::from(scirs2_core::random::Random::new().random_range(-0.1..0.1)).unwrap()
+                        * T::from(scirs2_core::random::Random::seed(42).random_range(-0.1, 0.1)).unwrap()
                 });
         }
 
@@ -3026,7 +3039,8 @@ impl<
             )),
             3 => Ok(ArchitectureAction::SelectConnection(
                 self.sample_random_connection(),
-            ), _ => Ok(ArchitectureAction::Stop),
+            )),
+            _ => Ok(ArchitectureAction::Stop),
         }
     }
 
@@ -3058,7 +3072,8 @@ impl<
             )),
             3 => Ok(ArchitectureAction::SelectConnection(
                 self.sample_random_connection(),
-            ), _ => Ok(ArchitectureAction::Stop),
+            )),
+            _ => Ok(ArchitectureAction::Stop),
         }
     }
 
@@ -3173,7 +3188,8 @@ impl<
         let width = decisions
             .iter()
             .filter_map(|action| match action {
-                ArchitectureAction::SelectHiddenSize(size) => Some(*size, _ => None,
+                ArchitectureAction::SelectHiddenSize(size) => Some(*size),
+                _ => None,
             })
             .max()
             .unwrap_or(256);
@@ -3340,7 +3356,7 @@ impl<
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .unwrap_or(0);
 
         Ok(max_idx)
@@ -3353,7 +3369,8 @@ impl<
             2 => LayerType::GRU,
             3 => LayerType::Transformer,
             4 => LayerType::Attention,
-            5 => LayerType::Dense_ =>, LayerType::Linear,
+            5 => LayerType::Linear,
+            _ => LayerType::Linear, // Default to Linear for indices beyond 5
         }
     }
 
@@ -3546,24 +3563,27 @@ impl Default for ResourceUsage {
 
 /// Architecture evaluator for performance assessment
 pub struct ArchitectureEvaluator<T: Float> {
-    config: NASConfig_phantom: std::marker::PhantomData<T>,
+    config: NASConfig,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> ArchitectureEvaluator<T> {
     pub fn new(_config: &NASConfig) -> Result<Self> {
         Ok(Self {
-            _config: _config.clone(), _phantom: std::marker::PhantomData,
+            config: _config.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
     pub async fn evaluate_architecture(
-        &self_arch: &ArchitectureSpec,
+        &self,
+        arch: &ArchitectureSpec,
     ) -> Result<PerformanceMetrics> {
         Ok(PerformanceMetrics::default())
     }
 
     pub async fn validate_architecture(
-        &self_arch: &ArchitectureSpec,
+        &self,
+        arch: &ArchitectureSpec,
     ) -> Result<ValidationResults> {
         Ok(ValidationResults {
             accuracy: 0.85,
@@ -3586,13 +3606,14 @@ impl<T: Float + Default + Clone> ArchitectureEvaluator<T> {
 
 /// Performance predictor for architecture assessment
 pub struct PerformancePredictor<T: Float> {
-    config: NASConfig_phantom: std::marker::PhantomData<T>,
+    config: NASConfig,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> PerformancePredictor<T> {
     pub fn new(_config: &NASConfig) -> Result<Self> {
         Ok(Self {
-            _config: _config.clone(), _phantom: std::marker::PhantomData,
+            config: _config.clone(), _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -3605,16 +3626,16 @@ pub struct ResourceManager {
 impl ResourceManager {
     pub fn new(_constraints: &SearchConstraints) -> Result<Self> {
         Ok(Self {
-            _constraints: _constraints.clone(),
+            constraints: _constraints.clone(),
         })
     }
 
     #[allow(dead_code)]
-    pub fn check_constraints(&self_arch: &ArchitectureSpec) -> Result<bool> {
+    pub fn check_constraints(&self, _arch: &ArchitectureSpec) -> Result<bool> {
         Ok(true) // Simplified check
     }
 
-    pub fn estimate_resource_usage(&self_arch: &ArchitectureSpec) -> Result<ResourceUsage> {
+    pub fn estimate_resource_usage(&self, _arch: &ArchitectureSpec) -> Result<ResourceUsage> {
         Ok(ResourceUsage::default())
     }
 
@@ -3648,7 +3669,7 @@ pub struct DiversityTracker {
 impl<T: Float + Default + Clone> PopulationManager<T> {
     pub fn new(_config: &NASConfig) -> Result<Self> {
         Ok(Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             population: Vec::with_capacity(_config.population_size),
             elite_population: Vec::with_capacity(_config.elite_size),
             performance_history: Vec::new(),
@@ -3656,7 +3677,8 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
                 structural_hashes: HashSet::new(),
                 performance_clusters: Vec::new(),
                 last_diversity_update: Instant::now(),
-            }_phantom: std::marker::PhantomData,
+            },
+            _phantom: std::marker::PhantomData,
         })
     }
 
@@ -4089,21 +4111,22 @@ impl ArchitectureGenerator {
     }
 
     #[allow(dead_code)]
-    pub fn load_architecture(&self_description: &str) -> Result<ArchitectureSpec> {
+    pub fn load_architecture(&self, _description: &str) -> Result<ArchitectureSpec> {
         // Simplified - would parse from _description
         self.generate_random_architecture()
     }
 
     #[allow(dead_code)]
     pub fn crossover(
-        &self_parent1: &ArchitectureSpec, _parent2: &ArchitectureSpec,
+        &self,
+        parent1: &ArchitectureSpec, _parent2: &ArchitectureSpec,
     ) -> Result<ArchitectureSpec> {
         // Simplified crossover - would implement proper genetic operations
         self.generate_random_architecture()
     }
 
     #[allow(dead_code)]
-    pub fn mutate(&self_architecture: &mut ArchitectureSpec) -> Result<MutationRecord> {
+    pub fn mutate(&self, architecture: &mut ArchitectureSpec) -> Result<MutationRecord> {
         Ok(MutationRecord {
             mutation_type: MutationType::ParameterMutation,
             affected_components: vec!["layer_0".to_string()],
@@ -4148,23 +4171,23 @@ impl<T: Float + Default + Clone> SearchHistory<T> {
 
     #[allow(dead_code)]
     pub fn record_iteration(
-        &mut self_iteration: usize, _population: &PopulationManager<T>,
+        &mut self, _iteration: usize, _population: &PopulationManager<T>,
     ) -> Result<()> {
         Ok(())
     }
 
     #[allow(dead_code)]
     pub fn finalize_search(
-        &mut self, _total_time: Duration_final, _best: &[ArchitectureCandidate],
+        &mut self, _total_time: Duration, _best: &[ArchitectureCandidate],
     ) -> Result<()> {
         Ok(())
     }
 }
 
 impl<T: Float + Default + Clone> SearchStrategy<T> {
-    pub fn new(_strategy_type: SearchStrategyType, config: &NASConfig) -> Result<Self> {
-        let state = match _strategy_type {
-            SearchStrategyType::Random =>, SearchStrategyState::Random(RandomSearchState::default()),
+    pub fn new(strategy_type: SearchStrategyType, config: &NASConfig) -> Result<Self> {
+        let state = match strategy_type {
+            SearchStrategyType::Random => SearchStrategyState::Random(RandomSearchState::default()),
             SearchStrategyType::Evolutionary => {
                 SearchStrategyState::Evolutionary(EvolutionarySearchState {
                     population: Vec::new(),
@@ -4176,7 +4199,8 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
                         performance_diversity: 0.5,
                         genotypic_diversity: 0.5,
                         phenotypic_diversity: 0.5,
-                    }_phantom: std::marker::PhantomData,
+                    },
+            _phantom: std::marker::PhantomData,
                 })
             }
             SearchStrategyType::BayesianOptimization => {
@@ -4273,7 +4297,7 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
 
         Ok(Self {
             strategy_type,
-            rng: Box::new(Random::with_seed(42)),
+            rng: Box::new(Random::seed(42)),
             state,
             optimization_history: Vec::new(),
             best_architectures: Vec::new(),
@@ -4282,7 +4306,7 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
 
     #[allow(dead_code)]
     pub fn update_strategy(
-        &mut self_population: &PopulationManager<T>, _iteration: usize,
+        &mut self, _population: &PopulationManager<T>, _iteration: usize,
     ) -> Result<()> {
         Ok(())
     }
@@ -4290,13 +4314,14 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
 
 /// Multi-objective optimizer for NAS
 pub struct MultiObjectiveOptimizer<T: Float> {
-    config: NASConfig_phantom: std::marker::PhantomData<T>,
+    config: NASConfig,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> MultiObjectiveOptimizer<T> {
     pub fn new(_config: &NASConfig) -> Result<Self> {
         Ok(Self {
-            _config: _config.clone(), _phantom: std::marker::PhantomData,
+            config: _config.clone(), _phantom: std::marker::PhantomData,
         })
     }
 }

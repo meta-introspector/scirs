@@ -1,8 +1,8 @@
 use std::f64::consts::PI;
-//! Geometric primitives used for collision detection
-//!
-//! This module provides the geometric primitives that are used for collision
-//! detection algorithms, including circles, triangles, boxes in 2D and 3D.
+// Geometric primitives used for collision detection
+//
+// This module provides the geometric primitives that are used for collision
+// detection algorithms, including circles, triangles, boxes in 2D and 3D.
 
 // ---------------------------------------------------------------------------
 // 2D Geometric Primitives

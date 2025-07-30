@@ -856,14 +856,14 @@ impl<A: Clone + Copy + Send + Sync + 'static> DatasetPrefetcher for MemoryMapped
         // but ensures the memory is mapped
 
         // Ensure the array is readable
-        self.array.asarray::<ndarray::IxDyn>()?;
+        self.array.as_array::<ndarray::IxDyn>()?;
 
         Ok(())
     }
 
     fn prefetch_all(&self) -> CoreResult<()> {
         // For memory-mapped arrays, just ensure the file is mapped
-        self.array.asarray::<ndarray::IxDyn>()?;
+        self.array.as_array::<ndarray::IxDyn>()?;
 
         Ok(())
     }

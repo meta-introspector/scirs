@@ -616,26 +616,26 @@ private func scirs2_model_free(_ handle: OpaquePointer) {
         fs::write(path, b"PK\x03\x04") // ZIP magic (wheel is a ZIP)
     fn generate_python_bindings(&self, path: &Path) -> Result<()> {
         let python_code = r#"
-"""
+'"'
 SciRS2 Model Python Bindings
 import json
 import numpy as np
 from typing import List, Dict, Any, Optional
 class SciRS2Model:
-    """SciRS2 neural network model for inference."""
+    '"'SciRS2 neural network model for inference.'"'
     def __init__(self, model_path: str):
-        """Initialize model from file.
+        '"'Initialize model from file.
         Args: model_path: Path to the model file
-        """
+        '"'
         self.model_path = model_path
         self._model_data = None
         self._load_model()
     def _load_model(self):
-        """Load model from file."""
+        '"'Load model from file.'"'
         with open(self.model_path, 'r') as f:
             self._model_data = json.load(f)
     def predict(self, input_data: np.ndarray) -> np.ndarray:
-        """Run inference on input data.
+        '"'Run inference on input data.
             input_data: Input tensor as numpy array
             
         Returns:
@@ -645,18 +645,18 @@ class SciRS2Model:
         # Stub implementation - simple passthrough
         return input_data * 1.1
     def get_input_specs(self) -> List[Dict[str, Any]]:
-        """Get input tensor specifications."""
+        '"'Get input tensor specifications.'"'
             return []
         return self._model_data.get('input_specs', [])
     def get_output_specs(self) -> List[Dict[str, Any]]:
-        """Get output tensor specifications."""
+        '"'Get output tensor specifications.'"'
         return self._model_data.get('output_specs', [])
 def load_model(model_path: str) ->, SciRS2Model:
-    """Load a SciRS2 model from file.
+    '"'Load a SciRS2 model from file.
     Args: model_path: Path to the model file
     Returns:
         Loaded SciRS2Model instance
-    """
+    '"'
     return SciRS2Model(model_path)
         fs::write(path, python_code).map_err(|e| NeuralError::IOError(e.to_string()))?;
     fn generate_dockerfile(&self, path: &Path, platform: TargetPlatform) -> Result<()> {

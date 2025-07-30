@@ -10,7 +10,7 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
-use super::xla__compilation::ComputationId;
+use super::xla_compilation::ComputationId;
 use super::{TPUConfig, TPUVersion, XLAOptimizationLevel};
 use crate::error::Result;
 
@@ -799,7 +799,7 @@ pub struct TaskExecutor {
 }
 
 impl DeviceManager {
-    pub fn new(_config: &TPUBackendConfig) -> Result<Self> {
+    pub fn new(config: &TPUBackendConfig) -> Result<Self> {
         Ok(Self {
             devices: Vec::new(),
             device_assignments: HashMap::new(),
@@ -818,17 +818,17 @@ impl DeviceManager {
 
 impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> TPUBackend<T> {
     /// Create a new TPU backend
-    pub fn new(_config: TPUBackendConfig) -> Result<Self> {
-        let device_manager = DeviceManager::new(&_config)?;
-        let execution_engine = ExecutionEngine::new(&_config)?;
-        let memory_manager = TPUMemoryManager::new(&_config)?;
-        let runtime_profiler = RuntimeProfiler::new(&_config);
-        let error_handler = TPUErrorHandler::new(&_config);
-        let performance_monitor = PerformanceMonitor::new(&_config);
+    pub fn new(config: TPUBackendConfig) -> Result<Self> {
+        let device_manager = DeviceManager::new(&config)?;
+        let execution_engine = ExecutionEngine::new(&config)?;
+        let memory_manager = TPUMemoryManager::new(&config)?;
+        let runtime_profiler = RuntimeProfiler::new(&config);
+        let error_handler = TPUErrorHandler::new(&config);
+        let performance_monitor = PerformanceMonitor::new(&config);
         let compilation_cache = Arc::new(RwLock::new(HashMap::new()));
 
         Ok(Self {
-            _config,
+            config,
             device_manager,
             execution_engine,
             memory_manager,
@@ -1116,9 +1116,9 @@ pub struct RuntimeProfiler {
 
 impl RuntimeProfiler {
     /// Create a new runtime profiler
-    pub fn new(_config: &TPUBackendConfig) -> Self {
+    pub fn new(config: &TPUBackendConfig) -> Self {
         Self {
-            enabled: _config.enable_performance_monitoring,
+            enabled: config.enable_performance_monitoring,
             profile_data: Vec::new(),
             sampling_interval: Duration::from_millis(100),
             last_sample: Instant::now(),
@@ -1166,12 +1166,12 @@ pub struct TPUErrorHandler {
 
 impl TPUErrorHandler {
     /// Create a new TPU error handler
-    pub fn new(_config: &TPUBackendConfig) -> Self {
+    pub fn new(config: &TPUBackendConfig) -> Self {
         Self {
-            recovery_enabled: _config.enable_error_recovery,
+            recovery_enabled: config.enable_error_recovery,
             error_statistics: ErrorStatistics::default(),
             recovery_strategies: HashMap::new(),
-            max_retry_attempts: _config.max_retry_attempts,
+            max_retry_attempts: config.max_retry_attempts,
         }
     }
 
@@ -1250,9 +1250,9 @@ pub struct PerformanceMonitor {
 
 impl PerformanceMonitor {
     /// Create a new performance monitor
-    pub fn new(_config: &TPUBackendConfig) -> Self {
+    pub fn new(config: &TPUBackendConfig) -> Self {
         Self {
-            enabled: _config.enable_performance_monitoring,
+            enabled: config.enable_performance_monitoring,
             total_executions: 0,
             average_execution_time: Duration::from_millis(0),
             performance_history: VecDeque::new(),
@@ -1282,7 +1282,7 @@ pub struct PerformanceSample {
 
 impl<T: Float + Send + Sync> TPUMemoryManager<T> {
     /// Create a new TPU memory manager
-    pub fn new(_config: &TPUBackendConfig) -> Result<Self> {
+    pub fn new(config: &TPUBackendConfig) -> Result<Self> {
         let usage_statistics = MemoryUsageStatistics {
             total_allocated: 0,
             peak_usage: 0,
@@ -1302,12 +1302,18 @@ impl<T: Float + Send + Sync> TPUMemoryManager<T> {
             strategy: GCStrategy::Adaptive,
             threshold: 0.8,
             last_collection: Instant::now(),
-            statistics: gc_statistics_phantom: std::marker::PhantomData,
+            statistics: GCStatistics {
+                total_collections: 0,
+                total_memory_reclaimed: 0,
+                average_collection_time: Duration::from_secs(0),
+                collection_efficiency: 0.0,
+            },
+            _phantom: std::marker::PhantomData,
         };
 
         Ok(Self {
             memory_pools: HashMap::new(),
-            allocation_strategy: _config.memory_allocation_strategy,
+            allocation_strategy: config.memory_allocation_strategy,
             usage_statistics,
             garbage_collector,
         })
@@ -1331,7 +1337,7 @@ impl<T: Float + Send + Sync> TPUMemoryManager<T> {
     }
 
     pub fn allocate_for_computation(
-        &self_program: &CompiledProgram, _devices: &[DeviceId],
+        &self, _program: &CompiledProgram, _devices: &[DeviceId],
     ) -> Result<MemoryAllocation> {
         // Simple implementation
         Ok(MemoryAllocation {
@@ -1349,7 +1355,7 @@ impl<T: Float + Send + Sync> ExecutionScheduler<T> {
 }
 
 impl<T: Float + Send + Sync> ExecutionEngine<T> {
-    pub fn new(_config: &TPUBackendConfig) -> Result<Self> {
+    pub fn new(config: &TPUBackendConfig) -> Result<Self> {
         Ok(Self {
             scheduler: ExecutionScheduler {
                 execution_queue: VecDeque::new(),
@@ -1369,11 +1375,11 @@ impl<T: Float + Send + Sync> ExecutionEngine<T> {
     }
 
     pub fn execute_task(
-        &self_task: ComputationTask, _devices: &[DeviceId], _memory_allocation: &MemoryAllocation,
+        &self, _task: ComputationTask, _devices: &[DeviceId], _memory_allocation: &MemoryAllocation,
     ) -> Result<TaskExecutionResult> {
         // Simple implementation
         Ok(TaskExecutionResult {
-            _task_id: TaskId(0),
+            task_id: TaskId(0),
             execution_time: std::time::Duration::from_millis(100),
             memory_used: 1024,
             energy_consumed: 10.0,
@@ -1384,7 +1390,7 @@ impl<T: Float + Send + Sync> ExecutionEngine<T> {
 
 impl PerformanceMonitor {
     pub fn record_execution(
-        &mut self, _computation_id: ComputationId_execution, _time: std::time::Duration_results: &TaskExecutionResult,
+        &mut self, _computation_id: ComputationId, _time: std::time::Duration, _results: &TaskExecutionResult,
     ) {
         // Simple implementation - record metrics
     }
@@ -1405,7 +1411,7 @@ impl DeviceManager {
         Ok(())
     }
 
-    pub fn select_devices(&self_program: &CompiledProgram) -> Result<Vec<DeviceId>> {
+    pub fn select_devices(&self, _program: &CompiledProgram) -> Result<Vec<DeviceId>> {
         // Simple implementation - return first available device
         if self.devices.is_empty() {
             Ok(Vec::new())
@@ -1460,9 +1466,9 @@ impl Default for ExecutionConstraints {
 
 impl<T: Float + Send + Sync> TPUBuffer<T> {
     /// Create a new TPU buffer
-    pub fn new(_data: Vec<T>, shape: Vec<usize>, layout: MemoryLayout) -> Self {
+    pub fn new(data: Vec<T>, shape: Vec<usize>, layout: MemoryLayout) -> Self {
         Self {
-            _data,
+            data,
             shape,
             layout,
             device: None,
@@ -1470,7 +1476,7 @@ impl<T: Float + Send + Sync> TPUBuffer<T> {
                 created_at: Instant::now(),
                 last_accessed: Instant::now(),
                 access_count: 0,
-                _data_type: DataType::F32, // Simplified
+                data_type: DataType::F32, // Simplified
                 flags: BufferFlags {
                     read_only: false,
                     persistent: false,

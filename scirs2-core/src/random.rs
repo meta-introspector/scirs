@@ -966,7 +966,7 @@ pub mod parallel {
             T: Send,
         {
             #[cfg(feature = "parallel")]
-            use rayon::iter::{IntoParallelIterator, ParallelIterator};
+            use crate::parallel_ops::{IntoParallelIterator, ParallelIterator};
 
             (0..count)
                 .into_par_iter()

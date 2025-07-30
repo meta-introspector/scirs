@@ -28,7 +28,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::neuromorphic::{SpikingNeuralClusterer, NeuromorphicProcessor};
+//! use scirs2_spatial::neuromorphic::{SpikingNeuralClusterer, NeuromorphicProcessor};
 //! use ndarray::array;
 //!
 //! // Spiking neural network clustering
@@ -254,19 +254,19 @@ impl SpikingNeuralClusterer {
     }
 
     /// Configure spike threshold
-    pub fn with_spike_threshold(mut threshold: f64) -> Self {
+    pub fn with_spike_threshold(mut self, threshold: f64) -> Self {
         self.spike_threshold = threshold;
         self
     }
 
     /// Enable/disable STDP learning
-    pub fn with_stdp_learning(mut enabled: bool) -> Self {
+    pub fn with_stdp_learning(mut self, enabled: bool) -> Self {
         self.stdp_learning = enabled;
         self
     }
 
     /// Enable/disable lateral inhibition
-    pub fn with_lateral_inhibition(mut enabled: bool) -> Self {
+    pub fn with_lateral_inhibition(mut self, enabled: bool) -> Self {
         self.lateral_inhibition = enabled;
         self
     }
@@ -556,7 +556,7 @@ pub struct NeuromorphicProcessor {
 }
 
 impl Default for NeuromorphicProcessor {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -574,7 +574,7 @@ impl NeuromorphicProcessor {
     }
 
     /// Enable memristive crossbar arrays
-    pub fn with_memristive_crossbar(mut enabled: bool) -> Self {
+    pub fn with_memristive_crossbar(mut self, enabled: bool) -> Self {
         self.memristive_crossbar = enabled;
         if enabled {
             self.initialize_crossbar();
@@ -583,13 +583,13 @@ impl NeuromorphicProcessor {
     }
 
     /// Enable temporal coding
-    pub fn with_temporal_coding(mut enabled: bool) -> Self {
+    pub fn with_temporal_coding(mut self, enabled: bool) -> Self {
         self.temporal_coding = enabled;
         self
     }
 
     /// Configure crossbar size
-    pub fn with_crossbar_size(mut rows: usize, cols: usize) -> Self {
+    pub fn with_crossbar_size(mut self, rows: usize, cols: usize) -> Self {
         self.crossbar_size = (rows, cols);
         self.conductances = Array2::zeros((rows, cols));
         self
@@ -2301,13 +2301,13 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Configure homeostatic regulation
-    pub fn with_homeostatic_regulation(mut target_rates: Array1<f64>) -> Self {
+    pub fn with_homeostatic_regulation(mut self, target_rates: Array1<f64>) -> Self {
         self.homeostatic_system.target_firing_rates = target_rates;
         self
     }
 
     /// Enable catastrophic forgetting protection
-    pub fn with_forgetting_protection(mut enabled: bool) -> Self {
+    pub fn with_forgetting_protection(mut self, enabled: bool) -> Self {
         self.forgetting_protection = enabled;
         self.metaplasticity.forgetting_protection.ewc_enabled = enabled;
         self
@@ -2990,7 +2990,7 @@ impl AdvancedMemristiveLearning {
     /// Record learning history
     async fn record_learning_history(
         &mut self,
-        metrics: &PerformanceMetrics_timestamp: f64,
+        metrics: &PerformanceMetrics, timestamp: f64,
     ) -> SpatialResult<()> {
         // Record performance metrics
         self.learning_history
@@ -3163,7 +3163,8 @@ impl PlasticityMechanism {
                     metaplasticity_threshold: 0.8,
                     saturation_threshold: 0.95,
                 },
-            , _ => (
+            ),
+            _ => (
                 PlasticityTimeConstants {
                     tau_fast: 10.0,
                     tau_slow: 20.0,
@@ -3189,7 +3190,7 @@ impl PlasticityMechanism {
         };
 
         Self {
-            mechanism_type,
+            mechanism_type: _mechanism_type,
             time_constants,
             learning_rates,
             thresholds,
@@ -3218,7 +3219,7 @@ impl HomeostaticSystem {
 }
 
 impl Default for MetaplasticityRules {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -3284,7 +3285,7 @@ impl NeuromodulationSystem {
 }
 
 impl Default for LearningHistory {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }

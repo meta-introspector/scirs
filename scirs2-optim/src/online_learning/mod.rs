@@ -6,6 +6,7 @@
 use crate::error::{OptimError, Result};
 use ndarray::{Array, Array1, Dimension, ScalarOperand};
 use num_traits::Float;
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 
@@ -298,19 +299,21 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOpti
             OnlineLearningStrategy::AdaptiveSGD {
                 adaptation_method: LearningRateAdaptation::Adam { .. },
                 ..
-            } => Some(Array::zeros(param_shape), _ => None,
+            } => Some(Array::zeros(param_shape)),
+            _ => None,
         };
 
         let current_lr = match &_strategy {
             OnlineLearningStrategy::AdaptiveSGD { initial_lr, .. } => A::from(*initial_lr).unwrap(),
-            OnlineLearningStrategy::OnlineNewton { .. } =>, A::from(0.01).unwrap(),
-            OnlineLearningStrategy::FTRL { .. } =>, A::from(0.1).unwrap(),
-            OnlineLearningStrategy::MirrorDescent { .. } =>, A::from(0.01).unwrap(),
-            OnlineLearningStrategy::AdaptiveMultiTask { .. } =>, A::from(0.001).unwrap(),
+            OnlineLearningStrategy::OnlineNewton { .. } => A::from(0.01).unwrap(),
+            OnlineLearningStrategy::FTRL { .. } => A::from(0.1).unwrap(),
+            OnlineLearningStrategy::MirrorDescent { .. } => A::from(0.01).unwrap(),
+            OnlineLearningStrategy::AdaptiveMultiTask { .. } => A::from(0.001).unwrap(),
         };
 
         Self {
-            _strategy_parameters: initial_parameters,
+            strategy: _strategy,
+            parameters: initial_parameters,
             gradient_accumulator,
             second_moment_accumulator,
             current_lr,
@@ -596,7 +599,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
     /// Create a new lifelong optimizer
     pub fn new(_strategy: LifelongStrategy) -> Self {
         Self {
-            _strategy,
+            strategy: _strategy,
             task_optimizers: HashMap::new(),
             shared_knowledge: SharedKnowledge {
                 fisher_information: None,
@@ -688,7 +691,8 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
 
     /// Apply Elastic Weight Consolidation regularization
     fn apply_ewc_regularization(
-        &mut self_gradient: &Array<A, D>, _importance_weight: f64,
+        &mut self,
+        gradient: &Array<A, D>, _importance_weight: f64,
     ) -> Result<()> {
         // Simplified EWC implementation
         // In practice, this would compute Fisher Information Matrix and apply regularization
@@ -696,7 +700,8 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
     }
 
     /// Apply Progressive Networks strategy
-    fn apply_progressive_networks(&mut self_gradient: &Array<A, D>) -> Result<()> {
+    fn apply_progressive_networks(&mut self,
+        gradient: &Array<A, D>) -> Result<()> {
         // Simplified Progressive Networks implementation
         // In practice, this would manage lateral connections between task columns
         Ok(())
@@ -733,7 +738,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
                             .iter()
                             .enumerate()
                             .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                            .map(|(idx_)| idx)
+                            .map(|(idx, _)| idx)
                         {
                             self.memory_buffer.examples.remove(min_idx);
                             self.memory_buffer.importance_scores.remove(min_idx);
@@ -755,14 +760,16 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> LifelongOp
     }
 
     /// Apply meta-learning strategy
-    fn apply_meta_learning(&mut self_gradient: &Array<A, D>) -> Result<()> {
+    fn apply_meta_learning(&mut self,
+        gradient: &Array<A, D>) -> Result<()> {
         // Simplified meta-learning implementation
         // In practice, this would update meta-parameters based on task performance
         Ok(())
     }
 
     /// Apply Gradient Episodic Memory constraints
-    fn apply_gem_constraints(&mut self_gradient: &Array<A, D>) -> Result<()> {
+    fn apply_gem_constraints(&mut self,
+        gradient: &Array<A, D>) -> Result<()> {
         // Simplified GEM implementation
         // In practice, this would project gradients to satisfy memory constraints
         Ok(())

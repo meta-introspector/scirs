@@ -44,7 +44,8 @@ impl FromStr for MMDataType {
             "real" => Ok(MMDataType::Real),
             "complex" => Ok(MMDataType::Complex),
             "integer" => Ok(MMDataType::Integer),
-            "pattern" => Ok(MMDataType::Pattern, _ => Err(IoError::FormatError(format!("Unknown data type: {}", s))),
+            "pattern" => Ok(MMDataType::Pattern),
+            _ => Err(IoError::FormatError(format!("Unknown data type: {}", s))),
         }
     }
 }
@@ -75,7 +76,8 @@ impl FromStr for MMFormat {
     fn from_str(s: &str) -> Result<Self> {
         match s.to_lowercase().as_str() {
             "coordinate" => Ok(MMFormat::Coordinate),
-            "array" => Ok(MMFormat::Array, _ => Err(IoError::FormatError(format!("Unknown format: {}", s))),
+            "array" => Ok(MMFormat::Array),
+            _ => Err(IoError::FormatError(format!("Unknown format: {}", s))),
         }
     }
 }
@@ -110,7 +112,8 @@ impl FromStr for MMSymmetry {
             "general" => Ok(MMSymmetry::General),
             "symmetric" => Ok(MMSymmetry::Symmetric),
             "hermitian" => Ok(MMSymmetry::Hermitian),
-            "skew-symmetric" => Ok(MMSymmetry::SkewSymmetric, _ => Err(IoError::FormatError(format!("Unknown symmetry: {}", s))),
+            "skew-symmetric" => Ok(MMSymmetry::SkewSymmetric),
+            _ => Err(IoError::FormatError(format!("Unknown symmetry: {}", s))),
         }
     }
 }

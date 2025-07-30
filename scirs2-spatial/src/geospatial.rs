@@ -17,7 +17,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::geospatial::{haversine_distance, initial_bearing, destination_point};
+//! use scirs2_spatial::geospatial::{haversine_distance, initial_bearing, destination_point};
 //!
 //! // Calculate distance between two cities
 //! let london = (51.5074, -0.1278);  // Latitude, Longitude
@@ -69,7 +69,7 @@ pub const EARTH_ECCENTRICITY_SQ: f64 = 2.0 * EARTH_FLATTENING - EARTH_FLATTENING
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::geospatial::deg_to_rad;
+/// use scirs2_spatial::geospatial::deg_to_rad;
 ///
 /// let radians = deg_to_rad(180.0);
 /// assert!((radians - std::f64::consts::PI).abs() < 1e-10);
@@ -92,7 +92,7 @@ pub fn deg_to_rad(_degrees: f64) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::geospatial::rad_to_deg;
+/// use scirs2_spatial::geospatial::rad_to_deg;
 ///
 /// let degrees = rad_to_deg(std::f64::consts::PI);
 /// assert!((degrees - 180.0).abs() < 1e-10);
@@ -115,7 +115,7 @@ pub fn rad_to_deg(_radians: f64) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::geospatial::normalize_angle;
+/// use scirs2_spatial::geospatial::normalize_angle;
 ///
 /// let normalized = normalize_angle(3.0 * std::f64::consts::PI);
 /// assert!((normalized - std::f64::consts::PI).abs() < 1e-10);
@@ -143,7 +143,7 @@ pub fn normalize_angle(_angle: f64) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::geospatial::normalize_bearing;
+/// use scirs2_spatial::geospatial::normalize_bearing;
 ///
 /// let normalized = normalize_bearing(450.0);
 /// assert!((normalized - 90.0).abs() < 1e-10);
@@ -175,7 +175,7 @@ pub fn normalize_bearing(_bearing_deg: f64) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::geospatial::haversine_distance;
+/// use scirs2_spatial::geospatial::haversine_distance;
 ///
 /// let new_york = (40.7128, -74.0060);
 /// let london = (51.5074, -0.1278);
@@ -211,7 +211,7 @@ pub fn haversine_distance(_point1: (f64, f64), point2: (f64, f64)) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::geospatial::initial_bearing;
+/// use scirs2_spatial::geospatial::initial_bearing;
 ///
 /// let start = (40.7128, -74.0060);  // New York
 /// let end = (51.5074, -0.1278);     // London
@@ -263,7 +263,7 @@ pub fn final_bearing(_point1: (f64, f64), point2: (f64, f64)) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::geospatial::destination_point;
+/// use scirs2_spatial::geospatial::destination_point;
 ///
 /// let start = (40.7128, -74.0060);  // New York
 /// let distance = 100_000.0;         // 100 km

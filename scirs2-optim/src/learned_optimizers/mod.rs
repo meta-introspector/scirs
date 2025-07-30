@@ -5,6 +5,7 @@
 
 use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
 pub mod adaptive_nas_system;
@@ -1800,7 +1801,7 @@ impl<A: Float + Default + Clone> AttentionParameters<A> {
         let scale = 0.1;
 
         Ok(Self {
-            query_weights: LSTMParameters::random_array_2d(hidden_size..hidden_size, scale),
+            query_weights: LSTMParameters::random_array_2d(hidden_size, hidden_size, scale),
             key_weights: LSTMParameters::random_array_2d(hidden_size, hidden_size, scale),
             value_weights: LSTMParameters::random_array_2d(hidden_size, hidden_size, scale),
             output_weights: LSTMParameters::random_array_2d(hidden_size, hidden_size, scale),

@@ -155,7 +155,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> FeatureImportanceCal
             }
 
             // Create dataset without this feature
-            let _x_without_feature = self.drop_column(x_test, feature_idx)?;
+            let _x_without_feature = "self".drop_column(x_test, feature_idx)?;
 
             // Note: In practice, you'd need a model that can handle different input sizes
             // For this example, we'll set the dropped feature to zero instead

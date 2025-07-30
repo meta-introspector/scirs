@@ -331,7 +331,8 @@ impl RecoverySuggestions {
                     "Use robust statistical methods".to_string(),
                     PerformanceImpact::Moderate,
                 ),
-            ]_ => vec![
+            ],
+            _ => vec![
                 (
                     "Check input data for validity".to_string(),
                     PerformanceImpact::None,
@@ -584,7 +585,8 @@ impl BatchErrorHandler {
                         let priority_icon = match action.priority {
                             1 => "🔴",
                             2 => "🟡",
-                            3 => "🟢"_ => "⚪",
+                            3 => "🟢",
+                            _ => "⚪",
                         };
                         report.push_str(&format!("    {} {}\n", priority_icon, action.description));
                     }
@@ -823,7 +825,8 @@ pub struct AutoRecoverySystem;
 impl AutoRecoverySystem {
     /// Attempt automatic recovery for common errors
     pub fn attempt_auto_recovery(
-        error: &StatsError_context: &EnhancedErrorContext,
+        error: &StatsError,
+        context: &EnhancedErrorContext,
     ) -> Option<RecoveryAction> {
         match error {
             StatsError::InvalidArgument(msg) if msg.contains("NaN") => Some(RecoveryAction {
@@ -852,7 +855,8 @@ impl AutoRecoverySystem {
                 performance_impact: PerformanceImpact::Minimal,
                 code_example: Some("let regularized = matrix + Array2::eye(n) * 1e-6;".to_string()),
                 automatic: true,
-            }, _ => None,
+            }),
+            _ => None,
         }
     }
 }

@@ -257,7 +257,8 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         &self,
         t: F,
         y: &ArrayView1<F>,
-        h: F_f: impl Fn(F, &ArrayView1<F>) -> IntegrateResult<Array1<F>>,
+        h: F,
+        f: impl Fn(F, &ArrayView1<F>) -> IntegrateResult<Array1<F>>,
     ) -> IntegrateResult<Array1<F>> {
         let start_time = Instant::now();
 
@@ -646,7 +647,10 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
 
     /// Benchmark a specific kernel configuration
     fn benchmark_kernel_config(
-        &self, _kernel_name: &str, _config: &KernelConfiguration_problem_size: usize,
+        &self,
+        _kernel_name: &str,
+        _config: &KernelConfiguration,
+        _problem_size: usize,
     ) -> IntegrateResult<Duration> {
         // Simplified benchmark - in real implementation would launch actual kernels
         Ok(Duration::from_micros(100))
@@ -1025,7 +1029,7 @@ impl RealTimeGpuMonitor {
 }
 
 impl Default for PerformanceThresholds {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         PerformanceThresholds {
             max_gpu_utilization: 95.0,
             max_memory_utilization: 90.0,

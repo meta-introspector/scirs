@@ -5,7 +5,7 @@
 //! It also shows how to use the adaptive dispatchers that automatically select
 //! the most efficient implementation for the current hardware.
 
-use scirs2__fft::{fft, fft_adaptive, fft_simd, simd_support_available};
+use scirs2_fft::{fft, fft_adaptive, fft_simd, simd_support_available};
 use std::f64::consts::PI;
 use std::time::Instant;
 

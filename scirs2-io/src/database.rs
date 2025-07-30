@@ -501,7 +501,8 @@ impl DatabaseConnector {
             #[cfg(not(feature = "duckdb"))]
             DatabaseType::DuckDB => Err(IoError::UnsupportedFormat(
                 "DuckDB support not enabled. Enable 'duckdb' feature.".to_string(),
-            ), _ => Err(IoError::UnsupportedFormat(format!(
+            )),
+            _ => Err(IoError::UnsupportedFormat(format!(
                 "Database type {:?} not yet implemented",
                 _config.db_type
             ))),
@@ -588,7 +589,7 @@ impl DatabaseConnection for SQLiteConnection {
         self.execute_sql(&sql, &[])
     }
 
-    fn execute_sql(&self, sql: &str_params: &[serde, _json::Value]) -> Result<ResultSet> {
+    fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
         let conn = self.conn.lock().map_err(|e| {
             IoError::DatabaseError(format!("Failed to lock database connection: {}", e))
         })?;
@@ -612,15 +613,15 @@ impl DatabaseConnection for SQLiteConnection {
                     for i in 0..column_count {
                         let value: rusqlite::types::Value = row.get(i)?;
                         let json_value = match value {
-                            rusqlite::types::Value::Null =>, serde_json::Value::Null,
+                            rusqlite::types::Value::Null => serde_json::Value::Null,
                             rusqlite::types::Value::Integer(i) => {
-                                serde_json::Value::Number(serde, _json::Number::from(i))
+                                serde_json::Value::Number(serde_json::Number::from(i))
                             }
-                            rusqlite::types::Value::Real(f) =>, serde_json::Value::Number(
+                            rusqlite::types::Value::Real(f) => serde_json::Value::Number(
                                 serde_json::Number::from_f64(f)
                                     .unwrap_or_else(|| serde_json::Number::from(0)),
                             ),
-                            rusqlite::types::Value::Text(s) =>, serde_json::Value::String(s),
+                            rusqlite::types::Value::Text(s) => serde_json::Value::String(s),
                             rusqlite::types::Value::Blob(b) => {
                                 serde_json::Value::String(hex::encode(b))
                             }
@@ -993,7 +994,8 @@ impl DatabaseConnection for PostgreSQLConnection {
                         }
                     }
                     serde_json::Value::Bool(b) => query = query.bind(*b),
-                    serde_json::Value::Null => query = query.bind(Option::<String>::None, _ => query = query.bind(param.to_string()),
+                    serde_json::Value::Null => query = query.bind(Option::<String>::None),
+                    _ => query = query.bind(param.to_string()),
                 }
             }
 
@@ -1245,7 +1247,8 @@ impl DatabaseConnection for PostgreSQLConnection {
                     "date" => DataType::Date,
                     "timestamp without time zone" => DataType::Timestamp,
                     "jsonb" | "json" => DataType::Json,
-                    "bytea" => DataType::Binary_ =>, DataType::Text, // Default fallback
+                    "bytea" => DataType::Binary,
+                    _ => DataType::Text, // Default fallback
                 };
 
                 columns.push(ColumnDef {
@@ -1404,7 +1407,8 @@ impl DatabaseConnection for MySQLConnection {
                         }
                     }
                     serde_json::Value::Bool(b) => query = query.bind(*b),
-                    serde_json::Value::Null => query = query.bind(Option::<String>::None, _ => query = query.bind(param.to_string()),
+                    serde_json::Value::Null => query = query.bind(Option::<String>::None),
+                    _ => query = query.bind(param.to_string()),
                 }
             }
 
@@ -1659,7 +1663,8 @@ impl DatabaseConnection for MySQLConnection {
                     "date" => DataType::Date,
                     "timestamp" | "datetime" => DataType::Timestamp,
                     "json" => DataType::Json,
-                    "blob" => DataType::Binary_ =>, DataType::Text, // Default fallback
+                    "blob" => DataType::Binary,
+                    _ => DataType::Text, // Default fallback
                 };
 
                 columns.push(ColumnDef {
@@ -1794,7 +1799,8 @@ impl DatabaseConnection for DuckDBConnection {
                     }
                 }
                 serde_json::Value::Bool(b) => b as &dyn duckdb::ToSql,
-                serde_json::Value::Null => &None::<String> as &dyn duckdb::ToSql_ => &p.to_string() as &dyn duckdb::ToSql,
+                serde_json::Value::Null => &None::<String> as &dyn duckdb::ToSql,
+                serde_json::Value::Array(_) | serde_json::Value::Object(_) => &p.to_string() as &dyn duckdb::ToSql,
             })
             .collect();
 
@@ -1816,14 +1822,14 @@ impl DatabaseConnection for DuckDBConnection {
                 for i in 0..column_count {
                     let value = match row.get_ref(i) {
                         Ok(val) => match val {
-                            duckdb::types::ValueRef::Null =>, serde_json::Value::Null,
-                            duckdb::types::ValueRef::Integer(i) =>, serde_json::_json!(i),
-                            duckdb::types::ValueRef::Real(f) =>, serde_json::_json!(f),
+                            duckdb::types::ValueRef::Null => serde_json::Value::Null,
+                            duckdb::types::ValueRef::Integer(i) => serde_json::json!(i),
+                            duckdb::types::ValueRef::Real(f) => serde_json::json!(f),
                             duckdb::types::ValueRef::Text(s) => {
-                                serde_json::_json!(std::str::from_utf8(s).unwrap_or(""))
+                                serde_json::json!(std::str::from_utf8(s).unwrap_or(""))
                             }
                             duckdb::types::ValueRef::Blob(b) => {
-                                serde_json::_json!(base64::encode(b))
+                                serde_json::json!(base64::encode(b))
                             }
                         },
                         Err(_) => serde_json::Value::Null,
@@ -1838,14 +1844,14 @@ impl DatabaseConnection for DuckDBConnection {
                 for i in 0..column_count {
                     let value = match row.get_ref(i) {
                         Ok(val) => match val {
-                            duckdb::types::ValueRef::Null =>, serde_json::Value::Null,
-                            duckdb::types::ValueRef::Integer(i) =>, serde_json::_json!(i),
-                            duckdb::types::ValueRef::Real(f) =>, serde_json::_json!(f),
+                            duckdb::types::ValueRef::Null => serde_json::Value::Null,
+                            duckdb::types::ValueRef::Integer(i) => serde_json::json!(i),
+                            duckdb::types::ValueRef::Real(f) => serde_json::json!(f),
                             duckdb::types::ValueRef::Text(s) => {
-                                serde_json::_json!(std::str::from_utf8(s).unwrap_or(""))
+                                serde_json::json!(std::str::from_utf8(s).unwrap_or(""))
                             }
                             duckdb::types::ValueRef::Blob(b) => {
-                                serde_json::_json!(base64::encode(b))
+                                serde_json::json!(base64::encode(b))
                             }
                         },
                         Err(_) => serde_json::Value::Null,
@@ -2032,7 +2038,8 @@ impl DatabaseConnection for DuckDBConnection {
                 "DATE" => DataType::Date,
                 "TIMESTAMP" => DataType::Timestamp,
                 "JSON" => DataType::Json,
-                "BLOB" => DataType::Binary_ =>, DataType::Text, // Default fallback
+                "BLOB" => DataType::Binary,
+                _ => DataType::Text, // Default fallback
             };
 
             columns.push(ColumnDef {
@@ -2458,7 +2465,7 @@ pub mod orm {
         }
 
         /// Find by primary key
-        pub fn find(_conn: &dyn DatabaseConnection, id: serde_json: Value) -> Result<T> {
+        pub fn find(_conn: &dyn DatabaseConnection, id: serde_json::Value) -> Result<T> {
             let query = QueryBuilder::select(T::table_name()).where_clause("id = ?");
 
             let result = _conn.execute_sql(&query.build_sql(), &[id])?;
@@ -2502,16 +2509,16 @@ pub mod cdc {
     pub enum ChangeEvent {
         Insert {
             table: String,
-            data: serde_json: Value,
+            data: serde_json::Value,
         },
         Update {
             table: String,
-            old: serde_json: Value,
-            new: serde_json: Value,
+            old: serde_json::Value,
+            new: serde_json::Value,
         },
         Delete {
             table: String,
-            data: serde_json: Value,
+            data: serde_json::Value,
         },
     }
 

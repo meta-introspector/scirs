@@ -5,7 +5,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 

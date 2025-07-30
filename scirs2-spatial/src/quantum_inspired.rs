@@ -28,7 +28,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::quantum_inspired::{QuantumClusterer, QuantumNearestNeighbor};
+//! use scirs2_spatial::quantum_inspired::{QuantumClusterer, QuantumNearestNeighbor};
 //! use ndarray::array;
 //!
 //! // Quantum-inspired k-means clustering
@@ -91,11 +91,10 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use rand::Rng;
 use std::collections::HashMap;
 use std::f64::consts::{PI, SQRT_2};
-use std::f64::consts::PI;
 
 /// Complex number type for quantum states
 pub type QuantumAmplitude = Complex64;

@@ -1065,7 +1065,7 @@ impl<
             knowledge_base: OptimizationKnowledgeBase::new()?,
             state: CoordinatorState::new(),
             performance_history: VecDeque::new(),
-            _config,
+            config: _config,
         };
 
         // Initialize the coordinator
@@ -1345,7 +1345,7 @@ impl<
             let mut count = 0;
 
             for i in 0..(n - 1) {
-                for j in (i + 1), std::cmp::min(i + 5, n) {
+                for j in (i + 1)..std::cmp::min(i + 5, n) {
                     // Local correlation
                     correlation_sum = correlation_sum + gradients[i] * gradients[j];
                     count += 1;
@@ -1500,7 +1500,8 @@ impl<
     }
 
     fn analyze_global_structure(
-        &self_parameters: &Array1<T>, _context: &OptimizationContext<T>,
+        &self,
+        parameters: &Array1<T>, _context: &OptimizationContext<T>,
     ) -> Result<GlobalStructure<T>> {
         Ok(GlobalStructure {
             connectivity: T::from(0.8).unwrap(),
@@ -1511,7 +1512,8 @@ impl<
     }
 
     fn analyze_noise_characteristics(
-        &self_gradients: &Array1<T>, _context: &OptimizationContext<T>,
+        &self,
+        gradients: &Array1<T>, _context: &OptimizationContext<T>,
     ) -> Result<NoiseCharacteristics<T>> {
         Ok(NoiseCharacteristics {
             noise_level: T::from(0.05).unwrap(),
@@ -1885,10 +1887,10 @@ impl<
         let mut diversity_sum = T::zero();
         let mut count = 0;
 
-        for (other_name_) in all_optimizers {
-            if *other_name != optimizer_name {
+        for (other_name_, _) in all_optimizers {
+            if *other_name_ != optimizer_name {
                 let other_category = optimizer_categories
-                    .get(other_name.as_str())
+                    .get(other_name_.as_str())
                     .unwrap_or(&unknown_category);
 
                 // Higher diversity for different categories
@@ -2092,7 +2094,7 @@ impl<
             let mut best_candidate_idx = 0;
             let mut best_score = T::from(-1.0).unwrap();
 
-            for (idx, (candidate_name, composite_score_)) in available.iter().enumerate() {
+            for (idx, &(ref candidate_name, ref composite_score, _)) in available.iter().enumerate() {
                 // Compute diversity bonus
                 let diversity_bonus =
                     self.compute_ensemble_diversity_bonus(candidate_name, &selected, context)?;
@@ -2146,7 +2148,8 @@ impl<
     }
 
     fn execute_ensemble_step(
-        &mut self_parameters: &Array1<T>, _gradients: &Array1<T>, _selected: &[String], _context: &OptimizationContext<T>,
+        &mut self,
+        parameters: &Array1<T>, _gradients: &Array1<T>, _selected: &[String], _context: &OptimizationContext<T>,
     ) -> Result<EnsembleOptimizationResults<T>> {
         Ok(EnsembleOptimizationResults {
             updated_parameters: Array1::zeros(10), // Placeholder
@@ -2163,13 +2166,15 @@ impl<
     }
 
     fn should_adapt(
-        &self_context: &OptimizationContext<T>, _results: &EnsembleOptimizationResults<T>,
+        &self,
+        context: &OptimizationContext<T>, _results: &EnsembleOptimizationResults<T>,
     ) -> bool {
         false // Placeholder
     }
 
     fn trigger_adaptation(
-        &mut self_context: &OptimizationContext<T>, _results: &EnsembleOptimizationResults<T>,
+        &mut self,
+        context: &OptimizationContext<T>, _results: &EnsembleOptimizationResults<T>,
     ) -> Result<()> {
         Ok(()) // Placeholder
     }
@@ -2259,7 +2264,8 @@ impl<
 
     /// Update strategy performance history
     fn update_strategy_performance_history(
-        &mut self_performance: &MetaLearningPerformance<T>,
+        &mut self,
+        performance: &MetaLearningPerformance<T>,
     ) -> Result<()> {
         for strategy in &self.meta_learning_orchestrator.strategies {
             let strategy_name = strategy.name();
@@ -2388,7 +2394,8 @@ impl<
 
     /// Update meta-optimizer selection based on performance
     fn update_meta_optimizer_selection(
-        &mut self_performance: &MetaLearningPerformance<T>,
+        &mut self,
+        performance: &MetaLearningPerformance<T>,
     ) -> Result<()> {
         // Promote well-performing strategies
         // First collect strategy names that need boosting to avoid borrowing conflicts
@@ -2420,7 +2427,8 @@ impl<
     // Helper methods for meta-learning
 
     fn compute_transfer_effectiveness(
-        &self_context: &OptimizationContext<T>,
+        &self,
+        context: &OptimizationContext<T>,
         results: &EnsembleOptimizationResults<T>,
     ) -> Result<T> {
         // Estimate how well knowledge transfers between tasks
@@ -2466,8 +2474,8 @@ impl<
         expected_outcomes.insert("performance_gain".to_string(), T::from(0.15).unwrap());
 
         Ok(MetaTask {
-            task_id: "performance_improvement".to_string(),
-            task_type: MetaTaskType::Optimization,
+            _task_id: "performance_improvement".to_string(),
+            _task_type: MetaTaskType::Optimization,
             parameters,
             expected_outcomes,
             resource_constraints: context.resource_constraints.clone(),
@@ -2486,8 +2494,8 @@ impl<
         expected_outcomes.insert("efficiency_gain".to_string(), T::from(0.2).unwrap());
 
         Ok(MetaTask {
-            task_id: "resource_efficiency".to_string(),
-            task_type: MetaTaskType::Optimization,
+            _task_id: "resource_efficiency".to_string(),
+            _task_type: MetaTaskType::Optimization,
             parameters,
             expected_outcomes,
             resource_constraints: context.resource_constraints.clone(),
@@ -2506,8 +2514,8 @@ impl<
         expected_outcomes.insert("adaptation_success".to_string(), T::from(0.8).unwrap());
 
         Ok(MetaTask {
-            task_id: "adaptation".to_string(),
-            task_type: MetaTaskType::Optimization,
+            _task_id: "adaptation".to_string(),
+            _task_type: MetaTaskType::Optimization,
             parameters,
             expected_outcomes,
             resource_constraints: context.resource_constraints.clone(),
@@ -2526,8 +2534,8 @@ impl<
         expected_outcomes.insert("learning_speed".to_string(), T::from(0.9).unwrap());
 
         Ok(MetaTask {
-            task_id: "few_shot_learning".to_string(),
-            task_type: MetaTaskType::Classification,
+            _task_id: "few_shot_learning".to_string(),
+            _task_type: MetaTaskType::Classification,
             parameters,
             expected_outcomes,
             resource_constraints: context.resource_constraints.clone(),
@@ -2548,7 +2556,7 @@ impl<
         }
 
         // Simple selection based on _task type
-        match meta_task.task_type {
+        match meta_task._task_type {
             MetaTaskType::Classification | MetaTaskType::Regression => {
                 // Prefer MAML for supervised tasks
                 for (i, strategy) in self
@@ -2591,7 +2599,8 @@ impl<
         Ok(())
     }
 
-    fn find_similar_tasks(&self_context: &OptimizationContext<T>) -> Result<Vec<MetaTask<T>>> {
+    fn find_similar_tasks(&self,
+        context: &OptimizationContext<T>) -> Result<Vec<MetaTask<T>>> {
         // Find tasks similar to current _context
         // For now, return empty list
         Ok(Vec::new())
@@ -2808,10 +2817,10 @@ impl<
     ) -> Result<T> {
         // Base probability depends on pattern type
         let base_probability = match characteristics.pattern_type {
-            PatternType::ConvergencePattern =>, T::from(0.7).unwrap(),
-            PatternType::PerformancePattern =>, T::from(0.8).unwrap(),
-            PatternType::ResourcePattern =>, T::from(0.6).unwrap(),
-            PatternType::FailurePattern =>, T::from(0.2).unwrap(),
+            PatternType::ConvergencePattern => T::from(0.7).unwrap(),
+            PatternType::PerformancePattern => T::from(0.8).unwrap(),
+            PatternType::ResourcePattern => T::from(0.6).unwrap(),
+            PatternType::FailurePattern => T::from(0.2).unwrap(),
         };
 
         // Adjust based on complexity
@@ -3195,21 +3204,24 @@ impl<T: Float + Send + Sync> OptimizationKnowledgeBase<T> {
     }
 
     fn extract_best_practices_from_success(
-        &mut self_pattern: &OptimizationPattern<T>,
+        &mut self,
+        pattern: &OptimizationPattern<T>,
     ) -> Result<()> {
         // Analyze successful _pattern to extract best practices
         Ok(())
     }
 
     fn analyze_and_record_failure(
-        &mut self_pattern: &OptimizationPattern<T>, _results: &EnsembleOptimizationResults<T>,
+        &mut self,
+        pattern: &OptimizationPattern<T>, _results: &EnsembleOptimizationResults<T>,
     ) -> Result<()> {
         // Analyze failure patterns and record for future reference
         Ok(())
     }
 
     fn extract_practice_from_success(
-        &self_context: &OptimizationContext<T>, _results: &EnsembleOptimizationResults<T>,
+        &self,
+        context: &OptimizationContext<T>, _results: &EnsembleOptimizationResults<T>,
     ) -> Result<BestPractice> {
         Ok(BestPractice {
             practice_id: "auto_generated".to_string(),
@@ -3221,7 +3233,8 @@ impl<T: Float + Send + Sync> OptimizationKnowledgeBase<T> {
     }
 
     fn extract_research_insights(
-        &self_context: &OptimizationContext<T>, _results: &EnsembleOptimizationResults<T>,
+        &self,
+        context: &OptimizationContext<T>, _results: &EnsembleOptimizationResults<T>,
     ) -> Result<Vec<ResearchInsight>> {
         Ok(Vec::new()) // Placeholder
     }
@@ -3293,7 +3306,7 @@ impl<
             + for<'a> std::iter::Sum<&'a T>,
     > AdvancedLSTMWrapper<T>
 {
-    fn new(_lstm_optimizer: LSTMOptimizer<T, ndarray::Ix1>) -> Self {
+    fn new(lstm_optimizer: LSTMOptimizer<T, ndarray::Ix1>) -> Self {
         let capabilities = OptimizerCapabilities {
             supported_problems: vec![ProblemType::NonConvex, ProblemType::Stochastic],
             scalability: ScalabilityInfo {
@@ -3452,7 +3465,7 @@ pub struct PerformanceDegradationTrigger<T: Float> {
 
 impl<T: Float + Send + Sync> PerformanceDegradationTrigger<T> {
     fn new(_threshold: T) -> Self {
-        Self { _threshold }
+        Self { threshold: _threshold }
     }
 }
 
@@ -3568,7 +3581,8 @@ impl<T: Float + Send + Sync> TaskDistributionAnalyzer<T> {
         Ok(Array1::from_vec(features))
     }
 
-    fn update_clustering(&mut self_features: &Array1<T>) -> Result<()> {
+    fn update_clustering(&mut self,
+        features: &Array1<T>) -> Result<()> {
         // Update clustering analysis based on new task _features
         // This would typically involve running clustering algorithms
         Ok(())
@@ -3881,7 +3895,8 @@ impl<T: Float + Send + Sync> KnowledgeIntegrationEngine<T> {
         }
     }
 
-    fn integrate_new_knowledge(&mut self_features: &Array1<T>, _target: T) -> Result<()> {
+    fn integrate_new_knowledge(&mut self,
+        features: &Array1<T>, _target: T) -> Result<()> {
         // Integrate new knowledge into existing knowledge base
         // This would typically involve updating internal models or knowledge graphs
         Ok(())
@@ -4027,10 +4042,10 @@ pub enum EvidenceLevel {
 impl From<EvidenceLevel> for EvidenceQuality {
     fn from(_level: EvidenceLevel) -> Self {
         match _level {
-            EvidenceLevel::Theoretical =>, EvidenceQuality::Medium,
-            EvidenceLevel::Empirical =>, EvidenceQuality::High,
-            EvidenceLevel::Industrial =>, EvidenceQuality::High,
-            EvidenceLevel::Consensus =>, EvidenceQuality::High,
+            EvidenceLevel::Theoretical => EvidenceQuality::Medium,
+            EvidenceLevel::Empirical => EvidenceQuality::High,
+            EvidenceLevel::Industrial => EvidenceQuality::High,
+            EvidenceLevel::Consensus => EvidenceQuality::High,
         }
     }
 }

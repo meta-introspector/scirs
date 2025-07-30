@@ -23,7 +23,7 @@ use crate::optimizers::Optimizer;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__optim::optimizers::{Adam, Optimizer};
+/// use scirs2_optim::optimizers::{Adam, Optimizer};
 ///
 /// // Initialize parameters and gradients
 /// let params = Array1::zeros(5);
@@ -61,9 +61,9 @@ impl<A: Float + ScalarOperand + Debug> Adam<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
-            _learning_rate,
+            learning_rate,
             beta1: A::from(0.9).unwrap(),
             beta2: A::from(0.999).unwrap(),
             epsilon: A::from(1e-8).unwrap(),

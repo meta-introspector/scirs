@@ -48,7 +48,7 @@ impl PipelineStage for FileReadStage {
             }
             FileFormat::Json => {
                 let file = File::open(&self.path).map_err(IoError::Io)?;
-                let value: serde_json: Value = serde, _json::from_reader(file)
+                let value: serde_json::Value = serde_json::from_reader(file)
                     .map_err(|e| IoError::SerializationError(e.to_string()))?;
                 Box::new(value) as Box<dyn Any + Send + Sync>
             }
@@ -75,7 +75,7 @@ impl PipelineStage for FileReadStage {
                     }
                     "json" => {
                         let file = File::open(&self.path).map_err(IoError::Io)?;
-                        let value: serde_json: Value = serde, _json::from_reader(file)
+                        let value: serde_json::Value = serde_json::from_reader(file)
                             .map_err(|e| IoError::SerializationError(e.to_string()))?;
                         Box::new(value) as Box<dyn Any + Send + Sync>
                     }

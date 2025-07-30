@@ -12,7 +12,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
 
-use crate::adaptive__selection::OptimizerType;
+use crate::adaptive_selection::OptimizerType;
 use crate::error::{OptimError, Result};
 use super::{
     LearnedOptimizerConfig, MetaOptimizationStrategy, NeuralOptimizerType,
@@ -3527,7 +3527,8 @@ impl<T: Float + Send + Sync> TransformerMetaLearning<T> {
         Ok(base_momentum * stability_measure)
     }
     
-    fn determine_update_operations(&self_context: &Array1<T>) -> Result<Vec<UpdateOperation>> {
+    fn determine_update_operations(&self,
+        context: &Array1<T>) -> Result<Vec<UpdateOperation>> {
         // For now, use standard gradient descent operations
         Ok(vec![UpdateOperation::Multiply, UpdateOperation::Add])
     }
@@ -4154,7 +4155,8 @@ impl<T: Float + Send + Sync> MemoryGarbageCollector<T> {
         })
     }
     
-    fn collect(&mut self_stores: &mut HashMap<MemoryType, MemoryStore<T>>, _patterns: &HashMap<String, AccessPattern>) -> Result<()> {
+    fn collect(&mut self,
+        stores: &mut HashMap<MemoryType, MemoryStore<T>>, _patterns: &HashMap<String, AccessPattern>) -> Result<()> {
         // Simple GC - update last GC time
         self.last_gc = Instant::now();
         Ok(())
@@ -4189,7 +4191,8 @@ impl<T: Float + Send + Sync> MetricsComputer<T> {
         })
     }
     
-    fn compute_metrics(&self_result: &TransformerOptimizationResult<T>) -> Result<PerformanceMetrics<T>> {
+    fn compute_metrics(&self,
+        result: &TransformerOptimizationResult<T>) -> Result<PerformanceMetrics<T>> {
         Ok(PerformanceMetrics {
             accuracy: T::from(0.9).unwrap(),
             loss: T::from(0.1).unwrap(),
@@ -4218,11 +4221,13 @@ impl<T: Float + Send + Sync> PerformancePredictor<T> {
         })
     }
     
-    fn update(&mut self_history: &VecDeque<PerformanceRecord<T>>) -> Result<()> {
+    fn update(&mut self,
+        history: &VecDeque<PerformanceRecord<T>>) -> Result<()> {
         Ok(())
     }
     
-    fn predict(&self_history: &VecDeque<PerformanceRecord<T>>, _steps: usize) -> Result<Vec<PerformanceMetrics<T>>> {
+    fn predict(&self,
+        history: &VecDeque<PerformanceRecord<T>>, _steps: usize) -> Result<Vec<PerformanceMetrics<T>>> {
         Ok(vec![PerformanceMetrics {
             accuracy: T::from(0.9).unwrap(),
             loss: T::from(0.1).unwrap(),
@@ -4242,7 +4247,8 @@ impl<T: Float + Send + Sync> AnomalyDetector<T> {
         })
     }
     
-    fn check_anomaly(&mut self_history: &VecDeque<PerformanceRecord<T>>) -> Result<bool> {
+    fn check_anomaly(&mut self,
+        history: &VecDeque<PerformanceRecord<T>>) -> Result<bool> {
         Ok(false)
     }
 }
@@ -4277,11 +4283,13 @@ impl<T: Float + Send + Sync> PredictionArchitecture<T> for TransformerPrediction
         Ok(sequence.clone())
     }
     
-    fn uncertainty(&self_sequence: &Array2<T>) -> Result<Array1<T>> {
+    fn uncertainty(&self,
+        sequence: &Array2<T>) -> Result<Array1<T>> {
         Ok(Array1::zeros(256))
     }
     
-    fn update(&mut self_data: &[(Array2<T>, Array2<T>)]) -> Result<()> {
+    fn update(&mut self,
+        data: &[(Array2<T>, Array2<T>)]) -> Result<()> {
         Ok(())
     }
 }

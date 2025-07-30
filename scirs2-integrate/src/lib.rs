@@ -41,7 +41,7 @@
 //! ### Basic Numerical Integration
 //!
 //! ```
-//! use scirs2__integrate::quad::quad;
+//! use scirs2_integrate::quad::quad;
 //!
 //! // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
 //! let result = quad(|x: f64| x * x, 0.0, 1.0, None).unwrap();
@@ -51,7 +51,7 @@
 //! ### Gaussian Quadrature
 //!
 //! ```
-//! use scirs2__integrate::gaussian::gauss_legendre;
+//! use scirs2_integrate::gaussian::gauss_legendre;
 //!
 //! // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
 //! let result = gauss_legendre(|x: f64| x * x, 0.0, 1.0, 5).unwrap();
@@ -61,7 +61,7 @@
 //! ### Romberg Integration
 //!
 //! ```
-//! use scirs2__integrate::romberg::romberg;
+//! use scirs2_integrate::romberg::romberg;
 //!
 //! // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
 //! let result = romberg(|x: f64| x * x, 0.0, 1.0, None).unwrap();
@@ -71,7 +71,7 @@
 //! ### Monte Carlo Integration
 //!
 //! ```
-//! use scirs2__integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
+//! use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
 //! use ndarray::ArrayView1;
 //!
 //! // Integrate f(x) = x² from 0 to 1 (exact result: 1/3)
@@ -95,7 +95,7 @@
 //!
 //! ```
 //! use ndarray::{array, ArrayView1};
-//! use scirs2__integrate::ode::{solve_ivp, ODEOptions, ODEMethod};
+//! use scirs2_integrate::ode::{solve_ivp, ODEOptions, ODEMethod};
 //!
 //! // Solve y'(t) = -y with initial condition y(0) = 1
 //! let result = solve_ivp(
@@ -114,7 +114,7 @@
 //!
 //! ```
 //! use ndarray::{array, ArrayView1};
-//! use scirs2__integrate::bvp::{solve_bvp, BVPOptions};
+//! use scirs2_integrate::bvp::{solve_bvp, BVPOptions};
 //! use std::f64::consts::PI;
 //!
 //! // Solve a simple linear BVP: y' = -y
@@ -225,7 +225,7 @@ pub use autotuning::{
     AlgorithmTuner, AutoTuner, GpuInfo, HardwareDetector, HardwareInfo, SimdFeature, TuningProfile,
 };
 pub use bvp::{solve_bvp, solve_bvp_auto, BVPOptions, BVPResult};
-pub use bvp__extended::{
+pub use bvp_extended::{
     solve_bvp_extended, solve_multipoint_bvp, BoundaryConditionType as BVPBoundaryConditionType,
     ExtendedBoundaryConditions, MultipointBVP, RobinBC,
 };
@@ -242,15 +242,15 @@ pub use memory::{
     BlockingStrategy, CacheAwareAlgorithms, CacheFriendlyMatrix, CacheLevel, DataLayoutOptimizer,
     MatrixLayout, MemoryPool, MemoryPrefetch, MemoryUsage, PooledBuffer,
 };
-pub use monte__carlo::{
+pub use monte_carlo::{
     importance_sampling, monte_carlo, monte_carlo_parallel, ErrorEstimationMethod,
     MonteCarloOptions, MonteCarloResult,
 };
 #[cfg(feature = "parallel")]
-pub use monte_carlo__parallel::{
+pub use monte_carlo_parallel::{
     adaptive_parallel_monte_carlo, parallel_monte_carlo, ParallelMonteCarloOptions,
 };
-pub use newton__cotes::{newton_cotes, newton_cotes_integrate, NewtonCotesResult, NewtonCotesType};
+pub use newton_cotes::{newton_cotes, newton_cotes_integrate, NewtonCotesResult, NewtonCotesType};
 // Export ODE types from the new modular implementation
 pub use ode::{
     solve_ivp, solve_ivp_with_events, terminal_event, EventAction, EventDirection, EventSpec,
@@ -259,19 +259,19 @@ pub use ode::{
 };
 // Export PDE types
 pub use pde::elliptic::{EllipticOptions, EllipticResult, LaplaceSolver2D, PoissonSolver2D};
-pub use pde::finite__difference::{
+pub use pde::finite_difference::{
     first_derivative, first_derivative_matrix, second_derivative, second_derivative_matrix,
     FiniteDifferenceScheme,
 };
-pub use pde::finite__element::{
+pub use pde::finite_element::{
     BoundaryNodeInfo, ElementType, FEMOptions, FEMPoissonSolver, FEMResult, Point, Triangle,
     TriangularMesh,
 };
-pub use pde::method_of__lines::{
+pub use pde::method_of_lines::{
     MOL2DResult, MOL3DResult, MOLHyperbolicResult, MOLOptions, MOLParabolicSolver1D,
     MOLParabolicSolver2D, MOLParabolicSolver3D, MOLResult, MOLWaveEquation1D,
 };
-pub use pde::spectral::spectral__element::{
+pub use pde::spectral::spectral_element::{
     QuadElement, SpectralElementMesh2D, SpectralElementOptions, SpectralElementPoisson2D,
     SpectralElementResult,
 };
@@ -397,7 +397,7 @@ pub use geometric::{
     SO3,
 };
 // Export analysis tools
-pub use analysis::advanced__analysis::{
+pub use analysis::advanced_analysis::{
     BifurcationPointData, ContinuationAnalyzer, FixedPointData, MonodromyAnalyzer, MonodromyResult,
     PeriodicStabilityType,
 };
@@ -417,71 +417,76 @@ pub use analysis::{
 // Export visualization utilities
 pub use visualization::{
     BifurcationDiagram,
-    BifurcationDiagramBuilder,
+    // BifurcationDiagramBuilder, // TODO: uncomment when implemented
     ColorScheme,
-    ConvergenceCurve,
-    ConvergencePlot,
+    // ConvergenceCurve, // TODO: uncomment when implemented
+    // ConvergencePlot, // TODO: uncomment when implemented
     // Enhanced visualization tools
-    ConvergenceVisualizer,
-    EnhancedBifurcationDiagram,
+    // ConvergenceVisualizer, // TODO: uncomment when implemented
+    // EnhancedBifurcationDiagram, // TODO: uncomment when implemented
     HeatMapPlot,
-    MultiMetricConvergencePlot,
+    // MultiMetricConvergencePlot, // TODO: uncomment when implemented
     OutputFormat,
-    PhaseDensityPlot,
+    // PhaseDensityPlot, // TODO: uncomment when implemented
     PhaseSpacePlot,
     PlotMetadata,
     PlotStatistics,
-    StepSizeAnalysisPlot,
+    // StepSizeAnalysisPlot, // TODO: uncomment when implemented
     SurfacePlot,
     VectorFieldPlot,
-    VisualizationEngine,
+    // VisualizationEngine, // TODO: uncomment when implemented
+    AttractorStability,
+    ParameterExplorationPlot,
+    PhaseSpace3D,
+    RealTimeBifurcationPlot,
+    SensitivityPlot,
 };
 // Export advanced modules
-pub use amr__advanced::{
+pub use amr_advanced::{
     AMRAdaptationResult, AdaptiveCell, AdaptiveMeshLevel, AdvancedAMRManager,
     CurvatureRefinementCriterion, FeatureDetectionCriterion, GeometricLoadBalancer,
     GradientRefinementCriterion, LoadBalancer, MeshHierarchy, RefinementCriterion,
 };
-pub use error__estimation::{
+pub use error_estimation::{
     AdvancedErrorEstimator, DefectCorrector, ErrorAnalysisResult, ErrorDistribution,
     RichardsonExtrapolator, SolutionQualityMetrics, SpectralErrorIndicator,
 };
-pub use parallel__optimization::{
+pub use parallel_optimization::{
     LoadBalancingStrategy, NumaTopology, ParallelExecutionStats, ParallelOptimizer, ParallelTask,
     VectorOperation, VectorizedComputeTask, WorkStealingConfig, WorkStealingStats,
 };
-pub use performance__monitor::{
+pub use performance_monitor::{
     ConvergenceAnalysis as PerfConvergenceAnalysis, OptimizationRecommendation,
     PerformanceAnalyzer, PerformanceBottleneck, PerformanceMetrics, PerformanceProfiler,
     PerformanceReport,
 };
 // Export advanced-performance optimization modules
-pub use advanced_memory__optimization::{
+pub use advanced_memory_optimization::{
     AccessPattern, AdvancedMemoryOptimizer, CacheStrategy, L1CacheBuffer, L2CacheBuffer,
     L3CacheBuffer, MemoryHierarchyManager, MemoryLayout, MemoryTier, MemoryType, NumaPlacement,
     OptimizedMemoryRegion, PrefetchStrategy, ZeroCopyBuffer, ZeroCopyBufferPool,
 };
-pub use advanced_simd__acceleration::{
+pub use advanced_simd_acceleration::{
     AdvancedSimdAccelerator, Avx512Support, MixedPrecisionOperation, PrecisionLevel,
     SimdCapabilities, SveSupport, VectorizationStrategies,
 };
-pub use gpu_advanced__acceleration::{
+pub use gpu_advanced_acceleration::{
     AdvancedGPUAccelerator, AdvancedGPUMemoryPool, GpuDeviceInfo,
     LoadBalancingStrategy as GpuLoadBalancingStrategy, MemoryBlock, MemoryBlockType,
     MultiGpuConfiguration, RealTimeGpuMonitor,
 };
-pub use realtime_performance__adaptation::{
+pub use realtime_performance_adaptation::{
     AdaptationStrategy, AlgorithmSwitchRecommendation, AnomalyAnalysisResult, AnomalySeverity,
     AnomalyType, OptimizationRecommendations, PerformanceAnalysis, PerformanceAnomaly,
     PerformanceBottleneck as AdaptivePerformanceBottleneck,
     PerformanceMetrics as AdaptivePerformanceMetrics, PerformanceTrend, RealTimeAdaptiveOptimizer,
 };
-// pub use advanced_mode__coordinator::{
+// pub use advanced_mode_coordinator::{
 //     PerformanceTargets, advancedModeConfig, advancedModeCoordinator, advancedModeMetrics,
 //     advancedModePerformanceReport, advancedModeResult,
 // }; // Module not implemented yet
 // Neural Reinforcement Learning Step Control exports
-pub use neural_rl_step__control::{
+pub use neural_rl_step_control::{
     DeepQNetwork, Experience, NetworkWeights, NeuralRLStepController, PrioritizedExperienceReplay,
     RLEvaluationResults, StateFeatureExtractor, StepSizePrediction, TrainingConfiguration,
     TrainingResult,
@@ -493,7 +498,7 @@ pub use pde::implicit::{
 };
 pub use qmc::{qmc_quad, qmc_quad_parallel, Faure, Halton, QMCQuadResult, RandomGenerator, Sobol};
 pub use quad::{quad, simpson, trapezoid};
-pub use quad__vec::{quad_vec, NormType, QuadRule, QuadVecOptions, QuadVecResult};
+pub use quad_vec::{quad_vec, NormType, QuadRule, QuadVecOptions, QuadVecResult};
 pub use symplectic::{
     position_verlet, symplectic_euler, symplectic_euler_a, symplectic_euler_b, velocity_verlet,
     CompositionMethod, GaussLegendre4, GaussLegendre6, HamiltonianFn, HamiltonianSystem,

@@ -1252,7 +1252,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
     /// Helper methods
     fn estimate_memory_usage(&self, data_size: usize) -> u64 {
         // Rough estimate: each T takes ~8 bytes, plus overhead
-        (data_size * std::mem::_size_of::<f64>() * 3) as u64
+        (data_size * std::mem::size_of::<f64>() * 3) as u64
     }
 
     fn get_current_memory_usage(&self) -> u64 {

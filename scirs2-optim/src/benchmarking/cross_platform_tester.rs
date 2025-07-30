@@ -164,10 +164,10 @@ impl Default for CrossPlatformConfig {
             ],
             performance_thresholds,
             precision_requirements: PrecisionRequirements {
-                f32, _absolute_tolerance: 1e-6,
-                f32, _relative_tolerance: 1e-5,
-                f64, _absolute_tolerance: 1e-12,
-                f64, _relative_tolerance: 1e-10,
+                f32_absolute_tolerance: 1e-6,
+                f32_relative_tolerance: 1e-5,
+                f64_absolute_tolerance: 1e-12,
+                f64_relative_tolerance: 1e-10,
                 required_significant_digits: 6,
             },
             timeout_settings: TimeoutSettings {
@@ -752,7 +752,7 @@ impl CrossPlatformTester {
         let compatibility_matrix = CompatibilityMatrix::new();
 
         Ok(Self {
-            _config,
+            config: _config,
             platform_detector,
             test_registry,
             results,
@@ -1168,12 +1168,12 @@ impl CrossPlatformTester {
         issue_type: &CompatibilityIssueType, _result: &TestResult,
     ) -> IssueSeverity {
         match issue_type {
-            CompatibilityIssueType::NumericalPrecision =>, IssueSeverity::Medium,
-            CompatibilityIssueType::PerformanceRegression =>, IssueSeverity::High,
-            CompatibilityIssueType::FeatureNotSupported =>, IssueSeverity::Medium,
-            CompatibilityIssueType::RuntimeError =>, IssueSeverity::High,
-            CompatibilityIssueType::MemoryIssue =>, IssueSeverity::High,
-            CompatibilityIssueType::ConcurrencyIssue =>, IssueSeverity::Critical,
+            CompatibilityIssueType::NumericalPrecision => IssueSeverity::Medium,
+            CompatibilityIssueType::PerformanceRegression => IssueSeverity::High,
+            CompatibilityIssueType::FeatureNotSupported => IssueSeverity::Medium,
+            CompatibilityIssueType::RuntimeError => IssueSeverity::High,
+            CompatibilityIssueType::MemoryIssue => IssueSeverity::High,
+            CompatibilityIssueType::ConcurrencyIssue => IssueSeverity::Critical,
         }
     }
 
@@ -1253,12 +1253,13 @@ impl PlatformDetector {
             &self.current_platform.operating_system,
             &self.current_platform.architecture,
         ) {
-            (OperatingSystem::Linux(_), Architecture::X86_64) =>, PlatformTarget::LinuxX64,
-            (OperatingSystem::Linux(_), Architecture::ARM64) =>, PlatformTarget::LinuxArm64,
-            (OperatingSystem::MacOS(_), Architecture::X86_64) =>, PlatformTarget::MacOSX64,
-            (OperatingSystem::MacOS(_), Architecture::ARM64) =>, PlatformTarget::MacOSArm64,
-            (OperatingSystem::Windows(_), Architecture::X86_64) =>, PlatformTarget::WindowsX64,
-            (OperatingSystem::Windows(_), Architecture::ARM64) => PlatformTarget::WindowsArm64_ =>, PlatformTarget::Custom("Unknown".to_string()),
+            (OperatingSystem::Linux(_), Architecture::X86_64) => PlatformTarget::LinuxX64,
+            (OperatingSystem::Linux(_), Architecture::ARM64) => PlatformTarget::LinuxArm64,
+            (OperatingSystem::MacOS(_), Architecture::X86_64) => PlatformTarget::MacOSX64,
+            (OperatingSystem::MacOS(_), Architecture::ARM64) => PlatformTarget::MacOSArm64,
+            (OperatingSystem::Windows(_), Architecture::X86_64) => PlatformTarget::WindowsX64,
+            (OperatingSystem::Windows(_), Architecture::ARM64) => PlatformTarget::WindowsArm64,
+            _ => PlatformTarget::Custom("Unknown".to_string()),
         }
     }
 
@@ -1430,11 +1431,11 @@ impl CrossPlatformTest for BasicFunctionalityTest {
         TestCategory::Functionality
     }
 
-    fn is_applicable(&self_platform: &PlatformTarget) -> bool {
+    fn is_applicable(&self, _platform: &PlatformTarget) -> bool {
         true // Basic functionality should work on all platforms
     }
 
-    fn performance_baseline(&self_platform: &PlatformTarget) -> Option<PerformanceBaseline> {
+    fn performance_baseline(&self, _platform: &PlatformTarget) -> Option<PerformanceBaseline> {
         Some(PerformanceBaseline {
             reference_platform: PlatformTarget::LinuxX64,
             expected_throughput: 1000.0,
@@ -1482,11 +1483,11 @@ impl CrossPlatformTest for OptimizerConsistencyTest {
         TestCategory::Functionality
     }
 
-    fn is_applicable(&self_platform: &PlatformTarget) -> bool {
+    fn is_applicable(&self, _platform: &PlatformTarget) -> bool {
         true
     }
 
-    fn performance_baseline(&self_platform: &PlatformTarget) -> Option<PerformanceBaseline> {
+    fn performance_baseline(&self, _platform: &PlatformTarget) -> Option<PerformanceBaseline> {
         None
     }
 }
@@ -1530,12 +1531,13 @@ macro_rules! impl_test {
                 $category
             }
 
-            fn is_applicable(&self_platform: &PlatformTarget) -> bool {
+            fn is_applicable(&self, _platform: &PlatformTarget) -> bool {
                 true
             }
 
             fn performance_baseline(
-                &self_platform: &PlatformTarget,
+                &self,
+                _platform: &PlatformTarget,
             ) -> Option<PerformanceBaseline> {
                 None
             }

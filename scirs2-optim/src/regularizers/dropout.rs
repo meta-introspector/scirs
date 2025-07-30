@@ -2,6 +2,7 @@
 
 use ndarray::{Array, Dimension, ScalarOperand, Zip};
 use num_traits::Float;
+use rand::Rng;
 use scirs2_core::random::Random;
 use std::fmt::Debug;
 
@@ -18,7 +19,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__optim::regularizers::Dropout;
+/// use scirs2_optim::regularizers::Dropout;
 /// use rand::SeedableRng;
 /// use rand::rngs::SmallRng;
 ///
@@ -58,16 +59,16 @@ impl<A: Float + Debug> Dropout<A> {
     /// * `rng` - Random number generator
     pub fn new<R: Rng>(_rate: A, rng: &mut R) -> Self {
         // Ensure _rate is between 0 and 1
-        let _rate = _rate.max(A::zero()).min(A::one());
+        let rate = _rate.max(A::zero()).min(A::one());
 
         // Create a new RNG from the provided one
         let mut seed_bytes = [0u8; 8];
         rng.fill_bytes(&mut seed_bytes);
         let seed = u64::from_ne_bytes(seed_bytes);
-        let rng = Random::with_seed(seed);
+        let rng = Random::seed(seed);
 
         Self {
-            _rate,
+            rate,
             rng,
             training: true,
             mask: None,
@@ -138,12 +139,12 @@ impl<A: Float + Debug> Dropout<A> {
     }
 }
 
-impl<A..D> Regularizer<A, D> for Dropout<A>
+impl<A, D> Regularizer<A, D> for Dropout<A>
 where
     A: Float + ScalarOperand + Debug,
     D: Dimension<Pattern = D>,
 {
-    fn apply(&self_params: &Array<A, D>, gradients: &mut Array<A, D>) -> Result<A> {
+    fn apply(&self, params: &Array<A, D>, gradients: &mut Array<A, D>) -> Result<A> {
         if !self.training || self.rate <= A::zero() {
             // In eval mode or with 0 dropout rate, no dropout is applied
             return Ok(A::zero());
@@ -172,7 +173,7 @@ where
         Ok(A::zero())
     }
 
-    fn penalty(&self_params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
         // Dropout doesn't add a penalty term to the loss
         Ok(A::zero())
     }

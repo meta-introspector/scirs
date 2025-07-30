@@ -56,7 +56,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
     pub fn new(_strategy: AveragingStrategy, num_nodes: usize) -> Self {
         Self {
             averaged_params: Vec::new(),
-            _strategy,
+            strategy: _strategy,
             node_weights: HashMap::new(),
             num_nodes,
             momentum_buffer: None,
@@ -193,7 +193,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterAverager<A, D> {
         // Compute total weight
         let total_weight: A = node_parameters
             .iter()
-            .map(|(node_id_)| self.node_weights.get(node_id).copied().unwrap_or(A::zero()))
+            .map(|(node_id, _)| self.node_weights.get(node_id).copied().unwrap_or(A::zero()))
             .fold(A::zero(), |acc, w| acc + w);
 
         if total_weight <= A::zero() {
@@ -791,7 +791,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCompressor<A, D> {
     /// Create a new gradient compressor
     pub fn new(_strategy: CompressionStrategy) -> Self {
         Self {
-            _strategy,
+            strategy: _strategy,
             error_state: None,
             stats: CompressionStats::new(),
         }
@@ -1127,7 +1127,8 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCompressor<A, D> {
                 match bits {
                     1..=8 => data.push(quantized as u8),
                     9..=16 => data.extend_from_slice(&(quantized as u16).to_le_bytes()),
-                    17..=32 => data.extend_from_slice(&quantized.to_le_bytes(), _ => unreachable!(),
+                    17..=32 => data.extend_from_slice(&quantized.to_le_bytes()),
+                    _ => unreachable!(),
                 }
             }
 

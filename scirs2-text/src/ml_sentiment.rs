@@ -124,7 +124,8 @@ impl MLSentimentAnalyzer {
 
         let sentiment = match sentiment_label.as_str() {
             "positive" => Sentiment::Positive,
-            "negative" => Sentiment::Negative_ =>, Sentiment::Neutral,
+            "negative" => Sentiment::Negative,
+            _ => Sentiment::Neutral,
         };
 
         // Calculate confidence (probability)

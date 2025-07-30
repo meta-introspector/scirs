@@ -26,17 +26,17 @@ rand_distr = { workspace = true }
 sha2 = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-serde_yaml = { version = "0.9" }
+serde_yaml = { workspace = true }
 num_cpus = { workspace = true }
-rand_chacha = "0.3"
-uuid = { version = "1.6", features = ["v4", "serde"] }
-futures = { version = "0.3", features = ["executor"] }
-chrono = { version = "0.4", features = ["serde"] }
-clap = { version = "4.4", features = ["derive"] }
-regex = "1.10"
-tokio = { version = "1.0", features = ["full"] }
-rsa = { version = "0.9", optional = true }
-x509-parser = { version = "0.16", optional = true }
+rand_chacha = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"] }
+futures = { workspace = true, features = ["executor"] }
+chrono = { workspace = true, features = ["serde"] }
+clap = { workspace = true, features = ["derive"] }
+regex = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+rsa = { workspace = true, optional = true }
+x509-parser = { workspace = true, optional = true }
 
 [[bin]]
 name = "performance_regression_tester"
@@ -78,7 +78,7 @@ path = "src/bin/dependency_vulnerability_scanner.rs"
 [dev-dependencies]
 plotters = { workspace = true }
 approx = { workspace = true }
-tempfile = "3"
+tempfile = { workspace = true }
 
 [features]
 default = []

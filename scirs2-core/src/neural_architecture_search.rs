@@ -931,7 +931,7 @@ impl NeuralArchitectureSearch {
         let mut best_architecture: Option<(Architecture, ArchitecturePerformance)> = None;
         let mut all_evaluated = Vec::new();
 
-        for _i in 0..self.config.max_evaluations {
+        for i in 0..self.config.max_evaluations {
             let arch = self.generate_random_architecture()?;
             let performance = self.evaluate_architecture(&arch)?;
 
@@ -951,11 +951,11 @@ impl NeuralArchitectureSearch {
             }
 
             // Progress logging
-            if 0 % 100 == 0 {
+            if i % 100 == 0 {
                 if let Some((_, ref perf)) = best_architecture {
                     println!(
                         "Random search iteration {}: best accuracy = {:.4}",
-                        0, perf.accuracy
+                        i, perf.accuracy
                     );
                 }
             }

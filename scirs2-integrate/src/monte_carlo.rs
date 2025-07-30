@@ -7,8 +7,8 @@ use crate::error::{IntegrateError, IntegrateResult};
 use crate::IntegrateFloat;
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
-use rand__distr::uniform::SampleUniform;
-use rand__distr::{Distribution, Uniform};
+use rand_distr::uniform::SampleUniform;
+use rand_distr::{Distribution, Uniform};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -24,7 +24,7 @@ pub struct MonteCarloOptions<F: IntegrateFloat> {
     /// Use antithetic variates for variance reduction
     pub use_antithetic: bool,
     /// Phantom data for generic type
-    pub _phantom: PhantomData<F>,
+    pub phantom: PhantomData<F>,
 }
 
 /// Method for estimating the error in Monte Carlo integration
@@ -42,7 +42,7 @@ impl<F: IntegrateFloat> Default for MonteCarloOptions<F> {
             n_samples: 10000,
             seed: None,
             error_method: ErrorEstimationMethod::StandardError,
-            use_antithetic: false, _phantom: PhantomData,
+            use_antithetic: false, phantom: PhantomData,
         }
     }
 }
@@ -80,7 +80,7 @@ pub struct MonteCarloResult<F: IntegrateFloat> {
 /// // Integrate f(x,y) = x²+y² over [0,1]×[0,1] (exact result: 2/3)
 /// let options = MonteCarloOptions {
 ///     n_samples: 100000,  // Use more samples for better accuracy
-///     _phantom: PhantomData,
+///     phantom: PhantomData,
 ///     ..Default::default()
 /// };
 ///
@@ -459,7 +459,7 @@ use crate::monte_carlo__parallel::{parallel_monte_carlo, ParallelMonteCarloOptio
                 use_antithetic: opts.use_antithetic,
                 n_threads: workers,
                 batch_size: 1000,
-                use_chunking: true, _phantom: PhantomData,
+                use_chunking: true, phantom: PhantomData,
             };
 
             return parallel_monte_carlo(f, ranges, Some(parallel_opts));
@@ -487,7 +487,7 @@ mod tests {
         let options = MonteCarloOptions {
             n_samples: 100000,
             seed: Some(12345), // For reproducibility
-            _phantom: PhantomData,
+            phantom: PhantomData,
             ..Default::default()
         };
 
@@ -503,7 +503,7 @@ mod tests {
         let options = MonteCarloOptions {
             n_samples: 100000,
             seed: Some(12345), // For reproducibility
-            _phantom: PhantomData,
+            phantom: PhantomData,
             ..Default::default()
         };
 
@@ -523,7 +523,7 @@ mod tests {
         let options = MonteCarloOptions {
             n_samples: 100000,
             seed: Some(12345), // For reproducibility
-            use_antithetic: true, _phantom: PhantomData,
+            use_antithetic: true, phantom: PhantomData,
             ..Default::default()
         };
 
@@ -585,7 +585,7 @@ mod tests {
         let options = MonteCarloOptions {
             n_samples: 100000,
             seed: Some(12345), // For reproducibility
-            _phantom: PhantomData,
+            phantom: PhantomData,
             ..Default::default()
         };
 

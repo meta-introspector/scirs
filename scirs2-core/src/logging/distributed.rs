@@ -102,7 +102,7 @@ impl DistributedLogEntry {
             self.id,
             self.node_id,
             format!("{self.level:?}"),
-            self.message.replace('"', "\\\""),
+            self.message.replace(", "\\\""),
             self.service,
             self.timestamp
                 .duration_since(UNIX_EPOCH)

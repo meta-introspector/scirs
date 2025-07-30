@@ -1031,7 +1031,7 @@ impl BibTeXProcessor {
                         .trim_end_matches("\",")
                         .to_string();
                     
-                    if let Some((__, ref mut fields)) = current_entry {
+                    if let Some((_, ref mut fields)) = current_entry {
                         fields.insert(field_name, field_value);
                     }
                 }

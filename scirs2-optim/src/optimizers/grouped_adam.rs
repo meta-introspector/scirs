@@ -2,7 +2,7 @@
 
 use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
-use crate::parameter__groups::{
+use crate::parameter_groups::{
     GroupManager, GroupedOptimizer, ParameterGroup, ParameterGroupConfig,
 };
 use ndarray::{Array, Dimension, ScalarOperand};
@@ -18,8 +18,8 @@ use std::fmt::Debug;
 ///
 /// ```no_run
 /// use ndarray::Array1;
-/// use scirs2__optim::optimizers::{GroupedAdam, Optimizer};
-/// use scirs2__optim::parameter_groups::{GroupedOptimizer, ParameterGroupConfig};
+/// use scirs2_optim::optimizers::{GroupedAdam, Optimizer};
+/// use scirs2_optim::parameter_groups::{GroupedOptimizer, ParameterGroupConfig};
 ///
 /// // Create grouped optimizer
 /// let mut optimizer = GroupedAdam::new(0.001);
@@ -62,9 +62,9 @@ pub struct GroupedAdam<A: Float + Send + Sync, D: Dimension> {
 
 impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> GroupedAdam<A, D> {
     /// Create a new grouped Adam optimizer
-    pub fn new(_default_lr: A) -> Self {
+    pub fn new(default_lr: A) -> Self {
         Self {
-            _default_lr,
+            default_lr,
             default_beta1: A::from(0.9).unwrap(),
             default_beta2: A::from(0.999).unwrap(),
             default_weight_decay: A::zero(),

@@ -21,7 +21,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__optim::regularizers::{WeightStandardization, Regularizer};
+/// use scirs2_optim::regularizers::{WeightStandardization, Regularizer};
 ///
 /// let weight_std = WeightStandardization::new(1e-5);
 /// let weights = array![[1.0, 2.0], [3.0, 4.0]];
@@ -47,7 +47,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> WeightStandardization<A> 
     /// * `eps` - Small constant for numerical stability (typically 1e-5)
     pub fn new(_eps: f64) -> Self {
         Self {
-            _eps: A::from_f64(_eps).unwrap(),
+            eps: A::from_f64(_eps).unwrap(),
         }
     }
 
@@ -282,7 +282,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive, D: Dimension> Regularizer
         Ok(A::zero())
     }
 
-    fn penalty(&self_params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
         // Weight standardization doesn't add a penalty term
         Ok(A::zero())
     }

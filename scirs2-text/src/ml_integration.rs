@@ -348,7 +348,8 @@ impl MLTextPreprocessor {
                 Language::English => 1.0,
                 Language::Spanish => 2.0,
                 Language::French => 3.0,
-                Language::German => 4.0_ => 0.0,
+                Language::German => 4.0,
+                _ => 0.0,
             };
             features[[i, 1]] = result.confidence;
         }

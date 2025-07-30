@@ -407,7 +407,7 @@ impl<T: Float + Send + Sync> TemporalCorrelationTracker<T> {
         self.event_history.push_back((time, event_type, neuron_id));
         
         // Remove old events outside correlation window
-        while let Some(&(old_time__)) = self.event_history.front() {
+        while let Some(&(old_time_)) = self.event_history.front() {
             if time - old_time > self.correlation_window {
                 self.event_history.pop_front();
             } else {
@@ -526,12 +526,14 @@ impl<T: Float + Send + Sync> EventCompressionEngine<T> {
         Ok(data)
     }
     
-    fn delta_encode_event(&mut self_event: &NeuromorphicEvent<T>) -> Result<Vec<u8>> {
+    fn delta_encode_event(&mut self,
+        event: &NeuromorphicEvent<T>) -> Result<Vec<u8>> {
         // Simplified delta encoding implementation
         Ok(vec![0u8; 16])
     }
     
-    fn sparse_encode_event(&mut self_event: &NeuromorphicEvent<T>) -> Result<Vec<u8>> {
+    fn sparse_encode_event(&mut self,
+        event: &NeuromorphicEvent<T>) -> Result<Vec<u8>> {
         // Simplified sparse encoding implementation
         Ok(vec![0u8; 8])
     }

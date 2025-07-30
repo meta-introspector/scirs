@@ -1,11 +1,11 @@
 [package]
 name = "scirs2-benchmarks"
 version.workspace = true
-edition = "2021"
-authors = ["SciRS2 Contributors"]
+edition.workspace = true
+authors.workspace = true
 description = "Comprehensive performance benchmarks for SciRS2 against SciPy"
-repository = "https://github.com/cool-japan/scirs"
-license = "MIT OR Apache-2.0"
+repository.workspace = true
+license.workspace = true
 
 [[bench]]
 name = "linalg_benchmarks"
@@ -29,12 +29,12 @@ harness = false
 
 [dependencies]
 # SciRS2 modules
-scirs2-core = { path = "../scirs2-core", features = ["parallel", "simd", "profiling", "memory_management"] }
-scirs2-linalg = { path = "../scirs2-linalg", features = ["simd", "parallel"] }
+scirs2-core = { workspace = true, features = ["parallel", "simd", "profiling", "memory_management"] }
+scirs2-linalg = { workspace = true, features = ["simd", "parallel"] }
 # scirs2-stats = { path = "../scirs2-stats" } # Temporarily disabled
-scirs2-fft = { path = "../scirs2-fft" }
+scirs2-fft = { workspace = true }
 # scirs2-optimize = { path = "../scirs2-optimize" } # Temporarily disabled
-scirs2-integrate = { path = "../scirs2-integrate" }
+scirs2-integrate = { workspace = true }
 # scirs2-cluster = { path = "../scirs2-cluster" } # Temporarily disabled
 # scirs2-interpolate = { path = "../scirs2-interpolate" } # Temporarily disabled
 
@@ -55,7 +55,7 @@ num-traits = { workspace = true }
 approx = { workspace = true }
 
 # Profiling and timing
-instant = "0.1"
+instant = { workspace = true }
 
 # Serialization for results
 serde = { workspace = true }

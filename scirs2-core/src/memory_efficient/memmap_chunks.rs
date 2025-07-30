@@ -98,7 +98,7 @@ use std::fs::OpenOptions;
 use std::io::{Seek, SeekFrom, Write};
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use crate::parallel_ops::*;
 
 /// Extension trait for MemoryMappedArray to enable chunked processing of large datasets.
 ///
@@ -387,7 +387,7 @@ where
             let end_idx = (start_idx + chunk_size).min(self.array.size);
 
             // Get the array data to return a chunk
-            if let Ok(array_1d) = self.array.asarray::<ndarray::Ix1>() {
+            if let Ok(array_1d) = self.array.as_array::<ndarray::Ix1>() {
                 Some(array_1d.slice(ndarray::s![start_idx..end_idx]).to_owned())
             } else {
                 None
@@ -513,7 +513,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
             let end_idx = (start_idx + chunk_size).min(self.size);
 
             // Get the data for this chunk
-            if let Ok(array_1d) = self.asarray::<ndarray::Ix1>() {
+            if let Ok(array_1d) = self.as_array::<ndarray::Ix1>() {
                 // Copy the data to a new array to avoid lifetime issues
                 let chunk_data = array_1d.slice(ndarray::s![start_idx..end_idx]).to_vec();
 
@@ -560,7 +560,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunks<A
             let mut chunk_data = Vec::with_capacity(end_idx - start_idx);
 
             // Obtain the data safely through the memory mapping
-            if let Ok(array_1d) = self.asarray::<ndarray::Ix1>() {
+            if let Ok(array_1d) = self.as_array::<ndarray::Ix1>() {
                 chunk_data.extend_from_slice(
                     array_1d
                         .slice(ndarray::s![start_idx..end_idx])
@@ -645,7 +645,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunksPa
             .collect();
 
         // Get the full array data
-        let array_1d = match self.asarray::<ndarray::Ix1>() {
+        let array_1d = match self.as_array::<ndarray::Ix1>() {
             Ok(arr) => arr,
             Err(_) => return Vec::new(),
         };
@@ -705,7 +705,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync> MemoryMappedChunksPa
         let offset = self.offset;
 
         // Get the full array data
-        let array_1d = match self.asarray::<ndarray::Ix1>() {
+        let array_1d = match self.as_array::<ndarray::Ix1>() {
             Ok(arr) => arr,
             Err(_) => return,
         };

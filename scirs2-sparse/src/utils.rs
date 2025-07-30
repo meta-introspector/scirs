@@ -19,7 +19,7 @@ use num_traits::Zero;
 /// # Example
 ///
 /// ```
-/// use scirs2__sparse::utils::identity;
+/// use scirs2_sparse::utils::identity;
 ///
 /// // Create a 3x3 identity matrix
 /// let eye = identity(3).unwrap();
@@ -58,7 +58,7 @@ pub fn identity(n: usize) -> SparseResult<CsrMatrix<f64>> {
 /// # Example
 ///
 /// ```
-/// use scirs2__sparse::utils::diag;
+/// use scirs2_sparse::utils::diag;
 ///
 /// // Create a diagonal matrix with elements [1, 2, 3]
 /// let d = diag(&[1.0, 2.0, 3.0]).unwrap();

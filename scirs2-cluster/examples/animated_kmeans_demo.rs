@@ -36,24 +36,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         max_frames: 200,
         show_convergence: true,
         centroid_trail_length: 8,
-        easing: scirs2_cluster: visualization::EasingFunction::EaseInOut,
+        easing: scirs2_cluster::visualization::EasingFunction::EaseInOut,
     };
 
     // Create visualization configuration
     let vis_config = VisualizationConfig {
-        color_scheme: scirs2, _cluster: visualization::ColorScheme::ColorblindFriendly,
+        color_scheme: scirs2_cluster::visualization::ColorScheme::ColorblindFriendly,
         point_size: 6.0,
         point_opacity: 0.8,
         show_centroids: true,
         show_boundaries: false,
-        boundary_type: scirs2, _cluster: visualization::BoundaryType::None,
+        boundary_type: scirs2_cluster::visualization::BoundaryType::None,
         interactive: false,
         animation: Some(scirs2_cluster::visualization::AnimationConfig {
             duration_ms: 3000,
             frames: 60,
-            easing: scirs2_cluster: visualization::EasingFunction::EaseInOut,
+            easing: scirs2_cluster::visualization::EasingFunction::EaseInOut,
         }),
-        dimensionality_reduction: scirs2, _cluster: visualization::DimensionalityReduction::None,
+        dimensionality_reduction: scirs2_cluster::visualization::DimensionalityReduction::None,
     };
 
     // Demonstrate animated K-means with different values of K
@@ -296,7 +296,7 @@ fn demonstrate_3d_animation() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create 3D visualization
     let vis_config = VisualizationConfig {
-        dimensionality_reduction: scirs2, _cluster: visualization::DimensionalityReduction::None,
+        dimensionality_reduction: scirs2_cluster::visualization::DimensionalityReduction::None,
         ..Default::default()
     };
 

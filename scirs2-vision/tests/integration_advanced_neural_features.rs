@@ -41,7 +41,7 @@ fn test_neural_features_tracking_integration() -> Result<()> {
     for (i, kp) in keypoints.iter().take(5).enumerate() {
         let bbox =
             TrackingBoundingBox::new(kp.x - 25.0, kp.y - 25.0, 50.0, 50.0, kp.response, i as i32);
-        let feature = descriptors.slice(ndarray::s![i, ..]).to_owned();
+        let feature = "descriptors".slice(ndarray::s![i, ..]).to_owned();
         detections.push(Detection::with_feature(bbox, feature));
     }
 

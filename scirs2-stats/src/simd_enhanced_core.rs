@@ -5,7 +5,7 @@
 //! with additional performance optimizations and adaptive algorithms.
 
 use crate::error::StatsResult;
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 use ndarray::{s, Array1, ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
@@ -29,7 +29,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps}
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::simd_enhanced_core::mean_enhanced;
+/// use scirs2_stats::simd_enhanced_core::mean_enhanced;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let mean = mean_enhanced(&data.view()).unwrap();

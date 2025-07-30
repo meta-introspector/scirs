@@ -138,11 +138,11 @@ pub struct PageHinkleyDetector<A: Float> {
 
 impl<A: Float> PageHinkleyDetector<A> {
     /// Create a new Page-Hinkley detector
-    pub fn new(_threshold: A, warning_threshold: A) -> Self {
+    pub fn new(threshold: A, warning_threshold: A) -> Self {
         Self {
             sum: A::zero(),
             min_sum: A::zero(),
-            _threshold,
+            threshold,
             warning_threshold,
             sample_count: 0,
             last_drift: None,
@@ -199,11 +199,11 @@ pub struct AdwinDetector<A: Float> {
 
 impl<A: Float + Sum> AdwinDetector<A> {
     /// Create a new ADWIN detector
-    pub fn new(_delta: A, max_window_size: usize) -> Self {
+    pub fn new(delta: A, max_window_size: usize) -> Self {
         Self {
             window: VecDeque::new(),
             max_window_size,
-            _delta,
+            delta,
             min_window_size: 10,
         }
     }
@@ -289,9 +289,9 @@ pub struct DdmDetector<A: Float> {
     /// Standard deviation of error rate
     error_std: A,
     /// Minimum error rate + 2*std
-    min_error_plus_2, std: A,
+    min_error_plus_2_std: A,
     /// Minimum error rate + 3*std
-    min_error_plus_3, std: A,
+    min_error_plus_3_std: A,
     /// Sample count
     sample_count: usize,
     /// Error count
@@ -304,8 +304,8 @@ impl<A: Float> DdmDetector<A> {
         Self {
             error_rate: A::zero(),
             error_std: A::one(),
-            min_error_plus_2, std: A::from(f64::MAX).unwrap(),
-            min_error_plus_3, std: A::from(f64::MAX).unwrap(),
+            min_error_plus_2_std: A::from(f64::MAX).unwrap(),
+            min_error_plus_3_std: A::from(f64::MAX).unwrap(),
             sample_count: 0,
             error_count: 0,
         }
@@ -331,16 +331,16 @@ impl<A: Float> DdmDetector<A> {
         let current_level = self.error_rate + A::from(2.0).unwrap() * self.error_std;
 
         // Update minimums
-        if current_level < self.min_error_plus_2std {
-            self.min_error_plus_2std = current_level;
-            self.min_error_plus_3std = self.error_rate + A::from(3.0).unwrap() * self.error_std;
+        if current_level < self.min_error_plus_2_std {
+            self.min_error_plus_2_std = current_level;
+            self.min_error_plus_3_std = self.error_rate + A::from(3.0).unwrap() * self.error_std;
         }
 
         // Check for drift
-        if current_level > self.min_error_plus_3std {
+        if current_level > self.min_error_plus_3_std {
             self.reset();
             DriftStatus::Drift
-        } else if current_level > self.min_error_plus_2std {
+        } else if current_level > self.min_error_plus_2_std {
             DriftStatus::Warning
         } else {
             DriftStatus::Stable
@@ -353,8 +353,8 @@ impl<A: Float> DdmDetector<A> {
         self.error_count = 0;
         self.error_rate = A::zero();
         self.error_std = A::one();
-        self.min_error_plus_2std = A::from(f64::MAX).unwrap();
-        self.min_error_plus_3std = A::from(f64::MAX).unwrap();
+        self.min_error_plus_2_std = A::from(f64::MAX).unwrap();
+        self.min_error_plus_3_std = A::from(f64::MAX).unwrap();
     }
 }
 
@@ -384,19 +384,19 @@ pub struct ConceptDriftDetector<A: Float> {
 
 impl<A: Float + std::fmt::Debug + Sum> ConceptDriftDetector<A> {
     /// Create a new concept drift detector
-    pub fn new(_config: DriftDetectorConfig) -> Self {
-        let threshold = A::from(_config.threshold).unwrap();
-        let warning_threshold = A::from(_config.warning_threshold).unwrap();
-        let delta = A::from(_config.alpha).unwrap();
+    pub fn new(config: DriftDetectorConfig) -> Self {
+        let threshold = A::from(config.threshold).unwrap();
+        let warning_threshold = A::from(config.warning_threshold).unwrap();
+        let delta = A::from(config.alpha).unwrap();
 
         Self {
             ph_detector: PageHinkleyDetector::new(threshold, warning_threshold),
-            adwin_detector: AdwinDetector::new(delta, _config.window_size),
+            adwin_detector: AdwinDetector::new(delta, config.window_size),
             ddm_detector: DdmDetector::new(),
             ensemble_history: VecDeque::with_capacity(10),
             drift_events: Vec::new(),
             performance_tracker: PerformanceDriftTracker::new(),
-            _config,
+            config,
         }
     }
 
@@ -412,7 +412,8 @@ impl<A: Float + std::fmt::Debug + Sum> ConceptDriftDetector<A> {
             match self.config.method {
                 DriftDetectionMethod::PageHinkley => ph_status,
                 DriftDetectionMethod::Adwin => adwin_status,
-                DriftDetectionMethod::DriftDetectionMethod => ddm_status_ => ph_status, // Default fallback
+                DriftDetectionMethod::DriftDetectionMethod => ddm_status,
+                _ => ddm_status, // Fallback for EarlyDriftDetection, StatisticalTest, Ensemble
             }
         };
 
@@ -594,8 +595,8 @@ impl<A: Float + std::iter::Sum> PerformanceDriftTracker<A> {
         }
 
         let recent_avg =
-            recent.iter().map(|(p__)| *p).sum::<A>() / A::from(recent.len()).unwrap();
-        let older_avg = older.iter().map(|(p__)| *p).sum::<A>() / A::from(older.len()).unwrap();
+            recent.iter().map(|(p, _, _)| *p).sum::<A>() / A::from(recent.len()).unwrap();
+        let older_avg = older.iter().map(|(p, _, _)| *p).sum::<A>() / A::from(older.len()).unwrap();
 
         recent_avg - older_avg
     }
@@ -991,7 +992,7 @@ pub mod advanced_drift_analysis {
 
     impl<A: Float + Default + Clone + std::fmt::Debug + std::iter::Sum> AdvancedDriftDetector<A> {
         /// Create new advanced drift detector
-        pub fn new(_config: DriftDetectorConfig) -> Self {
+        pub fn new(config: DriftDetectorConfig) -> Self {
             let base_detectors: Vec<Box<dyn DriftDetectorTrait<A>>> = vec![
                 // Add base detectors here
             ];
@@ -1314,7 +1315,8 @@ pub mod advanced_drift_analysis {
         }
 
         fn select_strategy(
-            &mut self_features: &PatternFeatures<A>, _impact: &DriftImpact<A>, _pattern: &Option<DriftPattern<A>>,
+            &mut self,
+        features: &PatternFeatures<A>, _impact: &DriftImpact<A>, _pattern: &Option<DriftPattern<A>>,
         ) -> Result<Option<AdaptationStrategy<A>>> {
             // Simplified strategy selection
             let strategy = AdaptationStrategy {
@@ -1381,9 +1383,9 @@ pub mod advanced_drift_analysis {
     }
 
     impl<A: Float> EpsilonGreedyBandit<A> {
-        fn new(_epsilon: A) -> Self {
+        fn new(epsilon: A) -> Self {
             Self {
-                _epsilon,
+                epsilon,
                 action_values: HashMap::new(),
                 action_counts: HashMap::new(),
                 total_trials: 0,

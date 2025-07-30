@@ -221,7 +221,7 @@ where
     D: Dimension,
 {
     /// Create a new MetricOptimizer (not implemented)
-    pub fn new<O>(_optimizer: O_metric_name: &str, _maximize: bool) -> Self
+    pub fn new<O>(_optimizer: O, _metric_name: &str, _maximize: bool) -> Self
     where
         O: Optimizer<F, D>,
     {

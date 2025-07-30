@@ -145,7 +145,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 JacobianStrategy::ModifiedNewton => 50,
                 JacobianStrategy::BroydenUpdate => 20,
                 JacobianStrategy::ParallelFiniteDifference => 1,
-                JacobianStrategy::ParallelSparseFiniteDifference => 1_ => 1, // Other strategies don't reuse as much
+                JacobianStrategy::ParallelSparseFiniteDifference => 1, // Other strategies don't reuse as much
             },
             _strategy,
             structure,
@@ -213,7 +213,8 @@ impl<F: IntegrateFloat> JacobianManager<F> {
 
         // For certain strategies, we always recompute
         match self.strategy {
-            JacobianStrategy::FiniteDifference => self._age > 0_ => {
+            JacobianStrategy::FiniteDifference => self._age > 0,
+            _ => {
                 // For other strategies, check if state has changed significantly
                 if let Some((old_t, old_y)) = &self.state_point {
                     // Calculate relative distance between current and previous state
@@ -237,7 +238,8 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                         JacobianStrategy::BroydenUpdate => (
                             F::from_f64(0.1).unwrap(), // 10% change in time
                             F::from_f64(0.1).unwrap(), // 10% change in y
-                        , _ => (
+                        ),
+                        _ => (
                             F::from_f64(0.01).unwrap(), // 1% change in time
                             F::from_f64(0.01).unwrap(), // 1% change in y
                         ),

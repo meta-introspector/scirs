@@ -5,7 +5,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use ndarray::{Array2, ArrayView2};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 use std::any::Any;
@@ -70,8 +70,8 @@ pub enum FftMode {
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::memory_efficient::{fft_inplace, FftMode};
-/// use num__complex::Complex64;
+/// use scirs2_fft::memory_efficient::{fft_inplace, FftMode};
+/// use num_complex::Complex64;
 ///
 /// // Create input and output buffers
 /// let mut input_buffer = vec![Complex64::new(1.0, 0.0),

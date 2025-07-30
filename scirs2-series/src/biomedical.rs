@@ -398,8 +398,8 @@ impl EEGAnalysis {
             }
 
             // Detect anomalous windows
-            let mean_feature = features.mean().unwrap();
-            let std_feature = features.std(0.0);
+            let mean_feature = "features".mean().unwrap();
+            let std_feature = "features".std(0.0);
             let threshold = mean_feature + threshold_multiplier * std_feature;
 
             let mut in_seizure = false;

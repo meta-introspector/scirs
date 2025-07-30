@@ -47,4 +47,7 @@ pub enum IntegrateError {
 }
 
 /// Result type for integration operations
-pub type IntegrateResult<T> = Result<T, IntegrateError>;
+pub type IntegrateResult<T> = std::result::Result<T, IntegrateError>;
+
+/// Convenient alias for Result with IntegrateError
+pub type Result<T> = std::result::Result<T, IntegrateError>;

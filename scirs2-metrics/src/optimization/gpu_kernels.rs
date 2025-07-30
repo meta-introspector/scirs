@@ -1445,7 +1445,7 @@ impl AdvancedGpuComputer {
         let kernel_config = KernelConfig {
             block_size: (block_size as u32, 1, 1),
             grid_size: (grid_size as u32, 1, 1),
-            shared_memory_size: feature_size as u32 * std::mem::size, _of::<F>() as u32,
+            shared_memory_size: feature_size as u32 * std::mem::size_of::<F>() as u32,
             async_execution: true,
             use_pinned_memory: true,
             optimization_level: self.config.kernel_optimization.fast_math as u8 * 2,

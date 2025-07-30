@@ -15,11 +15,11 @@
 
 use crate::error::{IoError, Result};
 #[cfg(feature = "gpu")]
-use crate::gpu__io::GpuIoProcessor;
-use crate::neural_adaptive__io::{
+use crate::gpu_io::GpuIoProcessor;
+use crate::neural_adaptive_io::{
     AdvancedIoProcessor, NeuralAdaptiveIoController, PerformanceFeedback, SystemMetrics,
 };
-use crate::quantum_inspired__io::{QuantumParallelProcessor, QuantumPerformanceStats};
+use crate::quantum_inspired_io::{QuantumParallelProcessor, QuantumPerformanceStats};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};
@@ -1400,7 +1400,10 @@ impl PerformanceIntelligence {
     }
 
     fn record_performance_data(
-        &mut self_intelligence: &ComprehensiveIntelligence, _result: &ProcessingResult_total_time: Duration,
+        &mut self,
+        _intelligence: &ComprehensiveIntelligence,
+        _result: &ProcessingResult,
+        _total_time: Duration,
     ) -> Result<()> {
         Ok(())
     }

@@ -22,9 +22,9 @@
 //! # Basic Usage
 //!
 //! ```
-//! use scirs2__integrate::symplectic::potential::HamiltonianSystem;
-//! use scirs2__integrate::symplectic::leapfrog::StormerVerlet;
-//! use scirs2__integrate::symplectic::SymplecticIntegrator;
+//! use scirs2_integrate::symplectic::potential::HamiltonianSystem;
+//! use scirs2_integrate::symplectic::leapfrog::StormerVerlet;
+//! use scirs2_integrate::symplectic::SymplecticIntegrator;
 //! use ndarray::array;
 //!
 //! // Define a simple harmonic oscillator: H = p²/2 + q²/2
@@ -64,7 +64,7 @@ pub use composition::CompositionMethod;
 pub use euler::{symplectic_euler, symplectic_euler_a, symplectic_euler_b};
 pub use leapfrog::{position_verlet, velocity_verlet, StormerVerlet};
 pub use potential::{HamiltonianSystem, SeparableHamiltonian};
-pub use runge__kutta::{GaussLegendre4, GaussLegendre6};
+pub use runge_kutta::{GaussLegendre4, GaussLegendre6};
 
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
@@ -232,7 +232,7 @@ pub trait HamiltonianFn<F: IntegrateFloat> {
     /// # Returns
     ///
     /// Time derivative of position coordinates
-    fn dq_dt(t: F, q: &Array1<F>, p: &Array1<F>) -> IntegrateResult<Array1<F>>;
+    fn dq_dt(&self, t: F, q: &Array1<F>, p: &Array1<F>) -> IntegrateResult<Array1<F>>;
 
     /// Computes the time derivative of momentum coordinates: dp/dt = -∂H/∂q
     ///
@@ -245,7 +245,7 @@ pub trait HamiltonianFn<F: IntegrateFloat> {
     /// # Returns
     ///
     /// Time derivative of momentum coordinates
-    fn dp_dt(t: F, q: &Array1<F>, p: &Array1<F>) -> IntegrateResult<Array1<F>>;
+    fn dp_dt(&self, t: F, q: &Array1<F>, p: &Array1<F>) -> IntegrateResult<Array1<F>>;
 
     /// Optional: Computes the Hamiltonian function H(q, p)
     ///

@@ -15,7 +15,7 @@ use ndarray::{Array, Array2, Dimension};
 use num_traits::Float;
 use std::sync::Arc;
 
-use crate::gpu::memory__pool::{CudaKernel, CudaStream};
+use crate::gpu::memory_pool::{CudaKernel, CudaStream};
 use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
 use scirs2_core::gpu::{GpuContext, GpuKernel};
 
@@ -1642,7 +1642,8 @@ impl StreamPool {
     }
 
     #[cfg(not(feature = "gpu"))]
-    pub fn get_stream(&mut self_index: usize) -> &() {
+    pub fn get_stream(&mut self,
+        index: usize) -> &() {
         &()
     }
 

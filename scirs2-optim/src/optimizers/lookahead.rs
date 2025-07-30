@@ -36,8 +36,8 @@ use std::marker::PhantomData;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__optim::optimizers::{Lookahead, SGD};
-/// use scirs2__optim::Optimizer;
+/// use scirs2_optim::optimizers::{Lookahead, SGD};
+/// use scirs2_optim::Optimizer;
 ///
 /// // Create an inner optimizer
 /// let sgd = SGD::new(0.01);
@@ -81,28 +81,30 @@ where
     D: Dimension,
 {
     /// Creates a new Lookahead optimizer with the given inner optimizer and default settings
-    pub fn new(_inner_optimizer: O) -> Self {
+    pub fn new(inner_optimizer: O) -> Self {
         Self {
-            _inner_optimizer,
+            inner_optimizer,
             alpha: A::from(0.5).unwrap(), // Default alpha is 0.5
             k: 5,                         // Default k is 5
             current_step: 0,
             slow_weights: None,
             fast_weights: None,
-            use_slow_weights: false, _phantom: PhantomData,
+            use_slow_weights: false,
+            _phantom: PhantomData,
         }
     }
 
     /// Creates a new Lookahead optimizer with the specified alpha and k values
-    pub fn with_config(_inner_optimizer: O, alpha: A, k: usize) -> Self {
+    pub fn with_config(inner_optimizer: O, alpha: A, k: usize) -> Self {
         Self {
-            _inner_optimizer,
+            inner_optimizer,
             alpha,
             k,
             current_step: 0,
             slow_weights: None,
             fast_weights: None,
-            use_slow_weights: false, _phantom: PhantomData,
+            use_slow_weights: false,
+            _phantom: PhantomData,
         }
     }
 
@@ -172,7 +174,8 @@ where
             current_step: self.current_step,
             slow_weights: self.slow_weights.clone(),
             fast_weights: self.fast_weights.clone(),
-            use_slow_weights: self.use_slow_weights, _phantom: PhantomData,
+            use_slow_weights: self.use_slow_weights,
+            _phantom: PhantomData,
         }
     }
 }

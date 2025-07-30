@@ -243,7 +243,10 @@ impl<
             PolicyGradientMethod::PPOAdaptiveKL => self.update_ppo_adaptive_kl(trajectory),
             PolicyGradientMethod::TRPO => self.update_trpo(trajectory),
             PolicyGradientMethod::Reinforce => self.update_reinforce(trajectory),
-            PolicyGradientMethod::ActorCritic => self.update_actor_critic(trajectory, _ => Err(OptimError::InvalidConfig(
+            PolicyGradientMethod::ActorCritic => Err(OptimError::InvalidConfig(
+                "Method not implemented".to_string(),
+            )),
+            _ => Err(OptimError::InvalidConfig(
                 "Method not implemented".to_string(),
             )),
         }
@@ -369,7 +372,7 @@ impl<
                     .iter()
                     .filter(|&&r| {
                         let clip_eps = self.config.ppo_config.clip_epsilon;
-                        r < T::one() - clip_eps || r >, T::one() + clip_eps
+                        r < T::one() - clip_eps || r > T::one() + clip_eps
                     })
                     .count();
                 clip_fraction =

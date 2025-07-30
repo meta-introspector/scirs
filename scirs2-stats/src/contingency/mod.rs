@@ -23,7 +23,7 @@ use num_traits::Float;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::contingency::chi2_contingency;
+/// use scirs2_stats::contingency::chi2_contingency;
 ///
 /// // Create a 2x2 contingency table
 /// let observed = array![
@@ -172,7 +172,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::contingency::fisher_exact;
+/// use scirs2_stats::contingency::fisher_exact;
 ///
 /// // Create a 2x2 contingency table
 /// let table = array![
@@ -331,7 +331,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::contingency::association;
+/// use scirs2_stats::contingency::association;
 ///
 /// // Create a 2x2 contingency table
 /// let table = array![
@@ -423,7 +423,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::contingency::relative_risk;
+/// use scirs2_stats::contingency::relative_risk;
 ///
 /// // Create a 2x2 contingency table
 /// //           | Disease+ | Disease- |
@@ -540,7 +540,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::contingency::odds_ratio;
+/// use scirs2_stats::contingency::odds_ratio;
 ///
 /// // Create a 2x2 contingency table
 /// //           | Disease+ | Disease- |

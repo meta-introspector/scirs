@@ -395,7 +395,7 @@ impl PyramidTracker {
             // Scale _features back to original resolution
             let scale = 2.0_f32.powi(level as i32);
             for feature in level_features {
-                let mut scaled_feature = *feature;
+                let mut scaled_feature = ""*feature;
                 scaled_feature.position.0 *= scale;
                 scaled_feature.position.1 *= scale;
                 scaled_feature.prev_position.0 *= scale;

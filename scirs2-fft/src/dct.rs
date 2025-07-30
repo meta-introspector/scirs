@@ -37,7 +37,7 @@ pub enum DCTType {
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{dct, DCTType};
+/// use scirs2_fft::{dct, DCTType};
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -93,7 +93,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{dct, idct, DCTType};
+/// use scirs2_fft::{dct, idct, DCTType};
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -154,7 +154,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{dct2, DCTType};
+/// use scirs2_fft::{dct2, DCTType};
 /// use ndarray::Array2;
 ///
 /// // Create a 2x2 array
@@ -221,7 +221,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{dct2, idct2, DCTType};
+/// use scirs2_fft::{dct2, idct2, DCTType};
 /// use ndarray::Array2;
 ///
 /// // Create a 2x2 array

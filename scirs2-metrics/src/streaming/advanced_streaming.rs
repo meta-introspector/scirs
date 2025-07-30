@@ -1623,7 +1623,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
                     .map(|p| p.timestamp)
                     .unwrap_or_else(|| now - Duration::from_millis(1)),
             ),
-            memory_usage: std::mem::size, _of::<StreamingStatistics<F>>(),
+            memory_usage: std::mem::size_of::<StreamingStatistics<F>>(),
             window_size: 1000, // Would come from actual window manager
             samples_processed: stats.total_samples,
         };

@@ -494,7 +494,8 @@ impl AdvancedSystem {
             score if score >= 90.0 => "Excellent",
             score if score >= 80.0 => "Good",
             score if score >= 70.0 => "Fair",
-            score if score >= 60.0 => "Poor"_ => "Critical",
+            score if score >= 60.0 => "Poor",
+            _ => "Critical",
         };
         println!(
             "   Status: {} - System is performing {}",
@@ -536,7 +537,8 @@ fn generate_mixed_workload(_count: usize) -> Vec<String> {
     (0.._count)
         .map(|i| match i % 3 {
             0 => format!("Short {i}"),
-            1 => format!("Medium document {i} with some content.", _ => format!("Long detailed document {i} with extensive content for comprehensive testing and analysis."),
+            1 => format!("Medium document {i} with some content."),
+            _ => format!("Long detailed document {i} with extensive content for comprehensive testing and analysis."),
         })
         .collect()
 }

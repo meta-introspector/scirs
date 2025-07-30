@@ -8,10 +8,10 @@
 
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
-use rand__distr::Normal;
+use rand_distr::Normal;
 use std::collections::{HashMap, VecDeque};
 
-use super::moment__accountant::MomentsAccountant;
+use super::moment_accountant::MomentsAccountant;
 use super::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;
@@ -33,7 +33,7 @@ where
     accountant: MomentsAccountant,
 
     /// Random number generator for noise
-    rng: scirs2_core: random::Random,
+    rng: scirs2_core::random::Random,
 
     /// Adaptive clipping state
     adaptive_clipping: Option<AdaptiveClippingState>,
@@ -210,7 +210,7 @@ where
         + Clone
         + Send
         + Sync
-        + ndarray_rand::rand, _distr::uniform::SampleUniform
+        + rand_distr::uniform::SampleUniform
         + ndarray::ScalarOperand
         + std::fmt::Debug
         + std::iter::Sum,
@@ -218,7 +218,7 @@ where
     O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new DP-SGD optimizer
-    pub fn new(_base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
+    pub fn new(base_optimizer: O, config: DifferentialPrivacyConfig) -> Result<Self> {
         let accountant = MomentsAccountant::new(
             config.noise_multiplier,
             config.target_delta,
@@ -389,24 +389,24 @@ where
     /// Update privacy configuration
     pub fn update_privacy_config(&mut self, new_config: DifferentialPrivacyConfig) -> Result<()> {
         // Validate that privacy budget doesn't decrease
-        if new_config.target_epsilon < self._config.target_epsilon
-            || new_config.target_delta < self._config.target_delta
+        if new_config.target_epsilon < self.config.target_epsilon
+            || new_config.target_delta < self.config.target_delta
         {
             return Err(OptimError::InvalidConfig(
                 "Cannot decrease privacy budget mid-training".to_string(),
             ));
         }
 
-        self._config = new_config;
-        self.privacy_budget.target_epsilon = self._config.target_epsilon;
-        self.privacy_budget.target_delta = self._config.target_delta;
+        self.config = new_config;
+        self.privacy_budget.target_epsilon = self.config.target_epsilon;
+        self.privacy_budget.target_delta = self.config.target_delta;
 
         // Update moment accountant
         self.accountant = MomentsAccountant::new(
-            self._config.noise_multiplier,
-            self._config.target_delta,
+            self.config.noise_multiplier,
+            self.config.target_delta,
             self.current_batch_size,
-            self._config.dataset_size,
+            self.config.dataset_size,
         );
 
         Ok(())
@@ -675,7 +675,7 @@ impl AdaptiveClippingState {
 impl QuantileEstimator {
     fn new() -> Self {
         Self {
-            p2_state: P2, AlgorithmState::new(0.5),
+            p2_state: P2AlgorithmState::new(0.5),
             moving_avg: 0.0,
             ema: 0.0,
             ema_decay: 0.99,
@@ -693,7 +693,7 @@ impl QuantileEstimator {
         }
     }
 
-    fn get_quantile(&self_quantile: f64) -> f64 {
+    fn get_quantile(&self, quantile: f64) -> f64 {
         if self.p2_state.count >= 5 {
             self.p2_state.get_quantile()
         } else {

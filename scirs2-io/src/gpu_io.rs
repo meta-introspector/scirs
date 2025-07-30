@@ -615,7 +615,7 @@ pub mod gpu_compression {
             }
 
             // Convert bytes back to T array
-            let element_size = std::mem::_size_of::<T>();
+            let element_size = std::mem::size_of::<T>();
             if combined_data.len() % element_size != 0 {
                 return Err(IoError::Other(
                     "Decompressed data _size mismatch".to_string(),

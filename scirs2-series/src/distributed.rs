@@ -547,7 +547,7 @@ impl<
             metrics: TaskMetrics {
                 execution_time,
                 executed_on: node_address.to_string(),
-                memory_usage: task.input_data.len() * std::mem::size, _of::<F>(),
+                memory_usage: task.input_data.len() * std::mem::size_of::<F>(),
                 cpu_utilization: 0.8,                    // Simulated
                 network_time: Duration::from_millis(10), // Simulated
             },

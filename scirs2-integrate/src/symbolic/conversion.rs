@@ -194,7 +194,8 @@ fn substitute_derivatives<F: IntegrateFloat>(
         Cos(a) => Cos(Box::new(substitute_derivatives(a, variable_map))),
         Exp(a) => Exp(Box::new(substitute_derivatives(a, variable_map))),
         Ln(a) => Ln(Box::new(substitute_derivatives(a, variable_map))),
-        Sqrt(a) => Sqrt(Box::new(substitute_derivatives(a, variable_map)), _ => expr.clone(),
+        Sqrt(a) => Sqrt(Box::new(substitute_derivatives(a, variable_map))),
+        _ => expr.clone(),
     }
 }
 
@@ -309,7 +310,7 @@ impl<F: IntegrateFloat> SystemConverter<F> {
         let mut all_expressions = Vec::new();
         let mut all_variable_map = HashMap::new();
 
-        for ode in self.odes {
+        for ode in &self.odes {
             let system = higher_order_to_first_order(&ode)?;
             all_state_vars.extend(system.state_vars);
             all_expressions.extend(system.expressions);

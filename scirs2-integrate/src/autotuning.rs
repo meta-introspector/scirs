@@ -256,7 +256,9 @@ impl HardwareDetector {
                     scirs2_core::gpu::GpuBackend::Cuda => "NVIDIA".to_string(),
                     scirs2_core::gpu::GpuBackend::Rocm => "AMD".to_string(),
                     scirs2_core::gpu::GpuBackend::Metal => "Apple".to_string(),
-                    scirs2_core::gpu::GpuBackend::OpenCL => "Unknown".to_string(, _ => "Unknown".to_string(),
+                    scirs2_core::gpu::GpuBackend::OpenCL => "Unknown".to_string(),
+                    scirs2_core::gpu::GpuBackend::Wgpu => "WebGPU".to_string(),
+                    scirs2_core::gpu::GpuBackend::Cpu => "CPU".to_string(),
                 },
                 model: device.device_name,
                 memory_size: device.memory_bytes.unwrap_or(0) as usize,
@@ -392,7 +394,7 @@ impl AutoTuner {
         } else {
             // Balance between parallelization overhead and load balancing
             let min_chunk = 100; // Minimum chunk to avoid excessive overhead
-            let ideal_chunk = problem_size / (num_threads * 4); // 4x oversubscription
+            let ideal_chunk = _problem_size / (num_threads * 4); // 4x oversubscription
             ideal_chunk.max(min_chunk)
         }
     }
@@ -410,7 +412,7 @@ impl AutoTuner {
     fn optimal_tolerances(_problem_size: usize) -> (f64, usize) {
         if _problem_size < 1000 {
             (1e-12, 100) // High accuracy for small problems
-        } else if problem_size < 100000 {
+        } else if _problem_size < 100000 {
             (1e-10, 500) // Moderate accuracy for medium problems
         } else {
             (1e-8, 1000) // Lower accuracy for large problems

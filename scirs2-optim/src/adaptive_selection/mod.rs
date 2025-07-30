@@ -6,6 +6,7 @@
 use crate::error::{OptimError, Result};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 
@@ -292,7 +293,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
         }
 
         Self {
-            _strategy,
+            strategy: _strategy,
             performance_history: HashMap::new(),
             problem_optimizer_map: Vec::new(),
             current_problem: None,
@@ -330,7 +331,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
             SelectionStrategy::MetaLearning {
                 feature_dim,
                 k_nearest,
-            } => self.meta_learning_selection(&problem, *feature_dim, *k_nearest),
+            } => self.meta_learning_selection(&problem, *feature_dim),
         }
     }
 
@@ -340,7 +341,8 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
         if problem.dataset_size > 100000 {
             match problem.problem_type {
                 ProblemType::ComputerVision => return Ok(OptimizerType::AdamW),
-                ProblemType::NaturalLanguage => return Ok(OptimizerType::AdamW, _ => return Ok(OptimizerType::Adam),
+                ProblemType::NaturalLanguage => return Ok(OptimizerType::AdamW),
+                _ => return Ok(OptimizerType::Adam),
             }
         }
 
@@ -405,8 +407,10 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
 
     /// Ensemble selection by trying multiple optimizers
     fn ensemble_selection(
-        &self_problem: &ProblemCharacteristics,
-        num_candidates: usize, _evaluation_steps: usize,
+        &self,
+        problem: &ProblemCharacteristics,
+        num_candidates: usize, 
+        _evaluation_steps: usize,
     ) -> Result<OptimizerType> {
         // Select top _candidates based on historical performance
         let mut _candidates = self.available_optimizers.clone();
@@ -419,7 +423,8 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
 
     /// Bandit-based selection with epsilon-greedy strategy
     fn bandit_selection(
-        &mut self_problem: &ProblemCharacteristics,
+        &self,
+        problem: &ProblemCharacteristics,
         epsilon: f64,
         confidence: f64,
     ) -> Result<OptimizerType> {
@@ -463,7 +468,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
     /// Meta-learning based selection
     fn meta_learning_selection(
         &mut self,
-        problem: &ProblemCharacteristics_feature_dim: usize,
+        problem: &ProblemCharacteristics,
         k_nearest: usize,
     ) -> Result<OptimizerType> {
         // Extract features from problem
@@ -512,7 +517,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
             let best_optimizer = votes
                 .iter()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .map(|(&optimizer_)| optimizer)
+                .map(|(optimizer_, _)| *optimizer_)
                 .unwrap_or(OptimizerType::Adam);
 
             return Ok(best_optimizer);
@@ -564,7 +569,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
         let mut features = Vec::new();
         let mut labels = Vec::new();
 
-        for (problem, optimizer_) in &self.problem_optimizer_map {
+        for (problem, optimizer_, _metrics) in &self.problem_optimizer_map {
             let feature_vec = self.extract_problem_features(problem);
             features.push(feature_vec);
 
@@ -572,7 +577,7 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptim
             if let Some(label) = self
                 .available_optimizers
                 .iter()
-                .position(|&opt| opt == *optimizer)
+                .position(|&opt| opt == *optimizer_)
             {
                 labels.push(label);
             }

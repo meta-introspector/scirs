@@ -28,7 +28,7 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::transform::{Rotation, Slerp};
+/// use scirs2_spatial::transform::{Rotation, Slerp};
 /// use ndarray::array;
 /// use std::f64::consts::PI;
 ///
@@ -76,7 +76,7 @@ impl Slerp {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, Slerp};
+    /// use scirs2_spatial::transform::{Rotation, Slerp};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -134,7 +134,7 @@ impl Slerp {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, Slerp};
+    /// use scirs2_spatial::transform::{Rotation, Slerp};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -197,7 +197,7 @@ impl Slerp {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, Slerp};
+    /// use scirs2_spatial::transform::{Rotation, Slerp};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///

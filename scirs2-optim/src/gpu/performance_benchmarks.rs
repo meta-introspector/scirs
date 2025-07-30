@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::Float;
 
-use crate::adaptive__selection::OptimizerType;
+use crate::adaptive_selection::OptimizerType;
 use crate::error::{OptimError, Result};
 use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
 

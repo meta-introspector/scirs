@@ -114,7 +114,7 @@ fn main() -> Result<()> {
     println!("--------------------------");
 
     // Apply feature-based transform
-    let registered_feature = warp_image(
+    let registered_feature = "warp_image"(
         &target_gray,
         &feature_result.registration.transform,
         (300, 300),

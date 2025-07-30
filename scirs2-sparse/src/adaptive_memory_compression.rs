@@ -487,7 +487,8 @@ impl AdaptiveMemoryCompressor {
                 compressed_size,
                 compression_ratio: total_size as f64 / compressed_size.max(1) as f64,
                 compression_time,
-            }_phantom: PhantomData,
+            },
+            _phantom: PhantomData,
         })
     }
 
@@ -1806,7 +1807,8 @@ impl AdaptiveMemoryCompressor {
                 // RLE or Delta compression
                 match block.block_type {
                     BlockType::Indices => self.decompress_rle(&block.compressed_data),
-                    BlockType::IndPtr => self.decompress_delta(&block.compressed_data, _ => Ok(block.compressed_data.clone()),
+                    BlockType::IndPtr => self.decompress_delta(&block.compressed_data),
+                    _ => Ok(block.compressed_data.clone()),
                 }
             }
             2 => {
@@ -1937,7 +1939,8 @@ impl AdaptiveMemoryCompressor {
                 compressed_size: total_size,
                 compression_ratio: 1.0,
                 compression_time: 0.0,
-            }_phantom: PhantomData,
+            },
+            _phantom: PhantomData,
         })
     }
 
@@ -2083,7 +2086,7 @@ impl OutOfCoreManager {
                 0 => BlockType::IndPtr,
                 1 => BlockType::Indices,
                 2 => BlockType::Data,
-                3 => BlockType::Combined_ =>, BlockType::Combined,
+                3 => BlockType::Combined,
             },
             compressed_data,
             original_size: header.original_size,
@@ -2267,7 +2270,7 @@ pub struct CompressedMatrix<T> {
     pub compressed_blocks: Vec<CompressedBlock>,
     pub compression_algorithm: CompressionAlgorithm,
     pub block_size: usize,
-    pub metadata: CompressionMetadata_phantom: PhantomData<T>,
+    pub metadata: CompressionMetadata, _phantom: PhantomData<T>,
 }
 
 /// Compressed block of matrix data

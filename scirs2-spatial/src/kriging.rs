@@ -22,7 +22,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::kriging::{OrdinaryKriging, VariogramModel};
+//! use scirs2_spatial::kriging::{OrdinaryKriging, VariogramModel};
 //! use ndarray::array;
 //!
 //! // Sample data points (x, y, z)
@@ -221,7 +221,7 @@ impl VariogramModel {
             Self::Spherical { range, .. } => *range,
             Self::Exponential { range, .. } => 3.0 * range, // Practical range
             Self::Gaussian { range, .. } => 3.0_f64.sqrt() * range, // Practical range
-            Self::Linear { .. } =>, f64::INFINITY,
+            Self::Linear { .. } => f64::INFINITY,
             Self::Power { .. } =>, f64::INFINITY,
             Self::Matern { range, .. } => 3.0 * range,
         }
@@ -234,7 +234,7 @@ impl VariogramModel {
             | Self::Exponential { sill, nugget, .. }
             | Self::Gaussian { sill, nugget, .. }
             | Self::Matern { sill, nugget, .. } => sill + nugget,
-            Self::Linear { .. } | Self::Power { .. } =>, f64::INFINITY,
+            Self::Linear { .. } | Self::Power { .. } => f64::INFINITY,
         }
     }
 
@@ -296,7 +296,7 @@ impl OrdinaryKriging {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::kriging::{OrdinaryKriging, VariogramModel};
+    /// use scirs2_spatial::kriging::{OrdinaryKriging, VariogramModel};
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -363,7 +363,7 @@ impl OrdinaryKriging {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::kriging::{OrdinaryKriging, VariogramModel};
+    /// use scirs2_spatial::kriging::{OrdinaryKriging, VariogramModel};
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];

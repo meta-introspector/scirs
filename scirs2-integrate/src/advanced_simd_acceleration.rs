@@ -882,7 +882,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
             MixedPrecisionOperation::Multiplication => {
                 self.single_precision_vector_mul(&f32_data)?
             }
-            MixedPrecisionOperation::DotProduct =>, Array1::from_vec(vec![
+            MixedPrecisionOperation::DotProduct => Array1::from_vec(vec![
                 self.single_precision_dot_product(&f32_data, &f32_data)?
             ]),
             MixedPrecisionOperation::Reduction => {
@@ -1016,14 +1016,29 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
 
     // Hardware detection methods (simplified)
     fn detect_avx512_support() -> Avx512Support {
-        Avx512Support {
-            foundation: is_x86_feature_detected!("avx512f"),
-            doubleword_quadword: is_x86_feature_detected!("avx512dq"),
-            byte_word: is_x86_feature_detected!("avx512bw"),
-            vector_length: is_x86_feature_detected!("avx512vl"),
-            conflict_detection: is_x86_feature_detected!("avx512cd"),
-            exponential_reciprocal: false, // is_x86_feature_detected!("avx512er"),
-            prefetch: false,               // is_x86_feature_detected!("avx512pf"),
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            Avx512Support {
+                foundation: is_x86_feature_detected!("avx512f"),
+                doubleword_quadword: is_x86_feature_detected!("avx512dq"),
+                byte_word: is_x86_feature_detected!("avx512bw"),
+                vector_length: is_x86_feature_detected!("avx512vl"),
+                conflict_detection: is_x86_feature_detected!("avx512cd"),
+                exponential_reciprocal: false, // is_x86_feature_detected!("avx512er"),
+                prefetch: false,               // is_x86_feature_detected!("avx512pf"),
+            }
+        }
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+        {
+            Avx512Support {
+                foundation: false,
+                doubleword_quadword: false,
+                byte_word: false,
+                vector_length: false,
+                conflict_detection: false,
+                exponential_reciprocal: false,
+                prefetch: false,
+            }
         }
     }
 
@@ -1037,27 +1052,57 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
     }
 
     fn detect_vector_width() -> usize {
-        if is_x86_feature_detected!("avx512f") {
-            512
-        } else if is_x86_feature_detected!("avx2") {
-            256
-        } else if is_x86_feature_detected!("sse2") {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            if is_x86_feature_detected!("avx512f") {
+                512
+            } else if is_x86_feature_detected!("avx2") {
+                256
+            } else if is_x86_feature_detected!("sse2") {
+                128
+            } else {
+                64 // Default scalar width
+            }
+        }
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+        {
+            // For non-x86 architectures, return a default width
+            // Could check for ARM NEON or other SIMD here
             128
-        } else {
-            64 // Default scalar width
         }
     }
 
     fn detect_fma_support() -> bool {
-        is_x86_feature_detected!("fma")
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            is_x86_feature_detected!("fma")
+        }
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+        {
+            false
+        }
     }
 
     fn detect_gather_scatter_support() -> bool {
-        is_x86_feature_detected!("avx2") // AVX2 has gather, AVX-512 has gather/scatter
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            is_x86_feature_detected!("avx2") // AVX2 has gather, AVX-512 has gather/scatter
+        }
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+        {
+            false
+        }
     }
 
     fn detect_mask_registers() -> bool {
-        is_x86_feature_detected!("avx512f") // AVX-512 has mask registers
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            is_x86_feature_detected!("avx512f") // AVX-512 has mask registers
+        }
+        #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+        {
+            false
+        }
     }
 
     fn measure_memory_bandwidth() -> f64 {
@@ -1178,14 +1223,14 @@ pub struct BottleneckAnalysis {
 pub struct PrecisionAnalyzer<F: IntegrateFloat> {
     pub error_thresholds: Vec<F>,
     pub precision_requirements: HashMap<String, PrecisionLevel>,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for PrecisionAnalyzer<F> {
     fn default() -> Self {
         Self {
             error_thresholds: Vec::new(),
-            precision_requirements: HashMap::new(), _phantom: std::marker::PhantomData,
+            precision_requirements: HashMap::new(), phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1201,14 +1246,14 @@ impl<F: IntegrateFloat> PrecisionAnalyzer<F> {
 pub struct DynamicPrecisionController<F: IntegrateFloat> {
     pub current_precision: PrecisionLevel,
     pub adaptation_history: Vec<(Instant, PrecisionLevel)>,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for DynamicPrecisionController<F> {
     fn default() -> Self {
         Self {
             current_precision: PrecisionLevel::Double,
-            adaptation_history: Vec::new(), _phantom: std::marker::PhantomData,
+            adaptation_history: Vec::new(), phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1289,7 +1334,7 @@ pub struct DataTypeOptimizations<F: IntegrateFloat> {
     pub optimal_vector_width: usize,
     pub alignment_requirements: usize,
     pub preferred_operations: Vec<String>,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for DataTypeOptimizations<F> {
@@ -1297,7 +1342,7 @@ impl<F: IntegrateFloat> Default for DataTypeOptimizations<F> {
         Self {
             optimal_vector_width: 8,
             alignment_requirements: 32,
-            preferred_operations: Vec::new(), _phantom: std::marker::PhantomData,
+            preferred_operations: Vec::new(), phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1316,7 +1361,7 @@ pub struct ConditionalPattern<F: IntegrateFloat> {
     pub pattern_type: String,
     pub condition_selectivity: f64,
     pub branch_cost: F,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for ConditionalPattern<F> {
@@ -1324,7 +1369,7 @@ impl<F: IntegrateFloat> Default for ConditionalPattern<F> {
         Self {
             pattern_type: "default".to_string(),
             condition_selectivity: 0.5,
-            branch_cost: F::zero(), _phantom: std::marker::PhantomData,
+            branch_cost: F::zero(), phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1335,7 +1380,7 @@ pub struct BlendOperation<F: IntegrateFloat> {
     pub blend_type: String,
     pub performance_cost: F,
     pub accuracy_impact: F,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for BlendOperation<F> {
@@ -1343,7 +1388,7 @@ impl<F: IntegrateFloat> Default for BlendOperation<F> {
         Self {
             blend_type: "default".to_string(),
             performance_cost: F::zero(),
-            accuracy_impact: F::zero(), _phantom: std::marker::PhantomData,
+            accuracy_impact: F::zero(), phantom: std::marker::PhantomData,
         }
     }
 }

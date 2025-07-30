@@ -12,7 +12,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::delaunay::Delaunay;
+//! use scirs2_spatial::delaunay::Delaunay;
 //! use ndarray::array;
 //!
 //! // Create a set of 2D points
@@ -119,7 +119,7 @@ impl Delaunay {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::delaunay::Delaunay;
+    /// use scirs2_spatial::delaunay::Delaunay;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -248,7 +248,7 @@ impl Delaunay {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::delaunay::Delaunay;
+    /// use scirs2_spatial::delaunay::Delaunay;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -306,7 +306,7 @@ impl Delaunay {
     }
 
     /// Insert constraint edges into the triangulation
-    fn insert_constraints(&self) -> SpatialResult<()> {
+    fn insert_constraints(&mut self) -> SpatialResult<()> {
         for &(i, j) in &self.constraints.clone() {
             self.insert_constraint_edge(i, j)?;
         }
@@ -314,7 +314,7 @@ impl Delaunay {
     }
 
     /// Insert a single constraint edge into the triangulation
-    fn insert_constraint_edge(_start: usize, end: usize) -> SpatialResult<()> {
+    fn insert_constraint_edge(&mut self, _start: usize, end: usize) -> SpatialResult<()> {
         // Check if the edge already exists in the triangulation
         if self.edge_exists(_start, end) {
             return Ok(()); // Edge already exists, nothing to do
@@ -342,7 +342,7 @@ impl Delaunay {
     }
 
     /// Check if an edge exists in the current triangulation
-    fn edge_exists(_start: usize, end: usize) -> bool {
+    fn edge_exists(&self, _start: usize, end: usize) -> bool {
         for simplex in &self.simplices {
             let simplex_size = simplex.len();
             // Check all edges of the simplex (triangle in 2D, tetrahedron in 3D)
@@ -538,7 +538,7 @@ impl Delaunay {
     }
 
     /// Find all triangles that contain any of the given edges
-    fn find_triangles_with_edges(_edges: &[(usize, usize)]) -> Vec<usize> {
+    fn find_triangles_with_edges(&self, _edges: &[(usize, usize)]) -> Vec<usize> {
         let mut triangles = HashSet::new();
 
         for (i, simplex) in self.simplices.iter().enumerate() {
@@ -553,7 +553,7 @@ impl Delaunay {
     }
 
     /// Check if a triangle contains a specific edge
-    fn triangle_contains_edge(_triangle: &[usize], v1: usize, v2: usize) -> bool {
+    fn triangle_contains_edge(&self, _triangle: &[usize], v1: usize, v2: usize) -> bool {
         for i in 0..3 {
             let j = (i + 1) % 3;
             let t1 = _triangle[i];
@@ -566,7 +566,7 @@ impl Delaunay {
     }
 
     /// Remove triangles from the triangulation
-    fn remove_triangles(_triangle_indices: &[usize]) {
+    fn remove_triangles(&mut self, _triangle_indices: &[usize]) {
         // Sort _indices in descending order to avoid index shifting issues
         let mut sorted_indices = _triangle_indices.to_vec();
         sorted_indices.sort_by(|a, b| b.cmp(a));
@@ -775,7 +775,8 @@ impl Delaunay {
         &self,
         v1: usize,
         v2: usize,
-        v3: usize_boundary_edges: &[(usize, usize)],
+        v3: usize,
+        _boundary_edges: &[(usize, usize)],
     ) -> bool {
         // Basic validation - check if triangle is not degenerate
         self.points_form_valid_triangle(v1, v2, v3)
@@ -791,7 +792,7 @@ impl Delaunay {
     /// # Returns
     ///
     /// * Vector of constraint edges as pairs of point indices
-    pub fn constraints() -> &[(usize, usize)] {
+    pub fn constraints(&self) -> &[(usize, usize)] {
         &self.constraints
     }
 
@@ -935,7 +936,7 @@ impl Delaunay {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::delaunay::Delaunay;
+    /// use scirs2_spatial::delaunay::Delaunay;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -1089,7 +1090,7 @@ impl Delaunay {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::delaunay::Delaunay;
+    /// use scirs2_spatial::delaunay::Delaunay;
     /// use ndarray::array;
     ///
     /// let points = array![

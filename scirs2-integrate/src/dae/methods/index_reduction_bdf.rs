@@ -4,8 +4,8 @@
 //! index reduction techniques for solving higher-index DAE systems.
 
 use crate::common::IntegrateFloat;
-use crate::dae::index__reduction::{DAEStructure, ProjectionMethod};
-use crate::dae::methods::bdf__dae::{bdf_implicit_dae, bdf_semi_explicit_dae};
+use crate::dae::index_reduction::{DAEStructure, ProjectionMethod};
+use crate::dae::methods::bdf_dae::{bdf_implicit_dae, bdf_semi_explicit_dae};
 use crate::dae::types::{DAEIndex, DAEOptions, DAEResult, DAEType};
 use crate::error::IntegrateResult;
 use ndarray::{Array1, ArrayView1};
@@ -171,9 +171,10 @@ where
     result.message = Some(format!(
         "Index reduction applied: {} -> Index-1 system solved successfully",
         match index {
+            DAEIndex::Index1 => "Index-1",
             DAEIndex::Index2 => "Index-2",
             DAEIndex::Index3 => "Index-3",
-            DAEIndex::HigherIndex => "Higher-index"_ => "Index-1",
+            DAEIndex::HigherIndex => "Higher-index",
         }
     ));
 

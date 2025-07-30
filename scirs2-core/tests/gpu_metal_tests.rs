@@ -3,7 +3,7 @@
 //! These tests verify the Metal implementation including device detection,
 //! buffer management, kernel compilation, and compute operations.
 
-#![cfg(all(test, feature = metal, target_os = "macos"))]
+#![cfg(all(test, feature = "metal", target_os = "macos"))]
 
 use scirs2_core::gpu::{
     backends::{MetalBufferOptions, MetalContext, MetalStorageMode},

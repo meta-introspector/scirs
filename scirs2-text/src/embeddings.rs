@@ -16,7 +16,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use scirs2__text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
+//! use scirs2_text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
 //!
 //! // Basic Word2Vec training
 //! let documents = vec![
@@ -56,7 +56,7 @@
 //! ### Custom Configuration
 //!
 //! ```rust
-//! use scirs2__text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
+//! use scirs2_text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
 //!
 //! let config = Word2VecConfig {
 //!     algorithm: Word2VecAlgorithm::CBOW,
@@ -74,7 +74,7 @@
 //! ### Incremental Training
 //!
 //! ```rust
-//! # use scirs2__text::embeddings::{Word2Vec, Word2VecConfig};
+//! # use scirs2_text::embeddings::{Word2Vec, Word2VecConfig};
 //! # let mut model = Word2Vec::new(Word2VecConfig::default());
 //! // Initial training
 //! let batch1 = vec!["first batch of documents"];
@@ -88,7 +88,7 @@
 //! ### Saving and Loading Models
 //!
 //! ```rust
-//! # use scirs2__text::embeddings::{Word2Vec, Word2VecConfig};
+//! # use scirs2_text::embeddings::{Word2Vec, Word2VecConfig};
 //! # let mut model = Word2Vec::new(Word2VecConfig::default());
 //! // Save trained model
 //! model.save_to_file("my_model.w2v").expect("Failed to save model");

@@ -533,7 +533,8 @@ impl Geometry {
             Geometry::Polygon { exterior, .. } => Self::LineString {
                 points: exterior.clone(),
             }
-            .bbox(, _ => None, // Simplified for other types
+            .bbox(),
+            _ => None, // Simplified for other types
         }
     }
 }
@@ -700,7 +701,7 @@ pub struct GeoJsonGeometry {
     /// Geometry type
     pub r#type: String,
     /// Coordinates
-    pub coordinates: serde_json: Value,
+    pub coordinates: serde_json::Value,
 }
 
 impl GeoJson {
@@ -739,11 +740,11 @@ impl GeoJson {
                     .into_iter()
                     .map(|(k, v)| {
                         let json_value = match v {
-                            AttributeValue::Integer(i) =>, serde_json::json!(i),
-                            AttributeValue::Float(f) =>, serde_json::json!(f),
-                            AttributeValue::String(s) =>, serde_json::json!(s),
-                            AttributeValue::Boolean(b) =>, serde_json::json!(b),
-                            AttributeValue::Date(d) =>, serde_json::json!(d),
+                            AttributeValue::Integer(i) => serde_json::json!(i),
+                            AttributeValue::Float(f) => serde_json::json!(f),
+                            AttributeValue::String(s) => serde_json::json!(s),
+                            AttributeValue::Boolean(b) => serde_json::json!(b),
+                            AttributeValue::Date(d) => serde_json::json!(d),
                         };
                         (k, json_value)
                     })
@@ -762,14 +763,15 @@ impl GeoJson {
         match _geom {
             Geometry::Point { x, y } => GeoJsonGeometry {
                 r#type: "Point".to_string(),
-                coordinates: serde_json: json!([x, y]),
+                coordinates: serde_json::json!([x, y]),
             },
             Geometry::LineString { points } => GeoJsonGeometry {
                 r#type: "LineString".to_string(),
-                coordinates: serde_json: json!(points),
-            }_ => GeoJsonGeometry {
+                coordinates: serde_json::json!(points),
+            },
+            _ => GeoJsonGeometry {
                 r#type: "Unknown".to_string(),
-                coordinates: serde_json: json!(null),
+                coordinates: serde_json::json!(null),
             },
         }
     }
@@ -1219,7 +1221,7 @@ mod tests {
         let crs_epsg = CRS::from_epsg(4326);
         assert_eq!(crs_epsg.epsg_code, Some(4326));
 
-        let crs_wkt = CRS::from_wkt("GEOGCS[\"WGS 84\",...]".to_string());
+        let crs_wkt = CRS::from_wkt("GEOGCS[\\\"WGS 84\\\",...]".to_string());
         assert!(crs_wkt.wkt.is_some());
     }
 }

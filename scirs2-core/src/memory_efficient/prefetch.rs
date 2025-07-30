@@ -110,7 +110,7 @@ impl PrefetchConfigBuilder {
     }
 
     /// Enable or disable asynchronous prefetching.
-    pub const fn prefetch(bool: TypeName) -> Self {
+    pub const fn async_prefetch(mut self, async_prefetch: bool) -> Self {
         self.config.async_prefetch = async_prefetch;
         self
     }
@@ -130,7 +130,7 @@ impl PrefetchConfigBuilder {
 /// Trait for tracking and predicting access patterns.
 pub trait AccessPatternTracker: std::fmt::Debug {
     /// Record an access to a block.
-    fn idx(usize: TypeName);
+    fn record_access(&mut self, block_idx: usize);
 
     /// Predict which blocks will be accessed next.
     fn predict_next_blocks(&self, count: usize) -> Vec<usize>;
@@ -224,7 +224,7 @@ impl BlockAccessTracker {
 }
 
 impl AccessPatternTracker for BlockAccessTracker {
-    fn idx(usize: TypeName) {
+    fn record_access(&mut self, block_idx: usize) {
         // Add to history and remove oldest if needed
         self.history.push_back(block_idx);
 
@@ -605,7 +605,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
     }
 
     /// Request prefetching of a specific block through the background thread.
-    fn idx(usize: TypeName) -> CoreResult<()> {
+    fn request_prefetch(&self, block_idx: usize) -> CoreResult<()> {
         if let Some(sender) = &self.prefetch_sender {
             sender
                 .send(PrefetchCommand::Prefetch(block_idx))
@@ -697,7 +697,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> Prefetching for PrefetchingCompres
         Ok(guard.stats())
     }
 
-    fn idx(usize: TypeName) -> CoreResult<()> {
+    fn prefetch_block_by_idx(&mut self, block_idx: usize) -> CoreResult<()> {
         if !self.prefetching_enabled {
             return Ok(());
         }

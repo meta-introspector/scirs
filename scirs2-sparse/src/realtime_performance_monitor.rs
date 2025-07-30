@@ -1653,7 +1653,8 @@ impl RealTimePerformanceMonitor {
                 "moving_average" => *_accuracy = (*_accuracy * 0.9 + 0.75 * 0.1).max(0.1),
                 "linear_regression" => *_accuracy = (*_accuracy * 0.9 + 0.8 * 0.1).max(0.1),
                 "arima" => *_accuracy = (*_accuracy * 0.9 + 0.85 * 0.1).max(0.1),
-                "neural_network" => *_accuracy = (*_accuracy * 0.9 + 0.9 * 0.1).max(0.1, _ => {}
+                "neural_network" => *_accuracy = (*_accuracy * 0.9 + 0.9 * 0.1).max(0.1),
+                _ => {}
             }
         }
     }

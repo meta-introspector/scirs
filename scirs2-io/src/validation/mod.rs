@@ -51,7 +51,8 @@ impl ChecksumAlgorithm {
         match _name.to_uppercase().as_str() {
             "CRC32" => Some(ChecksumAlgorithm::CRC32),
             "SHA256" => Some(ChecksumAlgorithm::SHA256),
-            "BLAKE3" => Some(ChecksumAlgorithm::BLAKE3, _ => None,
+            "BLAKE3" => Some(ChecksumAlgorithm::BLAKE3),
+            _ => None,
         }
     }
 }
@@ -1214,7 +1215,7 @@ impl SchemaDefinition {
     }
 
     /// Set default value for the schema
-    pub fn with_default(mut self, default: serde_json: Value) -> Self {
+    pub fn with_default(mut self, default: serde_json::Value) -> Self {
         self.default = Some(default);
         self
     }
@@ -1387,7 +1388,7 @@ impl SchemaValidator {
         json_str: &str,
         schema: &SchemaDefinition,
     ) -> Result<SchemaValidationResult> {
-        let data: serde_json: Value = serde, _json::from_str(json_str)
+        let data: serde_json::Value = serde_json::from_str(json_str)
             .map_err(|e| IoError::ValidationError(format!("Invalid JSON: {}", e)))?;
 
         Ok(self.validate(&data, schema))
@@ -1709,7 +1710,8 @@ impl SchemaValidator {
         self.add_format_validator("uuid", |s| {
             s.len() == 36
                 && s.chars().enumerate().all(|(i, c)| match i {
-                    8 | 13 | 18 | 23 => c == '-'_ => c.is_ascii_hexdigit(),
+                    8 | 13 | 18 | 23 => c == '-',
+                    _ => c.is_ascii_hexdigit(),
                 })
         });
 
@@ -1800,7 +1802,7 @@ pub mod schema_helpers {
 
 /// Build schemas from JSON Schema format
 #[allow(dead_code)]
-pub fn schema_from_json_schema(_json_schema: &serde, _json: :Value) -> Result<SchemaDefinition> {
+pub fn schema_from_json_schema(_json_schema: &serde_json::Value) -> Result<SchemaDefinition> {
     let object = _json_schema
         .as_object()
         .ok_or_else(|| IoError::ValidationError("Schema must be an object".to_string()))?;
@@ -1836,7 +1838,8 @@ pub fn schema_from_json_schema(_json_schema: &serde, _json: :Value) -> Result<Sc
             }
             SchemaDataType::Object(prop_schemas)
         }
-        "null" => SchemaDataType::Null_ => {
+        "null" => SchemaDataType::Null,
+        _ => {
             return Err(IoError::ValidationError(format!(
                 "Unknown type: {}",
                 type_name

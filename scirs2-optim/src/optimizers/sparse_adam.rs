@@ -27,14 +27,14 @@ pub struct SparseGradient<A: Float + ScalarOperand + Debug> {
 
 impl<A: Float + ScalarOperand + Debug> SparseGradient<A> {
     /// Create a new sparse gradient from indices and values
-    pub fn new(_indices: Vec<usize>, values: Vec<A>, dim: usize) -> Self {
+    pub fn new(indices: Vec<usize>, values: Vec<A>, dim: usize) -> Self {
         assert_eq!(
-            _indices.len(),
+            indices.len(),
             values.len(),
             "Indices and values must have the same length"
         );
         // Ensure no index is out of bounds
-        if let Some(&max_idx) = _indices.iter().max() {
+        if let Some(&max_idx) = indices.iter().max() {
             assert!(
                 max_idx < dim,
                 "Index {} is out of bounds for dimension {}",
@@ -43,18 +43,18 @@ impl<A: Float + ScalarOperand + Debug> SparseGradient<A> {
             );
         }
         Self {
-            _indices,
+            indices,
             values,
             dim,
         }
     }
 
     /// Create a sparse gradient from a dense array, keeping only non-zero entries
-    pub fn from_array(_array: &Array<A, Ix1>) -> Self {
+    pub fn from_array(array: &Array<A, Ix1>) -> Self {
         let mut indices = Vec::new();
         let mut values = Vec::new();
 
-        for (idx, &val) in _array.iter().enumerate() {
+        for (idx, &val) in array.iter().enumerate() {
             if !val.is_zero() {
                 indices.push(idx);
                 values.push(val);
@@ -64,7 +64,7 @@ impl<A: Float + ScalarOperand + Debug> SparseGradient<A> {
         Self {
             indices,
             values,
-            dim: _array.len(),
+            dim: array.len(),
         }
     }
 
@@ -103,7 +103,7 @@ impl<A: Float + ScalarOperand + Debug> SparseGradient<A> {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__optim::optimizers::{SparseAdam, SparseGradient, Optimizer};
+/// use scirs2_optim::optimizers::{SparseAdam, SparseGradient, Optimizer};
 ///
 /// // Initialize parameters
 /// let params = Array1::zeros(5);
@@ -147,9 +147,9 @@ impl<A: Float + ScalarOperand + Debug> SparseAdam<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
-            _learning_rate,
+            learning_rate,
             beta1: A::from(0.9).unwrap(),
             beta2: A::from(0.999).unwrap(),
             epsilon: A::from(1e-8).unwrap(),

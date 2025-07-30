@@ -9,7 +9,7 @@ use crate::ode::methods::{
     lsoda_method, radau_method, radau_method_with_mass, rk23_method, rk45_method, rk4_method,
 };
 use crate::ode::types::{MassMatrix, MassMatrixType, ODEMethod, ODEOptions, ODEResult};
-use crate::ode::utils::dense__output::DenseSolution;
+use crate::ode::utils::dense_output::DenseSolution;
 use crate::ode::utils::events::{
     EventAction, EventHandler, ODEOptionsWithEvents, ODEResultWithEvents,
 };
@@ -37,7 +37,7 @@ use ndarray::{Array1, ArrayView1};
 ///
 /// ```
 /// use ndarray::{array, ArrayView1};
-/// use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+/// use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 ///
 /// // Define ODE system: dy/dt = -y
 /// let f = |_t: f64, y: ArrayView1<f64>| array![-y[0]];
@@ -697,7 +697,7 @@ where
     Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone + 'static,
     EventFunc: Fn(F, ArrayView1<F>) -> F,
 {
-    use crate::ode::methods::radau__mass::radau_method_with_mass;
+    use crate::ode::methods::radau_mass::radau_method_with_mass;
 use crate::ode::utils::events::{EventAction, EventHandler};
 
     // Create event handler

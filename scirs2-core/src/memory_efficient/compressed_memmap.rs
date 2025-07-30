@@ -901,7 +901,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
 
         // Process blocks
         if parallel {
-            use rayon::prelude::*;
+            use crate::parallel_ops::*;
 
             return (0..num_blocks)
                 .into_par_iter()

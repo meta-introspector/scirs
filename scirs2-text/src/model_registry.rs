@@ -905,7 +905,8 @@ impl PrebuiltModels {
             "large_transformer" => Some(Self::large_transformer()),
             "scibiert_large" => Some(Self::domain_scientific_large()),
             "medbert" => Some(Self::medical_transformer()),
-            "legalbert" => Some(Self::legal_transformer(), _ => None,
+            "legalbert" => Some(Self::legal_transformer()),
+            _ => None,
         }
     }
 }

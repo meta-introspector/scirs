@@ -31,7 +31,7 @@ use crate::optimizers::Optimizer;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__optim::optimizers::{LAMB, Optimizer};
+/// use scirs2_optim::optimizers::{LAMB, Optimizer};
 ///
 /// // Initialize parameters and gradients
 /// let params = Array1::zeros(5);
@@ -71,9 +71,9 @@ impl<A: Float + ScalarOperand + Debug> LAMB<A> {
     /// # Arguments
     ///
     /// * `learning_rate` - The learning rate for parameter updates
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
-            _learning_rate,
+            learning_rate,
             beta1: A::from(0.9).unwrap(),
             beta2: A::from(0.999).unwrap(),
             epsilon: A::from(1e-6).unwrap(),
@@ -253,7 +253,7 @@ where
             norm_sq.sqrt()
         };
 
-        let trust_ratio = if weight_norm > A::zero() && gradient_norm >, A::zero() {
+        let trust_ratio = if weight_norm > A::zero() && gradient_norm > A::zero() {
             weight_norm / gradient_norm
         } else {
             A::one()

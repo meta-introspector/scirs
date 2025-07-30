@@ -640,25 +640,25 @@ impl<F: IntegrateFloat + Default> RealTimeAdaptiveOptimizer<F> {
     }
 
     fn recommend_algorithm_changes(
-        &self_current: &PerformanceAnalysis, _optimal: &OptimalConfiguration<F>,
+        self_current: &PerformanceAnalysis, _optimal: &OptimalConfiguration<F>,
     ) -> IntegrateResult<Vec<AlgorithmRecommendation<F>>> {
         Ok(Vec::new()) // Placeholder
     }
 
     fn recommend_parameter_adjustments(
-        &self_current: &PerformanceAnalysis, _optimal: &OptimalConfiguration<F>,
+        self_current: &PerformanceAnalysis, _optimal: &OptimalConfiguration<F>,
     ) -> IntegrateResult<Vec<ParameterAdjustment<F>>> {
         Ok(Vec::new()) // Placeholder
     }
 
     fn recommend_resource_reallocations(
-        &self_current: &PerformanceAnalysis, _optimal: &OptimalConfiguration<F>,
+        self_current: &PerformanceAnalysis, _optimal: &OptimalConfiguration<F>,
     ) -> IntegrateResult<Vec<ResourceReallocation>> {
         Ok(Vec::new()) // Placeholder
     }
 
     fn predict_performance_improvements(
-        &self_current: &PerformanceAnalysis, _optimal: &OptimalConfiguration<F>,
+        self_current: &PerformanceAnalysis, _optimal: &OptimalConfiguration<F>,
     ) -> IntegrateResult<PerformanceImprovement> {
         Ok(PerformanceImprovement {
             expected_throughput_gain: 1.2,
@@ -754,7 +754,7 @@ pub enum AnomalySeverity {
 }
 
 impl Default for AnomalySeverity {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::Low
     }
 }
@@ -1017,7 +1017,7 @@ pub struct RecoveryEvent {
 }
 
 impl Default for RecoveryEvent {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             timestamp: Instant::now(),
             event_type: String::new(),
@@ -1160,18 +1160,24 @@ impl<F: IntegrateFloat> AdaptiveAlgorithmSelector<F> {
     }
 
     fn evaluate_algorithm_performance(
-        &self_algorithm: &str, _problem: &ProblemCharacteristics_metrics: &PerformanceMetrics,
+        &self,
+        _algorithm: &str,
+        _problem: &ProblemCharacteristics,
+        _metrics: &PerformanceMetrics,
     ) -> IntegrateResult<f64> {
         Ok(0.8) // Placeholder score
     }
 
     fn find_better_algorithms(
-        &self_current: &str, _problem: &ProblemCharacteristics_current_score: f64,
+        &self,
+        current: &str,
+        _problem: &ProblemCharacteristics,
+        current_score: f64,
     ) -> IntegrateResult<Vec<AlgorithmCandidate<F>>> {
         Ok(Vec::new()) // Placeholder
     }
 
-    fn estimate_switching_cost(_from: &str_to: &str) -> IntegrateResult<f64> {
+    fn estimate_switching_cost(_from: &str, _to: &str) -> IntegrateResult<f64> {
         Ok(0.1) // Placeholder switching cost
     }
 }
@@ -1187,7 +1193,10 @@ impl<F: IntegrateFloat + Default> PerformancePredictor<F> {
     }
 
     fn predict_optimal_config(
-        &self, _problem_size: usize, _method: &str_performance: &PerformanceAnalysis,
+        &self,
+        _problem_size: usize,
+        _method: &str,
+        _performance: &PerformanceAnalysis,
     ) -> IntegrateResult<OptimalConfiguration<F>> {
         Ok(OptimalConfiguration {
             algorithm: String::new(),
@@ -1391,7 +1400,7 @@ pub struct ModelTrainer<F: IntegrateFloat> {
     pub training_algorithm: String,
     pub hyperparameters: HashMap<String, f64>,
     pub cross_validation_folds: usize,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for ModelTrainer<F> {
@@ -1399,7 +1408,7 @@ impl<F: IntegrateFloat> Default for ModelTrainer<F> {
         Self {
             training_algorithm: String::from("gradient_descent"),
             hyperparameters: HashMap::new(),
-            cross_validation_folds: 5, _phantom: std::marker::PhantomData,
+            cross_validation_folds: 5, phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1419,7 +1428,7 @@ pub struct ReinforcementLearningAgent<F: IntegrateFloat> {
     pub agent_type: String,
     pub learning_rate: f64,
     pub exploration_rate: f64,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for ReinforcementLearningAgent<F> {
@@ -1427,7 +1436,7 @@ impl<F: IntegrateFloat> Default for ReinforcementLearningAgent<F> {
         Self {
             agent_type: String::from("q_learning"),
             learning_rate: 0.01,
-            exploration_rate: 0.1, _phantom: std::marker::PhantomData,
+            exploration_rate: 0.1, phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1438,7 +1447,7 @@ pub struct BayesianOptimizer<F: IntegrateFloat> {
     pub acquisition_function: String,
     pub kernel_type: String,
     pub num_iterations: usize,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for BayesianOptimizer<F> {
@@ -1446,7 +1455,7 @@ impl<F: IntegrateFloat> Default for BayesianOptimizer<F> {
         Self {
             acquisition_function: String::from("expected_improvement"),
             kernel_type: String::from("rbf"),
-            num_iterations: 100, _phantom: std::marker::PhantomData,
+            num_iterations: 100, phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1457,7 +1466,7 @@ pub struct NeuralArchitectureSearch<F: IntegrateFloat> {
     pub search_strategy: String,
     pub architecture_space: String,
     pub evaluation_budget: usize,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for NeuralArchitectureSearch<F> {
@@ -1465,7 +1474,7 @@ impl<F: IntegrateFloat> Default for NeuralArchitectureSearch<F> {
         Self {
             search_strategy: String::from("evolutionary"),
             architecture_space: String::from("feedforward"),
-            evaluation_budget: 1000, _phantom: std::marker::PhantomData,
+            evaluation_budget: 1000, phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1476,7 +1485,7 @@ pub struct HyperparameterOptimizer<F: IntegrateFloat> {
     pub optimization_algorithm: String,
     pub search_space: HashMap<String, (f64, f64)>,
     pub max_evaluations: usize,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for HyperparameterOptimizer<F> {
@@ -1484,7 +1493,7 @@ impl<F: IntegrateFloat> Default for HyperparameterOptimizer<F> {
         Self {
             optimization_algorithm: String::from("random_search"),
             search_space: HashMap::new(),
-            max_evaluations: 100, _phantom: std::marker::PhantomData,
+            max_evaluations: 100, phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1513,7 +1522,7 @@ pub struct ConfigurationSpaceExplorer<F: IntegrateFloat> {
     pub exploration_strategy: String,
     pub space_dimensions: usize,
     pub explored_configurations: Vec<String>,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for ConfigurationSpaceExplorer<F> {
@@ -1521,7 +1530,7 @@ impl<F: IntegrateFloat> Default for ConfigurationSpaceExplorer<F> {
         Self {
             exploration_strategy: String::from("grid_search"),
             space_dimensions: 10,
-            explored_configurations: Vec::new(), _phantom: std::marker::PhantomData,
+            explored_configurations: Vec::new(), phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1550,7 +1559,7 @@ pub struct MultiObjectiveOptimizer<F: IntegrateFloat> {
     pub algorithm: String,
     pub pareto_front_size: usize,
     pub objectives: Vec<String>,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for MultiObjectiveOptimizer<F> {
@@ -1558,7 +1567,7 @@ impl<F: IntegrateFloat> Default for MultiObjectiveOptimizer<F> {
         Self {
             algorithm: String::from("nsga2"),
             pareto_front_size: 100,
-            objectives: Vec::new(), _phantom: std::marker::PhantomData,
+            objectives: Vec::new(), phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1642,7 +1651,7 @@ pub struct ObjectiveFunction<F: IntegrateFloat> {
     pub function_type: String,
     pub minimize: bool,
     pub constraints: Vec<String>,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for ObjectiveFunction<F> {
@@ -1650,7 +1659,7 @@ impl<F: IntegrateFloat> Default for ObjectiveFunction<F> {
         Self {
             function_type: "performance".to_string(),
             minimize: false, // Maximize performance by default
-            constraints: Vec::new(), _phantom: std::marker::PhantomData,
+            constraints: Vec::new(), phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1846,19 +1855,19 @@ impl DynamicResourceManager {
     }
 
     fn analyze_utilization(
-        &self_allocation: &ResourceAllocation,
+        self_allocation: &ResourceAllocation,
     ) -> IntegrateResult<UtilizationAnalysis> {
         Ok(UtilizationAnalysis::default())
     }
 
     fn identify_bottlenecks(
-        &self_analysis: &UtilizationAnalysis,
+        self_analysis: &UtilizationAnalysis,
     ) -> IntegrateResult<Vec<ResourceBottleneck>> {
         Ok(Vec::new())
     }
 
     fn generate_reallocation_plan(
-        &self_current: &ResourceAllocation, _bottlenecks: &[ResourceBottleneck], _target: &PerformanceTarget,
+        self_current: &ResourceAllocation, _bottlenecks: &[ResourceBottleneck], _target: &PerformanceTarget,
     ) -> IntegrateResult<ResourceReallocationPlan> {
         Ok(ResourceReallocationPlan::default())
     }
@@ -1878,7 +1887,7 @@ impl PerformanceAnomalyDetector {
 
 impl<F: IntegrateFloat + Default> PerformancePredictor<F> {
     fn predict_performance(
-        &self_characteristics: &ProblemCharacteristics, _workload: &WorkloadPrediction,
+        self_characteristics: &ProblemCharacteristics, _workload: &WorkloadPrediction,
     ) -> IntegrateResult<Vec<PerformancePrediction>> {
         Ok(Vec::new())
     }
@@ -1890,7 +1899,7 @@ impl<F: IntegrateFloat + Default> PerformancePredictor<F> {
     }
 
     fn validate_optimization_plan(
-        &self_plan: &PredictiveOptimizationPlan<F>,
+        self_plan: &PredictiveOptimizationPlan<F>,
     ) -> IntegrateResult<()> {
         Ok(())
     }
@@ -1919,7 +1928,7 @@ impl<F: IntegrateFloat> MachineLearningOptimizer<F> {
 }
 
 impl<F: IntegrateFloat> ObjectiveFunction<F> {
-    fn evaluate(&self_params: &OptimalParameters<F>) -> IntegrateResult<F> {
+    fn evaluate(self_params: &OptimalParameters<F>) -> IntegrateResult<F> {
         Ok(F::zero())
     }
 }
@@ -1944,7 +1953,7 @@ impl PerformanceAnomalyDetector {
 
 // Additional placeholder types
 impl Default for UtilizationAnalysis {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             cpu_utilization: 0.0,
             memory_utilization: 0.0,
@@ -1956,7 +1965,7 @@ impl Default for UtilizationAnalysis {
 }
 
 impl Default for ResourceBottleneck {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             resource_type: "unknown".to_string(),
             severity: 0.0,
@@ -1967,7 +1976,7 @@ impl Default for ResourceBottleneck {
 }
 
 impl Default for PerformancePrediction {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             metric_name: "unknown".to_string(),
             predicted_value: 0.0,

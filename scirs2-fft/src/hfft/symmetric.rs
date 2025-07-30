@@ -5,7 +5,7 @@
 //! for all indices i. This property is important for algorithms like HFFT and IHFFT.
 
 use ndarray::{Array, Array2, Dimension, IxDyn};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::ops::Not;
 
 /// Enforce Hermitian symmetry on a 2D complex array.
@@ -123,7 +123,7 @@ pub fn enforce_hermitian_symmetry_nd(_array: &mut Array<Complex64, IxDyn>) {
 
             // For each 2D plane along the first two dimensions, apply 2D symmetry
             if let Ok(mut view) = _array.view_mut().into_dimensionality::<ndarray::Ix3>() {
-                let (dim1, dim2_) = view.dim();
+                let (dim1, dim2, _) = view.dim();
 
                 for k in 0..view.dim().2 {
                     let mut slice = view.slice_mut(ndarray::s![.., .., k]);

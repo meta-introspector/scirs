@@ -5,7 +5,7 @@
 
 use crate::error::{OptimError, Result};
 use crate::optimizers::*;
-use crate::unified__api::OptimizerConfig;
+use crate::unified_api::OptimizerConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};

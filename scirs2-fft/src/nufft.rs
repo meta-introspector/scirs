@@ -15,7 +15,7 @@
 //! * Type 2 (Uniform to Non-Uniform): Data at uniform locations, transform to non-uniform frequency grid
 
 use crate::error::{FFTError, FFTResult};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::Zero;
 use std::f64::consts::PI;
 
@@ -54,9 +54,9 @@ pub enum InterpolationType {
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::nufft::{nufft_type1, InterpolationType};
+/// use scirs2_fft::nufft::{nufft_type1, InterpolationType};
 /// use std::f64::consts::PI;
-/// use num__complex::Complex64;
+/// use num_complex::Complex64;
 ///
 /// // Create non-uniform sample points in [-π, π]
 /// let n = 100;
@@ -203,9 +203,9 @@ pub fn nufft_type1(
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::nufft::{nufft_type2, InterpolationType};
+/// use scirs2_fft::nufft::{nufft_type2, InterpolationType};
 /// use std::f64::consts::PI;
-/// use num__complex::Complex64;
+/// use num_complex::Complex64;
 ///
 /// // Create a spectrum on a uniform grid
 /// let m = 128;

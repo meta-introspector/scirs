@@ -6,6 +6,7 @@
 
 use ndarray::{Array, Array2, Array4, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
+use rand::Rng;
 // Removed unused import ScientificNumber
 use std::fmt::Debug;
 
@@ -21,7 +22,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__optim::regularizers::MixUp;
+/// use scirs2_optim::regularizers::MixUp;
 ///
 /// let mixup = MixUp::new(0.2).unwrap();
 ///
@@ -48,14 +49,14 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> MixUp<A> {
     /// # Errors
     ///
     /// Returns an error if alpha is not positive
-    pub fn new(_alpha: A) -> Result<Self> {
-        if _alpha <= A::zero() {
+    pub fn new(alpha: A) -> Result<Self> {
+        if alpha <= A::zero() {
             return Err(OptimError::InvalidConfig(
                 "Alpha must be positive".to_string(),
             ));
         }
 
-        Ok(Self { _alpha })
+        Ok(Self { alpha })
     }
 
     /// Get a random mixing factor from Beta distribution
@@ -68,7 +69,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> MixUp<A> {
     ///
     /// Mixing factor lambda ~ Beta(alpha, alpha)
     fn get_mixing_factor(&self, seed: u64) -> A {
-        let mut rng = scirs2_core::random::Random::with_seed(seed);
+        let mut rng = scirs2_core::random::Random::seed(seed);
 
         // Use simple uniform distribution to approximate Beta for simplicity
         // For actual Beta distribution, we'd need more complex sampling
@@ -151,7 +152,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> MixUp<A> {
 ///
 /// ```no_run
 /// use ndarray::array;
-/// use scirs2__optim::regularizers::CutMix;
+/// use scirs2_optim::regularizers::CutMix;
 ///
 /// let cutmix = CutMix::new(1.0).unwrap();
 ///
@@ -178,14 +179,14 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
     /// # Errors
     ///
     /// Returns an error if beta is not positive
-    pub fn new(_beta: A) -> Result<Self> {
-        if _beta <= A::zero() {
+    pub fn new(beta: A) -> Result<Self> {
+        if beta <= A::zero() {
             return Err(OptimError::InvalidConfig(
                 "Beta must be positive".to_string(),
             ));
         }
 
-        Ok(Self { _beta })
+        Ok(Self { beta })
     }
 
     /// Generate a random bounding box for cutting
@@ -245,7 +246,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
     ///
     /// Mixing factor lambda ~ Beta(alpha, alpha)
     fn get_mixing_factor(&self, seed: u64) -> A {
-        let mut rng = scirs2_core::random::Random::with_seed(seed);
+        let mut rng = scirs2_core::random::Random::seed(seed);
 
         // For simplicity, we use a uniform distribution between 0 and 1
         // A proper Beta distribution would be used in a production implementation
@@ -283,7 +284,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
             ));
         }
 
-        let mut rng = scirs2_core::random::Random::with_seed(seed + 1); // Use different seed for shuffle
+        let mut rng = scirs2_core::random::Random::seed(seed + 1); // Use different seed for shuffle
         let lambda = self.get_mixing_factor(seed);
 
         // Create permutation for mixing using Fisher-Yates shuffle
@@ -342,12 +343,12 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
 impl<A: Float + Debug + ScalarOperand + FromPrimitive, D: Dimension> Regularizer<A, D>
     for MixUp<A>
 {
-    fn apply(&self_params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
+    fn apply(&self, _params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
         // MixUp is applied to inputs and labels, not model parameters
         Ok(A::zero())
     }
 
-    fn penalty(&self_params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
         // MixUp doesn't add a parameter penalty term
         Ok(A::zero())
     }
@@ -357,12 +358,12 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive, D: Dimension> Regularizer
 impl<A: Float + Debug + ScalarOperand + FromPrimitive, D: Dimension> Regularizer<A, D>
     for CutMix<A>
 {
-    fn apply(&self_params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
+    fn apply(&self, _params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
         // CutMix is applied to inputs and labels, not model parameters
         Ok(A::zero())
     }
 
-    fn penalty(&self_params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
         // CutMix doesn't add a parameter penalty term
         Ok(A::zero())
     }
@@ -460,7 +461,7 @@ mod tests {
         // Create 2 5x5 images with 1 channel (larger for more reliable mixing)
         let images = Array4::from_shape_fn(
             (2, 1, 5, 5),
-            |(i__y_x)| {
+            |(i_y_x)| {
                 if i == 0 {
                     1.0
                 } else {

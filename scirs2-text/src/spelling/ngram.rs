@@ -11,7 +11,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2__text::spelling::NGramModel;
+//! use scirs2_text::spelling::NGramModel;
 //!
 //! # fn main() {
 //! // Create a new trigram language model

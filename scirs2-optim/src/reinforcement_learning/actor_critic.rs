@@ -12,6 +12,7 @@ use super::{
 use crate::error::{OptimError, Result};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
+use rand::Rng;
 use std::collections::HashMap;
 
 /// Actor-Critic optimization methods
@@ -146,7 +147,7 @@ impl<T: Float> Default for ActorCriticConfig<T> {
             base_config: RLOptimizerConfig::default(),
             method: ActorCriticMethod::A2C,
             sac_config: SACConfig::default(),
-            td3_config: TD3, Config::default(),
+            td3_config: TD3Config::default(),
             ddpg_config: DDPGConfig::default(),
             use_target_networks: false,
             target_update_rate: T::from(0.005).unwrap(),
@@ -340,10 +341,10 @@ pub struct ExperienceReplayBuffer<T: Float> {
 
 impl<T: Float + Send + Sync> ExperienceReplayBuffer<T> {
     /// Create a new experience replay buffer
-    pub fn new(_max_size: usize, alpha: T, beta: T) -> Self {
+    pub fn new(max_size: usize, alpha: T, beta: T) -> Self {
         Self {
-            buffer: Vec::with_capacity(_max_size),
-            _max_size,
+            buffer: Vec::with_capacity(max_size),
+            max_size,
             position: 0,
             is_full: false,
             alpha,
@@ -404,7 +405,7 @@ impl<
     > ActorCriticOptimizer<T, P, V>
 {
     /// Create a new Actor-Critic optimizer
-    pub fn new(_config: ActorCriticConfig<T>, actor: P, critics: Vec<V>) -> Result<Self> {
+    pub fn new(config: ActorCriticConfig<T>, actor: P, critics: Vec<V>) -> Result<Self> {
         if critics.is_empty() {
             return Err(OptimError::InvalidConfig(
                 "At least one critic required".to_string(),
@@ -412,15 +413,15 @@ impl<
         }
 
         let replay_buffer = ExperienceReplayBuffer::new(
-            _config.replay_buffer_size,
-            _config.per_alpha,
-            _config.per_beta,
+            config.replay_buffer_size,
+            config.per_alpha,
+            config.per_beta,
         );
 
-        let temperature = _config.sac_config.temperature;
+        let temperature = config.sac_config.temperature;
 
         Ok(Self {
-            _config,
+            config,
             actor,
             critics,
             target_actor: None,
@@ -451,7 +452,10 @@ impl<
             ActorCriticMethod::SAC => self.update_sac(&experiences),
             ActorCriticMethod::TD3 => self.update_td3(&experiences),
             ActorCriticMethod::DDPG => self.update_ddpg(&experiences),
-            ActorCriticMethod::A2C => self.update_a2c_from_experiences(&experiences, _ => Err(OptimError::InvalidConfig(
+            ActorCriticMethod::A2C => Err(OptimError::InvalidConfig(
+                "Method not implemented".to_string(),
+            )),
+            _ => Err(OptimError::InvalidConfig(
                 "Method not implemented".to_string(),
             )),
         }
@@ -464,7 +468,10 @@ impl<
     ) -> Result<ActorCriticMetrics<T>> {
         match self.config.method {
             ActorCriticMethod::A2C => self.update_a2c(trajectory),
-            ActorCriticMethod::A3C => self.update_a3c(trajectory, _ => Err(OptimError::InvalidConfig(
+            ActorCriticMethod::A3C => Err(OptimError::InvalidConfig(
+                "Method requires experience replay".to_string(),
+            )),
+            _ => Err(OptimError::InvalidConfig(
                 "Method requires experience replay".to_string(),
             )),
         }

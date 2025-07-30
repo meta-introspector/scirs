@@ -53,7 +53,8 @@ impl ArffValue {
     /// Try to convert the value to a float if possible
     pub fn to_f64(&self) -> Option<f64> {
         match self {
-            ArffValue::Numeric(val) => Some(*val, _ => None,
+            ArffValue::Numeric(val) => Some(*val),
+            _ => None,
         }
     }
 
@@ -348,7 +349,7 @@ pub fn read_arff<P: AsRef<Path>>(_path: P) -> Result<ArffData> {
 /// // Get only the first 4 numeric attributes from the Iris dataset
 /// let numeric_attrs = arff_data.attributes.iter()
 ///     .take(4)
-///     .map(|(name_)| name.clone())
+///     .map(|(name, _)| name.clone())
 ///     .collect::<Vec<_>>();
 ///
 /// let matrix = get_numeric_matrix(&arff_data, &numeric_attrs).unwrap();
@@ -365,7 +366,7 @@ pub fn get_numeric_matrix(
 
     for attr_name in numeric_attributes {
         let mut found = false;
-        for (i, (name, attr_type)) in arff_data._attributes.iter().enumerate() {
+        for (i, (name, attr_type)) in arff_data.attributes.iter().enumerate() {
             if name == attr_name {
                 match attr_type {
                     AttributeType::Numeric => {
@@ -391,14 +392,14 @@ pub fn get_numeric_matrix(
     }
 
     // Create output matrix
-    let num_instances = arff_data._data.shape()[0];
+    let num_instances = arff_data.data.shape()[0];
     let num_selected = indices.len();
     let mut output = Array2::from_elem((num_instances, num_selected), f64::NAN);
 
     // Fill output matrix
     for (out_col, &in_col) in indices.iter().enumerate() {
         for row in 0..num_instances {
-            match &arff_data._data[[row, in_col]] {
+            match &arff_data.data[[row, in_col]] {
                 ArffValue::Numeric(val) => {
                     output[[row, out_col]] = *val;
                 }
@@ -494,12 +495,12 @@ pub fn write_arff<P: AsRef<Path>>(_path: P, arff_data: &ArffData) -> Result<()> 
         .map_err(|e| IoError::FileError(format!("Failed to write attribute: {e}")))?;
     }
 
-    // Write _data section header
-    writeln!(writer, "\n@_data")
-        .map_err(|e| IoError::FileError(format!("Failed to write _data header: {e}")))?;
+    // Write data section header
+    writeln!(writer, "\n@data")
+        .map_err(|e| IoError::FileError(format!("Failed to write data header: {e}")))?;
 
-    // Write _data lines
-    let shape = arff_data._data.shape();
+    // Write data lines
+    let shape = arff_data.data.shape();
     let num_instances = shape[0];
     let num_attributes = shape[1];
 
@@ -507,15 +508,15 @@ pub fn write_arff<P: AsRef<Path>>(_path: P, arff_data: &ArffData) -> Result<()> 
         let mut line = String::new();
 
         for j in 0..num_attributes {
-            let value = &arff_data._data[[i, j]];
+            let value = &arff_data.data[[i, j]];
             let attr_type = &arff_data.attributes[j].1;
 
             let value_str = match (value, attr_type) {
-                (ArffValue:: Missing) => "?".to_string(),
-                (ArffValue::Numeric(val)_) => val.to_string(),
-                (ArffValue::String(val)_) => format_arff_string(val),
-                (ArffValue::Date(val)_) => format_arff_string(val),
-                (ArffValue::Nominal(val)_) => format_arff_string(val),
+                (ArffValue::Missing, _) => "?".to_string(),
+                (ArffValue::Numeric(val), _) => val.to_string(),
+                (ArffValue::String(val), _) => format_arff_string(val),
+                (ArffValue::Date(val), _) => format_arff_string(val),
+                (ArffValue::Nominal(val), _) => format_arff_string(val),
             };
 
             if j > 0 {
@@ -525,7 +526,7 @@ pub fn write_arff<P: AsRef<Path>>(_path: P, arff_data: &ArffData) -> Result<()> 
         }
 
         writeln!(writer, "{line}")
-            .map_err(|e| IoError::FileError(format!("Failed to write _data line: {e}")))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write data line: {e}")))?;
     }
 
     Ok(())

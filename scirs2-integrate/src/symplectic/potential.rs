@@ -188,7 +188,7 @@ impl<F: IntegrateFloat> SeparableHamiltonian<F> {
 }
 
 impl<F: IntegrateFloat> HamiltonianFn<F> for SeparableHamiltonian<F> {
-    fn dq_dt(&self, t: F_q: &Array1<F>, p: &Array1<F>) -> IntegrateResult<Array1<F>> {
+    fn dq_dt(&self, t: F, q: &Array1<F>, p: &Array1<F>) -> IntegrateResult<Array1<F>> {
         // For separable Hamiltonian: dq/dt = ∂H/∂p = ∂T/∂p
         if let Some(grad) = &self.kinetic_gradient {
             Ok(grad(t, p))
@@ -214,7 +214,7 @@ impl<F: IntegrateFloat> HamiltonianFn<F> for SeparableHamiltonian<F> {
         }
     }
 
-    fn dp_dt(t: F, q: &Array1<F>, _p: &Array1<F>) -> IntegrateResult<Array1<F>> {
+    fn dp_dt(&self, t: F, q: &Array1<F>, _p: &Array1<F>) -> IntegrateResult<Array1<F>> {
         // For separable Hamiltonian: dp/dt = -∂H/∂q = -∂V/∂q
         if let Some(grad) = &self.potential_gradient {
             // Negate the gradient since dp/dt = -∇V(q)
@@ -318,14 +318,14 @@ impl<F: IntegrateFloat> HamiltonianFn<F> for HamiltonianSystem<F> {
         Ok((self.dq_dt_fn)(t, q, p))
     }
 
-    fn dp_dt(t: F, q: &Array1<F>, p: &Array1<F>) -> IntegrateResult<Array1<F>> {
+    fn dp_dt(&self, t: F, q: &Array1<F>, p: &Array1<F>) -> IntegrateResult<Array1<F>> {
         Ok((self.dp_dt_fn)(t, q, p))
     }
 
     fn hamiltonian(
         &self,
     ) -> Option<Box<dyn Fn(F, &Array1<F>, &Array1<F>) -> IntegrateResult<F> + '_>> {
-        if let Some(h_fn) = self.hamiltonian_fn {
+        if let Some(h_fn) = &self.hamiltonian_fn {
             let h = h_fn;
             Some(Box::new(move |t, q, p| Ok(h(t, q, p))))
         } else {

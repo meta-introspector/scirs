@@ -33,8 +33,8 @@ use std::marker::PhantomData;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__optim::optimizers::{SAM, SGD};
-/// use scirs2__optim::Optimizer;
+/// use scirs2_optim::optimizers::{SAM, SGD};
+/// use scirs2_optim::Optimizer;
 ///
 /// // Create a base optimizer
 /// let sgd = SGD::new(0.1);
@@ -81,26 +81,28 @@ where
     D: Dimension,
 {
     /// Creates a new SAM optimizer with the given inner optimizer and default settings
-    pub fn new(_inner_optimizer: O) -> Self {
+    pub fn new(inner_optimizer: O) -> Self {
         Self {
-            _inner_optimizer,
+            inner_optimizer,
             rho: A::from(0.05).unwrap(),
             epsilon: A::from(1e-12).unwrap(),
             adaptive: false,
             perturbed_params: None,
-            original_params: None, _phantom: PhantomData,
+            original_params: None,
+            _phantom: PhantomData,
         }
     }
 
     /// Creates a new SAM optimizer with the given inner optimizer and configuration
-    pub fn with_config(_inner_optimizer: O, rho: A, adaptive: bool) -> Self {
+    pub fn with_config(inner_optimizer: O, rho: A, adaptive: bool) -> Self {
         Self {
-            _inner_optimizer,
+            inner_optimizer,
             rho,
             epsilon: A::from(1e-12).unwrap(),
             adaptive,
             perturbed_params: None,
-            original_params: None, _phantom: PhantomData,
+            original_params: None,
+            _phantom: PhantomData,
         }
     }
 
@@ -215,7 +217,8 @@ where
     ///
     /// Updated parameters after applying the "sharpness-aware" update
     pub fn second_step(
-        &mut self_params: &Array<A, D>,
+        &mut self,
+        params: &Array<A, D>,
         gradients: &Array<A, D>,
     ) -> Result<Array<A, D>> {
         // Get original parameters
@@ -258,7 +261,8 @@ where
             epsilon: self.epsilon,
             adaptive: self.adaptive,
             perturbed_params: self.perturbed_params.clone(),
-            original_params: self.original_params.clone(), _phantom: PhantomData,
+            original_params: self.original_params.clone(),
+            _phantom: PhantomData,
         }
     }
 }
@@ -291,7 +295,7 @@ where
         // for both steps, which doesn't fully implement the SAM algorithm
 
         // First step: compute perturbed parameters
-        let (__) = self.first_step(params, gradients)?;
+        let (_) = self.first_step(params, gradients)?;
 
         // Second step: update with the same gradients
         // Note: In a real implementation, you should compute new gradients at the perturbed point
@@ -411,7 +415,7 @@ mod tests {
         let gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
 
         // First step to set up perturbed parameters
-        let (__) = optimizer.first_step(&params, &gradients).unwrap();
+        let (_) = optimizer.first_step(&params, &gradients).unwrap();
 
         // Simulate computing new gradients at perturbed point
         let new_gradients = Array1::from_vec(vec![0.15, 0.25, 0.35]);

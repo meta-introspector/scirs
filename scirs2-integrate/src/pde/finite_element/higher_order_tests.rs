@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests {
     // use super::*; // Unused import, commenting out
-    use crate::pde::finite__element::{
+    use crate::pde::finite_element::{
         ElementType, FEMOptions, FEMPoissonSolver, HigherOrderMeshGenerator, Point, ShapeFunctions,
         TriangularMesh, TriangularQuadrature,
     };

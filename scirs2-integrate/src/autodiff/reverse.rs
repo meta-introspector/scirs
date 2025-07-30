@@ -475,7 +475,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
     }
 
     /// Set checkpointing strategy
-    pub fn with_checkpoint_strategy(mut strategy: CheckpointStrategy) -> Self {
+    pub fn with_checkpoint_strategy(mut self, strategy: CheckpointStrategy) -> Self {
         self.checkpoint_strategy = strategy;
         self
     }

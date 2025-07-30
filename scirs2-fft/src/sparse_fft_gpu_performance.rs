@@ -5,11 +5,11 @@
 //! performance analysis, and runtime configuration.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse__fft::{SparseFFTAlgorithm, WindowFunction};
-use crate::sparse_fft_gpu__kernels::{
+use crate::sparse_fft::{SparseFFTAlgorithm, WindowFunction};
+use crate::sparse_fft_gpu_kernels::{
     KernelConfig, KernelFactory, KernelImplementation, KernelLauncher, KernelStats
 };
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 use std::time::{Duration, Instant};

@@ -29,8 +29,8 @@ use crate::window::Window;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__fft::mdct::mdct;
-/// use scirs2__fft::window::Window;
+/// use scirs2_fft::mdct::mdct;
+/// use scirs2_fft::window::Window;
 ///
 /// let signal = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 /// let mdct_result = mdct(&signal, 8, Some(Window::Hann)).unwrap();
@@ -99,8 +99,8 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__fft::mdct::{mdct, imdct};
-/// use scirs2__fft::window::Window;
+/// use scirs2_fft::mdct::{mdct, imdct};
+/// use scirs2_fft::window::Window;
 ///
 /// let signal = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 /// let mdct_coeffs = mdct(&signal, 8, Some(Window::Hann)).unwrap();

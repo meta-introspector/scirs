@@ -26,7 +26,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::tensor_cores::{TensorCoreDistanceMatrix, TensorCoreClustering};
+//! use scirs2_spatial::tensor_cores::{TensorCoreDistanceMatrix, TensorCoreClustering};
 //! use ndarray::array;
 //!
 //! // Tensor core distance matrix computation
@@ -954,7 +954,7 @@ impl TensorCoreDistanceMatrix {
             PrecisionMode::Full32 => self.compute_distances_fp32(points_i, points_j).await,
             PrecisionMode::Mixed16 => self.compute_distances_mixed16(points_i, points_j).await,
             PrecisionMode::BrainFloat16 => self.compute_distances_bf16(points_i, points_j).await,
-            PrecisionMode::Int8Dynamic => self.compute_distances_int8(points_i, points_j).await_ => self.compute_distances_fp32(points_i, points_j).await,
+            PrecisionMode::Int8Dynamic => self.compute_distances_int8(points_i, points_j).await,
         }
     }
 
@@ -1532,7 +1532,7 @@ impl TensorCoreClustering {
 }
 
 impl Default for StabilityMetrics {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -1600,7 +1600,7 @@ impl StabilityMetrics {
 }
 
 impl Default for DynamicPrecisionConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             strategy: ScalingStrategy::Balanced,
             min_precision: PrecisionMode::Int8Dynamic,
@@ -1735,11 +1735,11 @@ impl NumericalStabilityMonitor {
     /// Increase precision mode
     fn increase_precision(_current: PrecisionMode) -> PrecisionMode {
         match _current {
-            PrecisionMode::Int4Advanced =>, PrecisionMode::Int8Dynamic,
-            PrecisionMode::Int8Dynamic =>, PrecisionMode::Mixed16,
-            PrecisionMode::Mixed16 =>, PrecisionMode::BrainFloat16,
-            PrecisionMode::BrainFloat16 =>, PrecisionMode::Full32,
-            PrecisionMode::Full32 =>, PrecisionMode::Full32, // Already at max
+            PrecisionMode::Int4Advanced => PrecisionMode::Int8Dynamic,
+            PrecisionMode::Int8Dynamic => PrecisionMode::Mixed16,
+            PrecisionMode::Mixed16 => PrecisionMode::BrainFloat16,
+            PrecisionMode::BrainFloat16 => PrecisionMode::Full32,
+            PrecisionMode::Full32 => PrecisionMode::Full32, // Already at max
             _ => PrecisionMode::Mixed16,
         }
     }
@@ -1747,11 +1747,11 @@ impl NumericalStabilityMonitor {
     /// Decrease precision mode
     fn decrease_precision(_current: PrecisionMode) -> PrecisionMode {
         match _current {
-            PrecisionMode::Full32 =>, PrecisionMode::BrainFloat16,
-            PrecisionMode::BrainFloat16 =>, PrecisionMode::Mixed16,
-            PrecisionMode::Mixed16 =>, PrecisionMode::Int8Dynamic,
-            PrecisionMode::Int8Dynamic =>, PrecisionMode::Int4Advanced,
-            PrecisionMode::Int4Advanced =>, PrecisionMode::Int4Advanced, // Already at min
+            PrecisionMode::Full32 => PrecisionMode::BrainFloat16,
+            PrecisionMode::BrainFloat16 => PrecisionMode::Mixed16,
+            PrecisionMode::Mixed16 => PrecisionMode::Int8Dynamic,
+            PrecisionMode::Int8Dynamic => PrecisionMode::Int4Advanced,
+            PrecisionMode::Int4Advanced => PrecisionMode::Int4Advanced, // Already at min
             _ => PrecisionMode::Mixed16,
         }
     }
@@ -1785,7 +1785,8 @@ impl NumericalStabilityMonitor {
                 PrecisionMode::Full32 => 2.22e-16,
                 PrecisionMode::Mixed16 | PrecisionMode::BrainFloat16 => 9.77e-4,
                 PrecisionMode::Int8Dynamic => 1.0 / 256.0,
-                PrecisionMode::Int4Advanced => 1.0 / 16.0_ => 1e-6,
+                PrecisionMode::Int4Advanced => 1.0 / 16.0,
+                _ => 1e-6,
             };
             machine_eps * self.current_metrics.condition_number
         } else {
@@ -1816,7 +1817,7 @@ impl NumericalStabilityMonitor {
 }
 
 impl Default for ErrorRecoverySystem {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -2177,10 +2178,12 @@ impl AdvancedTensorCoreDistanceMatrix {
         match _action {
             RecoveryAction::IncreasePrecision => {
                 self.base_computer.precision_mode = match self.base_computer.precision_mode {
-                    PrecisionMode::Int4Advanced =>, PrecisionMode::Int8Dynamic,
-                    PrecisionMode::Int8Dynamic =>, PrecisionMode::Mixed16,
-                    PrecisionMode::Mixed16 =>, PrecisionMode::BrainFloat16,
-                    PrecisionMode::BrainFloat16 => PrecisionMode::Full32_ =>, PrecisionMode::Full32,
+                    PrecisionMode::Int4Advanced => PrecisionMode::Int8Dynamic,
+                    PrecisionMode::Int8Dynamic => PrecisionMode::Mixed16,
+                    PrecisionMode::Mixed16 => PrecisionMode::BrainFloat16,
+                    PrecisionMode::BrainFloat16 => PrecisionMode::Full32,
+                    PrecisionMode::Full32 => PrecisionMode::Full32,
+                    _ => PrecisionMode::Mixed16,
                 };
             }
             RecoveryAction::ReduceTileSize => {

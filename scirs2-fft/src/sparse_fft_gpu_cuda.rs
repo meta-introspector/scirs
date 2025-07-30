@@ -4,10 +4,10 @@
 //! the scirs2-core::gpu module. All direct GPU API calls are forbidden.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse__fft::{
+use crate::sparse_fft::{
     SparseFFTAlgorithm, SparseFFTConfig, SparseFFTResult, SparsityEstimationMethod, WindowFunction,
 };
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::gpu::{GpuBackend, GpuDevice};
 use scirs2_core::simd_ops::PlatformCapabilities;
@@ -41,7 +41,7 @@ pub struct GpuStream {
 }
 
 impl GpuStream {
-    pub fn new(_device_id: i32) -> FFTResult<Self> {
+    pub fn new(device_id: i32) -> FFTResult<Self> {
         Err(FFTError::NotImplementedError(
             "GPU streams need to be implemented with scirs2-core::gpu abstractions".to_string(),
         ))
@@ -61,7 +61,7 @@ impl GpuMemoryManager {
         ))
     }
 
-    pub fn free(&self_descriptor: BufferDescriptor) -> FFTResult<()> {
+    pub fn free(descriptor: BufferDescriptor) -> FFTResult<()> {
         Err(FFTError::NotImplementedError(
             "GPU memory management needs to be implemented with scirs2-core::gpu abstractions"
                 .to_string(),
@@ -126,21 +126,21 @@ pub struct FftGpuContext {
 
 impl FftGpuContext {
     /// Create a new FFT GPU context for the specified device
-    pub fn new(_device_id: i32) -> FFTResult<Self> {
+    pub fn new(device_id: i32) -> FFTResult<Self> {
         // Create core GPU context
         let gpu_backend = scirs2_core::gpu::GpuBackend::Cuda;
         let core_context = scirs2_core::gpu::GpuContext::new(gpu_backend)
             .map_err(|e| FFTError::ComputationError(e.to_string()))?;
 
         // Create device info using core abstractions
-        let device_info = GpuDeviceInfo::new(_device_id as usize)?;
+        let device_info = GpuDeviceInfo::new(device_id as usize)?;
 
         // Create stream
-        let stream = GpuStream::new(_device_id)?;
+        let stream = GpuStream::new(device_id)?;
 
         Ok(Self {
             core_context,
-            _device_id,
+            device_id,
             device_info,
             stream,
             initialized: true,
@@ -174,7 +174,7 @@ impl FftGpuContext {
         // Use the global memory manager to track allocations
         let manager = get_global_memory_manager()?;
 
-        manager.free(descriptor)
+        GpuMemoryManager::free(descriptor)
     }
 
     /// Copy data from host to device
@@ -191,7 +191,7 @@ impl FftGpuContext {
 
         if host_size_bytes > device_size_bytes {
             return Err(FFTError::DimensionError(format!(
-                "Host _buffer size ({host_size_bytes} bytes) exceeds device _buffer size ({device_size_bytes} bytes)"
+                "Host buffer size ({host_size_bytes} bytes) exceeds device buffer size ({device_size_bytes} bytes)"
             )));
         }
 
@@ -212,7 +212,7 @@ impl FftGpuContext {
 
         if device_size_bytes > host_size_bytes {
             return Err(FFTError::DimensionError(format!(
-                "Device _buffer size ({device_size_bytes} bytes) exceeds host _buffer size ({host_size_bytes} bytes)"
+                "Device buffer size ({device_size_bytes} bytes) exceeds host buffer size ({host_size_bytes} bytes)"
             )));
         }
 
@@ -259,7 +259,7 @@ impl GpuSparseFFT {
 
         // Allocate input buffer
         let input_buffer = memory_manager.allocate(
-            signal_size * std::mem::_size_of::<Complex64>(),
+            signal_size * std::mem::size_of::<Complex64>(),
             BufferLocation::Device,
             BufferType::Input,
         )?;
@@ -269,14 +269,14 @@ impl GpuSparseFFT {
         let max_components = self.config.sparsity.min(signal_size);
 
         let output_values_buffer = memory_manager.allocate(
-            max_components * std::mem::_size_of::<Complex64>(),
+            max_components * std::mem::size_of::<Complex64>(),
             BufferLocation::Device,
             BufferType::Output,
         )?;
         self.output_values_buffer = Some(output_values_buffer);
 
         let output_indices_buffer = memory_manager.allocate(
-            max_components * std::mem::_size_of::<usize>(),
+            max_components * std::mem::size_of::<usize>(),
             BufferLocation::Device,
             BufferType::Output,
         )?;
@@ -289,15 +289,15 @@ impl GpuSparseFFT {
     fn free_buffers(&mut self) -> FFTResult<()> {
         if let Ok(memory_manager) = get_global_memory_manager() {
             if let Some(buffer) = self.input_buffer.take() {
-                memory_manager.free(buffer)?;
+                GpuMemoryManager::free(buffer)?;
             }
 
             if let Some(buffer) = self.output_values_buffer.take() {
-                memory_manager.free(buffer)?;
+                GpuMemoryManager::free(buffer)?;
             }
 
             if let Some(buffer) = self.output_indices_buffer.take() {
-                memory_manager.free(buffer)?;
+                GpuMemoryManager::free(buffer)?;
             }
         }
 
@@ -514,7 +514,7 @@ pub fn get_cuda_devices() -> FFTResult<Vec<GpuDeviceInfo>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sparse_fft_gpu__memory::AllocationStrategy;
+    use crate::sparse_fft_gpu_memory::AllocationStrategy;
     use std::f64::consts::PI;
 
     // Helper function to create a sparse signal

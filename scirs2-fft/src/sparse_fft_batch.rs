@@ -5,12 +5,12 @@
 //! especially on GPU hardware.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse__fft::{
+use crate::sparse_fft::{
     SparseFFTAlgorithm, SparseFFTConfig, SparseFFTResult, SparsityEstimationMethod, WindowFunction,
 };
-use crate::sparse_fft__gpu::{GPUBackend, GPUSparseFFTConfig};
+use crate::sparse_fft_gpu::{GPUBackend, GPUSparseFFTConfig};
 
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::parallel_ops::*;
 use std::fmt::Debug;

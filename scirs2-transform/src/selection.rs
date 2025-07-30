@@ -546,7 +546,7 @@ impl MutualInfoSelector {
         let mut scores = Array1::zeros(n_features);
 
         for j in 0..n_features {
-            let feature = x.column(j).to_owned();
+            let feature = "x".column(j).to_owned();
             scores[j] = self.estimate_mutual_info(&feature, y);
         }
 
@@ -776,7 +776,7 @@ mod tests {
             let mut scores = Array1::zeros(n_features);
 
             for j in 0..n_features {
-                let feature = x.column(j);
+                let feature = "x".column(j);
                 let corr = pearson_correlation(&feature.to_owned(), y);
                 scores[j] = corr.abs();
             }

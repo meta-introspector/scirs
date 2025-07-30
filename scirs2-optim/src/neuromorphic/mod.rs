@@ -16,9 +16,9 @@ pub mod event_driven;
 pub mod energy_efficient;
 
 // Re-export key types
-pub use spike__based::{SpikingOptimizer, SpikingConfig, SpikeTrainOptimizer};
-pub use event__driven::{EventDrivenOptimizer, EventDrivenConfig, EventType};
-pub use energy__efficient::{EnergyEfficientOptimizer, EnergyOptimizationStrategy, EnergyBudget};
+pub use spike_based::{SpikingOptimizer, SpikingConfig, SpikeTrainOptimizer};
+pub use event_driven::{EventDrivenOptimizer, EventDrivenConfig, EventType};
+pub use energy_efficient::{EnergyEfficientOptimizer, EnergyOptimizationStrategy, EnergyBudget};
 
 /// Neuromorphic computing platform types
 #[derive(Debug, Clone, Copy)]

@@ -610,7 +610,7 @@ pub mod alpha6_api {
         ///
         /// ```
         /// use scirs2_core::{CoreResult, CoreError};
-        /// # #[cfg(all(feature = simd, feature = parallel, feature = "memory_efficient"))]
+        /// # #[cfg(all(feature = "simd", feature = "parallel", feature = "memory_efficient"))]
         /// use scirs2_core::{
         ///     memory_efficient::AdaptiveChunkingParams,
         /// };

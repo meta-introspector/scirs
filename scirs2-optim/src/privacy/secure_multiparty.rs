@@ -7,6 +7,7 @@
 use crate::error::{OptimError, Result};
 use ndarray::Array1;
 use num_traits::Float;
+use rand::Rng;
 use std::collections::HashMap;
 
 /// Secure Multi-Party Computation coordinator
@@ -186,12 +187,12 @@ pub struct ShamirSecretSharing<T: Float> {
 
 impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
     /// Create new secret sharing instance
-    pub fn new(_threshold: usize, num_shares: usize) -> Self {
+    pub fn new(threshold: usize, num_shares: usize) -> Self {
         // Use a large prime for field arithmetic
         let prime_field = 2u128.pow(127) - 1; // Mersenne prime
 
         Self {
-            _threshold,
+            threshold,
             num_shares,
             prime_field,
             coefficients: Vec::new(),
@@ -201,7 +202,7 @@ impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
     /// Share a secret value
     pub fn share_secret(&mut self, secret: T) -> Result<Vec<(usize, T)>> {
         // Generate random polynomial coefficients
-        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::seed(42);
         self.coefficients.clear();
         self.coefficients.push(secret); // a0 = secret
 
@@ -235,7 +236,7 @@ impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
         for (i, &(xi, yi)) in shares.iter().enumerate().take(self.threshold) {
             let mut lagrange_coeff = T::one();
 
-            for (j, &(xj_)) in shares.iter().enumerate().take(self.threshold) {
+            for (j, &(xj, _)) in shares.iter().enumerate().take(self.threshold) {
                 if i != j {
                     let xi_f = T::from(xi).unwrap();
                     let xj_f = T::from(xj).unwrap();
@@ -280,9 +281,9 @@ pub struct CryptographicAggregator<T: Float> {
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand> CryptographicAggregator<T> {
     /// Create new cryptographic aggregator
-    pub fn new(_config: SMPCConfig) -> Self {
+    pub fn new(config: SMPCConfig) -> Self {
         Self {
-            _config,
+            config,
             commitment_scheme: CommitmentScheme::new(),
             verification_params: VerificationParameters::new(),
             aggregation_proofs: Vec::new(),
@@ -451,11 +452,12 @@ pub struct CommitmentScheme<T: Float> {
 impl<T: Float + Send + Sync> CommitmentScheme<T> {
     /// Create new commitment scheme
     pub fn new() -> Self {
-        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::seed(42);
         let commitment_key: Vec<u8> = (0..32).map(|_| rng.gen_range(0..255)).collect();
 
         Self {
-            commitment_key_phantom: std::marker::PhantomData,
+            commitment_key,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -488,7 +490,7 @@ pub struct VerificationParameters<T: Float> {
 impl<T: Float + Send + Sync> VerificationParameters<T> {
     /// Create new verification parameters
     pub fn new() -> Self {
-        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::seed(42);
         let verification_key: Vec<u8> = (0..64).map(|_| rng.gen_range(0..255)).collect();
 
         Self {
@@ -525,11 +527,11 @@ pub struct ProofParameters<T: Float> {
 impl<T: Float + Send + Sync> ProofParameters<T> {
     /// Create new proof parameters
     pub fn new() -> Self {
-        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::seed(42);
         let generators: Vec<T> = (0..16)
             .map(|_| T::from(rng.gen_range(0.0..1.0)).unwrap())
             .collect();
-        let system_params: Vec<u8> = (0..128).map(|_| rng.random_range(0..255)).collect();
+        let system_params: Vec<u8> = (0..128).map(|_| rng.random_range(0, 255)).collect();
 
         Self {
             generators,
@@ -553,7 +555,7 @@ pub struct HomomorphicEngine<T: Float> {
 impl<T: Float + Send + Sync> HomomorphicEngine<T> {
     /// Create new homomorphic encryption engine
     pub fn new() -> Self {
-        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::seed(42);
         let public_key: Vec<u8> = (0..256).map(|_| rng.gen_range(0..255)).collect();
         let private_key: Vec<u8> = (0..256).map(|_| rng.gen_range(0..255)).collect();
 
@@ -667,7 +669,7 @@ pub struct HomomorphicParameters<T: Float> {
 impl<T: Float + Send + Sync> HomomorphicParameters<T> {
     /// Create new homomorphic parameters
     pub fn new() -> Self {
-        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::seed(42);
         let noise_params: Vec<T> = (0..8)
             .map(|_| T::from(rng.gen_range(0.0..1.0)).unwrap())
             .collect();
@@ -701,7 +703,7 @@ pub struct ZKProofSystem<T: Float> {
 impl<T: Float + Send + Sync> ZKProofSystem<T> {
     /// Create new zero-knowledge proof system
     pub fn new() -> Self {
-        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::seed(42);
         let crs: Vec<u8> = (0..512).map(|_| rng.gen_range(0..255)).collect();
 
         Self {
@@ -781,7 +783,7 @@ pub struct ZKProofParameters<T: Float> {
 impl<T: Float + Send + Sync> ZKProofParameters<T> {
     /// Create new ZK proof parameters
     pub fn new() -> Self {
-        let mut rng = scirs2_core::random::Random::with_seed(42);
+        let mut rng = scirs2_core::random::Random::seed(42);
         let circuit_params: Vec<T> = (0..16)
             .map(|_| T::from(rng.gen_range(0.0..1.0)).unwrap())
             .collect();
@@ -862,14 +864,14 @@ pub struct SecureAggregationResult<T: Float> {
 
 impl<T: Float + Send + Sync + ndarray::ScalarOperand> SMPCCoordinator<T> {
     /// Create new SMPC coordinator
-    pub fn new(_config: SMPCConfig) -> Result<Self> {
-        let secret_sharing = ShamirSecretSharing::new(_config.threshold, _config.num_participants);
-        let secure_aggregator = CryptographicAggregator::new(_config.clone());
+    pub fn new(config: SMPCConfig) -> Result<Self> {
+        let secret_sharing = ShamirSecretSharing::new(config.threshold, config.num_participants);
+        let secure_aggregator = CryptographicAggregator::new(config.clone());
         let homomorphic_engine = HomomorphicEngine::new();
         let zk_proof_system = ZKProofSystem::new();
 
         Ok(Self {
-            _config,
+            config,
             secret_sharing,
             secure_aggregator,
             homomorphic_engine,

@@ -9,7 +9,7 @@
 //! cargo run --example memory_mapped_parallel --features="memory_efficient parallel"
 //! ```
 
-#[cfg(all(feature = memory_efficient, feature = parallel))]
+#[cfg(all(feature = "memory_efficient", feature = "parallel"))]
 #[allow(dead_code)]
 fn main() {
     use ndarray::Array1;
@@ -132,7 +132,7 @@ fn main() {
     println!("\nSuccessfully completed all operations!");
 }
 
-#[cfg(not(all(feature = memory_efficient, feature = parallel)))]
+#[cfg(not(all(feature = "memory_efficient", feature = "parallel")))]
 #[allow(dead_code)]
 fn main() {
     println!("This example requires the 'memory_efficient' and 'parallel' features.");

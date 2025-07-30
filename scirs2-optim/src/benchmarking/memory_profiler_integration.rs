@@ -4,7 +4,7 @@
 //! that integrates with external profiling tools and provides actionable insights
 //! for optimization algorithms and their memory usage patterns.
 
-use crate::benchmarking::memory_leak__detector::{
+use crate::benchmarking::memory_leak_detector::{
     MemoryLeakDetector, MemoryDetectionConfig, MemoryOptimizationReport, 
     AllocationEvent, AllocationType
 };

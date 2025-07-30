@@ -33,13 +33,13 @@ pub use self::chemical::{
 };
 
 // Re-export enzyme kinetics types
-pub use self::enzyme__kinetics::{
+pub use self::enzyme_kinetics::{
     pathways as metabolic_pathways, EnzymeDefinition, EnzymeMechanism, EnzymeParameters,
     MetabolicPathway, PathwayAnalysis, RegulationType,
 };
 
 // Re-export chemical equilibrium types
-pub use self::chemical__equilibrium::{
+pub use self::chemical_equilibrium::{
     systems as equilibrium_systems, ActivityModel, EquilibriumCalculator, EquilibriumResult,
     EquilibriumType, ThermoData,
 };

@@ -142,11 +142,11 @@ where
     let reader = BufReader::new(file);
 
     let serialized: SerializedArray<A> = match format {
-        SerializationFormat::Binary =>, bincode::deserialize_from(reader)
+        SerializationFormat::Binary => bincode::deserialize_from(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
-        SerializationFormat::JSON =>, serde_json::from_reader(reader)
+        SerializationFormat::JSON => serde_json::from_reader(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
-        SerializationFormat::MessagePack =>, rmp_serde::from_read(reader)
+        SerializationFormat::MessagePack => rmp_serde::from_read(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
     };
 
@@ -307,11 +307,11 @@ where
     let reader = BufReader::new(file);
 
     let serialized: SerializedArray<A> = match format {
-        SerializationFormat::Binary =>, bincode::deserialize_from(reader)
+        SerializationFormat::Binary => bincode::deserialize_from(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
-        SerializationFormat::JSON =>, serde_json::from_reader(reader)
+        SerializationFormat::JSON => serde_json::from_reader(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
-        SerializationFormat::MessagePack =>, rmp_serde::from_read(reader)
+        SerializationFormat::MessagePack => rmp_serde::from_read(reader)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?,
     };
 
@@ -858,7 +858,7 @@ impl<A: Clone> SparseMatrix<A> {
     /// Get memory usage estimate in bytes
     pub fn memory_usage(&self) -> usize {
         let coo_size = self.coo_data.values.len()
-            * (std::mem::size_of::<A>() + 2 * std::mem::size, _of::<usize>());
+            * (std::mem::size_of::<A>() + 2 * std::mem::size_of::<usize>());
 
         let csr_size = if let Some(ref csr) = self.csr_data {
             csr.values.len() * std::mem::size_of::<A>()

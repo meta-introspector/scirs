@@ -19,7 +19,7 @@ use std::fmt::{self, Debug};
 /// # Example
 ///
 /// ```
-/// use scirs2__optim::schedulers::{OneCycle, LearningRateScheduler};
+/// use scirs2_optim::schedulers::{OneCycle, LearningRateScheduler};
 ///
 /// let mut scheduler = OneCycle::new(
 ///     0.0001,  // initial learning rate
@@ -70,13 +70,13 @@ impl<A: Float + ScalarOperand + std::fmt::Debug> OneCycle<A> {
     /// * `max_lr` - Maximum learning rate reached after warm-up
     /// * `total_steps` - Total number of training steps
     /// * `warmup_frac` - Fraction of total steps used for warm-up (typically 0.2-0.3)
-    pub fn new(_initial_lr: A, max_lr: A, total_steps: usize, warmup_frac: f64) -> Self {
+    pub fn new(initial_lr: A, max_lr: A, total_steps: usize, warmup_frac: f64) -> Self {
         let warmup_steps = (total_steps as f64 * warmup_frac) as usize;
-        let div_factor = max_lr / _initial_lr;
+        let div_factor = max_lr / initial_lr;
         let final_div_factor = A::from(10000.0).unwrap(); // Very small final LR
 
         Self {
-            _initial_lr,
+            initial_lr,
             max_lr,
             final_lr: None,
             total_steps,
@@ -190,7 +190,7 @@ impl<A: Float + ScalarOperand + Debug> LearningRateScheduler<A> for OneCycle<A> 
     }
 }
 
-impl<A: Float + Debug>, fmt::Debug for OneCycle<A> {
+impl<A: Float + Debug> fmt::Debug for OneCycle<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("OneCycle")
             .field("initial_lr", &self.initial_lr)

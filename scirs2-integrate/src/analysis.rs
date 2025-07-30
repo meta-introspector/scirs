@@ -4,9 +4,9 @@
 //! including bifurcation analysis and stability assessment.
 
 // LyapunovCalculator is defined in this module
-use crate::error::{IntegrateError, IntegrateResult as Result};
+use crate::error::{IntegrateError, IntegrateResult, Result};
 use ndarray::{s, Array1, Array2};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use rand::Rng;
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -222,7 +222,7 @@ impl BifurcationAnalyzer {
         &self,
         system: F,
         initial_guess: &Array1<f64>,
-    ) -> Result<Vec<BifurcationPoint>>
+    ) -> IntegrateResult<Vec<BifurcationPoint>>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64> + Send + Sync,
     {
@@ -292,7 +292,7 @@ impl BifurcationAnalyzer {
         samples_1: usize,
         samples_2: usize,
         initial_guess: &Array1<f64>,
-    ) -> Result<TwoParameterBifurcationResult>
+    ) -> IntegrateResult<TwoParameterBifurcationResult>
     where
         F: Fn(&Array1<f64>, f64, f64) -> Array1<f64> + Send + Sync,
     {
@@ -311,7 +311,7 @@ impl BifurcationAnalyzer {
 
                 // Find fixed point and analyze stability
                 // Create a wrapper system with combined parameters
-                let combined_system = |x: &Array1<f64>_: f64| system(x, param_1, param_2);
+                let combined_system = |x: &Array1<f64>, _: f64| system(x, param_1, param_2);
                 match self.find_fixed_point(&combined_system, initial_guess, 0.0) {
                     Ok(fixed_point) => {
                         let jacobian = self.compute_jacobian_two_param(
@@ -375,7 +375,7 @@ impl BifurcationAnalyzer {
         direction: &Array1<f64>,
         step_size: f64,
         max_steps: usize,
-    ) -> Result<ContinuationResult>
+    ) -> IntegrateResult<ContinuationResult>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64> + Send + Sync,
     {
@@ -441,7 +441,7 @@ impl BifurcationAnalyzer {
         nominal_parameters: &HashMap<String, f64>,
         parameter_perturbations: &HashMap<String, f64>,
         nominal_state: &Array1<f64>,
-    ) -> Result<SensitivityAnalysisResult>
+    ) -> IntegrateResult<SensitivityAnalysisResult>
     where
         F: Fn(&Array1<f64>, &HashMap<String, f64>) -> Array1<f64> + Send + Sync,
     {
@@ -501,7 +501,7 @@ impl BifurcationAnalyzer {
         &self,
         system: F,
         bifurcation_point: &BifurcationPoint,
-    ) -> Result<NormalFormResult>
+    ) -> IntegrateResult<NormalFormResult>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64> + Send + Sync,
     {
@@ -527,7 +527,7 @@ impl BifurcationAnalyzer {
         system: &F,
         initial_guess: &Array1<f64>,
         parameter: f64,
-    ) -> Result<Array1<f64>>
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
     {
@@ -566,7 +566,7 @@ impl BifurcationAnalyzer {
         system: &F,
         x: &Array1<f64>,
         parameter: f64,
-    ) -> Result<Array2<f64>>
+    ) -> IntegrateResult<Array2<f64>>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
     {
@@ -603,7 +603,7 @@ impl BifurcationAnalyzer {
         initial_guess: &Array1<f64>,
         parameter1: f64,
         parameter2: f64,
-    ) -> Result<Array1<f64>>
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: Fn(&Array1<f64>, f64, f64) -> Array1<f64>,
     {
@@ -643,7 +643,7 @@ impl BifurcationAnalyzer {
         x: &Array1<f64>,
         parameter1: f64,
         parameter2: f64,
-    ) -> Result<Array2<f64>>
+    ) -> IntegrateResult<Array2<f64>>
     where
         F: Fn(&Array1<f64>, f64, f64) -> Array1<f64>,
     {
@@ -667,7 +667,7 @@ impl BifurcationAnalyzer {
     }
 
     /// Compute eigenvalues of a matrix using QR algorithm
-    fn compute_eigenvalues(_matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+    fn compute_eigenvalues(&self, _matrix: &Array2<f64>) -> IntegrateResult<Vec<Complex64>> {
         // Convert to complex _matrix for eigenvalue computation
         let n = _matrix.nrows();
         let mut a = Array2::<Complex64>::zeros((n, n));
@@ -714,7 +714,7 @@ impl BifurcationAnalyzer {
     fn qr_decomposition(
         &self,
         a: &Array2<Complex64>,
-    ) -> Result<(Array2<Complex64>, Array2<Complex64>)> {
+    ) -> IntegrateResult<(Array2<Complex64>, Array2<Complex64>)> {
         let (m, n) = a.dim();
         let mut q = Array2::<Complex64>::zeros((m, n));
         let mut r = Array2::<Complex64>::zeros((n, n));
@@ -771,7 +771,7 @@ impl BifurcationAnalyzer {
         &self,
         a: &Array2<Complex64>,
         b: &Array2<Complex64>,
-    ) -> Result<Array2<Complex64>> {
+    ) -> IntegrateResult<Array2<Complex64>> {
         let (m, k1) = a.dim();
         let (k2, n) = b.dim();
 
@@ -1314,7 +1314,7 @@ impl BifurcationAnalyzer {
         system: F,
         initial_solution: &Array1<f64>,
         initial_parameter: f64,
-    ) -> Result<Vec<BifurcationPoint>>
+    ) -> IntegrateResult<Vec<BifurcationPoint>>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64> + Send + Sync,
     {
@@ -1388,7 +1388,7 @@ impl BifurcationAnalyzer {
         system: &F,
         predicted_solution: &Array1<f64>,
         predicted_parameter: f64,
-    ) -> Result<(Array1<f64>, f64)>
+    ) -> IntegrateResult<(Array1<f64>, f64)>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
     {
@@ -1422,7 +1422,7 @@ impl BifurcationAnalyzer {
     }
 
     /// Solve linear system using LU decomposition
-    fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+    fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> IntegrateResult<Array1<f64>> {
         let n = a.nrows();
         let mut lu = a.clone();
         let mut x = b.clone();
@@ -1504,7 +1504,7 @@ impl BifurcationAnalyzer {
     fn compute_tangent_vector<F>(
         &self_system: &F,
         point: &Array1<f64>, _parameter: f64,
-    ) -> Result<Array1<f64>>
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
     {
@@ -1522,8 +1522,8 @@ impl BifurcationAnalyzer {
 
     /// Compute parameter interaction effects
     fn compute_parameter_interaction<F>(
-        &self_system: &F_nominal, _parameters: &std::collections::HashMap<String, f64>, _nominal_state: &Array1<f64>, _param1: &str_param2: &str, _pert1: f64_pert2: f64,
-    ) -> Result<Array1<f64>>
+        &self, _system: &F, _nominal_parameters: &std::collections::HashMap<String, f64>, _nominal_state: &Array1<f64>, _param1: &str, _param2: &str, _pert1: f64, _pert2: f64,
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: Fn(&Array1<f64>, &std::collections::HashMap<String, f64>) -> Array1<f64>,
     {
@@ -1534,7 +1534,7 @@ impl BifurcationAnalyzer {
     /// Hopf normal form analysis
     fn hopf_normal_form<F>(
         &self_system: &F_bifurcation, _point: &BifurcationPoint,
-    ) -> Result<NormalFormResult>
+    ) -> IntegrateResult<NormalFormResult>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
     {
@@ -1549,7 +1549,7 @@ impl BifurcationAnalyzer {
     /// Fold normal form analysis
     fn fold_normal_form<F>(
         &self_system: &F_bifurcation, _point: &BifurcationPoint,
-    ) -> Result<NormalFormResult>
+    ) -> IntegrateResult<NormalFormResult>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
     {
@@ -1564,7 +1564,7 @@ impl BifurcationAnalyzer {
     /// Pitchfork normal form analysis
     fn pitchfork_normal_form<F>(
         &self_system: &F_bifurcation, _point: &BifurcationPoint,
-    ) -> Result<NormalFormResult>
+    ) -> IntegrateResult<NormalFormResult>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
     {
@@ -1579,7 +1579,7 @@ impl BifurcationAnalyzer {
     /// Transcritical normal form analysis
     fn transcritical_normal_form<F>(
         &self_system: &F_bifurcation, _point: &BifurcationPoint,
-    ) -> Result<NormalFormResult>
+    ) -> IntegrateResult<NormalFormResult>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,
     {
@@ -1761,7 +1761,7 @@ impl StabilityAnalyzer {
     }
 
     /// Perform comprehensive stability analysis
-    pub fn analyze_stability<F>(_system: F, domain: &[(f64, f64)]) -> Result<StabilityResult>
+    pub fn analyze_stability<F>(_system: F, domain: &[(f64, f64)]) -> IntegrateResult<StabilityResult>
     where
         F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync + Clone + 'static,
     {
@@ -1790,7 +1790,7 @@ impl StabilityAnalyzer {
     }
 
     /// Find fixed points in the given domain
-    fn find_fixed_points<F>(_system: &F, domain: &[(f64, f64)]) -> Result<Vec<FixedPoint>>
+    fn find_fixed_points<F>(_system: &F, domain: &[(f64, f64)]) -> IntegrateResult<Vec<FixedPoint>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -1879,7 +1879,7 @@ impl StabilityAnalyzer {
         &self,
         system: &F,
         initial_guess: &Array1<f64>,
-    ) -> Result<Array1<f64>>
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -1921,7 +1921,7 @@ impl StabilityAnalyzer {
     }
 
     /// Compute Jacobian at a specific point
-    fn compute_jacobian_at_point<F>(_system: &F, x: &Array1<f64>) -> Result<Array2<f64>>
+    fn compute_jacobian_at_point<F>(_system: &F, x: &Array1<f64>) -> IntegrateResult<Array2<f64>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -1952,7 +1952,7 @@ impl StabilityAnalyzer {
     }
 
     /// Solve linear system using Gaussian elimination
-    fn gaussian_elimination(_augmented: &Array2<f64>) -> Result<Array1<f64>> {
+    fn gaussian_elimination(_augmented: &Array2<f64>) -> IntegrateResult<Array1<f64>> {
         let n = _augmented.nrows();
         let mut a = _augmented.clone();
 
@@ -2011,7 +2011,7 @@ impl StabilityAnalyzer {
     }
 
     /// Compute real eigenvalues (simplified implementation)
-    fn compute_real_eigenvalues(_matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+    fn compute_real_eigenvalues(_matrix: &Array2<f64>) -> IntegrateResult<Vec<Complex64>> {
         // For now, use a simplified approach for 2x2 matrices
         let n = _matrix.nrows();
 
@@ -2048,7 +2048,7 @@ impl StabilityAnalyzer {
     }
 
     /// Compute eigenvalues using QR algorithm for larger matrices
-    fn eigenvalues_qr_algorithm(_matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+    fn eigenvalues_qr_algorithm(_matrix: &Array2<f64>) -> IntegrateResult<Vec<Complex64>> {
         let n = _matrix.nrows();
         let mut a = _matrix.clone();
         let max_iterations = 100;
@@ -2108,7 +2108,7 @@ impl StabilityAnalyzer {
     }
 
     /// Reduce matrix to upper Hessenberg form using Householder reflections
-    fn reduce_to_hessenberg(_matrix: &Array2<f64>) -> Result<Array2<f64>> {
+    fn reduce_to_hessenberg(_matrix: &Array2<f64>) -> IntegrateResult<Array2<f64>> {
         let n = _matrix.nrows();
         let mut h = _matrix.clone();
 
@@ -2160,7 +2160,7 @@ impl StabilityAnalyzer {
     }
 
     /// QR decomposition for real matrices
-    fn qr_decomposition_real(_matrix: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
+    fn qr_decomposition_real(_matrix: &Array2<f64>) -> IntegrateResult<(Array2<f64>, Array2<f64>)> {
         let (m, n) = _matrix.dim();
         let mut q = Array2::<f64>::eye(m);
         let mut r = _matrix.clone();
@@ -2210,7 +2210,7 @@ impl StabilityAnalyzer {
     fn compute_eigenvectors(
         &self_matrix: &Array2<f64>,
         eigenvalues: &[Complex64],
-    ) -> Result<Array2<Complex64>> {
+    ) -> IntegrateResult<Array2<Complex64>> {
         let n = eigenvalues.len();
         let eigenvectors = Array2::<Complex64>::zeros((n, n));
 
@@ -2253,7 +2253,7 @@ impl StabilityAnalyzer {
         &self,
         system: &F,
         domain: &[(f64, f64)],
-    ) -> Result<Vec<PeriodicOrbit>>
+    ) -> IntegrateResult<Vec<PeriodicOrbit>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2285,7 +2285,7 @@ impl StabilityAnalyzer {
         &self,
         system: &F,
         domain: &[(f64, f64)],
-    ) -> Result<Vec<PeriodicOrbit>>
+    ) -> IntegrateResult<Vec<PeriodicOrbit>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2326,7 +2326,7 @@ impl StabilityAnalyzer {
         system: &F,
         initial_guess: &Array1<f64>,
         period: f64,
-    ) -> Result<PeriodicOrbit>
+    ) -> IntegrateResult<PeriodicOrbit>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2385,7 +2385,7 @@ impl StabilityAnalyzer {
         initial_state: &Array1<f64>,
         period: f64,
         dt: f64,
-    ) -> Result<Array1<f64>>
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2412,7 +2412,7 @@ impl StabilityAnalyzer {
         initial_state: &Array1<f64>,
         period: f64,
         dt: f64,
-    ) -> Result<Array2<f64>>
+    ) -> IntegrateResult<Array2<f64>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2445,7 +2445,7 @@ impl StabilityAnalyzer {
         system: &F,
         representative_point: &Array1<f64>,
         period: f64,
-    ) -> Result<Vec<Complex64>>
+    ) -> IntegrateResult<Vec<Complex64>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2495,7 +2495,7 @@ impl StabilityAnalyzer {
         &self,
         system: &F,
         domain: &[(f64, f64)],
-    ) -> Result<Vec<PeriodicOrbit>>
+    ) -> IntegrateResult<Vec<PeriodicOrbit>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2538,7 +2538,7 @@ impl StabilityAnalyzer {
         initial_point: &Array1<f64>,
         section_normal: &Array1<f64>,
         section_point: &Array1<f64>,
-    ) -> Result<Vec<Array1<f64>>>
+    ) -> IntegrateResult<Vec<Array1<f64>>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2596,7 +2596,7 @@ impl StabilityAnalyzer {
         dt: f64,
         section_normal: &Array1<f64>,
         section_point: &Array1<f64>,
-    ) -> Result<Array1<f64>>
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2631,7 +2631,7 @@ impl StabilityAnalyzer {
     fn analyze_return_map_for_periodicity(
         &self,
         return_points: &[Array1<f64>],
-    ) -> Result<PeriodicOrbit> {
+    ) -> IntegrateResult<PeriodicOrbit> {
         if return_points.len() < 3 {
             return Err(IntegrateError::ComputationError(
                 "Insufficient return _points for periodicity analysis".to_string(),
@@ -2683,7 +2683,7 @@ impl StabilityAnalyzer {
         &self,
         system: &F,
         domain: &[(f64, f64)],
-    ) -> Result<Vec<PeriodicOrbit>>
+    ) -> IntegrateResult<Vec<PeriodicOrbit>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2708,7 +2708,7 @@ impl StabilityAnalyzer {
         &self,
         system: &F,
         initial_point: &Array1<f64>,
-    ) -> Result<PeriodicOrbit>
+    ) -> IntegrateResult<PeriodicOrbit>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -2744,7 +2744,7 @@ impl StabilityAnalyzer {
     }
 
     /// Detect dominant period using autocorrelation
-    fn detect_dominant_period(_trajectory: &[Array1<f64>], dt: f64) -> Result<f64> {
+    fn detect_dominant_period(_trajectory: &[Array1<f64>], dt: f64) -> IntegrateResult<f64> {
         if _trajectory.len() < 100 {
             return Err(IntegrateError::ComputationError(
                 "Trajectory too short for period detection".to_string(),
@@ -2842,7 +2842,7 @@ impl StabilityAnalyzer {
         &self,
         matrix: &Array2<f64>,
         rhs: &Array1<f64>,
-    ) -> Result<Array1<f64>> {
+    ) -> IntegrateResult<Array1<f64>> {
         let n = matrix.nrows();
         if n != matrix.ncols() || n != rhs.len() {
             return Err(IntegrateError::ComputationError(
@@ -2907,7 +2907,7 @@ impl StabilityAnalyzer {
     }
 
     /// Compute Lyapunov exponents
-    fn compute_lyapunov_exponents<F>(_system: &F) -> Result<Option<Array1<f64>>>
+    fn compute_lyapunov_exponents<F>(_system: &F) -> IntegrateResult<Option<Array1<f64>>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync + Clone,
     {
@@ -2925,7 +2925,8 @@ impl StabilityAnalyzer {
             1 => 0.01,
             2 => 0.005,
             3 => 0.002,
-            4..=6 => 0.001_ => 0.0005,
+            4..=6 => 0.001,
+            _ => 0.0005,
         };
 
         // Calculate number of exponents to compute (typically all for small systems)
@@ -2969,7 +2970,7 @@ impl StabilityAnalyzer {
         system: &F,
         domain: &[(f64, f64)],
         fixed_points: &[FixedPoint],
-    ) -> Result<BasinAnalysis>
+    ) -> IntegrateResult<BasinAnalysis>
     where
         F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync,
     {
@@ -3041,7 +3042,7 @@ impl StabilityAnalyzer {
         &self,
         system: &F,
         initial_state: &Array1<f64>,
-    ) -> Result<Array1<f64>>
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: Fn(&Array1<f64>) -> Array1<f64>,
     {
@@ -3163,7 +3164,7 @@ pub mod advanced_analysis {
             &self,
             trajectory: &[Array1<f64>],
             times: &[f64],
-        ) -> Result<PoincareMap> {
+        ) -> IntegrateResult<PoincareMap> {
             let mut crossings = Vec::new();
             let mut crossing_times = Vec::new();
 
@@ -3206,7 +3207,7 @@ pub mod advanced_analysis {
             point2: &Array1<f64>,
             t1: f64,
             t2: f64,
-        ) -> Result<Option<(Array1<f64>, f64)>> {
+        ) -> IntegrateResult<Option<(Array1<f64>, f64)>> {
             // Calculate distances from section
             let d1 = self.distance_from_section(point1);
             let d2 = self.distance_from_section(point2);
@@ -3238,7 +3239,7 @@ pub mod advanced_analysis {
         }
 
         /// Compute return map from crossings
-        fn compute_return_map(_crossings: &[Array1<f64>]) -> Result<ReturnMap> {
+        fn compute_return_map(_crossings: &[Array1<f64>]) -> IntegrateResult<ReturnMap> {
             let mut current_points = Vec::new();
             let mut next_points = Vec::new();
 
@@ -3264,7 +3265,7 @@ pub mod advanced_analysis {
         }
 
         /// Detect periodic orbits from crossings
-        fn detect_periodic_orbits(_crossings: &[Array1<f64>]) -> Result<Vec<PeriodicOrbit>> {
+        fn detect_periodic_orbits(_crossings: &[Array1<f64>]) -> IntegrateResult<Vec<PeriodicOrbit>> {
             let mut periodic_orbits = Vec::new();
             let tolerance = 1e-6;
 
@@ -3368,7 +3369,7 @@ pub mod advanced_analysis {
             system: F,
             initial_state: &Array1<f64>,
             total_time: f64,
-        ) -> Result<Array1<f64>>
+        ) -> IntegrateResult<Array1<f64>>
         where
             F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync,
         {
@@ -3421,7 +3422,7 @@ pub mod advanced_analysis {
         }
 
         /// Initialize orthonormal tangent vectors
-        fn initialize_tangent_vectors(_dim: usize) -> Result<Array2<f64>> {
+        fn initialize_tangent_vectors(&self, _dim: usize) -> IntegrateResult<Array2<f64>> {
             let mut vectors = Array2::zeros((_dim, self.n_exponents));
 
             // Initialize with random vectors
@@ -3453,7 +3454,7 @@ pub mod advanced_analysis {
         }
 
         /// Compute Jacobian matrix using finite differences
-        fn compute_jacobian<F>(_system: &F, state: &Array1<f64>) -> Result<Array2<f64>>
+        fn compute_jacobian<F>(_system: &F, state: &Array1<f64>) -> IntegrateResult<Array2<f64>>
         where
             F: Fn(&Array1<f64>) -> Array1<f64>,
         {
@@ -3480,9 +3481,9 @@ pub mod advanced_analysis {
         }
 
         /// QR decomposition using Gram-Schmidt
-        fn qr_decomposition(_matrix: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
-            let (_m, n) = _matrix.dim();
-            let mut q = _matrix.clone();
+        fn qr_decomposition(matrix: &Array2<f64>) -> IntegrateResult<(Array2<f64>, Array2<f64>)> {
+            let (_m, n) = matrix.dim();
+            let mut q = matrix.clone();
             let mut r = Array2::zeros((n, n));
 
             for j in 0..n {
@@ -3512,7 +3513,7 @@ pub mod advanced_analysis {
             total_time: f64,
             min_separation: f64,
             max_separation: f64,
-        ) -> Result<f64>
+        ) -> IntegrateResult<f64>
         where
             F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync,
         {
@@ -3537,20 +3538,20 @@ pub mod advanced_analysis {
                 reference_state += &(ref_derivative * self.dt);
                 nearby_state += &(nearby_derivative * self.dt);
 
-                // Calculate _separation
+                // Calculate separation
                 let separation_vector = &nearby_state - &reference_state;
-                let _separation = separation_vector.iter().map(|&x| x * x).sum::<f64>().sqrt();
+                let separation = separation_vector.iter().map(|&x| x * x).sum::<f64>().sqrt();
 
                 // Check if rescaling is needed
-                if (_separation > max_separation || _separation < min_separation)
-                    && _separation > 1e-15
+                if (separation > max_separation || separation < min_separation)
+                    && separation > 1e-15
                 {
                     // Add to Lyapunov sum
-                    lyapunov_sum += _separation.ln();
+                    lyapunov_sum += separation.ln();
                     n_rescales += 1;
 
-                    // Rescale the _separation vector
-                    let scale_factor = self.perturbation_magnitude / _separation;
+                    // Rescale the separation vector
+                    let scale_factor = self.perturbation_magnitude / separation;
                     nearby_state = &reference_state + &(separation_vector * scale_factor);
                 }
             }
@@ -3568,11 +3569,11 @@ pub mod advanced_analysis {
             time_series: &Array1<f64>,
             embedding_dimension: usize,
             delay: usize,
-        ) -> Result<f64> {
+        ) -> IntegrateResult<f64> {
             let n = time_series.len();
             if n < embedding_dimension * delay + 1 {
                 return Err(IntegrateError::ValueError(
-                    "Time _series too short for embedding".to_string(),
+                    "Time series too short for embedding".to_string(),
                 ));
             }
 
@@ -3645,7 +3646,7 @@ pub mod advanced_analysis {
             initial_state: &Array1<f64>,
             total_time: f64,
             n_trials: usize,
-        ) -> Result<(Array1<f64>, Array1<f64>)>
+        ) -> IntegrateResult<(Array1<f64>, Array1<f64>)>
         where
             F: Fn(&Array1<f64>) -> Array1<f64> + Send + Sync + Clone,
         {
@@ -3715,7 +3716,7 @@ pub mod advanced_analysis {
     }
 
     impl Default for FractalAnalyzer {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self::new()
         }
     }
@@ -3734,7 +3735,7 @@ pub mod advanced_analysis {
         pub fn calculate_fractal_dimension(
             &self,
             attractor_points: &[Array1<f64>],
-        ) -> Result<FractalDimension> {
+        ) -> IntegrateResult<FractalDimension> {
             match self.box_counting_method {
                 BoxCountingMethod::Standard => self.box_counting_dimension(attractor_points),
                 BoxCountingMethod::Differential => self.differential_box_counting(attractor_points),
@@ -3743,7 +3744,7 @@ pub mod advanced_analysis {
         }
 
         /// Standard box counting dimension
-        fn box_counting_dimension(_points: &[Array1<f64>]) -> Result<FractalDimension> {
+        fn box_counting_dimension(_points: &[Array1<f64>]) -> IntegrateResult<FractalDimension> {
             if _points.is_empty() {
                 return Err(IntegrateError::ValueError(
                     "Cannot analyze empty point set".to_string(),
@@ -3792,13 +3793,13 @@ pub mod advanced_analysis {
         }
 
         /// Differential box counting for higher accuracy
-        fn differential_box_counting(_points: &[Array1<f64>]) -> Result<FractalDimension> {
+        fn differential_box_counting(_points: &[Array1<f64>]) -> IntegrateResult<FractalDimension> {
             // Simplified implementation - would need full differential box counting
             self.box_counting_dimension(_points)
         }
 
         /// Correlation dimension using Grassberger-Procaccia algorithm
-        fn correlation_dimension(_points: &[Array1<f64>]) -> Result<FractalDimension> {
+        fn correlation_dimension(_points: &[Array1<f64>]) -> IntegrateResult<FractalDimension> {
             let n_points = _points.len();
             let mut scales = Vec::new();
             let mut correlations = Vec::new();
@@ -3878,7 +3879,7 @@ pub mod advanced_analysis {
             min_bounds: &Array1<f64>,
             box_size: f64,
             dim: usize,
-        ) -> Result<usize> {
+        ) -> IntegrateResult<usize> {
             let mut occupied_boxes = std::collections::HashSet::new();
 
             for point in points {
@@ -3893,7 +3894,7 @@ pub mod advanced_analysis {
             Ok(occupied_boxes.len())
         }
 
-        fn calculate_slope_from_log_data(_x_data: &[f64], y_data: &[f64]) -> Result<f64> {
+        fn calculate_slope_from_log_data(_x_data: &[f64], y_data: &[f64]) -> IntegrateResult<f64> {
             if _x_data.len() != y_data.len() || _x_data.len() < 2 {
                 return Err(IntegrateError::ValueError(
                     "Insufficient _data for slope calculation".to_string(),
@@ -3914,7 +3915,7 @@ pub mod advanced_analysis {
             Ok(slope)
         }
 
-        fn calculate_r_squared(_x_data: &[f64], y_data: &[f64], slope: f64) -> Result<f64> {
+        fn calculate_r_squared(_x_data: &[f64], y_data: &[f64], slope: f64) -> IntegrateResult<f64> {
             let log_x: Vec<f64> = _x_data.iter().map(|&x| x.ln()).collect();
             let log_y: Vec<f64> = y_data.iter().map(|&y| y.ln()).collect();
 
@@ -3994,7 +3995,7 @@ pub mod advanced_analysis {
         }
 
         /// Perform recurrence analysis
-        pub fn analyze_recurrence(&self, time_series: &[f64]) -> Result<RecurrenceAnalysis> {
+        pub fn analyze_recurrence(&self, time_series: &[f64]) -> IntegrateResult<RecurrenceAnalysis> {
             // Create delay coordinate embedding
             let embedded_vectors = self.create_embedding(time_series)?;
 
@@ -4015,7 +4016,7 @@ pub mod advanced_analysis {
         }
 
         /// Create delay coordinate embedding
-        fn create_embedding(_time_series: &[f64]) -> Result<Vec<Array1<f64>>> {
+        fn create_embedding(_time_series: &[f64]) -> IntegrateResult<Vec<Array1<f64>>> {
             let n = _time_series.len();
             let embedded_length = n - (self.embedding_dimension - 1) * self.time_delay;
 
@@ -4039,7 +4040,7 @@ pub mod advanced_analysis {
         }
 
         /// Compute recurrence matrix
-        fn compute_recurrence_matrix(_vectors: &[Array1<f64>]) -> Result<Array2<bool>> {
+        fn compute_recurrence_matrix(_vectors: &[Array1<f64>]) -> IntegrateResult<Array2<bool>> {
             let n = _vectors.len();
             let mut recurrence_matrix = Array2::from_elem((n, n), false);
 
@@ -4074,7 +4075,7 @@ pub mod advanced_analysis {
         }
 
         /// Calculate Recurrence Quantification Analysis measures
-        fn calculate_rqa_measures(_recurrence_matrix: &Array2<bool>) -> Result<RQAMeasures> {
+        fn calculate_rqa_measures(_recurrence_matrix: &Array2<bool>) -> IntegrateResult<RQAMeasures> {
             let n = _recurrence_matrix.nrows();
             let total_points = (n * n) as f64;
 
@@ -4128,7 +4129,7 @@ pub mod advanced_analysis {
             &self,
             matrix: &Array2<bool>,
             min_length: usize,
-        ) -> Result<Vec<RecurrentLine>> {
+        ) -> IntegrateResult<Vec<RecurrentLine>> {
             let n = matrix.nrows();
             let mut lines = Vec::new();
 
@@ -4186,7 +4187,7 @@ pub mod advanced_analysis {
             &self,
             matrix: &Array2<bool>,
             min_length: usize,
-        ) -> Result<Vec<RecurrentLine>> {
+        ) -> IntegrateResult<Vec<RecurrentLine>> {
             let n = matrix.nrows();
             let mut lines = Vec::new();
 
@@ -4305,7 +4306,7 @@ pub mod advanced_analysis {
             &self,
             system: F,
             initial_state: &Array1<f64>,
-        ) -> Result<ContinuationResult>
+        ) -> IntegrateResult<ContinuationResult>
         where
             F: Fn(&Array1<f64>, f64) -> Array1<f64>,
         {
@@ -4330,13 +4331,15 @@ pub mod advanced_analysis {
                 // Check for bifurcations
                 if let Some(bif_type) = self.detect_bifurcation(&eigenvalues) {
                     bifurcation_points.push(BifurcationPointData {
-                        parameter: param_state: fixed_point.clone(),
+                        parameter: param,
+                        state: fixed_point.clone(),
                         bifurcation_type: bif_type,
                     });
                 }
 
                 fixed_points.push(FixedPointData {
-                    parameter: param_state: fixed_point.clone(),
+                    parameter: param,
+                    state: fixed_point.clone(),
                     eigenvalues: eigenvalues.clone(),
                     stability: self.classify_stability(&eigenvalues),
                 });
@@ -4357,7 +4360,7 @@ pub mod advanced_analysis {
             system: &F,
             initial_guess: &Array1<f64>,
             parameter: f64,
-        ) -> Result<Array1<f64>>
+        ) -> IntegrateResult<Array1<f64>>
         where
             F: Fn(&Array1<f64>, f64) -> Array1<f64>,
         {
@@ -4388,7 +4391,7 @@ pub mod advanced_analysis {
             system: &F,
             x: &Array1<f64>,
             parameter: f64,
-        ) -> Result<Array2<f64>>
+        ) -> IntegrateResult<Array2<f64>>
         where
             F: Fn(&Array1<f64>, f64) -> Array1<f64>,
         {
@@ -4414,7 +4417,7 @@ pub mod advanced_analysis {
         }
 
         /// Solve linear system using Gaussian elimination
-        fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+        fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> IntegrateResult<Array1<f64>> {
             let n = a.nrows();
             let mut aug = Array2::zeros((n, n + 1));
 
@@ -4462,7 +4465,7 @@ pub mod advanced_analysis {
         }
 
         /// Compute eigenvalues for 2x2 matrices
-        fn compute_eigenvalues(_matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+        fn compute_eigenvalues(&self, _matrix: &Array2<f64>) -> IntegrateResult<Vec<Complex64>> {
             let n = _matrix.nrows();
 
             if n == 2 {
@@ -4545,7 +4548,7 @@ pub mod advanced_analysis {
             &self,
             system: F,
             initial_state: &Array1<f64>,
-        ) -> Result<MonodromyResult>
+        ) -> IntegrateResult<MonodromyResult>
         where
             F: Fn(&Array1<f64>) -> Array1<f64>,
         {
@@ -4585,7 +4588,7 @@ pub mod advanced_analysis {
         }
 
         /// Compute numerical Jacobian
-        fn numerical_jacobian<F>(_system: &F, x: &Array1<f64>) -> Result<Array2<f64>>
+        fn numerical_jacobian<F>(_system: &F, x: &Array1<f64>) -> IntegrateResult<Array2<f64>>
         where
             F: Fn(&Array1<f64>) -> Array1<f64>,
         {
@@ -4611,7 +4614,7 @@ pub mod advanced_analysis {
         }
 
         /// Compute eigenvalues
-        fn compute_eigenvalues(_matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+        fn compute_eigenvalues(&self, _matrix: &Array2<f64>) -> IntegrateResult<Vec<Complex64>> {
             let n = _matrix.nrows();
 
             if n == 2 {
@@ -6070,9 +6073,9 @@ use std::sync::{Arc, Mutex};
 
     impl BifurcationPredictionNetwork {
         /// Create a new bifurcation prediction network
-        pub fn new(_input_size: usize, hidden_layers: Vec<usize>, output_size: usize) -> Self {
+        pub fn new(input_size: usize, hidden_layers: Vec<usize>, output_size: usize) -> Self {
             let architecture = NetworkArchitecture {
-                _input_size,
+                input_size,
                 hidden_layers: hidden_layers.clone(),
                 output_size,
                 activation_functions: vec![ActivationFunction::ReLU; hidden_layers.len() + 1],
@@ -6118,7 +6121,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Forward pass through the network
-        pub fn forward(&self, input: &Array1<f64>) -> Result<Array1<f64>> {
+        pub fn forward(&self, input: &Array1<f64>) -> IntegrateResult<Array1<f64>> {
             let mut activation = input.clone();
 
             for (i, (weights, bias)) in self
@@ -6152,7 +6155,7 @@ use std::sync::{Arc, Mutex};
             &self,
             x: &Array1<f64>,
             func: ActivationFunction,
-        ) -> Result<Array1<f64>> {
+        ) -> IntegrateResult<Array1<f64>> {
             let result = match func {
                 ActivationFunction::ReLU => x.mapv(|v| v.max(0.0)),
                 ActivationFunction::LeakyReLU(alpha) => {
@@ -6178,7 +6181,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Apply dropout during training
-        fn apply_dropout(x: &Array1<f64>, dropout_rate: f64) -> Result<Array1<f64>> {
+        fn apply_dropout(x: &Array1<f64>, dropout_rate: f64) -> IntegrateResult<Array1<f64>> {
             if dropout_rate == 0.0 {
                 return Ok(x.clone());
             }
@@ -6200,7 +6203,7 @@ use std::sync::{Arc, Mutex};
             &mut self,
             training_data: &[(Array1<f64>, Array1<f64>)],
             validation_data: Option<&[(Array1<f64>, Array1<f64>)]>,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let mut training_metrics = Vec::new();
             let mut validation_metrics = Vec::new();
 
@@ -6246,7 +6249,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Train for one epoch
-        fn train_epoch(_training_data: &[(Array1<f64>, Array1<f64>)]) -> Result<f64> {
+        fn train_epoch(_training_data: &[(Array1<f64>, Array1<f64>)]) -> IntegrateResult<f64> {
             let mut total_loss = 0.0;
             let batch_size = self.training_config.batch_size;
 
@@ -6262,7 +6265,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Train on a single batch
-        fn train_batch(_batch: &[(Array1<f64>, Array1<f64>)]) -> Result<f64> {
+        fn train_batch(_batch: &[(Array1<f64>, Array1<f64>)]) -> IntegrateResult<f64> {
             let mut total_loss = 0.0;
 
             for (input, target) in _batch {
@@ -6278,7 +6281,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Calculate loss
-        fn calculate_loss(_prediction: &Array1<f64>, target: &Array1<f64>) -> Result<f64> {
+        fn calculate_loss(_prediction: &Array1<f64>, target: &Array1<f64>) -> IntegrateResult<f64> {
             match self.training_config.loss_function {
                 LossFunction::MSE => {
                     let diff = _prediction - target;
@@ -6331,14 +6334,14 @@ use std::sync::{Arc, Mutex};
         /// Backward pass (gradient computation)
         fn backward(
             &mut self_prediction: &Array1<f64>, _target: &Array1<f64>, _input: &Array1<f64>,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             // Placeholder for backpropagation implementation
             // In a real implementation, this would compute gradients and update weights
             Ok(())
         }
 
         /// Evaluate model performance
-        pub fn evaluate(&self, test_data: &[(Array1<f64>, Array1<f64>)]) -> Result<f64> {
+        pub fn evaluate(&self, test_data: &[(Array1<f64>, Array1<f64>)]) -> IntegrateResult<f64> {
             let mut total_loss = 0.0;
 
             for (input, target) in test_data {
@@ -6394,7 +6397,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Predict bifurcation type and location
-        pub fn predict_bifurcation(&self, features: &Array1<f64>) -> Result<BifurcationPrediction> {
+        pub fn predict_bifurcation(&self, features: &Array1<f64>) -> IntegrateResult<BifurcationPrediction> {
             let raw_output = self.forward(features)?;
 
             // Convert network output to bifurcation prediction
@@ -6412,7 +6415,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Classify bifurcation type from network output
-        fn classify_bifurcation_type(_output: &Array1<f64>) -> Result<BifurcationType> {
+        fn classify_bifurcation_type(_output: &Array1<f64>) -> IntegrateResult<BifurcationType> {
             // Find the class with highest probability
             let max_idx = _output
                 .iter()
@@ -6428,14 +6431,15 @@ use std::sync::{Arc, Mutex};
                 2 => BifurcationType::Pitchfork,
                 3 => BifurcationType::Hopf,
                 4 => BifurcationType::PeriodDoubling,
-                5 => BifurcationType::Homoclinic_ =>, BifurcationType::Unknown,
+                5 => BifurcationType::Homoclinic,
+                _ => BifurcationType::Unknown,
             };
 
             Ok(bifurcation_type)
         }
 
         /// Calculate prediction confidence
-        fn calculate_confidence(_output: &Array1<f64>) -> Result<f64> {
+        fn calculate_confidence(_output: &Array1<f64>) -> IntegrateResult<f64> {
             // Use max probability as confidence
             let max_prob = _output.iter().cloned().fold(0.0, f64::max);
             Ok(max_prob)
@@ -6472,7 +6476,7 @@ use std::sync::{Arc, Mutex};
 
     // Default implementations for configuration structures
     impl Default for TrainingConfiguration {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 learning_rate: LearningRateSchedule::Constant(0.001),
                 optimizer: Optimizer::Adam {
@@ -6491,7 +6495,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for RegularizationConfig {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 l1_lambda: 0.0,
                 l2_lambda: 0.001,
@@ -6503,7 +6507,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for EarlyStoppingConfig {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 enabled: true,
                 monitor: "val_loss".to_string(),
@@ -6515,7 +6519,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for FeatureExtraction {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 time_series_features: TimeSeriesFeatures::default(),
                 phase_space_features: PhaseSpaceFeatures::default(),
@@ -6528,7 +6532,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for TimeSeriesFeatures {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 window_size: 100,
                 overlap: 0.5,
@@ -6542,7 +6546,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for PhaseSpaceFeatures {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 embedding_dim: 3,
                 time_delay: 1,
@@ -6555,7 +6559,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for FrequencyFeatures {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 psd_features: true,
                 frequency_bins: 128,
@@ -6568,7 +6572,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for TopologicalFeatures {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 persistent_homology: true,
                 max_dimension: 2,
@@ -6579,7 +6583,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for StatisticalFeatures {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 moments: true,
                 quantiles: true,
@@ -6610,7 +6614,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Start real-time monitoring
-        pub fn start_monitoring(&self) -> Result<()> {
+        pub fn start_monitoring(&self) -> IntegrateResult<()> {
             // Implementation would start monitoring threads
             // This is a placeholder for the actual monitoring loop
             Ok(())
@@ -6620,7 +6624,7 @@ use std::sync::{Arc, Mutex};
         pub fn process_data_point(
             &mut self,
             data_point: Array1<f64>,
-        ) -> Result<Vec<BifurcationPrediction>> {
+        ) -> IntegrateResult<Vec<BifurcationPrediction>> {
             // Add to buffer
             {
                 let mut buffer = self.data_buffer.lock().unwrap();
@@ -6647,7 +6651,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Extract features from data buffer
-        fn extract_features_from_buffer(&self) -> Result<Array1<f64>> {
+        fn extract_features_from_buffer(&self) -> IntegrateResult<Array1<f64>> {
             let buffer = self.data_buffer.lock().unwrap();
             let data: Vec<Array1<f64>> = buffer.iter().cloned().collect();
 
@@ -6666,7 +6670,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Extract time series features
-        fn extract_time_series_features(_data: &[Array1<f64>]) -> Result<Array1<f64>> {
+        fn extract_time_series_features(_data: &[Array1<f64>]) -> IntegrateResult<Array1<f64>> {
             if _data.is_empty() {
                 return Ok(Array1::zeros(0));
             }
@@ -6705,7 +6709,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Extract phase space features
-        fn extract_phase_space_features(_data: &[Array1<f64>]) -> Result<Array1<f64>> {
+        fn extract_phase_space_features(_data: &[Array1<f64>]) -> IntegrateResult<Array1<f64>> {
             if _data.len() < 3 {
                 return Ok(Array1::zeros(0));
             }
@@ -6729,7 +6733,7 @@ use std::sync::{Arc, Mutex};
             }
 
             // Take mean of features to get fixed size
-            let mean_feature = features.iter().sum::<f64>() / features.len() as f64;
+            let mean_feature = "features".iter().sum::<f64>() / features.len() as f64;
 
             Ok(Array1::from_vec(vec![mean_feature]))
         }
@@ -6738,7 +6742,7 @@ use std::sync::{Arc, Mutex};
         fn check_and_generate_alerts(
             &mut self,
             predictions: &[BifurcationPrediction],
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             for prediction in predictions {
                 let threshold = self
                     .alert_system
@@ -6756,7 +6760,7 @@ use std::sync::{Arc, Mutex};
         }
 
         /// Generate an alert for a detected bifurcation
-        fn generate_alert(_prediction: &BifurcationPrediction) -> Result<()> {
+        fn generate_alert(_prediction: &BifurcationPrediction) -> IntegrateResult<()> {
             // Create alert message
             let alert_message = format!(
                 "Bifurcation detected: {:?} at parameter {} with confidence {:.3}",
@@ -6774,7 +6778,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for AlertSystemConfig {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             let mut alert_thresholds = HashMap::new();
             alert_thresholds.insert(BifurcationType::Fold, 0.8);
             alert_thresholds.insert(BifurcationType::Hopf, 0.7);
@@ -6790,7 +6794,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for AlertSuppressionConfig {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 min_interval: std::time::Duration::from_secs(60),
                 max_alerts_per_window: 10,
@@ -6801,7 +6805,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for AlertMetrics {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 alerts_generated: 0,
                 false_alarms: 0,
@@ -6813,7 +6817,7 @@ use std::sync::{Arc, Mutex};
     }
 
     impl Default for AdaptiveThresholdSystem {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 adaptation_method: ThresholdAdaptationMethod::ExponentialMovingAverage,
                 learning_rate: 0.01,

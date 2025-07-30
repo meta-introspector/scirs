@@ -201,11 +201,11 @@ impl ErrorMapper {
 
     fn assess_severity(&self, error: &IntegrationError) -> ErrorSeverity {
         match error {
-            IntegrationError::TensorConversion(_) =>, ErrorSeverity::Medium,
-            IntegrationError::ModuleCompatibility(_) =>, ErrorSeverity::High,
-            IntegrationError::ConfigMismatch(_) =>, ErrorSeverity::Low,
-            IntegrationError::VersionIncompatibility(_) =>, ErrorSeverity::High,
-            IntegrationError::ApiBoundary(_) =>, ErrorSeverity::Medium,
+            IntegrationError::TensorConversion(_) => ErrorSeverity::Medium,
+            IntegrationError::ModuleCompatibility(_) => ErrorSeverity::High,
+            IntegrationError::ConfigMismatch(_) => ErrorSeverity::Low,
+            IntegrationError::VersionIncompatibility(_) => ErrorSeverity::High,
+            IntegrationError::ApiBoundary(_) => ErrorSeverity::Medium,
         }
     }
 
@@ -338,7 +338,8 @@ impl ErrorMapper {
                 title: "Module Compatibility Matrix".to_string(),
                 url: "https://scirs2.dev/docs/compatibility".to_string(),
                 section: None,
-            }]_ => Vec::new(),
+            }],
+            _ => Vec::new(),
         }
     }
 }
@@ -603,7 +604,8 @@ impl ErrorRecovery for CompatibilityRecovery {
             )),
             IntegrationError::VersionIncompatibility(_) => Ok(RecoveryAction::ManualIntervention(
                 "Update to compatible module versions".to_string(),
-            ), _ => Err(IntegrationError::ModuleCompatibility(
+            )),
+            _ => Err(IntegrationError::ModuleCompatibility(
                 "Cannot recover from non-compatibility error".to_string(),
             )),
         }
@@ -621,7 +623,8 @@ impl ErrorRecovery for ConfigurationRecovery {
         match error {
             IntegrationError::ConfigMismatch(_) => Ok(RecoveryAction::RetryWithConfig(
                 [("use_defaults".to_string(), "true".to_string())].into(),
-            ), _ => Err(IntegrationError::ConfigMismatch(
+            )),
+            _ => Err(IntegrationError::ConfigMismatch(
                 "Cannot recover from non-configuration error".to_string(),
             )),
         }

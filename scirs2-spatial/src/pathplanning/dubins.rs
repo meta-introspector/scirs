@@ -16,7 +16,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::pathplanning::dubins::{DubinsPlanner, Pose2D};
+//! use scirs2_spatial::pathplanning::dubins::{DubinsPlanner, Pose2D};
 //!
 //! let start = Pose2D::new(0.0, 0.0, 0.0);  // x, y, theta
 //! let goal = Pose2D::new(5.0, 5.0, std::f64::consts::PI / 2.0);
@@ -317,7 +317,7 @@ impl DubinsPlanner {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::pathplanning::dubins::DubinsPlanner;
+    /// use scirs2_spatial::pathplanning::dubins::DubinsPlanner;
     ///
     /// let planner = DubinsPlanner::new(1.0);
     /// ```
@@ -339,7 +339,7 @@ impl DubinsPlanner {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::pathplanning::dubins::{DubinsPlanner, Pose2D};
+    /// use scirs2_spatial::pathplanning::dubins::{DubinsPlanner, Pose2D};
     ///
     /// let start = Pose2D::new(0.0, 0.0, 0.0);
     /// let goal = Pose2D::new(5.0, 5.0, std::f64::consts::PI / 2.0);

@@ -10,8 +10,8 @@ use crate::monte__carlo::{ErrorEstimationMethod, MonteCarloOptions, MonteCarloRe
 use crate::IntegrateFloat;
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
-use rand__distr::uniform::SampleUniform;
-use rand__distr::{Distribution, Uniform};
+use rand_distr::uniform::SampleUniform;
+use rand_distr::{Distribution, Uniform};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
@@ -38,7 +38,7 @@ pub struct ParallelMonteCarloOptions<F: IntegrateFloat> {
     /// Use chunk-based parallelism for better load balancing
     pub use_chunking: bool,
     /// Phantom data for generic type
-    pub _phantom: PhantomData<F>,
+    pub phantom: PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for ParallelMonteCarloOptions<F> {
@@ -50,7 +50,7 @@ impl<F: IntegrateFloat> Default for ParallelMonteCarloOptions<F> {
             use_antithetic: false,
             n_threads: None,  // Use all available cores
             batch_size: 1000, // Process 1000 samples per batch
-            use_chunking: true, _phantom: PhantomData,
+            use_chunking: true, phantom: PhantomData,
         }
     }
 }
@@ -65,7 +65,7 @@ impl<F: IntegrateFloat> From<MonteCarloOptions<F>> for ParallelMonteCarloOptions
             use_antithetic: _opts.use_antithetic,
             n_threads: None,
             batch_size: 1000,
-            use_chunking: true, _phantom: PhantomData,
+            use_chunking: true, phantom: PhantomData,
         }
     }
 }
@@ -99,7 +99,7 @@ impl<F: IntegrateFloat> From<MonteCarloOptions<F>> for ParallelMonteCarloOptions
 ///     n_samples: 1000000,
 ///     n_threads: Some(4),
 ///     batch_size: 5000,
-///     _phantom: PhantomData,
+///     phantom: PhantomData,
 ///     ..Default::default()
 /// };
 ///
@@ -510,7 +510,7 @@ where
         n_samples: opts.n_samples,
         seed: opts.seed,
         error_method: opts.error_method,
-        use_antithetic: opts.use_antithetic, _phantom: PhantomData,
+        use_antithetic: opts.use_antithetic, phantom: PhantomData,
     });
 
     crate::monte_carlo::monte_carlo(f, ranges, regular_opts)
@@ -535,7 +535,7 @@ where
         n_samples: max_samples,
         seed: opts.seed,
         error_method: opts.error_method,
-        use_antithetic: opts.use_antithetic, _phantom: PhantomData,
+        use_antithetic: opts.use_antithetic, phantom: PhantomData,
     });
 
     crate::monte_carlo::monte_carlo(f, ranges, regular_opts)
@@ -619,7 +619,7 @@ mod tests {
             n_samples: 5000,
             seed: Some(789),
             error_method: ErrorEstimationMethod::BatchMeans,
-            use_antithetic: true, _phantom: PhantomData,
+            use_antithetic: true, phantom: PhantomData,
         };
 
         let parallel_opts: ParallelMonteCarloOptions<f64> = regular_opts.into();

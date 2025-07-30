@@ -21,7 +21,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::alpha_shapes::AlphaShape;
+//! use scirs2_spatial::alpha_shapes::AlphaShape;
 //! use ndarray::array;
 //!
 //! // Create a set of 2D points
@@ -91,7 +91,7 @@ impl AlphaShape {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::alpha_shapes::AlphaShape;
+    /// use scirs2_spatial::alpha_shapes::AlphaShape;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -167,7 +167,7 @@ impl AlphaShape {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::alpha_shapes::AlphaShape;
+    /// use scirs2_spatial::alpha_shapes::AlphaShape;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -739,7 +739,8 @@ impl AlphaShape {
             3 => 6.0,
             4 => 24.0,
             5 => 120.0,
-            6 => 720.0_ => {
+            6 => 720.0,
+            _ => {
                 let mut result = 1.0;
                 for i in 2..=n {
                     result *= i as f64;
@@ -763,7 +764,7 @@ impl AlphaShape {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::alpha_shapes::AlphaShape;
+    /// use scirs2_spatial::alpha_shapes::AlphaShape;
     /// use ndarray::array;
     ///
     /// let points = array![

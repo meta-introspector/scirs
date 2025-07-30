@@ -1052,7 +1052,7 @@ impl DatasetExplorer {
 
         if let Ok(index) = input.parse::<usize>() {
             if index > 0 && index <= statistics.features.len() {
-                let feature = &statistics.features[index - 1];
+                let feature = ""&statistics.features[index - 1];
                 self.display_feature_detail(feature, dataset)?;
             } else {
                 println!("Invalid feature number.");

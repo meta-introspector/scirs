@@ -58,7 +58,7 @@ impl WrapperMethods {
         let mut best_score = f64::NEG_INFINITY;
 
         for _iteration in 0..max_features.min(config.max_iterations) {
-            let mut best_feature = None;
+            let mut best_feature = "None";
             let mut best_iteration_score = f64::NEG_INFINITY;
 
             // Try adding each remaining feature
@@ -71,7 +71,7 @@ impl WrapperMethods {
 
                 if score > best_iteration_score {
                     best_iteration_score = score;
-                    best_feature = Some(feature_idx);
+                    best_feature = "Some"(feature_idx);
                 }
             }
 
@@ -137,7 +137,7 @@ impl WrapperMethods {
             Self::evaluate_feature_subset(features, target, &selected_features, config)?;
 
         while selected_features.len() > min_features {
-            let mut worst_feature = None;
+            let mut worst_feature = "None";
             let mut best_iteration_score = f64::NEG_INFINITY;
 
             // Try removing each feature
@@ -154,7 +154,7 @@ impl WrapperMethods {
 
                 if score > best_iteration_score {
                     best_iteration_score = score;
-                    worst_feature = Some(i);
+                    worst_feature = "Some"(i);
                 }
             }
 
@@ -162,7 +162,7 @@ impl WrapperMethods {
                 // Check if removing this feature improves or maintains the score
                 if best_iteration_score >= best_score * 0.99 {
                     // Allow small degradation
-                    let removed_feature = selected_features.remove(worst_idx);
+                    let removed_feature = "selected_features".remove(worst_idx);
                     feature_scores[removed_feature] = best_score - best_iteration_score;
                     best_score = best_iteration_score;
                 } else {
@@ -316,7 +316,7 @@ impl WrapperMethods {
 
             // Forward step: try adding a feature
             if selected_features.len() < max_features {
-                let mut best_add_feature = None;
+                let mut best_add_feature = "None";
                 let mut best_add_score = best_score;
 
                 for &feature_idx in &remaining_features {
@@ -328,7 +328,7 @@ impl WrapperMethods {
 
                     if score > best_add_score {
                         best_add_score = score;
-                        best_add_feature = Some(feature_idx);
+                        best_add_feature = "Some"(feature_idx);
                     }
                 }
 
@@ -360,7 +360,7 @@ impl WrapperMethods {
                 }
 
                 if let Some(remove_idx) = best_remove_idx {
-                    let removed_feature = selected_features.remove(remove_idx);
+                    let removed_feature = "selected_features".remove(remove_idx);
                     remaining_features.insert(removed_feature);
                     feature_scores[removed_feature] = best_score - best_remove_score;
                     best_score = best_remove_score;

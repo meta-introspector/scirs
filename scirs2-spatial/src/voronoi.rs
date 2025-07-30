@@ -11,7 +11,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::voronoi::Voronoi;
+//! use scirs2_spatial::voronoi::Voronoi;
 //! use ndarray::array;
 //!
 //! // Create a set of 2D points
@@ -91,7 +91,7 @@ impl Voronoi {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::voronoi::Voronoi;
+    /// use scirs2_spatial::voronoi::Voronoi;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -630,7 +630,7 @@ impl Voronoi {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::voronoi::voronoi;
+/// use scirs2_spatial::voronoi::voronoi;
 /// use ndarray::array;
 ///
 /// let points = array![

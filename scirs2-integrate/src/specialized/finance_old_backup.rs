@@ -5,10 +5,10 @@
 
 use crate::error::{IntegrateError, IntegrateResult as Result};
 use ndarray::{s, Array1, Array2, Array3, ArrayView2, ArrayViewMut2};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use rand::prelude::*;
 use rand::rngs::SmallRng;
-use rand__distr::{Normal, StandardNormal, Uniform};
+use rand_distr::{Normal, StandardNormal, Uniform};
 use scirs2_core::constants::PI;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
@@ -411,7 +411,8 @@ impl StochasticPDESolver {
             | VolatilityModel::SABR { .. }
             | VolatilityModel::Bates { .. }
             | VolatilityModel::HullWhite { .. }
-            | VolatilityModel::ThreeHalves { .. } => Some(50, _ => None,
+            | VolatilityModel::ThreeHalves { .. } => Some(50),
+            _ => None,
         };
 
         Self {
@@ -438,7 +439,7 @@ impl StochasticPDESolver {
     }
 
     /// Price option using specified method
-    pub fn price_option(&self, option: &FinancialOption) -> Result<f64> {
+    pub fn price_option(&self, option: &FinancialOption) -> IntegrateResult<f64> {
         match self.method {
             FinanceMethod::FiniteDifference => self.price_finite_difference(option),
             FinanceMethod::MonteCarlo {
@@ -451,7 +452,7 @@ impl StochasticPDESolver {
     }
 
     /// Finite difference method for option pricing
-    fn price_finite_difference(&self, option: &FinancialOption) -> Result<f64> {
+    fn price_finite_difference(&self, option: &FinancialOption) -> IntegrateResult<f64> {
         match &self.volatility_model {
             VolatilityModel::Constant(sigma) => {
                 self.black_scholes_finite_difference(option, *sigma)
@@ -501,7 +502,7 @@ impl StochasticPDESolver {
     }
 
     /// Black-Scholes finite difference solver
-    fn black_scholes_finite_difference(&self, option: &FinancialOption, sigma: f64) -> Result<f64> {
+    fn black_scholes_finite_difference(&self, option: &FinancialOption, sigma: f64) -> IntegrateResult<f64> {
         let dt = option.maturity / (self.n_time - 1) as f64;
         let s_max = option.spot * 3.0;
         let ds = s_max / (self.n_asset - 1) as f64;
@@ -584,8 +585,9 @@ impl StochasticPDESolver {
         v0: f64,
         theta: f64,
         kappa: f64,
-        sigma: f64_rho: f64,
-    ) -> Result<f64> {
+        sigma: f64,
+        _rho: f64,
+    ) -> IntegrateResult<f64> {
         let n_vol = self.n_vol.unwrap_or(50);
         let dt = option.maturity / (self.n_time - 1) as f64;
 
@@ -703,8 +705,9 @@ impl StochasticPDESolver {
         option: &FinancialOption,
         alpha: f64,
         beta: f64,
-        nu: f64_rho: f64,
-    ) -> Result<f64> {
+        nu: f64,
+        _rho: f64,
+    ) -> IntegrateResult<f64> {
         // Simplified SABR finite difference implementation
         // Uses effective volatility approximation
         let effective_vol = alpha
@@ -727,7 +730,7 @@ impl StochasticPDESolver {
         &self,
         option: &FinancialOption,
         vol_surface: &dyn Fn(f64, f64) -> f64,
-    ) -> Result<f64> {
+    ) -> IntegrateResult<f64> {
         let dt = option.maturity / (self.n_time - 1) as f64;
         let s_max = option.spot * 3.0;
         let ds = s_max / (self.n_asset - 1) as f64;
@@ -796,7 +799,7 @@ impl StochasticPDESolver {
         sigma: f64,
         rho: f64,
         lambda_v: f64, _mu_v: f64, _sigma_v: f64,
-    ) -> Result<f64> {
+    ) -> IntegrateResult<f64> {
         // Simplified implementation: Use Heston as base with jump adjustment
         let heston_price = self.heston_finite_difference(option, v0, theta, kappa, sigma, rho)?;
 
@@ -813,8 +816,9 @@ impl StochasticPDESolver {
         option: &FinancialOption,
         v0: f64,
         alpha: f64,
-        beta: f64_rho: f64,
-    ) -> Result<f64> {
+        beta: f64,
+        _rho: f64,
+    ) -> IntegrateResult<f64> {
         // Hull-White volatility follows: dv_t = α dt + β v_t dW_t
         // Use mean volatility approximation
         let mean_vol = v0 + alpha * option.maturity / 2.0;
@@ -832,8 +836,9 @@ impl StochasticPDESolver {
         v0: f64,
         theta: f64,
         kappa: f64,
-        sigma: f64_rho: f64,
-    ) -> Result<f64> {
+        sigma: f64,
+        _rho: f64,
+    ) -> IntegrateResult<f64> {
         // 3/2 model: dv_t = κ(θ - v_t)dt + σ v_t^(3/2) dW_t
         // Use moment-matching approximation
         let mean_var = theta + (v0 - theta) * (-kappa * option.maturity).exp();
@@ -852,7 +857,7 @@ impl StochasticPDESolver {
         option: &FinancialOption,
         n_paths: usize,
         antithetic: bool,
-    ) -> Result<f64> {
+    ) -> IntegrateResult<f64> {
         let mut rng = rand::rng();
         let _normal = StandardNormal;
 
@@ -980,7 +985,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         rng: &mut ThreadRng,
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut v_path = vec![sigma * sigma]; // Constant variance
 
@@ -1013,7 +1018,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         original_path: &(Vec<f64>, Vec<f64>),
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut v_path = vec![sigma * sigma];
 
@@ -1045,7 +1050,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         rng: &mut ThreadRng,
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut v_path = vec![v0];
 
@@ -1087,7 +1092,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         rng: &mut ThreadRng,
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut sigma_path = vec![alpha * option.spot.powf(beta)];
 
@@ -1127,7 +1132,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         rng: &mut ThreadRng,
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut vol_path = Vec::new();
 
@@ -1163,7 +1168,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         rng: &mut ThreadRng,
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut v_path = vec![v0];
 
@@ -1212,7 +1217,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         rng: &mut ThreadRng,
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut v_path = vec![v0];
 
@@ -1254,7 +1259,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         rng: &mut ThreadRng,
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut v_path = vec![v0];
 
@@ -1285,7 +1290,7 @@ impl StochasticPDESolver {
     }
 
     /// Fourier transform pricing (for European options)
-    fn price_fourier_transform(&self, option: &FinancialOption) -> Result<f64> {
+    fn price_fourier_transform(&self, option: &FinancialOption) -> IntegrateResult<f64> {
         match &self.volatility_model {
             VolatilityModel::Constant(sigma) => {
                 // Use Black-Scholes closed form
@@ -1364,7 +1369,7 @@ impl StochasticPDESolver {
     }
 
     /// Black-Scholes closed-form formula
-    fn black_scholes_formula(&self, option: &FinancialOption, sigma: f64) -> Result<f64> {
+    fn black_scholes_formula(&self, option: &FinancialOption, sigma: f64) -> IntegrateResult<f64> {
         let s = option.spot;
         let k = option.strike;
         let r = option.risk_free_rate;
@@ -1396,7 +1401,7 @@ impl StochasticPDESolver {
         kappa: f64,
         sigma: f64,
         rho: f64,
-    ) -> Result<f64> {
+    ) -> IntegrateResult<f64> {
         // Simplified implementation using characteristic function
         // Full implementation would use FFT for efficiency
 
@@ -1483,7 +1488,7 @@ impl StochasticPDESolver {
         sigma: f64,
         rho: f64,
         r: f64,
-    ) -> Result<f64> {
+    ) -> IntegrateResult<f64> {
 
         // FFT parameters
         let n = 4096; // Power of 2 for FFT efficiency
@@ -1541,7 +1546,7 @@ impl StochasticPDESolver {
     /// Simple FFT implementation for option pricing
     #[allow(dead_code)]
     #[allow(clippy::only_used_in_recursion)]
-    fn fft_1d(&self, input: &[Complex64]) -> Result<Vec<Complex64>> {
+    fn fft_1d(&self, input: &[Complex64]) -> IntegrateResult<Vec<Complex64>> {
 
         let n = input.len();
         if n <= 1 {
@@ -1589,7 +1594,7 @@ impl StochasticPDESolver {
     }
 
     /// Tree method pricing
-    fn price_tree(&self, option: &FinancialOption, n_steps: usize) -> Result<f64> {
+    fn price_tree(&self, option: &FinancialOption, n_steps: usize) -> IntegrateResult<f64> {
         match &self.volatility_model {
             VolatilityModel::Constant(sigma) => self.binomial_tree(option, *sigma, n_steps),
             VolatilityModel::SABR {
@@ -1646,7 +1651,7 @@ impl StochasticPDESolver {
     }
 
     /// Binomial tree pricing
-    fn binomial_tree(&self, option: &FinancialOption, sigma: f64, n_steps: usize) -> Result<f64> {
+    fn binomial_tree(&self, option: &FinancialOption, sigma: f64, n_steps: usize) -> IntegrateResult<f64> {
         let dt = option.maturity / n_steps as f64;
         let u = (sigma * dt.sqrt()).exp();
         let d = 1.0 / u;
@@ -1716,7 +1721,7 @@ impl StochasticPDESolver {
         b: &[f64],
         c: &[f64],
         d: &[f64],
-    ) -> Result<Vec<f64>> {
+    ) -> IntegrateResult<Vec<f64>> {
         let n = b.len();
         let mut c_star = vec![0.0; n];
         let mut d_star = vec![0.0; n];
@@ -1746,8 +1751,12 @@ impl StochasticPDESolver {
 
     /// Apply boundary conditions for Heston PDE
     fn apply_heston_boundary_conditions(
-        &self_u: &mut Array2<f64>, _t_idx: usize, _option: &FinancialOption_n_vol: usize,
-    ) -> Result<()> {
+        &self,
+        _u: &mut Array2<f64>,
+        _t_idx: usize,
+        _option: &FinancialOption,
+        _n_vol: usize,
+    ) -> IntegrateResult<()> {
         // Boundary conditions at S = 0 and S = S_max
         // At v = 0 (deterministic case)
         // At v = v_max
@@ -1759,7 +1768,7 @@ impl StochasticPDESolver {
     }
 
     /// Calculate Greeks (sensitivities)
-    pub fn calculate_greeks(&self, option: &FinancialOption) -> Result<Greeks> {
+    pub fn calculate_greeks(&self, option: &FinancialOption) -> IntegrateResult<Greeks> {
         let base_price = self.price_option(option)?;
         let h = 0.01; // Finite difference step
 
@@ -1821,7 +1830,7 @@ impl StochasticPDESolver {
         dt: f64,
         rng: &mut ThreadRng,
         jump: &JumpProcess,
-    ) -> Result<f64> {
+    ) -> IntegrateResult<f64> {
         match jump {
             JumpProcess::Poisson {
                 lambda,
@@ -1896,7 +1905,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         rng: &mut ThreadRng,
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut v_path = vec![sigma * sigma];
 
@@ -1932,7 +1941,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         rng: &mut ThreadRng,
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut v_path = vec![0.0]; // NIG doesn't have explicit volatility process
 
@@ -1986,7 +1995,7 @@ impl StochasticPDESolver {
         n_steps: usize,
         dt: f64,
         rng: &mut ThreadRng,
-    ) -> Result<(Vec<f64>, Vec<f64>)> {
+    ) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         let mut s_path = vec![option.spot];
         let mut v_path = vec![0.0];
 
@@ -2004,7 +2013,7 @@ impl StochasticPDESolver {
             // Positive jumps
             let n_pos = rng.sample(rand_distr::Poisson::new(lambda_pos).unwrap()) as usize;
             for _ in 0..n_pos {
-                let u: f64 = rng.random();
+                let u: f64 = rng.gen();
                 let jump = (u.powf(-1.0 / (1.0 - y)) - 1.0) / g;
                 if jump > epsilon {
                     jump_sum += jump;
@@ -2014,7 +2023,7 @@ impl StochasticPDESolver {
             // Negative jumps
             let n_neg = rng.sample(rand_distr::Poisson::new(lambda_neg).unwrap()) as usize;
             for _ in 0..n_neg {
-                let u: f64 = rng.random();
+                let u: f64 = rng.gen();
                 let jump = -((u.powf(-1.0 / (1.0 - y)) - 1.0) / m);
                 if jump.abs() > epsilon {
                     jump_sum += jump;
@@ -2401,7 +2410,7 @@ use std::sync::{Arc, RwLock};
             model_params: &HestonModelParams,
             n_paths: usize,
             n_steps: usize,
-        ) -> Result<OptionPricingResult> {
+        ) -> IntegrateResult<OptionPricingResult> {
             let start_time = std::time::Instant::now();
 
             // Generate quantum-inspired random _paths
@@ -2456,7 +2465,7 @@ use std::sync::{Arc, RwLock};
             random_paths: &Array2<f64>,
             params: &HestonModelParams,
             n_steps: usize,
-        ) -> Result<Array2<f64>> {
+        ) -> IntegrateResult<Array2<f64>> {
             let n_paths = random_paths.nrows();
             let mut price_paths = Array2::zeros((n_paths, n_steps + 1));
             let dt = params.maturity / n_steps as f64;
@@ -2510,7 +2519,7 @@ use std::sync::{Arc, RwLock};
             &self,
             price_paths: &Array2<f64>,
             option: &FinancialOption,
-        ) -> Result<Array1<f64>> {
+        ) -> IntegrateResult<Array1<f64>> {
             let n_paths = price_paths.nrows();
             let n_steps = price_paths.ncols();
             let mut payoffs = Array1::zeros(n_paths);
@@ -2552,7 +2561,7 @@ use std::sync::{Arc, RwLock};
 
 /// Real-time risk management system with machine learning
 pub mod realtime_risk_engine {
-    use ndarray::array;
+    use ndarray::{array, s};
     use std::collections::VecDeque;
 
     /// Real-time risk monitor with predictive analytics
@@ -2802,7 +2811,8 @@ pub mod realtime_risk_engine {
         /// Check for risk threshold breaches and generate alerts
         fn check_risk_alerts(
             &mut self,
-            snapshot: &RiskSnapshot_predicted_risk: f64,
+            snapshot: &RiskSnapshot,
+            _predicted_risk: f64,
             timestamp: f64,
         ) -> Vec<RiskAlert> {
             let mut alerts = Vec::new();
@@ -3023,7 +3033,7 @@ pub mod advanced_exotic_derivatives {
     }
 
     impl Default for ExoticParameters {
-        fn default(&self) -> Self {
+        fn default() -> Self {
             Self {
                 n_monitoring: 252, // Daily monitoring
                 state_variables: HashMap::new(),
@@ -3070,7 +3080,7 @@ pub mod advanced_exotic_derivatives {
         }
 
         /// Price exotic option using Monte Carlo simulation
-        pub fn price_exotic_option(&self, option: &ExoticOption) -> Result<ExoticPricingResult> {
+        pub fn price_exotic_option(&self, option: &ExoticOption) -> IntegrateResult<ExoticPricingResult> {
             match &option.exotic_type {
                 ExoticOptionType::Lookback { lookback_type } => {
                     self.price_lookback_option(&option.base_option, *lookback_type)
@@ -3105,7 +3115,7 @@ pub mod advanced_exotic_derivatives {
             &self,
             option: &FinancialOption,
             lookback_type: LookbackType,
-        ) -> Result<ExoticPricingResult> {
+        ) -> IntegrateResult<ExoticPricingResult> {
             let dt = option.maturity / 252.0; // Daily steps
             let mut payoffs = Vec::with_capacity(self.n_simulations);
             let mut rng = rand::rng();
@@ -3178,7 +3188,7 @@ pub mod advanced_exotic_derivatives {
             option: &FinancialOption,
             averaging_method: AveragingMethod,
             observation_times: &[f64],
-        ) -> Result<ExoticPricingResult> {
+        ) -> IntegrateResult<ExoticPricingResult> {
             let mut payoffs = Vec::with_capacity(self.n_simulations);
             let mut rng = rand::rng();
             let sigma = 0.2; // Default volatility
@@ -3248,7 +3258,7 @@ pub mod advanced_exotic_derivatives {
             barrier_type: BarrierType,
             barrier_level: f64,
             rebate: f64,
-        ) -> Result<ExoticPricingResult> {
+        ) -> IntegrateResult<ExoticPricingResult> {
             let dt = option.maturity / 252.0; // Daily steps
             let mut payoffs = Vec::with_capacity(self.n_simulations);
             let mut rng = rand::rng();
@@ -3325,7 +3335,7 @@ pub mod advanced_exotic_derivatives {
             option: &FinancialOption,
             digital_type: DigitalType,
             cash_amount: f64,
-        ) -> Result<ExoticPricingResult> {
+        ) -> IntegrateResult<ExoticPricingResult> {
             let mut payoffs = Vec::with_capacity(self.n_simulations);
             let mut rng = rand::rng();
             let sigma = 0.2;
@@ -3385,7 +3395,7 @@ pub mod advanced_exotic_derivatives {
             dt: f64,
             n_steps: usize,
             rng: &mut impl Rng,
-        ) -> Result<Vec<f64>> {
+        ) -> IntegrateResult<Vec<f64>> {
             let mut path = Vec::with_capacity(n_steps + 1);
             path.push(initial_price);
             let mut current_price = initial_price;
@@ -3556,7 +3566,7 @@ pub mod advanced_solvers {
             lambda: f64,
             mu_jump: f64,
             sigma_jump: f64,
-        ) -> Result<f64> {
+        ) -> IntegrateResult<f64> {
             let dt = option.maturity / (self.n_time - 1) as f64;
             let ds = (self.s_max - self.s_min) / (self.n_asset - 1) as f64;
 
@@ -3621,7 +3631,7 @@ pub mod advanced_solvers {
             &self_lambda: f64,
             mu_jump: f64,
             sigma_jump: f64, _ds: f64,
-        ) -> Result<Array1<f64>> {
+        ) -> IntegrateResult<Array1<f64>> {
             let mut integral_weights = Array1::zeros(self.integration_points);
 
             // Numerical integration over _jump sizes
@@ -3713,7 +3723,7 @@ pub mod advanced_solvers {
             }
         }
 
-        fn interpolate_solution(&self, v: &Array2<f64>, spot: f64, ds: f64) -> Result<f64> {
+        fn interpolate_solution(&self, v: &Array2<f64>, spot: f64, ds: f64) -> IntegrateResult<f64> {
             let i = ((spot - self.s_min) / ds) as usize;
             if i >= self.n_asset - 1 {
                 return Ok(v[[0, self.n_asset - 1]]);
@@ -3758,7 +3768,7 @@ pub mod advanced_solvers {
             &self,
             option: &FinancialOption,
             volatility_model: &VolatilityModel,
-        ) -> Result<f64> {
+        ) -> IntegrateResult<f64> {
             let dt = option.maturity / self.n_steps as f64;
             let discount = (-option.risk_free_rate * dt).exp();
 
@@ -3839,7 +3849,7 @@ pub mod advanced_solvers {
             &self,
             option: &FinancialOption,
             volatility_model: &VolatilityModel,
-        ) -> Result<Array2<f64>> {
+        ) -> IntegrateResult<Array2<f64>> {
             let mut paths = Array2::zeros((self.n_paths, self.n_steps + 1));
             let dt = option.maturity / self.n_steps as f64;
 
@@ -3881,7 +3891,7 @@ pub mod advanced_solvers {
             }
         }
 
-        fn polynomial_regression(&self, x: &[f64], y: &[f64]) -> Result<Vec<f64>> {
+        fn polynomial_regression(&self, x: &[f64], y: &[f64]) -> IntegrateResult<Vec<f64>> {
             let n = x.len();
             if n == 0 {
                 return Ok(vec![]);
@@ -3916,7 +3926,7 @@ pub mod advanced_solvers {
             Ok(fitted_values)
         }
 
-        fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Vec<f64>> {
+        fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> IntegrateResult<Vec<f64>> {
             let n = a.nrows();
             let mut aug = Array2::zeros((n, n + 1));
 
@@ -4018,7 +4028,7 @@ pub mod advanced_solvers {
         }
 
         /// Calibrate volatility surface using SVI parameterization
-        pub fn calibrate_svi(&self, spot: f64, risk_free_rate: f64) -> Result<()> {
+        pub fn calibrate_svi(&self, spot: f64, risk_free_rate: f64) -> IntegrateResult<()> {
             for (t_idx, &maturity) in self.maturities.iter().enumerate() {
                 let quotes_for_maturity: Vec<_> = self
                     .market_data
@@ -4076,7 +4086,7 @@ pub mod advanced_solvers {
             &self,
             option: &FinancialOption,
             market_price: f64,
-        ) -> Result<f64> {
+        ) -> IntegrateResult<f64> {
             let mut sigma = 0.2; // Initial guess
             let tolerance = 1e-6;
             let max_iterations = 100;
@@ -4169,7 +4179,7 @@ pub mod advanced_solvers {
             &self, _log_moneyness: &[f64],
             implied_vols: &[f64],
             maturity: f64,
-        ) -> Result<SVIParameters> {
+        ) -> IntegrateResult<SVIParameters> {
             // Simple least squares fit for SVI parameters
             // In practice, this would use constrained optimization
 
@@ -4245,7 +4255,7 @@ pub mod advanced_solvers {
             &mut self,
             training_samples: usize,
             learning_rate: f64,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let mut rng = rand::rng();
 
             for _ in 0..training_samples {
@@ -4283,7 +4293,7 @@ pub mod advanced_solvers {
         }
 
         /// Price option using trained neural network
-        pub fn price_option_ml(&self, option: &FinancialOption, vol: f64) -> Result<f64> {
+        pub fn price_option_ml(&self, option: &FinancialOption, vol: f64) -> IntegrateResult<f64> {
             let input = vec![
                 option.spot,
                 option.strike,
@@ -4295,7 +4305,7 @@ pub mod advanced_solvers {
             self.forward_pass(&input)
         }
 
-        fn forward_pass(&self, input: &[f64]) -> Result<f64> {
+        fn forward_pass(&self, input: &[f64]) -> IntegrateResult<f64> {
             let mut activations = Array1::from_vec(input.to_vec());
 
             for weights in &self.network_weights {
@@ -4309,7 +4319,7 @@ pub mod advanced_solvers {
 
         fn backward_pass(
             &mut self_input: &[f64], _error: f64, _learning_rate: f64,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             // Simplified backward pass implementation
             // In practice would implement full backpropagation
             Ok(())
@@ -4455,6 +4465,7 @@ pub mod advanced_solvers {
 pub mod financial_optimizations {
 use std::sync::Mutex;
 use std::time::{Instant, SystemTime};
+use ndarray::{s, Array1, Array2, Array3};
 
     /// GPU-accelerated financial PDE solver with memory management
     pub struct GPUFinancialSolver {
@@ -4525,7 +4536,7 @@ use std::time::{Instant, SystemTime};
             stochastic_params: &StochasticPDEParams,
             time_horizon: f64,
             n_time_steps: usize,
-        ) -> Result<Array3<f64>> {
+        ) -> IntegrateResult<Array3<f64>> {
             let dt = time_horizon / n_time_steps as f64;
             let mut solution = Array3::zeros((n_time_steps + 1, self.nx, self.ny));
 
@@ -4570,7 +4581,7 @@ use std::time::{Instant, SystemTime};
             dt: f64,
             boundary_conditions: &FinancialBoundaryConditions,
             params: &StochasticPDEParams,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             // Simplified GPU kernel simulation
             // In practice, this would use CUDA/OpenCL/Vulkan compute shaders
 
@@ -4635,7 +4646,7 @@ use std::time::{Instant, SystemTime};
             dt: f64,
             boundary_conditions: &FinancialBoundaryConditions,
             params: &StochasticPDEParams,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             // Extract current values to avoid borrow checker issues
             let current_values = solution.slice(s![t_step, .., ..]).to_owned();
 
@@ -4687,7 +4698,7 @@ use std::time::{Instant, SystemTime};
             j_start: usize,
             dt: f64,
             params: &StochasticPDEParams,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             // SIMD processing simulation
             for offset in 0..4 {
                 let j = j_start + offset;
@@ -4707,7 +4718,7 @@ use std::time::{Instant, SystemTime};
             j: usize,
             dt: f64,
             params: &StochasticPDEParams,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             let u_ij = current[[i, j]];
             let u_ip1j = current[[i + 1, j]];
             let u_im1j = if i > 0 { current[[i - 1, j]] } else { 0.0 };
@@ -4982,7 +4993,7 @@ use std::time::{Instant, SystemTime};
             &self,
             solution: &mut ArrayViewMut2<f64>,
             boundary_conditions: &FinancialBoundaryConditions,
-        ) -> Result<()> {
+        ) -> IntegrateResult<()> {
             match boundary_conditions {
                 FinancialBoundaryConditions::Dirichlet {
                     left,
@@ -5234,7 +5245,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Process market data tick with latency optimization
-        pub fn process_market_tick(&self, tick: MarketTick) -> Result<Vec<TradingSignal>> {
+        pub fn process_market_tick(&self, tick: MarketTick) -> IntegrateResult<Vec<TradingSignal>> {
             let start_time = Instant::now();
 
             // Update market data buffer
@@ -5267,7 +5278,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Update order book with new tick data
-        fn update_order_book(&self, tick: &MarketTick) -> Result<()> {
+        fn update_order_book(&self, tick: &MarketTick) -> IntegrateResult<()> {
             let mut order_book = self.order_book.lock().unwrap();
 
             // Update timestamp
@@ -5293,7 +5304,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Generate trading signals based on market data
-        fn generate_trading_signals(&self, tick: &MarketTick) -> Result<Vec<TradingSignal>> {
+        fn generate_trading_signals(&self, tick: &MarketTick) -> IntegrateResult<Vec<TradingSignal>> {
             let mut signals = Vec::new();
 
             // Mean reversion signal
@@ -5321,7 +5332,7 @@ use std::time::{Instant, SystemTime};
         fn compute_mean_reversion_signal(
             &self,
             tick: &MarketTick,
-        ) -> Result<Option<TradingSignal>> {
+        ) -> IntegrateResult<Option<TradingSignal>> {
             let buffer = self.market_data_buffer.lock().unwrap();
 
             if buffer.len() < 20 {
@@ -5374,7 +5385,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Compute momentum trading signal
-        fn compute_momentum_signal(&self, tick: &MarketTick) -> Result<Option<TradingSignal>> {
+        fn compute_momentum_signal(&self, tick: &MarketTick) -> IntegrateResult<Option<TradingSignal>> {
             let buffer = self.market_data_buffer.lock().unwrap();
 
             if buffer.len() < 5 {
@@ -5416,7 +5427,7 @@ use std::time::{Instant, SystemTime};
         fn detect_arbitrage_opportunities(
             &self,
             tick: &MarketTick,
-        ) -> Result<Option<TradingSignal>> {
+        ) -> IntegrateResult<Option<TradingSignal>> {
             // Check for bid-ask spread arbitrage
             let spread = tick.ask_price - tick.bid_price;
             let mid_price = (tick.bid_price + tick.ask_price) / 2.0;
@@ -5439,7 +5450,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Check risk limits before executing trade
-        pub fn check_risk_limits(&self, signal: &TradingSignal, quantity: f64) -> Result<bool> {
+        pub fn check_risk_limits(&self, signal: &TradingSignal, quantity: f64) -> IntegrateResult<bool> {
             let positions = self.positions.lock().unwrap();
 
             // Check position limit
@@ -5493,15 +5504,15 @@ use std::time::{Instant, SystemTime};
 
     /// Trait for pricing models
     pub trait PricingModel: Send + Sync {
-        fn price_instrument(_params: &InstrumentParameters) -> Result<f64>;
-        fn calculate_greeks(_params: &InstrumentParameters) -> Result<Greeks>;
-        fn calibrate(_market_data: &[MarketQuote]) -> Result<()>;
+        fn price_instrument(&self, _params: &InstrumentParameters) -> IntegrateResult<f64>;
+        fn calculate_greeks(&self, _params: &InstrumentParameters) -> IntegrateResult<Greeks>;
+        fn calibrate(&self, _market_data: &[MarketQuote]) -> IntegrateResult<()>;
     }
 
     /// Trait for market data feeds
     pub trait MarketDataFeed: Send + Sync {
-        fn get_latest_quote(_symbol: &str) -> Result<MarketQuote>;
-        fn subscribe_to_updates(_symbols: &[String]) -> Result<()>;
+        fn get_latest_quote(_symbol: &str) -> IntegrateResult<MarketQuote>;
+        fn subscribe_to_updates(_symbols: &[String]) -> IntegrateResult<()>;
     }
 
     /// Instrument parameters for pricing
@@ -5633,7 +5644,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Price instrument with latency monitoring
-        pub fn price_instrument(&self, params: &InstrumentParameters) -> Result<f64> {
+        pub fn price_instrument(&self, params: &InstrumentParameters) -> IntegrateResult<f64> {
             let start_time = Instant::now();
 
             let instrument_key = format!("{:?}", params.instrument_type);
@@ -5662,7 +5673,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Calibrate all models to current market data
-        pub fn calibrate_models(&self) -> Result<()> {
+        pub fn calibrate_models(&self) -> IntegrateResult<()> {
             // Get market data for calibration outside the loop to avoid borrow checker issues
             let market_data = self.collect_market_data_for_calibration()?;
 
@@ -5673,7 +5684,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Collect market data for model calibration
-        fn collect_market_data_for_calibration(&self) -> Result<Vec<MarketQuote>> {
+        fn collect_market_data_for_calibration(&self) -> IntegrateResult<Vec<MarketQuote>> {
             let market_data = Vec::new();
 
             // Collect data from all market feeds
@@ -5747,14 +5758,14 @@ use std::time::{Instant, SystemTime};
 
     /// Risk model trait
     pub trait RiskModel: Send + Sync {
-        fn compute_portfolio_variance(_weights: &[f64], assets: &[Asset]) -> Result<f64>;
-        fn compute_var(_weights: &[f64], assets: &[Asset], confidence: f64) -> Result<f64>;
+        fn compute_portfolio_variance(&self, _weights: &[f64], assets: &[Asset]) -> IntegrateResult<f64>;
+        fn compute_var(&self, _weights: &[f64], assets: &[Asset], confidence: f64) -> IntegrateResult<f64>;
         fn compute_expected_shortfall(
             &self,
             weights: &[f64],
             assets: &[Asset],
             confidence: f64,
-        ) -> Result<f64>;
+        ) -> IntegrateResult<f64>;
     }
 
     /// Portfolio optimization constraints
@@ -5809,7 +5820,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Optimize portfolio weights
-        pub fn optimize_portfolio(&self) -> Result<Vec<f64>> {
+        pub fn optimize_portfolio(&self) -> IntegrateResult<Vec<f64>> {
             let n_assets = self.assets.len();
             if n_assets == 0 {
                 return Err(IntegrateError::ValueError(
@@ -5848,7 +5859,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Compute gradient of objective function
-        fn compute_objective_gradient(&self, weights: &[f64]) -> Result<Vec<f64>> {
+        fn compute_objective_gradient(&self, weights: &[f64]) -> IntegrateResult<Vec<f64>> {
             let n_assets = weights.len();
             let mut gradient = vec![0.0; n_assets];
 
@@ -5919,7 +5930,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Apply portfolio constraints
-        fn apply_constraints(&self, weights: &mut [f64]) -> Result<()> {
+        fn apply_constraints(&self, weights: &mut [f64]) -> IntegrateResult<()> {
             for constraint in &self.constraints {
                 match constraint {
                     PortfolioConstraint::WeightSum { target } => {
@@ -5944,7 +5955,7 @@ use std::time::{Instant, SystemTime};
         }
 
         /// Compute portfolio expected return
-        fn compute_portfolio_return(&self, weights: &[f64]) -> Result<f64> {
+        fn compute_portfolio_return(&self, weights: &[f64]) -> IntegrateResult<f64> {
             if weights.len() != self.assets.len() {
                 return Err(IntegrateError::ValueError(
                     "Weights length does not match number of assets".to_string(),
@@ -6031,7 +6042,7 @@ use std::time::{Instant, SystemTime};
                     &self,
                     weights: &[f64],
                     assets: &[Asset],
-                ) -> Result<f64> {
+                ) -> IntegrateResult<f64> {
                     let variance = weights
                         .iter()
                         .zip(assets.iter())
@@ -6042,13 +6053,13 @@ use std::time::{Instant, SystemTime};
 
                 fn compute_var(
                     &self_weights: &[f64], _assets: &[Asset], _confidence: f64,
-                ) -> Result<f64> {
+                ) -> IntegrateResult<f64> {
                     Ok(0.05) // 5% VaR
                 }
 
                 fn compute_expected_shortfall(
                     &self_weights: &[f64], _assets: &[Asset], _confidence: f64,
-                ) -> Result<f64> {
+                ) -> IntegrateResult<f64> {
                     Ok(0.07) // 7% Expected Shortfall
                 }
             }
@@ -6110,13 +6121,13 @@ pub struct EnhancedStochasticPDESolver {
 /// Interest rate models for enhanced pricing
 pub trait InterestRateModel: Send + Sync + std::fmt::Debug {
     /// Get interest rate at time t
-    fn rate(t: f64) -> f64;
+    fn rate(&self, t: f64) -> f64;
 
     /// Get rate derivative for sensitivity analysis
-    fn rate_derivative(t: f64) -> f64;
+    fn rate_derivative(&self, t: f64) -> f64;
 
     /// Calibrate model to market data
-    fn calibrate(_market_data: &[f64]) -> Result<()>;
+    fn calibrate(&self, _market_data: &[f64]) -> IntegrateResult<()>;
 }
 
 /// Hull-White one-factor model
@@ -6142,7 +6153,7 @@ impl InterestRateModel for HullWhiteModel {
         -self.alpha * (self.r0 - self.theta) * (-self.alpha * t).exp()
     }
 
-    fn calibrate(&mut self, market_data: &[f64]) -> Result<()> {
+    fn calibrate(&mut self, market_data: &[f64]) -> IntegrateResult<()> {
         // Simple calibration - in practice would use more sophisticated methods
         if market_data.len() >= 3 {
             self.alpha = market_data[0];
@@ -6176,7 +6187,7 @@ impl InterestRateModel for CIRModel {
         -self.kappa * (self.r0 - self.theta) * (-self.kappa * t).exp()
     }
 
-    fn calibrate(&mut self, market_data: &[f64]) -> Result<()> {
+    fn calibrate(&mut self, market_data: &[f64]) -> IntegrateResult<()> {
         if market_data.len() >= 3 {
             self.kappa = market_data[0];
             self.theta = market_data[1];
@@ -6220,7 +6231,7 @@ impl EnhancedStochasticPDESolver {
         correlations: &Array2<f64>,
         volatility_params: &HestonParameters,
         payoff_function: &dyn Fn(&[f64]) -> f64,
-    ) -> Result<Array3<f64>> {
+    ) -> IntegrateResult<Array3<f64>> {
         let _n_assets = initial_prices.len();
         let mut solution = Array3::zeros((self.n_asset, self.n_asset, self.n_time));
 
@@ -6250,7 +6261,7 @@ impl EnhancedStochasticPDESolver {
         solution: &mut Array3<f64>,
         initial_prices: &[f64],
         payoff_function: &dyn Fn(&[f64]) -> f64,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         let n_assets = initial_prices.len();
         let final_t_idx = self.n_time - 1;
 
@@ -6282,7 +6293,7 @@ impl EnhancedStochasticPDESolver {
         rate: f64,
         correlations: &Array2<f64>,
         volatility_params: &HestonParameters,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         let next_t_idx = t_idx + 1;
 
         // Extract current and next time slices
@@ -6391,7 +6402,7 @@ impl EnhancedStochasticPDESolver {
     }
 
     /// Apply boundary conditions with SIMD optimization
-    fn apply_boundary_conditions_simd(&self, slice: &mut ArrayViewMut2<f64>) -> Result<()> {
+    fn apply_boundary_conditions_simd(&self, slice: &mut ArrayViewMut2<f64>) -> IntegrateResult<()> {
         let n = self.n_asset;
 
         // Flatten boundary arrays for SIMD processing
@@ -6426,7 +6437,7 @@ impl EnhancedStochasticPDESolver {
         option_maturity: f64,
         strike: f64,
         option_type: OptionType,
-    ) -> Result<Array2<f64>> {
+    ) -> IntegrateResult<Array2<f64>> {
         let n_rate = 100; // Grid points for interest rate
         let rate_min = 0.0;
         let rate_max = 0.15;
@@ -6472,7 +6483,7 @@ impl EnhancedStochasticPDESolver {
         solution: &mut Array2<f64>,
         t_idx: usize,
         dr: f64,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         let n_rate = solution.nrows();
         let t = t_idx as f64 * self.dt;
 
@@ -6509,7 +6520,7 @@ impl EnhancedStochasticPDESolver {
         solution: &mut Array2<f64>,
         t_idx: usize,
         dr: f64,
-    ) -> Result<()> {
+    ) -> IntegrateResult<()> {
         let _n_rate = solution.nrows();
 
         // Similar to bond timestep but with option-specific boundary conditions
@@ -6523,7 +6534,7 @@ impl EnhancedStochasticPDESolver {
         &self,
         option_prices: &Array2<f64>,
         spot_prices: &Array1<f64>, _strike: f64, _time_to_maturity: f64, _volatility: f64,
-    ) -> Result<GreeksResult> {
+    ) -> IntegrateResult<GreeksResult> {
         let n_prices = spot_prices.len();
 
         // Delta: ∂V/∂S using SIMD
@@ -6572,7 +6583,7 @@ impl EnhancedStochasticPDESolver {
     pub fn real_time_calibration_simd(
         &mut self, _market_quotes: &[MarketQuote],
         calibration_instruments: &[CalibrationInstrument],
-    ) -> Result<CalibrationResult> {
+    ) -> IntegrateResult<CalibrationResult> {
         let _n_instruments = calibration_instruments.len();
         let _n_parameters = 5; // Example: vol, mean reversion, etc.
 
@@ -6628,7 +6639,7 @@ impl EnhancedStochasticPDESolver {
         &self,
         parameters: &Array1<f64>,
         instruments: &[CalibrationInstrument],
-    ) -> Result<Array1<f64>> {
+    ) -> IntegrateResult<Array1<f64>> {
         let n = instruments.len();
         let mut prices = Array1::zeros(n);
 
@@ -6657,7 +6668,7 @@ impl EnhancedStochasticPDESolver {
         &self,
         parameters: &Array1<f64>,
         instruments: &[CalibrationInstrument],
-    ) -> Result<Array2<f64>> {
+    ) -> IntegrateResult<Array2<f64>> {
         let n_instruments = instruments.len();
         let n_params = parameters.len();
         let mut jacobian = Array2::zeros((n_instruments, n_params));
@@ -6725,7 +6736,7 @@ impl EnhancedStochasticPDESolver {
     }
 
     /// Solve linear system using SIMD (simplified Gaussian elimination)
-    fn solve_linear_system_simd(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+    fn solve_linear_system_simd(a: &Array2<f64>, b: &Array1<f64>) -> IntegrateResult<Array1<f64>> {
         let n = a.nrows();
         let mut augmented = Array2::zeros((n, n + 1));
 
@@ -7008,7 +7019,7 @@ pub mod exotic_options {
         }
 
         /// Price exotic option using advanced Monte Carlo methods
-        pub fn price_exotic_option(&self, option: &ExoticOption) -> Result<PricingResult> {
+        pub fn price_exotic_option(&self, option: &ExoticOption) -> IntegrateResult<PricingResult> {
             match &option.option_type {
                 ExoticOptionType::Barrier { .. } => self.price_barrier_option(option),
                 ExoticOptionType::Asian { .. } => self.price_asian_option(option),
@@ -7022,7 +7033,7 @@ pub mod exotic_options {
         }
 
         /// Price barrier option with enhanced Monte Carlo
-        fn price_barrier_option(&self, option: &ExoticOption) -> Result<PricingResult> {
+        fn price_barrier_option(&self, option: &ExoticOption) -> IntegrateResult<PricingResult> {
             if let ExoticOptionType::Barrier {
                 barrier_level,
                 is_up,
@@ -7111,7 +7122,7 @@ pub mod exotic_options {
         }
 
         /// Price Asian option with control variate
-        fn price_asian_option(&self, option: &ExoticOption) -> Result<PricingResult> {
+        fn price_asian_option(&self, option: &ExoticOption) -> IntegrateResult<PricingResult> {
             if let ExoticOptionType::Asian {
                 averaging_type,
                 observation_dates,
@@ -7244,7 +7255,7 @@ pub mod exotic_options {
         }
 
         /// Price lookback option
-        fn price_lookback_option(&self, option: &ExoticOption) -> Result<PricingResult> {
+        fn price_lookback_option(&self, option: &ExoticOption) -> IntegrateResult<PricingResult> {
             if let ExoticOptionType::Lookback {
                 is_floating_strike,
                 extremum_so_far,
@@ -7312,7 +7323,7 @@ pub mod exotic_options {
         }
 
         /// Price rainbow option on multiple assets
-        fn price_rainbow_option(&self, option: &ExoticOption) -> Result<PricingResult> {
+        fn price_rainbow_option(&self, option: &ExoticOption) -> IntegrateResult<PricingResult> {
             if let ExoticOptionType::Rainbow {
                 n_assets,
                 payoff_type,
@@ -7398,13 +7409,13 @@ pub mod exotic_options {
         }
 
         /// Price basket option
-        fn price_basket_option(&self, option: &ExoticOption) -> Result<PricingResult> {
+        fn price_basket_option(&self, option: &ExoticOption) -> IntegrateResult<PricingResult> {
             // Implementation similar to rainbow basket payoff
             self.price_rainbow_option(option)
         }
 
         /// Price cliquet option
-        fn price_cliquet_option(_option: &ExoticOption) -> Result<PricingResult> {
+        fn price_cliquet_option(_option: &ExoticOption) -> IntegrateResult<PricingResult> {
             // Simplified implementation
             Ok(PricingResult {
                 price: 0.0,
@@ -7418,7 +7429,7 @@ pub mod exotic_options {
         }
 
         /// Price binary option
-        fn price_binary_option(&self, option: &ExoticOption) -> Result<PricingResult> {
+        fn price_binary_option(&self, option: &ExoticOption) -> IntegrateResult<PricingResult> {
             if let ExoticOptionType::Binary {
                 payout_amount,
                 is_cash_or_nothing,
@@ -7480,7 +7491,7 @@ pub mod exotic_options {
         }
 
         /// Price quanto option
-        fn price_quanto_option(_option: &ExoticOption) -> Result<PricingResult> {
+        fn price_quanto_option(_option: &ExoticOption) -> IntegrateResult<PricingResult> {
             // Simplified implementation
             Ok(PricingResult {
                 price: 0.0,
@@ -7822,7 +7833,7 @@ pub mod risk_management {
             current_portfolio_value: f64,
             scenarios: &[StressScenario],
             option_positions: &[ExoticOption],
-        ) -> Result<Vec<(String, f64)>> {
+        ) -> IntegrateResult<Vec<(String, f64)>> {
             let mut stress_results = Vec::new();
 
             for scenario in scenarios {
@@ -7842,8 +7853,9 @@ pub mod risk_management {
         fn calculate_stressed_portfolio_value(
             &self,
             current_value: f64,
-            scenario: &StressScenario_option_positions: &[ExoticOption],
-        ) -> Result<f64> {
+            scenario: &StressScenario,
+            _option_positions: &[ExoticOption],
+        ) -> IntegrateResult<f64> {
             // Simplified stress calculation
             let total_shock =
                 scenario.price_shocks.iter().sum::<f64>() / scenario.price_shocks.len() as f64;
@@ -8022,7 +8034,7 @@ pub mod advanced_performance_extensions {
 //             features: &Array2<f64>,
 //             targets: &Array1<f64>,
 //             epochs: usize,
-//         ) -> Result<()> {
+//         ) -> IntegrateResult<()> {
 //             for epoch in 0..epochs {
 //                 let mut total_loss = 0.0;
 //                 let n_samples = features.nrows();
@@ -8055,7 +8067,7 @@ pub mod advanced_performance_extensions {
 //         }
 
         /// Forward pass through the neural network
-        fn forward_pass(&self, input: &Array1<f64>) -> Result<(f64, Vec<Array1<f64>>)> {
+        fn forward_pass(&self, input: &Array1<f64>) -> IntegrateResult<(f64, Vec<Array1<f64>>)> {
             let mut activations = vec![input.clone()];
             let mut current_input = input.clone();
 
@@ -8081,7 +8093,7 @@ pub mod advanced_performance_extensions {
 //             input: &Array1<f64>,
 //             activations: &[Array1<f64>],
 //             output_error: f64,
-//         ) -> Result<()> {
+//         ) -> IntegrateResult<()> {
 //             let n_layers = self.weights.len();
 //             let mut delta = Array1::from_elem(1, output_error);
 // 
@@ -8125,12 +8137,11 @@ pub mod advanced_performance_extensions {
         }
 
         /// Predict volatility for given features
-        pub fn predict(&self, features: &Array1<f64>) -> Result<f64> {
+        pub fn predict(&self, features: &Array1<f64>) -> IntegrateResult<f64> {
             let (prediction_) = self.forward_pass(features)?;
             Ok(prediction)
         }
 
-        /// Create features from price and volatility history
 //         pub fn create_features(
 //             &self,
 //             prices: &Array1<f64>,
@@ -8268,7 +8279,7 @@ pub mod advanced_performance_extensions {
             &mut self,
             algorithm: QuantumAlgorithm,
             max_iterations: usize,
-        ) -> Result<PortfolioOptimizationResult> {
+        ) -> IntegrateResult<PortfolioOptimizationResult> {
             match algorithm {
                 QuantumAlgorithm::VQE => self.optimize_vqe(max_iterations),
                 QuantumAlgorithm::QAOA => self.optimize_qaoa(max_iterations),
@@ -8278,7 +8289,7 @@ pub mod advanced_performance_extensions {
         }
 
         /// Variational Quantum Eigensolver optimization
-        fn optimize_vqe(&self, max_iterations: usize) -> Result<PortfolioOptimizationResult> {
+        fn optimize_vqe(&self, max_iterations: usize) -> IntegrateResult<PortfolioOptimizationResult> {
             let mut best_weights = Array1::zeros(self.n_assets);
             let mut best_objective = f64::INFINITY;
             let mut converged = false;
@@ -8320,7 +8331,7 @@ pub mod advanced_performance_extensions {
         }
 
         /// QAOA optimization
-        fn optimize_qaoa(&self, max_iterations: usize) -> Result<PortfolioOptimizationResult> {
+        fn optimize_qaoa(&self, max_iterations: usize) -> IntegrateResult<PortfolioOptimizationResult> {
             let mut parameters = Array1::zeros(max_iterations * 2); // gamma and beta parameters
             let mut rng = rand::rng();
 
@@ -8370,7 +8381,7 @@ pub mod advanced_performance_extensions {
         fn optimize_quantum_annealing(
             &mut self,
             max_iterations: usize,
-        ) -> Result<PortfolioOptimizationResult> {
+        ) -> IntegrateResult<PortfolioOptimizationResult> {
             let mut best_weights = Array1::zeros(self.n_assets);
             let mut best_objective = f64::INFINITY;
 
@@ -8408,13 +8419,13 @@ pub mod advanced_performance_extensions {
         fn optimize_variational_circuit(
             &mut self,
             max_iterations: usize,
-        ) -> Result<PortfolioOptimizationResult> {
+        ) -> IntegrateResult<PortfolioOptimizationResult> {
             // Simplified implementation similar to VQE
             self.optimize_vqe(max_iterations)
         }
 
         /// Apply variational circuit for VQE
-        fn apply_variational_circuit(&self, theta: f64) -> Result<()> {
+        fn apply_variational_circuit(&self, theta: f64) -> IntegrateResult<()> {
             let n_states = self.quantum_state.len();
 
             // Apply rotation gates (simplified)
@@ -8438,7 +8449,7 @@ pub mod advanced_performance_extensions {
         }
 
         /// Apply QAOA layer
-        fn apply_qaoa_layer(&self, gamma: f64, beta: f64) -> Result<()> {
+        fn apply_qaoa_layer(&self, gamma: f64, beta: f64) -> IntegrateResult<()> {
             // Apply cost unitary
             self.apply_cost_unitary(gamma)?;
 
@@ -8449,7 +8460,7 @@ pub mod advanced_performance_extensions {
         }
 
         /// Apply cost unitary for portfolio optimization
-        fn apply_cost_unitary(&self, gamma: f64) -> Result<()> {
+        fn apply_cost_unitary(&self, gamma: f64) -> IntegrateResult<()> {
             let n_states = self.quantum_state.len();
 
             for i in 0..n_states {
@@ -8463,7 +8474,7 @@ pub mod advanced_performance_extensions {
         }
 
         /// Apply mixing unitary
-        fn apply_mixing_unitary(&mut self, beta: f64) -> Result<()> {
+        fn apply_mixing_unitary(&mut self, beta: f64) -> IntegrateResult<()> {
             let n_states = self.quantum_state.len();
             let mut new_state = Array1::zeros(n_states);
 
@@ -8483,7 +8494,7 @@ pub mod advanced_performance_extensions {
         }
 
         /// Apply annealing step
-        fn apply_annealing_step(&self, annealing_parameter: f64) -> Result<()> {
+        fn apply_annealing_step(&self, annealing_parameter: f64) -> IntegrateResult<()> {
             let n_states = self.quantum_state.len();
 
             // Quantum annealing interpolation between initial and final Hamiltonians
@@ -8519,14 +8530,14 @@ pub mod advanced_performance_extensions {
         }
 
         /// Measure portfolio weights from quantum state
-//         fn measure_portfolio_weights(&self) -> Result<Array1<f64>> {
+//         fn measure_portfolio_weights(&self) -> IntegrateResult<Array1<f64>> {
 //             let mut rng = rand::rng();
 // 
 //             // Quantum measurement simulation
 //             let probabilities: Vec<f64> = self.quantum_state.iter().map(|c| c.norm_sqr()).collect();
 // 
 //             // Sample according to quantum probabilities
-//             let random_value: f64 = rng.random();
+//             let random_value: f64 = rng.gen();
 //             let mut cumulative_prob = 0.0;
 //             let mut measured_state = 0;
 // 
@@ -8551,7 +8562,7 @@ pub mod advanced_performance_extensions {
 //         }
 
         /// Decode portfolio weights from quantum state index
-        fn decode_weights_from_state(&self, state_index: usize) -> Result<Array1<f64>> {
+        fn decode_weights_from_state(&self, state_index: usize) -> IntegrateResult<Array1<f64>> {
             let mut weights = Array1::zeros(self.n_assets);
             let max_weight_value = (1 << self.n_qubits_per_asset) - 1;
 
@@ -8565,7 +8576,7 @@ pub mod advanced_performance_extensions {
         }
 
         /// Calculate portfolio objective function
-        fn calculate_portfolio_objective(&self, weights: &Array1<f64>) -> Result<f64> {
+        fn calculate_portfolio_objective(&self, weights: &Array1<f64>) -> IntegrateResult<f64> {
             let expected_return = self.expected_returns.dot(weights);
             let portfolio_variance = weights.dot(&self.covariance_matrix.dot(weights));
 
@@ -8580,7 +8591,7 @@ pub mod advanced_performance_extensions {
         }
 
         /// Update QAOA parameters (simplified gradient descent)
-        fn update_qaoa_parameters(&self, parameters: &mut Array1<f64>, layer: usize) -> Result<()> {
+        fn update_qaoa_parameters(&self, parameters: &mut Array1<f64>, layer: usize) -> IntegrateResult<()> {
             let learning_rate = 0.01;
             let _epsilon = 1e-6;
 
@@ -8676,7 +8687,7 @@ pub mod advanced_performance_extensions {
         /// Cliquet option pricer
         impl CliquetOption {
             /// Price cliquet option using Monte Carlo
-            pub fn price_monte_carlo(&self, n_simulations: usize) -> Result<f64> {
+            pub fn price_monte_carlo(&self, n_simulations: usize) -> IntegrateResult<f64> {
                 let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(n_simulations);
 
@@ -8723,7 +8734,7 @@ pub mod advanced_performance_extensions {
             }
 
             /// Calculate delta using finite differences
-            pub fn calculate_delta(&self, n_simulations: usize, bump_size: f64) -> Result<f64> {
+            pub fn calculate_delta(&self, n_simulations: usize, bump_size: f64) -> IntegrateResult<f64> {
                 let original_price = self.price_monte_carlo(n_simulations)?;
 
                 let mut bumped_option = self.clone();
@@ -8737,7 +8748,7 @@ pub mod advanced_performance_extensions {
         /// Autocallable bond pricer
         impl AutocallableBond {
             /// Price autocallable bond using Monte Carlo
-            pub fn price_monte_carlo(&self, n_simulations: usize) -> Result<f64> {
+            pub fn price_monte_carlo(&self, n_simulations: usize) -> IntegrateResult<f64> {
                 let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(n_simulations);
 
@@ -8800,7 +8811,7 @@ pub mod advanced_performance_extensions {
             }
 
             /// Calculate probability of autocall at each observation date
-            pub fn autocall_probabilities(&self, n_simulations: usize) -> Result<Vec<f64>> {
+            pub fn autocall_probabilities(&self, n_simulations: usize) -> IntegrateResult<Vec<f64>> {
                 let mut rng = rand::rng();
                 let mut call_counts = vec![0; self.autocall_dates.len()];
 
@@ -8873,7 +8884,7 @@ pub mod advanced_performance_extensions {
                 &self,
                 heston_params: &HestonParameters,
                 n_simulations: usize,
-            ) -> Result<f64> {
+            ) -> IntegrateResult<f64> {
                 let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(n_simulations);
 

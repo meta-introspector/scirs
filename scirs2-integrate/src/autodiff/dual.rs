@@ -316,7 +316,7 @@ impl<F: IntegrateFloat> Div<F> for Dual<F> {
     }
 }
 
-impl<F: IntegrateFloat>, fmt::Display for Dual<F> {
+impl<F: IntegrateFloat> fmt::Display for Dual<F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} + {}ε", self.val, self.der)
     }
@@ -368,7 +368,7 @@ impl<F: IntegrateFloat> DualVector<F> {
     }
 
     /// Extract Jacobian
-    pub fn jacobian() -> &Array1<Array1<F>> {
+    pub fn jacobian(&self) -> &Array1<Array1<F>> {
         &self.jacobian
     }
 }

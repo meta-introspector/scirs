@@ -386,21 +386,21 @@ pub struct SafeArrayOps;
 impl SafeArrayOps {
     /// Safe array indexing with bounds checking
     pub fn safe_index<T>(array: &[T], index: usize) -> CoreResult<&T> {
-        _array.get(index).ok_or_else(|| {
+        array.get(index).ok_or_else(|| {
             CoreError::IndexError(ErrorContext::new(format!(
-                "Array index {} out of bounds for _array of length {}",
+                "Array index {} out of bounds for array of length {}",
                 index,
-                _array.len()
+                array.len()
             )))
         })
     }
 
     /// Safe mutable array indexing with bounds checking
     pub fn safe_index_mut<T>(array: &mut [T], index: usize) -> CoreResult<&mut T> {
-        let len = _array.len();
-        _array.get_mut(index).ok_or_else(|| {
+        let len = array.len();
+        array.get_mut(index).ok_or_else(|| {
             CoreError::IndexError(ErrorContext::new(format!(
-                "Array index {index} out of bounds for _array of length {len}"
+                "Array index {index} out of bounds for array of length {len}"
             )))
         })
     }
@@ -413,15 +413,15 @@ impl SafeArrayOps {
             ))));
         }
 
-        if end > _array.len() {
+        if end > array.len() {
             return Err(CoreError::IndexError(ErrorContext::new(format!(
-                "Slice end index {} out of bounds for _array of length {}",
+                "Slice end index {} out of bounds for array of length {}",
                 end,
-                _array.len()
+                array.len()
             ))));
         }
 
-        Ok(&_array[start..end])
+        Ok(&array[start..end])
     }
 
     /// Safe array copying with size validation
@@ -449,7 +449,7 @@ pub struct ResourceGuard<T> {
 
 impl<T> ResourceGuard<T> {
     /// Create a new resource guard
-    pub fn new<F>(_resource: T, cleanup: F) -> Self
+    pub fn new<F>(resource: T, cleanup: F) -> Self
     where
         F: FnOnce(T) + Send + 'static,
     {

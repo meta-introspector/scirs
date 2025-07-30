@@ -56,7 +56,8 @@ impl EulerConvention {
             "yxy" => Ok(EulerConvention::Yxy),
             "yzy" => Ok(EulerConvention::Yzy),
             "zxz" => Ok(EulerConvention::Zxz),
-            "zyz" => Ok(EulerConvention::Zyz, _ => Err(SpatialError::ValueError(format!(
+            "zyz" => Ok(EulerConvention::Zyz),
+            _ => Err(SpatialError::ValueError(format!(
                 "Invalid Euler convention: {s}"
             ))),
         }
@@ -74,7 +75,7 @@ impl EulerConvention {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::transform::Rotation;
+/// use scirs2_spatial::transform::Rotation;
 /// use ndarray::array;
 /// use std::f64::consts::PI;
 ///
@@ -130,7 +131,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     ///
     /// // Create a quaternion for a 90-degree rotation around the x-axis
@@ -174,7 +175,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     ///
     /// // Create a rotation matrix for a 90-degree rotation around the z-axis
@@ -263,7 +264,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -378,7 +379,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -433,7 +434,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -481,7 +482,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -632,7 +633,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -682,7 +683,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     ///
     /// let angles = array![0.0, 0.0, 0.0];
@@ -703,7 +704,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -734,7 +735,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -769,7 +770,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -804,7 +805,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -852,7 +853,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     ///
     /// let identity = Rotation::identity();
@@ -874,7 +875,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     ///
     /// let random_rot = Rotation::random();
     /// ```
@@ -916,7 +917,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -983,7 +984,7 @@ impl Rotation {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::Rotation;
+    /// use scirs2_spatial::transform::Rotation;
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///

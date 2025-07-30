@@ -195,7 +195,7 @@ impl ResourceAwareConfigBuilder {
     }
 
     /// Enable or disable automatic adjustment.
-    pub const fn adjust(bool: TypeName) -> Self {
+    pub fn with_auto_adjust(mut self, auto_adjust: bool) -> Self {
         self.config.auto_adjust = auto_adjust;
         self
     }
@@ -398,6 +398,11 @@ impl ResourceMonitor {
         }
 
         false
+    }
+
+    /// Get the optimal prefetch count based on current resources.
+    pub fn get_optimal_prefetch_count(&mut self, base_prefetch_count: usize) -> usize {
+        self.count(base_prefetch_count)
     }
 
     /// Get the latest resource snapshot.
@@ -650,11 +655,11 @@ pub struct PerformanceStats {
 
 impl ResourceAwarePrefetcher {
     /// Create a new resource-aware prefetcher.
-    pub fn config(ResourceAwareConfig: ResourceAwareConfig) -> Self {
+    pub fn config(baseconfig: PrefetchConfig, resource_config: ResourceAwareConfig) -> Self {
         Self {
             monitor: ResourceMonitor::new(resource_config),
-            baseconfig: _base_config.clone(),
-            currentconfig: _base_config,
+            baseconfig: baseconfig.clone(),
+            currentconfig: baseconfig,
             enabled: true,
             performance_stats: Arc::new(Mutex::new(PerformanceStats::default())),
             last_stats_update: Instant::now(),
@@ -668,11 +673,11 @@ impl ResourceAwarePrefetcher {
         }
 
         // Check if we should adjust prefetching based on resources
-        let mut config = self.current_config.clone();
+        let mut config = self.currentconfig.clone();
         let changed = self.monitor.adjust_prefetch_config(&mut config);
 
         if changed {
-            self.current_config = config;
+            self.currentconfig = config;
 
             // Take a resource snapshot and record it with stats
             if let Some(_snapshot) = self.monitor.get_latest_snapshot() {
@@ -692,7 +697,7 @@ impl ResourceAwarePrefetcher {
     }
 
     /// Record performance data from prefetching.
-    pub fn prefetched(&self, is_prefetched: bool, latency_ns: f64, prefetch_stats: &PrefetchStats,
+    pub fn record_prefetch_performance(&mut self, is_prefetched: bool, latency_ns: f64, prefetch_stats: &PrefetchStats,
     ) {
         if let Ok(mut stats) = self.performance_stats.lock() {
             // Update overall stats
@@ -710,11 +715,11 @@ impl ResourceAwarePrefetcher {
                 }
             } else {
                 // Moving average for non-prefetch latency
-                if _stats.non_prefetch_latency_ns == 0.0 {
-                    _stats.non_prefetch_latency_ns = latency_ns;
+                if stats.non_prefetch_latency_ns == 0.0 {
+                    stats.non_prefetch_latency_ns = latency_ns;
                 } else {
-                    _stats.non_prefetch_latency_ns =
-                        _stats.non_prefetch_latency_ns * 0.9 + latency_ns * 0.1;
+                    stats.non_prefetch_latency_ns =
+                        stats.non_prefetch_latency_ns * 0.9 + latency_ns * 0.1;
                 }
             }
         }
@@ -737,13 +742,13 @@ impl ResourceAwarePrefetcher {
     }
 
     /// Get the current prefetching configuration.
-    pub fn get_current_config(&self) -> PrefetchConfig {
-        self.current_config.clone()
+    pub fn get_currentconfig(&self) -> PrefetchConfig {
+        self.currentconfig.clone()
     }
 
     /// Get the base prefetching configuration.
-    pub fn get_base_config(&self) -> PrefetchConfig {
-        self.base_config.clone()
+    pub fn get_baseconfig(&self) -> PrefetchConfig {
+        self.baseconfig.clone()
     }
 
     /// Get a snapshot of the current resource usage.
@@ -783,12 +788,12 @@ impl ResourceAwarePrefetcher {
     /// Get the optimal prefetch count based on current resources.
     pub fn get_optimal_prefetch_count(&mut self) -> usize {
         self.monitor
-            .get_optimal_prefetch_count(self.base_config.prefetch_count)
+            .get_optimal_prefetch_count(self.baseconfig.prefetch_count)
     }
 
     /// Reset the prefetching configuration to the base configuration.
     pub fn reset_config(&mut self) {
-        self.current_config = self.base_config.clone();
+        self.currentconfig = self.baseconfig.clone();
     }
 }
 
@@ -806,16 +811,16 @@ pub struct ResourceAwarePrefetchingConfig {
 #[allow(dead_code)]
 impl ResourceAwarePrefetchingConfig {
     /// Create a new resource-aware prefetching configuration.
-    pub fn config(ResourceAwareConfig: ResourceAwareConfig) -> Self {
+    pub fn config(baseconfig: PrefetchConfig, resource_config: ResourceAwareConfig) -> Self {
         Self {
-            base_config,
-            resource_config,
+            baseconfig: baseconfig,
+            resourceconfig: resource_config,
         }
     }
 
     /// Create a resource-aware prefetcher from this configuration.
     pub fn create_prefetcher(&self) -> ResourceAwarePrefetcher {
-        ResourceAwarePrefetcher::new(self.base_config.clone(), self.resource_config.clone())
+        ResourceAwarePrefetcher::config(self.baseconfig.clone(), self.resourceconfig.clone())
     }
 }
 
@@ -926,7 +931,7 @@ mod tests {
     #[test]
     fn test_resource_aware_prefetcher() {
         // Create a resource-aware prefetcher
-        let base_config = PrefetchConfig {
+        let baseconfig = PrefetchConfig {
             prefetch_count: 5,
             ..Default::default()
         };
@@ -938,7 +943,7 @@ mod tests {
             ..Default::default()
         };
 
-        let mut prefetcher = ResourceAwarePrefetcher::new(base_config, resource_config);
+        let mut prefetcher = ResourceAwarePrefetcher::new(baseconfig, resource_config);
 
         // Record some performance data
         let stats = PrefetchStats {

@@ -5,8 +5,8 @@
 //! integration with the broader ML ecosystem.
 
 use crate::error::{Result, TextError};
-use crate::model__registry::{ModelMetadata, ModelRegistry};
-use crate::pos__tagging::PosTagger;
+use crate::model_registry::{ModelMetadata, ModelRegistry};
+use crate::pos_tagging::PosTagger;
 use crate::tokenize::Tokenizer;
 use crate::transformer::{TransformerConfig, TransformerModel};
 use crate::vectorize::{TfidfVectorizer, Vectorizer};
@@ -320,7 +320,7 @@ impl HfModelAdapter {
                 let file = fs::File::open(&config_file)
                     .map_err(|e| TextError::IoError(format!("Failed to open config file: {e}")))?;
                 let reader = BufReader::new(file);
-                let hf_config: HfConfig = serde, _json::from_reader(reader).map_err(|e| {
+                let hf_config: HfConfig = serde_json::from_reader(reader).map_err(|e| {
                     TextError::InvalidInput(format!("Failed to deserialize _config: {e}"))
                 })?;
                 hf_config.to_transformer_config()?
@@ -421,7 +421,8 @@ impl HfModelAdapter {
             "translation" => Ok(HfPipeline::Translation(TranslationPipeline::new())),
             "token-classification" => Ok(HfPipeline::TokenClassification(
                 TokenClassificationPipeline::new(),
-            ), _ => Err(TextError::InvalidInput(format!("Unsupported task: {task}"))),
+            )),
+            _ => Err(TextError::InvalidInput(format!("Unsupported task: {task}"))),
         }
     }
 
@@ -1944,7 +1945,8 @@ impl TranslationPipeline {
             ("fr", "en") => comprehensive_translations
                 .iter()
                 .map(|(en, fr)| (*fr, *en))
-                .collect(, _ => {
+                .collect(),
+            _ => {
                 // For unsupported language pairs, use a basic dictionary
                 vec![
                     ("hello", "hello"),

@@ -1048,7 +1048,8 @@ impl ProductionDeploymentValidator {
         let message = match status {
             CheckStatus::Pass => "Error handling working correctly".to_string(),
             CheckStatus::Warning => "Error handling needs improvement".to_string(),
-            CheckStatus::Fail => "Error handling causing panics".to_string(, _ => "Unknown error handling status".to_string(),
+            CheckStatus::Fail => "Error handling causing panics".to_string(),
+            _ => "Unknown error handling status".to_string(),
         };
 
         Ok(CheckResult {

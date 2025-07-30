@@ -373,7 +373,7 @@ impl Kernel for MatMulKernel {
         WorkDimensions {
             global: (self.m, self.n, 1),
             local: (16, 16, 1), // 16x16 thread blocks
-            shared_memory: 2 * 16 * 16 * std::mem::size, _of::<f32>(),
+            shared_memory: 2 * 16 * 16 * std::mem::size_of::<f32>(),
     fn memory_requirements(&self) -> KernelMemoryRequirements {
         let a_size = self.m * self.k * std::mem::size_of::<f32>();
         let b_size = self.k * self.n * std::mem::size_of::<f32>();

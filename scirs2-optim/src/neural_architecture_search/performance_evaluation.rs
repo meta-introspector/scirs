@@ -1356,7 +1356,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
             evaluation_cache: EvaluationCache::new(),
             statistical_analyzer: StatisticalAnalyzer::new(),
             resource_monitor: ResourceMonitor::new(),
-            _config,
+            config: _config,
         })
     }
 
@@ -1523,7 +1523,8 @@ impl<T: Float + Default> BenchmarkSuite<T> {
         })
     }
 
-    fn initialize(&mut self_config: &EvaluationConfig<T>) -> Result<()> {
+    fn initialize(&mut self,
+        config: &EvaluationConfig<T>) -> Result<()> {
         // Initialize standard benchmarks
         self.add_standard_benchmarks()?;
         Ok(())
@@ -1578,7 +1579,8 @@ impl<T: Float + Default> BenchmarkSuite<T> {
     }
 
     fn run_benchmarks(
-        &mut self_architecture: &OptimizerArchitecture<T>,
+        &mut self,
+        architecture: &OptimizerArchitecture<T>,
     ) -> Result<Vec<TestResult<T>>> {
         let mut results = Vec::new();
 
@@ -1643,7 +1645,8 @@ impl<T: Float + Default> PerformancePredictor<T> {
     }
 
     pub fn predict_performance(
-        &self_architecture: &OptimizerArchitecture<T>,
+        &self,
+        architecture: &OptimizerArchitecture<T>,
     ) -> Result<EvaluationResults<T>> {
         // Simple placeholder implementation
         Ok(EvaluationResults {
@@ -1656,7 +1659,8 @@ impl<T: Float + Default> PerformancePredictor<T> {
         })
     }
 
-    pub fn update_with_results(&mut self_results: &Vec<EvaluationResults<T>>) -> Result<()> {
+    pub fn update_with_results(&mut self,
+        results: &Vec<EvaluationResults<T>>) -> Result<()> {
         // Simple placeholder implementation
         Ok(())
     }

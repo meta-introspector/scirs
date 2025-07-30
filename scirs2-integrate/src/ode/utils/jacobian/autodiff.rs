@@ -89,7 +89,11 @@ where
 #[cfg(not(feature = "autodiff"))]
 #[allow(dead_code)]
 pub fn autodiff_jacobian<F, Func>(
-    _f: &Func_t: F, _y: &Array1<F>, _f_current: &Array1<F>, _perturbation_scale: F,
+    _f: &Func,
+    _t: F,
+    _y: &Array1<F>,
+    _f_current: &Array1<F>,
+    _perturbation_scale: F,
 ) -> IntegrateResult<Array2<F>>
 where
     F: IntegrateFloat,

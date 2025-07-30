@@ -202,7 +202,8 @@ fn label(_binary: &Array2<bool>) -> Result<(Array2<u32>, usize)> {
 fn preprocess(
     image: &Array2<f32>,
     mask: Option<&Array2<bool>>,
-    sigma: f32_mode: PreprocessMode,
+    sigma: f32,
+    mode: PreprocessMode,
 ) -> Result<(Array2<f32>, Array2<bool>)> {
     let (height, width) = image.dim();
 
@@ -359,7 +360,7 @@ fn nonmaximum_suppression(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__vision::feature::{canny, PreprocessMode};
+/// use scirs2_vision::feature::{canny, PreprocessMode};
 /// use image::DynamicImage;
 ///
 /// # fn main() -> scirs2_vision::error::Result<()> {
@@ -440,7 +441,7 @@ pub fn canny(
         return array_to_binary_image(&Array2::from_elem(low_mask.raw_dim(), false));
     };
 
-    // Find labels that contain high _threshold pixels
+    // Find labels that contain high threshold pixels
     let mut good_labels = vec![false; num_labels + 1];
     Zip::from(&labels)
         .and(&high_mask)

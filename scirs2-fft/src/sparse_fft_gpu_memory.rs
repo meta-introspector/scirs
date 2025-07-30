@@ -4,8 +4,8 @@
 //! implementations, including buffer allocation, reuse, and transfer optimization.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse_fft__gpu::GPUBackend;
-use num__complex::Complex64;
+use crate::sparse_fft_gpu::GPUBackend;
+use num_complex::Complex64;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -266,7 +266,7 @@ impl BufferDescriptor {
         backend: GPUBackend,
     ) -> FFTResult<Self> {
         let mut descriptor = Self {
-            _size,
+            size,
             element_size,
             location,
             buffer_type,
@@ -294,7 +294,7 @@ impl BufferDescriptor {
         id: usize,
     ) -> FFTResult<Self> {
         let backend = init_gpu_backend()?;
-        Self::new(_size, element_size, location, buffer_type, id, backend)
+        Self::new(size, element_size, location, buffer_type, id, backend)
     }
 
     /// Allocate the actual memory based on location and backend
@@ -760,7 +760,8 @@ impl GPUMemoryManager {
         max_memory: usize,
     ) -> Self {
         Self {
-            backend_device_id: device_id,
+            backend,
+            _device_id: device_id,
             allocation_strategy,
             max_memory,
             current_memory: 0,
@@ -787,7 +788,7 @@ impl GPUMemoryManager {
         location: BufferLocation,
         buffer_type: BufferType,
     ) -> FFTResult<BufferDescriptor> {
-        let total_size = _size * element_size;
+        let total_size = size * element_size;
 
         // Check if we're going to exceed the memory limit
         if self.max_memory > 0 && self.current_memory + total_size > self.max_memory {
@@ -799,7 +800,7 @@ impl GPUMemoryManager {
 
         // If using a cache strategy, check if we have an available buffer
         if self.allocation_strategy == AllocationStrategy::CacheBySize {
-            if let Some(buffers) = self.buffer_cache.get_mut(&_size) {
+            if let Some(buffers) = self.buffer_cache.get_mut(&size) {
                 if let Some(descriptor) = buffers
                     .iter()
                     .position(|b| b.buffer_type == buffer_type && b.location == location)
@@ -817,7 +818,7 @@ impl GPUMemoryManager {
 
         // Create descriptor with actual memory allocation
         let descriptor = BufferDescriptor::new(
-            _size,
+            size,
             element_size,
             location,
             buffer_type,

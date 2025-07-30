@@ -448,7 +448,8 @@ impl QuantumParallelProcessor {
             0 => self.strategy_quantum_superposition(data),
             1 => self.strategy_quantum_entanglement(data),
             2 => self.strategy_quantum_interference(data),
-            3 => self.strategy_quantum_tunneling(data, _ => self.strategy_classical_fallback(data),
+            3 => self.strategy_quantum_tunneling(data),
+            _ => self.strategy_classical_fallback(data),
         }
     }
 

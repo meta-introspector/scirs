@@ -10,7 +10,9 @@ use std::marker::PhantomData;
 /// Fluent builder for constructing pipelines
 pub struct PipelineBuilder<I, O> {
     stages: Vec<Box<dyn PipelineStage>>,
-    config: PipelineConfig_input: PhantomData<I>, _output: PhantomData<O>,
+    config: PipelineConfig,
+    _input: PhantomData<I>,
+    _output: PhantomData<O>,
 }
 
 impl<I, O> Default for PipelineBuilder<I, O>
@@ -32,7 +34,9 @@ where
     pub fn new() -> Self {
         Self {
             stages: Vec::new(),
-            config: PipelineConfig::default(), _input: PhantomData_output: PhantomData,
+            config: PipelineConfig::default(),
+            _input: PhantomData,
+            _output: PhantomData,
         }
     }
 
@@ -78,7 +82,9 @@ where
         self.stages.push(function_stage(name, f));
         PipelineBuilder {
             stages: self.stages,
-            config: self.config_input: self._input, _output: PhantomData,
+            config: self.config,
+            _input: self._input,
+            _output: PhantomData,
         }
     }
 
@@ -114,7 +120,9 @@ where
         self.stages.push(stage);
         PipelineBuilder {
             stages: self.stages,
-            config: self.config_input: self._input, _output: PhantomData,
+            config: self.config,
+            _input: self._input,
+            _output: PhantomData,
         }
     }
 
@@ -156,7 +164,9 @@ where
     pub fn build(self) -> Pipeline<I, O> {
         Pipeline {
             stages: self.stages,
-            config: self.config_input: PhantomData, _output: PhantomData,
+            config: self.config,
+            _input: PhantomData,
+            _output: PhantomData,
         }
     }
 }

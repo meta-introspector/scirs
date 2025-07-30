@@ -47,12 +47,12 @@ pub trait WorkStealingTask: Send + 'static {
     }
 
     /// Check if task can be subdivided for better load balancing
-    fn can_subdivide() -> bool {
+    fn can_subdivide(&self) -> bool {
         false
     }
 
     /// Subdivide task into smaller tasks (if possible)
-    fn subdivide() -> Vec<Box<dyn WorkStealingTask<Output = Self::Output>>>
+    fn subdivide(&self) -> Vec<Box<dyn WorkStealingTask<Output = Self::Output>>>
     where
         Self: Sized,
     {
@@ -76,17 +76,17 @@ where
     R: Send + 'static,
 {
     /// Create a new task from closure
-    pub fn new(_func: F) -> Self {
+    pub fn new(func: F) -> Self {
         Self {
-            _func: Some(_func),
+            func: Some(func),
             cost_estimate: 1.0,
         }
     }
 
     /// Create task with cost estimate
-    pub fn with_cost(_func: F, cost: f64) -> Self {
+    pub fn with_cost(func: F, cost: f64) -> Self {
         Self {
-            _func: Some(_func),
+            func: Some(func),
             cost_estimate: cost,
         }
     }
@@ -123,12 +123,12 @@ impl<T: WorkStealingTask> WorkStealingDeque<T> {
         }
     }
 
-    fn push_back(_task: T) {
-        self.total_cost += _task.estimated_cost();
-        self.items.push_back(_task);
+    fn push_back(&mut self, task: T) {
+        self.total_cost += task.estimated_cost();
+        self.items.push_back(task);
     }
 
-    fn pop_back(&self) -> Option<T> {
+    fn pop_back(&mut self) -> Option<T> {
         if let Some(task) = self.items.pop_back() {
             self.total_cost -= task.estimated_cost();
             Some(task)
@@ -137,7 +137,7 @@ impl<T: WorkStealingTask> WorkStealingDeque<T> {
         }
     }
 
-    fn steal_front(&self) -> Option<T> {
+    fn steal_front(&mut self) -> Option<T> {
         if let Some(task) = self.items.pop_front() {
             self.total_cost -= task.estimated_cost();
             Some(task)
@@ -155,7 +155,7 @@ impl<T: WorkStealingTask> WorkStealingDeque<T> {
         self.items.is_empty()
     }
 
-    fn total_cost() -> f64 {
+    fn total_cost(&self) -> f64 {
         self.total_cost
     }
 }
@@ -272,9 +272,9 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
     }
 
     /// Submit a single task for execution
-    pub fn submit(_task: T) {
+    pub fn submit(&self, task: T) {
         let mut global_queue = self.global_queue.lock().unwrap();
-        global_queue.push_back(_task);
+        global_queue.push_back(task);
         drop(global_queue);
 
         // Notify workers
@@ -282,9 +282,9 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
     }
 
     /// Submit multiple tasks for execution
-    pub fn submit_all(_tasks: Vec<T>) {
+    pub fn submit_all(&self, tasks: Vec<T>) {
         let mut global_queue = self.global_queue.lock().unwrap();
-        for task in _tasks {
+        for task in tasks {
             global_queue.push_back(task);
         }
         drop(global_queue);
@@ -317,7 +317,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
     }
 
     /// Get current pool statistics
-    pub fn statistics() -> PoolStatistics {
+    pub fn statistics(&self) -> PoolStatistics {
         let mut stats = self.stats.lock().unwrap();
 
         // Update statistics from worker states
@@ -384,7 +384,7 @@ impl<T: WorkStealingTask + 'static> WorkStealingPool<T> {
                 task_opt = Self::try_steal_work(worker_id, &worker_states, &stats);
             }
 
-            if let Some(task) = task_opt {
+            if let Some(mut task) = task_opt {
                 // Mark task as active
                 active_tasks.fetch_add(1, Ordering::Relaxed);
 
@@ -485,9 +485,10 @@ where
     /// Create new adaptive integration task
     pub fn new(_integrand: Func, interval: (F, F), tolerance: F, max_depth: usize) -> Self {
         Self {
-            _integrand,
+            integrand: _integrand,
             interval,
-            tolerance_depth: 0,
+            tolerance,
+            depth: 0,
             max_depth,
         }
     }
@@ -565,7 +566,7 @@ where
         };
 
         let right_task = AdaptiveIntegrationTask {
-            integrand: self.integrand,
+            integrand: self.integrand.clone(),
             interval: (mid, b),
             tolerance: self.tolerance / F::from(2.0).unwrap(),
             depth: self.depth + 1,

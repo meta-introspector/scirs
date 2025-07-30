@@ -1243,7 +1243,7 @@ pub fn create_simple_cnn(input_shape: (usize, usize, usize), num_classes: usize)
 mod tests {
     use super::*;
     use crate::array_protocol::{self, NdarrayWrapper};
-    use ndarray::Array2;
+    use ndarray::{Array1, Array2};
 
     #[test]
     fn test_linear_layer() {

@@ -32,7 +32,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::extreme_performance_optimization::{ExtremeOptimizer, AdvancedfastDistanceMatrix};
+//! use scirs2_spatial::extreme_performance_optimization::{ExtremeOptimizer, AdvancedfastDistanceMatrix};
 //! use ndarray::array;
 //!
 //! // Extreme performance distance matrix computation
@@ -535,7 +535,7 @@ pub struct PerformancePrediction {
 }
 
 impl Default for ExtremeOptimizer {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -698,7 +698,7 @@ impl ExtremeOptimizer {
 }
 
 impl Default for HardwarePerformanceCounters {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -768,7 +768,7 @@ impl CacheHierarchyInfo {
 }
 
 impl Default for JitCompiler {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -843,7 +843,7 @@ impl JitCompiler {
 }
 
 impl Default for ExtremeMemoryAllocator {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -988,7 +988,7 @@ impl AdvancedfastDistanceMatrix {
 
         // Use lock-free structures if enabled
         if self.optimizer.lock_free {
-            self.apply_lock_free_optimization(&mut distance_matrix)
+            Self::apply_lock_free_optimization(&mut distance_matrix)
                 .await?;
         }
 
@@ -1199,7 +1199,7 @@ impl AdvancedfastDistanceMatrix {
                 }
 
                 // Branch-free square root using Newton-Raphson with fixed iterations
-                let distance = self.branch_free_sqrt(sum_sq_diff);
+                let distance = Self::branch_free_sqrt(sum_sq_diff);
 
                 result[[i, j]] = distance;
                 result[[j, i]] = distance;
@@ -1207,7 +1207,7 @@ impl AdvancedfastDistanceMatrix {
         }
 
         // Apply branch-free threshold operations
-        self.apply_branch_free_thresholding(result).await?;
+        Self::apply_branch_free_thresholding(result).await?;
 
         // Update performance counters
         let total_ops = n_points * (n_points - 1) / 2;
@@ -1411,19 +1411,19 @@ impl SelfOptimizingAlgorithm {
     }
 
     /// Enable hardware performance counter feedback
-    pub fn with_hardware_counter_feedback(mut enabled: bool) -> Self {
+    pub fn with_hardware_counter_feedback(mut self, enabled: bool) -> Self {
         self.hardware_feedback = enabled;
         self
     }
 
     /// Enable runtime code generation
-    pub fn with_runtime_code_generation(mut enabled: bool) -> Self {
+    pub fn with_runtime_code_generation(mut self, enabled: bool) -> Self {
         self.runtime_codegen = enabled;
         self
     }
 
     /// Enable adaptive memory patterns
-    pub fn with_adaptive_memory_patterns(mut enabled: bool) -> Self {
+    pub fn with_adaptive_memory_patterns(mut self, enabled: bool) -> Self {
         self.adaptive_memory = enabled;
         self
     }
@@ -1486,7 +1486,7 @@ impl SelfOptimizingAlgorithm {
     }
 
     /// Optimize based on hardware counters
-    async fn optimize_based_on_hardware_counters() -> SpatialResult<()> {
+    async fn optimize_based_on_hardware_counters(&mut self) -> SpatialResult<()> {
         // Simulate hardware-guided optimization
         self.optimization_history.push(OptimizationRecord {
             timestamp: Instant::now(),
@@ -1520,13 +1520,13 @@ impl SelfOptimizingAlgorithm {
     }
 
     /// Generate optimized code
-    async fn generate_optimized_code(_data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
+    async fn generate_optimized_code(&mut self, _data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
         let _ = _data; // Placeholder
         Ok(())
     }
 
     /// Optimize memory patterns
-    async fn optimize_memory_patterns(_data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
+    async fn optimize_memory_patterns(&mut self, _data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
         let _ = _data; // Placeholder
         Ok(())
     }
@@ -1536,7 +1536,7 @@ impl SelfOptimizingAlgorithm {
         &self,
         data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array1<usize>> {
-        let (n_points_) = data.dim();
+        let (n_points, _) = data.dim();
 
         // Simulate clustering with extreme optimizations
         let mut assignments = Array1::zeros(n_points);
@@ -1569,7 +1569,8 @@ impl SelfOptimizingAlgorithm {
 
     /// Update performance model
     async fn update_performance_model(
-        &mut self_before: ExtremePerformanceMetrics,
+        &mut self,
+        before: ExtremePerformanceMetrics,
         after: ExtremePerformanceMetrics,
     ) -> SpatialResult<()> {
         self.performance_model.accuracy = 0.95;

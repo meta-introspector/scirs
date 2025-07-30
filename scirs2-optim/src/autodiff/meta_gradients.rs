@@ -1180,7 +1180,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         let norm1 = grad1.iter().map(|&x| x * x).sum::<T>().sqrt();
         let norm2 = grad2.iter().map(|&x| x * x).sum::<T>().sqrt();
 
-        if norm1 > T::zero() && norm2 >, T::zero() {
+        if norm1 > T::zero() && norm2 > T::zero() {
             let cosine = grad1.dot(&grad2) / (norm1 * norm2);
             Ok(cosine)
         } else {
@@ -1264,7 +1264,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
             }
         }
 
-        if norm1 > T::zero() && norm2 >, T::zero() {
+        if norm1 > T::zero() && norm2 > T::zero() {
             Ok(similarity / (norm1.sqrt() * norm2.sqrt()))
         } else {
             Ok(T::zero())
@@ -1429,8 +1429,8 @@ impl<T: Float + Default + Clone> CheckpointManager<T> {
     /// Create a new checkpoint manager
     pub fn new(_max_checkpoints: usize, memory_threshold: usize) -> Self {
         Self {
-            _checkpoints: HashMap::new(),
-            _max_checkpoints,
+            checkpoints: HashMap::new(),
+            max_checkpoints: _max_checkpoints,
             memory_threshold,
             current_memory: 0,
             policy: CheckpointPolicy::MemoryThreshold,
@@ -1444,7 +1444,7 @@ impl<T: Float + Default + Clone> CheckpointManager<T> {
         policy: CheckpointPolicy,
     ) -> Self {
         Self {
-            _checkpoints: HashMap::new(),
+            checkpoints: HashMap::new(),
             max_checkpoints,
             memory_threshold,
             current_memory: 0,

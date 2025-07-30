@@ -16,7 +16,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::distributed::{DistributedReader, PartitionStrategy};
+//! use scirs2_io::distributed::{DistributedReader, PartitionStrategy};
 //! use ndarray::Array2;
 //!
 //! // Create a distributed reader for a large CSV file
@@ -37,7 +37,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::error::{IoError, Result};
-use crate::thread__pool::ThreadPool;
+use crate::thread_pool::ThreadPool;
 use ndarray::Array2;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};

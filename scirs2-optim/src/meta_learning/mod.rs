@@ -484,7 +484,7 @@ impl<A: Float + ScalarOperand + Debug> HyperparameterOptimizer<A> {
     /// Create a new hyperparameter optimizer
     pub fn new(_strategy: HyperparameterStrategy) -> Self {
         Self {
-            _strategy,
+            strategy: _strategy,
             best_hyperparameters: None,
             best_performance: None,
             trial_history: Vec::new(),
@@ -696,7 +696,7 @@ impl<A: Float> SGDMetaOptimizer<A> {
     /// Create a new SGD meta-optimizer
     pub fn new(_meta_params: Array1<A>, meta_lr: A) -> Self {
         Self {
-            _meta_params,
+            meta_params: _meta_params,
             meta_lr,
         }
     }
@@ -740,8 +740,8 @@ pub struct UpdateNetwork<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> UpdateNetwork<A> {
     /// Create a new update network
-    pub fn new(_input_size: usize, output_size: usize) -> Self {
-        let weights = Array2::from_shape_fn((output_size, _input_size), |_| {
+    pub fn new(input_size: usize, output_size: usize) -> Self {
+        let weights = Array2::from_shape_fn((output_size, input_size), |_| {
             A::from(0.01).unwrap()
                 * (A::from(rand::random::<f64>()).unwrap() - A::from(0.5).unwrap())
         });

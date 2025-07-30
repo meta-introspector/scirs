@@ -239,9 +239,10 @@ impl EnhancedHDF5File {
             ExtendedDataType::Int8 => group.new_dataset::<i8>(),
             ExtendedDataType::UInt8 => group.new_dataset::<u8>(),
             ExtendedDataType::Int16 => group.new_dataset::<i16>(),
-            ExtendedDataType::UInt16 => group.new_dataset::<u16>(, _ => {
+            ExtendedDataType::UInt16 => group.new_dataset::<u16>(),
+            _ => {
                 return Err(IoError::FormatError(format!(
-                    "Unsupported data _type: {:?}",
+                    "Unsupported data type: {:?}",
                     data_type
                 )))
             }

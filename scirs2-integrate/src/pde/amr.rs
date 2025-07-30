@@ -94,7 +94,7 @@ pub enum RefinementCriteria<F: IntegrateFloat> {
     // },
 }
 
-impl<F: IntegrateFloat> + std::fmt::Debug for RefinementCriteria<F> {
+impl<F: IntegrateFloat + std::fmt::Debug> std::fmt::Debug for RefinementCriteria<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::GradientBased {
@@ -266,7 +266,7 @@ impl<F: IntegrateFloat> AMRGrid<F> {
     }
 
     /// Refine grid based on criteria
-    pub fn refine(&self, criteria: &RefinementCriteria<F>) -> IntegrateResult<usize> {
+    pub fn refine(&mut self, criteria: &RefinementCriteria<F>) -> IntegrateResult<usize> {
         let mut total_refined = 0;
 
         // Process each level from coarse to fine
@@ -302,7 +302,7 @@ impl<F: IntegrateFloat> AMRGrid<F> {
     }
 
     /// Coarsen grid based on criteria
-    pub fn coarsen(&self, criteria: &RefinementCriteria<F>) -> IntegrateResult<usize> {
+    pub fn coarsen(&mut self, criteria: &RefinementCriteria<F>) -> IntegrateResult<usize> {
         let mut total_coarsened = 0;
 
         // Process from fine to coarse levels
@@ -481,7 +481,7 @@ impl<F: IntegrateFloat> AMRGrid<F> {
     }
 
     /// Interpolate solution from parent cell to child cells
-    fn interpolate_to_children(&self, level: usize, i: usize, j: usize) -> IntegrateResult<()> {
+    fn interpolate_to_children(&mut self, level: usize, i: usize, j: usize) -> IntegrateResult<()> {
         let parent_value = self
             .solution
             .get(&(level, i, j))
@@ -615,7 +615,7 @@ impl<F: IntegrateFloat> AMRSolver<F> {
     }
 
     /// Store solution array in the AMR grid structure
-    fn store_solution_in_grid(&self, solution: &Array2<F>) -> IntegrateResult<()> {
+    fn store_solution_in_grid(&mut self, solution: &Array2<F>) -> IntegrateResult<()> {
         let (nx, ny) = solution.dim();
 
         // Clear existing solution

@@ -17,6 +17,7 @@ num-traits = { workspace = true }
 num-complex = { workspace = true }
 thiserror = { workspace = true }
 num = { workspace = true }
+statrs = { workspace = true }
 approx = { workspace = true }
 
 # Computational geometry

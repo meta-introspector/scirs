@@ -103,9 +103,9 @@ pub struct OptimizationMetric {
 
 impl OptimizationMetric {
     /// Create new metric tracker
-    pub fn new(_name: String, higher_is_better: bool, units: String) -> Self {
+    pub fn new(name: String, higher_is_better: bool, units: String) -> Self {
         Self {
-            _name,
+            name,
             values: VecDeque::new(),
             timestamps: VecDeque::new(),
             steps: VecDeque::new(),
@@ -398,9 +398,9 @@ pub struct DashboardLayout {
 
 impl OptimizationVisualizer {
     /// Create new visualization engine
-    pub fn new(_config: VisualizationConfig) -> Result<Self> {
+    pub fn new(config: VisualizationConfig) -> Result<Self> {
         // Create output directory if it doesn't exist
-        std::fs::create_dir_all(&_config.output_dir).map_err(|e| {
+        std::fs::create_dir_all(&config.output_dir).map_err(|e| {
             OptimError::InvalidConfig(format!("Failed to create output directory: {e}"))
         })?;
 
@@ -415,7 +415,7 @@ impl OptimizationVisualizer {
         };
 
         Ok(Self {
-            _config,
+            config,
             metrics: HashMap::new(),
             comparisons: Vec::new(),
             dashboard_state,
@@ -465,9 +465,9 @@ impl OptimizationVisualizer {
         let plot_data = self.create_line_plot(
             &steps,
             &values,
-            &format!("{} over Training Steps", metric._name),
+            &format!("{} over Training Steps", metric.name),
             "Training Steps",
-            &format!("{} ({})", metric._name, metric.units),
+            &format!("{} ({})", metric.name, metric.units),
         )?;
 
         self.save_plot(&plot_data, &format!("{metric_name}_curve"))
@@ -516,8 +516,8 @@ impl OptimizationVisualizer {
                 if let Some(values) = comparison.metrics.get(metric_name) {
                     let x_values: Vec<String> = (0..values.len()).map(|i| i.to_string()).collect();
                     writeln!(&mut plot_data,
-                        "traces.push({{x: {:?}, y: {:?}, _name: '{}', type: 'scatter', mode: 'lines'}});",
-                        x_values, values, comparison._name
+                        "traces.push({{x: {:?}, y: {:?}, name: '{}', type: 'scatter', mode: 'lines'}});",
+                        x_values, values, comparison.name
                     ).unwrap();
                 }
             }
@@ -707,7 +707,7 @@ impl OptimizationVisualizer {
             dashboard.push_str("<div class='dashboard-container'>\n");
 
             let mut plot_id = 0;
-            for (_name_) in &self.metrics {
+            for _ in &self.metrics {
                 if plot_id >= 4 {
                     break;
                 } // Limit to 4 plots in 2x2 grid

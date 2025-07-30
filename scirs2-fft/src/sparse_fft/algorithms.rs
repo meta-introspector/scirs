@@ -4,7 +4,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use rand::{Rng, SeedableRng};
 use std::fmt::Debug;
@@ -43,7 +43,7 @@ impl SparseFFT {
         let seed = _config.seed.unwrap_or_else(rand::random);
         let rng = rand::rngs::StdRng::seed_from_u64(seed);
 
-        Self { _config, rng }
+        Self { config: _config, rng }
     }
 
     /// Create a new sparse FFT processor with default configuration
@@ -424,11 +424,11 @@ impl SparseFFT {
         let selected_count = k.min(candidates.len());
         let selected_indices: Vec<usize> = candidates[..selected_count]
             .iter()
-            .map(|(_, i_)| *i)
+            .map(|(_, i_, _)| *i_)
             .collect();
         let selected_values: Vec<Complex64> = candidates[..selected_count]
             .iter()
-            .map(|(__, c)| *c)
+            .map(|(_, _, c)| *c)
             .collect();
 
         Ok((selected_values, selected_indices))
@@ -475,12 +475,12 @@ impl SparseFFT {
 
             // If flatness is low (indicates structure), find peak in this window
             if flatness < self.config.flatness_threshold {
-                if let Some((local_idx_)) = window_mags
+                if let Some((local_idx_, _)) = window_mags
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                 {
-                    let global_idx = start + local_idx;
+                    let global_idx = start + local_idx_;
                     if !selected_indices.contains(&global_idx) {
                         selected_indices.push(global_idx);
                         selected_values.push(spectrum[global_idx]);
@@ -499,7 +499,7 @@ impl SparseFFT {
             let mut remaining_candidates: Vec<(f64, usize, Complex64)> = spectrum
                 .iter()
                 .enumerate()
-                .filter(|(i_)| !selected_indices.contains(i))
+                .filter(|(i_, _)| !selected_indices.contains(i_))
                 .map(|(i, &c)| (c.norm(), i, c))
                 .collect();
 

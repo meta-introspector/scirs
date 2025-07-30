@@ -66,7 +66,7 @@ pub enum ColorScheme {
 
 impl ColorScheme {
     /// Get color for a given heat value (0.0 to 1.0)
-    fn get_color(&self, heat: f64) -> String {
+    fn get_color(&self, heat: f64, function_name: Option<&str>) -> String {
         let heat = heat.clamp(0.0, 1.0);
 
         match self {
@@ -99,7 +99,11 @@ impl ColorScheme {
             }
             ColorScheme::Java => {
                 // Use function name hash for consistent coloring
-                let hash = Self::hash_string(function_name);
+                let hash = if let Some(name) = function_name {
+                    Self::hash_string(name)
+                } else {
+                    0
+                };
                 let hue = (hash % 360) as f64;
                 let saturation = 70.0 + 30.0 * heat;
                 let lightness = 60.0 - 20.0 * heat;
@@ -130,7 +134,7 @@ impl ColorScheme {
         let l = l / 100.0;
 
         let c = (1.0 - (2.0 * l - 1.0).abs()) * s;
-        let x = c * (1.0 - ((h * 6.0) % 2.0.saturating_sub(1).0).abs());
+        let x = c * (1.0 - ((h * 6.0) % 2.0 - 1.0).abs());
         let m = l - c / 2.0;
 
         let (r, g, b) = if h < 1.0 / 6.0 {
@@ -159,12 +163,20 @@ impl ColorScheme {
 #[derive(Debug)]
 pub struct SvgFlameGraphGenerator {
     config: SvgFlameGraphConfig,
+    cpu_usage: Vec<(f64, f64)>,
+    memory_usage: Vec<(f64, f64)>,
+    total_duration: std::time::Duration,
 }
 
 impl SvgFlameGraphGenerator {
     /// Create a new SVG flame graph generator
     pub fn new(config: SvgFlameGraphConfig) -> Self {
-        Self { config }
+        Self { 
+            config,
+            cpu_usage: Vec::new(),
+            memory_usage: Vec::new(),
+            total_duration: std::time::Duration::from_secs(0),
+        }
     }
 
     /// Generate SVG flame graph from flame graph data
@@ -248,7 +260,16 @@ impl SvgFlameGraphGenerator {
     }
 
     /// Generate flame rectangles recursively
-    fn depth(usize: usize,
+    fn generate_flames(
+        &self,
+        node: &FlameGraphNode,
+        svg: &mut String,
+        x: f64,
+        width: f64,
+        y: f64,
+        height: f64,
+        total_time: f64,
+        depth: usize,
     ) {
         if width < self.config.min_width {
             return;
@@ -260,7 +281,7 @@ impl SvgFlameGraphGenerator {
         } else {
             0.0
         };
-        let color = self.config.color_scheme.get_color(heat, &node.name);
+        let color = self.config.color_scheme.get_color(heat, None);
 
         // Generate rectangle
         let escaped_name = self.escape_xml(&node.name);
@@ -307,7 +328,8 @@ impl SvgFlameGraphGenerator {
                     child_width,
                     y + height + 1.0,
                     height,
-                    total_time_depth + 1,
+                    total_time,
+                    depth + 1,
                 );
             }
 
@@ -343,36 +365,36 @@ impl SvgFlameGraphGenerator {
         r#"<script><![CDATA[
         // Search functionality
         function search(term) {
-            const elements = document.querySelectorAll('.func_g');
+            const elements = document.querySelectorAll(".func_g");
             elements.forEach(el => {
-                const text = el.querySelector('text').textContent;
+                const text = el.querySelector("text").textContent;
                 if (text.toLowerCase().includes(term.toLowerCase())) {
-                    el.style.opacity = '1.0';
+                    el.style.opacity = "1.0";
                 } else {
-                    el.style.opacity = '0.3';
+                    el.style.opacity = "0.3";
                 }
             });
         }
         
         // Reset search
         function resetSearch() {
-            const elements = document.querySelectorAll('.func_g');
+            const elements = document.querySelectorAll(".func_g");
             elements.forEach(el => {
-                el.style.opacity = '1.0';
+                el.style.opacity = "1.0";
             });
         }
         
         // Zoom functionality
         let currentZoom = 1.0;
-        const svg = document.querySelector('svg');
+        const svg = document.querySelector("svg");
         
         function zoom(factor) {
             currentZoom *= factor;
-            svg.style.transform = `scale(${currentZoom})`;
+            svg.style.transform = "scale(" + currentZoom + ")";;
         }
         
         // Mouse wheel zoom
-        svg.addEventListener('wheel', function(e) {
+        svg.addEventListener("wheel", function(e) {
             e.preventDefault();
             if (e.deltaY < 0) {
                 zoom(1.1);
@@ -382,11 +404,11 @@ impl SvgFlameGraphGenerator {
         });
         
         // Search on key press
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'r' || e.key === 'R') {
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "r" || e.key === "R") {
                 resetSearch();
-            } else if (e.key === 's' || e.key === 'S') {
-                const term = prompt('Search for:');
+            } else if (e.key === "s" || e.key === "S") {
+                const term = prompt("Search for:");
                 if (term) search(term);
             }
         });
@@ -443,7 +465,7 @@ impl EnhancedFlameGraph {
     pub fn export_enhanced_svg(&self, path: &str) -> Result<(), std::io::Error> {
         let config = SvgFlameGraphConfig {
             height: 800,
-            title: "Enhanced Performance Profile".to_string(),
+            title: "Enhanced Performance Profile ".to_string(),
             ..Default::default()
         };
 
@@ -509,7 +531,7 @@ impl EnhancedFlameGraph {
     /// Extract SVG content without header/footer
     fn extract_svg_content(&self, svg: &str) -> String {
         // Simple extraction - in a real implementation would use proper XML parsing
-        if let Some(start) = svg.find("<rect x=\"0\" y=\"0\"") {
+        if let Some(start) = svg.find(r#"<rect x="0" y="0""#) {
             if let Some(end) = svg.rfind("</svg>") {
                 return svg[start..end].to_string();
             }
@@ -580,15 +602,14 @@ impl EnhancedFlameGraph {
         let max_memory = self
             .memory_usage
             .iter()
-            .map(|(_, mem)| *mem)
-            .max()
-            .unwrap_or(0);
+            .map(|(_, mem)| *mem as f64)
+            .fold(0.0f64, |a, b| a.max(b));
         let max_time = self.total_duration.as_secs_f64();
 
         let mut points = String::new();
         for (i, (time, memory)) in self.memory_usage.iter().enumerate() {
             let chart_x = x + (time.as_secs_f64() / max_time) * width;
-            let chart_y = y + height - ((*memory as f64) / (max_memory as f64)) * height;
+            let chart_y = y + height - (*memory as f64 / max_memory) * height;
 
             if i > 0 {
                 points.push_str(" L");
@@ -600,6 +621,14 @@ impl EnhancedFlameGraph {
             r#"<path d="{points}" style="stroke:green; stroke-width:2; fill:none;"/>
 "#
         ));
+    }
+
+    /// Export flame graph to file
+    pub fn export_to_file(&self, root: &FlameGraphNode, path: &str) -> Result<(), std::io::Error> {
+        let config = SvgFlameGraphConfig::default();
+        let generator = SvgFlameGraphGenerator::new(config);
+        let svg_content = generator.generate_svg(root);
+        std::fs::write(path, svg_content)
     }
 }
 

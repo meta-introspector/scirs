@@ -139,7 +139,7 @@ impl<T: Clone> RTree<T> {
 
             // Get the subtree
             let child = match &mut self.root.entries[subtree_index] {
-                Entry::NonLeaf { child, .. } => child_ => {
+                Entry::NonLeaf { child, .. } => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry".into(),
                     ))
@@ -230,7 +230,7 @@ impl<T: Clone> RTree<T> {
 
         // Get the subtree
         let child = match &mut node.entries[subtree_index] {
-            Entry::NonLeaf { child, .. } => child_ => {
+            Entry::NonLeaf { child, .. } => {
                 return Err(crate::error::SpatialError::ComputationError(
                     "Expected a non-leaf entry".into(),
                 ))
@@ -275,7 +275,8 @@ impl<T: Clone> RTree<T> {
     pub(crate) fn choose_subtree(
         &self,
         node: &Node<T>,
-        mbr: &Rectangle_level: usize,
+        mbr: &Rectangle,
+        level: usize,
     ) -> SpatialResult<usize> {
         let mut min_enlargement = f64::MAX;
         let mut min_area = f64::MAX;

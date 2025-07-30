@@ -4,12 +4,12 @@
 //! in benchmark results using statistical analysis and configurable thresholds.
 
 use clap::{Arg, Command};
-use scirs2__optim::benchmarking::performance_regression_detector::{
+use scirs2_optim::benchmarking::performance_regression_detector::{
     AlertThresholds, BaselineStrategy, CiCdConfig, EnvironmentInfo, MetricType, MetricValue,
     PerformanceMeasurement, PerformanceRegressionDetector, RegressionConfig, RegressionSensitivity,
     StatisticalTest, TestConfiguration,
 };
-use scirs2__optim::error::{OptimError, Result};
+use scirs2_optim::error::{OptimError, Result};
 use serde_json;
 use std::fs;
 use std::path::PathBuf;

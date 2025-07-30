@@ -19,7 +19,7 @@ fn generate_data<A: Float>(_n_samples: usize, n_features: usize) -> (Array2<A>, 
     // Generate random _features and compute targets
     for i in 0.._n_samples {
         for j in 0..n_features {
-            let x_val = A::from(rng.random_range(-5.0..5.0)).unwrap();
+            let x_val = A::from(rng.random_range(-5.0, 5.0)).unwrap();
             x[[i, j]] = x_val;
         }
 

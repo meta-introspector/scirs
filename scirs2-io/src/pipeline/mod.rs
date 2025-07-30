@@ -243,7 +243,9 @@ impl<I, O> Pipeline<I, O> {
     pub fn new() -> Self {
         Self {
             stages: Vec::new(),
-            config: PipelineConfig::default(), _input: PhantomData_output: PhantomData,
+            config: PipelineConfig::default(),
+            _input: PhantomData,
+            _output: PhantomData,
         }
     }
 
@@ -482,7 +484,7 @@ pub struct SerializedPipeline {
 pub struct SerializedStage {
     pub name: String,
     pub stage_type: String,
-    pub config: serde_json: Value,
+    pub config: serde_json::Value,
 }
 
 impl<I, O> Pipeline<I, O> {
@@ -498,7 +500,7 @@ impl<I, O> Pipeline<I, O> {
                 .map(|s| SerializedStage {
                     name: s.name(),
                     stage_type: s.stage_type(),
-                    config: serde_json: Value::Null, // Stages would need to implement serialization
+                    config: serde_json::Value::Null, // Stages would need to implement serialization
                 })
                 .collect(),
             config: self.config.clone(),
@@ -634,7 +636,8 @@ impl PipelineOptimizer {
 
         for stage in _stages {
             match stage.stage_type().as_str() {
-                "filter" | "validation" => filters.push(stage, _ => others.push(stage),
+                "filter" | "validation" => filters.push(stage),
+                _ => others.push(stage),
             }
         }
 

@@ -58,7 +58,7 @@ fn solve_matrix_system<F>(_matrix: ArrayView2<F>, b: ArrayView1<F>) -> Integrate
 where
     F: IntegrateFloat,
 {
-    use crate::ode::utils::linear__solvers::solve_linear_system;
+    use crate::ode::utils::linear_solvers::solve_linear_system;
 
     // Use our custom solver
     solve_linear_system(&_matrix, &b).map_err(|err| {

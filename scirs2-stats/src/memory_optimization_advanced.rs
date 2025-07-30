@@ -343,7 +343,7 @@ where
 
     /// Estimate current memory usage
     fn estimate_memory_usage(&self) -> usize {
-        mem::size_of::<Self>() + self.computation_buffer.len() * mem::size, _of::<F>()
+        mem::size_of::<Self>() + self.computation_buffer.len() * mem::size_of::<F>()
     }
 
     /// Update memory profiling information
@@ -452,7 +452,7 @@ where
 
     /// Calculate optimal block size for cache efficiency
     fn calculate_optimal_block_size(_rows: usize, cols: usize, cache_line_size: usize) -> usize {
-        let element_size = mem::_size_of::<F>();
+        let element_size = mem::size_of::<F>();
         let elements_per_cache_line = cache_line_size / element_size;
 
         // Find block _size that maximizes cache utilization
@@ -660,7 +660,7 @@ impl AdaptiveStatsAllocator {
     }
 
     /// Predict optimal memory pool for allocation
-    fn predict_optimal_pool(&self, size: usize_alignment: usize, operation_type: &str) -> String {
+    fn predict_optimal_pool(&self, size: usize, alignment: usize, operation_type: &str) -> String {
         if let Ok(analyzer) = self.allocation_patterns.read() {
             if let Some(pattern) = analyzer.get_pattern(operation_type) {
                 // Use pattern analysis to select optimal pool

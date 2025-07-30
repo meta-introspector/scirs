@@ -1669,7 +1669,7 @@ where
         for (i, &feature) in sample.iter().enumerate() {
             if i < model.circuit_params.len() / 2 {
                 let param = model.circuit_params[i];
-                let quantum_feature = (feature * param).cos();
+                let quantum_feature = ""(feature * param).cos();
                 result = result + quantum_feature;
             }
         }

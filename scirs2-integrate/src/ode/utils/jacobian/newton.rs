@@ -7,7 +7,7 @@
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::ode::utils::jacobian::JacobianManager;
-use crate::ode::utils::linear__solvers::{auto_solve_linear_system, LinearSolverType};
+use crate::ode::utils::linear_solvers::{auto_solve_linear_system, LinearSolverType};
 use ndarray::Array1;
 
 /// Newton solver parameters

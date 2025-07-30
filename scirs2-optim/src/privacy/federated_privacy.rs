@@ -5,15 +5,16 @@
 //! differential privacy, privacy amplification through federation, advanced
 //! threat modeling, and cross-silo federated learning with heterogeneous clients.
 
-use super::moment__accountant::MomentsAccountant;
-use super::noise__mechanisms::{
+use super::moment_accountant::MomentsAccountant;
+use super::noise_mechanisms::{
     GaussianMechanism, LaplaceMechanism, NoiseMechanism as NoiseMechanismTrait,
 };
 use super::{AccountingMethod, DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use crate::error::{OptimError, Result};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use scirs2_core::random::{Random, Rng};
+use rand::Rng;
+use scirs2_core::random::{Random, Rng as SCRRng};
 use std::collections::{HashMap, VecDeque};
 
 // Additional imports for advanced federated learning
@@ -2060,7 +2061,8 @@ impl<T: Float> TaskDetector<T> {
     }
 
     /// Detect task changes in the given updates
-    pub fn detect_task_change(&mut self_updates: &[Array1<T>]) -> Result<bool> {
+    pub fn detect_task_change(&mut self,
+        updates: &[Array1<T>]) -> Result<bool> {
         // Placeholder implementation - always returns false for now
         // In a real implementation, this would analyze gradient patterns
         // to detect task changes
@@ -2550,7 +2552,7 @@ impl<
         let composition_analyzer = FederatedCompositionAnalyzer::new(_config.composition_method);
 
         Ok(Self {
-            _config,
+            config: _config,
             client_accountants: HashMap::new(),
             global_accountant,
             secure_aggregator,
@@ -2663,8 +2665,9 @@ impl<
         // Select noise mechanism
         let mut noise_mechanism: Box<dyn NoiseMechanismTrait<T> + Send> =
             match self.config.base_config.noise_mechanism {
-                NoiseMechanism::Gaussian =>, Box::new(GaussianMechanism::new()),
-                NoiseMechanism::Laplace => Box::new(LaplaceMechanism::new(), _ =>, Box::new(GaussianMechanism::new()),
+                NoiseMechanism::Gaussian => Box::new(GaussianMechanism::new()),
+                NoiseMechanism::Laplace => Box::new(LaplaceMechanism::new()),
+                _ => Box::new(GaussianMechanism::new()),
             };
 
         // Apply noise with federated-specific sensitivity
@@ -2696,7 +2699,7 @@ impl<
         // Filter out Byzantine clients
         let filtered_updates: HashMap<String, Array1<T>> = client_updates
             .iter()
-            .filter(|(client_id_)| {
+            .filter(|(client_id, _)| {
                 !outlier_results
                     .iter()
                     .any(|result| &result.client_id == *client_id && result.is_outlier)
@@ -2720,7 +2723,7 @@ impl<
             .compress_and_schedule(&personalized_updates, round_plan)?;
 
         // 5. Continual learning adaptation
-        let _updates_vec: Vec<_> = compressed_updates.values().cloned().collect();
+        let updates_vec: Vec<_> = compressed_updates.values().cloned().collect();
         if self
             .continual_learning_coordinator
             .task_detector
@@ -2908,7 +2911,7 @@ impl<
         let selected = weighted_clients
             .into_iter()
             .take(num_clients.min(sampling_weights.len()))
-            .map(|(client_id_)| client_id.clone())
+            .map(|(client_id_, _)| client_id_.clone())
             .collect();
 
         Ok(selected)
@@ -3144,20 +3147,20 @@ impl<
         let mut selected = Vec::new();
         let mut rng = scirs2_core::random::rng();
 
-        for (__clients) in device_groups {
-            if _clients.is_empty() {
+        for (_clients) in device_groups {
+            if _clients.1.is_empty() {
                 continue;
             }
 
-            let group_target = (target_count * _clients.len() / available_clients.len()).max(1);
-            let group_target = group_target.min(_clients.len());
+            let group_target = (target_count * _clients.1.len() / available_clients.len()).max(1);
+            let group_target = group_target.min(_clients.1.len());
 
             // Random selection from group
             let mut group_clients = _clients;
             let mut group_selected = Vec::new();
-            for _ in 0..group_target.min(group_clients.len()) {
-                let index = rng.gen_range(0..group_clients.len());
-                group_selected.push(group_clients.swap_remove(index));
+            for _ in 0..group_target.min(group_clients.1.len()) {
+                let index = rng.gen_range(0..group_clients.1.len());
+                group_selected.push(group_clients.1.swap_remove(index));
             }
             selected.extend(group_selected);
 
@@ -3528,7 +3531,7 @@ impl<
     /// Get privacy guarantees for current configuration
     fn get_privacy_guarantees(&self) -> PrivacyGuarantees {
         PrivacyGuarantees {
-            epsilon: self.config.base_config.target_epsilon,
+            _epsilon: self.config.base_config.target_epsilon,
             delta: self.config.base_config.target_delta,
             composition_method: self.config.composition_method,
             amplification_enabled: self.config.amplification_config.enabled,
@@ -3621,7 +3624,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SecureAggregator<T> {
     fn new(_config: SecureAggregationConfig) -> Result<Self> {
         let min_clients = _config.min_clients;
         Ok(Self {
-            _config,
+            config: _config,
             client_masks: HashMap::new(),
             shared_randomness: Arc::new(std::sync::Mutex::new(Random::default())),
             aggregation_threshold: min_clients,
@@ -3641,7 +3644,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SecureAggregator<T> {
             let mask_size = self.config.masking_dimension;
 
             let mask = Array1::from_iter(
-                (0..mask_size).map(|_| T::from(client_rng.gen_range(-1.0..1.0)).unwrap()).. );
+                (0..mask_size).map(|_| T::from(client_rng.gen_range(-1.0..1.0)).unwrap()) );
 
             self.client_masks.insert(client_id.clone(), mask);
         }
@@ -3693,7 +3696,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> SecureAggregator<T> {
 impl PrivacyAmplificationAnalyzer {
     fn new(_config: AmplificationConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             subsampling_history: VecDeque::with_capacity(1000),
             amplification_factors: HashMap::new(),
         }
@@ -3770,7 +3773,7 @@ impl PrivacyAmplificationAnalyzer {
 impl<T: Float + Send + Sync> CrossDevicePrivacyManager<T> {
     fn new(_config: CrossDeviceConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             user_clusters: HashMap::new(),
             device_profiles: HashMap::new(),
             temporal_correlations: HashMap::new(),
@@ -3810,7 +3813,7 @@ impl<T: Float + Send + Sync> CrossDevicePrivacyManager<T> {
 impl FederatedCompositionAnalyzer {
     fn new(_method: FederatedCompositionMethod) -> Self {
         Self {
-            _method,
+            method: _method,
             round_compositions: Vec::new(),
             client_compositions: HashMap::new(),
         }
@@ -4117,7 +4120,8 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
     }
 
     #[allow(dead_code)]
-    pub fn get_client_reputations(&self_clients: &[String]) -> HashMap<String, f64> {
+    pub fn get_client_reputations(&self,
+        clients: &[String]) -> HashMap<String, f64> {
         HashMap::new()
     }
 
@@ -4273,7 +4277,8 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CommunicationOpt
     }
 
     #[allow(dead_code)]
-    pub fn compute_efficiency_scores(&self_clients: &[String]) -> Result<HashMap<String, f64>> {
+    pub fn compute_efficiency_scores(&self,
+        clients: &[String]) -> Result<HashMap<String, f64>> {
         Ok(HashMap::new())
     }
 }
@@ -4309,7 +4314,8 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ContinualLearnin
 
     #[allow(dead_code)]
     pub fn adapt_to_new_task(
-        &mut self_updates: &HashMap<String, Array1<T>>, _round: usize,
+        &mut self,
+        updates: &HashMap<String, Array1<T>>, _round: usize,
     ) -> Result<()> {
         Ok(())
     }
@@ -4911,7 +4917,7 @@ pub mod secure_aggregation_protocols {
 
             Ok(Self {
                 active_protocol: _config.protocol,
-                _config,
+                config: _config,
                 key_manager,
                 fault_detector,
                 metrics: SecureAggregationMetrics::default(),
@@ -5097,7 +5103,7 @@ pub mod secure_aggregation_protocols {
                 for (i, &(xi, yi)) in points.iter().enumerate() {
                     let mut lagrange_coeff = T::one();
 
-                    for (k, &(xk_)) in points.iter().enumerate() {
+                    for (k, &(xk, _)) in points.iter().enumerate() {
                         if i != k {
                             lagrange_coeff = lagrange_coeff * (-xk) / (xi - xk);
                         }
@@ -5298,7 +5304,8 @@ pub mod secure_aggregation_protocols {
             }
         }
 
-        fn detect_anomaly(&self_values: &Array1<T>) -> Result<bool> {
+        fn detect_anomaly(&self,
+        values: &Array1<T>) -> Result<bool> {
             // Simplified anomaly detection - in practice would be more sophisticated
             Ok(false)
         }
@@ -5324,7 +5331,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> StatisticalAnaly
     /// Create new statistical analyzer
     pub fn new(_window_size: usize, significance_level: f64) -> Self {
         Self {
-            _window_size,
+            window_size: _window_size,
             significance_level,
             test_statistics: VecDeque::with_capacity(_window_size),
         }
@@ -5548,7 +5555,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> RobustEstimators
         let best_client = scores
             .iter()
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(client_)| client)
+            .map(|(client_, _)| client_)
             .ok_or_else(|| OptimError::InvalidConfig("Failed to find best client".to_string()))?;
 
         Ok(client_updates[best_client].clone())
@@ -5582,7 +5589,8 @@ impl UtilityEstimator {
         privacy_cost: f64,
     ) -> Result<UtilityMeasurement> {
         let measurement = UtilityMeasurement {
-            round_accuracy: model_accuracy,
+            round: 0, // TODO: Pass actual round number
+            accuracy: model_accuracy,
             loss: 1.0 - model_accuracy, // Simple approximation
             convergence_rate,
             noise_level: privacy_cost,
@@ -5635,7 +5643,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CompressionEngin
     /// Create new compression engine
     pub fn new(_strategy: CompressionStrategy) -> Self {
         Self {
-            _strategy,
+            strategy: _strategy,
             compression_history: VecDeque::with_capacity(100),
             error_feedback_memory: HashMap::new(),
         }
@@ -5818,10 +5826,10 @@ impl BandwidthMonitor {
         self.current_conditions = NetworkConditions {
             available_bandwidth: avg_bandwidth,
             network_quality: match self.assess_connection_quality(avg_bandwidth, avg_latency) {
-                ConnectionQuality::Excellent =>, NetworkQuality::Excellent,
-                ConnectionQuality::Good =>, NetworkQuality::Good,
-                ConnectionQuality::Fair =>, NetworkQuality::Fair,
-                ConnectionQuality::Poor =>, NetworkQuality::Poor,
+                ConnectionQuality::Excellent => NetworkQuality::Excellent,
+                ConnectionQuality::Good => NetworkQuality::Good,
+                ConnectionQuality::Fair => NetworkQuality::Fair,
+                ConnectionQuality::Poor => NetworkQuality::Poor,
             },
             congestion_level: self
                 .congestion_level_to_f64(self.assess_congestion_level(&recent_measurements)),

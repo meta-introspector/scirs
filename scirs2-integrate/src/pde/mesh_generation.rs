@@ -4,7 +4,7 @@
 //! It includes algorithms for generating structured and unstructured meshes for various
 //! shapes and domains, with quality control and refinement options.
 
-use crate::pde::finite__element::{ElementType, Point, Triangle, TriangularMesh};
+use crate::pde::finite_element::{ElementType, Point, Triangle, TriangularMesh};
 use crate::pde::{PDEError, PDEResult};
 use std::collections::{HashMap, HashSet};
 use std::f64::consts::PI;
@@ -27,7 +27,7 @@ pub struct MeshGenerationParams {
 }
 
 impl Default for MeshGenerationParams {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             element_size: 0.1,
             min_angle: 20.0,
@@ -113,7 +113,7 @@ pub struct AutoMeshGenerator {
 }
 
 impl Default for AutoMeshGenerator {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new(MeshGenerationParams::default())
     }
 }

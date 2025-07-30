@@ -245,7 +245,9 @@ fn demonstrate_advanced_analytics(
 
 /// Analyze performance patterns across algorithms
 #[allow(dead_code)]
-fn analyze_performance_patterns(_results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
+fn analyze_performance_patterns(
+    _results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
+) {
     println!("      📊 Performance Pattern Analysis:");
 
     // Calculate performance variance
@@ -327,7 +329,9 @@ fn analyze_optimization_opportunities(
 
 /// Analyze scalability insights
 #[allow(dead_code)]
-fn analyze_scalability_insights(_results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults) {
+fn analyze_scalability_insights(
+    _results: &scirs2_cluster::advanced_benchmarking::BenchmarkResults,
+) {
     println!("      📈 Scalability Analysis:");
 
     let scalability_results: Vec<_> = _results
@@ -521,7 +525,8 @@ fn create_noisy_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
         for j in 0..n_features {
             let base_value = match cluster_id {
                 0 => 1.0 + j as f64 * 0.5,
-                1 => -1.0 + j as f64 * 0.3_ => 0.0 + j as f64 * 0.1,
+                1 => -1.0 + j as f64 * 0.3,
+                _ => 0.0 + j as f64 * 0.1,
             };
 
             let value = if rng.random::<f64>() < outlier_probability {

@@ -5,7 +5,7 @@
 //! different FFT implementations at runtime.
 
 use crate::error::{FFTError, FFTResult};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use rustfft::FftPlanner;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};

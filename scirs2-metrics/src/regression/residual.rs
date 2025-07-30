@@ -41,7 +41,7 @@ pub struct ErrorHistogram<F: Float> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::error_histogram;
+/// use scirs2_metrics::regression::error_histogram;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
@@ -157,7 +157,7 @@ pub struct QQPlotData<F: Float> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::qq_plot_data;
+/// use scirs2_metrics::regression::qq_plot_data;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
@@ -360,7 +360,7 @@ pub struct ResidualAnalysis<F: Float> {
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__metrics::regression::residual_analysis;
+/// use scirs2_metrics::regression::residual_analysis;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
@@ -624,7 +624,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::test_heteroscedasticity;
+/// use scirs2_metrics::regression::test_heteroscedasticity;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
@@ -696,7 +696,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::test_autocorrelation;
+/// use scirs2_metrics::regression::test_autocorrelation;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
@@ -768,7 +768,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::test_normality;
+/// use scirs2_metrics::regression::test_normality;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 5.0, 8.0, 1.0, 4.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];

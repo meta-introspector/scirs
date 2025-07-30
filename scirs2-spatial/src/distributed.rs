@@ -27,7 +27,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::distributed::{DistributedSpatialCluster, NodeConfig};
+//! use scirs2_spatial::distributed::{DistributedSpatialCluster, NodeConfig};
 //! use ndarray::array;
 //!
 //! // Create distributed spatial cluster
@@ -82,7 +82,7 @@ pub struct NodeConfig {
 }
 
 impl Default for NodeConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -103,13 +103,13 @@ impl NodeConfig {
     }
 
     /// Configure node count
-    pub fn with_node_count(mut count: usize) -> Self {
+    pub fn with_node_count(mut self, count: usize) -> Self {
         self.node_count = count;
         self
     }
 
     /// Enable fault tolerance
-    pub fn with_fault_tolerance(mut enabled: bool) -> Self {
+    pub fn with_fault_tolerance(mut self, enabled: bool) -> Self {
         self.fault_tolerance = enabled;
         if enabled && self.replication_factor < 2 {
             self.replication_factor = 2;
@@ -118,13 +118,13 @@ impl NodeConfig {
     }
 
     /// Enable load balancing
-    pub fn with_load_balancing(mut enabled: bool) -> Self {
+    pub fn with_load_balancing(mut self, enabled: bool) -> Self {
         self.load_balancing = enabled;
         self
     }
 
     /// Enable compression
-    pub fn with_compression(mut enabled: bool) -> Self {
+    pub fn with_compression(mut self, enabled: bool) -> Self {
         self.compression = enabled;
         self
     }
@@ -671,8 +671,8 @@ impl DistributedSpatialCluster {
     }
 
     /// Distribute data across cluster nodes
-    pub async fn distribute_data(_data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
-        let (n_points_n_dims) = _data.dim();
+    pub async fn distribute_data(&mut self, _data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
+        let (n_points, n_dims) = _data.dim();
 
         // Create spatial partitions
         let partitions = self.create_spatial_partitions(_data).await?;
@@ -893,7 +893,7 @@ impl DistributedSpatialCluster {
     }
 
     /// Build distributed spatial indices
-    async fn build_distributed_indices() -> SpatialResult<()> {
+    async fn build_distributed_indices(&mut self) -> SpatialResult<()> {
         // Build local indices on each node
         for node_arc in &self.nodes {
             let mut node = node_arc.write().await;
@@ -991,7 +991,7 @@ impl DistributedSpatialCluster {
     }
 
     /// Initialize centroids using distributed k-means++
-    async fn initialize_distributed_centroids(k: usize) -> SpatialResult<Array2<f64>> {
+    async fn initialize_distributed_centroids(&self, k: usize) -> SpatialResult<Array2<f64>> {
         // Get random first centroid from any node
         let first_centroid = self.get_random_point_from_cluster().await?;
 
@@ -1012,7 +1012,7 @@ impl DistributedSpatialCluster {
     }
 
     /// Get random point from any node in cluster
-    async fn get_random_point_from_cluster() -> SpatialResult<Array1<f64>> {
+    async fn get_random_point_from_cluster(&self) -> SpatialResult<Array1<f64>> {
         for node_arc in &self.nodes {
             let node = node_arc.read().await;
             if let Some(ref local_data) = node.local_data {
@@ -1061,7 +1061,7 @@ impl DistributedSpatialCluster {
     }
 
     /// Select next centroid using weighted probability
-    async fn select_next_centroid_weighted(_distances: &[f64]) -> SpatialResult<Array1<f64>> {
+    async fn select_next_centroid_weighted(&self, _distances: &[f64]) -> SpatialResult<Array1<f64>> {
         let total_distance: f64 = _distances.iter().sum();
         let target = rand::random::<f64>() * total_distance;
 
@@ -1145,7 +1145,7 @@ impl DistributedSpatialCluster {
         let mut cluster_sums: HashMap<usize, Array1<f64>> = HashMap::new();
         let mut cluster_counts: HashMap<usize, usize> = HashMap::new();
 
-        for (node_id_assignments) in local_assignments {
+        for (node_id, _assignments) in local_assignments {
             let node = self.nodes[*node_id].read().await;
             if let Some(ref local_data) = node.local_data {
                 let (_, n_dims) = local_data.dim();
@@ -1281,7 +1281,7 @@ impl DistributedSpatialCluster {
     }
 
     /// Get cluster statistics
-    pub async fn get_cluster_statistics() -> SpatialResult<ClusterStatistics> {
+    pub async fn get_cluster_statistics(&self) -> SpatialResult<ClusterStatistics> {
         let state = self.cluster_state.read().await;
         let _load_balancer = self.load_balancer.read().await;
         let communication = self.communication.read().await;

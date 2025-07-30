@@ -143,7 +143,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> LocalExplainer<F> {
                 let coalition = self.sample_coalition(n_features, i)?;
 
                 // Prediction with coalition including feature i
-                let mut with_feature = background.to_owned();
+                let mut with_feature = "background".to_owned();
                 for &j in &coalition {
                     with_feature[j] = instance[j];
                 }
@@ -151,7 +151,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> LocalExplainer<F> {
                 let pred_with = model(&with_feature.insert_axis(Axis(0)).view())[0];
 
                 // Prediction with coalition excluding feature i
-                let mut without_feature = background.to_owned();
+                let mut without_feature = "background".to_owned();
                 for &j in &coalition {
                     if j != i {
                         without_feature[j] = instance[j];

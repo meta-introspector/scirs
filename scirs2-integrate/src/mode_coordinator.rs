@@ -7,13 +7,13 @@
 #![allow(dead_code)]
 #![allow(clippy::too_many_arguments)]
 
-use crate::advanced_memory__optimization::AdvancedMemoryOptimizer;
-use crate::advanced_simd__acceleration::AdvancedSimdAccelerator;
+use crate::advanced_memory_optimization::AdvancedMemoryOptimizer;
+use crate::advanced_simd_acceleration::AdvancedSimdAccelerator;
 use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
-use crate::gpu_advanced__acceleration::AdvancedGPUAccelerator;
-use crate::neural_rl_step__control::{NeuralRLStepController, ProblemState};
-use crate::realtime_performance__adaptation::{
+use crate::gpu_advanced_acceleration::AdvancedGPUAccelerator;
+use crate::neural_rl_step_control::{NeuralRLStepController, ProblemState};
+use crate::realtime_performance_adaptation::{
     AdaptationStrategy, AdaptationTriggers, OptimizationObjectives, PerformanceConstraints,
     RealTimeAdaptiveOptimizer, TargetMetrics,
 };
@@ -390,7 +390,7 @@ impl<
     }
 
     /// Initialize real-time adaptive optimization
-    pub fn initialize_adaptive_optimization(&self) -> IntegrateResult<()> {
+    pub fn initialize_adaptive_optimization(&mut self) -> IntegrateResult<()> {
         if !self.config.enable_adaptive_optimization {
             return Ok(());
         }
@@ -893,7 +893,7 @@ impl<
 
     /// Estimate memory usage for a given problem size
     fn estimate_memory_usage(_problem_size: usize) -> usize {
-        let base_memory = _problem_size * std::mem::_size_of::<F>() * 5; // 5 arrays typical for RK4
+        let base_memory = _problem_size * std::mem::size_of::<F>() * 5; // 5 arrays typical for RK4
         if self.config.enable_gpu {
             base_memory * 2 // GPU memory overhead
         } else {
@@ -1227,7 +1227,7 @@ pub struct PerformancePrediction {
 }
 
 impl Default for PerformancePrediction {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             throughput_improvement: 1.0,
             memory_efficiency: 0.5,
@@ -1454,7 +1454,7 @@ pub struct SimdMetrics {
 }
 
 impl Default for AdvancedModeConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         AdvancedModeConfig {
             enable_gpu: true,
             enable_memory_optimization: true,
@@ -1472,7 +1472,7 @@ impl Default for AdvancedModeConfig {
 }
 
 impl Default for PerformanceTargets {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         PerformanceTargets {
             target_throughput: 100.0,
             max_memory_usage: 1024 * 1024 * 1024, // 1GB

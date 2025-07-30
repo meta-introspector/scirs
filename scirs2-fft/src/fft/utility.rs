@@ -4,7 +4,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use ndarray::{Array, ArrayD, IxDyn};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::fmt::Debug;
 
 /// Try to convert a value to Complex64
@@ -91,8 +91,8 @@ pub fn next_power_of_two(n: usize) -> usize {
 ///
 /// Returns an error if the input size is zero or n is zero
 #[allow(dead_code)]
-pub fn validate_fft_size(_input_size: usize, n: Option<usize>) -> FFTResult<usize> {
-    if _input_size == 0 {
+pub fn validate_fft_size(input_size: usize, n: Option<usize>) -> FFTResult<usize> {
+    if input_size == 0 {
         return Err(FFTError::ValueError("Input cannot be empty".to_string()));
     }
 
@@ -122,7 +122,7 @@ pub fn validate_fft_shapes(
     input_shape: &[usize],
     shape: Option<&[usize]>,
 ) -> FFTResult<Vec<usize>> {
-    match _shape {
+    match shape {
         Some(output_shape) => {
             if output_shape.len() != input_shape.len() {
                 return Err(FFTError::ValueError(

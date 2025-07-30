@@ -306,7 +306,7 @@ where
 
     // Calculate shared memory _size based on block _size and data type
     let shared_memory_size = match config.memory_strategy {
-        MemoryStrategy::SharedMemory =>, std::mem::_size_of::<T>() * block_size_ => 0,
+        MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * block_size_,
     };
 
     // Enhanced kernel arguments with CUDA-specific optimizations
@@ -371,7 +371,7 @@ where
 
     // Calculate local memory _size for work-group sharing
     let local_memory_size = match config.memory_strategy {
-        MemoryStrategy::SharedMemory =>, std::mem::_size_of::<T>() * optimal_local_size_ => 0,
+        MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * optimal_local_size_,
     };
 
     // Enhanced OpenCL kernel arguments
@@ -438,7 +438,7 @@ where
 
     // Threadgroup memory _size for Metal
     let threadgroup_memory_size = match config.memory_strategy {
-        MemoryStrategy::SharedMemory =>, std::mem::_size_of::<T>() * aligned_threadgroup_size_ => 0,
+        MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * aligned_threadgroup_size_,
     };
 
     // Enhanced Metal kernel arguments
@@ -704,7 +704,8 @@ where
             data_buffer,
             b_buffer,
             x_buffer,
-        , _ => device.execute_kernel_with_args(
+        ),
+        _ => device.execute_kernel_with_args(
             kernel,
             &global_size,
             &local_size,
@@ -862,7 +863,7 @@ impl GpuMemoryManager {
         T: GpuDataType + Default + 'static,
     {
         let aligned_size =
-            self.align_size(size * std::mem::size_of::<T>()) / std::mem::size, _of::<T>();
+            self.align_size(size * std::mem::size_of::<T>()) / std::mem::size_of::<T>();
         let key = (aligned_size, std::any::TypeId::of::<T>());
 
         // Try to get from pool first
@@ -1180,10 +1181,10 @@ where
     T: GpuDataType + Copy,
 {
     let priority = match access_pattern {
-        AccessPattern::Sequential =>, TransferPriority::Normal,
-        AccessPattern::Random =>, TransferPriority::High,
-        AccessPattern::Strided { .. } =>, TransferPriority::High,
-        AccessPattern::Blocked =>, TransferPriority::Normal,
+        AccessPattern::Sequential => TransferPriority::Normal,
+        AccessPattern::Random => TransferPriority::High,
+        AccessPattern::Strided { .. } => TransferPriority::High,
+        AccessPattern::Blocked => TransferPriority::Normal,
     };
 
     memory_manager.transfer_data_optimized(matrix_data, priority)
@@ -1213,9 +1214,9 @@ pub fn optimize_memory_bandwidth(
         (GpuBackend::Cuda, AccessPattern::Sequential, _size) if _size > 1024 * 1024 => {
             MemoryStrategy::Coalesced
         }
-        (GpuBackend::Cuda, AccessPattern:: Random) =>, MemoryStrategy::TextureMemory,
-        (GpuBackend::OpenCL, AccessPattern:: Blocked) =>, MemoryStrategy::SharedMemory,
-        (GpuBackend:: Metal, _size) if _size > 512 * 1024 => {
+        (GpuBackend::Cuda, AccessPattern::Random, _) => MemoryStrategy::TextureMemory,
+        (GpuBackend::OpenCL, AccessPattern::Blocked, _) => MemoryStrategy::SharedMemory,
+        (GpuBackend::Metal, _, _size) if _size > 512 * 1024 => {
             MemoryStrategy::SharedMemory // Unified memory architecture
         }
         _ => MemoryStrategy::Standard,
@@ -1307,7 +1308,7 @@ pub fn calculate_adaptive_workgroup_size(
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_spmv_kernel<T>(
-    _device: &GpuDevice_kernel: &GpuKernelHandle,
+    _device: &GpuDevice, _kernel: &GpuKernelHandle,
     rows: usize,
     indptr_buffer: &GpuBuffer<u32>,
     indices_buffer: &GpuBuffer<u32>,
@@ -1334,7 +1335,7 @@ where
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_symmetric_spmv_kernel<T>(
-    _device: &GpuDevice_kernel: &GpuKernelHandle,
+    _device: &GpuDevice, _kernel: &GpuKernelHandle,
     rows: usize,
     indptr_buffer: &GpuBuffer<u32>,
     indices_buffer: &GpuBuffer<u32>,
@@ -1361,7 +1362,7 @@ where
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_triangular_solve_kernel<T>(
-    _device: &GpuDevice_kernel: &GpuKernelHandle,
+    _device: &GpuDevice, _kernel: &GpuKernelHandle,
     n: usize,
     indptr_buffer: &GpuBuffer<u32>,
     indices_buffer: &GpuBuffer<u32>,

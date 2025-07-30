@@ -112,7 +112,7 @@ impl ShapeFunctions {
     }
 
     /// Linear shape function derivatives
-    fn linear_shape_derivatives(_xi: f64_eta: f64, _zeta: f64) -> (Array1<f64>, Array1<f64>) {
+    fn linear_shape_derivatives(_xi: f64, _eta: f64, _zeta: f64) -> (Array1<f64>, Array1<f64>) {
         let dxi = Array1::from_vec(vec![-1.0, 1.0, 0.0]);
         let deta = Array1::from_vec(vec![-1.0, 0.0, 1.0]);
         (dxi, deta)
@@ -231,7 +231,8 @@ impl TriangularQuadrature {
             1 => Ok(Self::order_1()),
             3 => Ok(Self::order_3()),
             6 => Ok(Self::order_6()),
-            12 => Ok(Self::order_12(), _ => Err(PDEError::FiniteElementError(format!(
+            12 => Ok(Self::order_12()),
+            _ => Err(PDEError::FiniteElementError(format!(
                 "Quadrature rule of _order {_order} is not implemented"
             ))),
         }

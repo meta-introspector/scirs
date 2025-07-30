@@ -6,7 +6,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::NormMode;
 use ndarray::{Array, Array1, Array2, ArrayD, Dimension, IxDyn, ShapeBuilder};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 use std::fmt::Debug;

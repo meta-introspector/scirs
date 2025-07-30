@@ -71,14 +71,14 @@ impl ChunkedArrayReader {
         })?;
 
         // Pre-allocate buffer pool for maximum chunk _size
-        let max_chunk_bytes = chunk_size * shape.1 * std::mem::_size_of::<f64>();
+        let max_chunk_bytes = chunk_size * shape.1 * std::mem::size_of::<f64>();
 
         Ok(ChunkedArrayReader {
             file: BufReader::new(file),
             shape,
             chunk_size,
             current_row: 0,
-            dtype_size: std::mem::_size, _of::<f64>(),
+            dtype_size: std::mem::size_of::<f64>(),
             buffer_pool: vec![0u8; max_chunk_bytes],
         })
     }

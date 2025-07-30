@@ -4,7 +4,7 @@
 //! reference counting analysis, cycle detection, real-time monitoring, and
 //! pattern-based leak identification.
 
-use super::memory_leak__detector::{
+use super::memory_leak_detector::{
     AllocationEvent, AllocationType, GrowthPattern, GrowthTrend, LeakDetector, LeakSource,
     MemoryGrowthAnalysis, MemoryLeakResult, MemoryUsageSnapshot,
 };
@@ -171,7 +171,7 @@ impl ReferenceCountingDetector {
     /// Create a new reference counting detector
     pub fn new(_config: ReferenceCountingConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             reference_tracker: Arc::new(RwLock::new(ReferenceTracker::new())),
             cycle_detector: CycleDetector::new(),
         }
@@ -652,7 +652,7 @@ impl CycleDetector {
         indices.insert(v, *index);
         lowlinks.insert(v, *index);
         *index += 1;
-        _stack.push(v);
+        stack.push(v);
         on_stack.insert(v);
 
         if let Some(neighbors) = graph.get(&v) {
@@ -661,7 +661,7 @@ impl CycleDetector {
                     self.strongconnect(
                         w,
                         index,
-                        _stack,
+                        stack,
                         indices,
                         lowlinks,
                         on_stack,
@@ -682,7 +682,7 @@ impl CycleDetector {
         if lowlinks.get(&v) == indices.get(&v) {
             let mut component = Vec::new();
             loop {
-                let w = _stack.pop().unwrap();
+                let w = stack.pop().unwrap();
                 on_stack.remove(&w);
                 component.push(w);
                 if w == v {
@@ -830,7 +830,7 @@ impl RealTimeMemoryMonitor {
     /// Create a new real-time memory monitor
     pub fn new(_config: RealTimeMonitorConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             state: Arc::new(Mutex::new(MonitorState::new())),
             alert_system: AlertSystem::new(),
             is_active: Arc::new(Mutex::new(false)),
@@ -903,7 +903,7 @@ impl RealTimeMemoryMonitor {
         // In a real implementation, this would use system APIs to get actual memory usage
         // For now, we'll simulate memory sampling
         MemorySample {
-            _timestamp,
+            timestamp: _timestamp,
             memory_usage: Self::get_current_memory_usage(),
             allocation_rate: 0.0,   // Would be calculated from real data
             deallocation_rate: 0.0, // Would be calculated from real data

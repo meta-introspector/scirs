@@ -711,7 +711,7 @@ impl OptimizerCoreGenerator {
 //! This plugin implements the {} optimization algorithm.
 //! Generated with scirs2-optim template generator v{}
 
-use scirs2__optim::plugin::*;
+use scirs2_optim::plugin::*;
 use ndarray::{{Array1, Array2}};
 use num_traits::Float;
 use serde::{{Serialize, Deserialize}};
@@ -1034,7 +1034,7 @@ impl TestSuiteGenerator {
 //!
 //! These tests validate the complete functionality of the {} optimizer plugin.
 
-use scirs2__optim::plugin::*;
+use scirs2_optim::plugin::*;
 use ndarray::{{Array1, Array2}};
 
 mod common;
@@ -1195,7 +1195,7 @@ fn test_{}_performance_characteristics() {{
 //! These benchmarks measure the performance characteristics of the {} optimizer.
 
 use criterion::{{black_box, criterion_group, criterion_main, Criterion}};
-use scirs2__optim::plugin::*;
+use scirs2_optim::plugin::*;
 use ndarray::Array1;
 
 #[allow(dead_code)]
@@ -1324,7 +1324,7 @@ Add this plugin to your `Cargo.toml`:
 ### Basic Usage
 
 ```rust
-use scirs2__optim::plugin::*;
+use scirs2_optim::plugin::*;
 use {}::*;
 use ndarray::Array1;
 use std::path::PathBuf;
@@ -1601,7 +1601,8 @@ The plugin can be extended by:
 struct BenchmarkGenerator;
 
 impl CodeGenerator for BenchmarkGenerator {
-    fn generate(&self_template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
+    fn generate(&self,
+        template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
         // Implementation would generate comprehensive benchmark suites
         Ok(vec![])
     }
@@ -1614,7 +1615,8 @@ impl CodeGenerator for BenchmarkGenerator {
 struct ExampleGenerator;
 
 impl CodeGenerator for ExampleGenerator {
-    fn generate(&self_template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
+    fn generate(&self,
+        template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
         // Implementation would generate usage examples
         Ok(vec![])
     }
@@ -1627,7 +1629,8 @@ impl CodeGenerator for ExampleGenerator {
 struct CICDGenerator;
 
 impl CodeGenerator for CICDGenerator {
-    fn generate(&self_template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
+    fn generate(&self,
+        template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
         // Implementation would generate GitHub Actions, Travis CI, etc.
         Ok(vec![])
     }
@@ -1640,7 +1643,8 @@ impl CodeGenerator for CICDGenerator {
 struct ConfigurationGenerator;
 
 impl CodeGenerator for ConfigurationGenerator {
-    fn generate(&self_template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
+    fn generate(&self,
+        template: &PluginTemplate, _parameters: &HashMap<String, String>, _config: &TemplateGeneratorConfig) -> Result<Vec<GeneratedFile>> {
         // Implementation would generate Cargo.toml, plugin manifests, etc.
         Ok(vec![])
     }
@@ -1896,7 +1900,8 @@ impl TemplateValidationRule for ParameterValidationRule {
 struct StructureValidationRule;
 
 impl TemplateValidationRule for StructureValidationRule {
-    fn validate(&self_template: &PluginTemplate) -> ValidationResult {
+    fn validate(&self,
+        template: &PluginTemplate) -> ValidationResult {
         // Validate _template structure
         ValidationResult {
             passed: true,
@@ -1957,7 +1962,8 @@ impl TemplateExtractor {
         Self
     }
     
-    fn extract_template(&self_analysis: PluginAnalysis, template_name: &str) -> Result<PluginTemplate> {
+    fn extract_template(&self,
+        analysis: PluginAnalysis, template_name: &str) -> Result<PluginTemplate> {
         // Extract template structure from _analysis
         Ok(PluginTemplate {
             _name: template_name.to_string(),

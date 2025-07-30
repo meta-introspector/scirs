@@ -907,7 +907,7 @@ impl BitPackedSparseVector {
 
     /// Memory usage in bytes
     pub fn memory_usage(&self) -> usize {
-        self.bit_data.len() * std::mem::size_of::<u64>() + std::mem::size, _of::<usize>()
+        self.bit_data.len() * std::mem::size_of::<u64>() + std::mem::size_of::<usize>()
     }
 
     /// Intersection with another bit-packed vector
@@ -1058,7 +1058,7 @@ impl AdaptiveSparseMatrix {
             Self::Csr(m) => m.memory_usage(),
             Self::Csc(m) => m.memory_usage(),
             Self::Coo(m) => {
-                m.nnz() * (2 * std::mem::size_of::<usize>() + std::mem::size, _of::<f64>())
+                m.nnz() * (2 * std::mem::size_of::<usize>() + std::mem::size_of::<f64>())
             }
             Self::Block(m) => m.memory_usage(),
             Self::Hierarchical(m) => m.memory_usage(),

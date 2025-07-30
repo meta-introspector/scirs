@@ -22,7 +22,7 @@ use thiserror::Error;
 
 #[cfg(feature = "parallel")]
 #[allow(unused_imports)]
-use rayon::prelude::*;
+use crate::parallel_ops::*;
 
 /// JIT compilation error types
 #[derive(Error, Debug)]

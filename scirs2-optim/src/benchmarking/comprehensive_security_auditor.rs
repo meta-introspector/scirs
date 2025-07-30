@@ -493,7 +493,7 @@ impl ComprehensiveSecurityAuditor {
         let report_generator = SecurityReportGenerator::new();
 
         Self {
-            _config,
+            config: _config,
             dependency_scanner,
             vulnerability_db,
             policy_enforcer,
@@ -956,7 +956,7 @@ impl ComprehensiveSecurityAuditor {
         fn visit_dir(_dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
             for entry in std::fs::read_dir(_dir)? {
                 let entry = entry?;
-                let _path = entry._path();
+                let _path = entry.path();
 
                 if _path.is_dir() {
                     // Skip common non-source directories
@@ -1063,8 +1063,11 @@ impl ComprehensiveSecurityAuditor {
                         vuln_dep.name, vuln_dep.current_version, fixed_version
                     ),
                     priority: match vuln_dep.severity {
-                        SecuritySeverity::Critical =>, RemediationPriority::Critical,
-                        SecuritySeverity::High => RemediationPriority::High_ =>, RemediationPriority::Medium,
+                        SecuritySeverity::Critical => RemediationPriority::Critical,
+                        SecuritySeverity::High => RemediationPriority::High,
+                        SecuritySeverity::Medium => RemediationPriority::Medium,
+                        SecuritySeverity::Low => RemediationPriority::Low,
+                        SecuritySeverity::Info => RemediationPriority::Low,
                     },
                     effort: EffortLevel::Low,
                     steps: vec![
@@ -1088,9 +1091,11 @@ impl ComprehensiveSecurityAuditor {
                     title: format!("Fix security issue: {}", issue.description),
                     description: remediation.clone(),
                     priority: match issue.severity {
-                        SecuritySeverity::Critical =>, RemediationPriority::Critical,
-                        SecuritySeverity::High =>, RemediationPriority::High,
-                        SecuritySeverity::Medium => RemediationPriority::Medium_ =>, RemediationPriority::Low,
+                        SecuritySeverity::Critical => RemediationPriority::Critical,
+                        SecuritySeverity::High => RemediationPriority::High,
+                        SecuritySeverity::Medium => RemediationPriority::Medium,
+                        SecuritySeverity::Low => RemediationPriority::Low,
+                        SecuritySeverity::Info => RemediationPriority::Low,
                     },
                     effort: EffortLevel::Medium,
                     steps: vec![
@@ -1180,7 +1185,8 @@ impl ComprehensiveSecurityAuditor {
             r if r >= 0.8 => RiskLevel::Critical,
             r if r >= 0.6 => RiskLevel::High,
             r if r >= 0.4 => RiskLevel::Medium,
-            r if r >= 0.2 => RiskLevel::Low_ =>, RiskLevel::Minimal,
+            r if r >= 0.2 => RiskLevel::Low,
+            _ => RiskLevel::Minimal,
         };
 
         let mitigation_strategies = self.generate_mitigation_strategies(&risk_factors);
@@ -1651,7 +1657,7 @@ impl Default for RiskAssessment {
 impl DependencyScanner {
     fn new(_config: DependencyScanConfig) -> Self {
         Self {
-            _config: DependencyScanConfig::default(),
+            config: DependencyScanConfig::default(),
             vuln_db_client: VulnerabilityDatabaseClient::new(),
             license_db: LicenseDatabase::new(),
             package_cache: HashMap::new(),
@@ -1702,7 +1708,7 @@ struct PackageMetadata;
 impl VulnerabilityDatabase {
     fn new(_config: VulnerabilityDatabaseConfig) -> Self {
         Self {
-            _config: VulnerabilityDatabaseConfig::default(),
+            config: VulnerabilityDatabaseConfig::default(),
             local_cache: HashMap::new(),
             last_update: SystemTime::now(),
             update_frequency: Duration::from_secs(24 * 60 * 60),

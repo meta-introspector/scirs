@@ -14,7 +14,7 @@
 //! ## Traditional API
 //! ```
 //! use ndarray::{Array1, Array2};
-//! use scirs2__optim::optimizers::{SGD, Optimizer};
+//! use scirs2_optim::optimizers::{SGD, Optimizer};
 //!
 //! // Create a simple optimization problem
 //! let params = Array1::zeros(5);
@@ -31,7 +31,7 @@
 //! ## Unified API (PyTorch-style)
 //! ```
 //! use ndarray::Array1;
-//! use scirs2__optim::{OptimizerConfig, OptimizerFactory, Parameter, UnifiedOptimizer};
+//! use scirs2_optim::{OptimizerConfig, OptimizerFactory, Parameter, UnifiedOptimizer};
 //!
 //! // Create parameters (similar to PyTorch)
 //! let mut param1 = Parameter::new(Array1::from_vec(vec![1.0, 2.0, 3.0]), "layer1.weight");
@@ -105,16 +105,16 @@ pub use gpu::{
     sgd_gpu::SGDGpu,
     GpuOptimError, GpuOptimizer, GpuOptimizerConfig,
 };
-pub use gradient__processing::*;
+pub use gradient_processing::*;
 #[cfg(feature = "metrics_integration")]
 pub use metrics::*;
-pub use optimizer__composition::*;
+pub use optimizer_composition::*;
 pub use optimizers::*;
 pub use regularizers::*;
 pub use schedulers::*;
 
 // Selective re-exports to avoid conflicts
-pub use adaptive__selection::{
+pub use adaptive_selection::{
     AdaptiveOptimizerSelector, OptimizerStatistics, OptimizerType, PerformanceMetrics,
     ProblemCharacteristics, ProblemType, SelectionNetwork, SelectionStrategy,
 };
@@ -128,7 +128,7 @@ pub use benchmarking::visualization::{
 pub use benchmarking::{
     BenchmarkResult, GradientFlowAnalyzer, GradientFlowStats, OptimizerBenchmark, VisualizationData,
 };
-pub use curriculum__optimization::{
+pub use curriculum_optimization::{
     AdaptiveCurriculum, AdversarialAttack, AdversarialConfig, CurriculumManager, CurriculumState,
     CurriculumStrategy, ImportanceWeightingStrategy,
 };
@@ -136,33 +136,33 @@ pub use distributed::{
     AveragingStrategy, CommunicationResult, CompressedGradient, CompressionStrategy,
     DistributedCoordinator, GradientCompressor, ParameterAverager, ParameterServer,
 };
-pub use domain__specific::{
+pub use domain_specific::{
     CrossDomainKnowledge, DomainOptimizationConfig, DomainPerformanceMetrics, DomainRecommendation,
     DomainSpecificSelector, DomainStrategy, LearningRateScheduleType, OptimizationContext,
     RecommendationType, RegularizationApproach, ResourceConstraints, TrainingConfiguration,
 };
-pub use gradient__accumulation::{
+pub use gradient_accumulation::{
     AccumulationMode, GradientAccumulator as GradAccumulator, MicroBatchTrainer,
     VariableAccumulator,
 };
 // Temporarily commented out hardware-aware re-exports to resolve compilation issues
-// pub use hardware__aware::{
+// pub use hardware_aware::{
 //     AllReduceAlgorithm, CommunicationStrategy, GPUArchitecture, HardwareAwareOptimizer,
 //     HardwareOptimizationConfig, HardwarePerformanceStats, HardwarePlatform, MemoryStrategy,
 //     ParallelizationStrategy, PartitionStrategy, PerformanceProfiler, PrecisionStrategy,
 //     QuantizationSupport, ResourceMonitor, SIMDSupport, TPUVersion, TuningStrategy,
 // };
 // Temporarily commented out complex re-exports to resolve compilation issues
-// pub use learned__optimizers::optimization__coordinator::{
+// pub use learned_optimizers::optimization_coordinator::{
 //     LandscapeFeatures, OptimizationContext as advancedOptimizationContext,
 //     OptimizationRecommendation, OptimizerCapabilities, PerformanceSnapshot, AdvancedConfig,
 //     AdvancedCoordinator, AdvancedResult,
 // };
-pub use learned__optimizers::{
+pub use learned_optimizers::{
     LSTMOptimizer, LearnedOptimizerConfig, LearnedOptimizerMetrics, LearnedOptimizerState,
     MetaOptimizationStrategy, NeuralOptimizerType, TransferResults,
 };
-pub use meta__learning::{
+pub use meta_learning::{
     AcquisitionFunction, HyperparameterOptimizer, HyperparameterPredictor, HyperparameterStrategy,
     MetaOptimizer, MetaOptimizerTrait, NeuralOptimizer, OptimizationTrajectory, SGDMetaOptimizer,
     UpdateNetwork,
@@ -172,11 +172,11 @@ pub use neural_architecture_search::{
     NeuralArchitectureSearch, OptimizerArchitecture, PerformanceEvaluator, SearchResults,
     SearchStrategyType,
 };
-pub use neural__integration::architecture__aware::{
+pub use neural_integration::architecture_aware::{
     ArchitectureAwareOptimizer, ArchitectureStrategy,
 };
-pub use neural__integration::forward__backward::{BackwardHook, ForwardHook, NeuralIntegration};
-pub use neural__integration::{
+pub use neural_integration::forward_backward::{BackwardHook, ForwardHook, NeuralIntegration};
+pub use neural_integration::{
     LayerArchitecture, LayerId, OptimizationConfig, ParamId, ParameterManager, ParameterMetadata,
     ParameterOptimizer, ParameterType,
 };
@@ -189,7 +189,7 @@ pub use plugin::{
     OptimizerPlugin, PluginCapabilities, PluginLoader, PluginRegistry, PluginValidationFramework,
 };
 // Macro is exported at crate root via #[macro_export]
-pub use online__learning::{
+pub use online_learning::{
     ColumnGrowthStrategy, LearningRateAdaptation, LifelongOptimizer, LifelongStats,
     LifelongStrategy, MemoryExample, MemoryUpdateStrategy, MirrorFunction, OnlineLearningStrategy,
     OnlineOptimizer, OnlinePerformanceMetrics, SharedKnowledge, TaskGraph,
@@ -198,8 +198,8 @@ pub use privacy::{
     AccountingMethod, ClippingStats, DifferentialPrivacyConfig, DifferentiallyPrivateOptimizer,
     MomentsAccountant, NoiseMechanism, PrivacyBudget, PrivacyValidation,
 };
-pub use second__order::{HessianInfo, Newton, SecondOrderOptimizer, LBFGS as SecondOrderLBFGS};
-pub use self__tuning::{
+pub use second_order::{HessianInfo, Newton, SecondOrderOptimizer, LBFGS as SecondOrderLBFGS};
+pub use self_tuning::{
     OptimizerInfo, OptimizerTrait, PerformanceStats, SelfTuningConfig, SelfTuningOptimizer,
     SelfTuningStatistics, TargetMetric,
 };
@@ -212,8 +212,8 @@ pub use streaming::{
 //     PodTopology, TPUConfig, TPUMemoryOptimization, TPUOptimizer, TPUPerformanceMetrics,
 //     TPUTopologyInfo, TPUVersion as TPUVersionEnum, XLAOptimizationLevel,
 // };
-pub use training__stabilization::{AveragingMethod, ModelEnsemble, PolyakAverager, WeightAverager};
-pub use unified__api::{
+pub use training_stabilization::{AveragingMethod, ModelEnsemble, PolyakAverager, WeightAverager};
+pub use unified_api::{
     OptimizerConfig, OptimizerFactory, Parameter, TrainingLoop, UnifiedAdam, UnifiedOptimizer,
     UnifiedSGD,
 };

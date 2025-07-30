@@ -168,7 +168,7 @@ impl<F: Float> GraphVisualizer<F> {
             write!(
                 output,
                 "    {{\"id\": {i}, \"label\": \"{}\"}}",
-                label.replace('"', "\\\"")
+                label.replace(", "\\\"")
             )?;
         }
 

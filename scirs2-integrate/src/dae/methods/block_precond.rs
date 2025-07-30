@@ -232,7 +232,7 @@ impl<F: IntegrateFloat> BlockILUPreconditioner<F> {
     /// Apply the preconditioner: P⁻¹v
     ///
     /// Solves the system P * z = v for z, where P is the block ILU(0) preconditioner
-    pub fn apply(v: &Array1<F>) -> Array1<F> {
+    pub fn apply(&self, v: &Array1<F>) -> Array1<F> {
         let n_total = self.n_x + self.n_y;
         let mut result = Array1::<F>::zeros(n_total);
 
@@ -500,7 +500,7 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
     /// Apply the preconditioner: P⁻¹v
     ///
     /// Multiplies the input vector by the block diagonal inverse
-    pub fn apply(v: &Array1<F>) -> Array1<F> {
+    pub fn apply(&self, v: &Array1<F>) -> Array1<F> {
         let mut result = Array1::<F>::zeros(self.n);
 
         // Apply each block inverse to the corresponding segment of the input vector

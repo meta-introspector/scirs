@@ -432,7 +432,7 @@ impl AdvancedMemoryProfiler {
         Ix: petgraph::graph::IndexType,
     {
         let node_size = std::mem::size_of::<N>();
-        let edge_size = std::mem::size_of::<E>() + std::mem::size, _of::<Ix>() * 2; // source + target
+        let edge_size = std::mem::size_of::<E>() + std::mem::size_of::<Ix>() * 2; // source + target
         let index_size = std::mem::size_of::<Ix>();
 
         let base_graph_overhead = 1024; // Estimated overhead for graph structure

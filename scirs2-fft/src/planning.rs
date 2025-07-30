@@ -12,13 +12,13 @@
 //! - Support for both runtime and ahead-of-time planning
 //! - Plan pruning and management to optimize memory usage
 
-use crate::auto__tuning::{AutoTuneConfig, AutoTuner, FftVariant};
+use crate::auto_tuning::{AutoTuneConfig, AutoTuner, FftVariant};
 use crate::backend::BackendContext;
 use crate::error::{FFTError, FFTResult};
-use crate::plan__serialization::{PlanMetrics, PlanSerializationManager};
+use crate::plan_serialization::{PlanMetrics, PlanSerializationManager};
 
 use ndarray::{ArrayBase, Data, Dimension};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -225,7 +225,7 @@ impl AdvancedFftPlanner {
         };
 
         Self {
-            _config,
+            config: _config,
             cache: Arc::new(Mutex::new(HashMap::new())),
             serialization_manager,
             auto_tuner,
@@ -367,12 +367,12 @@ impl AdvancedFftPlanner {
         // If still over capacity, remove least recently used
         let max_entries = self.config.max_cached_plans;
         while cache.len() >= max_entries {
-            if let Some((key_to_remove_)) = cache
+            if let Some((key_to_remove_, _)) = cache
                 .iter()
                 .min_by_key(|(_, v)| (v.last_used, v.usage_count))
-                .map(|(k_)| (k.clone(), ()))
+                .map(|(k_, _)| (k_.clone(), ()))
             {
-                cache.remove(&key_to_remove);
+                cache.remove(&key_to_remove_);
             } else {
                 break;
             }
@@ -486,7 +486,7 @@ impl FftPlanExecutor {
     /// Create a new executor for the given plan
     pub fn new(_plan: Arc<FftPlan>) -> Self {
         Self {
-            _plan,
+            plan: _plan,
             context: None,
         }
     }
@@ -494,7 +494,7 @@ impl FftPlanExecutor {
     /// Create a new executor with a specific context
     pub fn with_context(_plan: Arc<FftPlan>, context: BackendContext) -> Self {
         Self {
-            _plan,
+            plan: _plan,
             context: Some(context),
         }
     }
@@ -698,7 +698,7 @@ pub fn plan_ahead_of_time(_sizes: &[usize], db_path: Option<&str>) -> FFTResult<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num__complex::Complex64;
+    use num_complex::Complex64;
     use tempfile::tempdir;
 
     #[test]

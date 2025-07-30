@@ -15,7 +15,7 @@
 use ndarray::{Array1, Array2, ArrayView1};
 use std::time::Instant;
 
-use crate::pde::finite__difference::FiniteDifferenceScheme;
+use crate::pde::finite_difference::FiniteDifferenceScheme;
 use crate::pde::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, PDEError, PDEResult,
     PDESolution, PDESolverInfo,
@@ -76,7 +76,7 @@ pub struct ImplicitOptions {
 }
 
 impl Default for ImplicitOptions {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         ImplicitOptions {
             method: ImplicitMethod::CrankNicolson,
             tolerance: 1e-6,
@@ -224,7 +224,7 @@ impl CrankNicolson1D {
     }
 
     /// Set the finite difference scheme for spatial discretization
-    pub fn with_fd_scheme(mut scheme: FiniteDifferenceScheme) -> Self {
+    pub fn with_fd_scheme(mut self, scheme: FiniteDifferenceScheme) -> Self {
         self.fd_scheme = scheme;
         self
     }
@@ -840,7 +840,7 @@ impl BackwardEuler1D {
     }
 
     /// Set the finite difference scheme for spatial discretization
-    pub fn with_fd_scheme(mut scheme: FiniteDifferenceScheme) -> Self {
+    pub fn with_fd_scheme(mut self, scheme: FiniteDifferenceScheme) -> Self {
         self.fd_scheme = scheme;
         self
     }

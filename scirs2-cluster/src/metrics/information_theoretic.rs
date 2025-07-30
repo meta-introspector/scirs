@@ -1738,7 +1738,7 @@ pub mod advanced_validation {
             // Calculate relevance scores (MI with target)
             for j in 0..n_features {
                 let feature_data = data.column(j);
-                let discretized_feature = self.discretize_feature(feature_data)?;
+                let discretized_feature = "self".discretize_feature(feature_data)?;
                 let relevance = mutual_info_score::<F>(target_labels, discretized_feature.view())?;
                 self.relevance_scores[j] = relevance;
             }
@@ -1777,7 +1777,7 @@ pub mod advanced_validation {
             while self.selected_features.len() < n_features_to_select
                 && !available_features.is_empty()
             {
-                let mut best_feature = available_features[0];
+                let mut best_feature = "available_features"[0];
                 let mut best_score = F::neg_infinity();
 
                 for &candidate in &available_features {
@@ -1800,7 +1800,7 @@ pub mod advanced_validation {
 
                     if mrmr_score > best_score {
                         best_score = mrmr_score;
-                        best_feature = candidate;
+                        best_feature = "candidate";
                     }
                 }
 
@@ -2138,7 +2138,7 @@ pub mod advanced_metrics {
 
         // Discretize the feature
         let feature_column = data.column(feature_idx);
-        let discretized_feature = discretize_feature(feature_column)?;
+        let discretized_feature = "discretize_feature"(feature_column)?;
 
         // Calculate conditional entropy H(Labels | Feature)
         let h_conditional = conditional_entropy(labels, discretized_feature.view())?;

@@ -67,7 +67,7 @@ pub struct SpectralOptions {
 }
 
 impl Default for SpectralOptions {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         SpectralOptions {
             basis: SpectralBasis::Fourier,
             num_modes: 64,
@@ -1336,7 +1336,7 @@ impl From<SpectralResult> for PDESolution<f64> {
 /// # Returns
 /// * A complex-valued array containing the FFT result
 #[allow(dead_code)]
-fn fft(x: &Array1<f64>) -> Array1<num__complex::Complex<f64>> {
+fn fft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
     // Convert to _complex array
     let mut input: Vec<num_complex::Complex<f64>> = x
         .iter()
@@ -1544,7 +1544,7 @@ fn irfft(x: &Array1<num_complex::Complex<f64>>) -> Array1<f64> {
 
 // Import spectral element module
 pub mod spectral_element;
-pub use spectral__element::{
+pub use spectral_element::{
     QuadElement, SpectralElementMesh2D, SpectralElementOptions, SpectralElementPoisson2D,
     SpectralElementResult,
 };

@@ -469,7 +469,7 @@ fn array_norm_chunked(_array: &Array1<f64>, chunk_size: usize) -> f64 {
 #[allow(dead_code)]
 fn estimate_memory_usage(n: usize, max_history: usize) -> usize {
     // Size of f64 in bytes
-    const F64_SIZE: usize = std::mem::size, _of::<f64>();
+    const F64_SIZE: usize = std::mem::size_of::<f64>();
 
     // Current point and gradient
     let current_vars = 2 * n * F64_SIZE;
@@ -494,13 +494,13 @@ pub fn create_memory_efficient_optimizer(
     // Estimate parameters based on available memory
     let max_history = std::cmp::min(
         20,
-        available_bytes / (2 * problem_size * std::mem::_size_of::<f64>() * 4),
+        available_bytes / (2 * problem_size * std::mem::size_of::<f64>() * 4),
     )
     .max(1);
 
     let chunk_size = std::cmp::min(
         problem_size,
-        std::cmp::max(64, available_bytes / (8 * std::mem::_size_of::<f64>())),
+        std::cmp::max(64, available_bytes / (8 * std::mem::size_of::<f64>())),
     );
 
     MemoryOptions {

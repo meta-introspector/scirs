@@ -41,7 +41,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientAccumulator<A, D> {
         Self {
             accumulated_gradients: Vec::new(),
             accumulation_count: 0,
-            _target_accumulations,
+            target_accumulations: _target_accumulations,
             mode,
             initialized: false,
         }

@@ -4,7 +4,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, Axis, s};
-use scirs2__linalg::eigh;
+use scirs2_linalg::eigh;
 use super::BssConfig;
 
 #[allow(unused_imports)]

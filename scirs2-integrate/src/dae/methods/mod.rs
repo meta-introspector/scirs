@@ -22,11 +22,11 @@ pub mod krylov_dae;
 pub mod block_precond;
 
 // Re-export main solver functions
-pub use self::bdf__dae::{bdf_implicit_dae, bdf_semi_explicit_dae};
-pub use self::index_reduction__bdf::{bdf_implicit_with_index_reduction, bdf_with_index_reduction};
-pub use self::krylov__dae::{krylov_bdf_implicit_dae, krylov_bdf_semi_explicit_dae};
+pub use self::bdf_dae::{bdf_implicit_dae, bdf_semi_explicit_dae};
+pub use self::index_reduction_bdf::{bdf_implicit_with_index_reduction, bdf_with_index_reduction};
+pub use self::krylov_dae::{krylov_bdf_implicit_dae, krylov_bdf_semi_explicit_dae};
 
 // Re-export preconditioner creation functions
-pub use self::block__precond::{
+pub use self::block_precond::{
     create_block_ilu_preconditioner, create_block_jacobi_preconditioner,
 };

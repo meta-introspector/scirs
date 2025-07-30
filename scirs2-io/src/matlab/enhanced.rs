@@ -920,11 +920,13 @@ impl MatV73Sparse {
 
         // Read sparse matrix metadata
         let nrows = match file.get_attribute(name, "MATLAB_sparse_nrows") {
-            Some(AttributeValue::Integer(n)) => n as usize_ => return Err(IoError::Other("Missing sparse matrix rows".to_string())),
+            Some(AttributeValue::Integer(n)) => n as usize,
+            _ => return Err(IoError::Other("Missing sparse matrix rows".to_string())),
         };
 
         let ncols = match file.get_attribute(name, "MATLAB_sparse_ncols") {
-            Some(AttributeValue::Integer(n)) => n as usize_ => return Err(IoError::Other("Missing sparse matrix cols".to_string())),
+            Some(AttributeValue::Integer(n)) => n as usize,
+            _ => return Err(IoError::Other("Missing sparse matrix cols".to_string())),
         };
 
         // Read sparse data components

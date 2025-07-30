@@ -363,32 +363,32 @@ impl Logger {
 
     /// Log a message at trace level
     pub fn trace(&self, message: &str) {
-        self.log(LogLevel::Trace, message);
+        self.write_log(LogLevel::Trace, message);
     }
 
     /// Log a message at debug level
     pub fn debug(&self, message: &str) {
-        self.log(LogLevel::Debug, message);
+        self.write_log(LogLevel::Debug, message);
     }
 
     /// Log a message at info level
     pub fn info(&self, message: &str) {
-        self.log(LogLevel::Info, message);
+        self.write_log(LogLevel::Info, message);
     }
 
     /// Log a message at warning level
     pub fn warn(&self, message: &str) {
-        self.log(LogLevel::Warn, message);
+        self.write_log(LogLevel::Warn, message);
     }
 
     /// Log a message at error level
     pub fn error(&self, message: &str) {
-        self.log(LogLevel::Error, message);
+        self.write_log(LogLevel::Error, message);
     }
 
     /// Log a message at critical level
     pub fn critical(&self, message: &str) {
-        self.log(LogLevel::Critical, message);
+        self.write_log(LogLevel::Critical, message);
     }
 
     /// Create an enhanced progress tracker using the logger's context
@@ -420,7 +420,7 @@ impl Logger {
         update: u64,
     ) {
         self.info(message);
-        progress.update_model(update);
+        progress.update(update);
     }
 
     /// Execute an operation with progress tracking
@@ -981,7 +981,7 @@ pub mod distributed {
 
             if should_log {
                 // Log locally
-                self.local_logger.log(level, message);
+                self.local_logger.write_log(level, message);
 
                 // Create distributed log entry
                 let entry = DistributedLogEntry::new(

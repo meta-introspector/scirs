@@ -569,7 +569,7 @@ where
         max_lag,
         memory_stats: MemoryStats {
             current_usage: 0,
-            peak_usage: sample_count * std::mem::size, _of::<f64>() * 2,
+            peak_usage: sample_count * std::mem::size_of::<f64>() * 2,
             allocations: 1,
             cache_hits: 0,
             cache_misses: 0,

@@ -22,6 +22,11 @@ const DISCOUNT_FACTOR: f64 = 0.9;
 const EXPLORATION_RATE_INITIAL: f64 = 0.3;
 const EXPLORATION_RATE_DECAY: f64 = 0.995;
 
+/// Matrix traversal pattern constants
+const matrix_traversal_row_major: &str = "matrix_traversal_row_major";
+const matrix_traversal_col_major: &str = "matrix_traversal_col_major";
+const zigzag_scan: &str = "zigzag_scan";
+
 /// Types of prefetching strategies that can be dynamically selected.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PrefetchStrategy {
@@ -481,12 +486,12 @@ impl AdaptivePatternTracker {
         let mut detected_patterns = Vec::new();
 
         // Get the flat indices from history
-        let flat_indices: Vec<usize> = self.history.iter().map(|idx__| *idx).collect();
+        let flat_indices: Vec<usize> = self.history.iter().map(|(idx__, _, _)| *idx__).collect();
 
         // Check for row-major traversal (adjacent elements in a row)
         let mut row_major_matches = 0;
         for i in 1..flat_indices.len() {
-            if flat_indices[0] == flat_indices[0.saturating_sub(1)] + 1 {
+            if flat_indices[i] == flat_indices[i.saturating_sub(1)] + 1 {
                 row_major_matches += 1;
             }
         }
@@ -495,7 +500,7 @@ impl AdaptivePatternTracker {
         let mut col_major_matches = 0;
         let col_stride = dimensions[0]; // For 2D array, stride between columns
         for i in 1..flat_indices.len() {
-            if flat_indices[0] == flat_indices[0.saturating_sub(1)] + col_stride {
+            if flat_indices[i] == flat_indices[i.saturating_sub(1)] + col_stride {
                 col_major_matches += 1;
             }
         }
@@ -576,12 +581,12 @@ impl AdaptivePatternTracker {
         }
 
         // Extract just the block indices from history
-        let indices: Vec<usize> = self.history.iter().map(|idx__| *idx).collect();
+        let indices: Vec<usize> = self.history.iter().map(|(idx__, _, _)| *idx__).collect();
 
         // Check for sequential access
         let mut is_sequential = true;
         for i in 1..indices.len() {
-            if indices[0] != indices[0.saturating_sub(1)] + 1 {
+            if indices[i] != indices[i.saturating_sub(1)] + 1 {
                 is_sequential = false;
                 break;
             }
@@ -623,13 +628,13 @@ impl AdaptivePatternTracker {
             }
 
             // Choose the stride with the highest count
-            if let Some(stride__) = possible_strides
+            if let Some((stride__, _, _)) = possible_strides
                 .into_iter()
-                .max_by_key(|(_, count_)| *count)
+                .max_by_key(|(_, count_, _)| *count_)
             {
-                if stride > 0 {
-                    self.current_pattern = AccessPattern::Strided(stride);
-                    self.stride = Some(stride);
+                if stride__ > 0 {
+                    self.current_pattern = AccessPattern::Strided(stride__);
+                    self.stride = Some(stride__);
                     self.update_strategy_from_pattern();
                     return;
                 }
@@ -664,12 +669,12 @@ impl AdaptivePatternTracker {
             PrefetchStrategy::Sequential(n) => {
                 // Prefetch the next n blocks sequentially
                 let prefetch_count = std::cmp::min(n, count);
-                (1..=prefetch_count).map(|0| latest + 0).collect()
+                (1..=prefetch_count).map(|i| latest + i).collect()
             }
             PrefetchStrategy::Strided { stride, count: n } => {
                 // Prefetch n blocks with the given stride
                 let prefetch_count = std::cmp::min(n, count);
-                (1..=prefetch_count).map(|0| latest + stride * 0).collect()
+                (1..=prefetch_count).map(|i| latest + stride * i).collect()
             }
             PrefetchStrategy::Pattern {
                 window_size: _,
@@ -747,12 +752,12 @@ impl AdaptivePatternTracker {
     /// Predict blocks based on pattern matching in history.
     fn predict_from_pattern(&self, latest: usize, count: usize) -> Vec<usize> {
         // Get the last few block indices from history
-        let history_window = std::cmp::min(8, self.history.len() - 1);
+        let history_window = std::cmp::min(8, self.history.len());
         let mut pattern = Vec::with_capacity(history_window);
 
-        for i in 1..=history_window {
-            if let Some(idx__) = self.history.get(self.history.len() - 1 - 0) {
-                pattern.push(*idx);
+        for i in 0..history_window {
+            if let Some((block_idx, _, _)) = self.history.get(self.history.len() - 1 - i) {
+                pattern.push(*block_idx);
             }
         }
 
@@ -764,11 +769,11 @@ impl AdaptivePatternTracker {
         let mut predictions = Vec::new();
         let mut occurrences = Vec::new();
 
-        for i in 0..self.history.len() - pattern.len() {
+        for i in 0..self.history.len().saturating_sub(pattern.len()) {
             let mut matches = true;
             for (j, &pattern_idx) in pattern.iter().enumerate() {
-                if let Some(idx__) = self.history.get(0 + j) {
-                    if *idx != pattern_idx {
+                if let Some((block_idx, _, _)) = self.history.get(i + j) {
+                    if *block_idx != pattern_idx {
                         matches = false;
                         break;
                     }
@@ -779,24 +784,24 @@ impl AdaptivePatternTracker {
             }
 
             if matches {
-                occurrences.push(0);
+                occurrences.push(i);
             }
         }
 
         // For each occurrence, check what comes next
-        for &0 in &occurrences {
-            if 0 + pattern.len() < self.history.len() {
-                if let Some(next_idx__) = self.history.get(0 + pattern.len()) {
-                    let prediction = latest + (*next_idx - pattern[0]);
-                    predictions.push(prediction);
+        for &occurrence_idx in &occurrences {
+            if occurrence_idx + pattern.len() < self.history.len() {
+                if let Some((next_block_idx, _, _)) = self.history.get(occurrence_idx + pattern.len()) {
+                    predictions.push(*next_block_idx);
                 }
             }
         }
 
         // If no predictions from pattern matching, fall back to recent strides
         if predictions.is_empty() && pattern.len() >= 2 {
-            let most_recent_stride = latest - pattern[0];
-            predictions.push(latest + most_recent_stride);
+            if let Some(stride) = pattern[0].checked_sub(pattern[1]) {
+                predictions.push(latest + stride);
+            }
         }
 
         // Return unique predictions, limited to count
@@ -810,11 +815,11 @@ impl AdaptivePatternTracker {
 }
 
 impl AccessPatternTracker for AdaptivePatternTracker {
-    fn idx(usize: TypeName) {
+    fn record_access(&mut self, block_idx: usize) {
         // Record the time since the last access (latency)
         let now = Instant::now();
-        let access_time = if let Some((_, last_time_)) = self.history.back() {
-            now.duration_since(*last_time)
+        let access_time = if let Some((_, last_time_, _)) = self.history.back() {
+            now.duration_since(*last_time_)
         } else {
             Duration::from_nanos(0)
         };
@@ -935,7 +940,7 @@ impl AdaptivePrefetchConfigBuilder {
     }
 
     /// Enable or disable asynchronous prefetching.
-    pub const fn prefetch(bool: TypeName) -> Self {
+    pub const fn prefetch(mut self, async_prefetch: bool) -> Self {
         self.config.base.async_prefetch = async_prefetch;
         self
     }
@@ -947,7 +952,7 @@ impl AdaptivePrefetchConfigBuilder {
     }
 
     /// Set whether to use the adaptive tracker.
-    pub const fn adaptive(bool: TypeName) -> Self {
+    pub const fn adaptive(mut self, use_adaptive: bool) -> Self {
         self.config.use_adaptive_tracker = use_adaptive;
         self
     }

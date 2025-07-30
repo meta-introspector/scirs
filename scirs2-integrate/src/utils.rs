@@ -30,17 +30,17 @@ where
     F: IntegrateFloat,
     Func: Fn(ArrayView1<F>) -> Array1<F>,
 {
-    let n = _x.len();
+    let n = x.len();
     let f_x = match f_x {
         Some(val) => val.to_owned(),
-        None => f(_x),
+        None => f(x),
     };
     let m = f_x.len();
 
     let mut jac = Array2::<F>::zeros((m, n));
 
     for i in 0..n {
-        let mut x_perturbed = _x.to_owned();
+        let mut x_perturbed = x.to_owned();
         x_perturbed[i] += eps;
 
         let f_perturbed = f(x_perturbed.view());
@@ -294,7 +294,7 @@ where
 
         // Check if we've converged
         let norm = f_x
-            ._iter()
+            .iter()
             .map(|&v| v.abs())
             .fold(F::zero(), |a, b| a.max(b));
         if norm < tol {
@@ -356,7 +356,7 @@ where
 
         // Check if we've converged
         let norm = f_tx
-            ._iter()
+            .iter()
             .map(|&v| v.abs())
             .fold(F::zero(), |a, b| a.max(b));
         if norm < tol {

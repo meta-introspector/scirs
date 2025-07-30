@@ -30,7 +30,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::mean_poisson_deviance;
+/// use scirs2_metrics::regression::mean_poisson_deviance;
 ///
 /// let y_true = array![3.0, 5.0, 2.0, 7.0];
 /// let y_pred = array![2.5, 5.0, 3.0, 8.0];
@@ -99,7 +99,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::mean_gamma_deviance;
+/// use scirs2_metrics::regression::mean_gamma_deviance;
 ///
 /// let y_true = array![3.0, 5.0, 2.0, 7.0];
 /// let y_pred = array![2.5, 5.0, 3.0, 8.0];
@@ -160,7 +160,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::tweedie_deviance_score;
+/// use scirs2_metrics::regression::tweedie_deviance_score;
 ///
 /// let y_true = array![3.0, 5.0, 2.0, 7.0];
 /// let y_pred = array![2.5, 5.0, 3.0, 8.0];
@@ -266,7 +266,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::quantile_loss;
+/// use scirs2_metrics::regression::quantile_loss;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -339,7 +339,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array1};
-/// use scirs2__metrics::regression::compute_robust_weights;
+/// use scirs2_metrics::regression::compute_robust_weights;
 ///
 /// // Create some residuals with outliers
 /// let residuals = array![0.1, 0.2, -0.3, 5.0, 0.2, -0.1, -4.0];
@@ -457,7 +457,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::weighted_mean_squared_error;
+/// use scirs2_metrics::regression::weighted_mean_squared_error;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -537,7 +537,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::weighted_median_absolute_error;
+/// use scirs2_metrics::regression::weighted_median_absolute_error;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0];
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0];
@@ -639,7 +639,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::regression::m_estimator;
+/// use scirs2_metrics::regression::m_estimator;
 ///
 /// let y_true = array![3.0, -0.5, 2.0, 7.0, 10.0]; // 10.0 is an outlier
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 5.0];

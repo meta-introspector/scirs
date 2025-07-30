@@ -448,7 +448,7 @@ impl<T: Clone> Ord for EntryWithDistance<T> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::rtree::RTree;
+/// use scirs2_spatial::rtree::RTree;
 /// use ndarray::array;
 ///
 /// // Create points
@@ -555,17 +555,17 @@ impl<T: Clone> RTree<T> {
     }
 
     /// Get the height of the R-tree
-    pub fn height(&mut self) -> usize {
+    pub fn height(&self) -> usize {
         self.height
     }
 
     /// Check if the R-tree is empty
-    pub fn is_empty(&mut self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.size == 0
     }
 
     /// Clear the R-tree, removing all data points
-    pub fn clear() {
+    pub fn clear(&mut self) {
         self.root = Node::new(true, 0);
         self.size = 0;
         self.height = 1;

@@ -8,7 +8,7 @@ use crate::error::{IntegrateError, IntegrateResult};
 use crate::quad::trapezoid;
 use crate::IntegrateFloat;
 use ndarray::{Array1, Array2, ArrayView1};
-use rand__distr::{Distribution, Uniform};
+use rand_distr::{Distribution, Uniform};
 use std::fmt::Debug;
 
 /// Options for controlling the behavior of Romberg integration
@@ -283,7 +283,7 @@ fn integrate_adaptive_nested<F, Func>(
     opts: &RombergOptions<F>,
 ) -> IntegrateResult<MultiRombergResult<F>>
 where
-    F: IntegrateFloat + rand__distr::uniform::SampleUniform,
+    F: IntegrateFloat + rand_distr::uniform::SampleUniform,
     Func: Fn(ArrayView1<F>) -> F + Copy,
 {
     let n_dims = ranges.len();

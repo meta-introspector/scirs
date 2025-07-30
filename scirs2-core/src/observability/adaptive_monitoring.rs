@@ -1277,7 +1277,7 @@ impl MetricsCollector {
         #[cfg(target_os = "macos")]
         {
             use std::process::Command;
-            if let Ok(output) = Command::new(top).args(&["-l", "1", "-n", "0"]).output() {
+            if let Ok(output) = Command::new("top").args(&["-l", "1", "-n", "0"]).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     for line in output_str.lines() {
@@ -1399,7 +1399,7 @@ impl MetricsCollector {
         #[cfg(target_os = "macos")]
         {
             use std::process::Command;
-            if let Ok(output) = Command::new(vm_stat).output() {
+            if let Ok(output) = Command::new("vm_stat").output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     let mut pages_free = 0u64;
@@ -1492,7 +1492,7 @@ impl MetricsCollector {
             let memory_metrics = crate::memory::metrics::MemoryMetricsCollector::new(
                 crate::memory::metrics::MemoryMetricsConfig::default(),
             );
-            let current_usage = memory_metrics.get_current_usage(system);
+            let current_usage = memory_metrics.get_current_usage("system");
             if current_usage > 0 {
                 // This would be process memory, not system memory
                 // Scale it up as a rough system estimate
@@ -1580,7 +1580,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use ping to localhost to measure basic network latency
-            if let Ok(output) = Command::new(ping)
+            if let Ok(output) = Command::new("ping")
                 .args(&["-c", "3", "-W", "1000", "127.0.0.1"])
                 .output()
             {
@@ -1606,7 +1606,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use ping to localhost on Windows
-            if let Ok(output) = Command::new(ping)
+            if let Ok(output) = Command::new("ping")
                 .args(&["-n", "3", "127.0.0.1"])
                 .output()
             {
@@ -1691,7 +1691,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use powermetrics to get cache miss information (requires admin)
-            if let Ok(output) = Command::new(sysctl)
+            if let Ok(output) = Command::new("sysctl")
                 .args(&["-n", "hw.cachesize"])
                 .output()
             {
@@ -1805,7 +1805,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use ps command to get memory usage
-            if let Ok(output) = Command::new(ps)
+            if let Ok(output) = Command::new("ps")
                 .args(&["-o", "rss=", "-p", &std::process::id().to_string()])
                 .output()
             {
@@ -1818,7 +1818,7 @@ impl MetricsCollector {
             }
 
             // Alternative: use task_info system call through sysctl
-            if let Ok(output) = Command::new(sysctl).args(&["-n", "hw.memsize"]).output() {
+            if let Ok(output) = Command::new("sysctl").args(&["-n", "hw.memsize"]).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     if let Ok(total_memory) = output_str.trim().parse::<usize>() {
@@ -1960,7 +1960,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use vm_stat to check memory pressure
-            if let Ok(output) = Command::new(vm_stat).output() {
+            if let Ok(output) = Command::new("vm_stat").output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     let mut pages_purgeable = 0u64;
@@ -2128,7 +2128,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use netstat to get network statistics
-            if let Ok(output) = Command::new(netstat).args(&["-ib"]).output() {
+            if let Ok(output) = Command::new("netstat").args(&["-ib"]).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     let mut total_bytes = 0u64;
@@ -2138,7 +2138,7 @@ impl MetricsCollector {
                         let fields: Vec<&str> = line.split_whitespace().collect();
                         if fields.len() >= 10 {
                             // Skip loopback
-                            if fields[0] == lo0 {
+                            if fields[0] == "lo0" {
                                 continue;
                             }
 
@@ -2307,7 +2307,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use iostat to get disk I/O statistics
-            if let Ok(output) = Command::new(iostat)
+            if let Ok(output) = Command::new("iostat")
                 .args(&["-d", "-w", "1", "-c", "1"])
                 .output()
             {
@@ -2317,11 +2317,11 @@ impl MetricsCollector {
 
                     for line in output_str.lines() {
                         let fields: Vec<&str> = line.split_whitespace().collect();
-                        if fields.len() >= 3 && !line.contains(device) {
+                        if fields.len() >= 3 && !line.contains("device") {
                             // Try to parse read and write rates (usually in MB/s)
                             if let (Ok(read_rate), Ok(write_rate)) = (
-                                fields[1].parse::<f64>().or_else(|_| Ok(0.0)),
-                                fields[2].parse::<f64>().or_else(|_| Ok(0.0)),
+                                fields[1].parse::<f64>().or_else(|_| Ok::<f64, std::num::ParseFloatError>(0.0)),
+                                fields[2].parse::<f64>().or_else(|_| Ok::<f64, std::num::ParseFloatError>(0.0)),
                             ) {
                                 total_mb_per_sec += read_rate + write_rate;
                             }
@@ -2414,7 +2414,7 @@ impl MetricsCollector {
                 // ARM NEON is standard on aarch64
                 let neon_utilization = cpu_utilization * 0.8;
                 custom_metrics.insert(neon_utilization.to_string(), neon_utilization);
-                custom_metrics.insert(simd_capability_score.to_string(), 0.8);
+                custom_metrics.insert("simd_capability_score".to_string(), 0.8);
             }
         }
 

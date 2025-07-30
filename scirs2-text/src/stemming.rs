@@ -64,7 +64,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2__text::{LancasterStemmer, PorterStemmer, RuleLemmatizer, SimpleLemmatizer, SnowballStemmer, Stemmer};
+//! use scirs2_text::{LancasterStemmer, PorterStemmer, RuleLemmatizer, SimpleLemmatizer, SnowballStemmer, Stemmer};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let porter = PorterStemmer::new();
@@ -92,13 +92,13 @@ pub mod lancaster;
 pub mod rule_lemmatizer;
 
 use crate::error::{Result, TextError};
-use lazy__static::lazy_static;
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 
 // Re-export stemmer and lemmatizer implementations
 pub use self::lancaster::LancasterStemmer;
-pub use self::rule__lemmatizer::{
+pub use self::rule_lemmatizer::{
     LemmatizerConfig, PosTag, RuleCondition, RuleLemmatizer, RuleLemmatizerBuilder,
 };
 
@@ -111,8 +111,8 @@ pub use self::rule__lemmatizer::{
 /// # Example
 ///
 /// ```
-/// use scirs2__text::stemming::create_pos_aware_lemmatizer;
-/// use scirs2__text::stemming::Stemmer;
+/// use scirs2_text::stemming::create_pos_aware_lemmatizer;
+/// use scirs2_text::stemming::Stemmer;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let lemmatizer = create_pos_aware_lemmatizer();

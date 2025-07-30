@@ -27,7 +27,7 @@ ndarray = { workspace = true }
 num-traits = { workspace = true }
 num-complex = { workspace = true }
 thiserror = { workspace = true }
-scirs2-core = { workspace = true, features = ["simd", "parallel", "gpu"] }
+scirs2-core = { workspace = true, features = ["simd", "parallel", "gpu", "validation"] }
 
 # FFT specific dependencies
 rustfft = { workspace = true }

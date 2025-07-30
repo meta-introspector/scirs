@@ -2550,14 +2550,14 @@ impl SynapticPlasticityManager {
     }
 
     pub fn strengthen_synapses(
-        &mut self, _spike_pattern: &SpikePattern, _response: &NetworkResponse_fitness: f64,
+        &mut self, _spike_pattern: &SpikePattern, _response: &NetworkResponse, _fitness: f64,
     ) -> Result<()> {
         // Implement synaptic strengthening
         Ok(())
     }
 
     pub fn weaken_synapses(
-        &mut self, _spike_pattern: &SpikePattern, _response: &NetworkResponse_fitness: f64,
+        &mut self, _spike_pattern: &SpikePattern, _response: &NetworkResponse, _fitness: f64,
     ) -> Result<()> {
         // Implement synaptic weakening
         Ok(())
@@ -2956,7 +2956,8 @@ impl MetacognitiveMonitor {
 
     fn evaluate_solution_quality(
         &self,
-        solution: &ConsciousSolution_consciousness_state: &ConsciousnessState,
+        solution: &ConsciousSolution,
+        _consciousness_state: &ConsciousnessState,
     ) -> Result<f64> {
         // Evaluate solution quality using metacognitive assessment
         let parameter_balance = self.assess_parameter_balance(&solution.parameters);
@@ -3467,7 +3468,8 @@ impl ReinforcementLearningOptimizer {
                         .dqn_agent
                         .select_action(&state, episode as f64 / max_episodes as f64)?,
                     1 => self.policy_gradient.select_action(&state)?,
-                    2 => self.actor_critic.select_action(&state)?_ => self.generate_curiosity_driven_action(&state)?,
+                    2 => self.actor_critic.select_action(&state)?,
+                    _ => self.generate_curiosity_driven_action(&state)?,
                 };
 
                 // Execute action in _environment
@@ -3540,7 +3542,8 @@ impl ReinforcementLearningOptimizer {
         match selected_algorithm {
             0 => self.dqn_agent.update_q_network(reward)?,
             1 => self.policy_gradient.update_policy(reward)?,
-            2 => self.actor_critic.update_networks(reward)?_ => self.curiosity_module.update_networks(reward)?,
+            2 => self.actor_critic.update_networks(reward)?,
+            _ => self.curiosity_module.update_networks(reward)?,
         }
         Ok(())
     }
@@ -5592,7 +5595,7 @@ impl LSTMModel {
 }
 
 impl ARIMAModel {
-    pub fn new(_p: usize_d: usize, _q: usize) -> Self {
+    pub fn new(_p: usize, _d: usize, _q: usize) -> Self {
         Self
     }
 

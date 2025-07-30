@@ -138,7 +138,7 @@ where
     // Apply the operation element-wise
     #[cfg(feature = "parallel")]
     {
-        use rayon::prelude::*;
+        use crate::parallel_ops::*;
         // For simplicity, we convert to vectors, process in parallel, then convert back
         // A more efficient implementation would operate directly on array iterators
         let input_slice = input.as_slice().unwrap();
@@ -185,7 +185,7 @@ where
     // Apply the operation element-wise
     #[cfg(feature = "parallel")]
     {
-        use rayon::prelude::*;
+        use crate::parallel_ops::*;
 
         let input1_slice = input1.as_slice().unwrap();
         let input2_slice = input2.as_slice().unwrap();

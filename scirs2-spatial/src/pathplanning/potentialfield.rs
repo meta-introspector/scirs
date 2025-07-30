@@ -9,7 +9,7 @@
 //!
 //! ```
 //! use ndarray::Array1;
-//! use scirs2__spatial::pathplanning::{PotentialFieldPlanner, PotentialConfig};
+//! use scirs2_spatial::pathplanning::{PotentialFieldPlanner, PotentialConfig};
 //!
 //! // Create a configuration for the potential field planner
 //! let config = PotentialConfig::new()
@@ -49,7 +49,7 @@ use num_traits::Float;
 
 use crate::error::{SpatialError, SpatialResult};
 use crate::pathplanning::astar::Path;
-// use crate::transform::rigid__transform::RigidTransform;
+// use crate::transform::rigid_transform::RigidTransform;
 
 /// Type alias for distance calculation function
 #[allow(dead_code)]
@@ -79,7 +79,7 @@ pub struct PotentialConfig {
 }
 
 impl Default for PotentialConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             attractive_gain: 1.0,
             repulsive_gain: 100.0,
@@ -101,55 +101,55 @@ impl PotentialConfig {
     }
 
     /// Set the attractive gain (force towards goal)
-    pub fn with_attractive_gain(mut gain: f64) -> Self {
+    pub fn with_attractive_gain(mut self, gain: f64) -> Self {
         self.attractive_gain = gain;
         self
     }
 
     /// Set the repulsive gain (force away from obstacles)
-    pub fn with_repulsive_gain(mut gain: f64) -> Self {
+    pub fn with_repulsive_gain(mut self, gain: f64) -> Self {
         self.repulsive_gain = gain;
         self
     }
 
     /// Set the influence radius of obstacles
-    pub fn with_influence_radius(mut radius: f64) -> Self {
+    pub fn with_influence_radius(mut self, radius: f64) -> Self {
         self.influence_radius = radius;
         self
     }
 
     /// Set the step size for path following
-    pub fn with_step_size(mut step_size: f64) -> Self {
+    pub fn with_step_size(mut self, step_size: f64) -> Self {
         self.step_size = step_size;
         self
     }
 
     /// Set the maximum number of iterations
-    pub fn with_max_iterations(mut max_iterations: usize) -> Self {
+    pub fn with_max_iterations(mut self, max_iterations: usize) -> Self {
         self.max_iterations = max_iterations;
         self
     }
 
     /// Set the minimum force threshold for detecting local minima
-    pub fn with_min_force_threshold(mut threshold: f64) -> Self {
+    pub fn with_min_force_threshold(mut self, threshold: f64) -> Self {
         self.min_force_threshold = threshold;
         self
     }
 
     /// Set random seed
-    pub fn with_seed(mut seed: u64) -> Self {
+    pub fn with_seed(mut self, seed: u64) -> Self {
         self.seed = Some(seed);
         self
     }
 
     /// Set goal threshold distance
-    pub fn with_goal_threshold(mut threshold: f64) -> Self {
+    pub fn with_goal_threshold(mut self, threshold: f64) -> Self {
         self.goal_threshold = threshold;
         self
     }
 
     /// Enable/disable fast path option
-    pub fn with_use_fast_path(mut use_fast_path: bool) -> Self {
+    pub fn with_use_fast_path(mut self, use_fast_path: bool) -> Self {
         self.use_fast_path = use_fast_path;
         self
     }

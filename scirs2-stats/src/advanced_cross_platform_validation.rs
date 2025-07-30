@@ -749,12 +749,12 @@ fn generate_performance_test_data(_size: usize) -> Array1<f64> {
 
 #[allow(dead_code)]
 fn estimate_memory_usage(_data_size: usize) -> usize {
-    _data_size * std::mem::_size_of::<f64>() * 2 // Rough estimate
+    _data_size * std::mem::size_of::<f64>() * 2 // Rough estimate
 }
 
 #[allow(dead_code)]
 fn calculate_memory_efficiency(_peak_usage: usize, data_size: usize) -> f64 {
-    let theoretical_minimum = data_size * std::mem::_size_of::<f64>();
+    let theoretical_minimum = data_size * std::mem::size_of::<f64>();
     theoretical_minimum as f64 / _peak_usage as f64
 }
 

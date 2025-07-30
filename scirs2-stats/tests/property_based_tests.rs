@@ -11,13 +11,13 @@ use ndarray::{Array1, Array2};
 use quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
 use quickcheck__macros::quickcheck;
 use scirs2__stats::{
-use statrs::statistics::Statistics;
     corrcoef,
     distributions::{beta, gamma, norm, uniform},
     kurtosis, mean, median, pearson_r, quantile, range, skew, std,
     traits::Distribution,
     var,
 };
+use statrs::statistics::Statistics;
 
 /// Helper function to generate valid statistical data
 #[allow(dead_code)]

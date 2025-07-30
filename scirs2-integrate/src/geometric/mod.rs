@@ -11,17 +11,17 @@ pub mod lie_group;
 pub mod structure_preserving;
 pub mod volume_preserving;
 
-pub use lie__group::{
+pub use lie_group::{
     ExponentialMap, GLn, Gln, HeisenbergAlgebra, HeisenbergGroup, LieAlgebra, LieGroupIntegrator,
     LieGroupMethod, SE3Integrator, SLn, SO3Integrator, Se3, Sln, So3, Sp2n, SE3, SO3,
 };
-pub use structure__preserving::{
+pub use structure_preserving:{
     invariants::{AngularMomentumInvariant2D, EnergyInvariant, LinearMomentumInvariant},
     ConservationChecker, ConstrainedIntegrator, EnergyMomentumIntegrator, EnergyPreservingMethod,
     GeometricInvariant, MomentumPreservingMethod, MultiSymplecticIntegrator, SplittingIntegrator,
     StructurePreservingIntegrator, StructurePreservingMethod,
 };
-pub use volume__preserving::{
+pub use volume_preserving:{
     ABCFlow, CircularFlow2D, DiscreteGradientIntegrator, DivergenceFreeFlow, DoubleGyre,
     HamiltonianFlow, IncompressibleFlow, ModifiedMidpointIntegrator, StreamFunction, StuartVortex,
     TaylorGreenVortex, VariationalIntegrator, VolumeChecker, VolumePreservingIntegrator,

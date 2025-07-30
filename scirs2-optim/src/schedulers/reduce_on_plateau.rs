@@ -14,7 +14,7 @@ use crate::schedulers::LearningRateScheduler;
 /// # Examples
 ///
 /// ```
-/// use scirs2__optim::schedulers::{ReduceOnPlateau, LearningRateScheduler};
+/// use scirs2_optim::schedulers::{ReduceOnPlateau, LearningRateScheduler};
 ///
 /// // Create a scheduler with initial learning rate 0.1, factor 0.1,
 /// // patience 2, and minimum learning rate 1e-6
@@ -55,7 +55,8 @@ pub struct ReduceOnPlateau<A: Float + Debug> {
     best_metric: Option<A>,
     /// Threshold for measuring improvement
     threshold: A,
-    /// Mode: 'min' (lower is better) or 'max' (higher is better), mode_is_min: bool,
+    /// Mode: 'min' (lower is better) or 'max' (higher is better)
+    mode_is_min: bool,
 }
 
 impl<A: Float + Debug> ReduceOnPlateau<A> {
@@ -67,9 +68,9 @@ impl<A: Float + Debug> ReduceOnPlateau<A> {
     /// * `factor` - Factor by which the learning rate will be reduced (e.g., 0.1 means 10x reduction)
     /// * `patience` - Number of epochs with no improvement after which learning rate will be reduced
     /// * `min_lr` - Minimum learning rate
-    pub fn new(_initial_lr: A, factor: A, patience: usize, min_lr: A) -> Self {
+    pub fn new(initial_lr: A, factor: A, patience: usize, min_lr: A) -> Self {
         Self {
-            current_lr: _initial_lr,
+            current_lr: initial_lr,
             factor,
             patience,
             min_lr,

@@ -402,7 +402,8 @@ impl ErrorMonitor {
     /// Generate actionable recommendations
     fn generate_recommendations(
         &self,
-        stats: &ErrorStatistics_issues: &[CriticalIssue],
+        stats: &ErrorStatistics,
+        issues: &[CriticalIssue],
     ) -> Vec<Recommendation> {
         let mut recommendations = Vec::new();
 
@@ -426,7 +427,7 @@ impl ErrorMonitor {
         }
 
         // Recommendations based on frequent errors
-        for (code_count) in &stats.top_errors {
+        for (code, count) in &stats.top_errors {
             match code {
                 ErrorCode::E3005 => {
                     recommendations.push(Recommendation {
@@ -661,7 +662,8 @@ impl HealthReport {
             90..=100 => "🟢 EXCELLENT",
             70..=89 => "🟡 GOOD",
             50..=69 => "🟠 FAIR",
-            30..=49 => "🔴 POOR"_ => "🚨 CRITICAL",
+            30..=49 => "🔴 POOR",
+            _ => "🚨 CRITICAL",
         };
         report.push_str(&format!("Status: {}\n\n", health_indicator));
 

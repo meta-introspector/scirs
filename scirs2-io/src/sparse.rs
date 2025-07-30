@@ -18,7 +18,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::sparse::{SparseMatrix, SparseFormat};
+//! use scirs2_io::sparse::{SparseMatrix, SparseFormat};
 //! use ndarray::Array2;
 //!
 //! // Create a sparse matrix from a dense array
@@ -43,7 +43,7 @@
 #![allow(dead_code)]
 
 use crate::error::{IoError, Result};
-use crate::matrix__market::{
+use crate::matrix_market::{
     MMDataType, MMFormat, MMHeader, MMSparseMatrix, MMSymmetry, SparseEntry,
 };
 use crate::serialize::{SparseMatrixCOO, SparseMatrixCSC, SparseMatrixCSR};

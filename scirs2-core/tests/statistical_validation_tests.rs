@@ -1,14 +1,14 @@
 //! Tests for statistical constraint validation
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 use scirs2_core::validation::data::{
     Constraint, DataType, StatisticalConstraints, ValidationConfig, ValidationSchema, Validator,
 };
 
-#[cfg(all(feature = data_validation, feature = serde))]
-use serde__json::json;
+#[cfg(all(feature = "data_validation", feature = "serde"))]
+use serde_json::json;
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_statistical_constraint_mean() {
@@ -31,7 +31,7 @@ fn test_statistical_constraint_mean() {
     assert!(result.is_valid(), "Valid mean should pass validation");
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_statistical_constraint_mean_too_low() {
@@ -59,7 +59,7 @@ fn test_statistical_constraint_mean_too_low() {
         .any(|e| e.constraint == Some("statistical.min_mean".to_string())));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_statistical_constraint_mean_too_high() {
@@ -87,7 +87,7 @@ fn test_statistical_constraint_mean_too_high() {
         .any(|e| e.constraint == Some("statistical.max_mean".to_string())));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_statistical_constraint_std_dev() {
@@ -113,7 +113,7 @@ fn test_statistical_constraint_std_dev() {
     );
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_statistical_constraint_std_too_low() {
@@ -144,7 +144,7 @@ fn test_statistical_constraint_std_too_low() {
         .any(|e| e.constraint == Some("statistical.min_std".to_string())));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_statistical_constraint_std_too_high() {
@@ -175,7 +175,7 @@ fn test_statistical_constraint_std_too_high() {
         .any(|e| e.constraint == Some("statistical.max_std".to_string())));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_statistical_constraint_non_numeric() {
@@ -206,7 +206,7 @@ fn test_statistical_constraint_non_numeric() {
         .any(|e| e.message.contains("Expected numeric value")));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_statistical_constraint_empty_array() {
@@ -237,7 +237,7 @@ fn test_statistical_constraint_empty_array() {
         .any(|e| e.message.contains("requires numeric values")));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_statistical_constraint_integer_values() {
@@ -263,7 +263,7 @@ fn test_statistical_constraint_integer_values() {
     );
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_statistical_constraint_complex() {

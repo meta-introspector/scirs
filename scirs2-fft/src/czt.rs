@@ -6,7 +6,7 @@
 
 use crate::{next_fast_len, FFTError, FFTResult};
 use ndarray::{s, Array, Array1, ArrayBase, ArrayD, Axis, Data, Dimension, RemoveAxis, Zip};
-use num__complex::Complex;
+use num_complex::Complex;
 use std::f64::consts::PI;
 
 /// Compute points at which the chirp z-transform samples

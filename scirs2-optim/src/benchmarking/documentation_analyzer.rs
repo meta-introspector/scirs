@@ -527,7 +527,7 @@ impl DocumentationAnalyzer {
     /// Create a new documentation analyzer
     pub fn new(_config: AnalyzerConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             analysis_results: AnalysisResults::default(),
             metrics: DocumentationMetrics::default(),
         }
@@ -671,7 +671,7 @@ impl DocumentationAnalyzer {
                         name: item,
                         file_path: file_path.to_path_buf(),
                         line_number: line_num + 1,
-                        _category: _category.clone(),
+                        category: _category.clone(),
                         visibility: VisibilityLevel::Public,
                         suggested_template: self.generate_doc_template(&_category),
                     };
@@ -942,7 +942,7 @@ impl DocumentationAnalyzer {
             complexity_distribution: HashMap::new(), // Would be filled by more sophisticated analysis
         };
 
-        example_coverage.insert(module_name_coverage);
+        example_coverage.insert(module_name, _coverage);
 
         Ok(())
     }
@@ -1103,7 +1103,8 @@ impl DocumentationAnalyzer {
     }
 
     /// Validate a URL
-    fn validate_url(&self_url: &str) -> bool {
+    fn validate_url(&self,
+        url: &str) -> bool {
         // Simplified validation - in practice would make HTTP requests
         true // Assume all URLs are valid for demonstration
     }
@@ -1295,7 +1296,8 @@ impl DocumentationAnalyzer {
                             "Include proper syntax highlighting".to_string(),
                         ],
                         expected_impact: 0.15,
-                    }_ => StyleRecommendation {
+                    },
+                    _ => StyleRecommendation {
                         category: category.clone(),
                         description: format!("Address {:?} inconsistencies", category),
                         implementation_steps: vec!["Review and standardize".to_string()],
@@ -1474,7 +1476,8 @@ impl DocumentationAnalyzer {
                         "{}: {}",
                         match category {
                             ItemCategory::Function => "Function",
-                            ItemCategory::Struct => "Struct"_ => "Item",
+                            ItemCategory::Struct => "Struct",
+                            _ => "Item",
                         },
                         item.name
                     ));

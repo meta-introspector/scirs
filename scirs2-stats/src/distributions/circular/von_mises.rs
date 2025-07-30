@@ -8,8 +8,8 @@ use crate::error::{StatsError, StatsResult};
 use crate::traits::{CircularDistribution, Distribution};
 use ndarray::Array1;
 use rand::rng;
-use rand__distr::{Distribution as RandDistribution, VonMises};
-use rand__distr::uniform::SampleUniform;
+use rand_distr::{Distribution as RandDistribution, VonMises};
+use rand_distr::uniform::SampleUniform;
 use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -35,8 +35,8 @@ use statrs::statistics::Statistics;
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions::circular::VonMises;
-/// use scirs2__stats::traits::CircularDistribution;
+/// use scirs2_stats::distributions::circular::VonMises;
+/// use scirs2_stats::traits::CircularDistribution;
 ///
 /// // Create a von Mises distribution with mean direction 0.0 and concentration 1.0
 /// let vm = VonMises::new(0.0f64, 1.0).unwrap();

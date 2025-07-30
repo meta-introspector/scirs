@@ -146,7 +146,7 @@ impl TrackedGpuContext {
     }
 
     /// Get the backend name
-    pub const fn backend_name(&self) -> &str {
+    pub fn backend_name(&self) -> &str {
         self.inner.backend_name()
     }
 

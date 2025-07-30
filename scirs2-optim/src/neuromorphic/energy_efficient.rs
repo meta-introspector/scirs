@@ -917,7 +917,8 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> EnergyEf
     }
     
     /// Apply default optimization
-    fn apply_default_optimization(&mut self_workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>> {
+    fn apply_default_optimization(&mut self,
+        workload: &WorkloadSample<T>) -> Result<EnergyOptimizationResult<T>> {
         // Minimal optimization - just monitoring
         Ok(EnergyOptimizationResult {
             strategy_used: self.current_strategy,

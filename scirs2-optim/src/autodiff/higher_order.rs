@@ -195,7 +195,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         Self {
             forward_engine: ForwardModeEngine::new(),
             reverse_engine: ReverseModeEngine::new(),
-            _max_order,
+            max_order: _max_order,
             mixed_mode: true,
             derivative_cache: HashMap::new(),
             finite_diff_eps: T::from(1e-5).unwrap(),
@@ -586,7 +586,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     ) -> Result<Array2<T>> {
         let mut kfac_blocks = Vec::new();
 
-        for (i_layer) in layers.iter().enumerate() {
+        for (i, _layer) in layers.iter().enumerate() {
             let activation = &activations[i];
             let gradient = &gradients[i];
 
@@ -967,7 +967,8 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
 
         match problem_size {
             0..=10 => HvpMode::FiniteDifference,
-            11..=100 => HvpMode::ForwardOverReverse_ =>, HvpMode::ReverseOverForward,
+            11..=100 => HvpMode::ForwardOverReverse,
+            _ => HvpMode::ReverseOverForward,
         }
     }
 

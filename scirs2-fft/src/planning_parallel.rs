@@ -7,9 +7,9 @@ use crate::error::{FFTError, FFTResult};
 use crate::planning::{
     AdvancedFftPlanner, FftPlan, FftPlanExecutor, PlannerBackend, PlanningConfig,
 };
-use crate::worker__pool::WorkerPool;
+use crate::worker_pool::WorkerPool;
 
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -106,7 +106,7 @@ impl ParallelPlanner {
 
         Self {
             base_planner,
-            _config,
+            config: _config,
             worker_pool,
         }
     }
@@ -150,8 +150,8 @@ impl ParallelPlanner {
     ) -> FFTResult<Vec<ParallelPlanResult>> {
         // Filter out small FFTs that would be processed serially
         let (small_specs, large_specs): (Vec<_>, Vec<_>) =
-            specs.iter().enumerate().partition(|(_, (shape__))| {
-                shape.iter().product::<usize>() < self.config.parallel_threshold
+            specs.iter().enumerate().partition(|(_, (shape__, _, _))| {
+                shape__.iter().product::<usize>() < self.config.parallel_threshold
             });
 
         // Process small FFTs serially
@@ -220,7 +220,7 @@ impl ParallelPlanner {
         }
 
         // Sort results by original index
-        results.sort_by_key(|(idx_)| *idx);
+        results.sort_by_key(|(idx_, _)| *idx_);
         Ok(results.into_iter().map(|(_, result)| result).collect())
     }
 
@@ -268,7 +268,7 @@ impl ParallelExecutor {
         };
 
         Self {
-            _plan,
+            plan: _plan,
             config,
             worker_pool,
         }

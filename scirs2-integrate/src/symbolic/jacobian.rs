@@ -152,13 +152,13 @@ impl<F: IntegrateFloat> SymbolicODEBuilder<F> {
     }
 
     /// Set the number of state variables
-    pub fn with_state_vars(mut n: usize) -> Self {
+    pub fn with_state_vars(mut self, n: usize) -> Self {
         self.state_vars = (0..n).map(|i| Variable::indexed("y", i)).collect();
         self
     }
 
     /// Set custom state variable names
-    pub fn with_named_vars(mut names: Vec<String>) -> Self {
+    pub fn with_named_vars(mut self, names: Vec<String>) -> Self {
         self.state_vars = names.into_iter().map(Variable::new).collect();
         self
     }

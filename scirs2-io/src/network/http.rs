@@ -374,7 +374,7 @@ impl HttpClient {
     #[cfg(not(feature = "reqwest"))]
     /// Make an HTTP request (fallback implementation when reqwest feature is disabled)
     pub async fn request(
-        &self_method: HttpMethod, _url: &str_body: Option<&[u8]>,
+        &self, _method: HttpMethod, _url: &str, _body: Option<&[u8]>,
     ) -> Result<HttpResponse> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
@@ -405,7 +405,7 @@ pub async fn download_concurrent(
     downloads: Vec<(String, String)>,
     max_concurrent: usize,
 ) -> Result<Vec<Result<()>>> {
-    use futures__util::stream::{FuturesUnordered, StreamExt};
+    use futures_util::stream::{FuturesUnordered, StreamExt};
 
     let client = HttpClient::new(NetworkConfig::default());
 

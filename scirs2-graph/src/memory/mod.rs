@@ -51,7 +51,7 @@ impl MemoryProfiler {
 
         // Calculate node storage - nodes are stored with their data
         let node_bytes = node_count
-            * (mem::size_of::<N>() + mem::size, _of::<petgraph::_graph::NodeIndex<Ix>>())
+            * (mem::size_of::<N>() + mem::size_of::<petgraph::_graph::NodeIndex<Ix>>())
             + mem::size_of::<std::collections::HashMap<N, petgraph::_graph::NodeIndex<Ix>>>();
 
         // Calculate adjacency list storage based on actual _graph structure
@@ -65,7 +65,7 @@ impl MemoryProfiler {
         }
 
         // Calculate edge storage
-        let edge_bytes = edge_count * (mem::size_of::<N>() * 2 + mem::size, _of::<E>());
+        let edge_bytes = edge_count * (mem::size_of::<N>() * 2 + mem::size_of::<E>());
 
         // Estimate allocator overhead (typically 8-16 bytes per allocation)
         let allocation_count = node_count + 1; // nodes + main structure
@@ -101,7 +101,7 @@ impl MemoryProfiler {
 
         // Similar to undirected but with separate in/out adjacency lists
         let node_bytes = node_count
-            * (mem::size_of::<N>() + mem::size, _of::<petgraph::_graph::NodeIndex<Ix>>())
+            * (mem::size_of::<N>() + mem::size_of::<petgraph::_graph::NodeIndex<Ix>>())
             + mem::size_of::<std::collections::HashMap<N, petgraph::_graph::NodeIndex<Ix>>>();
 
         // Both in-edges and out-edges storage - directed graphs have separate lists
@@ -110,16 +110,16 @@ impl MemoryProfiler {
             // Count successors (outgoing edges)
             if let Ok(successors) = _graph.successors(node) {
                 adjacency_bytes +=
-                    successors.len() * mem::size_of::<E>() + mem::size, _of::<Vec<E>>();
+                    successors.len() * mem::size_of::<E>() + mem::size_of::<Vec<E>>();
             }
             // Count predecessors (incoming edges)
             if let Ok(predecessors) = _graph.predecessors(node) {
                 adjacency_bytes +=
-                    predecessors.len() * mem::size_of::<E>() + mem::size, _of::<Vec<E>>();
+                    predecessors.len() * mem::size_of::<E>() + mem::size_of::<Vec<E>>();
             }
         }
 
-        let edge_bytes = edge_count * (mem::size_of::<N>() * 2 + mem::size, _of::<E>());
+        let edge_bytes = edge_count * (mem::size_of::<N>() * 2 + mem::size_of::<E>());
 
         let allocation_count = node_count * 2 + 1; // in/out vecs + main structure
         let overhead_bytes = allocation_count * 16;
@@ -202,7 +202,7 @@ impl MemoryProfiler {
             total_capacity,
             total_used,
             fragmentation_ratio: fragmentation,
-            wasted_bytes: (total_capacity - total_used) * mem::size, _of::<(N, E)>(),
+            wasted_bytes: (total_capacity - total_used) * mem::size_of::<(N, E)>(),
         }
     }
 }
@@ -846,7 +846,7 @@ mod tests {
             total_capacity: 1000,
             total_used: 500,
             fragmentation_ratio: 0.5, // High fragmentation
-            wasted_bytes: 500 * mem::size, _of::<(usize, f64)>(),
+            wasted_bytes: 500 * mem::size_of::<(usize, f64)>(),
         };
 
         let stats = MemoryStats {

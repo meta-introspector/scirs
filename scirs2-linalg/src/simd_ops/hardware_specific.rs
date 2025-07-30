@@ -22,10 +22,26 @@ impl HardwareCapabilities {
     /// Detect available hardware features
     pub fn detect() -> Self {
         HardwareCapabilities {
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             has_avx: is_x86_feature_detected!("avx"),
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+            has_avx: false,
+            
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             has_avx2: is_x86_feature_detected!("avx2"),
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+            has_avx2: false,
+            
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             has_avx512: is_x86_feature_detected!("avx512f"),
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+            has_avx512: false,
+            
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             has_fma: is_x86_feature_detected!("fma"),
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+            has_fma: false,
+            
             has_neon: cfg!(target_arch = "aarch64"),
         }
     }
@@ -66,6 +82,7 @@ where
     // Choose optimization based on available hardware and type
     if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f64>() {
         if capabilities.has_avx2 && n >= 16 {
+            #[cfg(target_arch = "x86_64")]
             unsafe {
                 let raw_result =
                     avx2_dot_f64(x.as_ptr() as *const f64, y.as_ptr() as *const f64, n)?;
@@ -86,6 +103,7 @@ where
         }
     } else if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f32>() {
         if capabilities.has_avx2 && n >= 32 {
+            #[cfg(target_arch = "x86_64")]
             unsafe {
                 let raw_result =
                     avx2_dot_f32(x.as_ptr() as *const f32, y.as_ptr() as *const f32, n)?;
@@ -139,6 +157,7 @@ where
     // Choose optimization based on available hardware
     if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f64>() {
         if capabilities.has_avx2 {
+            #[cfg(target_arch = "x86_64")]
             unsafe {
                 avx2_matvec_f64(
                     a.as_ptr() as *const f64,
@@ -167,6 +186,7 @@ where
         }
     } else if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f32>() {
         if capabilities.has_avx2 {
+            #[cfg(target_arch = "x86_64")]
             unsafe {
                 avx2_matvec_f32(
                     a.as_ptr() as *const f32,
@@ -534,36 +554,6 @@ unsafe fn neon_dot_f32(_x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linal
 
     // Horizontal sum
     let mut result = vaddvq_f32(sum);
-
-    // Handle remaining elements
-    while i < n {
-        result += *_x_ptr.add(i) * *y_ptr.add(i);
-        i += 1;
-    }
-
-    Ok(result)
-}
-
-/// ARM Neon-optimized dot product for f64
-#[cfg(target_arch = "aarch64")]
-#[target_feature(enable = "neon")]
-unsafe fn neon_dot_f64(_x_ptr: *const f64, y_ptr: *const f64, n: usize) -> LinalgResult<f64> {
-    use std::arch::aarch64::*;
-
-    const BLOCK_SIZE: usize = 2;
-    let mut sum = vdupq_n_f64(0.0);
-
-    // Process 2 elements at a time
-    let mut i = 0;
-    while i + BLOCK_SIZE <= n {
-        let x_vec = vld1q_f64(_x_ptr.add(i));
-        let y_vec = vld1q_f64(y_ptr.add(i));
-        sum = vfmaq_f64(sum, x_vec, y_vec);
-        i += BLOCK_SIZE;
-    }
-
-    // Horizontal sum
-    let mut result = vaddvq_f64(sum);
 
     // Handle remaining elements
     while i < n {

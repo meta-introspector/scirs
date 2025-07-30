@@ -1,5 +1,6 @@
 use ndarray::{Array, ArrayBase, Data, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
+use rand::Rng;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};
@@ -32,7 +33,7 @@ pub struct ShakeDrop<A: Float + FromPrimitive + Debug> {
     /// Range for the beta parameter
     pub beta_range: (A, A),
     /// Random number generator
-    rng: scirs2_core: random::Random,
+    rng: scirs2_core::random::Random<rand::rngs::StdRng>,
 }
 
 impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
@@ -56,7 +57,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             p,
             alpha_range: (neg_one, one),
             beta_range: (zero, one),
-            rng: scirs2_core: random::Random::with_seed(42),
+            rng: scirs2_core::random::Random::seed(42),
         }
     }
 
@@ -76,7 +77,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             p,
             alpha_range,
             beta_range,
-            rng: scirs2_core: random::Random::with_seed(42),
+            rng: scirs2_core::random::Random::seed(42),
         }
     }
 
@@ -172,7 +173,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
         S: Data<Elem = A>,
         D: Dimension,
     {
-        let (b_alpha, beta) = gate_params;
+        let (b, _alpha, beta) = gate_params;
 
         // During backward pass: grad_x = grad_output * (b + beta - b*beta)
         let factor = b + beta - b * beta;
@@ -183,7 +184,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
 impl<A: Float + FromPrimitive + Debug + ScalarOperand, D: Dimension> Regularizer<A, D>
     for ShakeDrop<A>
 {
-    fn apply(&self_params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
+    fn apply(&self, _params: &Array<A, D>, _gradients: &mut Array<A, D>) -> Result<A> {
         // ShakeDrop is typically applied to activations, not parameters
         // In this implementation, apply() isn't the primary usage pattern
         // Instead, users would call forward() during the forward pass
@@ -195,7 +196,7 @@ impl<A: Float + FromPrimitive + Debug + ScalarOperand, D: Dimension> Regularizer
         ))
     }
 
-    fn penalty(&self_params: &Array<A, D>) -> Result<A> {
+    fn penalty(&self, _params: &Array<A, D>) -> Result<A> {
         // ShakeDrop doesn't add a penalty term to the loss function
         Ok(A::zero())
     }

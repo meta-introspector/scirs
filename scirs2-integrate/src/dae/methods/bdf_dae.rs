@@ -1015,7 +1015,7 @@ where
 
 /// Predict the next state for fully implicit DAE
 #[allow(dead_code)]
-fn predict_fully_implicit<F>(_y_history: &[Array1<F>], order: usize_h: F) -> Array1<F>
+fn predict_fully_implicit<F>(_y_history: &[Array1<F>], order: usize, _h: F) -> Array1<F>
 where
     F: IntegrateFloat,
 {

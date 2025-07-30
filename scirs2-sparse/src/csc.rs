@@ -436,7 +436,7 @@ impl CscMatrix<f64> {
 
 impl<T> CscMatrix<T>
 where
-    T: num_traits: Float
+    T: num_traits::Float
         + std::fmt::Debug
         + Copy
         + Default

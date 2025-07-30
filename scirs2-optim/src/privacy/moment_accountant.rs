@@ -330,7 +330,7 @@ impl MomentsAccountant {
         }
 
         // Find optimal epsilon
-        let (composed_epsilon_) = self.compute_optimal_epsilon(&total_log_moments)?;
+        let (composed_epsilon, _) = self.compute_optimal_epsilon(&total_log_moments)?;
 
         Ok(CompositionAnalysis {
             mechanisms: mechanisms.to_vec(),
@@ -470,9 +470,9 @@ impl MomentsAccountant {
 
         while low <= high {
             let mid = (low + high) / 2;
-            let (epsilon_) = self.get_privacy_spent(mid)?;
+            let epsilon_ = self.get_privacy_spent(mid)?;
 
-            if epsilon <= target_epsilon {
+            if epsilon_.0 <= target_epsilon {
                 result = mid;
                 low = mid + 1;
             } else {
@@ -503,7 +503,8 @@ impl MomentsAccountant {
             let mgf_term = match k {
                 0 => 0.0, // No change, moment is 1, log moment is 0
                 1 => self.compute_single_change_moment(alpha, sigma)?,
-                2 => self.compute_double_change_moment(alpha, sigma)?_ => 0.0,
+                2 => self.compute_double_change_moment(alpha, sigma)?,
+                _ => 0.0,
             };
 
             let term = log_binomial + log_prob_k + mgf_term;
@@ -612,7 +613,7 @@ impl MomentsAccountant {
         }
 
         // Find optimal epsilon
-        let (composed_epsilon_) =
+        let (composed_epsilon, _) =
             self.compute_optimal_epsilon_with_delta(&total_log_moments, target_delta)?;
 
         Ok(CompositionAnalysis {

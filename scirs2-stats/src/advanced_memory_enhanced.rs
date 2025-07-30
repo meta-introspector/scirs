@@ -379,8 +379,8 @@ impl AdvancedMemoryManager {
         Ok(AllocationCharacteristics {
             size_bytes: bytes_required,
             element_count: size,
-            element_size: std::mem::size, _of::<T>(),
-            alignment_requirement: std::mem::align, _of::<T>(),
+            element_size: std::mem::size_of::<T>(),
+            alignment_requirement: std::mem::align_of::<T>(),
             access_pattern: usage_hint.access_pattern,
             lifetime_hint: usage_hint.lifetime,
             numa_locality_preference: usage_hint.numa_preference,

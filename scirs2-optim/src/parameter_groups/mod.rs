@@ -328,7 +328,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterGroup<A, D> {
     /// Create a new parameter group
     pub fn new(_id: usize, params: Vec<Array<A, D>>, config: ParameterGroupConfig<A>) -> Self {
         Self {
-            _id,
+            id: _id,
             params,
             config,
             state: HashMap::new(),
@@ -540,7 +540,7 @@ pub mod checkpointing {
 
     impl CheckpointMetadata {
         /// Create new metadata with current timestamp
-        pub fn new(_optimizer_version: String) -> Self {
+        pub fn new(optimizer_version: String) -> Self {
             use std::time::{SystemTime, UNIX_EPOCH};
 
             let timestamp = SystemTime::now()
@@ -1132,8 +1132,8 @@ pub mod checkpointing {
         /// Create a new checkpoint manager with maximum number of checkpoints
         pub fn with_max_checkpoints(_max_checkpoints: usize) -> Self {
             Self {
-                _checkpoints: HashMap::new(),
-                _max_checkpoints,
+                checkpoints: HashMap::new(),
+                max_checkpoints: _max_checkpoints,
                 checkpoint_keys: Vec::new(),
             }
         }
@@ -1215,7 +1215,7 @@ pub mod checkpointing {
                     id: group.id,
                     params: group.params.clone(),
                     config: group.config.clone(),
-                    _state: group._state.clone(),
+                    state: group.state.clone(),
                 })
                 .collect();
 
@@ -1232,16 +1232,16 @@ pub mod checkpointing {
             checkpoint: &OptimizerCheckpoint<A, D>,
             expected_groups: usize,
         ) -> Result<()> {
-            if checkpoint._groups.len() != expected_groups {
+            if checkpoint.groups.len() != expected_groups {
                 return Err(OptimError::InvalidConfig(format!(
-                    "Checkpoint has {} _groups, expected {expected_groups}",
-                    checkpoint._groups.len()
+                    "Checkpoint has {} groups, expected {expected_groups}",
+                    checkpoint.groups.len()
                 )));
             }
 
             // Validate that all group IDs are unique
             let mut ids = std::collections::HashSet::new();
-            for group in &checkpoint._groups {
+            for group in &checkpoint.groups {
                 if !ids.insert(group.id) {
                     return Err(OptimError::InvalidConfig(format!(
                         "Duplicate group ID {} in checkpoint",
@@ -1516,7 +1516,8 @@ mod tests {
 
         // Check that the right constraint types were added
         match &config.constraints[0] {
-            ParameterConstraint::Simplex => (, _ => panic!("Expected Simplex constraint"),
+            ParameterConstraint::Simplex => (),
+            _ => panic!("Expected Simplex constraint"),
         }
 
         match &config.constraints[1] {

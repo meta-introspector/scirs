@@ -163,7 +163,7 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::pochhammer;
+/// use scirs2_special::pochhammer;
 ///
 /// // (1)_4 = 1 * 2 * 3 * 4 = 24
 /// let result: f64 = pochhammer(1.0, 4);
@@ -209,7 +209,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::{pochhammer, ln_pochhammer};
+/// use scirs2_special::{pochhammer, ln_pochhammer};
 ///
 /// let a: f64 = 2.0;
 /// let n = 3;
@@ -258,7 +258,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::hyp1f1;
+/// use scirs2_special::hyp1f1;
 ///
 /// // Some known values
 /// let result1: f64 = hyp1f1(1.0, 2.0, 0.5).unwrap();
@@ -292,7 +292,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::hyp0f1;
+/// use scirs2_special::hyp0f1;
 ///
 /// // Some known values
 /// let result1: f64 = hyp0f1(1.0, 0.5).unwrap();
@@ -434,7 +434,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::hyperu;
+/// use scirs2_special::hyperu;
 ///
 /// // Some known values
 /// let result1: f64 = hyperu(1.0, 2.0, 1.0).unwrap();
@@ -714,7 +714,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__special::hyp2f1;
+/// use scirs2_special::hyp2f1;
 ///
 /// // Some known values
 /// let result1: f64 = hyp2f1(1.0, 2.0, 3.0, 0.5).unwrap();

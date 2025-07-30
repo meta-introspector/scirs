@@ -383,7 +383,7 @@ pub struct SparseWarning;
 #[allow(dead_code)]
 pub fn is_sparse_array<T>(_obj: &dyn SparseArray<T>) -> bool
 where
-    T: num_traits: Float
+    T: num_traits::Float
         + std::fmt::Debug
         + Copy
         + std::ops::Add<Output = T>
@@ -399,7 +399,7 @@ where
 #[allow(dead_code)]
 pub fn is_sym_sparse_array<T>(_obj: &dyn SymSparseArray<T>) -> bool
 where
-    T: num_traits: Float
+    T: num_traits::Float
         + std::fmt::Debug
         + Copy
         + std::ops::Add<Output = T>
@@ -683,7 +683,7 @@ mod tests {
     #[test]
     fn test_construct_sym_utils() {
         // Test creating an identity matrix
-        let eye = construct_sym::eye_sym, _array::<f64>(3, "csr").unwrap();
+        let eye = construct_sym::eye_sym_array::<f64>(3, "csr").unwrap();
 
         assert_eq!(eye.shape(), (3, 3));
         assert_eq!(SparseArray::get(&*eye, 0, 0), 1.0);

@@ -155,7 +155,7 @@ impl<T: Clone> RTree<T> {
     ) -> SpatialResult<()> {
         // Get the child node
         let child = match &parent.entries[child_index] {
-            Entry::NonLeaf { child, .. } => child_ => {
+            Entry::NonLeaf { child, .. } => {
                 return Err(crate::error::SpatialError::ComputationError(
                     "Expected a non-leaf entry".into(),
                 ))
@@ -198,7 +198,7 @@ impl<T: Clone> RTree<T> {
 
         // Get the sibling
         let sibling = match &parent.entries[best_sibling_index] {
-            Entry::NonLeaf { child, .. } => child_ => {
+            Entry::NonLeaf { child, .. } => {
                 return Err(crate::error::SpatialError::ComputationError(
                     "Expected a non-leaf entry".into(),
                 ))
@@ -226,14 +226,14 @@ impl<T: Clone> RTree<T> {
 
             // Get mutable references to the nodes
             let child_node = match &mut child_entry {
-                Entry::NonLeaf { child, .. } => child_ => {
+                Entry::NonLeaf { child, .. } => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry for child node".into(),
                     ))
                 }
             };
             let sibling_node = match &mut sibling_entry {
-                Entry::NonLeaf { child, .. } => child_ => {
+                Entry::NonLeaf { child, .. } => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry for sibling node".into(),
                     ))
@@ -289,14 +289,14 @@ impl<T: Clone> RTree<T> {
 
             // Get the nodes
             let child_node = match &mut child_entry {
-                Entry::NonLeaf { child, .. } => child_ => {
+                Entry::NonLeaf { child, .. } => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry for child node".into(),
                     ))
                 }
             };
             let sibling_node = match sibling_entry {
-                Entry::NonLeaf { child, .. } => child_ => {
+                Entry::NonLeaf { child, .. } => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry for sibling node".into(),
                     ))

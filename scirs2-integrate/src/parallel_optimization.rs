@@ -7,7 +7,7 @@
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{s, Array1, Array2, ArrayView2, Axis};
-use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
@@ -110,24 +110,24 @@ pub enum BackoffStrategy {
 /// Trait for parallel tasks
 pub trait ParallelTask: Send {
     /// Execute the task
-    fn execute() -> ParallelResult;
+    fn execute(&self) -> ParallelResult;
 
     /// Estimate computational cost
     fn estimated_cost(&self) -> f64;
 
     /// Check if task can be subdivided
-    fn can_subdivide() -> bool;
+    fn can_subdivide(&self) -> bool;
 
     /// Subdivide task into smaller tasks
-    fn subdivide(_self: Box<Self>) -> Vec<Box<dyn ParallelTask + Send>>;
+    fn subdivide(&self) -> Vec<Box<dyn ParallelTask + Send>>;
 
     /// Get task priority
-    fn priority() -> TaskPriority {
+    fn priority(&self) -> TaskPriority {
         TaskPriority::Normal
     }
 
     /// Get preferred NUMA node
-    fn preferred_numa_node() -> Option<usize> {
+    fn preferred_numa_node(&self) -> Option<usize> {
         None
     }
 }
@@ -271,7 +271,7 @@ impl ParallelOptimizer {
     }
 
     /// Initialize thread pool
-    pub fn initialize(&self) -> IntegrateResult<()> {
+    pub fn initialize(&mut self) -> IntegrateResult<()> {
         let thread_pool = ThreadPool::new(self.num_threads, &self.work_stealing_config)?;
         self.thread_pool = Some(thread_pool);
         Ok(())
@@ -518,12 +518,12 @@ impl ParallelOptimizer {
     ) -> IntegrateResult<Array2<F>> {
 
         let result_value = match op {
-            Sum => input.sum(),
-            Product => input.fold(F::one(), |acc, &x| acc * x),
-            Max => input.fold(F::neg_infinity(), |acc, &x| acc.max(x)),
-            Min => input.fold(F::infinity(), |acc, &x| acc.min(x)),
-            Mean => input.sum() / F::from(input.len()).unwrap(),
-            Variance => {
+            ReductionOp::Sum => input.sum(),
+            ReductionOp::Product => input.fold(F::one(), |acc, &x| acc * x),
+            ReductionOp::Max => input.fold(F::neg_infinity(), |acc, &x| acc.max(x)),
+            ReductionOp::Min => input.fold(F::infinity(), |acc, &x| acc.min(x)),
+            ReductionOp::Mean => input.sum() / F::from(input.len()).unwrap(),
+            ReductionOp::Variance => {
                 let mean = input.sum() / F::from(input.len()).unwrap();
 
                 input.mapv(|x| (x - mean).powi(2)).sum() / F::from(input.len()).unwrap()
@@ -560,7 +560,7 @@ impl NumaTopology {
 }
 
 impl Default for WorkStealingConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             max_steal_attempts: 10,
             steal_ratio: 0.5,
@@ -823,18 +823,18 @@ impl Drop for ThreadPool {
 }
 
 impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> {
-    fn execute(&mut self) -> ParallelResult {
+    fn execute(&self) -> ParallelResult {
         // Perform actual vectorized computation based on operation type
         let result: Array2<F> = match &self.operation {
             VectorOperation::ElementWise(op) => {
                 match op {
-                    Add(value) => self.input.mapv(|x| x + F::from(*value).unwrap()),
-                    Multiply(value) => self.input.mapv(|x| x * F::from(*value).unwrap()),
-                    Power(exp) => self.input.mapv(|x| x.powf(F::from(*exp).unwrap())),
-                    Exp => self.input.mapv(|x| x.exp()),
-                    Log => self.input.mapv(|x| x.ln()),
-                    Sin => self.input.mapv(|x| x.sin()),
-                    Cos => self.input.mapv(|x| x.cos()),
+                    ArithmeticOp::Add(value) => self.input.mapv(|x| x + F::from(*value).unwrap()),
+                    ArithmeticOp::Multiply(value) => self.input.mapv(|x| x * F::from(*value).unwrap()),
+                    ArithmeticOp::Power(exp) => self.input.mapv(|x| x.powf(F::from(*exp).unwrap())),
+                    ArithmeticOp::Exp => self.input.mapv(|x| x.exp()),
+                    ArithmeticOp::Log => self.input.mapv(|x| x.ln()),
+                    ArithmeticOp::Sin => self.input.mapv(|x| x.sin()),
+                    ArithmeticOp::Cos => self.input.mapv(|x| x.cos()),
                 }
             }
             VectorOperation::MatrixVector(vector) => {
@@ -854,12 +854,12 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
             }
             VectorOperation::Reduction(op) => {
                 let result_value = match op {
-                    Sum => self.input.sum(),
-                    Product => self.input.fold(F::one(), |acc, &x| acc * x),
-                    Max => self.input.fold(F::neg_infinity(), |acc, &x| acc.max(x)),
-                    Min => self.input.fold(F::infinity(), |acc, &x| acc.min(x)),
-                    Mean => self.input.sum() / F::from(self.input.len()).unwrap(),
-                    Variance => {
+                    ReductionOp::Sum => self.input.sum(),
+                    ReductionOp::Product => self.input.fold(F::one(), |acc, &x| acc * x),
+                    ReductionOp::Max => self.input.fold(F::neg_infinity(), |acc, &x| acc.max(x)),
+                    ReductionOp::Min => self.input.fold(F::infinity(), |acc, &x| acc.min(x)),
+                    ReductionOp::Mean => self.input.sum() / F::from(self.input.len()).unwrap(),
+                    ReductionOp::Variance => {
                         let mean = self.input.sum() / F::from(self.input.len()).unwrap();
                         self.input.mapv(|x| (x - mean).powi(2)).sum()
                             / F::from(self.input.len()).unwrap()
@@ -881,27 +881,27 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
         self.input.nrows() > self.chunk_size * 2
     }
 
-    fn subdivide(_self: Box<Self>) -> Vec<Box<dyn ParallelTask + Send>> {
+    fn subdivide(&self) -> Vec<Box<dyn ParallelTask + Send>> {
         // Only subdivide if the task is large enough and can benefit from parallelization
-        if _self.input.len() < _self.chunk_size * 2 {
-            return vec![_self];
+        if self.input.len() < self.chunk_size * 2 {
+            return vec![];
         }
 
-        let num_chunks = _self.input.nrows().div_ceil(_self.chunk_size);
+        let num_chunks = self.input.nrows().div_ceil(self.chunk_size);
         let mut subtasks = Vec::with_capacity(num_chunks);
 
         for i in 0..num_chunks {
-            let start_row = i * _self.chunk_size;
-            let end_row = ((i + 1) * _self.chunk_size).min(_self.input.nrows());
+            let start_row = i * self.chunk_size;
+            let end_row = ((i + 1) * self.chunk_size).min(self.input.nrows());
 
-            if start_row < _self.input.nrows() {
-                let chunk = _self.input.slice(s![start_row..end_row, ..]).to_owned();
+            if start_row < self.input.nrows() {
+                let chunk = self.input.slice(s![start_row..end_row, ..]).to_owned();
 
                 let subtask = VectorizedComputeTask {
                     input: chunk,
-                    operation: _self.operation.clone(),
-                    chunk_size: _self.chunk_size,
-                    prefer_simd: _self.prefer_simd,
+                    operation: self.operation.clone(),
+                    chunk_size: self.chunk_size,
+                    prefer_simd: self.prefer_simd,
                 };
 
                 subtasks.push(Box::new(subtask) as Box<dyn ParallelTask + Send>);
@@ -909,7 +909,7 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
         }
 
         if subtasks.is_empty() {
-            vec![_self]
+            vec![self]
         } else {
             subtasks
         }

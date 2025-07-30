@@ -31,5 +31,5 @@ pub mod rbf;
 
 // Re-export key types and functions
 pub use idw::IDWInterpolator;
-pub use natural__neighbor::NaturalNeighborInterpolator;
+pub use natural_neighbor::NaturalNeighborInterpolator;
 pub use rbf::{RBFInterpolator, RBFKernel};

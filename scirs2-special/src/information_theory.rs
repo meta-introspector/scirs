@@ -172,7 +172,7 @@ use std::fmt::{Debug, Display};
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::information_theory::entr;
+/// use scirs2_special::information_theory::entr;
 ///
 /// let h = entr(0.5);
 /// assert!((h - 0.34657359027997264).abs() < 1e-10);

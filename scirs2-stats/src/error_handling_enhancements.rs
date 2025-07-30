@@ -85,7 +85,8 @@ impl AdvancedErrorMessages {
                     "Check for memory pressure or system resource contention."
                 }
             }
-            x if x > 3.0 => "Consider optimizing data layout or using more efficient algorithms."_ => "Performance is within acceptable range but could be optimized.",
+            x if x > 3.0 => "Consider optimizing data layout or using more efficient algorithms.",
+            _ => "Performance is within acceptable range but could be optimized.",
         };
 
         StatsError::computation(format!(
@@ -224,7 +225,8 @@ impl AdvancedErrorRecovery {
     /// Attempt automatic error recovery with performance optimization
     pub fn attempt_recovery(
         error: &StatsError,
-        context: &AdvancedErrorContext_operation: &str,
+        context: &AdvancedErrorContext,
+        operation: &str,
     ) -> Option<RecoveryStrategy> {
         match error {
             StatsError::ComputationError(msg) if msg.contains("memory") => {

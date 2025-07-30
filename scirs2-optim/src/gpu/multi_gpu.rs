@@ -607,7 +607,7 @@ impl<A: Float> MultiGpuSync<A> {
                 start_time: std::time::Instant::now(),
                 expected_completion: std::time::Duration::from_millis(10), // Estimate
                 strategy: SyncStrategy::PipelineParallel,
-                data_size: gradients.len() * std::mem::size, _of::<A>(),
+                data_size: gradients.len() * std::mem::size_of::<A>(),
                 status: AsyncCommStatus::InProgress,
             };
 

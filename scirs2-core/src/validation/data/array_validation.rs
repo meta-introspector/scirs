@@ -12,7 +12,7 @@ use ndarray::{ArrayBase, Data, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive, ToPrimitive, Zero};
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use crate::parallel_ops::*;
 
 use super::config::{ErrorSeverity, ValidationErrorType};
 use super::constraints::{ArrayValidationConstraints, StatisticalConstraints};

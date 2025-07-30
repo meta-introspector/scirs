@@ -930,7 +930,7 @@ impl MultiGpuCommunicator {
             .iter()
             .enumerate()
             .min_by(|(_, a), (_, b)| a.utilization.partial_cmp(&b.utilization).unwrap())
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .unwrap_or(0)
     }
 

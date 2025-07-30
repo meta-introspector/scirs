@@ -117,7 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cleaner = BasicTextCleaner::new(true, true, true);
 
     // Clean documents first
-    let cleaned_docs: Result<Vec<_>_> = documents.iter().map(|doc| cleaner.clean(doc)).collect();
+    let cleaned_docs: Result<Vec<_>, _> = documents.iter().map(|doc| cleaner.clean(doc)).collect();
     let cleaned_docs = cleaned_docs?;
     let cleaned_refs: Vec<&str> = cleaned_docs.iter().map(|s| s.as_str()).collect();
 

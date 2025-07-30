@@ -5,7 +5,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::convex_hull::ConvexHull;
+//! use scirs2_spatial::convex_hull::ConvexHull;
 //! use ndarray::array;
 //!
 //! // Create points for the convex hull
@@ -58,7 +58,7 @@ pub enum ConvexHullAlgorithm {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::convex_hull::convex_hull;
+/// use scirs2_spatial::convex_hull::convex_hull;
 /// use ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
@@ -88,7 +88,7 @@ pub fn convex_hull(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> 
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::convex_hull::{convex_hull_with_algorithm, ConvexHullAlgorithm};
+/// use scirs2_spatial::convex_hull::{convex_hull_with_algorithm, ConvexHullAlgorithm};
 /// use ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
@@ -118,7 +118,8 @@ pub struct ConvexHull {
     vertex_indices: Vec<usize>,
     /// Simplex indices (facets) of the convex hull
     simplices: Vec<Vec<usize>>,
-    /// Equations of the hull facets (shape: n_facets x (n_dim+1)), equations: Option<Array2<f64>>,
+    /// Equations of the hull facets (shape: n_facets x (n_dim+1))
+    equations: Option<Array2<f64>>,
 }
 
 impl ConvexHull {
@@ -139,7 +140,7 @@ impl ConvexHull {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::convex_hull::ConvexHull;
+    /// use scirs2_spatial::convex_hull::ConvexHull;
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
@@ -168,7 +169,7 @@ impl ConvexHull {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::convex_hull::{ConvexHull, ConvexHullAlgorithm};
+    /// use scirs2_spatial::convex_hull::{ConvexHull, ConvexHullAlgorithm};
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
@@ -204,9 +205,9 @@ impl ConvexHull {
         }
 
         match algorithm {
-            ConvexHullAlgorithm::GrahamScan =>, Self::new_graham_scan(points),
-            ConvexHullAlgorithm::JarvisMarch =>, Self::new_jarvis_march(points),
-            ConvexHullAlgorithm::QHull =>, Self::new_qhull(points),
+            ConvexHullAlgorithm::GrahamScan => Self::new_graham_scan(points),
+            ConvexHullAlgorithm::JarvisMarch => Self::new_jarvis_march(points),
+            ConvexHullAlgorithm::QHull => Self::new_qhull(points),
         }
     }
 
@@ -710,7 +711,7 @@ impl ConvexHull {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::convex_hull::ConvexHull;
+    /// use scirs2_spatial::convex_hull::ConvexHull;
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
@@ -763,7 +764,7 @@ impl ConvexHull {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::convex_hull::ConvexHull;
+    /// use scirs2_spatial::convex_hull::ConvexHull;
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
@@ -786,7 +787,7 @@ impl ConvexHull {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::convex_hull::ConvexHull;
+    /// use scirs2_spatial::convex_hull::ConvexHull;
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
@@ -819,7 +820,7 @@ impl ConvexHull {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::convex_hull::ConvexHull;
+    /// use scirs2_spatial::convex_hull::ConvexHull;
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -877,7 +878,7 @@ impl ConvexHull {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::convex_hull::ConvexHull;
+    /// use scirs2_spatial::convex_hull::ConvexHull;
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
@@ -905,7 +906,7 @@ impl ConvexHull {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::convex_hull::ConvexHull;
+    /// use scirs2_spatial::convex_hull::ConvexHull;
     /// use ndarray::array;
     ///
     /// // Create a square with area 1
@@ -970,7 +971,7 @@ impl ConvexHull {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::convex_hull::ConvexHull;
+    /// use scirs2_spatial::convex_hull::ConvexHull;
     /// use ndarray::array;
     ///
     /// // Create a 3D cube

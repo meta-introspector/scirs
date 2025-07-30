@@ -1,14 +1,14 @@
 //! Tests for shape constraint validation
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 use scirs2_core::validation::data::{
     Constraint, DataType, ShapeConstraints, ValidationConfig, ValidationSchema, Validator,
 };
 
-#[cfg(all(feature = data_validation, feature = serde))]
-use serde__json::json;
+#[cfg(all(feature = "data_validation", feature = "serde"))]
+use serde_json::json;
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_shape_constraint_1d_array() {
@@ -34,7 +34,7 @@ fn test_shape_constraint_1d_array() {
     );
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_shape_constraint_1d_wrong_size() {
@@ -65,7 +65,7 @@ fn test_shape_constraint_1d_wrong_size() {
         .any(|e| e.constraint == Some("shape.dimension[0]".to_string())));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_shape_constraint_2d_array() {
@@ -98,7 +98,7 @@ fn test_shape_constraint_2d_array() {
     );
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_shape_constraint_jagged_array() {
@@ -133,7 +133,7 @@ fn test_shape_constraint_jagged_array() {
         .any(|e| e.message.contains("Jagged arrays are not supported")));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_shape_constraint_square_matrix() {
@@ -168,7 +168,7 @@ fn test_shape_constraint_square_matrix() {
     );
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_shape_constraint_non_square_fails() {
@@ -205,7 +205,7 @@ fn test_shape_constraint_non_square_fails() {
         .any(|e| e.constraint == Some("shape.square".to_string())));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_shape_constraint_element_count() {
@@ -231,7 +231,7 @@ fn test_shape_constraint_element_count() {
     );
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_shape_constraint_too_few_elements() {
@@ -262,7 +262,7 @@ fn test_shape_constraint_too_few_elements() {
         .any(|e| e.constraint == Some("shape.min_elements".to_string())));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_shape_constraint_too_many_elements() {
@@ -293,7 +293,7 @@ fn test_shape_constraint_too_many_elements() {
         .any(|e| e.constraint == Some("shape.max_elements".to_string())));
 }
 
-#[cfg(all(feature = data_validation, feature = serde))]
+#[cfg(all(feature = "data_validation", feature = "serde"))]
 #[test]
 #[allow(dead_code)]
 fn test_shape_constraint_flexible_dimensions() {

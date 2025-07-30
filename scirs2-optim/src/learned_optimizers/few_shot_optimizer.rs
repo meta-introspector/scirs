@@ -1093,7 +1093,11 @@ impl<T: Float + Send + Sync> FastAdaptationEngine<T> {
     }
 
     fn adapt_fast(
-        &mut self_optimizer: &mut dyn FewShotOptimizer<T>, _task_data: &TaskData<T>, _strategy: AdaptationStrategyType_config: &AdaptationConfig,
+        &mut self,
+        _optimizer: &mut dyn FewShotOptimizer<T>,
+        _task_data: &TaskData<T>,
+        _strategy: AdaptationStrategyType,
+        _config: &AdaptationConfig,
     ) -> Result<AdaptationResult<T>> {
         // Simplified adaptation result
         Ok(AdaptationResult {
@@ -1136,7 +1140,8 @@ impl<T: Float + Send + Sync> FewShotPerformanceTracker<T> {
         ))
     }
 
-    fn record_performance(&mut self_result: &AdaptationResult<T>) -> Result<()> {
+    fn record_performance(&mut self,
+        result: &AdaptationResult<T>) -> Result<()> {
         Ok(()) // Placeholder
     }
 }

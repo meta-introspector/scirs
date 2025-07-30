@@ -31,7 +31,8 @@ impl TryFrom<u16> for WavFormat {
             1 => Ok(WavFormat::Pcm),
             3 => Ok(WavFormat::Float),
             6 => Ok(WavFormat::Alaw),
-            7 => Ok(WavFormat::Mulaw, _ => Err(IoError::FormatError(format!(
+            7 => Ok(WavFormat::Mulaw),
+            _ => Err(IoError::FormatError(format!(
                 "Unknown WAV format code: {}",
                 _value
             ))),

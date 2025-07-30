@@ -1301,11 +1301,9 @@ pub fn validate_api_usage(api_name: &str,
 /// Check if an API has long-term stability
 #[allow(dead_code)]
 pub fn has_long_term_stability(api_name: &str, module: &str) -> bool {
-    // For now, return true for core APIs
-    matches!((api_name, module), 
-        ("CoreError", "error") |
-        ("check_finite", "validation")
-    ) || true  // Default to true for all other cases
+    // For now, return true for all APIs
+    let _ = (api_name, module); // Use parameters to avoid warnings
+    true  // Default to true for all cases
 }
 
 /// Stability contract for APIs

@@ -3,7 +3,7 @@
 //! This module contains the configuration structures, enums, and utility functions
 //! used to configure and control sparse FFT computations.
 
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::fmt::Debug;
 
 /// Helper function to extract complex values from various types (for doctests)

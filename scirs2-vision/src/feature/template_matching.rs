@@ -318,7 +318,8 @@ fn match_normalized_correlation_coeff(
 pub fn find_best_match(_scores: &Array2<f32>, method: MatchMethod) -> MatchResult {
     let (height, width) = _scores.dim();
     let mut best_score = match method {
-        MatchMethod::SumSquaredDiff | MatchMethod::NormalizedSumSquaredDiff => f32::INFINITY_ =>, f32::NEG_INFINITY,
+        MatchMethod::SumSquaredDiff | MatchMethod::NormalizedSumSquaredDiff => f32::INFINITY,
+        _ => f32::NEG_INFINITY,
     };
     let mut best_x = 0;
     let mut best_y = 0;

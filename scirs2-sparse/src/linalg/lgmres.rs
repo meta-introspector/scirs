@@ -193,7 +193,8 @@ where
 fn inner_gmres<F>(
     a: &dyn LinearOperator<F>,
     r0: &[F],
-    m: usize_augmented_vectors: &[Vec<F>],
+    m: usize,
+    augmented_vectors: &[Vec<F>],
     preconditioner: Option<&dyn LinearOperator<F>>,
 ) -> SparseResult<(Vec<F>, F, Vec<Vec<F>>)>
 where

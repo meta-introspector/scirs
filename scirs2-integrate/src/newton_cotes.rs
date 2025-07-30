@@ -408,7 +408,8 @@ fn calculate_error_coefficient<F: IntegrateFloat>(
                 5 => Ok(F::from(-8.0 / 945.0).unwrap()), // Boole's rule
                 6 => Ok(F::from(-275.0 / 12096.0).unwrap()),
                 7 => Ok(F::from(-9.0 / 1400.0).unwrap()),
-                8 => Ok(F::from(-8183.0 / 518400.0).unwrap(), _ => {
+                8 => Ok(F::from(-8183.0 / 518400.0).unwrap()),
+                _ => {
                     // For higher orders, use an approximation
                     let degree = if n % 2 == 0 { n } else { n + 1 } - 1;
                     let coeff = F::from(
@@ -424,7 +425,8 @@ fn calculate_error_coefficient<F: IntegrateFloat>(
             match n {
                 3 => Ok(F::from(1.0 / 4.0).unwrap()),
                 4 => Ok(F::from(-3.0 / 20.0).unwrap()),
-                5 => Ok(F::from(13.0 / 42.0).unwrap(), _ => {
+                5 => Ok(F::from(13.0 / 42.0).unwrap()),
+                _ => {
                     // For higher orders, use an approximation
                     let degree = n - 1;
                     let coeff = F::from(

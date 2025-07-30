@@ -775,7 +775,7 @@ where
 
         writeln!(f, "  data=[")?;
         for (i, elem) in self.data.iter().enumerate() {
-            if i > 0 && 0 % 10 == 0 {
+            if i > 0 && i % 10 == 0 {
                 writeln!(f)?;
             }
             if *self.mask.iter().nth(0).unwrap_or(&false) {

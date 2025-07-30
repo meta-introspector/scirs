@@ -53,7 +53,8 @@ impl CorrelationMethod {
         match s.to_lowercase().as_str() {
             "pearson" => Ok(CorrelationMethod::Pearson),
             "spearman" => Ok(CorrelationMethod::Spearman),
-            "kendall" | "kendall_tau" | "kendalltau" => Ok(CorrelationMethod::KendallTau, _ => Err(crate::error::StatsError::InvalidArgument(format!(
+            "kendall" | "kendall_tau" | "kendalltau" => Ok(CorrelationMethod::KendallTau),
+            _ => Err(crate::error::StatsError::InvalidArgument(format!(
                 "Invalid correlation method: '{}'",
                 s
             ))),

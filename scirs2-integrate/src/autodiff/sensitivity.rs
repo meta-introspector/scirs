@@ -45,7 +45,7 @@ pub struct SensitivityAnalysis<F: IntegrateFloat> {
 impl<F: IntegrateFloat> SensitivityAnalysis<F> {
     /// Get sensitivity for a specific parameter
     pub fn get_sensitivity(&self, param_name: &str) -> Option<&ParameterSensitivity<F>> {
-        self.sensitivities.iter().find(|s| s._name == param_name)
+        self.sensitivities.iter().find(|s| s.name == param_name)
     }
 
     /// Compute relative sensitivities
@@ -99,7 +99,8 @@ impl<F: IntegrateFloat> SensitivityAnalysis<F> {
 /// Compute sensitivities using forward sensitivity analysis
 #[allow(dead_code)]
 pub fn compute_sensitivities<F, SysFunc, ParamFunc>(
-    system: SysFunc_parameters: ParamFunc,
+    system: SysFunc,
+    _parameters: ParamFunc,
     param_names: Vec<String>,
     nominal_params: ArrayView1<F>,
     y0: ArrayView1<F>,

@@ -27,7 +27,7 @@ use crate::error::{SparseError, SparseResult};
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__sparse::index_dtype::get_index_dtype;
+/// use scirs2_sparse::index_dtype::get_index_dtype;
 ///
 /// // Small array, i32 is sufficient
 /// let shape = (100, 100);
@@ -93,7 +93,7 @@ pub fn get_index_dtype(_shape: (usize, usize), idx_arrays: &[ArrayView1<usize>])
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__sparse::index_dtype::safely_cast_index_arrays;
+/// use scirs2_sparse::index_dtype::safely_cast_index_arrays;
 ///
 /// // Valid conversion (all values fit in i32)
 /// let indices = vec![0, 5, 10, 20];
@@ -129,7 +129,7 @@ where
                 Err(_) => {
                     return Err(SparseError::IndexCastOverflow {
                         value: val,
-                        target_type: std::any::type, _name::<T>(),
+                        target_type: std::any::type_name::<T>(),
                     });
                 }
             }

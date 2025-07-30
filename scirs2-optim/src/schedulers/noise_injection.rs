@@ -4,8 +4,8 @@
 //! to help escape local minima and improve exploration during training.
 
 use ndarray::ScalarOperand;
-// Removed unused imports Distribution, Normal, Uniform
 use num_traits::{Float, NumCast};
+use rand::Rng;
 use std::fmt::Debug;
 
 use super::LearningRateScheduler;
@@ -58,7 +58,7 @@ where
     /// Current step number
     step_count: usize,
     /// Random number generator
-    rng: scirs2_core: random::Random,
+    rng: scirs2_core::random::Random,
     /// Minimum learning rate to ensure training stability
     min_lr: A,
 }
@@ -79,7 +79,7 @@ where
     /// # Example
     ///
     /// ```
-    /// use scirs2__optim::schedulers::{
+    /// use scirs2_optim::schedulers::{
     ///     ExponentialDecay, NoiseDistribution, NoiseInjectionScheduler, LearningRateScheduler
     /// };
     ///
@@ -97,12 +97,12 @@ where
     /// let lr = scheduler.get_learning_rate();
     /// assert!(lr >= 0.001); // Learning rate should be at least min_lr
     /// ```
-    pub fn new(_base_scheduler: S, noise_dist: NoiseDistribution<A>, min_lr: A) -> Self {
+    pub fn new(base_scheduler: S, noise_dist: NoiseDistribution<A>, min_lr: A) -> Self {
         Self {
-            _base_scheduler,
+            base_scheduler,
             noise_dist,
             step_count: 0,
-            rng: scirs2_core: random::rng(),
+            rng: scirs2_core::random::rng(),
             min_lr,
         }
     }
@@ -121,12 +121,12 @@ where
                 let std_dev_f64 = std_dev.to_f64().unwrap();
                 // Box-Muller transformation for Gaussian
                 let u1: f64 = self.rng.gen_range(0.0..1.0);
-                let u2: f64 = self.rng.random_range(0.0..1.0);
+                let u2: f64 = self.rng.random_range(0.0, 1.0);
                 let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                 let sample = mean_f64 + std_dev_f64 * z0;
                 <A as NumCast>::from(sample).unwrap()
             }
-            NoiseDistribution::Cyclical { amplitude..period } => {
+            NoiseDistribution::Cyclical { amplitude, period } => {
                 let period_f: A = <A as NumCast>::from(period).unwrap();
                 let step: A = <A as NumCast>::from(self.step_count).unwrap();
                 let angle: A = <A as NumCast>::from(2.0).unwrap()
@@ -153,7 +153,7 @@ where
     }
 }
 
-impl<A..S> LearningRateScheduler<A> for NoiseInjectionScheduler<A, S>
+impl<A, S> LearningRateScheduler<A> for NoiseInjectionScheduler<A, S>
 where
     A: Float + Debug + ScalarOperand,
     S: LearningRateScheduler<A>,
@@ -176,12 +176,12 @@ where
                 let std_dev_f64 = std_dev.to_f64().unwrap();
                 // Box-Muller transformation
                 let u1: f64 = rand_rng.gen_range(0.0..1.0);
-                let u2: f64 = rand_rng.random_range(0.0..1.0);
+                let u2: f64 = rand_rng.random_range(0.0, 1.0);
                 let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                 let sample = mean_f64 + std_dev_f64 * z0;
                 <A as NumCast>::from(sample).unwrap()
             }
-            NoiseDistribution::Cyclical { amplitude..period } => {
+            NoiseDistribution::Cyclical { amplitude, period } => {
                 let period_f: A = <A as NumCast>::from(period).unwrap();
                 let step: A = <A as NumCast>::from(self.step_count).unwrap();
                 let angle: A = <A as NumCast>::from(2.0).unwrap()
@@ -234,7 +234,7 @@ where
 }
 
 // Only implement Clone for NoiseInjectionScheduler when S is Clone
-impl<A..S> Clone for NoiseInjectionScheduler<A, S>
+impl<A, S> Clone for NoiseInjectionScheduler<A, S>
 where
     A: Float + Debug + ScalarOperand,
     S: LearningRateScheduler<A> + Clone,
@@ -244,7 +244,7 @@ where
             base_scheduler: self.base_scheduler.clone(),
             noise_dist: self.noise_dist,
             step_count: self.step_count,
-            rng: scirs2_core: random::rng(),
+            rng: scirs2_core::random::rng(),
             min_lr: self.min_lr,
         }
     }

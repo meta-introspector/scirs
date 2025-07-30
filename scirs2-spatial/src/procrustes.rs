@@ -208,7 +208,8 @@ fn procrustes_basic_impl(
 pub fn procrustes_extended(
     data1: &ArrayView2<'_, f64>,
     data2: &ArrayView2<'_, f64>,
-    scaling: bool_reflection: bool,
+    scaling: bool,
+    _reflection: bool,
     translation: bool,
 ) -> SpatialResult<(Array2<f64>, ProcrustesParams, f64)> {
     // Validate inputs

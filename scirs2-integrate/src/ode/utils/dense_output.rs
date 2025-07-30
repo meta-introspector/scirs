@@ -222,7 +222,7 @@ impl<F: IntegrateFloat> DOP853Interpolant<F> {
         // Normalized time (theta) in [0,1]
         let theta = (t - self.t0) / self.h;
 
-        if theta < F::zero() || theta >, F::one() {
+        if theta < F::zero() || theta > F::one() {
             return Err(IntegrateError::ValueError(
                 "Evaluation point is outside of the step".to_string(),
             ));
@@ -284,7 +284,7 @@ impl<F: IntegrateFloat> RadauInterpolant<F> {
         // Normalized time (theta) in [0,1]
         let theta = (t - self.t0) / self.h;
 
-        if theta < F::zero() || theta >, F::one() {
+        if theta < F::zero() || theta > F::one() {
             return Err(IntegrateError::ValueError(
                 "Evaluation point is outside of the step".to_string(),
             ));

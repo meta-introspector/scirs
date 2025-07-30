@@ -4,9 +4,9 @@
 //! scirs2-fft results with known correct values and other implementations.
 
 use ndarray::Array2;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::identities::Zero;
-use scirs2__fft::{dct, fft, fft2, frft, frft_complex, ifft, irfft, rfft};
+use scirs2_fft::{dct, fft, fft2, frft, frft_complex, ifft, irfft, rfft};
 use std::f64::consts::PI;
 
 /// Accuracy test result
@@ -435,7 +435,8 @@ mod tests {
                 "fft2_accuracy" => assert!(result.mean_error < 1e-8, "2D FFT accuracy"),
                 "dct_ii_frequency" => assert!(result.max_error < 1.0, "DCT frequency detection"),
                 // The FrFT additivity property has known numerical issues as documented in FRFT_NUMERICAL_ISSUES.md
-                "frft_additivity" => assert!(result.relative_error < 15.0, "FrFT additivity", _ => {}
+                "frft_additivity" => assert!(result.relative_error < 15.0, "FrFT additivity"),
+                _ => {}
             }
         }
     }

@@ -329,7 +329,7 @@ where
                 // Get all blocks for this row
                 let mut row_blocks: Vec<(usize, Vec<Vec<T>>)> = block_data
                     .iter()
-                    .filter(|&(&(r_)_)| r == row_idx)
+                    .filter(|&(&(r, _), _)| r == row_idx)
                     .map(|(&(_, c), block)| (c, block.clone()))
                     .collect();
 

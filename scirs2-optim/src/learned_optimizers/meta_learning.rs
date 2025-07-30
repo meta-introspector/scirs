@@ -1195,7 +1195,7 @@ impl<
         let few_shot_learner = FewShotLearner::new(&_config.few_shot_settings)?;
 
         Ok(Self {
-            _config,
+            config: _config,
             meta_learner,
             task_manager,
             meta_validator,
@@ -1553,7 +1553,7 @@ impl<
         let adaptation_history = VecDeque::with_capacity(1000);
 
         Ok(Self {
-            _config,
+            config: _config,
             inner_optimizer,
             outer_optimizer,
             gradient_engine,
@@ -1769,13 +1769,14 @@ impl<T: Float + Default + Clone + std::iter::Sum, D: Dimension> MAMLLearner<T, D
 
 /// Meta-validation system for meta-learning
 pub struct MetaValidator<T: Float> {
-    config: MetaLearningConfig_phantom: std::marker::PhantomData<T>,
+    config: MetaLearningConfig,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> MetaValidator<T> {
     pub fn new(_config: &MetaLearningConfig) -> Result<Self> {
         Ok(Self {
-            _config: _config.clone(), _phantom: std::marker::PhantomData,
+            config: _config.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
@@ -1793,18 +1794,20 @@ impl<T: Float + Default + Clone> MetaValidator<T> {
 
 /// Adaptation engine for meta-learning
 pub struct AdaptationEngine<T: Float> {
-    config: MetaLearningConfig_phantom: std::marker::PhantomData<T>,
+    config: MetaLearningConfig,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> AdaptationEngine<T> {
     pub fn new(_config: &MetaLearningConfig) -> Result<Self> {
         Ok(Self {
-            _config: _config.clone(), _phantom: std::marker::PhantomData,
+            config: _config.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
     pub fn adapt(
-        &mut self_task: &MetaTask<T>, _meta_parameters: &HashMap<String, Array1<T>>, _meta_learner: &mut dyn MetaLearner<T>, _inner_steps: usize,
+        &mut self,
+        task: &MetaTask<T>, _meta_parameters: &HashMap<String, Array1<T>>, _meta_learner: &mut dyn MetaLearner<T>, _inner_steps: usize,
     ) -> Result<TaskAdaptationResult<T>> {
         // Placeholder adaptation implementation
         Ok(TaskAdaptationResult {
@@ -1823,13 +1826,14 @@ impl<T: Float + Default + Clone> AdaptationEngine<T> {
 
 /// Transfer learning manager
 pub struct TransferLearningManager<T: Float> {
-    settings: TransferLearningSettings_phantom: std::marker::PhantomData<T>,
+    settings: TransferLearningSettings,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> TransferLearningManager<T> {
     pub fn new(_settings: &TransferLearningSettings) -> Result<Self> {
         Ok(Self {
-            _settings: _settings.clone(), _phantom: std::marker::PhantomData,
+            settings: _settings.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
@@ -1852,13 +1856,14 @@ impl<T: Float + Default + Clone> TransferLearningManager<T> {
 
 /// Continual learning system
 pub struct ContinualLearningSystem<T: Float> {
-    settings: ContinualLearningSettings_phantom: std::marker::PhantomData<T>,
+    settings: ContinualLearningSettings,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> ContinualLearningSystem<T> {
     pub fn new(_settings: &ContinualLearningSettings) -> Result<Self> {
         Ok(Self {
-            _settings: _settings.clone(), _phantom: std::marker::PhantomData,
+            settings: _settings.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
@@ -1894,13 +1899,14 @@ impl<T: Float + Default + Clone> ContinualLearningSystem<T> {
 
 /// Multi-task coordinator
 pub struct MultiTaskCoordinator<T: Float> {
-    settings: MultiTaskSettings_phantom: std::marker::PhantomData<T>,
+    settings: MultiTaskSettings,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> MultiTaskCoordinator<T> {
     pub fn new(_settings: &MultiTaskSettings) -> Result<Self> {
         Ok(Self {
-            _settings: _settings.clone(), _phantom: std::marker::PhantomData,
+            settings: _settings.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
@@ -1947,7 +1953,10 @@ impl<T: Float + Default + Clone> MetaOptimizationTracker<T> {
     }
 
     pub fn record_epoch(
-        &mut self_epoch: usize_training, _result: &TrainingResult_validation_result: &ValidationResult,
+        &mut self,
+        _epoch: usize,
+        _training_result: &TrainingResult,
+        _validation_result: &ValidationResult,
     ) -> Result<()> {
         self.step_count += 1;
         // Placeholder implementation
@@ -1970,18 +1979,20 @@ impl<T: Float + Default + Clone> MetaOptimizationTracker<T> {
 
 /// Task distribution manager
 pub struct TaskDistributionManager<T: Float> {
-    config: MetaLearningConfig_phantom: std::marker::PhantomData<T>,
+    config: MetaLearningConfig,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> TaskDistributionManager<T> {
     pub fn new(_config: &MetaLearningConfig) -> Result<Self> {
         Ok(Self {
-            _config: _config.clone(), _phantom: std::marker::PhantomData,
+            config: _config.clone(), _phantom: std::marker::PhantomData,
         })
     }
 
     pub fn sample_task_batch(
-        &self_tasks: &[MetaTask<T>],
+        &self,
+        _tasks: &[MetaTask<T>],
         batch_size: usize,
     ) -> Result<Vec<MetaTask<T>>> {
         // Placeholder implementation - sample random _tasks
@@ -1991,13 +2002,14 @@ impl<T: Float + Default + Clone> TaskDistributionManager<T> {
 
 /// Few-shot learner
 pub struct FewShotLearner<T: Float> {
-    settings: FewShotSettings_phantom: std::marker::PhantomData<T>,
+    settings: FewShotSettings,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> FewShotLearner<T> {
     pub fn new(_settings: &FewShotSettings) -> Result<Self> {
         Ok(Self {
-            _settings: _settings.clone(), _phantom: std::marker::PhantomData,
+            settings: _settings.clone(), _phantom: std::marker::PhantomData,
         })
     }
 

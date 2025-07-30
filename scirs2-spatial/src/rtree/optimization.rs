@@ -256,12 +256,14 @@ impl<T: Clone> RTree<T> {
             // Calculate overlap between nodes at this level
             for i in 0..current_level_nodes.len() - 1 {
                 let node_i_mbr = match current_level_nodes[i].mbr() {
-                    Ok(Some(mbr)) => mbr_ => continue,
+                    Ok(Some(mbr)) => mbr,
+                    _ => continue,
                 };
 
                 for node_j in current_level_nodes.iter().skip(i + 1) {
                     let node_j_mbr = match node_j.mbr() {
-                        Ok(Some(mbr)) => mbr_ => continue,
+                        Ok(Some(mbr)) => mbr,
+                        _ => continue,
                     };
 
                     // Check if MBRs intersect

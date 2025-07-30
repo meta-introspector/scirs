@@ -26,7 +26,7 @@ impl<A: Float + Debug + ScalarOperand> ConstantScheduler<A> {
     /// # Example
     ///
     /// ```
-    /// use scirs2__optim::schedulers::{ConstantScheduler, LearningRateScheduler};
+    /// use scirs2_optim::schedulers::{ConstantScheduler, LearningRateScheduler};
     ///
     /// let mut scheduler = ConstantScheduler::new(0.1);
     /// assert_eq!(scheduler.get_learning_rate(), 0.1);
@@ -35,8 +35,8 @@ impl<A: Float + Debug + ScalarOperand> ConstantScheduler<A> {
     /// scheduler.step();
     /// assert_eq!(scheduler.get_learning_rate(), 0.1);
     /// ```
-    pub fn new(_learning_rate: A) -> Self {
-        Self { _learning_rate }
+    pub fn new(learning_rate: A) -> Self {
+        Self { learning_rate }
     }
 }
 

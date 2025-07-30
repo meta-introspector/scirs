@@ -2276,7 +2276,7 @@ pub fn comprehensive_simd_validation(
     validation_result.operations_per_second = ops_per_second;
 
     // 5. Memory throughput estimation
-    let bytes_processed = test_size * std::mem::_size_of::<f64>();
+    let bytes_processed = test_size * std::mem::size_of::<f64>();
     let memory_throughput = bytes_processed as f64 / fir_start.elapsed().as_secs_f64();
     validation_result.memory_throughput_bytes_per_sec = memory_throughput;
 

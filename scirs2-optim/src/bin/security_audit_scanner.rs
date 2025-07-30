@@ -753,7 +753,8 @@ impl DependencyScanner {
         vulns
     }
 
-    fn version_is_vulnerable(&self_version: &str, _affected_range: &str) -> bool {
+    fn version_is_vulnerable(&self,
+        version: &str, _affected_range: &str) -> bool {
         // Simplified _version checking - in practice would use semver parsing
         false // Most dependencies are likely not vulnerable
     }

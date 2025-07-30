@@ -55,7 +55,7 @@ pub use compressed_memmap::{
 };
 #[cfg(feature = "gpu")]
 pub use cross_device::{
-    create_cpu_array, create_cross_device_manager, create_gpu_array, to_best_device,
+    create_cpuarray, create_cross_device_manager, create_gpuarray, to_best_device,
     CrossDeviceManager, DeviceArray, DeviceBuffer, DeviceMemoryManager, DeviceMemoryPool,
     DeviceStream, DeviceType, KernelParam, ToDevice, ToHost, TransferDirection, TransferEvent,
     TransferMode, TransferOptions, TransferOptionsBuilder,
@@ -135,7 +135,7 @@ pub mod prelude {
     // GPU-specific exports
     #[cfg(feature = "gpu")]
     pub use super::{
-        create_cpu_array, create_cross_device_manager, create_gpu_array, to_best_device,
+        create_cpuarray, create_cross_device_manager, create_gpuarray, to_best_device,
     };
 
     // Parallel processing exports

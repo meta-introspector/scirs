@@ -7,7 +7,7 @@
 
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
-use crate::ode::utils::dense__output::DenseSolution;
+use crate::ode::utils::dense_output::DenseSolution;
 use ndarray::{Array1, ArrayView1};
 
 /// Direction of zero-crossing for event detection

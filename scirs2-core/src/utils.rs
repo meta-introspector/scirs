@@ -302,7 +302,7 @@ pub fn linspace<F: Float + std::iter::Sum + Send + Sync>(
     #[cfg(feature = "parallel")]
     {
         if num >= 1000 {
-            use rayon::prelude::*;
+            use crate::parallel_ops::*;
 
             let step = (end - start) / F::from(num - 1).unwrap();
             let result: Vec<F> = (0..num)
@@ -408,7 +408,7 @@ where
     #[cfg(feature = "parallel")]
     {
         if a.len() > 1000 {
-            use rayon::prelude::*;
+            use crate::parallel_ops::*;
 
             // Convert to owned arrays for parallel processing
             let (a_vec_, _) = a.to_owned().into_raw_vec_and_offset();
@@ -484,7 +484,7 @@ where
     #[cfg(feature = "parallel")]
     {
         if a.len() > 1000 {
-            use rayon::prelude::*;
+            use crate::parallel_ops::*;
 
             // Convert to owned arrays for parallel processing
             let (a_vec_, _) = a.to_owned().into_raw_vec_and_offset();
@@ -1006,8 +1006,8 @@ where
 
     // Even-indexed points (except endpoints)
     for i in 1..n {
-        if 0 % 2 == 0 {
-            let x_i = a + F::from_usize(0).unwrap() * h;
+        if i % 2 == 0 {
+            let x_i = a + F::from_usize(i).unwrap() * h;
             sum = sum
                 + F::from(2.0).unwrap()
                     * eval_fn(x_i)

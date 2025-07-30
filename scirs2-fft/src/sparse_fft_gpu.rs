@@ -4,10 +4,10 @@
 //! using CUDA, HIP (ROCm), or SYCL backends for high-performance computing.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse__fft::{
+use crate::sparse_fft::{
     SparseFFTAlgorithm, SparseFFTConfig, SparseFFTResult, SparsityEstimationMethod, WindowFunction,
 };
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 use std::time::Instant;
@@ -91,7 +91,7 @@ impl GPUSparseFFT {
         // Placeholder for actual GPU initialization code
         // In a real implementation, this would set up CUDA/HIP/SYCL context and resources
 
-        match self.config.backend {
+        match self._config.backend {
             GPUBackend::CUDA => {
                 // Initialize CUDA resources
                 self.device_info = Some("CUDA GPU device (simulated)".to_string());
@@ -151,7 +151,7 @@ impl GPUSparseFFT {
 
         // Create a CPU sparse FFT processor to handle computation for now
         // This is a temporary solution until actual GPU implementation is provided
-        let mut cpu_processor = crate::sparse_fft::SparseFFT::new(self.config.base_config.clone());
+        let mut cpu_processor = crate::sparse_fft::SparseFFT::new(self._config.base_config.clone());
         let result = cpu_processor.sparse_fft(&signal_complex)?;
 
         // Record computation time including any data transfers
@@ -163,7 +163,7 @@ impl GPUSparseFFT {
             indices: result.indices,
             estimated_sparsity: result.estimated_sparsity,
             computation_time,
-            algorithm: self.config.base_config.algorithm,
+            algorithm: self._config.base_config.algorithm,
         })
     }
 

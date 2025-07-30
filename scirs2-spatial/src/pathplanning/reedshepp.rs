@@ -13,7 +13,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::pathplanning::reedshepp::{ReedsSheppPlanner, Pose2D};
+//! use scirs2_spatial::pathplanning::reedshepp::{ReedsSheppPlanner, Pose2D};
 //!
 //! let start = Pose2D::new(0.0, 0.0, 0.0);  // x, y, theta
 //! let goal = Pose2D::new(1.0, 1.0, std::f64::consts::PI / 2.0);
@@ -349,7 +349,7 @@ impl ReedsSheppPlanner {
                     ReedsSheppPathType::CSC
                 }
             }
-            5 => ReedsSheppPathType::CCSCC_ =>, ReedsSheppPathType::CSC, // Default fallback
+            _ => ReedsSheppPathType::CSC, // Default fallback
         }
     }
 

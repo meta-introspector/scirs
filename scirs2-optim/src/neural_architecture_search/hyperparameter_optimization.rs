@@ -1764,7 +1764,8 @@ impl<T: Float + Send + Sync> HyperparameterOptimizationPipeline<T> {
         Ok(vec![])
     }
     
-    fn estimate_resource_requirements(&self_config: &ParameterConfiguration<T>) -> Result<ResourceRequirements<T>> {
+    fn estimate_resource_requirements(&self,
+        config: &ParameterConfiguration<T>) -> Result<ResourceRequirements<T>> {
         // Placeholder implementation
         Ok(ResourceRequirements {
             cpu_cores: 1,
@@ -1897,7 +1898,8 @@ impl<T: Float + Send + Sync> EvaluationScheduler<T> {
         Ok(())
     }
     
-    fn schedule_task(&mut self_task: EvaluationTask<T>) -> Result<()> {
+    fn schedule_task(&mut self,
+        task: EvaluationTask<T>) -> Result<()> {
         Ok(())
     }
     
@@ -1920,7 +1922,8 @@ impl<T: Float + Send + Sync> HPOResultDatabase<T> {
             statistics: DatabaseStatistics::default()}
     }
     
-    fn add_result(&mut self_result: HPOResult<T>) -> Result<()> {
+    fn add_result(&mut self,
+        result: HPOResult<T>) -> Result<()> {
         Ok(())
     }
     
@@ -1928,7 +1931,8 @@ impl<T: Float + Send + Sync> HPOResultDatabase<T> {
         self.results.clone()
     }
     
-    fn get_best_result(&self_objective: &str) -> Option<&HPOResult<T>> {
+    fn get_best_result(&self,
+        objective: &str) -> Option<&HPOResult<T>> {
         None
     }
     
@@ -1958,7 +1962,8 @@ impl<T: Float + Send + Sync> MultiFidelityManager<T> {
         Ok(configs)
     }
     
-    fn update_with_result(&mut self_result: &HPOResult<T>) -> Result<()> {
+    fn update_with_result(&mut self,
+        result: &HPOResult<T>) -> Result<()> {
         Ok(())
     }
 }
@@ -1973,7 +1978,8 @@ impl<T: Float + Send + Sync> EarlyStoppingController<T> {
             state: EarlyStoppingState::Active}
     }
     
-    fn update(&mut self_performance: T) {
+    fn update(&mut self,
+        performance: T) {
         // Would implement early stopping logic
     }
     
@@ -1992,7 +1998,8 @@ impl<T: Float + Send + Sync> EnsembleOptimizer<T> {
             combination_engine: CombinationEngine::new()})
     }
     
-    fn initialize(&mut self_config: &HPOConfig<T>) -> Result<()> {
+    fn initialize(&mut self,
+        config: &HPOConfig<T>) -> Result<()> {
         Ok(())
     }
     
@@ -2000,7 +2007,8 @@ impl<T: Float + Send + Sync> EnsembleOptimizer<T> {
         Ok(vec![])
     }
     
-    fn update(&mut self_result: &HPOResult<T>) -> Result<()> {
+    fn update(&mut self,
+        result: &HPOResult<T>) -> Result<()> {
         Ok(())
     }
 }

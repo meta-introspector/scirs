@@ -181,7 +181,7 @@ fn create_and_test_buffer(_size: usize, backend: GPUBackend) -> FFTResult<std::t
 
     let buffer = BufferDescriptor::new(
         _size,
-        std::mem::_size_of::<Complex64>(),
+        std::mem::size_of::<Complex64>(),
         BufferLocation::Device,
         BufferType::Input,
         0,
@@ -191,10 +191,10 @@ fn create_and_test_buffer(_size: usize, backend: GPUBackend) -> FFTResult<std::t
     let allocation_time = start.elapsed();
 
     // Simulate some work
-    let test_data = vec![0u8; _size * std::mem::_size_of::<Complex64>()];
+    let test_data = vec![0u8; _size * std::mem::size_of::<Complex64>()];
     buffer.copy_host_to_device(&test_data)?;
 
-    let mut result_data = vec![0u8; _size * std::mem::_size_of::<Complex64>()];
+    let mut result_data = vec![0u8; _size * std::mem::size_of::<Complex64>()];
     buffer.copy_device_to_host(&mut result_data)?;
 
     Ok(allocation_time)

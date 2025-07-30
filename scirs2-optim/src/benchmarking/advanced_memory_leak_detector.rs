@@ -632,7 +632,7 @@ impl AdvancedMemoryLeakDetector {
         let statistics = MemoryStatistics::default();
 
         Ok(Self {
-            _config,
+            config: _config,
             memory_history,
             active_sessions,
             leak_analyzer,
@@ -658,7 +658,7 @@ impl AdvancedMemoryLeakDetector {
         let session = MonitoringSession {
             session_id: session_id.clone(),
             start_time: Instant::now(),
-            _config: session_config,
+            config: session_config,
             snapshots: VecDeque::new(),
             analysis_results: None,
             statistics: SessionStatistics::default(),
@@ -972,8 +972,11 @@ impl AdvancedMemoryLeakDetector {
         growth_analysis: &GrowthAnalysis,
     ) -> Result<LeakCharacteristics> {
         let leak_type = match growth_analysis.trend_type {
-            GrowthTrendType::Linear =>, LeakType::ClassicLeak,
-            GrowthTrendType::Exponential => LeakType::UnboundedGrowth_ =>, LeakType::ClassicLeak,
+            GrowthTrendType::Linear => LeakType::ClassicLeak,
+            GrowthTrendType::Exponential => LeakType::UnboundedGrowth,
+            GrowthTrendType::NoGrowth => LeakType::ClassicLeak, // Consider as stabilized leak
+            GrowthTrendType::Polynomial => LeakType::UnboundedGrowth, // Polynomial growth can lead to unbounded
+            GrowthTrendType::Irregular => LeakType::ClassicLeak, // Default to classic for irregular patterns
         };
 
         Ok(LeakCharacteristics {
@@ -987,7 +990,7 @@ impl AdvancedMemoryLeakDetector {
 
     fn generate_recommendations(
         &self,
-        growth_analysis: &GrowthAnalysis_pattern, _analysis: &PatternAnalysisResult,
+        growth_analysis: &GrowthAnalysis, _analysis: &PatternAnalysisResult,
         leak_characteristics: &LeakCharacteristics,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
@@ -1030,7 +1033,8 @@ impl AdvancedMemoryLeakDetector {
             severity: match analysis_result.severity {
                 s if s >= 0.9 => AlertSeverity::Critical,
                 s if s >= 0.7 => AlertSeverity::High,
-                s if s >= 0.5 => AlertSeverity::Medium_ =>, AlertSeverity::Low,
+                s if s >= 0.5 => AlertSeverity::Medium,
+                _ => AlertSeverity::Low,
             },
             alert_type: MemoryAlertType::MemoryLeak,
             message: format!(
@@ -1046,7 +1050,8 @@ impl AdvancedMemoryLeakDetector {
     }
 
     fn update_statistics(
-        &self_session: &MonitoringSession_analysis, _result: &LeakAnalysisResult,
+        &self,
+        session: &MonitoringSession, _result: &LeakAnalysisResult,
     ) -> Result<()> {
         // Implementation would update global statistics
         Ok(())
@@ -1079,7 +1084,7 @@ pub struct MemoryLeakReport {
 impl LeakAnalysisEngine {
     fn new(_config: AnalysisConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             statistical_analyzer: StatisticalAnalyzer::new(StatisticalConfig::default()),
             pattern_detector: PatternDetector::new(PatternConfig::default()),
             anomaly_detector: AnomalyDetector::new(AnomalyConfig::default()),
@@ -1129,26 +1134,26 @@ impl LeakAnalysisEngine {
 
 impl StatisticalAnalyzer {
     fn new(_config: StatisticalConfig) -> Self {
-        Self { _config }
+        Self { config: _config }
     }
 }
 
 impl PatternDetector {
     fn new(_config: PatternConfig) -> Self {
-        Self { _config }
+        Self { config: _config }
     }
 }
 
 impl AnomalyDetector {
     fn new(_config: AnomalyConfig) -> Self {
-        Self { _config }
+        Self { config: _config }
     }
 }
 
 impl MemoryAlertSystem {
     fn new(_config: AlertConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             alert_history: VecDeque::new(),
             alert_handlers: Vec::new(),
         }

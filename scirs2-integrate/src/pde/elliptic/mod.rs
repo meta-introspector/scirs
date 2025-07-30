@@ -11,7 +11,7 @@
 use ndarray::{Array1, Array2};
 use std::time::Instant;
 
-use crate::pde::finite__difference::FiniteDifferenceScheme;
+use crate::pde::finite_difference::FiniteDifferenceScheme;
 use crate::pde::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, PDEError, PDEResult,
     PDESolution, PDESolverInfo,
@@ -58,7 +58,7 @@ pub struct EllipticOptions {
 }
 
 impl Default for EllipticOptions {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         EllipticOptions {
             max_iterations: 1000,
             tolerance: 1e-6,

@@ -722,7 +722,7 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
                 // Create MemoryMappedArray
                 Ok(MemoryMappedArray {
                     shape: header.shape,
-                    filepath: path.topath_buf(),
+                    file_path: path.to_path_buf(),
                     mode,
                     offset: data_offset,
                     size: header.total_elements,
@@ -745,7 +745,7 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
                 // Create MemoryMappedArray
                 Ok(MemoryMappedArray {
                     shape: header.shape,
-                    filepath: path.topath_buf(),
+                    file_path: path.to_path_buf(),
                     mode,
                     offset: data_offset,
                     size: header.total_elements,
@@ -767,7 +767,7 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
                 // Create MemoryMappedArray
                 Ok(MemoryMappedArray {
                     shape: header.shape,
-                    filepath: path.topath_buf(),
+                    file_path: path.to_path_buf(),
                     mode,
                     offset: data_offset,
                     size: header.total_elements,
@@ -833,7 +833,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// ```
     pub fn save_array<S, D>(
         data: &ndarray::ArrayBase<S, D>,
-        filepath: impl AsRef<Path>,
+        file_path: impl AsRef<Path>,
         metadata: Option<serde_json::Value>,
     ) -> CoreResult<Self>
     where
@@ -844,10 +844,10 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         let mmap = super::memmap::create_temp_mmap(data, AccessMode::ReadWrite, 0)?;
 
         // Save to the specified file with zero-copy serialization
-        mmap.save_zero_copy(&filepath, metadata)?;
+        mmap.save_zero_copy(&file_path, metadata)?;
 
         // Open the file we just created with read-write access
-        Self::load_zero_copy(&filepath, AccessMode::ReadWrite)
+        Self::load_zero_copy(&file_path, AccessMode::ReadWrite)
     }
 
     /// Open a zero-copy serialized memory-mapped array from a file.
@@ -879,8 +879,8 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn open_zero_copy(filepath: impl AsRef<Path>, mode: AccessMode) -> CoreResult<Self> {
-        Self::load_zero_copy(filepath, mode)
+    pub fn open_zero_copy(file_path: impl AsRef<Path>, mode: AccessMode) -> CoreResult<Self> {
+        Self::load_zero_copy(file_path, mode)
     }
 
     /// Read the metadata from a zero-copy serialized file without loading the entire array.
@@ -916,8 +916,8 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn read_metadata(filepath: impl AsRef<Path>) -> CoreResult<serde_json::Value> {
-        let path = filepath.as_ref();
+    pub fn read_metadata(file_path: impl AsRef<Path>) -> CoreResult<serde_json::Value> {
+        let path = file_path.as_ref();
 
         // Open file
         let mut file = File::open(path)?;
@@ -986,7 +986,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     where
         D: Dimension,
     {
-        self.asarray::<D>()
+        self.as_array::<D>()
     }
 
     /// Update metadata in a zero-copy serialized file without rewriting the entire array.
@@ -1030,10 +1030,10 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// # }
     /// ```
     pub fn update_metadata(
-        filepath: impl AsRef<Path>,
+        file_path: impl AsRef<Path>,
         metadata: serde_json::Value,
     ) -> CoreResult<()> {
-        let path = filepath.as_ref();
+        let path = file_path.as_ref();
 
         // Open file
         let mut file = OpenOptions::new().read(true).write(true).open(path)?;
@@ -1672,7 +1672,7 @@ mod tests {
         }
 
         // Check our copy-on-write view has the modifications
-        let cow_array = cow_mmap.asarray::<ndarray::Ix2>().unwrap();
+        let cow_array = cow_mmap.as_array::<ndarray::Ix2>().unwrap();
         for i in 0..10 {
             for j in 0..10 {
                 if i == j {

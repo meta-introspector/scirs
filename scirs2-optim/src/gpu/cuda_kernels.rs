@@ -4,7 +4,7 @@
 //! memory-intensive optimizers like Adam and LAMB that can benefit from
 //! custom GPU acceleration.
 
-use crate::adaptive__selection::OptimizerType;
+use crate::adaptive_selection::OptimizerType;
 use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};

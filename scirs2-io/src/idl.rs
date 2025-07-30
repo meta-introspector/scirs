@@ -188,7 +188,8 @@ impl IdlReader {
                                 // For now, just store it
                             }
                         }
-                        RecordType::EndMarker => break_ => {} // Skip other record types
+                        RecordType::EndMarker => break,
+                        _ => {} // Skip other record types
                     }
                 }
                 Err(e) => {
@@ -225,7 +226,8 @@ impl IdlReader {
             13 => RecordType::Header,
             16 => RecordType::HeapData,
             17 => RecordType::HeapHeader,
-            19 => RecordType::CompressedData_ => {
+            19 => RecordType::CompressedData,
+            _ => {
                 return Err(IoError::FormatError(format!(
                     "Unknown record type: {rec_type}",
                 )))
@@ -238,7 +240,8 @@ impl IdlReader {
                 let data = self.read_variable_data()?;
                 Ok((record_type, Some(name), Some(data)))
             }
-            RecordType::EndMarker => Ok((record_type, None, None), _ => {
+            RecordType::EndMarker => Ok((record_type, None, None)),
+            _ => {
                 // Skip unknown record types
                 if next_offset > 0 {
                     self.reader
@@ -268,7 +271,8 @@ impl IdlReader {
             12 => self.read_uint_array(),
             13 => self.read_ulong_array(),
             14 => self.read_long64_array(),
-            15 => self.read_ulong64_array(, _ => Err(IoError::FormatError(format!(
+            15 => self.read_ulong64_array(),
+            _ => Err(IoError::FormatError(format!(
                 "Unknown type code: {type_code}",
             ))),
         }
@@ -540,7 +544,8 @@ impl IdlReader {
                 12 => self.read_uint_array()?,
                 13 => self.read_ulong_array()?,
                 14 => self.read_long64_array()?,
-                15 => self.read_ulong64_array()?_ => {
+                15 => self.read_ulong64_array()?,
+                _ => {
                     // Unknown type, skip it by creating undefined
                     IdlType::Undefined
                 }
@@ -756,7 +761,8 @@ impl IdlWriter {
             IdlType::Long(array) => self.write_long_array(array),
             IdlType::Float(array) => self.write_float_array(array),
             IdlType::Double(array) => self.write_double_array(array),
-            IdlType::String(string) => self.write_string_data(string, _ => Err(IoError::Other(
+            IdlType::String(string) => self.write_string_data(string),
+            _ => Err(IoError::Other(
                 "Unsupported IDL type for writing".to_string(),
             )),
         }

@@ -150,7 +150,7 @@ impl AdvancedDatasetAnalyzer {
         let complexity_scores = (0..n_features)
             .into_par_iter()
             .map(|i| {
-                let feature = data.column(i);
+                let feature = "data".column(i);
                 self.calculate_feature_complexity(feature)
             })
             .collect::<Result<Vec<_>>>()?;
@@ -208,7 +208,7 @@ impl AdvancedDatasetAnalyzer {
         let feature_entropies: Vec<f64> = (0..n_features)
             .into_par_iter()
             .map(|i| {
-                let feature = data.column(i);
+                let feature = "data".column(i);
                 self.calculate_feature_complexity(feature).unwrap_or(0.0)
             })
             .collect();

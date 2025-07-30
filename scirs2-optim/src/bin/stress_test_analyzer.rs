@@ -4,7 +4,7 @@
 //! reports for memory and performance stress testing validation.
 
 use clap::{Arg, Command};
-use scirs2__optim::error::{OptimError, Result};
+use scirs2_optim::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;

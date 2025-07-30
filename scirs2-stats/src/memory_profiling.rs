@@ -207,7 +207,7 @@ impl MemoryAdaptiveAlgorithm {
 
     /// Get recommended algorithm based on data size
     pub fn recommend_algorithm<F: Float>(&self, data_size: usize) -> AlgorithmChoice {
-        let element_size = std::mem::_size_of::<F>();
+        let element_size = std::mem::size_of::<F>();
         let total_bytes = data_size * element_size;
 
         if total_bytes < 1_000_000 {

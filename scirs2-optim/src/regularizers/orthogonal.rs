@@ -19,7 +19,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__optim::regularizers::{OrthogonalRegularization, Regularizer};
+/// use scirs2_optim::regularizers::{OrthogonalRegularization, Regularizer};
 ///
 /// let ortho_reg = OrthogonalRegularization::new(0.01);
 /// let weights = array![[1.0, 0.0], [0.0, 1.0]];
@@ -40,8 +40,8 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> OrthogonalRegularization<
     /// # Arguments
     ///
     /// * `lambda` - Regularization strength
-    pub fn new(_lambda: A) -> Self {
-        Self { _lambda }
+    pub fn new(lambda: A) -> Self {
+        Self { lambda }
     }
 
     /// Compute orthogonal penalty for a 2D weight matrix

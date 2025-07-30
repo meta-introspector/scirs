@@ -24,30 +24,30 @@ fn main() {
     println!("Integrated Features Example");
 
     #[cfg(all(
-        feature = logging,
-        feature = profiling,
-        feature = random,
-        feature = memory_management,
-        feature = types
+        feature = "logging",
+        feature = "profiling",
+        feature = "random",
+        feature = "memory_management",
+        feature = "types"
     ))]
     run_integrated_example();
 
     #[cfg(not(all(
-        feature = logging,
-        feature = profiling,
-        feature = random,
-        feature = memory_management,
-        feature = types
+        feature = "logging",
+        feature = "profiling",
+        feature = "random",
+        feature = "memory_management",
+        feature = "types"
     )))]
     println!("Not all required features are enabled. Please run with --features=\"logging profiling random memory_management types\"");
 }
 
 #[cfg(all(
-    feature = logging,
-    feature = profiling,
-    feature = random,
-    feature = memory_management,
-    feature = types
+    feature = "logging",
+    feature = "profiling",
+    feature = "random",
+    feature = "memory_management",
+    feature = "types"
 ))]
 #[allow(dead_code)]
 fn run_integrated_example() {

@@ -267,7 +267,7 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
     }
 
     /// Evaluate the expression with given variable values
-    pub fn evaluate(_values: &HashMap<Variable, F>) -> IntegrateResult<F> {
+    pub fn evaluate(&self, _values: &HashMap<Variable, F>) -> IntegrateResult<F> {
 
         match self {
             Constant(c) => Ok(*c),
@@ -340,7 +340,8 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
 
         // Remove duplicates
         vars.sort_by(|a, b| match (&a.name, &b.name) {
-            (n1, n2) if n1 != n2 => n1.cmp(n2, _ => a.index.cmp(&b.index),
+            (n1, n2) if n1 != n2 => n1.cmp(n2),
+            _ => a.index.cmp(&b.index),
         });
         vars.dedup();
         vars
@@ -421,7 +422,8 @@ fn match_expressions<F: IntegrateFloat>(
 
     match (expr1, expr2) {
         (Constant(a), Constant(b)) => (*a - *b).abs() < F::epsilon(),
-        (Var(a), Var(b)) => a == b_ => false,
+        (Var(a), Var(b)) => a == b,
+        _ => false,
     }
 }
 
@@ -475,8 +477,9 @@ pub fn simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExp
             let b_simp = simplify(b);
             match (&a_simp, &b_simp) {
                 (Constant(x), Constant(y)) => Constant(*x + *y),
-                (Constant(x)_) if x.abs() < F::epsilon() => b_simp,
-                (_, Constant(y)) if y.abs() < F::epsilon() => a_simp_ => Add(Box::new(a_simp), Box::new(b_simp)),
+                (Constant(x), _) if x.abs() < F::epsilon() => b_simp,
+                (_, Constant(y)) if y.abs() < F::epsilon() => a_simp,
+                _ => Add(Box::new(a_simp), Box::new(b_simp)),
             }
         }
         Sub(a, b) => {
@@ -484,7 +487,8 @@ pub fn simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExp
             let b_simp = simplify(b);
             match (&a_simp, &b_simp) {
                 (Constant(x), Constant(y)) => Constant(*x - *y),
-                (_, Constant(y)) if y.abs() < F::epsilon() => a_simp_ => Sub(Box::new(a_simp), Box::new(b_simp)),
+                (_, Constant(y)) if y.abs() < F::epsilon() => a_simp,
+                _ => Sub(Box::new(a_simp), Box::new(b_simp)),
             }
         }
         Mul(a, b) => {
@@ -492,10 +496,11 @@ pub fn simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExp
             let b_simp = simplify(b);
             match (&a_simp, &b_simp) {
                 (Constant(x), Constant(y)) => Constant(*x * *y),
-                (Constant(x)_) if x.abs() < F::epsilon() => Constant(F::zero()),
+                (Constant(x), _) if x.abs() < F::epsilon() => Constant(F::zero()),
                 (_, Constant(y)) if y.abs() < F::epsilon() => Constant(F::zero()),
-                (Constant(x)_) if (*x - F::one()).abs() < F::epsilon() => b_simp,
-                (_, Constant(y)) if (*y - F::one()).abs() < F::epsilon() => a_simp_ => Mul(Box::new(a_simp), Box::new(b_simp)),
+                (Constant(x), _) if (*x - F::one()).abs() < F::epsilon() => b_simp,
+                (_, Constant(y)) if (*y - F::one()).abs() < F::epsilon() => a_simp,
+                _ => Mul(Box::new(a_simp), Box::new(b_simp)),
             }
         }
         Div(a, b) => {
@@ -503,15 +508,17 @@ pub fn simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExp
             let b_simp = simplify(b);
             match (&a_simp, &b_simp) {
                 (Constant(x), Constant(y)) if y.abs() > F::epsilon() => Constant(*x / *y),
-                (Constant(x)_) if x.abs() < F::epsilon() => Constant(F::zero()),
-                (_, Constant(y)) if (*y - F::one()).abs() < F::epsilon() => a_simp_ => Div(Box::new(a_simp), Box::new(b_simp)),
+                (Constant(x), _) if x.abs() < F::epsilon() => Constant(F::zero()),
+                (_, Constant(y)) if (*y - F::one()).abs() < F::epsilon() => a_simp,
+                _ => Div(Box::new(a_simp), Box::new(b_simp)),
             }
         }
         Neg(a) => {
             let a_simp = simplify(a);
             match &a_simp {
                 Constant(x) => Constant(-*x),
-                Neg(inner) => (**inner).clone(, _ => Neg(Box::new(a_simp)),
+                Neg(inner) => (**inner).clone(),
+                _ => Neg(Box::new(a_simp)),
             }
         }
         Pow(a, b) => {
@@ -521,8 +528,8 @@ pub fn simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExp
                 (Constant(x), Constant(y)) => Constant(x.powf(*y)),
                 (_, Constant(y)) if y.abs() < F::epsilon() => Constant(F::one()), // a^0 = 1
                 (_, Constant(y)) if (*y - F::one()).abs() < F::epsilon() => a_simp, // a^1 = a
-                (Constant(x)_) if x.abs() < F::epsilon() => Constant(F::zero()), // 0^b = 0 (for b > 0)
-                (Constant(x)_) if (*x - F::one()).abs() < F::epsilon() => Constant(F::one()), // 1^b = 1
+                (Constant(x), _) if x.abs() < F::epsilon() => Constant(F::zero()), // 0^b = 0 (for b > 0)
+                (Constant(x), _) if (*x - F::one()).abs() < F::epsilon() => Constant(F::one()), // 1^b = 1
                 _ => Pow(Box::new(a_simp), Box::new(b_simp)),
             }
         }
@@ -645,7 +652,7 @@ impl<F: IntegrateFloat> StdNeg for SymbolicExpression<F> {
     }
 }
 
-impl<F: IntegrateFloat>, fmt::Display for SymbolicExpression<F> {
+impl<F: IntegrateFloat> fmt::Display for SymbolicExpression<F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 
         match self {

@@ -67,9 +67,9 @@ impl<F: IntegrateFloat> MemoryPool<F> {
         }
 
         // Allocate new buffer
-        if self.total_allocated + _size * std::mem::_size_of::<F>() <= self.max_total_memory {
+        if self.total_allocated + _size * std::mem::size_of::<F>() <= self.max_total_memory {
             let buffer = vec![F::zero(); _size];
-            self.total_allocated += _size * std::mem::_size_of::<F>();
+            self.total_allocated += _size * std::mem::size_of::<F>();
 
             if _size <= self.max_buffer_size {
                 PooledBuffer::new(buffer, Some(_size))

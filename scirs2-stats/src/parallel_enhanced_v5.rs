@@ -249,7 +249,7 @@ where
                 sequential_time_ms: total_time * 0.2, // Estimate
                 thread_efficiency: 0.85, // Estimate based on overhead
                 load_balance_efficiency: 0.90, // Estimate
-                memory_overhead_bytes: m * n * std::mem::size, _of::<F>(),
+                memory_overhead_bytes: m * n * std::mem::size_of::<F>(),
                 cache_miss_rate: 0.1, // Estimate
             });
         }
@@ -305,7 +305,7 @@ where
                 sequential_time_ms: total_time * 0.05,
                 thread_efficiency: 0.92,
                 load_balance_efficiency: 0.88,
-                memory_overhead_bytes: n_bootstrap * data.len() * std::mem::size, _of::<F>(),
+                memory_overhead_bytes: n_bootstrap * data.len() * std::mem::size_of::<F>(),
                 cache_miss_rate: 0.05,
             });
         }
@@ -352,7 +352,7 @@ where
                 sequential_time_ms: total_time * 0.10,
                 thread_efficiency: 0.88,
                 load_balance_efficiency: 0.85,
-                memory_overhead_bytes: n_samples * std::mem::size, _of::<F>(),
+                memory_overhead_bytes: n_samples * std::mem::size_of::<F>(),
                 cache_miss_rate: 0.12,
             });
         }
@@ -405,7 +405,7 @@ where
                 sequential_time_ms: total_time * 0.15,
                 thread_efficiency: 0.82,
                 load_balance_efficiency: 0.78,
-                memory_overhead_bytes: data.len() * std::mem::size, _of::<F>() * 2,
+                memory_overhead_bytes: data.len() * std::mem::size_of::<F>() * 2,
                 cache_miss_rate: 0.15,
             });
         }
@@ -458,7 +458,7 @@ where
                 sequential_time_ms: total_time * 0.05,
                 thread_efficiency: 0.90,
                 load_balance_efficiency: 0.85,
-                memory_overhead_bytes: max_evaluations * parameter_bounds.len() * std::mem::size, _of::<F>(),
+                memory_overhead_bytes: max_evaluations * parameter_bounds.len() * std::mem::size_of::<F>(),
                 cache_miss_rate: 0.08,
             });
         }

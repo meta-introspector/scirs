@@ -54,7 +54,7 @@ pub struct MechanicalConfig {
 }
 
 impl Default for MechanicalConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             system_type: MechanicalSystemType::RigidBody,
             dt: 0.01,
@@ -174,7 +174,7 @@ pub struct MechanicalProperties {
 }
 
 impl Default for MechanicalProperties {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             mass: Array1::ones(1),
             inertia: vec![Array2::eye(3)],
@@ -216,7 +216,7 @@ pub struct IntegrationStats {
 }
 
 impl Default for IntegrationStats {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             constraint_iterations: 0,
             converged: true,
@@ -250,7 +250,7 @@ impl MechanicalIntegrator {
         &mut self,
         t: f64,
         state: &RigidBodyState,
-    ) -> Result<MechanicalIntegrationResult, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<MechanicalIntegrationResult, Box<dyn std::error::Error>> {
         let start_time = std::time::Instant::now();
 
         // Calculate forces and torques
@@ -310,7 +310,7 @@ impl MechanicalIntegrator {
         &self,
         t: f64,
         state: &RigidBodyState,
-    ) -> Result<(Array1<f64>, Array1<f64>), Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<(Array1<f64>, Array1<f64>), Box<dyn std::error::Error>> {
         let n_bodies = self.properties.mass.len();
         let mut forces = Array1::zeros(3 * n_bodies);
         let mut torques = Array1::zeros(3 * n_bodies);
@@ -359,7 +359,7 @@ impl MechanicalIntegrator {
         state: &RigidBodyState,
         forces: &Array1<f64>,
         torques: &Array1<f64>,
-    ) -> Result<RigidBodyState, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<RigidBodyState, Box<dyn std::error::Error>> {
         let dt = self.config.dt;
         let dt2 = dt * dt;
 
@@ -406,7 +406,7 @@ impl MechanicalIntegrator {
         state: &RigidBodyState,
         forces: &Array1<f64>,
         torques: &Array1<f64>,
-    ) -> Result<RigidBodyState, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<RigidBodyState, Box<dyn std::error::Error>> {
         let dt = self.config.dt;
         let dt2 = dt * dt;
 
@@ -441,7 +441,7 @@ impl MechanicalIntegrator {
         torques: &Array1<f64>,
         beta: f64,
         gamma: f64,
-    ) -> Result<RigidBodyState, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<RigidBodyState, Box<dyn std::error::Error>> {
         let dt = self.config.dt;
         let dt2 = dt * dt;
 
@@ -474,7 +474,7 @@ impl MechanicalIntegrator {
         state: &RigidBodyState,
         forces: &Array1<f64>,
         torques: &Array1<f64>,
-    ) -> Result<RigidBodyState, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<RigidBodyState, Box<dyn std::error::Error>> {
         // Similar to Verlet but with different formulation
         self.verlet_step(state, forces, torques)
     }
@@ -797,7 +797,8 @@ impl MechanicalIntegrator {
     /// Baumgarte stabilization
     fn enforce_baumgarte_stabilization(
         &self,
-        state: &mut RigidBodyState_alpha: f64,
+        state: &mut RigidBodyState,
+        alpha: f64,
         beta: f64,
     ) -> IntegrationResult {
         // Baumgarte stabilization: C̈ + 2α*Ċ + β²*C = 0
@@ -825,7 +826,7 @@ impl MechanicalIntegrator {
         &self,
         matrix: &Array2<f64>,
         rhs: &Array1<f64>,
-    ) -> Result<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
         let n = matrix.nrows();
         if n == 0 || n != matrix.ncols() || n != rhs.len() {
             return Err("Invalid matrix dimensions".into());
@@ -903,7 +904,7 @@ impl MechanicalIntegrator {
     fn project_to_constraint_manifold(
         &self,
         state: &mut RigidBodyState,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<(), Box<dyn std::error::Error>> {
         // For double pendulum, directly project to valid configuration
         if self.properties.constraints.len() == 2 && state.position.len() >= 6 {
             // Get parameters from the constraints (assuming they're for double pendulum)
@@ -1139,7 +1140,7 @@ pub mod systems {
         };
 
         // Gravitational forces
-        let gravity_force = Box::new(move |_t: f64_pos: &Array1<f64>, _vel: &Array1<f64>| {
+        let gravity_force = Box::new(move |_t: f64, _pos: &Array1<f64>, _vel: &Array1<f64>| {
             Array1::from_vec(vec![0.0, -m1 * 9.81, 0.0, 0.0, -m2 * 9.81, 0.0])
         });
 

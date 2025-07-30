@@ -827,7 +827,7 @@ impl<T: Float + Default + Clone> HigherOrderGradients<T> {
         CacheStats {
             cache_size: self.derivative_cache.len(),
             max_cache_size: self.memory_config.max_cache_size,
-            memory_usage: self.derivative_cache.len() * std::mem::size, _of::<Array1<T>>(),
+            memory_usage: self.derivative_cache.len() * std::mem::size_of::<Array1<T>>(),
         }
     }
 }

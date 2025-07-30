@@ -8,7 +8,7 @@
 //! - Persisting tuning results for future use
 //! - Detecting CPU features and adapting algorithms accordingly
 
-use num__complex::Complex64;
+use num_complex::Complex64;
 use rustfft::FftPlanner;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use crate::error::{FFTError, FFTResult};
-use crate::plan__serialization::PlanSerializationManager;
+use crate::plan_serialization::PlanSerializationManager;
 
 /// A range of FFT sizes to benchmark
 #[derive(Debug, Clone)]
@@ -166,7 +166,7 @@ impl AutoTuner {
             });
 
         Self {
-            _config,
+            config: _config,
             database,
             enabled: true,
         }
@@ -442,7 +442,7 @@ impl AutoTuner {
         // detect actual CPU model, features, etc.
         SystemInfo {
             cpu_model: String::from("Unknown"),
-            num_cores: num, _cpus: get(),
+            num_cores: num_cpus::get(),
             architecture: std::env::consts::ARCH.to_string(),
             cpu_features: detect_cpu_features(),
         }
@@ -550,9 +550,9 @@ impl AutoTuner {
             FftVariant::Cached => {
                 // Use the plan cache via PlanSerializationManager
                 // Create a plan directly - manager is not needed here
-                let (plan_) =
+                let (plan_, _) =
                     crate::plan_serialization::create_and_time_plan(actual_size, forward);
-                plan.process(&mut buffer);
+                plan_.process(&mut buffer);
             }
             FftVariant::SplitRadix => {
                 // Placeholder for split-radix FFT

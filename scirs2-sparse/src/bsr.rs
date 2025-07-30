@@ -48,7 +48,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::bsr::BsrMatrix;
+    /// use scirs2_sparse::bsr::BsrMatrix;
     ///
     /// // Create a 6x6 sparse matrix with 2x2 blocks
     /// let matrix = BsrMatrix::<f64>::new((6, 6), (2, 2)).unwrap();

@@ -838,7 +838,8 @@ pub mod monitoring {
         let durations: Vec<Duration> = _states
             .iter()
             .filter_map(|s| match (s.start_time, s.end_time) {
-                (Some(start), Some(end)) => Some(end - start, _ => None,
+                (Some(start), Some(end)) => Some(end - start),
+                _ => None,
             })
             .collect();
 
@@ -1453,7 +1454,7 @@ pub mod dynamic {
 /// Event-driven workflows
 pub mod events {
     use super::*;
-    use crossbeam__channel::{Receiver, Sender};
+    use crossbeam_channel::{Receiver, Sender};
 
     /// Event types that can trigger workflows
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1938,7 +1939,8 @@ pub mod visualization {
                     TaskType::Validation => "yellow",
                     TaskType::MLTraining => "orange",
                     TaskType::MLInference => "pink",
-                    TaskType::Export => "lightgray"_ => "white",
+                    TaskType::Export => "lightgray",
+                    _ => "white",
                 };
 
                 dot.push_str(&format!(
@@ -1973,7 +1975,8 @@ pub mod visualization {
                     TaskType::Validation => "{",
                     TaskType::MLTraining => "[[",
                     TaskType::MLInference => "((",
-                    TaskType::Export => "["_ => "[",
+                    TaskType::Export => "[",
+                    _ => "[",
                 };
 
                 let close = match task.task_type {
@@ -1982,7 +1985,8 @@ pub mod visualization {
                     TaskType::Validation => "}",
                     TaskType::MLTraining => "]]",
                     TaskType::MLInference => "))",
-                    TaskType::Export => "]"_ => "]",
+                    TaskType::Export => "]",
+                    _ => "]",
                 };
 
                 mermaid.push_str(&format!("    {}{}{}{}\n", task.id, shape, task.name, close));
@@ -2013,7 +2017,8 @@ pub mod visualization {
                     let status = match task_state.status {
                         TaskStatus::Success => "done",
                         TaskStatus::Failed => "crit",
-                        TaskStatus::Running => "active"_ => "",
+                        TaskStatus::Running => "active",
+                        _ => "",
                     };
 
                     timeline.push_str(&format!(

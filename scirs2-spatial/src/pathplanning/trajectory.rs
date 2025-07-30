@@ -14,7 +14,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::pathplanning::trajectory::{TrajectoryOptimizer, TrajectoryPoint, TrajectoryConstraints};
+//! use scirs2_spatial::pathplanning::trajectory::{TrajectoryOptimizer, TrajectoryPoint, TrajectoryConstraints};
 //!
 //! let start = TrajectoryPoint::new(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // x, y, vx, vy, ax, ay
 //! let goal = TrajectoryPoint::new(5.0, 3.0, 0.0, 0.0, 0.0, 0.0);
@@ -124,7 +124,7 @@ pub struct TrajectoryConstraints {
 }
 
 impl Default for TrajectoryConstraints {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             max_velocity: 10.0,
             max_acceleration: 5.0,
@@ -164,7 +164,7 @@ impl CircularObstacle {
     }
 
     /// Check if a point is inside the obstacle (with safety margin)
-    pub fn contains(x: f64, y: f64, safety_margin: f64) -> bool {
+    pub fn contains(&self, x: f64, y: f64, safety_margin: f64) -> bool {
         let distance = ((x - self.x).powi(2) + (y - self.y).powi(2)).sqrt();
         distance < self.radius + safety_margin
     }

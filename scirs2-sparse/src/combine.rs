@@ -103,7 +103,8 @@ where
         "csr" => CsrArray::from_triplets(&rows, &cols, &data, (m, n), false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "coo" => CooArray::from_triplets(&rows, &cols, &data, (m, n), false)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
@@ -200,7 +201,8 @@ where
         "csr" => CsrArray::from_triplets(&rows, &cols, &data, (m, n), false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "coo" => CooArray::from_triplets(&rows, &cols, &data, (m, n), false)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
@@ -294,7 +296,8 @@ where
         "csr" => CsrArray::from_triplets(&rows, &cols, &data, (total_rows, total_cols), false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "coo" => CooArray::from_triplets(&rows, &cols, &data, (total_rows, total_cols), false)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
@@ -369,7 +372,8 @@ where
         "csr" => CsrArray::from_triplets(&tril_rows, &tril_cols, &tril_data, shape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "coo" => CooArray::from_triplets(&tril_rows, &tril_cols, &tril_data, shape, false)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
@@ -444,7 +448,8 @@ where
         "csr" => CsrArray::from_triplets(&triu_rows, &triu_cols, &triu_data, shape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "coo" => CooArray::from_triplets(&triu_rows, &triu_cols, &triu_data, shape, false)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
@@ -573,7 +578,8 @@ where
         "csr" => CsrArray::from_triplets(&out_rows, &out_cols, &out_data, output_shape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "coo" => CooArray::from_triplets(&out_rows, &out_cols, &out_data, output_shape, false)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
@@ -703,7 +709,8 @@ where
             "csr" => CsrArray::from_triplets(&rows, &cols, &data, output_shape, true)
                 .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
             "coo" => CooArray::from_triplets(&rows, &cols, &data, output_shape, true)
-                .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
+                .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+            _ => Err(SparseError::ValueError(format!(
                 "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
             ))),
         };
@@ -749,7 +756,8 @@ where
         "csr" => CsrArray::from_triplets(&rows, &cols, &data, output_shape, true)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "coo" => CooArray::from_triplets(&rows, &cols, &data, output_shape, true)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
@@ -936,7 +944,7 @@ where
             if let Some(block) = blocks[i][j] {
                 let (block_rows, block_cols, block_data) = block.find();
 
-                for (((&row, &col), &val)_) in block_rows
+                for (((&row, &col), &val)) in block_rows
                     .iter()
                     .zip(block_cols.iter())
                     .zip(block_data.iter())
@@ -955,7 +963,8 @@ where
         "csr" => CsrArray::from_triplets(&rows, &cols, &data, total_shape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         "coo" => CooArray::from_triplets(&rows, &cols, &data, total_shape, false)
-            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>, _ => Err(SparseError::ValueError(format!(
+            .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
+        _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
         ))),
     }
@@ -995,7 +1004,7 @@ where
         }
 
         // All diagonal elements must be 1
-        if (data[i] - T::one()).abs() >, T::epsilon() {
+        if (data[i] - T::one()).abs() > T::epsilon() {
             return false;
         }
     }

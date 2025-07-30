@@ -4,10 +4,10 @@
 //! and identifies potential optimization opportunities.
 
 use clap::{Arg, Command};
-use scirs2__optim::benchmarking::memory_leak_detector::{
+use scirs2_optim::benchmarking::memory_leak_detector::{
     AllocationType, MemoryAnomaly, MemoryPattern, MemoryUsageSnapshot,
 };
-use scirs2__optim::error::Result;
+use scirs2_optim::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;

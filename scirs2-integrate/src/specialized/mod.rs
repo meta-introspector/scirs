@@ -14,30 +14,31 @@ pub use finance::{
     StochasticPDESolver, VolatilityModel,
 };
 // Advanced-performance financial computing exports
-pub use finance::advanced_monte_carlo__engine::{
-    AdvancedMonteCarloEngine, OptionPricingResult, QuantumInspiredRNG, VarianceReductionSuite,
-};
-pub use finance::realtime_risk__engine::{
-    AlertSeverity, RealTimeRiskMonitor, RiskAlert, RiskAlertType, RiskDashboard, RiskSnapshot,
-};
-pub use fluid__dynamics::turbulence__models::{
+// TODO: These modules need to be created or mapped to existing modules
+// pub use finance::advanced_monte_carlo_engine::{
+//     AdvancedMonteCarloEngine, OptionPricingResult, QuantumInspiredRNG, VarianceReductionSuite,
+// };
+// pub use finance::realtime_risk_engine::{
+//     AlertSeverity, RealTimeRiskMonitor, RiskAlert, RiskAlertType, RiskDashboard, RiskSnapshot,
+// };
+pub use fluid_dynamics::turbulence_models::{
     FluidState3D, LESolver, RANSModel, RANSSolver, RANSState, SGSModel,
 };
-pub use fluid__dynamics::{
+pub use fluid_dynamics::{
     DealiasingStrategy, FluidBoundaryCondition, FluidState, NavierStokesParams, NavierStokesSolver,
     SpectralNavierStokesSolver,
 };
 // Advanced-performance fluid dynamics exports
-pub use fluid__dynamics::advanced_gpu__acceleration::{AdvancedGPUKernel, GPUMemoryPool};
-pub use fluid__dynamics::neural_adaptive__solver::{
+pub use fluid_dynamics::advanced_gpu_acceleration::{AdvancedGPUKernel, GPUMemoryPool};
+pub use fluid_dynamics::neural_adaptive_solver::{
     AdaptiveAlgorithmSelector, AlgorithmRecommendation, ProblemCharacteristics,
 };
-pub use fluid__dynamics::streaming__optimization::StreamingComputeManager;
+pub use fluid_dynamics::streaming_optimization::StreamingComputeManager;
 // Enhanced multiphase flow exports
-pub use fluid__dynamics::multiphase__flow::{
+pub use fluid_dynamics::multiphase_flow::{
     InterfaceTrackingMethod, MultiphaseFlowSolver, MultiphaseFlowState, PhaseProperties,
 };
-pub use quantum::quantum__algorithms::{
+pub use quantum::quantum_algorithms::{
     MultiBodyQuantumSolver, QuantumAnnealer, VariationalQuantumEigensolver,
 };
 pub use quantum::{
@@ -45,15 +46,16 @@ pub use quantum::{
     QuantumPotential, QuantumState, SchrodingerMethod, SchrodingerSolver,
 };
 // Quantum machine learning exports
-pub use quantum::quantum__algorithms::{
+pub use quantum::quantum_algorithms::{
     EntanglementPattern, QuantumFeatureMap, QuantumKernelParams, QuantumSVMModel,
     QuantumSupportVectorMachine,
 };
 // Enhanced quantum optimization exports
 pub use quantum::QuantumAnnealingSolver;
 // Enhanced financial modeling exports
-pub use finance::exotic__options::{
-    AveragingType, ExoticOption, ExoticOptionPricer, ExoticOptionType, PricingResult,
-    RainbowPayoffType,
-};
-pub use finance::risk__management::{PortfolioRiskMetrics, RiskAnalyzer, StressScenario};
+// TODO: Map to actual existing modules
+// pub use finance::exotic_options::{
+//     AveragingType, ExoticOption, ExoticOptionPricer, ExoticOptionType, PricingResult,
+//     RainbowPayoffType,
+// };
+// pub use finance::risk_management::{PortfolioRiskMetrics, RiskAnalyzer, StressScenario};

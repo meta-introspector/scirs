@@ -61,7 +61,9 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
     KDTreeOptimized<T, D> for KDTree<T, D>
 {
     fn directed_hausdorff_distance(
-        &self_points: &ArrayView2<T>, _seed: Option<u64>,
+        &self,
+        _points: &ArrayView2<T>,
+        _seed: Option<u64>,
     ) -> SpatialResult<(T, usize, usize)> {
         // This method implements an approximate directed Hausdorff distance
         // using the KD-tree for acceleration. It's faster than the direct method
@@ -114,7 +116,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
         Ok((max_dist, max_i, max_j))
     }
 
-    fn hausdorff_distance(_points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T> {
+    fn hausdorff_distance(&self, _points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T> {
         // First get the forward directed Hausdorff distance
         let (dist_forward__) = self.directed_hausdorff_distance(_points, seed)?;
 
@@ -136,7 +138,8 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
     }
 
     fn batch_nearest_neighbor(
-        &self_points: &ArrayView2<T>,
+        &self,
+        _points: &ArrayView2<T>,
     ) -> SpatialResult<(Array1<usize>, Array1<T>)> {
         // Check dimensions
         let tree_dims = self.ndim();

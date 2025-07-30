@@ -24,7 +24,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::realtime::{StreamClient, StreamProcessor, Protocol};
+//! use scirs2_io::realtime::{StreamClient, StreamProcessor, Protocol};
 //! use ndarray::Array1;
 //!
 //! #[tokio::main]
@@ -65,7 +65,7 @@ use tokio::time::{interval, sleep};
 use url;
 
 #[cfg(feature = "websocket")]
-use tokio__tungstenite::{connect_async, tungstenite::protocol::Message};
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
 #[cfg(all(feature = "sse", feature = "async"))]
 use futures::StreamExt;
@@ -535,7 +535,7 @@ impl WebSocketConnection {
 #[async_trait::async_trait]
 impl StreamConnection for WebSocketConnection {
     async fn connect(&mut self) -> Result<()> {
-        use tokio__tungstenite::{connect_async, tungstenite::protocol::Message};
+        use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
         let url = url::Url::parse(&self.config.endpoint)
             .map_err(|e| IoError::ParseError(format!("Invalid WebSocket URL: {}", e)))?;
@@ -552,7 +552,7 @@ impl StreamConnection for WebSocketConnection {
 
     async fn receive(&mut self) -> Result<Vec<u8>> {
         use futures::SinkExt;
-        use tokio__tungstenite::tungstenite::protocol::Message;
+        use tokio_tungstenite::tungstenite::protocol::Message;
 
         if !self.connected || self.ws_stream.is_none() {
             return Err(IoError::ParseError("Not connected".to_string()));
@@ -603,7 +603,7 @@ impl StreamConnection for WebSocketConnection {
 
     async fn send(&mut self, data: &[u8]) -> Result<()> {
         use futures::SinkExt;
-        use tokio__tungstenite::tungstenite::protocol::Message;
+        use tokio_tungstenite::tungstenite::protocol::Message;
 
         if !self.connected || self.ws_stream.is_none() {
             return Err(IoError::FileError("Not connected".to_string()));
@@ -639,7 +639,7 @@ impl StreamConnection for WebSocketConnection {
 
     async fn close(&mut self) -> Result<()> {
         use futures::SinkExt;
-        use tokio__tungstenite::tungstenite::protocol::Message;
+        use tokio_tungstenite::tungstenite::protocol::Message;
 
         if let Some(ws_stream) = &mut self.ws_stream {
             let _ = ws_stream.send(Message::Close(None)).await;
@@ -796,7 +796,7 @@ impl StreamConnection for SSEConnection {
     async fn connect(&mut self) -> Result<()> {
         #[cfg(feature = "sse")]
         {
-            use eventsource__client::Client;
+            use eventsource_client::Client;
             use tokio::sync::mpsc;
 
             let url = url::Url::parse(&self.config.endpoint)
@@ -1038,7 +1038,7 @@ impl StreamConnection for GrpcStreamConnection {
                 // to send the data via a streaming RPC call
 
                 // Validate the data can be parsed as JSON (for this example)
-                let _json_data: serde, _json: Value = serde__json::from_slice(data).map_err(|e| {
+                let _json_data: serde_json::Value = serde_json::from_slice(data).map_err(|e| {
                     IoError::ParseError(format!("Invalid JSON data for gRPC: {}", e))
                 })?;
 

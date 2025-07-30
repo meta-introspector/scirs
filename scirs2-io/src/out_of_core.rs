@@ -168,7 +168,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         let metadata = ArrayMetadata {
             shape: shape.to_vec(),
             dtype: std::any::type_name::<T>().to_string(),
-            element_size: std::mem::size, _of::<T>(),
+            element_size: std::mem::size_of::<T>(),
             chunk_shape,
             compression: config.compression,
             num_chunks,
@@ -378,7 +378,8 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             1 => Some(CompressionAlgorithm::Gzip),
             2 => Some(CompressionAlgorithm::Zstd),
             3 => Some(CompressionAlgorithm::Lz4),
-            4 => Some(CompressionAlgorithm::Bzip2, _ => return Err(IoError::ParseError("Invalid compression type".to_string())),
+            4 => Some(CompressionAlgorithm::Bzip2),
+            _ => return Err(IoError::ParseError("Invalid compression type".to_string())),
         };
 
         // Calculate number of chunks

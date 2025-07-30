@@ -349,7 +349,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
         self.parameters
             .iter()
             .filter(|(_, metadata)| &metadata.layer_name == layer_id)
-            .map(|(param_id_)| param_id)
+            .map(|(param_id, _)| param_id)
             .collect()
     }
 
@@ -358,7 +358,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
         self.parameters
             .iter()
             .filter(|(_, metadata)| metadata.param_type == param_type)
-            .map(|(param_id_)| param_id)
+            .map(|(param_id, _)| param_id)
             .collect()
     }
 
@@ -369,7 +369,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> ParameterManager<A, D> {
             .filter(|(param_id, metadata)| {
                 metadata.requires_grad && !self.is_parameter_frozen(param_id)
             })
-            .map(|(param_id_)| param_id)
+            .map(|(param_id, _)| param_id)
             .collect()
     }
 }
@@ -436,7 +436,7 @@ pub mod forward_backward {
     }
 
     impl<
-            A: Float + ScalarOperand + Debug + 'static + num_traits::FromPrimitive,
+            A: Float + ScalarOperand + Debug + 'static + num_traits::FromPrimitive + std::iter::Sum,
             D: Dimension + 'static,
         > NeuralIntegration<A, D>
     {
@@ -591,7 +591,8 @@ pub mod forward_backward {
                 .config
                 .get("activation")
                 .and_then(|v| match v {
-                    LayerConfig::String(s) => Some(s.as_str(), _ => None,
+                    LayerConfig::String(s) => Some(s.as_str()),
+                    _ => None,
                 })
                 .unwrap_or("relu");
 
@@ -648,7 +649,8 @@ pub mod forward_backward {
                 .config
                 .get("dropout_rate")
                 .and_then(|v| match v {
-                    LayerConfig::Float(f) => Some(A::from(*f).unwrap(), _ => None,
+                    LayerConfig::Float(f) => Some(A::from(*f).unwrap()),
+                    _ => None,
                 })
                 .unwrap_or(A::from(0.5).unwrap());
 
@@ -797,7 +799,8 @@ pub mod forward_backward {
                 .config
                 .get("activation")
                 .and_then(|v| match v {
-                    LayerConfig::String(s) => Some(s.as_str(), _ => None,
+                    LayerConfig::String(s) => Some(s.as_str()),
+                    _ => None,
                 })
                 .unwrap_or("relu");
 
@@ -861,7 +864,8 @@ pub mod forward_backward {
                 .config
                 .get("dropout_rate")
                 .and_then(|v| match v {
-                    LayerConfig::Float(f) => Some(A::from(*f).unwrap(), _ => None,
+                    LayerConfig::Float(f) => Some(A::from(*f).unwrap()),
+                    _ => None,
                 })
                 .unwrap_or(A::from(0.5).unwrap());
 
@@ -1172,7 +1176,7 @@ pub mod architecture_aware {
         /// Apply layer-wise learning rate decay
         fn apply_layer_wise_decay(&mut self) -> Result<()> {
             // Extract layer numbers from layer names and apply decay
-            for (layer_id_) in self.param_manager.layer_architectures.clone() {
+            for (layer_id, _) in self.param_manager.layer_architectures.clone() {
                 if let Some(layer_num) = self.extract_layer_number(&layer_id) {
                     let decay_factor = A::from(0.95_f64.powi(layer_num as i32)).unwrap();
                     let mut rule = self
@@ -1247,7 +1251,7 @@ pub mod architecture_aware {
             // Count total layers
             let total_layers = self.param_manager.layer_architectures.len();
 
-            for (i, (layer_id_)) in self
+            for (i, (layer_id, _)) in self
                 .param_manager
                 .layer_architectures
                 .clone()
@@ -1559,7 +1563,7 @@ mod tests {
 
     #[test]
     fn test_architecture_aware_transformer() {
-        use crate::neural__integration::architecture_aware::*;
+        use crate::neural_integration::architecture_aware::*;
 
         let config = OptimizationConfig::default();
         let strategy = ArchitectureStrategy::Transformer {

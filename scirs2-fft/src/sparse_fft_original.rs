@@ -8,7 +8,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
 use crate::helper::next_fast_len;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use rand::Rng;
 use rand::SeedableRng;
@@ -1408,8 +1408,8 @@ impl SparseFFT {
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::sparse_fft;
-/// use scirs2__fft::sparse_fft::{SparseFFTAlgorithm, WindowFunction};
+/// use scirs2_fft::sparse_fft;
+/// use scirs2_fft::sparse_fft::{SparseFFTAlgorithm, WindowFunction};
 ///
 /// // Generate a sparse signal: a sum of 3 sinusoids
 /// let n = 1024;
@@ -1466,7 +1466,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{sparse_fft, reconstruct_spectrum};
+/// use scirs2_fft::{sparse_fft, reconstruct_spectrum};
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1508,8 +1508,8 @@ pub fn reconstruct_spectrum(
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{sparse_fft, reconstruct_time_domain};
-/// use num__complex::Complex64;
+/// use scirs2_fft::{sparse_fft, reconstruct_time_domain};
+/// use num_complex::Complex64;
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1562,7 +1562,7 @@ pub fn reconstruct_time_domain(
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{sparse_fft, reconstruct_high_resolution};
+/// use scirs2_fft::{sparse_fft, reconstruct_high_resolution};
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1606,7 +1606,7 @@ pub fn reconstruct_high_resolution(
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{sparse_fft, reconstruct_filtered};
+/// use scirs2_fft::{sparse_fft, reconstruct_filtered};
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1667,7 +1667,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::adaptive_sparse_fft;
+/// use scirs2_fft::adaptive_sparse_fft;
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1713,7 +1713,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::frequency_pruning_sparse_fft;
+/// use scirs2_fft::frequency_pruning_sparse_fft;
 ///
 /// // Generate a sparse signal
 /// let n = 1024;
@@ -1760,7 +1760,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::spectral_flatness_sparse_fft;
+/// use scirs2_fft::spectral_flatness_sparse_fft;
 /// use rand::{Rng, SeedableRng};
 ///
 /// // Generate a sparse signal with some noise
@@ -1826,7 +1826,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::sparse_fft2;
+/// use scirs2_fft::sparse_fft2;
 ///
 /// // Generate a 2D sparse signal (8x8)
 /// let rows = 8;
@@ -1865,8 +1865,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::sparse_fft2;
-/// use scirs2__fft::sparse_fft::WindowFunction;
+/// use scirs2_fft::sparse_fft2;
+/// use scirs2_fft::sparse_fft::WindowFunction;
 ///
 /// // Generate a 2D sparse signal (8x8)
 /// let rows = 8;
@@ -1928,7 +1928,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::sparse_fftn;
+/// use scirs2_fft::sparse_fftn;
 ///
 /// // Generate a 3D sparse signal (4x4x4)
 /// let shape = vec![4, 4, 4];
@@ -1963,8 +1963,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::sparse_fftn;
-/// use scirs2__fft::sparse_fft::WindowFunction;
+/// use scirs2_fft::sparse_fftn;
+/// use scirs2_fft::sparse_fft::WindowFunction;
 ///
 /// // Generate a 3D sparse signal (4x4x4)
 /// let shape = vec![4, 4, 4];

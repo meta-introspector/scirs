@@ -1277,7 +1277,8 @@ where
 fn predict_step<F>(
     x_history: &[Array1<F>],
     y_history: &[Array1<F>],
-    order: usize_h: F,
+    order: usize,
+    h: F,
 ) -> (Array1<F>, Array1<F>)
 where
     F: IntegrateFloat,

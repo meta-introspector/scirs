@@ -22,8 +22,8 @@ use std::fmt::Debug;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__optim::optimizer_composition::SequentialOptimizer;
-/// use scirs2__optim::optimizers::{SGD, Adam, Optimizer};
+/// use scirs2_optim::optimizer_composition::SequentialOptimizer;
+/// use scirs2_optim::optimizers::{SGD, Adam, Optimizer};
 ///
 /// // Create optimizers
 /// let sgd = SGD::new(0.1);
@@ -60,7 +60,7 @@ where
     ///
     /// * `optimizers` - List of optimizers to apply in sequence
     pub fn new(_optimizers: Vec<Box<dyn Optimizer<A, D>>>) -> Self {
-        Self { _optimizers }
+        Self { optimizers: _optimizers }
     }
 
     /// Add an optimizer to the sequence
@@ -178,7 +178,7 @@ where
     /// * `optimizer_index` - The index of the optimizer to use for this group
     pub fn new(_params: Array<A, D>, optimizer_index: usize) -> Self {
         Self {
-            _params,
+            params: _params,
             optimizer_index,
         }
     }
@@ -193,8 +193,8 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__optim::optimizer_composition::{ParallelOptimizer, ParameterGroup};
-/// use scirs2__optim::optimizers::{SGD, Adam, Optimizer};
+/// use scirs2_optim::optimizer_composition::{ParallelOptimizer, ParameterGroup};
+/// use scirs2_optim::optimizers::{SGD, Adam, Optimizer};
 ///
 /// // Create optimizers
 /// let sgd = SGD::new(0.1);
@@ -430,7 +430,7 @@ where
     A: Float + ScalarOperand + Debug,
     D: Dimension,
 {
-    fn step(&mut self_params: &Array<A, D>, _gradients: &Array<A, D>) -> Result<Array<A, D>> {
+    fn step(&mut self, _params: &Array<A, D>, _gradients: &Array<A, D>) -> Result<Array<A, D>> {
         // This implementation is a bit tricky since we have multiple parameter groups
         // We'll return an error message directing users to use update_all_parameters instead
         Err(OptimError::InvalidConfig(
@@ -492,8 +492,8 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__optim::optimizer_composition::ChainedOptimizer;
-/// use scirs2__optim::optimizers::{SGD, Adam, Optimizer};
+/// use scirs2_optim::optimizer_composition::ChainedOptimizer;
+/// use scirs2_optim::optimizers::{SGD, Adam, Optimizer};
 ///
 /// // Create optimizers
 /// let inner = SGD::new(0.1);
@@ -530,7 +530,7 @@ where
     /// * `inner` - The inner optimizer, applied first
     /// * `outer` - The outer optimizer, applied to the result of the inner optimizer
     pub fn new(_inner: Box<dyn Optimizer<A, D>>, outer: Box<dyn Optimizer<A, D>>) -> Self {
-        Self { _inner, outer }
+        Self { inner: _inner, outer }
     }
 
     /// Get a reference to the inner optimizer

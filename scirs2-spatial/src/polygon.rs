@@ -9,7 +9,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__spatial::polygon::point_in_polygon;
+//! use scirs2_spatial::polygon::point_in_polygon;
 //!
 //! // Create a square polygon
 //! let polygon = array![
@@ -51,7 +51,7 @@ use std::f64::consts::PI;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::polygon::point_in_polygon;
+/// use scirs2_spatial::polygon::point_in_polygon;
 ///
 /// // Create a square polygon
 /// let polygon = array![
@@ -132,7 +132,7 @@ pub fn point_in_polygon<T: Float>(_point: &[T], polygon: &ArrayView2<T>) -> bool
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::polygon::point_on_boundary;
+/// use scirs2_spatial::polygon::point_on_boundary;
 ///
 /// // Create a square polygon
 /// let polygon = array![
@@ -226,7 +226,7 @@ pub fn point_on_boundary<T: Float>(_point: &[T], polygon: &ArrayView2<T>, epsilo
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::polygon::polygon_area;
+/// use scirs2_spatial::polygon::polygon_area;
 ///
 /// // Create a 1x1 square
 /// let square = array![
@@ -277,7 +277,7 @@ pub fn polygon_area<T: Float>(_polygon: &ArrayView2<T>) -> T {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::polygon::polygon_centroid;
+/// use scirs2_spatial::polygon::polygon_centroid;
 ///
 /// // Create a 1x1 square
 /// let square = array![
@@ -370,7 +370,7 @@ pub fn polygon_centroid<T: Float>(_polygon: &ArrayView2<T>) -> Vec<T> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::polygon::polygon_contains_polygon;
+/// use scirs2_spatial::polygon::polygon_contains_polygon;
 ///
 /// // Create an outer polygon (large square)
 /// let outer = array![
@@ -565,7 +565,7 @@ fn segments_overlap<T: Float>(_a1: &[T], a2: &[T], b1: &[T], b2: &[T], epsilon: 
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::polygon::is_simple_polygon;
+/// use scirs2_spatial::polygon::is_simple_polygon;
 ///
 /// // A simple square
 /// let simple = array![
@@ -636,7 +636,7 @@ pub fn is_simple_polygon<T: Float>(_polygon: &ArrayView2<T>) -> bool {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::polygon::convex_hull_graham;
+/// use scirs2_spatial::polygon::convex_hull_graham;
 ///
 /// // A set of points
 /// let points = array![
@@ -778,7 +778,7 @@ pub fn convex_hull_graham<T: Float + std::fmt::Debug>(_points: &ArrayView2<T>) -
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::polygon::douglas_peucker_simplify;
+/// use scirs2_spatial::polygon::douglas_peucker_simplify;
 ///
 /// // A polygon with many points
 /// let complex_polygon = array![
@@ -911,7 +911,7 @@ fn perpendicular_distance<T: Float>(_point: &[T; 2], line_start: &[T; 2], line_e
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::polygon::visvalingam_whyatt_simplify;
+/// use scirs2_spatial::polygon::visvalingam_whyatt_simplify;
 ///
 /// // A polygon with some redundant vertices
 /// let polygon = array![

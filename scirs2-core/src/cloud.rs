@@ -1439,7 +1439,8 @@ mod tests {
         };
 
         match encryption.method {
-            EncryptionMethod::CustomerManaged => assert!(true, _ => assert!(false),
+            EncryptionMethod::CustomerManaged => assert!(true),
+            _ => assert!(false),
         }
         assert_eq!(encryption.key, Some("test-key-id".to_string()));
     }

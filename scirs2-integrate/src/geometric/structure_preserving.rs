@@ -19,10 +19,10 @@ type StiffnessFn = Box<dyn Fn(&ArrayView1<f64>) -> Array1<f64>>;
 /// Trait for geometric invariants
 pub trait GeometricInvariant {
     /// Evaluate the invariant quantity
-    fn evaluate(x: &ArrayView1<f64>, v: &ArrayView1<f64>, t: f64) -> f64;
+    fn evaluate(&self, x: &ArrayView1<f64>, v: &ArrayView1<f64>, t: f64) -> f64;
 
     /// Name of the invariant (for debugging)
-    fn name() -> &'static str;
+    fn name(&self) -> &'static str;
 }
 
 /// General structure-preserving integrator
@@ -109,7 +109,7 @@ impl EnergyPreservingMethod {
         q: &ArrayView1<f64>,
         p: &ArrayView1<f64>,
         dt: f64,
-    ) -> Result<(Array1<f64>, Array1<f64>)> {
+    ) -> IntegrateResult<(Array1<f64>, Array1<f64>)> {
         let h = 1e-8;
 
         // Compute gradients using finite differences
@@ -172,7 +172,7 @@ impl EnergyPreservingMethod {
         q: &ArrayView1<f64>,
         p: &ArrayView1<f64>,
         dt: f64,
-    ) -> Result<(Array1<f64>, Array1<f64>)> {
+    ) -> IntegrateResult<(Array1<f64>, Array1<f64>)> {
         // Simplified AVF - uses quadrature to average the vector field
         let _n_quad = 3; // Number of quadrature points
         let weights = [1.0 / 6.0, 4.0 / 6.0, 1.0 / 6.0]; // Simpson's rule weights
@@ -237,7 +237,7 @@ impl MomentumPreservingMethod {
         x: &ArrayView1<f64>,
         v: &ArrayView1<f64>,
         dt: f64,
-    ) -> Result<(Array1<f64>, Array1<f64>)> {
+    ) -> IntegrateResult<(Array1<f64>, Array1<f64>)> {
         // Compute forces
         let f = (self.force)(x);
 
@@ -389,7 +389,7 @@ impl SplittingIntegrator {
         q: &ArrayView1<f64>,
         p: &ArrayView1<f64>,
         dt: f64,
-    ) -> Result<(Array1<f64>, Array1<f64>)> {
+    ) -> IntegrateResult<(Array1<f64>, Array1<f64>)> {
         let mut q_current = q.to_owned();
         let mut p_current = p.to_owned();
 
@@ -475,7 +475,7 @@ impl EnergyMomentumIntegrator {
         u: &ArrayView1<f64>,
         v: &ArrayView1<f64>,
         dt: f64,
-    ) -> Result<(Array1<f64>, Array1<f64>)> {
+    ) -> IntegrateResult<(Array1<f64>, Array1<f64>)> {
         // Predict displacement
         let u_pred = u + v * dt;
 
@@ -542,7 +542,7 @@ impl ConstrainedIntegrator {
         p: &ArrayView1<f64>,
         dt: f64,
         force: &Array1<f64>,
-    ) -> Result<(Array1<f64>, Array1<f64>)> {
+    ) -> IntegrateResult<(Array1<f64>, Array1<f64>)> {
         // Unconstrained step
         let q_tilde = q + p * dt;
         let p_tilde = p + force * dt;
@@ -588,7 +588,7 @@ impl ConstrainedIntegrator {
         &self,
         a: &ndarray::Array2<f64>,
         b: &Array1<f64>,
-    ) -> Result<Array1<f64>> {
+    ) -> IntegrateResult<Array1<f64>> {
         // LU decomposition would be more robust
         let n = b.len();
         let mut x = Array1::zeros(n);
@@ -665,7 +665,7 @@ impl MultiSymplecticIntegrator {
         s: &GradientFn,
         dt: f64,
         dx: f64,
-    ) -> Result<ndarray::Array2<f64>> {
+    ) -> IntegrateResult<ndarray::Array2<f64>> {
         let (nx_) = z.dim();
         let mut z_new = z.clone();
 
@@ -714,7 +714,7 @@ pub mod invariants {
             (self.hamiltonian)(x, v)
         }
 
-        fn name(&self) -> &'_ str {
+        fn name(&self) -> &'static str {
             "Energy"
         }
     }
@@ -732,11 +732,11 @@ pub mod invariants {
     }
 
     impl GeometricInvariant for LinearMomentumInvariant {
-        fn evaluate(&self_x: &ArrayView1<f64>, v: &ArrayView1<f64>, _t: f64) -> f64 {
+        fn evaluate(&self, x: &ArrayView1<f64>, v: &ArrayView1<f64>, _t: f64) -> f64 {
             v[self.component] * self.masses[self.component]
         }
 
-        fn name(&self) -> &'_ str {
+        fn name(&self) -> &'static str {
             "Linear Momentum"
         }
     }
@@ -769,7 +769,7 @@ pub mod invariants {
             l
         }
 
-        fn name(&self) -> &'_ str {
+        fn name(&self) -> &'static str {
             "Angular Momentum"
         }
     }

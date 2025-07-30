@@ -119,7 +119,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Tokens: {tokens:?}");
 
     // Stem
-    let stemmed_tokens: Result<Vec<_>_> = tokens
+    let stemmed_tokens: Result<Vec<_>, _> = tokens
         .iter()
         .map(|token| porter_stemmer.stem(token))
         .collect();

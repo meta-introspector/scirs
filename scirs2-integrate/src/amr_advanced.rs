@@ -103,13 +103,13 @@ pub enum RefinementFlag {
 /// Trait for refinement criteria
 pub trait RefinementCriterion<F: IntegrateFloat>: Send + Sync {
     /// Evaluate refinement criterion for a cell
-    fn evaluate(_cell: &AdaptiveCell<F>, neighbors: &[&AdaptiveCell<F>]) -> F;
+    fn evaluate(&self, _cell: &AdaptiveCell<F>, neighbors: &[&AdaptiveCell<F>]) -> F;
 
     /// Get criterion name
-    fn name() -> &'static str;
+    fn name(&self) -> &'static str;
 
     /// Get criterion weight in combined evaluation
-    fn weight() -> F {
+    fn weight(&self) -> F {
         F::one()
     }
 }
@@ -145,7 +145,7 @@ pub struct CurvatureRefinementCriterion<F: IntegrateFloat> {
 /// Load balancing strategy trait
 pub trait LoadBalancer<F: IntegrateFloat>: Send + Sync {
     /// Balance computational load across processors/threads
-    fn balance(_hierarchy: &mut MeshHierarchy<F>) -> IntegrateResult<()>;
+    fn balance(&self, _hierarchy: &mut MeshHierarchy<F>) -> IntegrateResult<()>;
 }
 
 /// Zoltan-style geometric load balancer
@@ -322,7 +322,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Evaluate all refinement criteria for all cells
-    fn evaluate_refinement_criteria(&self) -> IntegrateResult<()> {
+    fn evaluate_refinement_criteria(&mut self) -> IntegrateResult<()> {
         for level in &mut self.mesh_hierarchy.levels {
             let cell_ids: Vec<CellId> = level.cells.keys().cloned().collect();
 
@@ -368,7 +368,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Flag cells for refinement or coarsening
-    fn flag_cells_for_adaptation(&self) -> IntegrateResult<(usize, usize)> {
+    fn flag_cells_for_adaptation(&mut self) -> IntegrateResult<(usize, usize)> {
         let mut refine_count = 0;
         let mut coarsen_count = 0;
 
@@ -548,7 +548,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Coarsen flagged cells
-    fn coarsen_flagged_cells(&self) -> IntegrateResult<usize> {
+    fn coarsen_flagged_cells(&mut self) -> IntegrateResult<usize> {
         let mut cells_coarsened = 0;
 
         // Process from finest to coarsest level
@@ -573,7 +573,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Coarsen children back to parent cell
-    fn coarsen_to_parent(&self, parent_id: CellId) -> IntegrateResult<bool> {
+    fn coarsen_to_parent(&mut self, parent_id: CellId) -> IntegrateResult<bool> {
         let child_ids = if let Some(children) = self.mesh_hierarchy.hierarchy_map.get(&parent_id) {
             children.clone()
         } else {
@@ -1315,7 +1315,7 @@ impl<F: IntegrateFloat + Send + Sync> RefinementCriterion<F> for FeatureDetectio
         feature_score
     }
 
-    fn name() -> &'static str {
+    fn name(&self) -> &'static str {
         "FeatureDetection"
     }
 }
@@ -1349,7 +1349,7 @@ impl<F: IntegrateFloat + Send + Sync> RefinementCriterion<F> for CurvatureRefine
         curvature
     }
 
-    fn name() -> &'static str {
+    fn name(&self) -> &'static str {
         "Curvature"
     }
 }

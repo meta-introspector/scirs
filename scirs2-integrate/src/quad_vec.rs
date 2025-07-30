@@ -26,7 +26,7 @@ pub struct QuadVecResult<T> {
     pub success: bool,
 }
 
-impl<T: fmt::Display>, fmt::Display for QuadVecResult<T> {
+impl<T: fmt::Display> fmt::Display for QuadVecResult<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -66,7 +66,7 @@ pub struct QuadVecOptions {
 }
 
 impl Default for QuadVecOptions {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             epsabs: 1e-10,
             epsrel: 1e-8,

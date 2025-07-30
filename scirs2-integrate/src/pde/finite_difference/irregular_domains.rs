@@ -55,14 +55,14 @@ impl std::fmt::Debug for BoundaryCondition {
 impl Clone for BoundaryCondition {
     fn clone(&self) -> Self {
         match self {
-            BoundaryCondition::Dirichlet(value) =>, BoundaryCondition::Dirichlet(*value),
-            BoundaryCondition::Neumann(value) =>, BoundaryCondition::Neumann(*value),
+            BoundaryCondition::Dirichlet(value) => BoundaryCondition::Dirichlet(*value),
+            BoundaryCondition::Neumann(value) => BoundaryCondition::Neumann(*value),
             BoundaryCondition::Robin { alpha, beta, value } => BoundaryCondition::Robin {
                 alpha: *alpha,
                 beta: *beta,
                 value: *value,
             },
-            BoundaryCondition::Custom(func) =>, BoundaryCondition::Custom(Arc::clone(func)),
+            BoundaryCondition::Custom(func) => BoundaryCondition::Custom(Arc::clone(func)),
         }
     }
 }
@@ -718,7 +718,7 @@ impl IrregularStencils {
         let mut constraint_matrix = Array2::<f64>::zeros((n, n));
         let mut rhs = Array1::<f64>::zeros(n);
 
-        for (i, &((x, y)_)) in neighbors.iter().enumerate() {
+        for (i, &(x, y)) in neighbors.iter().enumerate() {
             let dx = x - cx;
             let dy = y - cy;
 
@@ -1161,7 +1161,7 @@ mod tests {
         }
 
         // Source function: f(x,y) = 1 (constant source)
-        let source_fn = |_x: f64_y: f64| 1.0;
+        let source_fn = |_x: f64, _y: f64| 1.0;
 
         // Solve the PDE: ∇²u = 1 with u = 0 on boundary
         let solution = grid.solve_pde(Some(&source_fn), None).unwrap();

@@ -27,7 +27,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::quantum_classical_hybrid::{HybridSpatialOptimizer, HybridClusterer};
+//! use scirs2_spatial::quantum_classical_hybrid::{HybridSpatialOptimizer, HybridClusterer};
 //! use ndarray::array;
 //!
 //! // Quantum-classical hybrid clustering
@@ -52,7 +52,7 @@
 //! ```
 
 use crate::error::SpatialResult;
-use crate::quantum__inspired::{QuantumClusterer, QuantumState, VariationalQuantumEigensolver};
+use crate::quantum_inspired::{QuantumClusterer, QuantumState, VariationalQuantumEigensolver};
 use ndarray::{Array1, Array2, ArrayView2};
 use std::time::Instant;
 
@@ -153,7 +153,7 @@ pub struct HybridPerformanceMetrics {
 }
 
 impl Default for HybridSpatialOptimizer {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }

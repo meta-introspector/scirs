@@ -1008,6 +1008,7 @@ pub mod simd_ops {
 
 /// Memory prefetching utilities
 pub mod prefetch {
+    #[cfg(target_arch = "x86_64")]
     use std::arch::x86_64::*;
 
     /// Prefetch memory for read access

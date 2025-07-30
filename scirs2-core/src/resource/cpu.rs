@@ -310,7 +310,7 @@ impl CpuInfo {
 
         Ok(Self {
             model: "macOS CPU".to_string(),
-            vendor: Apple.to_string(),
+            vendor: "Apple".to_string(),
             physical_cores,
             logical_cores,
             base_frequency_ghz: 2.5,

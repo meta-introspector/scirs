@@ -15,7 +15,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::generic_traits::{SpatialPoint, SpatialArray};
+//! use scirs2_spatial::generic_traits::{SpatialPoint, SpatialArray};
 //! use ndarray::array;
 //!
 //! // Generic distance calculation
@@ -57,58 +57,58 @@ pub trait SpatialScalar:
     }
 
     /// Convert to f64 for interoperability
-    fn to_f64() -> Option<f64> {
+    fn to_f64(&self) -> Option<f64> {
         NumCast::from(*self)
     }
 
     /// Square root function
-    fn sqrt() -> Self {
-        Float::sqrt(self)
+    fn sqrt(&self) -> Self {
+        Float::sqrt(*self)
     }
 
     /// Absolute value function
-    fn abs() -> Self {
-        Float::abs(self)
+    fn abs(&self) -> Self {
+        Float::abs(*self)
     }
 
     /// Power function
-    fn powf(_exp: Self) -> Self {
-        Float::powf(self_exp)
+    fn powf(&self, _exp: Self) -> Self {
+        Float::powf(*self, _exp)
     }
 
     /// Natural logarithm
-    fn ln() -> Self {
-        Float::ln(self)
+    fn ln(&self) -> Self {
+        Float::ln(*self)
     }
 
     /// Exponential function
-    fn exp() -> Self {
-        Float::exp(self)
+    fn exp(&self) -> Self {
+        Float::exp(*self)
     }
 
     /// Sine function
-    fn sin() -> Self {
-        Float::sin(self)
+    fn sin(&self) -> Self {
+        Float::sin(*self)
     }
 
     /// Cosine function
-    fn cos() -> Self {
-        Float::cos(self)
+    fn cos(&self) -> Self {
+        Float::cos(*self)
     }
 
     /// Arctangent of y/x
-    fn atan2(_other: Self) -> Self {
-        Float::atan2(self_other)
+    fn atan2(&self, _other: Self) -> Self {
+        Float::atan2(*self, _other)
     }
 
     /// Check if the value is finite
-    fn is_finite() -> bool {
-        Float::is_finite(self)
+    fn is_finite(&self) -> bool {
+        Float::is_finite(*self)
     }
 
     /// Check if the value is NaN
-    fn is_nan() -> bool {
-        Float::is_nan(self)
+    fn is_nan(&self) -> bool {
+        Float::is_nan(*self)
     }
 
     /// SIMD-optimized squared Euclidean distance
@@ -128,11 +128,11 @@ pub trait SpatialScalar:
 }
 
 impl SpatialScalar for f32 {
-    fn epsilon(&self) -> Self {
+    fn epsilon() -> Self {
         f32::EPSILON
     }
 
-    fn max_finite(&self) -> Self {
+    fn max_finite() -> Self {
         f32::MAX
     }
 
@@ -176,11 +176,11 @@ impl SpatialScalar for f32 {
 }
 
 impl SpatialScalar for f64 {
-    fn epsilon(&self) -> Self {
+    fn epsilon() -> Self {
         f64::EPSILON
     }
 
-    fn max_finite(&self) -> Self {
+    fn max_finite() -> Self {
         f64::MAX
     }
 
@@ -228,10 +228,10 @@ impl SpatialScalar for f64 {
 /// allowing algorithms to work with vectors, arrays, and custom types.
 pub trait SpatialPoint<T: SpatialScalar> {
     /// Get the dimension of the point
-    fn dimension() -> usize;
+    fn dimension(&self) -> usize;
 
     /// Get the coordinate at the given index
-    fn coordinate(_index: usize) -> Option<T>;
+    fn coordinate(&self, _index: usize) -> Option<T>;
 
     /// Get all coordinates as a slice if possible (for efficiency)
     fn as_slice(&self) -> Option<&[T]> {
@@ -311,7 +311,7 @@ pub trait SpatialArray<T: SpatialScalar, P: SpatialPoint<T>> {
     fn dimension(&self) -> Option<usize>;
 
     /// Get a point at the given index
-    fn get_point(_index: usize) -> Option<P>;
+    fn get_point(&self, _index: usize) -> Option<P>;
 
     /// Iterate over all points
     fn iter_points(&self) -> Box<dyn Iterator<Item = P> + '_>;
@@ -429,11 +429,11 @@ impl<T: SpatialScalar> SpatialPoint<T> for Vec<T> {
         self.len()
     }
 
-    fn coordinate(_index: usize) -> Option<T> {
+    fn coordinate(&self, _index: usize) -> Option<T> {
         self.get(_index).copied()
     }
 
-    fn as_slice() -> Option<&[T]> {
+    fn as_slice(&self) -> Option<&[T]> {
         Some(self.as_slice())
     }
 
@@ -448,11 +448,11 @@ impl<T: SpatialScalar> SpatialPoint<T> for &[T] {
         self.len()
     }
 
-    fn coordinate(_index: usize) -> Option<T> {
+    fn coordinate(&self, _index: usize) -> Option<T> {
         self.get(_index).copied()
     }
 
-    fn as_slice() -> Option<&[T]> {
+    fn as_slice(&self) -> Option<&[T]> {
         Some(self)
     }
 
@@ -472,11 +472,11 @@ impl<T: SpatialScalar, const N: usize> SpatialPoint<T> for [T; N] {
         N
     }
 
-    fn coordinate(_index: usize) -> Option<T> {
+    fn coordinate(&self, _index: usize) -> Option<T> {
         self.get(_index).copied()
     }
 
-    fn as_slice() -> Option<&[T]> {
+    fn as_slice(&self) -> Option<&[T]> {
         Some(self.as_slice())
     }
 
@@ -616,11 +616,11 @@ impl<T: SpatialScalar> SpatialPoint<T> for Point<T> {
         self.coords.len()
     }
 
-    fn coordinate(_index: usize) -> Option<T> {
+    fn coordinate(&self, _index: usize) -> Option<T> {
         self.coords.get(_index).copied()
     }
 
-    fn as_slice() -> Option<&[T]> {
+    fn as_slice(&self) -> Option<&[T]> {
         Some(&self.coords)
     }
 
@@ -730,11 +730,11 @@ use ndarray::{ArrayView1, ArrayView2, Axis};
             self.len()
         }
 
-        fn coordinate(_index: usize) -> Option<T> {
+        fn coordinate(&self, _index: usize) -> Option<T> {
             self.get(_index).copied()
         }
 
-        fn as_slice() -> Option<&[T]> {
+        fn as_slice(&self) -> Option<&[T]> {
             self.as_slice()
         }
 
@@ -753,11 +753,11 @@ use ndarray::{ArrayView1, ArrayView2, Axis};
             self.len()
         }
 
-        fn coordinate(_index: usize) -> Option<T> {
+        fn coordinate(&self, _index: usize) -> Option<T> {
             self.get(_index).copied()
         }
 
-        fn as_slice() -> Option<&[T]> {
+        fn as_slice(&self) -> Option<&[T]> {
             self.as_slice()
         }
 
@@ -790,7 +790,7 @@ use ndarray::{ArrayView1, ArrayView2, Axis};
             }
         }
 
-        fn get_point(_index: usize) -> Option<Array1<T>> {
+        fn get_point(&self, _index: usize) -> Option<Array1<T>> {
             if _index < self.len() {
                 Some(self.array.row(_index).to_owned())
             } else {
@@ -798,7 +798,7 @@ use ndarray::{ArrayView1, ArrayView2, Axis};
             }
         }
 
-        fn iter_points() -> Box<dyn Iterator<Item = Array1<T>> + '_> {
+        fn iter_points(&self) -> Box<dyn Iterator<Item = Array1<T>> + '_> {
             Box::new(self.array.axis_iter(Axis(0)).map(|row| row.to_owned()))
         }
     }

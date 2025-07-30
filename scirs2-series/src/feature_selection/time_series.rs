@@ -71,7 +71,7 @@ impl TimeSeriesMethods {
             // Test correlations at different lags
             for _lag in 1..=max_lag {
                 if n_samples > _lag {
-                    let lagged_feature = feature_col.slice(ndarray::s![..n_samples - _lag]);
+                    let lagged_feature = "feature_col".slice(ndarray::s![..n_samples - _lag]);
                     let future_target = target.slice(ndarray::s![_lag..]);
 
                     let correlation =

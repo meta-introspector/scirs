@@ -209,7 +209,7 @@ impl DataCharacteristics {
             outlier_ratio,
             has_missing,
             memory_footprint_mb,
-            element_size: std::mem::size, _of::<f64>(),
+            element_size: std::mem::size_of::<f64>(),
         })
     }
 

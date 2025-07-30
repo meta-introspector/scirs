@@ -246,7 +246,8 @@ pub struct ConvergenceInfo<F> {
 /// Advanced bootstrap processor
 pub struct AdvancedBootstrapProcessor<F> {
     config: AdvancedBootstrapConfig,
-    rng: StdRng_phantom: PhantomData<F>,
+    rng: StdRng,
+    _phantom: PhantomData<F>,
 }
 
 impl<F> AdvancedBootstrapProcessor<F>
@@ -335,7 +336,8 @@ where
 
         // Determine effective sample size
         let effective_sample_size = match &self.config.bootstrap_type {
-            BootstrapType::Block { .. } => Some(self.compute_effective_sample_size(data.len()), _ => None,
+            BootstrapType::Block { .. } => Some(self.compute_effective_sample_size(data.len())),
+            _ => None,
         };
 
         Ok(AdvancedBootstrapResult {
@@ -366,7 +368,7 @@ where
 
         if self.config.parallel && self.config.n_bootstrap > 100 {
             // Parallel execution
-            let samples: Result<Vec<_>_> = (0..self.config.n_bootstrap)
+            let samples: Result<Vec<_>, _> = (0..self.config.n_bootstrap)
                 .into_par_iter()
                 .map(|_| {
                     let mut local_rng = {
@@ -407,7 +409,8 @@ where
 
     /// Stratified bootstrap maintaining group proportions
     fn stratified_bootstrap<T>(
-        &mut self..data: &ArrayView1<F>,
+        &mut self,
+        data: &ArrayView1<F>,
         strata: &[usize],
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<T> + Send + Sync + Copy,
     ) -> StatsResult<Array1<F>>
@@ -455,7 +458,8 @@ where
 
     /// Block bootstrap for time series data
     fn block_bootstrap<T>(
-        &mut self..data: &ArrayView1<F>,
+        &mut self,
+        data: &ArrayView1<F>,
         block_type: &BlockType,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<T> + Send + Sync + Copy,
     ) -> StatsResult<Array1<F>>

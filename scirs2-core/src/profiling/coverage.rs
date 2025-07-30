@@ -112,7 +112,7 @@ impl Default for CoverageConfig {
             branch_threshold: 70.0,
             integration_threshold: 60.0,
             report_formats: vec![ReportFormat::Html, ReportFormat::Json],
-            output_directory: PathBuf::from(coverage_reports),
+            output_directory: PathBuf::from("coverage_reports"),
             include_system_code: false,
             exclude_patterns: vec![
                 "*/tests/*".to_string(),
@@ -847,7 +847,7 @@ impl CoverageAnalyzer {
     }
 
     /// Record line execution
-    pub fn number(u32: TypeName) -> CoreResult<()> {
+    pub fn record_line_execution(&self, file_path: &Path, line_number: u32) -> CoreResult<()> {
         if let Ok(mut coverage) = self.file_coverage.write() {
             let file_coverage =
                 coverage
@@ -871,9 +871,7 @@ impl CoverageAnalyzer {
     }
 
     /// Record branch execution
-    pub fn id(&str: &str,
-        taken: bool,
-    ) -> CoreResult<()> {
+    pub fn record_branch_execution(&self, file_path: &Path, line_number: u32, branch_id: &str, taken: bool) -> CoreResult<()> {
         if let Ok(mut coverage) = self.file_coverage.write() {
             let file_coverage =
                 coverage
@@ -925,8 +923,7 @@ impl CoverageAnalyzer {
     }
 
     /// Record function execution
-    pub fn line(u32: u32,
-    ) -> CoreResult<()> {
+    pub fn record_function_execution(&self, file_path: &Path, function_name: &str, start_line: u32, end_line: u32) -> CoreResult<()> {
         if let Ok(mut coverage) = self.file_coverage.write() {
             let file_coverage =
                 coverage
@@ -1015,7 +1012,7 @@ impl CoverageAnalyzer {
             stats.covered_integrations += file_cov
                 .integrations
                 .iter()
-                .filter(|0| i.execution_count > 0)
+                .filter(|i| i.execution_count > 0)
                 .count() as u32;
         }
 
@@ -1776,11 +1773,16 @@ impl CoverageAnalyzer {
     }
 
     /// Calculate function complexity (simplified)
-    fn line(u32: TypeName) -> u32 {
+    fn calculate_complexity(start_line: u32, end_line: u32) -> u32 {
         // Simplified complexity calculation based on _line count
         // In a real implementation, this would analyze the AST
         let line_count = end_line.saturating_sub(start_line) + 1;
         (line_count / 10).max(1) // Rough approximation
+    }
+
+    /// Calculate function complexity (instance method)
+    fn calculate_function_complexity(&self, start_line: u32, end_line: u32) -> u32 {
+        Self::calculate_complexity(start_line, end_line)
     }
 
     /// Find complex uncovered functions
@@ -1862,7 +1864,7 @@ mod tests {
             branches: vec![
                 BranchCoverage {
                     line_number: 10,
-                    branch_id: b1.to_string(),
+                    branch_id: "b1".to_string(),
                     true_count: 5,
                     false_count: 3,
                     branch_type: BranchType::IfElse,
@@ -1870,7 +1872,7 @@ mod tests {
                 },
                 BranchCoverage {
                     line_number: 20,
-                    branch_id: b2.to_string(),
+                    branch_id: "b2".to_string(),
                     true_count: 0,
                     false_count: 0,
                     branch_type: BranchType::IfElse,
@@ -1878,7 +1880,7 @@ mod tests {
                 },
             ],
             functions: vec![FunctionCoverage {
-                function_name: test_fn.to_string(),
+                function_name: "test_fn".to_string(),
                 start_line: 5,
                 end_line: 15,
                 execution_count: 10,
@@ -1911,7 +1913,7 @@ mod tests {
     fn test_branch_coverage_analysis() {
         let branch = BranchCoverage {
             line_number: 10,
-            branch_id: test_branch.to_string(),
+            branch_id: "test_branch".to_string(),
             true_count: 8,
             false_count: 2,
             branch_type: BranchType::IfElse,
@@ -1926,7 +1928,7 @@ mod tests {
     #[test]
     fn test_function_coverage_score() {
         let function = FunctionCoverage {
-            function_name: complex_function.to_string(),
+            function_name: "complex_function".to_string(),
             start_line: 1,
             end_line: 50,
             execution_count: 5,
@@ -1940,7 +1942,7 @@ mod tests {
 
         // Test uncovered function
         let uncovered_function = FunctionCoverage {
-            function_name: unused_function.to_string(),
+            function_name: "unused_function".to_string(),
             start_line: 60,
             end_line: 70,
             execution_count: 0,

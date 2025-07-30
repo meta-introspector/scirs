@@ -45,7 +45,7 @@ pub struct ChemicalConfig {
 }
 
 impl Default for ChemicalConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             system_type: ChemicalSystemType::MassAction,
             dt: 0.001,
@@ -222,7 +222,7 @@ impl ChemicalIntegrator {
         &mut self,
         t: f64,
         state: &ChemicalState,
-    ) -> Result<ChemicalResult, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<ChemicalResult, Box<dyn std::error::Error>> {
         let start_time = std::time::Instant::now();
 
         // Calculate reaction rates
@@ -313,7 +313,7 @@ impl ChemicalIntegrator {
     fn calculate_reaction_rates(
         &self,
         concentrations: &Array1<f64>,
-    ) -> Result<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
         let mut rates = Array1::zeros(self.properties.reactions.len());
 
         for (i, reaction) in self.properties.reactions.iter().enumerate() {
@@ -328,7 +328,7 @@ impl ChemicalIntegrator {
         &self,
         reaction: &Reaction,
         concentrations: &Array1<f64>,
-    ) -> Result<f64, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<f64, Box<dyn std::error::Error>> {
         let mut rate = reaction.rate_constant;
 
         // Apply temperature dependence if Arrhenius parameters are provided
@@ -427,7 +427,7 @@ impl ChemicalIntegrator {
     fn calculate_concentration_derivatives(
         &self,
         reaction_rates: &Array1<f64>,
-    ) -> Result<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
         let mut derivatives = Array1::zeros(self.properties.num_species);
 
         for (reaction_idx, rate) in reaction_rates.iter().enumerate() {
@@ -457,7 +457,7 @@ impl ChemicalIntegrator {
         concentrations: &Array1<f64>,
         derivatives: &Array1<f64>,
         dt: f64,
-    ) -> Result<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
         if let Some(ref _prev_state) = self.previous_state {
             // BDF2: (3/2)*y_n+1 - 2*y_n + (1/2)*y_n-1 = dt * f(t_n+1, y_n+1)
             // Simplified as explicit step for now
@@ -475,7 +475,7 @@ impl ChemicalIntegrator {
         concentrations: &Array1<f64>,
         derivatives: &Array1<f64>,
         dt: f64,
-    ) -> Result<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
         // Simplified: y_n+1 = y_n + dt * f(t_n+1, y_n+1)
         // For now, use explicit step as approximation
         let new_concentrations = concentrations + &(derivatives * dt);
@@ -488,7 +488,7 @@ impl ChemicalIntegrator {
         concentrations: &Array1<f64>,
         derivatives: &Array1<f64>,
         dt: f64,
-    ) -> Result<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
         // Simplified Rosenbrock method
         let new_concentrations = concentrations + &(derivatives * dt);
         Ok(new_concentrations)
@@ -500,7 +500,7 @@ impl ChemicalIntegrator {
         concentrations: &Array1<f64>,
         derivatives: &Array1<f64>,
         dt: f64,
-    ) -> Result<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
         // Simplified Cash-Karp method
         let new_concentrations = concentrations + &(derivatives * dt);
         Ok(new_concentrations)
@@ -512,7 +512,7 @@ impl ChemicalIntegrator {
         concentrations: &Array1<f64>,
         derivatives: &Array1<f64>,
         dt: f64,
-    ) -> Result<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
         // Simplified adaptive method
         let new_concentrations = concentrations + &(derivatives * dt);
         Ok(new_concentrations)
@@ -522,7 +522,7 @@ impl ChemicalIntegrator {
     fn enforce_positivity_constraints(
         &self,
         concentrations: Array1<f64>,
-    ) -> Result<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
         Ok(concentrations.mapv(|x| x.max(0.0)))
     }
 
@@ -530,7 +530,7 @@ impl ChemicalIntegrator {
     fn enforce_conservation_constraints(
         &self,
         concentrations: Array1<f64>,
-    ) -> Result<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
         // For now, just return the input concentrations
         // In a full implementation, this would project onto the conservation manifold
         Ok(concentrations)

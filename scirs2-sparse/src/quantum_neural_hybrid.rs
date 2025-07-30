@@ -276,17 +276,17 @@ impl QuantumNeuralHybridProcessor {
                     HybridProcessingMode::PureNeural
                 }
             }
-            HybridStrategy::Parallel =>, HybridProcessingMode::BalancedHybrid,
+            HybridStrategy::Parallel => HybridProcessingMode::BalancedHybrid,
             HybridStrategy::Adaptive => self.adaptive_mode_selection(rows, cols, indptr, indices),
-            HybridStrategy::Entangled =>, HybridProcessingMode::AdaptiveBlend,
-            HybridStrategy::QuantumNeural =>, HybridProcessingMode::QuantumDominant,
+            HybridStrategy::Entangled => HybridProcessingMode::AdaptiveBlend,
+            HybridStrategy::QuantumNeural => HybridProcessingMode::QuantumDominant,
         }
     }
 
     /// Adaptive mode selection based on current conditions
     fn adaptive_mode_selection(
         &self,
-        rows: usize_cols: usize,
+        rows: usize, _cols: usize,
         indptr: &[usize], _indices: &[usize],
     ) -> HybridProcessingMode {
         let quantum_score = self.hybrid_state.quantum_coherence * 0.7
@@ -454,7 +454,7 @@ impl QuantumNeuralHybridProcessor {
     /// Adaptive blend processing
     fn adaptive_blend<T>(
         &mut self,
-        rows: usize_cols: usize,
+        rows: usize, _cols: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],

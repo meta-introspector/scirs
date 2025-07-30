@@ -2531,8 +2531,8 @@ pub mod benchmark {
             execution_time: Duration,
         ) -> f64 {
             let (n_samples, n_features) = data_size;
-            let input_size = n_samples * n_features * std::mem::_size_of::<f64>();
-            let output_size = n_samples * n_samples * std::mem::_size_of::<f64>();
+            let input_size = n_samples * n_features * std::mem::size_of::<f64>();
+            let output_size = n_samples * n_samples * std::mem::size_of::<f64>();
             let total_memory = (input_size * 2 + output_size) as f64; // Read input twice, write output
 
             total_memory / execution_time.as_secs_f64() / (1024.0 * 1024.0 * 1024.0)
@@ -2987,7 +2987,7 @@ pub mod accelerated {
                 n_samples,
                 n_features,
                 sparsity,
-                element_size: std::mem::size, _of::<F>(),
+                element_size: std::mem::size_of::<F>(),
                 spatial_locality,
                 complexity_score,
             }

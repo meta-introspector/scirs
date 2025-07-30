@@ -90,7 +90,7 @@ impl FromStr for Window {
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::window::{Window, get_window};
+/// use scirs2_fft::window::{Window, get_window};
 ///
 /// // Create a Hann window
 /// let win = get_window(Window::Hann, 10, true).unwrap();
@@ -634,7 +634,7 @@ fn bessel_i0(x: f64) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::window::{Window, apply_window};
+/// use scirs2_fft::window::{Window, apply_window};
 /// use ndarray::Array1;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
@@ -680,7 +680,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::window::{Window, enbw};
+/// use scirs2_fft::window::{Window, enbw};
 /// use approx::assert_relative_eq;
 ///
 /// let bandwidth = enbw(Window::Hann, 1024).unwrap();

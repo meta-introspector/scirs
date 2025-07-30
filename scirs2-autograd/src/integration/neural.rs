@@ -72,7 +72,8 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         match self.layer_type {
             LayerType::Linear => self.init_linear_parameters(input_shape),
             LayerType::Conv2D => self.init_conv2d_parameters(input_shape),
-            LayerType::BatchNorm => self.init_batch_norm_parameters(input_shape, _ => Ok(()), // No initialization needed for activation layers
+            LayerType::BatchNorm => self.init_batch_norm_parameters(input_shape),
+            _ => Ok(()), // No initialization needed for activation layers
         }
     }
 

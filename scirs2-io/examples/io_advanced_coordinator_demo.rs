@@ -858,7 +858,7 @@ fn generate_backup_process_data(_size: usize) -> Vec<u8> {
 fn generate_ml_dataset_data(_size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
-            let feature = (i as f32 / 100.0).sin() * (i as f32 / 200.0).cos() * 127.0 + 128.0;
+            let feature = ""(i as f32 / 100.0).sin() * (i as f32 / 200.0).cos() * 127.0 + 128.0;
             let noise = ((i * 7) % 20) as f32;
             (feature + noise) as u8
         })

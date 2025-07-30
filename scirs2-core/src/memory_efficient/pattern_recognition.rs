@@ -830,14 +830,14 @@ pub mod pattern_utils {
         match pattern {
             ComplexPattern::RowMajor => {
                 // For row-major, prefetch the next sequential indices
-                (1..=prefetch_count).map(|0| current_idx + 0).collect()
+                (1..=prefetch_count).map(|i| current_idx + i).collect()
             }
             ComplexPattern::ColumnMajor => {
                 if dimensions.len() >= 2 {
                     let stride = dimensions[0];
                     // For column-major, prefetch with stride equal to number of rows
                     (1..=prefetch_count)
-                        .map(|0| current_idx + stride * 0)
+                        .map(|i| current_idx + stride * i)
                         .collect()
                 } else {
                     // Default to sequential if dimensions unknown

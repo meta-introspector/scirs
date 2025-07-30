@@ -216,7 +216,8 @@ impl<R: Read + Seek> FortranFile<R> {
                     .reader
                     .read_u32::<LittleEndian>()
                     .map(|v| v as usize)
-                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}")), _ => self
+                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}"))),
+                _ => self
                     .reader
                     .read_u32::<BigEndian>()
                     .map(|v| v as usize)
@@ -227,7 +228,8 @@ impl<R: Read + Seek> FortranFile<R> {
                     .reader
                     .read_u64::<LittleEndian>()
                     .map(|v| v as usize)
-                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}")), _ => self
+                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}"))),
+                _ => self
                     .reader
                     .read_u64::<BigEndian>()
                     .map(|v| v as usize)

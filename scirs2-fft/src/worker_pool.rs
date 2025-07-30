@@ -111,7 +111,7 @@ impl WorkerPool {
 
     /// Execute a function with a specific number of workers
     /// Simplified to use core parallel abstractions
-    pub fn execute_with_workers<F, R>(&self_num_workers: usize, f: F) -> R
+    pub fn execute_with_workers<F, R>(&self, num_workers: usize, f: F) -> R
     where
         F: FnOnce() -> R + Send,
         R: Send,

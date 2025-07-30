@@ -14,10 +14,10 @@ pub mod policy_gradient;
 pub mod trust_region;
 
 // Re-export key types
-pub use actor__critic::{ActorCriticConfig, ActorCriticMethod, ActorCriticOptimizer};
-pub use natural__gradients::{NaturalGradientConfig, NaturalPolicyGradient};
-pub use policy__gradient::{PolicyGradientConfig, PolicyGradientMethod, PolicyGradientOptimizer};
-pub use trust__region::{TrustRegionConfig, TrustRegionMethod, TrustRegionOptimizer};
+pub use actor_critic::{ActorCriticConfig, ActorCriticMethod, ActorCriticOptimizer};
+pub use natural_gradients::{NaturalGradientConfig, NaturalPolicyGradient};
+pub use policy_gradient::{PolicyGradientConfig, PolicyGradientMethod, PolicyGradientOptimizer};
+pub use trust_region::{TrustRegionConfig, TrustRegionMethod, TrustRegionOptimizer};
 
 /// Reinforcement Learning optimization configuration
 #[derive(Debug, Clone)]
@@ -379,10 +379,10 @@ pub enum ScheduleType {
 
 impl<T: Float + Send + Sync> RLScheduler<T> {
     /// Create a new learning rate scheduler
-    pub fn new(_initial_lr: T, schedule: ScheduleType) -> Self {
+    pub fn new(initial_lr: T, schedule: ScheduleType) -> Self {
         Self {
-            _initial_lr,
-            current_lr: _initial_lr,
+            initial_lr,
+            current_lr: initial_lr,
             decay_factor: T::from(0.99).unwrap(),
             schedule,
             update_count: 0,

@@ -7,8 +7,6 @@ use crate::error::{IntegrateError, IntegrateResult as Result};
 use ndarray::{Array1, Array2, ArrayView1};
 use std::f64::consts::PI;
 #[allow(unused_imports)]
-use scirs2_core::constants::PI;
-#[allow(unused_imports)]
 use std::f64::consts::SQRT_2;
 
 // Type alias for complex function type
@@ -82,13 +80,13 @@ impl VolumePreservingIntegrator {
     }
 
     /// Set tolerance for implicit methods
-    pub fn with_tolerance(mut tol: f64) -> Self {
+    pub fn with_tolerance(mut self, tol: f64) -> Self {
         self.tol = tol;
         self
     }
 
     /// Integrate one step
-    pub fn step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
+    pub fn step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -107,7 +105,7 @@ impl VolumePreservingIntegrator {
         x: &ArrayView1<f64>,
         t: f64,
         flow: &F,
-    ) -> Result<Array1<f64>>
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -124,7 +122,7 @@ impl VolumePreservingIntegrator {
         x: &ArrayView1<f64>,
         t: f64,
         flow: &F,
-    ) -> Result<Array1<f64>>
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -151,7 +149,7 @@ impl VolumePreservingIntegrator {
     }
 
     /// Splitting method for special structures
-    fn splitting_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
+    fn splitting_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -160,7 +158,7 @@ impl VolumePreservingIntegrator {
     }
 
     /// Projection method (project back to divergence-free manifold)
-    fn projection_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
+    fn projection_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -174,7 +172,7 @@ impl VolumePreservingIntegrator {
     }
 
     /// Fourth-order composition method
-    fn composition_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> Result<Array1<f64>>
+    fn composition_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -237,7 +235,7 @@ impl VolumePreservingIntegrator {
         t0: f64,
         t_final: f64,
         flow: &F,
-    ) -> Result<Vec<(f64, Array1<f64>)>>
+    ) -> IntegrateResult<Vec<(f64, Array1<f64>)>>
     where
         F: DivergenceFreeFlow,
     {
@@ -355,10 +353,10 @@ impl DivergenceFreeFlow for DoubleGyre {
 /// Stream function based flow representation
 pub trait StreamFunction {
     /// Evaluate stream function at a point
-    fn psi(x: f64, y: f64, t: f64) -> f64;
+    fn psi(&self, x: f64, y: f64, t: f64) -> f64;
 
     /// Compute velocity field from stream function
-    fn velocity(x: f64, y: f64, t: f64) -> (f64, f64) {
+    fn velocity(&self, x: f64, y: f64, t: f64) -> (f64, f64) {
         let h = 1e-8;
 
         // u = ∂ψ/∂y
@@ -380,7 +378,7 @@ pub struct StuartVortex {
 }
 
 impl StreamFunction for StuartVortex {
-    fn psi(&self, x: f64, y: f64_t: f64) -> f64 {
+    fn psi(&self, x: f64, y: f64, t: f64) -> f64 {
         -self.alpha.ln() * y.cos() + self.alpha * (self.k * x).cos() * y.sin()
     }
 }
@@ -489,7 +487,7 @@ impl ModifiedMidpointIntegrator {
         x: &ArrayView1<f64>,
         t: f64,
         flow: &F,
-    ) -> Result<Array1<f64>>
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -533,7 +531,7 @@ impl VariationalIntegrator {
         x1: &ArrayView1<f64>,
         t: f64,
         flow: &F,
-    ) -> Result<f64>
+    ) -> IntegrateResult<f64>
     where
         F: DivergenceFreeFlow,
     {
@@ -559,7 +557,7 @@ impl VariationalIntegrator {
     }
 
     /// Gauss-Legendre quadrature on [0,1]
-    fn gauss_legendre_quadrature(&self) -> Result<(Vec<f64>, Vec<f64>)> {
+    fn gauss_legendre_quadrature(&self) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
         match self.n_quad {
             1 => Ok((vec![1.0], vec![0.5])),
             2 => Ok((
@@ -573,7 +571,8 @@ impl VariationalIntegrator {
                     0.5,
                     0.5 + 0.5 * (0.6_f64).sqrt(),
                 ],
-            ), _ => Err(IntegrateError::ValueError(format!(
+            )),
+            _ => Err(IntegrateError::ValueError(format!(
                 "Quadrature order {} not implemented",
                 self.n_quad
             ))),
@@ -668,7 +667,7 @@ impl VolumeChecker {
         flow: &F,
         t0: f64,
         t_final: f64,
-    ) -> Result<f64>
+    ) -> IntegrateResult<f64>
     where
         F: DivergenceFreeFlow,
     {
@@ -695,7 +694,7 @@ impl VolumeChecker {
     }
 
     /// Estimate volume using bounding box (simplified)
-    fn estimate_volume(_points: &Array2<f64>) -> Result<f64> {
+    fn estimate_volume(_points: &Array2<f64>) -> IntegrateResult<f64> {
         if _points.nrows() == 0 {
             return Ok(0.0);
         }

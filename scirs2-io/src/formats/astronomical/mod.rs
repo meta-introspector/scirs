@@ -134,7 +134,8 @@ impl FitsHeader {
     pub fn get_bool(&self, keyword: &str) -> Result<bool> {
         match self.get_card(keyword) {
             Some(card) => match &card.value {
-                CardValue::Boolean(b) => Ok(*b, _ => Err(IoError::ParseError(format!(
+                CardValue::Boolean(b) => Ok(*b),
+                _ => Err(IoError::ParseError(format!(
                     "Keyword {keyword} is not a boolean"
                 ))),
             },
@@ -146,7 +147,8 @@ impl FitsHeader {
     pub fn get_i64(&self, keyword: &str) -> Result<i64> {
         match self.get_card(keyword) {
             Some(card) => match &card.value {
-                CardValue::Integer(i) => Ok(*i, _ => Err(IoError::ParseError(format!(
+                CardValue::Integer(i) => Ok(*i),
+                _ => Err(IoError::ParseError(format!(
                     "Keyword {keyword} is not an integer"
                 ))),
             },
@@ -159,7 +161,8 @@ impl FitsHeader {
         match self.get_card(keyword) {
             Some(card) => match &card.value {
                 CardValue::Float(f) => Ok(*f),
-                CardValue::Integer(i) => Ok(*i as f64, _ => Err(IoError::ParseError(format!(
+                CardValue::Integer(i) => Ok(*i as f64),
+                _ => Err(IoError::ParseError(format!(
                     "Keyword {keyword} is not a number"
                 ))),
             },
@@ -171,7 +174,8 @@ impl FitsHeader {
     pub fn get_string(&self, keyword: &str) -> Result<String> {
         match self.get_card(keyword) {
             Some(card) => match &card.value {
-                CardValue::String(s) => Ok(s.clone(), _ => Err(IoError::ParseError(format!(
+                CardValue::String(s) => Ok(s.clone()),
+                _ => Err(IoError::ParseError(format!(
                     "Keyword {keyword} is not a string"
                 ))),
             },
@@ -246,7 +250,8 @@ impl FitsDataType {
             32 => Ok(FitsDataType::Int32),
             64 => Ok(FitsDataType::Int64),
             -32 => Ok(FitsDataType::Float32),
-            -64 => Ok(FitsDataType::Float64, _ => Err(IoError::ParseError(format!(
+            -64 => Ok(FitsDataType::Float64),
+            _ => Err(IoError::ParseError(format!(
                 "Invalid BITPIX value: {_bitpix}"
             ))),
         }
@@ -278,7 +283,8 @@ impl FitsFile {
                 match header.get_string("XTENSION").ok().as_deref() {
                     Some("IMAGE") => HDUType::Image,
                     Some("TABLE") => HDUType::AsciiTable,
-                    Some("BINTABLE") => HDUType::BinaryTable_ =>, HDUType::Image,
+                    Some("BINTABLE") => HDUType::BinaryTable,
+                    _ => HDUType::Image,
                 }
             };
 
@@ -570,7 +576,8 @@ impl FitsNumeric for f32 {
             FitsDataType::Int32 => _reader
                 .read_i32::<BigEndian>()
                 .map(|v| v as f32)
-                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}")), _ => Err(IoError::ParseError(format!(
+                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}"))),
+            _ => Err(IoError::ParseError(format!(
                 "Unsupported conversion from {data_type:?} to f32"
             ))),
         }
@@ -580,7 +587,8 @@ impl FitsNumeric for f32 {
         match data_type {
             FitsDataType::Float32 => writer
                 .write_f32::<BigEndian>(*self)
-                .map_err(|e| IoError::FileError(format!("Failed to write f32: {e}")), _ => Err(IoError::FileError(format!(
+                .map_err(|e| IoError::FileError(format!("Failed to write f32: {e}"))),
+            _ => Err(IoError::FileError(format!(
                 "Unsupported conversion from f32 to {data_type:?}"
             ))),
         }
@@ -600,7 +608,8 @@ impl FitsNumeric for f64 {
             FitsDataType::Int32 => _reader
                 .read_i32::<BigEndian>()
                 .map(|v| v as f64)
-                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}")), _ => Err(IoError::ParseError(format!(
+                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}"))),
+            _ => Err(IoError::ParseError(format!(
                 "Unsupported conversion from {data_type:?} to f64"
             ))),
         }
@@ -610,7 +619,8 @@ impl FitsNumeric for f64 {
         match data_type {
             FitsDataType::Float64 => writer
                 .write_f64::<BigEndian>(*self)
-                .map_err(|e| IoError::FileError(format!("Failed to write f64: {e}")), _ => Err(IoError::FileError(format!(
+                .map_err(|e| IoError::FileError(format!("Failed to write f64: {e}"))),
+            _ => Err(IoError::FileError(format!(
                 "Unsupported conversion from f64 to {data_type:?}"
             ))),
         }
@@ -1106,7 +1116,8 @@ impl FitsTableReader {
     /// Create a new table reader
     pub fn new(_hdu: HDU) -> Result<Self> {
         match _hdu.hdu_type {
-            HDUType::AsciiTable | HDUType::BinaryTable => Ok(Self { _hdu }, _ => Err(IoError::ParseError("HDU is not a table".to_string())),
+            HDUType::AsciiTable | HDUType::BinaryTable => Ok(Self { hdu: _hdu }),
+            _ => Err(IoError::ParseError("HDU is not a table".to_string())),
         }
     }
 

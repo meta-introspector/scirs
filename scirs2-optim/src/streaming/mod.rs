@@ -19,12 +19,12 @@ pub mod low_latency;
 pub mod streaming_metrics;
 
 // Re-export key types for convenience
-pub use concept__drift::{ConceptDriftDetector, DriftDetectorConfig, DriftEvent, DriftStatus};
-pub use enhanced_adaptive__lr::{
+pub use concept_drift::{ConceptDriftDetector, DriftDetectorConfig, DriftEvent, DriftStatus};
+pub use enhanced_adaptive_lr::{
     AdaptationStatistics, AdaptiveLRConfig, EnhancedAdaptiveLRController,
 };
-pub use low__latency::{LowLatencyConfig, LowLatencyMetrics, LowLatencyOptimizer};
-pub use streaming__metrics::{MetricsSample, MetricsSummary, StreamingMetricsCollector};
+pub use low_latency::{LowLatencyConfig, LowLatencyMetrics, LowLatencyOptimizer};
+pub use streaming_metrics::{MetricsSample, MetricsSummary, StreamingMetricsCollector};
 
 use crate::optimizers::Optimizer;
 
@@ -409,7 +409,7 @@ where
     O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new streaming optimizer
-    pub fn new(_base_optimizer: O, config: StreamingConfig) -> Result<Self> {
+    pub fn new(base_optimizer: O, config: StreamingConfig) -> Result<Self> {
         let lr_adaptation_state = LearningRateAdaptationState {
             current_lr: A::from(0.01).unwrap(), // Default learning rate
             accumulated_gradients: None,
@@ -634,7 +634,7 @@ where
         abs_values.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Zero out all but top-k elements
-        for (i_) in abs_values.iter().skip(k) {
+        for (i, _) in abs_values.iter().skip(k) {
             compressed[*i] = A::zero();
         }
 
@@ -773,7 +773,8 @@ where
         Ok(())
     }
 
-    fn check_concept_drift(&mut self_update: &Array1<A>) -> Result<()> {
+    fn check_concept_drift(&mut self,
+        update: &Array1<A>) -> Result<()> {
         // Simplified concept drift detection based on loss
         let current_loss = A::from(self.metrics.current_loss).unwrap();
 
@@ -852,7 +853,8 @@ where
         Ok(result.into_dimensionality::<ndarray::Ix1>()?)
     }
 
-    fn async_update(&mut self_params: &Array1<A>, gradient: &Array1<A>) -> Result<Array1<A>> {
+    fn async_update(&mut self,
+        params: &Array1<A>, gradient: &Array1<A>) -> Result<Array1<A>> {
         if let Some(ref mut async_state) = self.async_state {
             // Add to update queue
             let gradient_generic = gradient.clone().into_dimensionality::<D>()?;
@@ -1483,10 +1485,10 @@ pub struct PredictionModel<A: Float> {
 }
 
 impl<A: Float> PredictionModel<A> {
-    pub fn new(_feature_dim: usize) -> Result<Self> {
+    pub fn new(feature_dim: usize) -> Result<Self> {
         Ok(Self {
-            weights: Array1::zeros(_feature_dim),
-            _feature_dim,
+            weights: Array1::zeros(feature_dim),
+            feature_dim,
             model_order: 3,
         })
     }
@@ -1662,9 +1664,9 @@ pub struct AdvancedQoSManager {
 }
 
 impl AdvancedQoSManager {
-    pub fn new(_config: AdvancedQoSConfig) -> Self {
+    pub fn new(config: AdvancedQoSConfig) -> Self {
         Self {
-            _config,
+            config,
             current_status: QoSStatus {
                 is_compliant: true,
                 violations: Vec::new(),
@@ -1726,9 +1728,9 @@ pub struct RealTimeOptimizer {
 }
 
 impl RealTimeOptimizer {
-    pub fn new(_config: RealTimeConfig) -> Result<Self> {
+    pub fn new(config: RealTimeConfig) -> Result<Self> {
         Ok(Self {
-            _config,
+            config,
             performance_metrics: RealTimeMetrics::default(),
             optimization_state: RTOptimizationState::default(),
         })
@@ -1877,12 +1879,12 @@ pub struct PipelineExecutionManager<A: Float> {
 }
 
 impl<A: Float> PipelineExecutionManager<A> {
-    pub fn new(_parallelism_degree: usize, processing_priority: StreamPriority) -> Self {
+    pub fn new(parallelism_degree: usize, processing_priority: StreamPriority) -> Self {
         Self {
             pipeline_stages: Vec::new(),
-            _parallelism_degree,
+            parallelism_degree,
             processing_priority,
-            stage_coordinator: StageCoordinator::new(_parallelism_degree),
+            stage_coordinator: StageCoordinator::new(parallelism_degree),
         }
     }
 
@@ -1917,11 +1919,11 @@ pub struct StageCoordinator {
 }
 
 impl StageCoordinator {
-    pub fn new(_parallelism_degree: usize) -> Self {
+    pub fn new(parallelism_degree: usize) -> Self {
         Self {
             coordination_strategy: CoordinationStrategy::DataParallel,
             synchronization_barriers: Vec::new(),
-            _parallelism_degree,
+            parallelism_degree,
         }
     }
 }

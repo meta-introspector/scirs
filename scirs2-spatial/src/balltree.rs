@@ -21,7 +21,7 @@
 
 use crate::distance::{Distance, EuclideanDistance};
 use crate::error::{SpatialError, SpatialResult};
-use crate::safe__conversions::*;
+use crate::safe_conversions::*;
 use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::Float;
 use std::cmp::Ordering;
@@ -167,7 +167,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
     /// # Returns
     ///
     /// * `SpatialResult<usize>` - Index of the root node of the subtree
-    fn build_subtree(_start_idx: usize, end_idx: usize) -> SpatialResult<usize> {
+    fn build_subtree(&mut self, _start_idx: usize, end_idx: usize) -> SpatialResult<usize> {
         let n_points = end_idx - _start_idx;
 
         // Calculate centroid of points in this node
@@ -680,7 +680,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
     }
 
     /// Get the leaf size
-    pub fn get_leaf_size() -> usize {
+    pub fn get_leaf_size(&self) -> usize {
         self.leaf_size
     }
 }

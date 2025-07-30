@@ -262,7 +262,7 @@ fn solve_matrix_system<F>(_matrix: ArrayView2<F>, b: ArrayView1<F>) -> Integrate
 where
     F: IntegrateFloat + std::default::Default,
 {
-    use crate::dae::utils::linear__solvers::solve_linear_system;
+    use crate::dae::utils::linear_solvers::solve_linear_system;
 
     // Use our custom solver to solve the system
     solve_linear_system(&_matrix.view(), &b.view()).map_err(|err| {
@@ -391,7 +391,8 @@ where
                 -F::from_f64(75.0 / 137.0).unwrap(),
                 F::from_f64(12.0 / 137.0).unwrap(),
                 -F::one(),
-            ]_ => return Array1::zeros(n), // Invalid order, return zeros (will trigger error)
+            ],
+            _ => return Array1::zeros(n), // Invalid order, return zeros (will trigger error)
         };
 
         // Compute the BDF approximation of the derivative
@@ -563,7 +564,8 @@ where
                     2 => F::from_f64(4.0 / 3.0).unwrap(),
                     3 => F::from_f64(18.0 / 11.0).unwrap(),
                     4 => F::from_f64(48.0 / 25.0).unwrap(),
-                    5 => F::from_f64(300.0 / 137.0).unwrap(, _ =>, F::one(), // Fallback to first-order if invalid
+                    5 => F::from_f64(300.0 / 137.0).unwrap(),
+                    _ => F::one(), // Fallback to first-order if invalid
                 };
 
                 let scale = bdf_coeff / h;
@@ -632,7 +634,8 @@ where
                             -F::from_f64(75.0 / 137.0).unwrap(),
                             F::from_f64(12.0 / 137.0).unwrap(),
                             -F::one(),
-                        ]_ => vec![F::one(), -F::one()], // Fallback to backward Euler
+                        ],
+                        _ => vec![F::one(), -F::one()], // Fallback to backward Euler
                     };
 
                     // Compute the BDF approximation of the derivative
@@ -852,7 +855,7 @@ where
             }
 
             // Apply Pantelides index reduction algorithm
-use crate::dae::index__reduction::{DAEStructure, PantelidesReducer};
+use crate::dae::index_reduction::{DAEStructure, PantelidesReducer};
 
             // Create DAE structure
             let mut structure = DAEStructure::default();
@@ -1096,7 +1099,7 @@ where
 {
     // After index _reduction, we can solve the system as a standard index-1 DAE
     // Use BDF method for semi-explicit DAE systems
-    use crate::dae::methods::bdf__dae::bdf_semi_explicit_dae;
+    use crate::dae::methods::bdf_dae::bdf_semi_explicit_dae;
 
     bdf_semi_explicit_dae(f, g, t_span, x0, y0, options)
 }
@@ -1168,7 +1171,9 @@ where
 #[allow(dead_code)]
 fn apply_dummy_derivative_method<F, FFunc, GFunc>(
     f: FFunc,
-    g: GFunc_x0: &Array1<F>, _y0: &Array1<F>,
+    g: GFunc,
+    _x0: &Array1<F>,
+    _y0: &Array1<F>,
 ) -> IntegrateResult<(
     impl Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
     impl Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,

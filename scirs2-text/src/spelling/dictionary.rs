@@ -12,7 +12,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2__text::spelling::{DictionaryCorrector, SpellingCorrector};
+//! use scirs2_text::spelling::{DictionaryCorrector, SpellingCorrector};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a dictionary-based spelling corrector with default settings
@@ -30,7 +30,7 @@
 //! ```
 
 use crate::error::{Result, TextError};
-use crate::string__metrics::{DamerauLevenshteinMetric, StringMetric};
+use crate::string_metrics::{DamerauLevenshteinMetric, StringMetric};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -489,7 +489,7 @@ impl SpellingCorrector for DictionaryCorrector {
         let actual_limit = std::cmp::min(limit, candidates.len());
         let suggestions = candidates[0..actual_limit]
             .iter()
-            .map(|(word__)| word.clone())
+            .map(|(word, _)| word.clone())
             .collect();
 
         Ok(suggestions)

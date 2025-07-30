@@ -26,7 +26,7 @@ impl<F: IntegrateFloat> ForwardAD<F> {
     }
 
     /// Set the tolerance
-    pub fn with_tolerance(mut tol: F) -> Self {
+    pub fn with_tolerance(mut self, tol: F) -> Self {
         self.tolerance = tol;
         self
     }

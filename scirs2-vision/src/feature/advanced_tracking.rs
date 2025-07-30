@@ -22,7 +22,7 @@
 //! - Memory-optimized track management
 
 use crate::error::{Result, VisionError};
-use crate::gpu__ops::GpuVisionContext;
+use crate::gpu_ops::GpuVisionContext;
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::VecDeque;
 use std::time::Instant;
@@ -335,7 +335,7 @@ impl Track {
         }
 
         Self {
-            _id,
+            id: _id,
             kalman_filter,
             features,
             max_features: 10,
@@ -469,7 +469,7 @@ impl Detection {
     /// Create a new detection
     pub fn new(_bbox: BoundingBox) -> Self {
         Self {
-            _bbox,
+            bbox: _bbox,
             feature: None,
             timestamp: Instant::now(),
         }
@@ -478,7 +478,7 @@ impl Detection {
     /// Create detection with appearance feature
     pub fn with_feature(_bbox: BoundingBox, feature: Array1<f32>) -> Self {
         Self {
-            _bbox,
+            bbox: _bbox,
             feature: Some(feature),
             timestamp: Instant::now(),
         }
@@ -564,7 +564,7 @@ impl DeepSORT {
         };
 
         // Associate detections with tracks
-        let (matched_pairs, unmatched_detections_unmatched_tracks) =
+        let (matched_pairs, unmatched_detections, unmatched_tracks) =
             self.associate_detections_to_tracks(&detections_with_features)?;
 
         // Update matched tracks
@@ -807,7 +807,7 @@ impl AppearanceExtractor {
         // In practice, this would use a pre-trained network
 
         // Apply Gaussian blur as feature preprocessing
-        let blurred = crate::gpu__ops::gpu_gaussian_blur(gpu_ctx, image, 1.0)?;
+        let blurred = crate::gpu_ops::gpu_gaussian_blur(gpu_ctx, image, 1.0)?;
 
         // Downsample to fixed size
         let downsampled = self.downsample_gpu(gpu_ctx, &blurred.view())?;

@@ -41,7 +41,7 @@ pub struct ODEOptions {
 }
 
 impl Default for ODEOptions {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             method: ODEMethod::RK45,
             rtol: 1e-3,

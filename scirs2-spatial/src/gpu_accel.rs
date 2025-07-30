@@ -25,7 +25,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::gpu_accel::{GpuDistanceMatrix, GpuKMeans};
+//! use scirs2_spatial::gpu_accel::{GpuDistanceMatrix, GpuKMeans};
 //! use ndarray::array;
 //!
 //! // GPU distance matrix computation
@@ -42,7 +42,7 @@
 //! ```
 
 use crate::error::SpatialResult;
-use crate::memory__pool::DistancePool;
+use crate::memory_pool::DistancePool;
 use ndarray::{Array1, Array2, ArrayView2};
 use std::sync::Arc;
 use std::f64::consts::PI;
@@ -74,7 +74,7 @@ pub struct GpuCapabilities {
 }
 
 impl Default for GpuCapabilities {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             gpu_available: false,
             device_count: 0,
@@ -631,7 +631,7 @@ impl GpuDevice {
 }
 
 impl Default for GpuDevice {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new().unwrap_or_else(|_| Self {
             capabilities: GpuCapabilities::default(),
             preferred_backend: GpuBackend::CpuFallback,
@@ -685,7 +685,7 @@ impl GpuDistanceMatrix {
             GpuBackend::Cuda => self.compute_cuda(points).await,
             GpuBackend::Rocm => self.compute_rocm(points).await,
             GpuBackend::Vulkan => self.compute_vulkan(points).await,
-            GpuBackend::CpuFallback => self.compute_cpu_fallback(points).await_ => self.compute_cpu_fallback(points).await,
+            GpuBackend::CpuFallback => self.compute_cpu_fallback(points).await,
         }
     }
 
@@ -719,7 +719,7 @@ impl GpuDistanceMatrix {
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<f64>> {
         // Use existing SIMD implementation as fallback
-        use crate::simd__distance::parallel_pdist;
+        use crate::simd_distance::parallel_pdist;
 
         let condensed = parallel_pdist(points, "euclidean")?;
 
@@ -793,7 +793,7 @@ impl GpuKMeans {
             GpuBackend::Cuda => self.fit_cuda(points).await,
             GpuBackend::Rocm => self.fit_rocm(points).await,
             GpuBackend::Vulkan => self.fit_vulkan(points).await,
-            GpuBackend::CpuFallback => self.fit_cpu_fallback(points).await_ => self.fit_cpu_fallback(points).await,
+            GpuBackend::CpuFallback => self.fit_cpu_fallback(points).await,
         }
     }
 
@@ -835,7 +835,7 @@ impl GpuKMeans {
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         // Use existing advanced-optimized SIMD K-means as fallback
-        use crate::simd__distance::advanced_simd_clustering::AdvancedSimdKMeans;
+        use crate::simd_distance::advanced_simd_clustering::AdvancedSimdKMeans;
 
         let advanced_kmeans = AdvancedSimdKMeans::new(self.k)
             .with_mixed_precision(true)
@@ -939,7 +939,7 @@ impl GpuNearestNeighbors {
         k: usize,
     ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
         // Use existing advanced-optimized SIMD nearest neighbors as fallback
-        use crate::simd__distance::advanced_simd_clustering::AdvancedSimdNearestNeighbors;
+        use crate::simd_distance::advanced_simd_clustering::AdvancedSimdNearestNeighbors;
 
         let advanced_nn = AdvancedSimdNearestNeighbors::new();
         advanced_nn.simd_knn_advanced_fast(query_points, data_points, k)
@@ -947,7 +947,7 @@ impl GpuNearestNeighbors {
 }
 
 impl Default for GpuNearestNeighbors {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new().unwrap_or_else(|_| Self {
             device: Arc::new(GpuDevice::default()),
             build_batch_size: 1024,
@@ -1000,7 +1000,7 @@ impl HybridProcessor {
 }
 
 impl Default for HybridProcessor {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new().unwrap_or_else(|_| Self {
             gpu_device: Arc::new(GpuDevice::default()),
             cpu_threshold: 1000,

@@ -5,7 +5,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use crate::fft::ifft;
-use num__complex::Complex64;
+use num_complex::Complex64;
 
 use super::algorithms::SparseFFTResult;
 
@@ -23,7 +23,7 @@ use super::algorithms::SparseFFTResult;
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__fft::sparse_fft::{sparse_fft, reconstruct_spectrum};
+/// use scirs2_fft::sparse_fft::{sparse_fft, reconstruct_spectrum};
 ///
 /// // Generate a sparse signal
 /// let n = 64;
@@ -73,7 +73,7 @@ pub fn reconstruct_spectrum(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__fft::sparse_fft::{sparse_fft, reconstruct_time_domain};
+/// use scirs2_fft::sparse_fft::{sparse_fft, reconstruct_time_domain};
 ///
 /// // Generate a sparse signal
 /// let n = 64;
@@ -129,7 +129,7 @@ pub fn reconstruct_time_domain(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__fft::sparse_fft::{sparse_fft, reconstruct_high_resolution};
+/// use scirs2_fft::sparse_fft::{sparse_fft, reconstruct_high_resolution};
 ///
 /// // Generate a sparse signal
 /// let n = 32;
@@ -240,7 +240,7 @@ pub fn reconstruct_high_resolution(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__fft::sparse_fft::{sparse_fft, reconstruct_filtered};
+/// use scirs2_fft::sparse_fft::{sparse_fft, reconstruct_filtered};
 ///
 /// // Generate a sparse signal
 /// let n = 64;

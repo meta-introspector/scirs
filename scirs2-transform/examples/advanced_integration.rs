@@ -435,8 +435,10 @@ fn create_sparse_dataset(
 
 #[allow(dead_code)]
 fn create_drifting_dataset(
-    n_samples: usize..n, _features: usize,
-    drift_factor: f64,) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
+    n_samples: usize,
+    _features: usize,
+    drift_factor: f64,
+) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
     use rand::Rng;
     let mut rng = rand::rng();
     let mut data = Array2::zeros((n_samples, n_features));
@@ -472,7 +474,9 @@ fn create_numerical_features(
 
 #[allow(dead_code)]
 fn create_categorical_features(
-    n_samples: usize..n, _features: usize,) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
+    n_samples: usize,
+    n_features: usize,
+) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
     use rand::Rng;
     let mut rng = rand::rng();
     let mut data = Array2::zeros((n_samples, n_features));
@@ -488,7 +492,9 @@ fn create_categorical_features(
 
 #[allow(dead_code)]
 fn create_temporal_features(
-    n_samples: usize..n, _features: usize,) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
+    n_samples: usize,
+    n_features: usize,
+) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
     use rand::Rng;
     let mut rng = rand::rng();
     let mut data = Array2::zeros((n_samples, n_features));
@@ -534,7 +540,9 @@ fn create_benchmark_dataset(
 
 #[allow(dead_code)]
 fn optimize_for_sparsity(
-    quantum_pipeline: Vec<TransformationConfig>..neuro, _pipeline: Vec<TransformationConfig>,) -> Result<Vec<TransformationConfig>, Box<dyn std::error::Error>> {
+    quantum_pipeline: Vec<TransformationConfig>,
+    neuro_pipeline: Vec<TransformationConfig>,
+) -> Result<Vec<TransformationConfig>, Box<dyn std::error::Error>> {
     // Combine and optimize for sparse data characteristics
     let mut combined = quantum_pipeline;
     combined.extend(neuro_pipeline);
@@ -561,7 +569,8 @@ fn optimize_for_sparsity(
 
 #[allow(dead_code)]
 fn adapt_to_concept_drift(
-    _meta_features: &DatasetMetaFeatures, _history: &[AdaptationRecord],
+    _meta_features: &DatasetMetaFeatures,
+    _history: &[AdaptationRecord],
 ) -> Result<Vec<TransformationConfig>, Box<dyn std::error::Error>> {
     // Simplified adaptive response
     Ok(vec![

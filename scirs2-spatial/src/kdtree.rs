@@ -18,7 +18,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::KDTree;
+//! use scirs2_spatial::KDTree;
 //! use ndarray::array;
 //!
 //! // Create a KD-Tree with points in 2D space
@@ -38,8 +38,8 @@
 //! Using custom distance metrics:
 //!
 //! ```
-//! use scirs2__spatial::KDTree;
-//! use scirs2__spatial::distance::ManhattanDistance;
+//! use scirs2_spatial::KDTree;
+//! use scirs2_spatial::distance::ManhattanDistance;
 //! use ndarray::array;
 //!
 //! // Create a KD-Tree with Manhattan distance metric
@@ -54,7 +54,7 @@
 //! Using custom leaf size for performance tuning:
 //!
 //! ```
-//! use scirs2__spatial::KDTree;
+//! use scirs2_spatial::KDTree;
 //! use ndarray::array;
 //!
 //! // Create a KD-Tree with custom leaf size
@@ -66,7 +66,7 @@
 
 use crate::distance::{Distance, EuclideanDistance};
 use crate::error::{SpatialError, SpatialResult};
-use crate::safe__conversions::*;
+use crate::safe_conversions::*;
 use ndarray::Array2;
 use num_traits::Float;
 use std::cmp::Ordering;
@@ -128,7 +128,7 @@ impl<T: Float> Rectangle<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::kdtree::Rectangle;
+    /// use scirs2_spatial::kdtree::Rectangle;
     ///
     /// let rect = Rectangle::new(vec![0.0, 0.0], vec![1.0, 1.0]);
     /// let mins = rect.mins();
@@ -147,7 +147,7 @@ impl<T: Float> Rectangle<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::kdtree::Rectangle;
+    /// use scirs2_spatial::kdtree::Rectangle;
     ///
     /// let rect = Rectangle::new(vec![0.0, 0.0], vec![1.0, 1.0]);
     /// let maxes = rect.maxes();
@@ -167,7 +167,7 @@ impl<T: Float> Rectangle<T> {
     /// # Returns
     ///
     /// * A tuple of (left, right) rectangles
-    pub fn split(_dim: usize, value: T) -> (Self, Self) {
+    pub fn split(&self, _dim: usize, value: T) -> (Self, Self) {
         let mut left_maxes = self.maxes.clone();
         left_maxes[_dim] = value;
 
@@ -189,7 +189,7 @@ impl<T: Float> Rectangle<T> {
     /// # Returns
     ///
     /// * true if the rectangle contains the point, false otherwise
-    pub fn contains(_point: &[T]) -> bool {
+    pub fn contains(&self, _point: &[T]) -> bool {
         assert_eq!(
             _point.len(),
             self.mins.len(),
@@ -215,7 +215,7 @@ impl<T: Float> Rectangle<T> {
     /// # Returns
     ///
     /// * The minimum distance from the point to any point in the rectangle
-    pub fn min_distance<D: Distance<T>>(_point: &[T], metric: &D) -> T {
+    pub fn min_distance<D: Distance<T>>(&self, _point: &[T], metric: &D) -> T {
         metric.min_distance_point_rectangle(_point, &self.mins, &self.maxes)
     }
 }
@@ -471,7 +471,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::KDTree;
+    /// use scirs2_spatial::KDTree;
     /// use ndarray::array;
     ///
     /// // Create points for the KDTree - use the exact same points from test_kdtree_with_custom_leaf_size
@@ -483,7 +483,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// assert_eq!(indices.len(), 2);
     /// assert_eq!(distances.len(), 2);
     /// ```
-    pub fn query(_point: &[T], k: usize) -> SpatialResult<(Vec<usize>, Vec<T>)> {
+    pub fn query(&self, _point: &[T], k: usize) -> SpatialResult<(Vec<usize>, Vec<T>)> {
         if _point.len() != self.ndim {
             return Err(SpatialError::DimensionError(format!(
                 "Query _point dimension ({}) does not match tree dimension ({})",
@@ -622,7 +622,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::KDTree;
+    /// use scirs2_spatial::KDTree;
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -632,7 +632,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// let (indices, distances) = kdtree.query_radius(&[0.5, 0.5], 0.7).unwrap();
     /// assert_eq!(indices.len(), 4); // All points are within 0.7 units of [0.5, 0.5]
     /// ```
-    pub fn query_radius(_point: &[T], radius: T) -> SpatialResult<(Vec<usize>, Vec<T>)> {
+    pub fn query_radius(&self, _point: &[T], radius: T) -> SpatialResult<(Vec<usize>, Vec<T>)> {
         if _point.len() != self.ndim {
             return Err(SpatialError::DimensionError(format!(
                 "Query _point dimension ({}) does not match tree dimension ({})",
@@ -737,7 +737,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::KDTree;
+    /// use scirs2_spatial::KDTree;
     /// use ndarray::array;
     ///
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
@@ -747,7 +747,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// let count = kdtree.count_neighbors(&[0.5, 0.5], 0.7).unwrap();
     /// assert_eq!(count, 4); // All points are within 0.7 units of [0.5, 0.5]
     /// ```
-    pub fn count_neighbors(_point: &[T], radius: T) -> SpatialResult<usize> {
+    pub fn count_neighbors(&self, _point: &[T], radius: T) -> SpatialResult<usize> {
         if _point.len() != self.ndim {
             return Err(SpatialError::DimensionError(format!(
                 "Query _point dimension ({}) does not match tree dimension ({})",
@@ -862,7 +862,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
     /// # Returns
     ///
     /// * The bounding rectangle of the entire dataset
-    pub fn bounds() -> &Rectangle<T> {
+    pub fn bounds(&self) -> &Rectangle<T> {
         &self.bounds
     }
 }

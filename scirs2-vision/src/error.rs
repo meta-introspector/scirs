@@ -58,25 +58,25 @@ pub enum VisionError {
 impl Clone for VisionError {
     fn clone(&self) -> Self {
         match self {
-            VisionError::ImageLoadError(s) =>, VisionError::ImageLoadError(s.clone()),
-            VisionError::InvalidParameter(s) =>, VisionError::InvalidParameter(s.clone()),
-            VisionError::OperationError(s) =>, VisionError::OperationError(s.clone()),
-            VisionError::NdimageError(s) =>, VisionError::NdimageError(s.clone()),
-            VisionError::IoError(e) =>, VisionError::Other(format!("I/O error: {e}")),
-            VisionError::TypeConversionError(s) =>, VisionError::TypeConversionError(s.clone()),
-            VisionError::ShapeError(e) =>, VisionError::Other(format!("Shape error: {e}")),
-            VisionError::LinAlgError(s) =>, VisionError::LinAlgError(s.clone()),
-            VisionError::GpuError(s) =>, VisionError::GpuError(s.clone()),
-            VisionError::DimensionMismatch(s) =>, VisionError::DimensionMismatch(s.clone()),
-            VisionError::InvalidInput(s) =>, VisionError::InvalidInput(s.clone()),
-            VisionError::Other(s) =>, VisionError::Other(s.clone()),
+            VisionError::ImageLoadError(s) => VisionError::ImageLoadError(s.clone()),
+            VisionError::InvalidParameter(s) => VisionError::InvalidParameter(s.clone()),
+            VisionError::OperationError(s) => VisionError::OperationError(s.clone()),
+            VisionError::NdimageError(s) => VisionError::NdimageError(s.clone()),
+            VisionError::IoError(e) => VisionError::Other(format!("I/O error: {e}")),
+            VisionError::TypeConversionError(s) => VisionError::TypeConversionError(s.clone()),
+            VisionError::ShapeError(e) => VisionError::Other(format!("Shape error: {e}")),
+            VisionError::LinAlgError(s) => VisionError::LinAlgError(s.clone()),
+            VisionError::GpuError(s) => VisionError::GpuError(s.clone()),
+            VisionError::DimensionMismatch(s) => VisionError::DimensionMismatch(s.clone()),
+            VisionError::InvalidInput(s) => VisionError::InvalidInput(s.clone()),
+            VisionError::Other(s) => VisionError::Other(s.clone()),
         }
     }
 }
 
 /// Convert GPU errors to vision errors
 impl From<scirs2_core::gpu::GpuError> for VisionError {
-    fn from(_err: scirs2_core: gpu::GpuError) -> Self {
+    fn from(_err: scirs2_core::gpu::GpuError) -> Self {
         VisionError::GpuError(_err.to_string())
     }
 }
@@ -456,12 +456,12 @@ impl ErrorRecoveryManager {
     /// Determine error severity level
     fn determine_error_severity(&self, error: &VisionError) -> ErrorSeverity {
         match error {
-            VisionError::InvalidParameter(_) | VisionError::InvalidInput(_) =>, ErrorSeverity::Low,
+            VisionError::InvalidParameter(_) | VisionError::InvalidInput(_) => ErrorSeverity::Low,
             VisionError::OperationError(_) | VisionError::TypeConversionError(_) => {
                 ErrorSeverity::Medium
             }
-            VisionError::LinAlgError(_) | VisionError::DimensionMismatch(_) =>, ErrorSeverity::High,
-            VisionError::IoError(_) | VisionError::Other(_) => ErrorSeverity::Critical_ =>, ErrorSeverity::Medium,
+            VisionError::LinAlgError(_) | VisionError::DimensionMismatch(_) => ErrorSeverity::High,
+            VisionError::IoError(_) | VisionError::Other(_) => ErrorSeverity::Critical,
         }
     }
 

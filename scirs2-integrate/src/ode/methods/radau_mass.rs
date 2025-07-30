@@ -6,10 +6,10 @@
 use crate::error::IntegrateResult;
 use crate::ode::types::{MassMatrix, MassMatrixType, ODEMethod, ODEOptions, ODEResult};
 use crate::ode::utils::common::calculate_error_weights;
-use crate::ode::utils::dense__output::DenseSolution;
+use crate::ode::utils::dense_output::DenseSolution;
 use crate::ode::utils::interpolation::ContinuousOutputMethod;
 use crate::ode::utils::jacobian;
-use crate::ode::utils::linear__solvers::solve_linear_system;
+use crate::ode::utils::linear_solvers::solve_linear_system;
 use crate::ode::utils::mass_matrix;
 use crate::IntegrateFloat;
 use ndarray::{Array1, Array2, ArrayView1};
@@ -224,10 +224,10 @@ where
         if mass_matrix.matrix_type != MassMatrixType::Identity {
             // Estimate condition number heuristically and adjust tolerance accordingly
             let condition_factor = match mass_matrix.matrix_type {
-                MassMatrixType::Constant =>, F::from_f64(5.0).unwrap(), // Moderate relaxation
-                MassMatrixType::TimeDependent =>, F::from_f64(8.0).unwrap(), // More relaxation
-                MassMatrixType::StateDependent =>, F::from_f64(12.0).unwrap(), // Most relaxation
-                MassMatrixType::Identity =>, F::one(),                  // No change
+                MassMatrixType::Constant => F::from_f64(5.0).unwrap(), // Moderate relaxation
+                MassMatrixType::TimeDependent => F::from_f64(8.0).unwrap(), // More relaxation
+                MassMatrixType::StateDependent => F::from_f64(12.0).unwrap(), // Most relaxation
+                MassMatrixType::Identity => F::one(),                  // No change
             };
             newton_tol *= condition_factor;
 

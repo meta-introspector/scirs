@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution, FisherF as RandFisherF};
+use rand_distr::{Distribution, FisherF as RandFisherF};
 use std::f64::consts::PI;
 
 /// F distribution structure
@@ -40,7 +40,7 @@ impl<T: Float + NumCast> F<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::f::F;
+    /// use scirs2_stats::distributions::f::F;
     ///
     /// // F distribution with 2 and 10 degrees of freedom
     /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
@@ -95,7 +95,7 @@ impl<T: Float + NumCast> F<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::f::F;
+    /// use scirs2_stats::distributions::f::F;
     ///
     /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
     /// let pdf_at_one = f_dist.pdf(1.0);
@@ -162,7 +162,7 @@ impl<T: Float + NumCast> F<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::f::F;
+    /// use scirs2_stats::distributions::f::F;
     ///
     /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
     /// let cdf_at_one = f_dist.cdf(1.0);
@@ -226,7 +226,7 @@ impl<T: Float + NumCast> F<T> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::f::F;
+    /// use scirs2_stats::distributions::f::F;
     ///
     /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
     /// let samples = f_dist.rvs(1000).unwrap();

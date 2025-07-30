@@ -27,7 +27,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::ml_optimization::{NeuralSpatialOptimizer, ReinforcementLearningSelector};
+//! use scirs2_spatial::ml_optimization::{NeuralSpatialOptimizer, ReinforcementLearningSelector};
 //! use ndarray::array;
 //!
 //! // Neural network-based spatial optimizer
@@ -165,7 +165,7 @@ pub struct NeuralSpatialOptimizer {
 }
 
 impl Default for NeuralSpatialOptimizer {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -525,7 +525,8 @@ impl NeuralSpatialOptimizer {
             0 => DistanceMetric::Euclidean,
             1 => DistanceMetric::Manhattan,
             2 => DistanceMetric::Cosine,
-            3 => DistanceMetric::Minkowski(2.0, _ =>, DistanceMetric::Euclidean,
+            3 => DistanceMetric::Minkowski(2.0),
+            _ => DistanceMetric::Euclidean,
         }
     }
 
@@ -1043,7 +1044,7 @@ pub struct Experience {
 }
 
 impl Default for ReinforcementLearningSelector {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }

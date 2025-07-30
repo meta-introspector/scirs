@@ -70,10 +70,10 @@ async-trait = { workspace = true, optional = true }  # For object-safe async tra
 
 # GPU backend dependencies
 # Note: metal and objc2-metal-performance-shaders are macOS-specific, moved to target-specific section
-cudarc = { version = "0.12", optional = true, features = ["cuda-12000"] }  # CUDA runtime
-opencl3 = { version = "0.11", optional = true }  # OpenCL runtime  
-wgpu = { version = "22.1", optional = true }  # WebGPU runtime
-pollster = { version = "0.4", optional = true }  # Async runtime for WebGPU
+cudarc = { workspace = true, optional = true, features = ["cuda-12000"] }  # CUDA runtime
+opencl3 = { workspace = true, optional = true }  # OpenCL runtime  
+wgpu = { workspace = true, optional = true }  # WebGPU runtime
+pollster = { workspace = true, optional = true }  # Async runtime for WebGPU
 
 # Production-level feature dependencies
 reqwest = { workspace = true, optional = true }  # HTTP client for tracing export

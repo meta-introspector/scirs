@@ -36,7 +36,8 @@ impl SVDMethod {
             "lanczos" => Ok(Self::Lanczos),
             "randomized" | "random" => Ok(Self::Randomized),
             "power" => Ok(Self::Power),
-            "cross" | "cross_approximation" => Ok(Self::CrossApproximation, _ => Err(SparseError::ValueError(format!("Unknown SVD method: {s}"))),
+            "cross" | "cross_approximation" => Ok(Self::CrossApproximation),
+            _ => Err(SparseError::ValueError(format!("Unknown SVD method: {s}"))),
         }
     }
 }

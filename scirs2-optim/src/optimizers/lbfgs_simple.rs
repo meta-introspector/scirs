@@ -27,14 +27,15 @@ pub struct SimpleLBFGS<A: Float + ScalarOperand + Debug> {
     prev_grad: Option<Array1<A>>}
 
 impl<A: Float + ScalarOperand + Debug> SimpleLBFGS<A> {
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
-            _learning_rate,
+            learning_rate,
             history_size: 20,
             s_list: VecDeque::new(),
             y_list: VecDeque::new(),
             prev_params: None,
-            prev_grad: None}
+            prev_grad: None,
+        }
     }
 
     pub fn learning_rate(&self) -> A {

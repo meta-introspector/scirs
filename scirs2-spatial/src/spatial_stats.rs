@@ -14,7 +14,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__spatial::spatial_stats::{morans_i, gearys_c};
+//! use scirs2_spatial::spatial_stats::{morans_i, gearys_c};
 //!
 //! // Create spatial data (values at different locations)
 //! let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
@@ -60,7 +60,7 @@ use crate::error::{SpatialError, SpatialResult};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::spatial_stats::morans_i;
+/// use scirs2_spatial::spatial_stats::morans_i;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
 /// let weights = array![
@@ -143,7 +143,7 @@ pub fn morans_i<T: Float>(_values: &ArrayView1<T>, weights: &ArrayView2<T>) -> S
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::spatial_stats::gearys_c;
+/// use scirs2_spatial::spatial_stats::gearys_c;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
 /// let weights = array![
@@ -231,7 +231,7 @@ pub fn gearys_c<T: Float>(_values: &ArrayView1<T>, weights: &ArrayView2<T>) -> S
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::spatial_stats::local_morans_i;
+/// use scirs2_spatial::spatial_stats::local_morans_i;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
 /// let weights = array![
@@ -315,7 +315,7 @@ pub fn local_morans_i<T: Float>(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::spatial_stats::getis_ord_gi;
+/// use scirs2_spatial::spatial_stats::getis_ord_gi;
 ///
 /// let values = array![1.0, 2.0, 1.5, 3.0, 2.5];
 /// let weights = array![
@@ -420,7 +420,7 @@ pub fn getis_ord_gi<T: Float>(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::spatial_stats::distance_weights_matrix;
+/// use scirs2_spatial::spatial_stats::distance_weights_matrix;
 ///
 /// let coords = array![
 ///     [0.0, 0.0],
@@ -512,7 +512,7 @@ pub fn distance_weights_matrix<T: Float>(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::spatial_stats::clark_evans_index;
+/// use scirs2_spatial::spatial_stats::clark_evans_index;
 ///
 /// let coords = array![
 ///     [0.0, 0.0],

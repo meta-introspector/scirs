@@ -216,7 +216,7 @@ fn demo_dendrogram_json_export(_data: &Array2<f64>) -> Result<(), Box<dyn std::e
     println!("🎯 JSON dendrogram export successful!");
 
     // Parse and display structure information
-    let json_data: serde, _json: Value = serde_json::from_str(&json_dendrogram)?;
+    let json_data: serde_json::Value = serde_json::from_str(&json_dendrogram)?;
     println!(
         "   - Format: {}",
         json_data["type"].as_str().unwrap_or("unknown")

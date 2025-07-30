@@ -20,7 +20,7 @@
 //! ### Testing if a point is inside a sphere
 //!
 //! ```
-//! use scirs2__spatial::collision::{Sphere, point_sphere_collision};
+//! use scirs2_spatial::collision::{Sphere, point_sphere_collision};
 //!
 //! let sphere = Sphere {
 //!     center: [0.0, 0.0, 0.0],
@@ -36,7 +36,7 @@
 //! ### Testing if two circles collide
 //!
 //! ```
-//! use scirs2__spatial::collision::{Circle, circle_circle_collision};
+//! use scirs2_spatial::collision::{Circle, circle_circle_collision};
 //!
 //! let circle1 = Circle {
 //!     center: [0.0, 0.0],

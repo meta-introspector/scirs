@@ -16,8 +16,8 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::generic_algorithms::{GenericKDTree, GenericDistanceMatrix};
-//! use scirs2__spatial::generic_traits::{Point, EuclideanMetric};
+//! use scirs2_spatial::generic_algorithms::{GenericKDTree, GenericDistanceMatrix};
+//! use scirs2_spatial::generic_traits::{Point, EuclideanMetric};
 //!
 //! // Create points with different numeric types
 //! let points_f32 = vec![
@@ -36,7 +36,7 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use crate::generic__traits::{DistanceMetric, Point, SpatialPoint, SpatialScalar};
+use crate::generic_traits::{DistanceMetric, Point, SpatialPoint, SpatialScalar};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use std::cmp::Ordering;
@@ -1919,7 +1919,7 @@ pub struct GMMResult<T: SpatialScalar> {
 
 #[cfg(test)]
 mod tests {
-use crate::generic__traits::EuclideanMetric;
+use crate::generic_traits::EuclideanMetric;
     use approx::assert_relative_eq;
 
     #[test]

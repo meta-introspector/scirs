@@ -1,8 +1,8 @@
 //! Simple example demonstrating automatic padding
 
 use ndarray::Array1;
-use num__complex::Complex;
-use scirs2__fft::{auto_pad_complex, AutoPadConfig, PaddingMode};
+use num_complex::Complex;
+use scirs2_fft::{auto_pad_complex, AutoPadConfig, PaddingMode};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

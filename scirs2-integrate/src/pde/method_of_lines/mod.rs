@@ -28,7 +28,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use crate::ode::{solve_ivp, ODEMethod, ODEOptions};
-use crate::pde::finite__difference::FiniteDifferenceScheme;
+use crate::pde::finite_difference::FiniteDifferenceScheme;
 use crate::pde::{BoundaryCondition, Domain, PDEError, PDEResult, PDESolution, PDESolverInfo};
 
 /// Type alias for 1D coefficient function taking (x, t, u) and returning a value
@@ -54,7 +54,7 @@ pub struct MOLOptions {
 }
 
 impl Default for MOLOptions {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         MOLOptions {
             ode_method: ODEMethod::RK45,
             atol: 1e-6,
@@ -190,7 +190,7 @@ impl MOLParabolicSolver1D {
     }
 
     /// Set the finite difference scheme for spatial discretization
-    pub fn with_fd_scheme(mut scheme: FiniteDifferenceScheme) -> Self {
+    pub fn with_fd_scheme(mut self, scheme: FiniteDifferenceScheme) -> Self {
         self.fd_scheme = scheme;
         self
     }

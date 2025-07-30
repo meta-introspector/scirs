@@ -5,6 +5,7 @@
 
 use ndarray::Array1;
 use num_traits::Float;
+use rand::Rng;
 use scirs2_core::random::Random;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -298,7 +299,7 @@ impl<T: Float + Default + Clone> MOEADOptimizer<T> {
         let neighborhood_size = 20; // Default neighborhood size
 
         Ok(Self {
-            _config,
+            config: _config,
             weight_vectors: Vec::new(),
             population: Vec::new(),
             neighbors: Vec::new(),
@@ -323,7 +324,7 @@ impl<T: Float + Default + Clone> MOEADOptimizer<T> {
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + std::iter::Sum>
     MultiObjectiveOptimizer<T> for MOEADOptimizer<T>
 {
-    fn initialize(&mut self_config: &MultiObjectiveConfig<T>) -> Result<()> {
+    fn initialize(&mut self, _config: &MultiObjectiveConfig<T>) -> Result<()> {
         Ok(())
     }
 
@@ -338,7 +339,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
     }
 
     fn select_candidates(
-        &mut self_population: &[OptimizerArchitecture<T>], _objectives: &[T],
+        &mut self, _population: &[OptimizerArchitecture<T>], _objectives: &[T],
     ) -> Result<Vec<OptimizerArchitecture<T>>> {
         Ok(Vec::new())
     }
@@ -398,7 +399,7 @@ impl<T: Float + Default + Clone> WeightedSum<T> {
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + std::iter::Sum>
     MultiObjectiveOptimizer<T> for WeightedSum<T>
 {
-    fn initialize(&mut self_config: &MultiObjectiveConfig<T>) -> Result<()> {
+    fn initialize(&mut self, _config: &MultiObjectiveConfig<T>) -> Result<()> {
         Ok(())
     }
 
@@ -414,7 +415,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
     }
 
     fn select_candidates(
-        &mut self_population: &[OptimizerArchitecture<T>], _objectives: &[T],
+        &mut self, _population: &[OptimizerArchitecture<T>], _objectives: &[T],
     ) -> Result<Vec<OptimizerArchitecture<T>>> {
         // Simple placeholder implementation
         Ok(Vec::new())
@@ -681,10 +682,10 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
             pareto_front: ParetoFront::new(),
             generation: 0,
             statistics: MultiObjectiveStatistics::default(),
-            _population_size,
+            population_size: _population_size,
             crossover_prob,
             mutation_prob,
-            rng: Random::with_seed(42),
+            rng: Random::seed(42),
         }
     }
 
@@ -713,7 +714,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
 
     /// Generate random architecture (placeholder)
     fn generate_random_architecture(&self) -> Result<OptimizerArchitecture<T>> {
-        use super::architecture__space::{ComponentType, OptimizerComponent};
+        use super::architecture_space::{ComponentType, OptimizerComponent};
 
         // Simplified random architecture generation
         let component = OptimizerComponent {
@@ -893,7 +894,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
         &mut self,
         combined_population: Vec<Individual<T>>,
     ) -> Vec<Individual<T>> {
-        self._population = combined_population;
+        self.population = combined_population;
 
         // Non-dominated sorting
         let fronts = self.non_dominated_sort();
@@ -911,7 +912,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
 
                 // Add entire front
                 for &idx in front {
-                    new_population.push(self._population[idx].clone());
+                    new_population.push(self.population[idx].clone());
                 }
                 front_idx += 1;
             } else {
@@ -920,7 +921,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
 
                 let mut front_individuals: Vec<_> = front
                     .iter()
-                    .map(|&idx| (idx, self._population[idx].crowding_distance))
+                    .map(|&idx| (idx, self.population[idx].crowding_distance))
                     .collect();
 
                 // Sort by crowding distance (descending)
@@ -929,7 +930,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
                 let remaining_slots = self.population_size - new_population.len();
                 for i in 0..remaining_slots {
                     let idx = front_individuals[i].0;
-                    new_population.push(self._population[idx].clone());
+                    new_population.push(self.population[idx].clone());
                 }
                 break;
             }
@@ -1139,9 +1140,14 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
                 let mut objectives = Vec::new();
                 for obj_config in &self.config.objectives {
                     let metric = match obj_config.objective_type {
-                        ObjectiveType::Performance =>, EvaluationMetric::FinalPerformance,
-                        ObjectiveType::Efficiency =>, EvaluationMetric::ComputationalEfficiency,
-                        ObjectiveType::Robustness => EvaluationMetric::TrainingStability_ =>, EvaluationMetric::FinalPerformance,
+                        ObjectiveType::Performance => EvaluationMetric::FinalPerformance,
+                        ObjectiveType::Efficiency => EvaluationMetric::ComputationalEfficiency,
+                        ObjectiveType::Robustness => EvaluationMetric::FinalPerformance,
+                        ObjectiveType::Interpretability => EvaluationMetric::FinalPerformance,
+                        ObjectiveType::Fairness => EvaluationMetric::FinalPerformance,
+                        ObjectiveType::Privacy => EvaluationMetric::FinalPerformance,
+                        ObjectiveType::Sustainability => EvaluationMetric::ComputationalEfficiency,
+                        ObjectiveType::Cost => EvaluationMetric::ComputationalEfficiency,
                     };
 
                     let value = result
@@ -1173,7 +1179,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
     }
 
     fn select_candidates(
-        &mut self_population: &[OptimizerArchitecture<T>], _objectives: &[T],
+        &mut self, _population: &[OptimizerArchitecture<T>], _objectives: &[T],
     ) -> Result<Vec<OptimizerArchitecture<T>>> {
         // Generate new candidates through crossover and mutation
         let mut new_population = Vec::new();
@@ -1185,7 +1191,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
 
             // Crossover
             let mut offspring = if self.rng.gen_range(0.0..1.0) < self.crossover_prob {
-                self.crossover(&parent1..&parent2)?
+                self.crossover(&parent1, &parent2)?
             } else {
                 parent1.clone()
             };
@@ -1250,7 +1256,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
         if !parent1.architecture.components.is_empty()
             && !parent2.architecture.components.is_empty()
         {
-            for (key_value) in &parent1.architecture.components[0].hyperparameters {
+            for (key, _value) in &parent1.architecture.components[0].hyperparameters {
                 if self.rng.gen_range(0.0..1.0) < 0.5 {
                     if let Some(parent2_value) =
                         parent2.architecture.components[0].hyperparameters.get(key)
@@ -1275,7 +1281,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
             {
                 if self.rng.gen_range(0.0..1.0) < 0.1 {
                     // 10% mutation rate per parameter
-                    let noise = T::from(self.rng.random_range(-0.05..0.05)).unwrap(); // ±5% noise
+                    let noise = T::from(self.rng.random_range(-0.05, 0.05)).unwrap(); // ±5% noise
                     *value = *value + noise;
                 }
             }

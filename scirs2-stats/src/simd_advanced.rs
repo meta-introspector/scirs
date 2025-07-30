@@ -10,7 +10,7 @@
 //! - Vector instruction pipelining
 
 use crate::error::{StatsError, StatsResult};
-use crate::simd_enhanced__v6::AdvancedSimdOps;
+use crate::simd_enhanced_v6::AdvancedSimdOps;
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
@@ -188,13 +188,13 @@ where
     fn select_optimal_memory_pattern(_config: &AdvancedSimdConfig) -> MemoryPattern {
         if _config.enable_cache_blocking {
             MemoryPattern::Blocked {
-                block_size: _config.l1_cache_size / std::mem::size, _of::<f64>(),
+                block_size: _config.l1_cache_size / std::mem::size_of::<f64>(),
             }
         } else if _config.enable_prefetch {
             MemoryPattern::SequentialPrefetch
         } else {
             MemoryPattern::Tiled {
-                tile_size: _config.cache_line_size / std::mem::size, _of::<f64>(),
+                tile_size: _config.cache_line_size / std::mem::size_of::<f64>(),
             }
         }
     }
@@ -833,8 +833,8 @@ impl CacheAwareVectorProcessor {
     /// Create new cache-aware processor
     pub fn new(_config: &AdvancedSimdConfig) -> Self {
         Self {
-            l1_block_size: _config.l1_cache_size / std::mem::size, _of::<f64>(),
-            l2_block_size: _config.l2_cache_size / std::mem::size, _of::<f64>(),
+            l1_block_size: _config.l1_cache_size / std::mem::size_of::<f64>(),
+            l2_block_size: _config.l2_cache_size / std::mem::size_of::<f64>(),
             vector_width: _config.vector_width,
             prefetch_distance: _config.vector_width * 4, // Prefetch 4 vectors ahead
         }
@@ -872,7 +872,7 @@ pub fn advanced_mean_f64(_data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsRe
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__stats::advanced_simd_advanced::advanced_mean_f32;
+/// use scirs2_stats::advanced_simd_advanced::advanced_mean_f32;
 ///
 /// let data = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
 /// let result = advanced_mean_f32(&data.view()).unwrap();

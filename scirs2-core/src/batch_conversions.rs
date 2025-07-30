@@ -41,7 +41,7 @@ use std::fmt;
 use wide::{f32x4, f64x2, i32x4};
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use crate::parallel_ops::*;
 
 /// Configuration for batch conversions
 #[derive(Debug, Clone)]
@@ -61,8 +61,8 @@ pub struct BatchConversionConfig {
 impl Default for BatchConversionConfig {
     fn default() -> Self {
         Self {
-            use_simd: cfg!(feature = simd),
-            use_parallel: cfg!(feature = parallel),
+            use_simd: cfg!(feature = "simd"),
+            use_parallel: cfg!(feature = "parallel"),
             parallel_chunk_size: 1024,
             simd_vector_size: None,
             parallel_threshold: 10000,
@@ -223,7 +223,7 @@ impl BatchConverter {
         T: Bounded + NumCast + PartialOrd + fmt::Display + Copy + 'static,
     {
         // Check if we can use SIMD for this conversion
-        if self.can_use_simd_for__conversion::<S, T>() {
+        if self.can_use_simd_for_conversion::<S, T>() {
             self.convert_slice_simd_optimized(slice)
         } else {
             self.convert_slice_sequential_with_errors(slice)
@@ -711,27 +711,27 @@ pub mod utils {
     use super::*;
 
     /// Convert f64 slice to f32 with SIMD optimization
-    pub fn slice( &[f64]) -> CoreResult<Vec<f32>> {
+    pub fn f64_to_f32_batch(slice: &[f64]) -> CoreResult<Vec<f32>> {
         let converter = BatchConverter::with_default_config();
-        converter.convert_slice(_slice)
+        converter.convert_slice(slice)
     }
 
     /// Convert f32 slice to f64 with SIMD optimization  
-    pub fn slice( &[f32]) -> CoreResult<Vec<f64>> {
+    pub fn f32_to_f64_batch(slice: &[f32]) -> CoreResult<Vec<f64>> {
         let converter = BatchConverter::with_default_config();
-        converter.convert_slice(_slice)
+        converter.convert_slice(slice)
     }
 
     /// Convert i32 slice to f32 with SIMD optimization
-    pub fn slice( &[i32]) -> Vec<f32> {
+    pub fn i32_to_f32_batch(slice: &[i32]) -> Vec<f32> {
         let converter = BatchConverter::with_default_config();
-        converter.convert_slice_clamped(_slice)
+        converter.convert_slice_clamped(slice)
     }
 
     /// Convert i64 slice to f64 with SIMD optimization
-    pub fn slice( &[i64]) -> Vec<f64> {
+    pub fn i64_to_f64_batch(slice: &[i64]) -> Vec<f64> {
         let converter = BatchConverter::with_default_config();
-        converter.convert_slice_clamped(_slice)
+        converter.convert_slice_clamped(slice)
     }
 
     /// Benchmark different conversion methods
@@ -779,7 +779,7 @@ pub mod utils {
         }
 
         // Combined SIMD + Parallel
-        #[cfg(all(feature = simd, feature = parallel))]
+        #[cfg(all(feature = "simd", feature = "parallel"))]
         {
             let start = Instant::now();
             let config = BatchConversionConfig::default()
@@ -906,15 +906,15 @@ mod tests {
     #[test]
     fn test_utils_functions() {
         let f64_data: Vec<f64> = vec![1.0, 2.5, 3.7];
-        let f32_result = utils:: f64, _to_f32_batch(&f64_data).unwrap();
+        let f32_result = utils::f64_to_f32_batch(&f64_data).unwrap();
         assert_eq!(f32_result.len(), f64_data.len());
 
         let f32_data: Vec<f32> = vec![1.0, 2.5, 3.7];
-        let f64_result = utils:: f32, _to_f64_batch(&f32_data).unwrap();
+        let f64_result = utils::f32_to_f64_batch(&f32_data).unwrap();
         assert_eq!(f64_result.len(), f32_data.len());
 
         let i32_data: Vec<i32> = vec![1, 2, 3];
-        let f32_result = utils:: i32, _to_f32_batch(&i32_data);
+        let f32_result = utils::i32_to_f32_batch(&i32_data);
         assert_eq!(f32_result.len(), i32_data.len());
     }
 }

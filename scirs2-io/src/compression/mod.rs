@@ -102,7 +102,8 @@ impl CompressionAlgorithm {
             "br" | "brotli" => Some(CompressionAlgorithm::Brotli),
             "snappy" | "snp" => Some(CompressionAlgorithm::Snappy),
             "fpz" | "fpzip" => Some(CompressionAlgorithm::FpZip),
-            "dlz4" | "delta-lz4" => Some(CompressionAlgorithm::DeltaLz4, _ => None,
+            "dlz4" | "delta-lz4" => Some(CompressionAlgorithm::DeltaLz4),
+            _ => None,
         }
     }
 }

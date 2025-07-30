@@ -23,7 +23,7 @@ type VoronoiDiagramResult = (Array2<f64>, Vec<Vec<usize>>, Array2<f64>);
 /// # Examples
 ///
 /// ```
-/// # use scirs2__spatial::spherical_voronoi::SphericalVoronoi;
+/// # use scirs2_spatial::spherical_voronoi::SphericalVoronoi;
 /// # use ndarray::array;
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// // Create points on a sphere (these should be normalized)

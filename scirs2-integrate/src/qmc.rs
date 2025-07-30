@@ -29,7 +29,7 @@ pub struct QMCQuadResult<T> {
     pub standard_error: T,
 }
 
-impl<T: fmt::Display>, fmt::Display for QMCQuadResult<T> {
+impl<T: fmt::Display> fmt::Display for QMCQuadResult<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -42,13 +42,13 @@ impl<T: fmt::Display>, fmt::Display for QMCQuadResult<T> {
 /// Trait for quasi-random number generators
 pub trait QRNGEngine: Send + Sync {
     /// Generate n points in d dimensions in the unit hypercube [0,1]^d
-    fn random(n: usize) -> Array2<f64>;
+    fn random(&mut self, n: usize) -> Array2<f64>;
 
     /// Dimensionality of the generator
-    fn dim() -> usize;
+    fn dim(&self) -> usize;
 
     /// Create a new instance from a seed
-    fn new_from_seed(_seed: u64) -> Box<dyn QRNGEngine>;
+    fn new_from_seed(&self, seed: u64) -> Box<dyn QRNGEngine>;
 }
 
 /// Simple pseudorandom number generator for benchmarking
@@ -60,10 +60,10 @@ pub struct RandomGenerator {
 
 impl RandomGenerator {
     /// Create a new random number generator
-    pub fn new(_dim: usize, seed: Option<u64>) -> Self {
+    pub fn new(dim: usize, seed: Option<u64>) -> Self {
         let _seed = seed.unwrap_or_else(random::<u64>);
 
-        Self { dim_seed }
+        Self { dim, _seed }
     }
 }
 
@@ -84,8 +84,8 @@ impl QRNGEngine for RandomGenerator {
         self.dim
     }
 
-    fn new_from_seed(_seed: u64) -> Box<dyn QRNGEngine> {
-        Box::new(Self::new(self.dim, Some(_seed)))
+    fn new_from_seed(&self, seed: u64) -> Box<dyn QRNGEngine> {
+        Box::new(Self::new(self.dim, Some(seed)))
     }
 }
 
@@ -100,15 +100,15 @@ pub struct Sobol {
 
 impl Sobol {
     /// Create a new Sobol sequence generator
-    pub fn new(_dim: usize, seed: Option<u64>) -> Self {
+    pub fn new(dim: usize, seed: Option<u64>) -> Self {
         let seed = seed.unwrap_or_else(random::<u64>);
 
         let mut sobol = Self {
-            _dim,
+            dim,
             seed,
             curr_index: 0,
             direction_numbers: Vec::new(),
-            last_point: vec![0; _dim],
+            last_point: vec![0; dim],
         };
 
         sobol.initialize_direction_numbers();
@@ -116,7 +116,7 @@ impl Sobol {
     }
 
     /// Initialize direction numbers for Sobol sequence
-    fn initialize_direction_numbers() {
+    fn initialize_direction_numbers(&mut self) {
         self.direction_numbers = vec![Vec::new(); self.dim];
 
         // First dimension uses powers of 2
@@ -164,7 +164,7 @@ impl Sobol {
             }
 
             // Generate remaining direction numbers using recurrence relation
-            let degree = self.bit_length(poly) - 1;
+            let degree = Sobol::bit_length(poly) - 1;
             for i in degree..64 {
                 let mut value = self.direction_numbers[d][i - degree];
 
@@ -186,7 +186,7 @@ impl Sobol {
             self.direction_numbers[d] = (0..64)
                 .map(|i| {
                     let base = 2 + (d - primitive_polynomials.len()) as u64;
-                    self.van_der_corput_direction_number(i, base)
+                    Sobol::van_der_corput_direction_number(i, base)
                 })
                 .collect();
         }
@@ -222,7 +222,7 @@ impl Sobol {
     }
 
     /// Generate a Sobol sequence point using proper Sobol algorithm
-    fn generate_point(&self) -> Vec<f64> {
+    fn generate_point(&mut self) -> Vec<f64> {
         if self.curr_index == 0 {
             self.curr_index = 1;
             return vec![0.0; self.dim];
@@ -267,8 +267,8 @@ impl QRNGEngine for Sobol {
         self.dim
     }
 
-    fn new_from_seed(_seed: u64) -> Box<dyn QRNGEngine> {
-        Box::new(Self::new(self.dim, Some(_seed)))
+    fn new_from_seed(&self, seed: u64) -> Box<dyn QRNGEngine> {
+        Box::new(Self::new(self.dim, Some(seed)))
     }
 }
 
@@ -281,18 +281,18 @@ pub struct Halton {
 
 impl Halton {
     /// Create a new Halton sequence generator
-    pub fn new(_dim: usize, seed: Option<u64>) -> Self {
+    pub fn new(dim: usize, seed: Option<u64>) -> Self {
         let seed = seed.unwrap_or_else(random::<u64>);
 
         Self {
-            _dim,
+            dim,
             seed,
             curr_index: 0,
         }
     }
 
     /// Generate a Halton sequence point
-    fn generate_point(&self) -> Vec<f64> {
+    fn generate_point(&mut self) -> Vec<f64> {
         let first_primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53];
         let mut result = vec![0.0; self.dim];
 
@@ -343,8 +343,8 @@ impl QRNGEngine for Halton {
         self.dim
     }
 
-    fn new_from_seed(_seed: u64) -> Box<dyn QRNGEngine> {
-        Box::new(Self::new(self.dim, Some(_seed)))
+    fn new_from_seed(&self, seed: u64) -> Box<dyn QRNGEngine> {
+        Box::new(Self::new(self.dim, Some(seed)))
     }
 }
 
@@ -357,11 +357,11 @@ pub struct Faure {
 
 impl Faure {
     /// Create a new Faure sequence generator
-    pub fn new(_dim: usize, seed: Option<u64>) -> Self {
+    pub fn new(dim: usize, seed: Option<u64>) -> Self {
         let seed = seed.unwrap_or_else(random::<u64>);
 
         Self {
-            _dim,
+            dim,
             seed,
             curr_index: 0,
         }
@@ -371,8 +371,8 @@ impl Faure {
     ///
     /// The Faure sequence is based on a prime base p >= dim, where p is the smallest
     /// prime number greater than or equal to the dimension.
-    fn generate_point(&self) -> Vec<f64> {
-        let base = self.find_prime_base(self.dim);
+    fn generate_point(&mut self) -> Vec<f64> {
+        let base = Faure::find_prime_base(self.dim);
         let mut result = vec![0.0; self.dim];
 
         // Scrambling offset using seed
@@ -381,7 +381,7 @@ impl Faure {
 
         // Generate coordinates using Faure matrices
         for (d, result_elem) in result.iter_mut().enumerate().take(self.dim) {
-            *result_elem = self.faure_coordinate(scrambled_index, d, base);
+            *result_elem = Faure::faure_coordinate(scrambled_index, d, base);
         }
 
         self.curr_index += 1;
@@ -494,8 +494,8 @@ impl QRNGEngine for Faure {
         self.dim
     }
 
-    fn new_from_seed(_seed: u64) -> Box<dyn QRNGEngine> {
-        Box::new(Self::new(self.dim, Some(_seed)))
+    fn new_from_seed(&self, seed: u64) -> Box<dyn QRNGEngine> {
+        Box::new(Self::new(self.dim, Some(seed)))
     }
 }
 

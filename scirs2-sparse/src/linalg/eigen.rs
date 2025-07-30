@@ -1048,7 +1048,8 @@ impl EigenvalueMethod {
             "arnoldi" => Ok(Self::Arnoldi),
             "power" | "power_iteration" => Ok(Self::PowerIteration),
             "inverse" | "inverse_iteration" => Ok(Self::InverseIteration),
-            "subspace" | "subspace_iteration" => Ok(Self::SubspaceIteration, _ => Err(SparseError::ValueError(format!(
+            "subspace" | "subspace_iteration" => Ok(Self::SubspaceIteration),
+            _ => Err(SparseError::ValueError(format!(
                 "Unknown eigenvalue method: {s}"
             ))),
         }
@@ -1465,7 +1466,8 @@ where
         "LM" => b.abs().partial_cmp(&a.abs()).unwrap(),
         "SM" => a.abs().partial_cmp(&b.abs()).unwrap(),
         "LA" => b.partial_cmp(a).unwrap(),
-        "SA" => a.partial_cmp(b).unwrap(, _ => b.abs().partial_cmp(&a.abs()).unwrap(),
+        "SA" => a.partial_cmp(b).unwrap(),
+        _ => b.abs().partial_cmp(&a.abs()).unwrap(),
     });
 
     // Take only k eigenvalues
@@ -2095,7 +2097,8 @@ where
             .partial_cmp(&b.abs())
             .unwrap_or(std::cmp::Ordering::Equal),
         "LA" => b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal),
-        "SA" => a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal, _ => b
+        "SA" => a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal),
+        _ => b
             .abs()
             .partial_cmp(&a.abs())
             .unwrap_or(std::cmp::Ordering::Equal),
@@ -3550,7 +3553,8 @@ where
             .partial_cmp(&b.abs())
             .unwrap_or(std::cmp::Ordering::Equal),
         "LA" => b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal),
-        "SA" => a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal, _ => b
+        "SA" => a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal),
+        _ => b
             .abs()
             .partial_cmp(&a.abs())
             .unwrap_or(std::cmp::Ordering::Equal),
@@ -3730,7 +3734,8 @@ where
             .partial_cmp(&b.abs())
             .unwrap_or(std::cmp::Ordering::Equal),
         "LA" => b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal),
-        "SA" => a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal, _ => b
+        "SA" => a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal),
+        _ => b
             .abs()
             .partial_cmp(&a.abs())
             .unwrap_or(std::cmp::Ordering::Equal),
@@ -3894,7 +3899,7 @@ where
     // If C*x = mu*x, then A*x = lambda*B*x where lambda = sigma * (1 + mu) / (1 - mu)
     for eval in eigenvalues.iter_mut() {
         let mu = *eval;
-        if (T::one() - mu).abs() >, T::from(1e-14).unwrap() {
+        if (T::one() - mu).abs() > T::from(1e-14).unwrap() {
             *eval = sigma * (T::one() + mu) / (T::one() - mu);
         } else {
             *eval = sigma; // Handle near-singular case
@@ -3912,7 +3917,8 @@ where
             .partial_cmp(&b.abs())
             .unwrap_or(std::cmp::Ordering::Equal),
         "LA" => b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal),
-        "SA" => a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal, _ => b
+        "SA" => a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal),
+        _ => b
             .abs()
             .partial_cmp(&a.abs())
             .unwrap_or(std::cmp::Ordering::Equal),

@@ -206,7 +206,7 @@ pub mod ml_framework;
 /// # Examples
 ///
 /// ```rust,no_run
-/// use scirs2__io::mmap::{MmapArray, create_mmap_array};
+/// use scirs2_io::mmap::{MmapArray, create_mmap_array};
 /// use ndarray::Array2;
 ///
 /// // Create a large array file
@@ -250,7 +250,7 @@ pub mod netcdf;
 /// # Examples
 ///
 /// ```rust,no_run
-/// use scirs2__io::network::NetworkClient;
+/// use scirs2_io::network::NetworkClient;
 ///
 /// // Create a network client for downloading files
 /// let client = NetworkClient::new();
@@ -337,7 +337,7 @@ pub mod simd_io;
 /// # Examples
 ///
 /// ```rust,no_run
-/// use scirs2__io::sparse::SparseMatrix;
+/// use scirs2_io::sparse::SparseMatrix;
 /// use ndarray::Array2;
 ///
 /// // Create a sparse matrix from a dense array
@@ -371,7 +371,7 @@ pub mod sparse;
 /// # Examples
 ///
 /// ```rust,no_run
-/// use scirs2__io::streaming::{StreamingConfig, process_file_chunked};
+/// use scirs2_io::streaming::{StreamingConfig, process_file_chunked};
 ///
 /// // Process a large file in chunks
 /// let config = StreamingConfig::default().chunk_size(64 * 1024);
@@ -432,11 +432,11 @@ pub mod workflow;
 pub mod zero_copy;
 
 // Re-export commonly used functionality
-pub use advanced__coordinator::{
+pub use advanced_coordinator::{
     AdaptiveImprovements, AdvancedCoordinator, AdvancedStatistics, IntelligenceLevel,
     PerformanceIntelligenceStats, ProcessingResult, QualityMetrics, StrategyType,
 };
-pub use enhanced__algorithms::{
+pub use enhanced_algorithms::{
     AdvancedPatternAnalysis, AdvancedPatternRecognizer, DataCharacteristics, EmergentPattern,
     MetaPattern, OptimizationRecommendation, SynergyType,
 };

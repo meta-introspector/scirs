@@ -362,7 +362,7 @@ impl MPICommunicator {
                 request_handle: request,
                 operation_id: operation_id.clone(),
                 start_time: std::time::Instant::now(),
-                expected_bytes: data.len() * std::mem::size, _of::<T>(),
+                expected_bytes: data.len() * std::mem::size_of::<T>(),
                 operation_type: RequestOperationType::PointToPoint,
             };
 
@@ -401,7 +401,7 @@ impl MPICommunicator {
                 request_handle: request,
                 operation_id: operation_id.clone(),
                 start_time: std::time::Instant::now(),
-                expected_bytes: buffer.len() * std::mem::size, _of::<T>(),
+                expected_bytes: buffer.len() * std::mem::size_of::<T>(),
                 operation_type: RequestOperationType::PointToPoint,
             };
 

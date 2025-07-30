@@ -126,7 +126,7 @@ where
     }
 
     /// Load a chunk of the array into memory
-    pub fn index(usize: TypeName) -> Result<Array<A, D>, CoreError> {
+    pub fn load_chunk(&self, chunk_index: usize) -> Result<Array<A, D>, CoreError> {
         if chunk_index >= self.num_chunks() {
             return Err(CoreError::IndexError(
                 ErrorContext::new(format!(
@@ -185,7 +185,7 @@ where
 
         // Extract just this chunk's data from the full array
         // This is inefficient; a better implementation would read directly from disk
-        let cloned_array = full_array.clone();
+        let cloned_array = fullarray.clone();
         let chunk_dynamic = cloned_array.to_shape(chunk_shape).map_err(|e| {
             CoreError::DimensionError(
                 ErrorContext::new(format!("{e}"))
@@ -268,7 +268,11 @@ where
     }
 
     /// Try to squeeze singleton dimensions.
-    fn dims(usize: usize,
+    fn try_squeeze_dimensions(
+        array: Array<A, ndarray::IxDyn>,
+        context: &str,
+        source_dims: usize,
+        target_dims: usize,
     ) -> Result<Array<A, D>, CoreError> {
         let source_shape = array.shape().to_vec();
 
@@ -319,7 +323,11 @@ where
     }
 
     /// Try to expand dimensions by adding singleton dimensions.
-    fn dims(usize: usize,
+    fn try_expand_dimensions(
+        array: Array<A, ndarray::IxDyn>,
+        context: &str,
+        source_dims: usize,
+        target_dims: usize,
     ) -> Result<Array<A, D>, CoreError> {
         let source_shape = array.shape().to_vec();
         let dims_to_add = target_dims - source_dims;
@@ -337,7 +345,7 @@ where
 
         // Create expanded shape by adding singleton dimensions at the end
         let mut expanded_shape = source_shape.clone();
-        expanded_shape.extend(std::iter::repeat_n(1, dims_to_add));
+        expanded_shape.extend(std::iter::repeat(1).take(dims_to_add));
 
         // Try to reshape to expanded shape
         match array
@@ -450,7 +458,7 @@ where
         R: FromIterator<B> + Send,
         A: Send + Sync,
     {
-        use rayon::prelude::*;
+        use crate::parallel_ops::*;
 
         // Get the total number of chunks
         let num_chunks = self.num_chunks();
@@ -523,7 +531,7 @@ where
     where
         S: Data<Elem = A>,
     {
-        let array = OutOfCoreArray::new(data, "file_path", strategy)?;
+        let array = OutOfCoreArray::new(data, file_path, strategy)?;
 
         Ok(Self { array, read_only })
     }
@@ -566,7 +574,7 @@ where
     S: Data<Elem = A>,
     D: Dimension + Serialize + for<'de> Deserialize<'de>,
 {
-    DiskBackedArray::new(data, "file_path", strategy, read_only)
+    DiskBackedArray::new(data, file_path, strategy, read_only)
 }
 
 /// Load chunks of an out-of-core array into memory

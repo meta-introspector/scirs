@@ -20,7 +20,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::interpolate::IDWInterpolator;
+/// use scirs2_spatial::interpolate::IDWInterpolator;
 /// use ndarray::array;
 ///
 /// // Create sample points and values

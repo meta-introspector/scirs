@@ -1040,7 +1040,8 @@ impl PublicationGenerator {
             references: Vec::new()})
     }
     
-    fn generate_introduction(&self_experiments: &[Experiment]) -> Result<String> {
+    fn generate_introduction(&self,
+        experiments: &[Experiment]) -> Result<String> {
         Ok("This section introduces the research problem and motivation for comparing optimization algorithms.".to_string())
     }
     
@@ -1082,7 +1083,8 @@ impl PublicationGenerator {
         Ok(content)
     }
     
-    fn generate_conclusion(&self_experiments: &[Experiment]) -> Result<String> {
+    fn generate_conclusion(&self,
+        experiments: &[Experiment]) -> Result<String> {
         Ok("This section summarizes the key findings and implications of the experimental results.".to_string())
     }
 }

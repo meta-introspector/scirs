@@ -7,6 +7,7 @@
 use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 // Removed unused import Distribution
 use num_traits::Float;
+use rand::Rng;
 use std::marker::PhantomData;
 
 use crate::error::{OptimError, Result};
@@ -64,18 +65,21 @@ pub struct NoiseParameters<T: Float> {
 
 /// Gaussian noise mechanism for (ε, δ)-differential privacy
 pub struct GaussianMechanism<T: Float> {
-    rng: scirs2_core: random::Random_phantom: PhantomData<T>,
+    rng: scirs2_core::random::Random<rand::prelude::StdRng>,
+    _phantom: PhantomData<T>,
 }
 
 /// Laplace noise mechanism for ε-differential privacy
 pub struct LaplaceMechanism<T: Float> {
-    rng: scirs2_core: random::Random_phantom: PhantomData<T>,
+    rng: scirs2_core::random::Random<rand::prelude::StdRng>,
+    _phantom: PhantomData<T>,
 }
 
 /// Exponential mechanism for discrete optimization
 pub struct ExponentialMechanism<T: Float> {
-    rng: scirs2_core: random::Random,
-    quality_function: Box<dyn Fn(&T) -> T + Send + Sync>, _phantom: PhantomData<T>,
+    rng: scirs2_core::random::Random<rand::prelude::StdRng>,
+    quality_function: Box<dyn Fn(&T) -> T + Send + Sync>,
+    _phantom: PhantomData<T>,
 }
 
 /// Truncated noise mechanism for bounded sensitivity
@@ -145,12 +149,12 @@ pub enum MechanismSelectionStrategy {
 
 impl<T> GaussianMechanism<T>
 where
-    T: Float + Default + Clone + Send + Sync + rand__distr::uniform::SampleUniform,
+    T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
 {
     /// Create a new Gaussian mechanism
     pub fn new() -> Self {
         Self {
-            rng: scirs2_core: random::Random::with_seed(42), // Use seeded RNG for thread safety
+            rng: scirs2_core::random::Random::seed(42), // Use seeded RNG for thread safety
             _phantom: PhantomData,
         }
     }
@@ -193,7 +197,7 @@ where
             // Use Box-Muller transformation to generate normal random numbers
             // since direct sampling with scirs2_core::Random has trait issues
             let u1: f64 = self.rng.gen_range(0.0..1.0);
-            let u2: f64 = self.rng.random_range(0.0..1.0);
+            let u2: f64 = self.rng.random_range(0.0, 1.0);
             let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             let noise = T::from(z0 * sigma_f64).unwrap();
             x + noise
@@ -265,7 +269,7 @@ where
     /// Create a new Laplace mechanism
     pub fn new() -> Self {
         Self {
-            rng: scirs2_core: random::Random::with_seed(43), // Use seeded RNG for thread safety
+            rng: scirs2_core::random::Random::seed(43), // Use seeded RNG for thread safety
             _phantom: PhantomData,
         }
     }
@@ -287,7 +291,8 @@ where
         &mut self,
         data: &mut ArrayBase<S, D>,
         sensitivity: T,
-        epsilon: T_delta: Option<T>,
+        epsilon: T,
+        delta: Option<T>,
     ) -> Result<()>
     where
         S: DataMut<Elem = T>,
@@ -376,8 +381,9 @@ where
     /// Create a new exponential mechanism
     pub fn new(_quality_function: Box<dyn Fn(&T) -> T + Send + Sync>) -> Self {
         Self {
-            rng: scirs2_core: random::Random::with_seed(44), // Use seeded RNG for thread safety
-            quality_function_phantom: PhantomData,
+            rng: scirs2_core::random::Random::seed(44), // Use seeded RNG for thread safety
+            quality_function: _quality_function,
+            _phantom: PhantomData,
         }
     }
 
@@ -430,8 +436,9 @@ where
     /// Create a new truncated noise mechanism
     pub fn new(_base_mechanism: Box<dyn NoiseMechanism<T> + Send>, truncation_bound: T) -> Self {
         Self {
-            _base_mechanism,
-            truncation_bound_phantom: PhantomData,
+            base_mechanism: _base_mechanism,
+            truncation_bound,
+            _phantom: PhantomData,
         }
     }
 }
@@ -513,8 +520,9 @@ where
     /// Create a new tree aggregation mechanism
     pub fn new(_tree_height: usize, base_mechanism: Box<dyn NoiseMechanism<T> + Send>) -> Self {
         Self {
-            _tree_height,
-            base_mechanism_phantom: PhantomData,
+            tree_height: _tree_height,
+            base_mechanism,
+            _phantom: PhantomData,
         }
     }
 
@@ -570,9 +578,10 @@ where
         Self {
             threshold,
             budget_fraction,
-            _queries_answered: 0,
+            queries_answered: 0,
             max_queries,
-            base_mechanism_phantom: PhantomData,
+            base_mechanism,
+            _phantom: PhantomData,
         }
     }
 
@@ -652,8 +661,8 @@ where
     /// Select optimal noise mechanism
     pub fn select_mechanism(&self) -> Box<dyn NoiseMechanism<T> + Send> {
         match self.selection_strategy {
-            MechanismSelectionStrategy::AlwaysGaussian =>, Box::new(GaussianMechanism::new()),
-            MechanismSelectionStrategy::AlwaysLaplace =>, Box::new(LaplaceMechanism::new()),
+            MechanismSelectionStrategy::AlwaysGaussian => Box::new(GaussianMechanism::new()),
+            MechanismSelectionStrategy::AlwaysLaplace => Box::new(LaplaceMechanism::new()),
             MechanismSelectionStrategy::PrivacyOptimal => {
                 if self.target_delta.is_some() {
                     Box::new(GaussianMechanism::new())
@@ -747,7 +756,7 @@ where
         Ok(NoiseCalibrationResult {
             mechanism_used: mechanism.name().to_string(),
             noise_scale: adjusted_sensitivity / self.target_epsilon,
-            _sensitivity_used: adjusted_sensitivity,
+            sensitivity_used: adjusted_sensitivity,
             scaling_factor: self.scaling_factor,
             calibration_time_us: calibration_time.as_micros() as u64,
             privacy_parameters: PrivacyParameters {
@@ -813,7 +822,7 @@ where
     for i in 0..rows {
         for j in 0..cols {
             let u1: f64 = rng.gen_range(0.0..1.0);
-            let u2: f64 = rng.random_range(0.0..1.0);
+            let u2: f64 = rng.random_range(0.0, 1.0);
             let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             let gaussian_sample = z0 * scale_f64;
             noise[[i, j]] = T::from(gaussian_sample).unwrap();

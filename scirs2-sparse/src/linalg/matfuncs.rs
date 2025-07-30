@@ -413,7 +413,8 @@ where
     // Estimate ||A||
     let norm_a = match norm_type {
         "1" => onenormest(a, None, None)?,
-        "2" => twonormest(a, Some(tol), Some(maxiter))?_ => {
+        "2" => twonormest(a, Some(tol), Some(maxiter))?,
+        _ => {
             return Err(crate::error::SparseError::ValueError(
                 "norm_type must be '1' or '2'".to_string(),
             ))
@@ -1203,7 +1204,8 @@ where
     // Estimate ||A||
     let norm_a = match norm_type {
         "2" => twonormest_enhanced(a, Some(tol), Some(maxiter), None)?,
-        "1" => onenormest_enhanced(a, None, None)?_ => {
+        "1" => onenormest_enhanced(a, None, None)?,
+        _ => {
             return Err(crate::error::SparseError::ValueError(
                 "norm_type must be '1' or '2'".to_string(),
             ))
@@ -1347,7 +1349,8 @@ where
 /// Estimate ||A^(-1)|| using enhanced inverse power iteration
 #[allow(dead_code)]
 fn estimate_inverse_norm_enhanced<T, S>(
-    a: &S_norm_type: &str,
+    a: &S,
+    norm_type: &str,
     tol: T,
     maxiter: usize,
 ) -> SparseResult<T>

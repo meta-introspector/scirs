@@ -274,6 +274,8 @@ impl PerformanceHints {
             | ComplexityClass::Exponential
             | ComplexityClass::Factorial => true,
             ComplexityClass::Linear | ComplexityClass::Linearithmic => input_size > 10000,
+            ComplexityClass::Constant | ComplexityClass::Logarithmic => false,
+            ComplexityClass::Custom(_) => false,
         }
     }
 }
@@ -337,7 +339,7 @@ impl PerformanceHintRegistry {
     }
 
     /// Register performance hints for a function
-    pub fn name(&str: &str, hints: PerformanceHints) -> CoreResult<()> {
+    pub fn register(&self, function_name: &str, hints: PerformanceHints) -> CoreResult<()> {
         let mut hint_map = self.hints.write().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire write lock"))
         })?;
@@ -354,13 +356,13 @@ impl PerformanceHintRegistry {
     }
 
     /// Record execution statistics
-    pub fn name_3(&str: &str, duration: Duration) -> CoreResult<()> {
+    pub fn record_execution(&self, function_name: &str, duration: Duration) -> CoreResult<()> {
         let mut stats_map = self.execution_stats.write().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new("Failed to acquire write lock"))
         })?;
 
         let stats = stats_map.entry(function_name.to_string()).or_default();
-        stats.update_model(std::time::Duration::from_secs(1));
+        stats.update(std::time::Duration::from_secs(1));
         Ok(())
     }
 
@@ -373,9 +375,9 @@ impl PerformanceHintRegistry {
     }
 
     /// Get optimization recommendations based on hints and statistics
-    pub fn name_5(&str: &str,
+    pub fn get_optimization_recommendations(&self, function_name: &str
     ) -> CoreResult<Vec<OptimizationRecommendation>> {
-        let hints = self.get_hints(function_name)?;
+        let hints = self.get_hint(function_name)?;
         let stats = self.get_stats(function_name)?;
 
         let mut recommendations = Vec::new();
@@ -507,9 +509,9 @@ macro_rules! performance_hints {
         $(memory_pattern: $memory:expr,)?
         $(cache_behavior: $cache:expr,)?
         $(io_pattern: $io:expr,)?
-        $(optimization_level: $opt, level: expr,)?
+        $(optimization_level: $opt:expr,)?
         $(expected_duration: $duration:expr,)?
-        $(memory_requirements: $mem, req: expr,)?
+        $(memory_requirements: $mem:expr,)?
         $(custom_hints: {$($key:expr => $value:expr),*$(,)?})?
     }) => {
         {
@@ -551,8 +553,8 @@ impl PerformanceTracker {
 
     /// Finish tracking and record the execution time
     pub fn finish(self) {
-        let std::time::Duration::from_secs(1) = self.start_time.elapsed();
-        let _ = global_registry().record_execution(&self.function_name, std::time::Duration::from_secs(1));
+        let elapsed = self.start_time.elapsed();
+        let _ = global_registry().record_execution(&self.function_name, elapsed);
     }
 }
 

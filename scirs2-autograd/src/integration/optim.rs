@@ -146,7 +146,8 @@ impl StateValue {
     pub fn as_float(&self) -> Option<f64> {
         match self {
             StateValue::Float(val) => Some(*val),
-            StateValue::Int(val) => Some(*val as f64, _ => None,
+            StateValue::Int(val) => Some(*val as f64),
+            _ => None,
         }
     }
 
@@ -154,7 +155,8 @@ impl StateValue {
     pub fn as_int(&self) -> Option<i64> {
         match self {
             StateValue::Int(val) => Some(*val),
-            StateValue::Float(val) => Some(*val as i64, _ => None,
+            StateValue::Float(val) => Some(*val as i64),
+            _ => None,
         }
     }
 }

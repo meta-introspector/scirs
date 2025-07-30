@@ -315,7 +315,7 @@ where
         self.to_array()
     }
 
-    fn set(&mut self_i: usize, _j: usize_value: T) -> SparseResult<()> {
+    fn set(&mut self, i: usize, j: usize, value: T) -> SparseResult<()> {
         Err(SparseError::NotImplemented(
             "Setting individual elements in SymCsrArray is not supported. Convert to another format first.".to_string()
         ))
@@ -689,7 +689,7 @@ where
         self.to_array()
     }
 
-    fn set(&mut self_i: usize, _j: usize_value: T) -> SparseResult<()> {
+    fn set(&mut self, i: usize, j: usize, value: T) -> SparseResult<()> {
         Err(SparseError::NotImplemented(
             "Setting individual elements in SymCooArray is not supported. Convert to another format first.".to_string()
         ))

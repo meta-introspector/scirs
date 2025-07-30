@@ -86,7 +86,7 @@ where
     let _metadata = CompressedArrayMetadata {
         shape: array.shape().to_vec(),
         dtype: std::any::type_name::<A>().to_string(),
-        element_size: std::mem::size, _of::<A>(),
+        element_size: std::mem::size_of::<A>(),
         algorithm: format!("{algorithm:?}"),
         original_size: flat_data.len(),
         compressed_size: compressed_data.len(),
@@ -146,7 +146,8 @@ where
         "Gzip" => CompressionAlgorithm::Gzip,
         "Zstd" => CompressionAlgorithm::Zstd,
         "Lz4" => CompressionAlgorithm::Lz4,
-        "Bzip2" => CompressionAlgorithm::Bzip2_ => {
+        "Bzip2" => CompressionAlgorithm::Bzip2,
+        _ => {
             return Err(IoError::DecompressionError(format!(
                 "Unknown compression algorithm: {}",
                 compressed_array.metadata.algorithm
@@ -231,7 +232,7 @@ where
     let metadata = CompressedArrayMetadata {
         shape: array.shape().to_vec(),
         dtype: std::any::type_name::<A>().to_string(),
-        element_size: std::mem::_size, _of::<A>(),
+        element_size: std::mem::size_of::<A>(),
         algorithm: format!("{algorithm:?}"),
         original_size: total_original_size,
         compressed_size: total_compressed_size,
@@ -322,7 +323,8 @@ where
         "Gzip" => CompressionAlgorithm::Gzip,
         "Zstd" => CompressionAlgorithm::Zstd,
         "Lz4" => CompressionAlgorithm::Lz4,
-        "Bzip2" => CompressionAlgorithm::Bzip2_ => {
+        "Bzip2" => CompressionAlgorithm::Bzip2,
+        _ => {
             return Err(IoError::DecompressionError(format!(
                 "Unknown compression algorithm: {}",
                 metadata.algorithm
@@ -464,7 +466,7 @@ where
     // Get the raw slice for zero-copy access
     if let Some(slice) = array.as_slice() {
         let bytes = bytemuck::cast_slice(slice);
-        let bytes_per_chunk = chunk_size * std::mem::_size_of::<A>();
+        let bytes_per_chunk = chunk_size * std::mem::size_of::<A>();
 
         let (compressed_chunks, total_original_size, total_compressed_size) = if use_parallel {
             // Parallel compression for large arrays
@@ -532,7 +534,7 @@ where
         let metadata = CompressedArrayMetadata {
             shape: array.shape().to_vec(),
             dtype: std::any::type_name::<A>().to_string(),
-            element_size: std::mem::_size, _of::<A>(),
+            element_size: std::mem::size_of::<A>(),
             algorithm: format!("{algorithm:?}"),
             original_size: total_original_size,
             compressed_size: combined_data.len(),
@@ -581,7 +583,8 @@ where
         "Gzip" => CompressionAlgorithm::Gzip,
         "Lz4" => CompressionAlgorithm::Lz4,
         "Zstd" => CompressionAlgorithm::Zstd,
-        "Bzip2" => CompressionAlgorithm::Bzip2_ => {
+        "Bzip2" => CompressionAlgorithm::Bzip2,
+        _ => {
             return Err(IoError::FormatError(format!(
                 "Unknown compression algorithm: {}",
                 compressed.metadata.algorithm

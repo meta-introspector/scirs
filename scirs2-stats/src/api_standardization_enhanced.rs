@@ -690,8 +690,8 @@ pub enum OperationType {
 impl OperationType {
     fn from_descriptive(_desc_op: DescriptiveOperation) -> Self {
         match _desc_op {
-            DescriptiveOperation::Mean =>, OperationType::Mean,
-            DescriptiveOperation::Variance(_) =>, OperationType::Variance,
+            DescriptiveOperation::Mean => OperationType::Mean,
+            DescriptiveOperation::Variance(_) => OperationType::Variance,
             DescriptiveOperation::StdDev(_) =>, OperationType::Variance,
             DescriptiveOperation::Skewness =>, OperationType::Mean, // Simplified
             DescriptiveOperation::Kurtosis =>, OperationType::Mean, // Simplified

@@ -104,7 +104,7 @@ where
     }
 
     let mut y = Array1::zeros(rows);
-    let element_size = std::mem::_size_of::<T>();
+    let element_size = std::mem::size_of::<T>();
 
     // Process matrix in chunks
     let num_chunks = rows.div_ceil(chunk_size);
@@ -307,7 +307,7 @@ where
     /// Process a chunk of matrix multiplication
     #[allow(dead_code)]
     fn process_chunk_matmul<S1, S2>(
-        &mut self_a: &S1_b, _csc: &S2_row_start: usize, _row_end: usize_b, _cols: usize,
+        &mut self, _a: &S1, _b_csc: &S2, _row_start: usize, _row_end: usize, _b_cols: usize,
     ) -> SparseResult<ChunkResult<T>>
     where
         S1: SparseArray<T>,
@@ -436,7 +436,7 @@ impl CacheAwareOps {
         }
 
         let mut y = Array1::zeros(rows);
-        let elements_per_cache_line = cache_line_size / std::mem::_size_of::<T>();
+        let elements_per_cache_line = cache_line_size / std::mem::size_of::<T>();
 
         // Group operations by cache lines for better locality
         let (row_indices, col_indices, values) = matrix.find();
@@ -474,7 +474,7 @@ impl CacheAwareOps {
         let (row_indices, col_indices, values) = matrix.find();
 
         // Group operations by cache lines
-        let elements_per_cache_line = cache_line_size / std::mem::_size_of::<T>();
+        let elements_per_cache_line = cache_line_size / std::mem::size_of::<T>();
 
         let mut transposed_triplets = Vec::new();
 
@@ -582,7 +582,7 @@ impl ChunkedOperations {
         let mut result_cols = Vec::new();
         let mut result_values = Vec::new();
 
-        let element_size = std::mem::_size_of::<T>();
+        let element_size = std::mem::size_of::<T>();
 
         // Extract elements from both matrices once
         let (a_rows_idx, a_cols_idx, a_values) = a.find();
@@ -674,7 +674,7 @@ impl ChunkedOperations {
         let mut result_cols = Vec::new();
         let mut result_values = Vec::new();
 
-        let element_size = std::mem::_size_of::<T>();
+        let element_size = std::mem::size_of::<T>();
 
         // Process matrix in chunks
         for chunk_start in (0..rows).step_by(chunk_size) {
@@ -734,7 +734,7 @@ impl ChunkedOperations {
         let (rows, cols) = matrix.shape();
         let mut all_triplets = Vec::new();
 
-        let element_size = std::mem::_size_of::<T>();
+        let element_size = std::mem::size_of::<T>();
 
         // Process in chunks to minimize peak memory usage
         for chunk_start in (0..rows).step_by(chunk_size) {

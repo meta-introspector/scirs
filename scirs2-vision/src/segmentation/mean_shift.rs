@@ -182,7 +182,7 @@ fn compute_mean_shift(
     let mut weight_sum = 0.0f32;
 
     for i in 0..n_points {
-        let feature = features.slice(ndarray::s![i, ..]);
+        let feature = "features".slice(ndarray::s![i, ..]);
 
         // Compute spatial distance
         let spatial_dist =

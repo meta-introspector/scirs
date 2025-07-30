@@ -41,7 +41,7 @@ where
     /// # Example
     ///
     /// ```
-    /// use scirs2__optim::schedulers::{CustomScheduler, LearningRateScheduler};
+    /// use scirs2_optim::schedulers::{CustomScheduler, LearningRateScheduler};
     ///
     /// // Create a scheduler that reduces the learning rate by 10% every 10 steps
     /// let mut scheduler = CustomScheduler::new(0.1, |step| {
@@ -51,10 +51,11 @@ where
     /// assert_eq!(scheduler.get_learning_rate(), 0.1);
     /// scheduler.step();
     /// ```
-    pub fn new(_initial_lr: A, lr_func: F) -> Self {
+    pub fn new(initial_lr: A, lr_func: F) -> Self {
         Self {
-            _lr_func: Rc::new(RefCell::new(lr_func)),
-            step_count: 0, _phantom: PhantomData,
+            lr_func: Rc::new(RefCell::new(lr_func)),
+            step_count: 0,
+            _phantom: PhantomData,
         }
     }
 
@@ -119,7 +120,7 @@ where
     /// # Example
     ///
     /// ```
-    /// use scirs2__optim::schedulers::{CustomScheduler, CombinedScheduler, LearningRateScheduler};
+    /// use scirs2_optim::schedulers::{CustomScheduler, CombinedScheduler, LearningRateScheduler};
     ///
     /// // Create a scheduler that uses both exponential decay and cosine annealing
     /// let exponential = CustomScheduler::new(0.1, |step| {
@@ -196,8 +197,8 @@ where
     A: Float + Debug + ScalarOperand,
 {
     /// Create a new scheduler builder with the given initial learning rate
-    pub fn new(_initial_lr: A) -> Self {
-        Self { _initial_lr }
+    pub fn new(initial_lr: A) -> Self {
+        Self { initial_lr }
     }
 
     /// Create a step decay scheduler
@@ -303,8 +304,8 @@ where
             let x = (step / step_size - two * cycle).abs();
 
             let scale = match mode_inner {
-                CyclicMode::Triangular =>, A::one(),
-                CyclicMode::Triangular2 =>, A::one() / (two.powi(cycle.to_i32().unwrap_or(0))),
+                CyclicMode::Triangular => A::one(),
+                CyclicMode::Triangular2 => A::one() / (two.powi(cycle.to_i32().unwrap_or(0))),
                 CyclicMode::ExpRange(gamma) => gamma.powi(step.to_i32().unwrap_or(0)),
             };
 

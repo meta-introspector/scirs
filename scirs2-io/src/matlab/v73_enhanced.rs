@@ -555,7 +555,8 @@ impl V73MatFile {
                         "categorical" => self.read_categorical(file, name),
                         "datetime" => self.read_datetime(file, name),
                         "string" => self.read_string_array(file, name),
-                        "function_handle" => self.read_function_handle(file, name, _ => {
+                        "function_handle" => self.read_function_handle(file, name),
+                        _ => {
                             // Check if it's an object
                             if let Ok(AttributeValue::Bool(true)) =
                                 file.get_attribute(name, "MATLAB_object")

@@ -12,8 +12,8 @@
 //! ```no_run
 //! # #[cfg(feature = "dashboard_server")]
 //! # {
-//! use scirs2__metrics::dashboard::{InteractiveDashboard, DashboardConfig};
-//! use scirs2__metrics::dashboard::server::start_http_server;
+//! use scirs2_metrics::dashboard::{InteractiveDashboard, DashboardConfig};
+//! use scirs2_metrics::dashboard::server::start_http_server;
 //!
 //! let dashboard = InteractiveDashboard::default();
 //! dashboard.add_metric("accuracy", 0.95).unwrap();

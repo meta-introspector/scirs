@@ -186,14 +186,16 @@ impl SparseError {
                 "Convert matrix to the required format",
                 "Use .to_csr() or .to_csc() for format conversion",
                 "Check if the operation supports the current format",
-            ]_ => vec!["Check the documentation for this operation"],
+            ],
+            _ => vec!["Check the documentation for this operation"],
         }
     }
 
     /// Create a dimension mismatch error with helpful context
     pub fn dimension_mismatch_with_context(
         expected: usize,
-        found: usize_operation: &str,
+        found: usize,
+        operation: &str,
     ) -> Self {
         SparseError::DimensionMismatch { expected, found }
     }

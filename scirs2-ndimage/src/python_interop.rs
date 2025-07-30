@@ -460,7 +460,7 @@ setup(
     /// Generate __init__.py for Python package
     pub fn generate_init_py() -> String {
         r#"
-"""
+'"'
 SciRS2 NDImage - High-performance N-dimensional image processing
 ==============================================================
 
@@ -484,7 +484,7 @@ Examples
 >>> filtered = ndi.gaussian_filter(image, sigma=1.0)
 >>> binary = image > 0.5
 >>> eroded = ndi.binary_erosion(binary)
-"""
+'"'
 
 from ._rust import *
 from . import filters, morphology, measurements, interpolation, segmentation, features

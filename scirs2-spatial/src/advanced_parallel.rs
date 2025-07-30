@@ -19,7 +19,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::advanced_parallel::{AdvancedParallelDistanceMatrix, WorkStealingConfig};
+//! use scirs2_spatial::advanced_parallel::{AdvancedParallelDistanceMatrix, WorkStealingConfig};
 //! use ndarray::array;
 //!
 //! // Configure work-stealing parallel processing
@@ -36,7 +36,7 @@
 //! ```
 
 use crate::error::SpatialResult;
-use crate::memory__pool::DistancePool;
+use crate::memory_pool::DistancePool;
 use ndarray::{Array1, Array2, ArrayView2};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::VecDeque;
@@ -75,7 +75,7 @@ pub struct WorkStealingConfig {
 }
 
 impl Default for WorkStealingConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -97,44 +97,44 @@ impl WorkStealingConfig {
     }
 
     /// Configure NUMA awareness
-    pub fn with_numa_aware(mut enabled: bool) -> Self {
+    pub fn with_numa_aware(mut self, enabled: bool) -> Self {
         self.numa_aware = enabled;
         self
     }
 
     /// Configure work stealing
-    pub fn with_work_stealing(mut enabled: bool) -> Self {
+    pub fn with_work_stealing(mut self, enabled: bool) -> Self {
         self.work_stealing = enabled;
         self
     }
 
     /// Configure adaptive scheduling
-    pub fn with_adaptive_scheduling(mut enabled: bool) -> Self {
+    pub fn with_adaptive_scheduling(mut self, enabled: bool) -> Self {
         self.adaptive_scheduling = enabled;
         self
     }
 
     /// Set number of threads
-    pub fn with_threads(mut num_threads: usize) -> Self {
+    pub fn with_threads(mut self, num_threads: usize) -> Self {
         self.num_threads = num_threads;
         self
     }
 
     /// Configure chunk sizes
-    pub fn with_chunk_sizes(mut initial: usize, minimum: usize) -> Self {
+    pub fn with_chunk_sizes(mut self, initial: usize, minimum: usize) -> Self {
         self.initial_chunk_size = initial;
         self.min_chunk_size = minimum;
         self
     }
 
     /// Set thread affinity strategy
-    pub fn with_thread_affinity(mut strategy: ThreadAffinityStrategy) -> Self {
+    pub fn with_thread_affinity(mut self, strategy: ThreadAffinityStrategy) -> Self {
         self.thread_affinity = strategy;
         self
     }
 
     /// Set memory allocation strategy
-    pub fn with_memory_strategy(mut strategy: MemoryStrategy) -> Self {
+    pub fn with_memory_strategy(mut self, strategy: MemoryStrategy) -> Self {
         self.memory_strategy = strategy;
         self
     }
@@ -180,14 +180,14 @@ pub struct NumaTopology {
 }
 
 impl Default for NumaTopology {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::detect()
     }
 }
 
 impl NumaTopology {
     /// Detect NUMA topology
-    pub fn detect(&self) -> Self {
+    pub fn detect() -> Self {
         // In a real implementation, this would query the system for NUMA information
         // using libraries like hwloc or reading /sys/devices/system/node/
 
@@ -369,7 +369,7 @@ pub struct KDTreeConfig {
 }
 
 impl Default for KDTreeConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             max_leaf_size: 32,
             cache_aware: true,
@@ -503,7 +503,8 @@ impl WorkStealingPool {
         completed_work: Arc<AtomicUsize>,
         active_workers: Arc<AtomicUsize>,
         shutdown: Arc<AtomicBool>,
-        config: WorkStealingConfig_memory_pool: Arc<DistancePool>,
+        config: WorkStealingConfig,
+        memory_pool: Arc<DistancePool>,
     ) {
         // Set thread affinity if configured
         Self::set_thread_affinity(thread_id, numa_node, &config);
@@ -756,7 +757,7 @@ impl WorkStealingPool {
     /// Process distance matrix computation chunk
     fn process_distance_matrix_chunk(_start: usize, end: usize, context: &WorkContext) {
         if let Some(distance_context) = &context.distance_context {
-            use crate::simd__distance::hardware_specific_simd::HardwareOptimizedDistances;
+            use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
 
             let optimizer = HardwareOptimizedDistances::new();
             let points = &distance_context.points;
@@ -920,7 +921,8 @@ impl WorkStealingPool {
     fn build_local_kdtree_chunk(
         points: &Array2<f64>,
         indices: &[usize],
-        depth: usize_config: &KDTreeConfig,
+        depth: usize,
+        config: &KDTreeConfig,
     ) -> KDTreeChunkResult {
         let n_dims = points.ncols();
         let splitting_dimension = depth % n_dims;

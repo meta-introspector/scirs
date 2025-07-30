@@ -28,7 +28,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::interpolate::NaturalNeighborInterpolator;
+/// use scirs2_spatial::interpolate::NaturalNeighborInterpolator;
 /// use ndarray::array;
 ///
 /// // Create sample points and values

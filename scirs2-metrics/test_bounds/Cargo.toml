@@ -1,8 +1,7 @@
 [package]
 name = "test_bounds"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
-[dependencies]
-num-traits = "0.2"
+num-traits = { workspace = true }

@@ -667,7 +667,7 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
         MemoryStats {
             total_tensor_memory: total_memory,
             gradient_memory,
-            buffer_memory: self.grad_buffer.len() * std::mem::size, _of::<Array1<T>>(),
+            buffer_memory: self.grad_buffer.len() * std::mem::size_of::<Array1<T>>(),
             peak_memory: total_memory + gradient_memory, // Simplified
         }
     }

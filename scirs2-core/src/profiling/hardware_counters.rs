@@ -497,7 +497,7 @@ impl PerformanceCounter for MacOSCounter {
         ]
     }
 
-    fn is_counter_available(&self, counter_type: &CounterType) -> bool {
+    fn is_available(&self, counter_type: &CounterType) -> bool {
         matches!(
             counter_type,
             CounterType::CpuCycles
@@ -507,8 +507,8 @@ impl PerformanceCounter for MacOSCounter {
         )
     }
 
-    fn start_counter(&mut self, counter_type: &CounterType) -> CoreResult<()> {
-        if self.is_counter_available(counter_type) {
+    fn start_counter(&self, counter_type: &CounterType) -> CoreResult<()> {
+        if self.is_available(counter_type) {
             let mut counters = self.active_counters.write().unwrap();
             counters.insert(counter_type.clone(), true);
             Ok(())
@@ -517,7 +517,7 @@ impl PerformanceCounter for MacOSCounter {
         }
     }
 
-    fn stop_counter(&mut self, counter_type: &CounterType) -> CoreResult<()> {
+    fn stop_counter(&self, counter_type: &CounterType) -> CoreResult<()> {
         let mut counters = self.active_counters.write().unwrap();
         if counters.remove(counter_type).is_some() {
             Ok(())
@@ -552,11 +552,15 @@ impl PerformanceCounter for MacOSCounter {
         Ok(results)
     }
 
-    fn reset_counter(&mut self, counter_type: &CounterType) -> CoreResult<()> {
+    fn reset_counter(&self, counter_type: &CounterType) -> CoreResult<()> {
         // macOS counters typically can't be reset
         Ok(())
     }
 
+    fn is_overflowed(&self, _counter_type: &CounterType) -> CoreResult<bool> {
+        // macOS hardware counters don't typically overflow in our implementation
+        Ok(false)
+    }
 }
 
 /// Hardware counter manager that provides a unified interface
@@ -787,10 +791,13 @@ impl PerformanceCounter for NoOpCounter {
         Err(HardwareCounterError::NotAvailable.into())
     }
 
-    fn reset_counter(&mut self, _counter_type: &CounterType) -> CoreResult<()> {
+    fn reset_counter(&self, _counter_type: &CounterType) -> CoreResult<()> {
         Err(HardwareCounterError::NotAvailable.into())
     }
 
+    fn is_overflowed(&self, _counter_type: &CounterType) -> CoreResult<bool> {
+        Err(HardwareCounterError::NotAvailable.into())
+    }
 }
 
 /// Derived performance metrics calculated from raw counters

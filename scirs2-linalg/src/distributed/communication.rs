@@ -120,7 +120,7 @@ impl<T> Message<T> {
             source,
             destination,
             tag,
-            size_bytes: std::mem::size, _of::<T>(),
+            size_bytes: std::mem::size_of::<T>(),
             sequence,
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

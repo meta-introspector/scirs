@@ -11,7 +11,7 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
-use super::transformer__optimizer::{TransformerOptimizer, TransformerOptimizerConfig};
+use super::transformer_optimizer::{TransformerOptimizer, TransformerOptimizerConfig};
 #[allow(unused_imports)]
 use crate::error::Result;
 
@@ -894,7 +894,8 @@ impl<T: Float> Default for AdaptiveConfig<T> {
 impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> {
     /// Enhance transformer optimizer for current optimization task
     pub fn enhance_optimizer(
-        &mut self_transformer: &mut TransformerOptimizer<T>,
+        &mut self,
+        transformer: &mut TransformerOptimizer<T>,
         gradient_history: &[Array1<T>],
         loss_history: &[T],
     ) -> Result<EnhancementResult<T>> {
@@ -1565,18 +1566,18 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
         patterns: &mut Array3<T>,
         analysis: &LandscapeAnalysis<T>,
     ) -> Result<()> {
-        let (num_heads, seq_len_) = patterns.dim();
+        let (num_heads, seq_len, _) = patterns.dim();
 
         for head in 0..num_heads {
             for i in 0..seq_len {
                 for j in 0..seq_len {
                     // Generate attention weight based on position and analysis
                     let distance = ((i as i32 - j as i32).abs() as f64).sqrt();
-                    let base_attention = (-distance / (seq_len as f64 * 0.1)).exp();
+                    let base_attention = (-T::from(distance).unwrap() / (T::from(seq_len).unwrap() * T::from(0.1).unwrap())).exp();
 
                     // Modulate based on landscape analysis
                     let complexity_factor = analysis.complexity.to_f64().unwrap_or(0.5);
-                    let modulated_attention = base_attention * (1.0 + complexity_factor * 0.3);
+                    let modulated_attention = base_attention * (T::one() + T::from(complexity_factor).unwrap() * T::from(0.3).unwrap());
 
                     patterns[[head, i, j]] = T::from(modulated_attention).unwrap();
                 }
@@ -1611,7 +1612,8 @@ impl<T: Float + Send + Sync> DynamicArchitectureAdapter<T> {
     }
 
     fn adapt_architecture(
-        &mut self_landscape: &LandscapeAnalysis<T>, _sequence: &SequenceAdaptation<T>, _attention: &AttentionOptimization<T>,
+        &mut self,
+        landscape: &LandscapeAnalysis<T>, _sequence: &SequenceAdaptation<T>, _attention: &AttentionOptimization<T>,
     ) -> Result<ArchitectureAdaptation<T>> {
         // Simplified implementation
         Ok(ArchitectureAdaptation {
@@ -1658,7 +1660,8 @@ impl<T: Float + Send + Sync> TransformerPerformancePredictor<T> {
     }
 
     fn predict_improvement(
-        &mut self_landscape: &LandscapeAnalysis<T>, _adaptation: &ArchitectureAdaptation<T>,
+        &mut self,
+        landscape: &LandscapeAnalysis<T>, _adaptation: &ArchitectureAdaptation<T>,
     ) -> Result<PerformancePrediction<T>> {
         // Simplified implementation
         Ok(PerformancePrediction {
@@ -1751,7 +1754,7 @@ impl<T: Float + Send + Sync> PredictorNetwork<T> {
             weights,
             biases,
             activations,
-            _architecture,
+            architecture: _architecture,
         })
     }
 }
@@ -1771,7 +1774,7 @@ impl<T: Float + Send + Sync> PredictionCache<T> {
         Self {
             predictions: HashMap::new(),
             hit_rate: 0.0,
-            _capacity,
+            capacity: _capacity,
         }
     }
 }

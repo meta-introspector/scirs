@@ -210,7 +210,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
         gradients: Array1<T>,
     ) -> Result<RLOptimizationMetrics<T>> {
         // Update Fisher information matrix
-        if self.update_count % self.config.fisher_update_freq == 0 {
+        if self.update_count % self._config.fisher_update_freq == 0 {
             self.update_fisher_information(&trajectory)?;
         }
 
@@ -233,7 +233,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
 
     /// Update Fisher Information Matrix
     fn update_fisher_information(&mut self, trajectory: &TrajectoryBatch<T>) -> Result<()> {
-        match self.config.fisher_method {
+        match self._config.fisher_method {
             FisherEstimationMethod::Empirical => self.update_empirical_fisher(trajectory)?,
             FisherEstimationMethod::True => self.update_true_fisher(trajectory)?,
             FisherEstimationMethod::Diagonal => self.update_diagonal_fisher(trajectory)?,
@@ -295,7 +295,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
         }
 
         diagonal = diagonal / T::from(batch_size).unwrap();
-        diagonal = diagonal + T::from(self.config.damping).unwrap();
+        diagonal = diagonal + T::from(self._config.damping).unwrap();
 
         self.fisher_diagonal = Some(diagonal);
 
@@ -303,14 +303,16 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
     }
 
     /// Update block diagonal Fisher approximation
-    fn update_block_diagonal_fisher(&mut self_trajectory: &TrajectoryBatch<T>) -> Result<()> {
+    fn update_block_diagonal_fisher(&mut self,
+        trajectory: &TrajectoryBatch<T>) -> Result<()> {
         // Block diagonal approximation groups parameters into blocks
         // and assumes independence between blocks
         Ok(())
     }
 
     /// Update Kronecker factorization
-    fn update_kronecker_factors(&mut self_trajectory: &TrajectoryBatch<T>) -> Result<()> {
+    fn update_kronecker_factors(&mut self,
+        trajectory: &TrajectoryBatch<T>) -> Result<()> {
         // Kronecker factorization approximates the Fisher matrix as
         // a Kronecker product of smaller matrices (K-FAC style)
         Ok(())
@@ -318,11 +320,11 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
 
     /// Compute natural gradients
     fn compute_natural_gradients(&self, gradients: &Array1<T>) -> Result<Array1<T>> {
-        if !self.config.enable_preconditioning {
+        if !self._config.enable_preconditioning {
             return Ok(gradients.clone());
         }
 
-        let natural_grad = match self.config.fisher_method {
+        let natural_grad = match self._config.fisher_method {
             FisherEstimationMethod::Diagonal => {
                 if let Some(ref diag) = self.fisher_diagonal {
                     gradients / diag
@@ -341,7 +343,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
         };
 
         // Apply scaling
-        let scaled_natural_grad = natural_grad * self.config.natural_grad_scale;
+        let scaled_natural_grad = natural_grad * self._config.natural_grad_scale;
 
         Ok(scaled_natural_grad)
     }
@@ -354,7 +356,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
         let mut p = r.clone();
         let mut rsold = self.dot(&r, &r);
 
-        for _i in 0..self.config.cg_iters {
+        for _i in 0..self._config.cg_iters {
             let ap = fisher.dot(&p);
             let alpha = rsold / self.dot(&p, &ap);
 
@@ -363,7 +365,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
 
             let rsnew = self.dot(&r, &r);
 
-            if rsnew.sqrt() < self.config.cg_tolerance {
+            if rsnew.sqrt() < self._config.cg_tolerance {
                 break;
             }
 
@@ -409,7 +411,8 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
     }
 
     /// Update policy network parameters
-    fn update_policy_parameters(&mut self_update: &Array1<T>) -> Result<()> {
+    fn update_policy_parameters(&mut self,
+        update: &Array1<T>) -> Result<()> {
         // Placeholder for actual parameter _update
         // In practice, this would modify the policy network weights
         Ok(())
@@ -417,7 +420,8 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
 
     /// Compute log probability gradients
     fn compute_log_prob_gradients(
-        &self_obs: &Array1<T>, _action: &Array1<T>,
+        &self,
+        obs: &Array1<T>, _action: &Array1<T>,
     ) -> Result<Array1<T>> {
         // Placeholder for computing gradients of log probability
         // This would typically involve backpropagation through the policy network
@@ -461,7 +465,7 @@ impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyN
         // Add damping for numerical stability
         let mut damped_fisher = fisher;
         for i in 0..self.param_dim {
-            damped_fisher[[i, i]] += self.config.damping;
+            damped_fisher[[i, i]] += self._config.damping;
         }
 
         self.fisher_matrix = Some(damped_fisher);

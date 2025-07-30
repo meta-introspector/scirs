@@ -298,7 +298,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         })?;
 
         Ok(Self {
-            _config,
+            config: _config,
             test_functions: Vec::new(),
             python_scripts,
             results: Vec::new(),
@@ -462,7 +462,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         Ok(CrossFrameworkBenchmarkResult {
             config: self.config.clone(),
-            _function_name: test_function.name.clone(),
+            function_name: test_function.name.clone(),
             problem_dim,
             batch_size,
             optimizer_results,
@@ -506,7 +506,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             let mut converged = false;
 
             for iteration in 0..self.config.max_iterations {
-                let f_val = (test_function._function)(&x);
+                let f_val = (test_function.function)(&x);
                 let grad = (test_function.gradient)(&x);
                 let grad_norm = grad.mapv(|g| g * g).sum().sqrt();
 
@@ -532,7 +532,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
             // If didn't converge, record final state
             if !converged {
                 let elapsed = start_time.elapsed();
-                let f_val = (test_function._function)(&x);
+                let f_val = (test_function.function)(&x);
                 let grad = (test_function.gradient)(&x);
                 let grad_norm = grad.mapv(|g| g * g).sum().sqrt();
 
@@ -878,9 +878,9 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         let cpu_usage = results
             .iter()
-            .map(|(id_summary)| {
+            .map(|(id_, _summary)| {
                 (
-                    id.clone(),
+                    id_.clone(),
                     CpuStats {
                         cpu_percent: 0.0, // Would be measured during actual benchmarking
                         cores_used: 1,

@@ -127,7 +127,7 @@ impl AdaptivePlanner {
         metrics.insert(PlanningStrategy::AutoTuned, StrategyMetrics::new());
 
         Self {
-            _size: _size.to_vec(),
+            size: _size.to_vec(),
             forward,
             current_strategy: PlanningStrategy::CacheFirst, // Start with a reasonable default
             current_backend: PlannerBackend::default(),
@@ -313,7 +313,7 @@ impl AdaptiveExecutor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use num__complex::Complex64;
+    use num_complex::Complex64;
 
     #[test]
     fn test_adaptive_planner_basics() {

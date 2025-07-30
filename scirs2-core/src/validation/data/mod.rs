@@ -277,11 +277,13 @@ mod tests {
         assert_eq!(integer_type, DataType::Integer);
 
         match array_type {
-            DataType::Array(inner) => assert_eq!(*inner, DataType::Float64, _ => panic!("Expected Array type"),
+            DataType::Array(inner) => assert_eq!(*inner, DataType::Float64),
+            _ => panic!("Expected Array type"),
         }
 
         match matrix_type {
-            DataType::Matrix(inner) => assert_eq!(*inner, DataType::Float32, _ => panic!("Expected Matrix type"),
+            DataType::Matrix(inner) => assert_eq!(*inner, DataType::Float32),
+            _ => panic!("Expected Matrix type"),
         }
     }
 

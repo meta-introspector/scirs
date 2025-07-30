@@ -564,7 +564,8 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         let norm_value = match norm_type {
             "1" => self.compute_l1_norm(input),
             "2" | "fro" => self.compute_l2_norm(input),
-            "inf" => self.compute_inf_norm(input, _ => {
+            "inf" => self.compute_inf_norm(input),
+            _ => {
                 return Err(IntegrationError::ModuleCompatibility(format!(
                     "Unsupported norm _type: {norm_type}"
                 )))
@@ -855,14 +856,16 @@ impl LinalgParameter {
     pub fn as_float(&self) -> Option<f64> {
         match self {
             LinalgParameter::Float(val) => Some(*val),
-            LinalgParameter::Int(val) => Some(*val as f64, _ => None,
+            LinalgParameter::Int(val) => Some(*val as f64),
+            _ => None,
         }
     }
 
     /// Get as string
     pub fn as_string(&self) -> Option<String> {
         match self {
-            LinalgParameter::String(val) => Some(val.clone(), _ => None,
+            LinalgParameter::String(val) => Some(val.clone()),
+            _ => None,
         }
     }
 }
@@ -1157,7 +1160,7 @@ mod tests {
                         memory_accesses: tensor.data().len() as u64,
                     },
                     numerical_stability: NumericalStability::Stable,
-                    memory_usage: tensor.data().len() * std::mem::size, _of::<f32>(),
+                    memory_usage: tensor.data().len() * std::mem::size_of::<f32>(),
                 },
             };
 

@@ -333,7 +333,7 @@ impl CrossPlatformValidator {
                     self.platform_info.max_path_length
                 ),
                 field: Some(path.to_string()),
-                suggestion: Some("Use shorter path or enable long path support".to_string()),
+                suggestion: Some("Use shorter path or enable long path support ".to_string()),
                 severity: ValidationSeverity::Error,
             });
         }
@@ -346,7 +346,7 @@ impl CrossPlatformValidator {
             OsFamily::Unknown => {
                 result
                     .warnings
-                    .push("Unknown platform - basic validation only".to_string());
+                    .push("Unknown platform - basic validation only ".to_string());
             }
         }
 
@@ -355,9 +355,9 @@ impl CrossPlatformValidator {
             result.is_valid = false;
             result.errors.push(ValidationError {
                 code: "NULL_BYTE_IN_PATH".to_string(),
-                message: "Path contains null byte".to_string(),
+                message: "Path contains null byte ".to_string(),
                 field: Some(path.to_string()),
-                suggestion: Some("Remove null bytes from path".to_string()),
+                suggestion: Some("Remove null bytes from path ".to_string()),
                 severity: ValidationSeverity::Critical,
             });
         }
@@ -368,7 +368,7 @@ impl CrossPlatformValidator {
     /// Validate Windows-specific path constraints
     fn validate_windows_path(&self, path: &str, result: &mut ValidationResult) {
         // Check for invalid characters
-        let invalid_chars = ['<', '>', ':', '"', '|', '?', '*'];
+        let invalid_chars = r#"<>:"|?*"#.chars().collect::<Vec<_>>();
         for &ch in &invalid_chars {
             if path.contains(ch) {
                 result.is_valid = false;

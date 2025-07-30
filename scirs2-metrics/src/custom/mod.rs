@@ -16,7 +16,7 @@
 //! ## Defining a Custom Classification Metric
 //!
 //! ```
-//! use scirs2__metrics::custom::{ClassificationMetric, MetricResult};
+//! use scirs2_metrics::custom::{ClassificationMetric, MetricResult};
 //! use ndarray::Array1;
 //!
 //! struct CustomAccuracy;
@@ -48,7 +48,7 @@
 //! ## Defining a Custom Regression Metric
 //!
 //! ```
-//! use scirs2__metrics::custom::{RegressionMetric, MetricResult};
+//! use scirs2_metrics::custom::{RegressionMetric, MetricResult};
 //! use ndarray::Array1;
 //!
 //! struct LogCoshError;

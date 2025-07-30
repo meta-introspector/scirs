@@ -47,7 +47,7 @@ use num_traits::NumCast;
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::waterfall_3d;
+/// use scirs2_fft::waterfall_3d;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -160,7 +160,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::waterfall_mesh;
+/// use scirs2_fft::waterfall_mesh;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -273,7 +273,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::waterfall_lines;
+/// use scirs2_fft::waterfall_lines;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -412,7 +412,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::waterfall_mesh_colored;
+/// use scirs2_fft::waterfall_mesh_colored;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -556,7 +556,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::waterfall::apply_colormap;
+/// use scirs2_fft::waterfall::apply_colormap;
 /// use ndarray::Array1;
 ///
 /// // Create some test amplitudes

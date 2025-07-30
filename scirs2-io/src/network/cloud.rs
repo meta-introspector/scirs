@@ -217,7 +217,7 @@ impl CloudProvider {
 
     // AWS S3 implementations
     async fn s3_upload<P: AsRef<Path>>(
-        &self_config: &S3Config_local, _path: P_remote_path: &str,
+        &self, _config: &S3Config, _local_path: P, _remote_path: &str,
     ) -> Result<()> {
         #[cfg(feature = "aws-sdk-s3")]
         {
@@ -302,7 +302,7 @@ impl CloudProvider {
 
     // Google Cloud Storage implementations
     async fn gcs_upload<P: AsRef<Path>>(
-        &self_config: &GcsConfig_local, _path: P_remote_path: &str,
+        &self, _config: &GcsConfig, _local_path: P, _remote_path: &str,
     ) -> Result<()> {
         #[cfg(feature = "google-cloud-storage")]
         {
@@ -386,7 +386,7 @@ impl CloudProvider {
 
     // Azure Blob Storage implementations
     async fn azure_upload<P: AsRef<Path>>(
-        &self_config: &AzureConfig_local, _path: P_remote_path: &str,
+        &self, _config: &AzureConfig, _local_path: P, _remote_path: &str,
     ) -> Result<()> {
         #[cfg(feature = "azure-storage-blobs")]
         {

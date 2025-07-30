@@ -1308,7 +1308,7 @@ impl<T: Float + Send + Sync> HyperparameterOptimizer<T> {
         self.best_configurations.push(result.config.clone());
 
         // Keep only top 10
-        self.best_configurations.sort_by(|_a_b| {
+        self.best_configurations.sort_by(|_a, _b| {
             // Sort by performance (would need to look up performance)
             std::cmp::Ordering::Equal
         });
@@ -1335,14 +1335,15 @@ impl<T: Float + Send + Sync> EarlyStoppingManager<T> {
         }
     }
 
-    fn should_continue(&self_history: &[HyperOptResult<T>]) -> bool {
+    fn should_continue(&self,
+        history: &[HyperOptResult<T>]) -> bool {
         // Simplified - would implement actual early stopping logic
         true
     }
 }
 
 impl<T: Float + Send + Sync> ConfigurationCache<T> {
-    fn new(_max_size: usize) -> Self {
+    fn new(max_size: usize) -> Self {
         Self {
             cache: HashMap::new(),
             cache_stats: CacheStatistics {
@@ -1372,7 +1373,7 @@ impl<T: Float + Send + Sync> ConfigurationCache<T> {
 
         if self.cache.len() >= self.max_size {
             // Simple eviction - remove first entry
-            if let Some((key_)) = self.cache.iter().next() {
+            if let Some((key, _)) = self.cache.iter().next() {
                 let key = *key;
                 self.cache.remove(&key);
                 self.cache_stats.evictions += 1;

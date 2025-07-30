@@ -1,5 +1,5 @@
 use crate::csr::CsrMatrix;
-use crate::sym__csr::SymCsrMatrix;
+use crate::sym_csr::SymCsrMatrix;
 
 #[test]
 #[allow(dead_code)]

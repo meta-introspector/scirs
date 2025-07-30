@@ -980,7 +980,8 @@ impl ConfidenceScorer {
         // Pattern match confidence (based on entity type)
         let pattern_score = match entity.entity_type {
             EntityType::Email | EntityType::Url | EntityType::Phone => 1.0,
-            EntityType::Date | EntityType::Time | EntityType::Money | EntityType::Percentage => 0.9_ => 0.7,
+            EntityType::Date | EntityType::Time | EntityType::Money | EntityType::Percentage => 0.9,
+            _ => 0.7,
         };
         features.insert("pattern_match".to_string(), pattern_score);
 
@@ -1032,7 +1033,8 @@ impl ConfidenceScorer {
             }
             EntityType::Location => vec!["in", "at", "from", "to", "near", "City", "State"],
             EntityType::Money => vec!["cost", "price", "pay", "budget", "revenue", "profit"],
-            EntityType::Date => vec!["on", "in", "during", "until", "since", "when"]_ => vec![],
+            EntityType::Date => vec!["on", "in", "during", "until", "since", "when"],
+            _ => vec![],
         };
 
         let matches = keywords

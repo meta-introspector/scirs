@@ -8,6 +8,7 @@
 
 use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
 use super::{LearnedOptimizerConfig, MetaOptimizationStrategy};
@@ -41,7 +42,7 @@ pub struct LSTMOptimizer<T: Float> {
     step_count: usize,
 
     /// Random number generator for noise and initialization
-    rng: scirs2_core: random::Random,
+    rng: scirs2_core::random::Random,
 }
 
 /// LSTM network architecture for optimization
@@ -930,10 +931,10 @@ impl<
         let metrics = LSTMOptimizerMetrics::new();
 
         // Initialize RNG
-        let rng = scirs2_core::random::Random::with_seed(42);
+        let rng = scirs2_core::random::rng();
 
         Ok(Self {
-            _config,
+            config: _config,
             lstm_network,
             history_buffer,
             meta_learner,
@@ -1444,7 +1445,7 @@ impl<T: Float + Default + Clone> HistoryBuffer<T> {
             losses: VecDeque::with_capacity(_max_length),
             learning_rates: VecDeque::with_capacity(_max_length),
             update_magnitudes: VecDeque::with_capacity(_max_length),
-            _max_length,
+            max_length: _max_length,
             feature_cache: None,
         }
     }
@@ -1616,7 +1617,8 @@ impl<T: Float + Default + Clone> MetaLearner<T> {
         })
     }
 
-    fn step(&mut self_tasks: &[MetaTask<T>], _network: &mut LSTMNetwork<T>) -> Result<T> {
+    fn step(&mut self,
+        tasks: &[MetaTask<T>], _network: &mut LSTMNetwork<T>) -> Result<T> {
         // Placeholder meta-learning step
         Ok(T::zero())
     }
@@ -1663,7 +1665,8 @@ impl<T: Float + Default + Clone> AdaptiveLearningRateController<T> {
     }
 
     fn compute_lr(
-        &mut self_gradients: &Array1<T>, _loss: Option<T>, _history: &HistoryBuffer<T>,
+        &mut self,
+        gradients: &Array1<T>, _loss: Option<T>, _history: &HistoryBuffer<T>,
     ) -> Result<T> {
         // Placeholder adaptive LR computation
         Ok(self.current_lr)
@@ -1728,7 +1731,8 @@ impl<T: Float + Default + Clone> OptimizationStateTracker<T> {
         }
     }
 
-    fn update(&mut self_gradients: &Array1<T>, _updates: &Array1<T>, _loss: Option<T>) {
+    fn update(&mut self,
+        gradients: &Array1<T>, _updates: &Array1<T>, _loss: Option<T>) {
         // Placeholder state update
     }
 }

@@ -214,13 +214,15 @@ fn extract_linear_coefficient<F: IntegrateFloat>(
             // Check if one side is the variable and other is constant
             match (a.as_ref(), b.as_ref()) {
                 (Var(v), Constant(c)) if v == var => Some(*c),
-                (Constant(c), Var(v)) if v == var => Some(*c, _ => None,
+                (Constant(c), Var(v)) if v == var => Some(*c),
+                _ => None,
             }
         }
         Div(a, b) => {
             // Check if numerator is the variable and denominator is constant
             match (a.as_ref(), b.as_ref()) {
-                (Var(v), Constant(c)) if v == var => Some(F::one() / *c, _ => None,
+                (Var(v), Constant(c)) if v == var => Some(F::one() / *c),
+                _ => None,
             }
         }
         _ => None,
@@ -245,7 +247,7 @@ fn integrate_expression<F: IntegrateFloat>(
         )),
         Pow(base, exp) => {
             if let (Var(v), Constant(n)) = (base.as_ref(), exp.as_ref()) {
-                if v == var && (*n + F::one()).abs() >, F::epsilon() {
+                if v == var && (*n + F::one()).abs() > F::epsilon() {
                     // ∫x^n dx = x^(n+1)/(n+1)
                     return Some(Div(
                         Box::new(Pow(
@@ -333,7 +335,8 @@ fn expressions_equal<F: IntegrateFloat>(
         | (Cos(a), Cos(b))
         | (Exp(a), Exp(b))
         | (Ln(a), Ln(b))
-        | (Sqrt(a), Sqrt(b)) => expressions_equal(a, b, _ => false,
+        | (Sqrt(a), Sqrt(b)) => expressions_equal(a, b),
+        _ => false,
     }
 }
 

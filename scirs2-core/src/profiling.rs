@@ -1283,7 +1283,7 @@ pub mod advanced {
 
             let max_memory = memory_hist.iter().max().copied().unwrap_or(0);
 
-            let total_network_in: u64 = network_hist.iter().map(|(bytes_in_, _)| *bytes_in).sum();
+            let total_network_in: u64 = network_hist.iter().map(|(bytes_in_, _)| *bytes_in_).sum();
             let total_network_out: u64 = network_hist.iter().map(|(_, bytes_out)| *bytes_out).sum();
 
             ResourceStats {
@@ -1927,8 +1927,8 @@ pub mod comprehensive {
         pub fn new(config: ComprehensiveConfig) -> Self {
             Self {
                 app_profiler: Arc::new(Mutex::new(Profiler::new())),
-                system_monitor: SystemMonitor::new(config.system_config.clone()),
-                system_alerter: SystemAlerter::new(config.alert_config.clone()),
+                system_monitor: SystemMonitor::new(config.systemconfig.clone()),
+                system_alerter: SystemAlerter::new(config.alertconfig.clone()),
                 flame_graph_generator: advanced::FlameGraphGenerator::new(),
                 session_start: Instant::now(),
                 config,
@@ -2025,7 +2025,7 @@ pub mod comprehensive {
 
             // Export flame graph if available
             if let Some(ref flame_graph) = report.flame_graph {
-                let svg_generator = SvgFlameGraphGenerator::new(self.config.svg_config.clone());
+                let svg_generator = SvgFlameGraphGenerator::new(self.config.svgconfig.clone());
                 svg_generator
                     .export_to_file(flame_graph, &format!("{base_path}_flamegraph.svg"))?;
 

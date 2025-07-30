@@ -28,7 +28,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::adaptive_selection::{AdaptiveAlgorithmSelector, SelectionContext};
+//! use scirs2_spatial::adaptive_selection::{AdaptiveAlgorithmSelector, SelectionContext};
 //! use ndarray::array;
 //!
 //! // Create adaptive selector with multiple strategies
@@ -556,7 +556,7 @@ pub struct CachedSelection {
 }
 
 impl Default for SelectionContext {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -584,32 +584,32 @@ impl SelectionContext {
     }
 
     /// Configure accuracy priority
-    pub fn with_accuracy_priority(mut priority: f64) -> Self {
+    pub fn with_accuracy_priority(mut self, priority: f64) -> Self {
         self.accuracy_priority = priority.clamp(0.0, 1.0);
         self
     }
 
     /// Configure speed priority
-    pub fn with_speed_priority(mut priority: f64) -> Self {
+    pub fn with_speed_priority(mut self, priority: f64) -> Self {
         self.speed_priority = priority.clamp(0.0, 1.0);
         self
     }
 
     /// Configure memory constraint
-    pub fn with_memory_constraint(mut bytes: usize) -> Self {
+    pub fn with_memory_constraint(mut self, bytes: usize) -> Self {
         self.memory_constraint = bytes;
         self
     }
 
     /// Configure real-time requirement
-    pub fn with_real_time_requirement(mut required: bool) -> Self {
+    pub fn with_real_time_requirement(mut self, required: bool) -> Self {
         self.real_time_requirement = required;
         self
     }
 }
 
 impl Default for AdaptiveAlgorithmSelector {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -671,7 +671,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Enable performance learning
-    pub fn with_performance_learning(mut enabled: bool) -> Self {
+    pub fn with_performance_learning(mut self, enabled: bool) -> Self {
         self.performance_learning = enabled;
         if enabled {
             self.strategies.push(SelectionStrategy::HistoryBased);
@@ -680,7 +680,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Enable resource awareness
-    pub fn with_resource_awareness(mut enabled: bool) -> Self {
+    pub fn with_resource_awareness(mut self, enabled: bool) -> Self {
         self.resource_awareness = enabled;
         if enabled {
             self.strategies.push(SelectionStrategy::ResourceAware);
@@ -689,7 +689,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Enable quality optimization
-    pub fn with_quality_optimization(mut enabled: bool) -> Self {
+    pub fn with_quality_optimization(mut self, enabled: bool) -> Self {
         self.quality_optimization = enabled;
         if enabled {
             self.strategies.push(SelectionStrategy::QualityOptimized);
@@ -698,7 +698,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Enable ensemble methods
-    pub fn with_ensemble_methods(mut enabled: bool) -> Self {
+    pub fn with_ensemble_methods(mut self, enabled: bool) -> Self {
         self.ensemble_methods = enabled;
         if enabled {
             self.strategies.push(SelectionStrategy::EnsembleBased);

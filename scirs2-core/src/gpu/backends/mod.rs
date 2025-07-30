@@ -5,9 +5,13 @@
 
 use crate::gpu::{GpuBackend, GpuError};
 use std::process::Command;
+use std::str::FromStr;
 
 #[cfg(target_os = "macos")]
 use serde_json;
+
+#[cfg(feature = "validation")]
+use regex;
 
 // Backend implementation modules
 #[cfg(feature = "cuda")]
@@ -297,6 +301,7 @@ fn detect_metal_devices() -> Result<Vec<GpuInfo>, GpuError> {
                                 .or_else(|| display.get("vram").and_then(|v| v.as_str()))
                             {
                                 // Parse VRAM string like "8 GB" or "8192 MB"
+                                #[cfg(feature = "validation")]
                                 if let Some(captures) = regex::Regex::new(r"(\d+)\s*(GB|MB)")
                                     .ok()
                                     .and_then(|re| re.captures(vram_str))

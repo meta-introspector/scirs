@@ -816,7 +816,7 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
     /// Calculate memory bandwidth utilization
     fn calculate_bandwidth_utilization(&self, data_size: usize, duration: Duration) -> Option<f64> {
         if let Some(peak_bandwidth) = self.system_capabilities.memory_bandwidth.peak_bandwidth {
-            let bytes_transferred = data_size * std::mem::_size_of::<T>();
+            let bytes_transferred = data_size * std::mem::size_of::<T>();
             let bandwidth_used =
                 bytes_transferred as f64 / duration.as_secs_f64() / (1024.0 * 1024.0 * 1024.0);
             Some(bandwidth_used / peak_bandwidth)

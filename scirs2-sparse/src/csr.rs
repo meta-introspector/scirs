@@ -79,7 +79,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::csr::CsrMatrix;
+    /// use scirs2_sparse::csr::CsrMatrix;
     ///
     /// // Create a 3x3 sparse matrix with 5 non-zero elements
     /// let rows = vec![0, 0, 1, 2, 2];
@@ -512,7 +512,7 @@ impl CsrMatrix<f64> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::csr::CsrMatrix;
+    /// use scirs2_sparse::csr::CsrMatrix;
     ///
     /// let rows = vec![0, 0, 1, 2, 2];
     /// let cols = vec![0, 2, 2, 0, 1];
@@ -568,7 +568,7 @@ impl CsrMatrix<f64> {
 
 impl<T> CsrMatrix<T>
 where
-    T: num_traits: Float
+    T: num_traits::Float
         + std::fmt::Debug
         + Copy
         + Default

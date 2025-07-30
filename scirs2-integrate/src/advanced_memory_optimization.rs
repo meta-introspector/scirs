@@ -458,7 +458,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     ) -> IntegrateResult<ProblemCharacteristics> {
         Ok(ProblemCharacteristics {
             dimension: problem_size,
-            estimated_memory_footprint: problem_size * std::mem::_size, _of::<F>() * 10, // Estimate
+            estimated_memory_footprint: problem_size * std::mem::size_of::<F>() * 10, // Estimate
             access_pattern: self.infer_access_pattern(method_type)?,
             computational_intensity: self.estimate_computational_intensity(method_type)?,
             data_locality: self.analyze_data_locality(problem_size)?,
@@ -577,7 +577,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     /// Allocate L3 cache-optimized memory
     fn allocate_l3_optimized(
         &self,
-        size: usize_strategy: AllocationStrategy,
+        size: usize,
+        strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         let mut hierarchy = self.hierarchy_manager.write().unwrap();
 
@@ -614,7 +615,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     /// Allocate NUMA-optimized main memory
     fn allocate_numa_optimized(
         &self,
-        size: usize_strategy: AllocationStrategy,
+        size: usize,
+        strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         let numa_manager = self.numa_manager.read().unwrap();
         let optimal_node = numa_manager.select_optimal_node(size)?;
@@ -664,7 +666,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     /// Allocate GPU-optimized memory
     fn allocate_gpu_optimized(
         &self,
-        size: usize_strategy: AllocationStrategy,
+        size: usize,
+        strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         let mut hierarchy = self.hierarchy_manager.write().unwrap();
 
@@ -715,7 +718,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
         match _method_type.to_lowercase().as_str() {
             "rk4" | "rk45" | "rk23" => Ok(AccessPattern::Sequential),
             "bdf" | "lsoda" => Ok(AccessPattern::Random), // Due to Jacobian operations
-            "symplectic" => Ok(AccessPattern::Blocked { block_size: 1024 }, _ => Ok(AccessPattern::Sequential),
+            "symplectic" => Ok(AccessPattern::Blocked { block_size: 1024 }),
+            _ => Ok(AccessPattern::Sequential),
         }
     }
 
@@ -754,31 +758,31 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
 
     // Helper method implementations (simplified for brevity)
     fn design_optimal_layout(
-        &self_requirements: &MemoryRequirements<F>,
+        self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<MemoryLayout> {
         Ok(MemoryLayout::SoA) // Structure of Arrays for better vectorization
     }
 
     fn design_cache_strategy(
-        &self_requirements: &MemoryRequirements<F>,
+        self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<CacheStrategy> {
         Ok(CacheStrategy::Adaptive)
     }
 
     fn design_numa_placement(
-        &self_requirements: &MemoryRequirements<F>,
+        self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<NumaPlacement> {
         Ok(NumaPlacement::LocalFirst)
     }
 
     fn design_prefetch_schedule(
-        &self_requirements: &MemoryRequirements<F>, _iterations: usize,
+        self_requirements: &MemoryRequirements<F>, _iterations: usize,
     ) -> IntegrateResult<PrefetchSchedule> {
         Ok(PrefetchSchedule::Adaptive)
     }
 
     fn design_buffer_reuse(
-        &self_requirements: &MemoryRequirements<F>,
+        self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<BufferReuseStrategy> {
         Ok(BufferReuseStrategy::LRU)
     }
@@ -830,7 +834,7 @@ pub struct MemoryRequirements<F: IntegrateFloat> {
     pub working_set_size: usize,
     pub peak_usage: usize,
     pub temporal_pattern: TemporalAccessPattern,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 #[derive(Debug, Clone)]
@@ -1036,7 +1040,7 @@ impl CacheHierarchyInfo {
 }
 
 impl Default for CacheHierarchyInfo {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             l1_size: 32 * 1024,
             l2_size: 256 * 1024,
@@ -1342,7 +1346,7 @@ impl ProblemCharacteristicAnalyzer {
 }
 
 impl Default for ProblemCharacteristicAnalyzer {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }

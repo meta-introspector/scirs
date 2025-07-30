@@ -536,7 +536,7 @@ impl PerformanceRegressionDetector {
         let alert_system = AlertSystem::new(AlertConfig::default());
 
         Ok(Self {
-            _config,
+            config: _config,
             historical_data,
             statistical_analyzer,
             regression_analyzer,
@@ -678,15 +678,26 @@ impl PerformanceRegressionDetector {
                     RegressionType::AbruptRegression
                 }
             }
-            MetricType::ExecutionTime =>, RegressionType::IncreasedLatency,
-            MetricType::Throughput =>, RegressionType::ReducedThroughput,
-            MetricType::ErrorRate =>, RegressionType::IncreasedErrorRate_ => {
+            MetricType::ExecutionTime => RegressionType::IncreasedLatency,
+            MetricType::Throughput => RegressionType::ReducedThroughput,
+            MetricType::ErrorRate => {
                 if self.is_gradual_change(values) {
                     RegressionType::GradualRegression
                 } else {
                     RegressionType::AbruptRegression
                 }
             }
+            MetricType::CpuUtilization | MetricType::GpuUtilization => {
+                if self.is_gradual_change(values) {
+                    RegressionType::GradualRegression
+                } else {
+                    RegressionType::AbruptRegression
+                }
+            }
+            MetricType::CacheHitRate => RegressionType::ReducedThroughput,
+            MetricType::Flops => RegressionType::ReducedThroughput,
+            MetricType::ConvergenceRate => RegressionType::GradualRegression,
+            MetricType::Custom(_) => RegressionType::AbruptRegression, // Default for custom metrics
         }
     }
 
@@ -926,7 +937,8 @@ impl PerformanceRegressionDetector {
         match severity {
             s if s >= 0.9 => AlertSeverity::Critical,
             s if s >= 0.7 => AlertSeverity::High,
-            s if s >= 0.5 => AlertSeverity::Medium_ =>, AlertSeverity::Low,
+            s if s >= 0.5 => AlertSeverity::Medium,
+            _ => AlertSeverity::Low,
         }
     }
 
@@ -1324,7 +1336,7 @@ impl PerformanceDatabase {
 
 impl StatisticalAnalyzer {
     fn new(_config: StatisticalConfig) -> Self {
-        Self { _config }
+        Self { config: _config }
     }
 
     fn perform_regression_test(
@@ -1350,7 +1362,8 @@ impl StatisticalAnalyzer {
     }
 
     fn calculate_p_value(
-        &self_values: &[f64], _baseline: Option<&MetricValue>, _test_type: &StatisticalTest,
+        &self,
+        values: &[f64], _baseline: Option<&MetricValue>, _test_type: &StatisticalTest,
     ) -> f64 {
         // Simplified - would implement actual statistical tests
         0.05
@@ -1389,7 +1402,7 @@ impl RegressionAnalyzer {
     fn new(_config: RegressionAnalysisConfig) -> Self {
         Self {
             current_results: Vec::new(),
-            _config,
+            config: _config,
         }
     }
 }
@@ -1397,7 +1410,7 @@ impl RegressionAnalyzer {
 impl AlertSystem {
     fn new(_config: AlertConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             alert_history: VecDeque::new(),
         }
     }
@@ -1674,7 +1687,17 @@ impl std::hash::Hash for MetricType {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
-            MetricType::Custom(name) => name.hash(state, _ => {}
+            MetricType::Custom(name) => name.hash(state),
+            // For other variants, discriminant is sufficient
+            MetricType::ExecutionTime 
+            | MetricType::MemoryUsage 
+            | MetricType::Throughput
+            | MetricType::CpuUtilization
+            | MetricType::GpuUtilization
+            | MetricType::CacheHitRate
+            | MetricType::Flops 
+            | MetricType::ConvergenceRate
+            | MetricType::ErrorRate => {}
         }
     }
 }
@@ -1682,7 +1705,8 @@ impl std::hash::Hash for MetricType {
 impl PartialEq for MetricType {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (MetricType::Custom(a), MetricType::Custom(b)) => a == b_ =>, std::mem::discriminant(self) == std::mem::discriminant(other),
+            (MetricType::Custom(a), MetricType::Custom(b)) => a == b,
+            _ => std::mem::discriminant(self) == std::mem::discriminant(other),
         }
     }
 }

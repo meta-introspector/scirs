@@ -173,7 +173,7 @@ pub struct AStarPlanner {
 }
 
 impl Default for AStarPlanner {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }

@@ -14,12 +14,12 @@ pub mod step_control;
 pub mod stiffness;
 
 // Re-exports
-pub use dense__output::*;
+pub use dense_output::*;
 pub use diagnostics::*;
 pub use interpolation::*;
 pub use jacobian::*;
-pub use linear__solvers::*;
-pub use step__control::*;
+pub use linear_solvers::*;
+pub use step_control::*;
 pub use stiffness::*;
 
 // Selective imports from common to avoid conflicts
@@ -30,6 +30,6 @@ pub use common::{
 
 // SIMD operations (feature-gated)
 #[cfg(feature = "simd")]
-pub use simd__ops::SimdOdeOps;
+pub use simd_ops::SimdOdeOps;
 
 // Don't re-export events or mass_matrix as they have potential naming conflicts

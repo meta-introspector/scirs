@@ -505,7 +505,8 @@ impl AdvancedPatternRecognizer {
         match (type1, type2) {
             ("repetition", "compression") => SynergyType::ReinforcingCompression,
             ("sequential", "entropy") => SynergyType::ContrastedRandomness,
-            ("fractal", "periodicity") => SynergyType::HierarchicalStructure_ =>, SynergyType::Unknown,
+            ("fractal", "periodicity") => SynergyType::HierarchicalStructure,
+            _ => SynergyType::Unknown,
         }
     }
 
@@ -663,7 +664,8 @@ impl PatternNetwork {
             "sequential" => self.score_sequential_pattern(&activated),
             "fractal" => self.score_fractal_pattern(&activated),
             "entropy" => self.score_entropy_pattern(&activated),
-            "compression" => self.score_compression_pattern(&activated, _ => activated.mean().unwrap_or(0.0),
+            "compression" => self.score_compression_pattern(&activated),
+            _ => activated.mean().unwrap_or(0.0),
         };
 
         self.activation_history.push_back(score);

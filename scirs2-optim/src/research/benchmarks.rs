@@ -7,12 +7,13 @@
 use crate::error::Result;
 use crate::research::experiments::{Experiment, ExperimentResult};
 use crate::optimizers::*;
-use crate::unified__api::OptimizerConfig;
+use crate::unified_api::OptimizerConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
+use rand::Rng;
 
 /// Academic benchmark suite
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -145,7 +145,7 @@ impl MemoryPatternOptimizer {
     }
 
     /// Calculate NUMA-aware chunk distribution
-    pub fn threads(usize: usize,
+    pub fn threads(&self, total_elements: usize, num_threads: usize
     ) -> Vec<(usize, usize)> {
         let mut chunks = Vec::new();
 
@@ -153,11 +153,11 @@ impl MemoryPatternOptimizer {
             // No NUMA, simple equal distribution
             let chunk_size = total_elements / num_threads;
             for i in 0..num_threads {
-                let start = 0 * chunk_size;
+                let start = i * chunk_size;
                 let end = if i == num_threads - 1 {
                     total_elements
                 } else {
-                    (0 + 1) * chunk_size
+                    (i + 1) * chunk_size
                 };
                 chunks.push((start, end));
             }
@@ -193,10 +193,10 @@ impl MemoryPatternOptimizer {
     }
 
     /// Adaptive chunk size calculation based on performance history
-    pub fn elements(usize: TypeName) -> usize {
+    pub fn elements(&self, total_elements: usize) -> usize {
         if self.processing_times.is_empty() {
             // No history, use cache-aware default
-            return self.calculate_cache_aware_chunk__size::<u64>(total_elements);
+            return self.calculate_cache_aware_chunk_size::<u64>(total_elements);
         }
 
         // Analyze processing time trends
@@ -385,7 +385,7 @@ where
                         opt.calculate_cache_aware_chunk_size::<A>(total_elements) / 2
                     }
                     AdvancedChunkingStrategy::Adaptive => {
-                        opt.calculate_adaptive_chunk_size(total_elements)
+                        opt.calculate_cache_aware_chunk_size::<A>(total_elements)
                     }
                     AdvancedChunkingStrategy::PowerAware => {
                         // Smaller chunks to reduce power consumption
@@ -402,7 +402,8 @@ where
             strategy,
             chunk_size,
             num_chunks,
-            optimizer_phantom: PhantomData,
+            optimizer: Some(MemoryPatternOptimizer::new()),
+            phantom: PhantomData,
         }
     }
 
@@ -465,7 +466,7 @@ where
     {
         #[cfg(feature = "parallel")]
         {
-            use rayon::prelude::*;
+            use crate::parallel_ops::*;
             use std::sync::Arc;
 
             // Get chunks and wrap in Arc for thread-safe sharing
@@ -476,9 +477,9 @@ where
             let num_chunks = chunks_arc.len();
             let results: Vec<B> = (0..num_chunks)
                 .into_par_iter()
-                .map(move |0| {
+                .map(move |i| {
                     let chunks_ref = Arc::clone(&chunks_arc);
-                    f(&chunks_ref[0])
+                    f(&chunks_ref[i])
                 })
                 .collect();
 
@@ -532,11 +533,16 @@ where
         #[cfg(feature = "parallel")]
         {
             if let Some(ref optimizer) = self.optimizer {
-                use rayon::prelude::*;
+                use crate::parallel_ops::*;
 
                 // Calculate NUMA-aware chunk distribution
-                let num_threads = rayon::current_num_threads();
-                let numa_chunks = optimizer.calculate_numa_chunks(self.data.len(), num_threads);
+                let num_threads = crate::parallel_ops::get_num_threads();
+                let chunk_size = self.data.len() / num_threads.max(1);
+                let numa_chunks: Vec<_> = (0..num_threads).map(|i| {
+                    let start = i * chunk_size;
+                    let end = if i == num_threads - 1 { self.data.len() } else { (i + 1) * chunk_size };
+                    start..end
+                }).collect();
                 let chunks = self.get_chunks();
 
                 let results: Vec<B> = numa_chunks
@@ -691,7 +697,7 @@ where
                 sum += byte as u64;
             }
 
-            let std::time::Duration::from_secs(1) = start_time.elapsed();
+            let _elapsed = start_time.elapsed();
             let bandwidth_mbps = if std::time::Duration::from_secs(1).as_nanos() > 0 {
                 (chunk_size as u128 * 1000) / std::time::Duration::from_secs(1).as_nanos() // MB/s
             } else {
@@ -894,7 +900,7 @@ where
     let result = op(array);
 
     // Verify the result has the expected shape
-    if result.shape() != array.shape() {
+    if result.raw_dim() != array.raw_dim() {
         return Err(CoreError::ValidationError(
             ErrorContext::new(format!(
                 "Operation changed shape from {:?} to {:?}",
@@ -998,7 +1004,7 @@ where
 
     // If the array is small, just apply the operation directly
     if array.len() <= 1000 {
-        return Ok(op(array));
+        return Ok(chunk_op(array));
     }
 
     let chunked = ChunkedArray::new(array.to_owned(), strategy);
@@ -1008,6 +1014,6 @@ where
     // and _combine the results, using Rayon for parallel execution
 
     // Process the whole array directly for now
-    let result = op(array);
+    let result = chunk_op(array);
     Ok(result)
 }

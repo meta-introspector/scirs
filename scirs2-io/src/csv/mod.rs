@@ -12,7 +12,7 @@
 
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use ndarray::{Array1, Array2};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
@@ -66,7 +66,7 @@ impl Default for CsvReaderConfig {
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::csv::{read_csv, CsvReaderConfig};
+/// use scirs2_io::csv::{read_csv, CsvReaderConfig};
 ///
 /// // Read with default configuration
 /// let (headers, data) = read_csv("data.csv", None).unwrap();
@@ -234,7 +234,7 @@ fn parse_csv_line(_line: &str, config: &CsvReaderConfig) -> Vec<String> {
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::csv::{read_csv_numeric, CsvReaderConfig};
+/// use scirs2_io::csv::{read_csv_numeric, CsvReaderConfig};
 ///
 /// let (headers, data) = read_csv_numeric("data.csv", None).unwrap();
 /// println!("Numeric data shape: {:?}", data.shape());
@@ -646,7 +646,8 @@ fn convert_value(
             let lower = trimmed.to_lowercase();
             match lower.as_str() {
                 "true" | "yes" | "1" => Ok(DataValue::Boolean(true)),
-                "false" | "no" | "0" => Ok(DataValue::Boolean(false), _ => Err(IoError::FormatError(format!(
+                "false" | "no" | "0" => Ok(DataValue::Boolean(false)),
+                _ => Err(IoError::FormatError(format!(
                     "Cannot convert '{value}' to boolean"
                 ))),
             }
@@ -707,7 +708,7 @@ fn convert_value(
 ///
 /// ```no_run
 /// use ndarray::array;
-/// use scirs2__io::csv::{write_csv, CsvWriterConfig};
+/// use scirs2_io::csv::{write_csv, CsvWriterConfig};
 ///
 /// let data = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
 /// let headers = vec!["A".to_string(), "B".to_string(), "C".to_string()];
@@ -837,7 +838,7 @@ fn format_csv_line(_fields: &[String], config: &CsvWriterConfig) -> String {
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::csv::{read_csv_typed, ColumnType, CsvReaderConfig, MissingValueOptions};
+/// use scirs2_io::csv::{read_csv_typed, ColumnType, CsvReaderConfig, MissingValueOptions};
 ///
 /// // Read with automatic type detection
 /// let (headers, data) = read_csv_typed("data.csv", None, None, None).unwrap();
@@ -923,7 +924,7 @@ pub fn read_csv_typed<P: AsRef<Path>>(
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::csv::{read_csv_chunked, CsvReaderConfig};
+/// use scirs2_io::csv::{read_csv_chunked, CsvReaderConfig};
 /// use ndarray::Array2;
 ///
 /// let config = CsvReaderConfig::default();
@@ -1063,7 +1064,7 @@ where
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::csv::{write_csv_typed, DataValue, CsvWriterConfig};
+/// use scirs2_io::csv::{write_csv_typed, DataValue, CsvWriterConfig};
 ///
 /// // Create mixed-type data
 /// let row1 = vec![
@@ -1189,7 +1190,7 @@ pub fn write_csv_typed<P: AsRef<Path>>(
 ///
 /// ```no_run
 /// use ndarray::{Array1, array};
-/// use scirs2__io::csv::{write_csv_columns, CsvWriterConfig};
+/// use scirs2_io::csv::{write_csv_columns, CsvWriterConfig};
 ///
 /// let col1 = array![1.0, 2.0, 3.0];
 /// let col2 = array![4.0, 5.0, 6.0];
@@ -1283,7 +1284,8 @@ impl Default for StreamingCsvConfig {
 
 /// Streaming CSV reader for processing large files
 pub struct StreamingCsvReader<R: BufRead> {
-    reader: R_config: StreamingCsvConfig,
+    reader: R,
+    config: StreamingCsvConfig,
     headers: Option<Vec<String>>,
     current_line: usize,
     buffer: Vec<String>,

@@ -647,7 +647,8 @@ impl AdaptiveSimdOptimizer {
                 SimdInstructionSet::SSE | SimdInstructionSet::SSE2 => 128,
                 SimdInstructionSet::AVX | SimdInstructionSet::AVX2 => 256,
                 SimdInstructionSet::AVX512 => 512,
-                SimdInstructionSet::NEON => 128_ => 128,
+                SimdInstructionSet::NEON => 128,
+                _ => 128,
             };
 
             // Conservative strategy
@@ -735,7 +736,8 @@ impl AdaptiveSimdOptimizer {
         match &characteristics.access_pattern {
             MemoryAccessPattern::Sequential => score *= 1.0,
             MemoryAccessPattern::Strided { .. } => score *= 0.8,
-            MemoryAccessPattern::Random => score *= 0.5_ => score *= 0.7,
+            MemoryAccessPattern::Random => score *= 0.5,
+            _ => score *= 0.7,
         }
 
         // Hardware compatibility bonus
@@ -798,7 +800,8 @@ impl AdaptiveSimdOptimizer {
         metrics.cache_hit_rate = match &characteristics.access_pattern {
             MemoryAccessPattern::Sequential => 0.95,
             MemoryAccessPattern::Strided { .. } => 0.8,
-            MemoryAccessPattern::Tiled { .. } => 0.9_ => 0.7,
+            MemoryAccessPattern::Tiled { .. } => 0.9,
+            _ => 0.7,
         };
 
         Ok(metrics)

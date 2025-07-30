@@ -123,7 +123,7 @@ pub mod validation {
         value: F,
         param_name: &str,
     ) -> StatsResult<F> {
-        if value < F::zero() || value >, F::one() {
+        if value < F::zero() || value > F::one() {
             Err(helpers::probability_range(param_name, value))
         } else {
             Ok(value)

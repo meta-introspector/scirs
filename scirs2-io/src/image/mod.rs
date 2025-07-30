@@ -65,7 +65,8 @@ impl ImageFormat {
             "bmp" => ImageFormat::BMP,
             "tiff" | "tif" => ImageFormat::TIFF,
             "gif" => ImageFormat::GIF,
-            "webp" => ImageFormat::WEBP_ =>, ImageFormat::Other,
+            "webp" => ImageFormat::WEBP,
+            _ => ImageFormat::Other,
         }
     }
 
@@ -694,7 +695,8 @@ pub fn read_exif_metadata<P: AsRef<Path>>(_path: P) -> Result<Option<ExifMetadat
                 if !vec.is_empty() {
                     camera.white_balance = Some(match vec[0] {
                         0 => "Auto".to_string(),
-                        1 => "Manual".to_string(, _ => "Unknown".to_string(),
+                        1 => "Manual".to_string(),
+                        _ => "Unknown".to_string(),
                     });
                 }
             }

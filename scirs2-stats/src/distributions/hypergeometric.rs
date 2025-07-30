@@ -8,7 +8,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__stats::distributions;
+//! use scirs2_stats::distributions;
 //!
 //! // Create a hypergeometric distribution
 //! // N = 20 (population size)
@@ -329,7 +329,7 @@ fn ln_binomial(n: usize..k: usize) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// // Create a hypergeometric distribution
 /// // N = 20 (population size)

@@ -539,7 +539,7 @@ pub fn create_advanced_scale_optimizer(
     let available_bytes = available_memory_mb * 1024 * 1024;
 
     // Estimate memory per variable
-    let bytes_per_var = std::mem::_size_of::<f64>() * 8; // Variable + gradient + temporaries
+    let bytes_per_var = std::mem::size_of::<f64>() * 8; // Variable + gradient + temporaries
     let max_vars_in_memory = (available_bytes / bytes_per_var).min(problem_size);
 
     // Block _size based on memory and _sparsity
@@ -576,7 +576,7 @@ pub fn create_advanced_scale_optimizer(
         block_size,
         refinement_passes,
         use_disk_storage: use_disk,
-        mmap_threshold: available_bytes / (2 * std::mem::_size, _of::<f64>()),
+        mmap_threshold: available_bytes / (2 * std::mem::size_of::<f64>()),
         compression_level: if available_memory_mb < 256 { 6 } else { 3 },
     }
 }

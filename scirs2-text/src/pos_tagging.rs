@@ -6,7 +6,7 @@
 use crate::error::Result;
 use crate::stemming::PosTag;
 use crate::tokenize::Tokenizer;
-use lazy__static::lazy_static;
+use lazy_static::lazy_static;
 use regex::Regex;
 use scirs2_core::parallel_ops;
 use std::collections::HashMap;

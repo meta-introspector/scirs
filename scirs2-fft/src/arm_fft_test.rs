@@ -8,8 +8,8 @@
 #[allow(unused_imports)]
 mod tests {
     use crate::error::FFTResult;
-    use crate::simd__fft::{fft2_adaptive, fft_adaptive, fftn_adaptive, ifft_adaptive};
-    use num__complex::Complex64;
+    use crate::simd_fft::{fft2_adaptive, fft_adaptive, fftn_adaptive, ifft_adaptive};
+    use num_complex::Complex64;
     use std::f64::consts::PI;
 
     /// Test 1D FFT on ARM platforms
@@ -158,7 +158,7 @@ mod tests {
             .collect();
 
         // Test using adaptive planner
-        use crate::planning__adaptive::{AdaptiveExecutor, AdaptivePlanningConfig};
+        use crate::planning_adaptive::{AdaptiveExecutor, AdaptivePlanningConfig};
 
         // Create an adaptive executor with default config
         let config = AdaptivePlanningConfig::default();

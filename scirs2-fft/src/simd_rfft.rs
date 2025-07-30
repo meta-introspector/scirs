@@ -5,7 +5,7 @@
 
 use crate::error::FFTResult;
 use crate::rfft::{irfft as irfft_basic, rfft as rfft_basic};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities};
 use std::fmt::Debug;
@@ -29,8 +29,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::simd_rfft::{rfft_simd};
-/// use scirs2__fft::simd_fft::NormMode;
+/// use scirs2_fft::simd_rfft::{rfft_simd};
+/// use scirs2_fft::simd_fft::NormMode;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -92,7 +92,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::simd_rfft::{rfft_simd, irfft_simd};
+/// use scirs2_fft::simd_rfft::{rfft_simd, irfft_simd};
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];

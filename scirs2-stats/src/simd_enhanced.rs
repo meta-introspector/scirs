@@ -712,7 +712,7 @@ where
                 name: "Scalar".to_string(),
                 instruction_set: InstructionSet::SSE2,
                 performance_score: 1.0,
-                memory_requirements: data_size * std::mem::_size, _of::<F>(),
+                memory_requirements: data_size * std::mem::size_of::<F>(),
                 accuracy_score: 1.0,
                 last_used: std::time::Instant::now(),
             }
@@ -722,7 +722,7 @@ where
                     name: "SimdBasic".to_string(),
                     instruction_set: InstructionSet::AVX,
                     performance_score: 2.0,
-                    memory_requirements: data_size * std::mem::_size, _of::<F>(),
+                    memory_requirements: data_size * std::mem::size_of::<F>(),
                     accuracy_score: 0.95,
                     last_used: std::time::Instant::now(),
                 }
@@ -731,7 +731,7 @@ where
                     name: "SimdStable".to_string(),
                     instruction_set: InstructionSet::AVX2,
                     performance_score: 1.8,
-                    memory_requirements: data_size * std::mem::_size, _of::<F>(),
+                    memory_requirements: data_size * std::mem::size_of::<F>(),
                     accuracy_score: 1.0,
                     last_used: std::time::Instant::now(),
                 }
@@ -741,7 +741,7 @@ where
                 name: "SimdOptimized".to_string(),
                 instruction_set: InstructionSet::AVX512F,
                 performance_score: 3.0,
-                memory_requirements: data_size * std::mem::_size, _of::<F>(),
+                memory_requirements: data_size * std::mem::size_of::<F>(),
                 accuracy_score: 0.98,
                 last_used: std::time::Instant::now(),
             }
@@ -751,7 +751,7 @@ where
                 name: "ParallelSimd".to_string(),
                 instruction_set: InstructionSet::AVX512F,
                 performance_score: 4.0,
-                memory_requirements: data_size * std::mem::_size, _of::<F>(),
+                memory_requirements: data_size * std::mem::size_of::<F>(),
                 accuracy_score: 0.95,
                 last_used: std::time::Instant::now(),
             }

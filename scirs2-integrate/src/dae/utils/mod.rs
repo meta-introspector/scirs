@@ -10,7 +10,7 @@ use ndarray::{Array2, ArrayView2};
 pub mod linear_solvers;
 
 // Re-export useful utilities
-pub use linear__solvers::{matrix_norm, solve_linear_system, solve_lu, vector_norm};
+pub use linear_solvers::{matrix_norm, solve_linear_system, solve_lu, vector_norm};
 
 /// Compute the constraint Jacobian for a constraint function
 #[allow(dead_code)]

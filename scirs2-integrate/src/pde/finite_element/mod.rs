@@ -101,7 +101,7 @@ pub struct BoundaryNodeInfo {
 }
 
 impl Default for TriangularMesh {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -302,7 +302,7 @@ pub struct FEMOptions {
 }
 
 impl Default for FEMOptions {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         FEMOptions {
             element_type: ElementType::Linear,
             quadrature_order: 3, // 3-point rule suitable for quadratic functions

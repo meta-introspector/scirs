@@ -28,7 +28,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::next_gen_gpu_architecture::{QuantumGpuProcessor, PhotonicAccelerator};
+//! use scirs2_spatial::next_gen_gpu_architecture::{QuantumGpuProcessor, PhotonicAccelerator};
 //! use ndarray::array;
 //!
 //! // Quantum-GPU hybrid processing
@@ -53,7 +53,7 @@
 
 use crate::error::SpatialResult;
 use ndarray::{Array1, Array2, Array3, ArrayView2};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::collections::VecDeque;
 use std::f64::consts::PI;
 
@@ -255,7 +255,7 @@ pub struct NextGenPerformanceMetrics {
 }
 
 impl Default for QuantumGpuProcessor {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -290,19 +290,19 @@ impl QuantumGpuProcessor {
     }
 
     /// Enable quantum coherence preservation
-    pub fn with_quantum_coherence_preservation(mut enabled: bool) -> Self {
+    pub fn with_quantum_coherence_preservation(mut self, enabled: bool) -> Self {
         self.quantum_coherence = enabled;
         self
     }
 
     /// Enable tensor core quantum enhancement
-    pub fn with_tensor_core_quantum_enhancement(mut enabled: bool) -> Self {
+    pub fn with_tensor_core_quantum_enhancement(mut self, enabled: bool) -> Self {
         self.tensor_quantum_enhancement = enabled;
         self
     }
 
     /// Enable holographic memory
-    pub fn with_holographic_memory(mut enabled: bool) -> Self {
+    pub fn with_holographic_memory(mut self, enabled: bool) -> Self {
         self.holographic_memory = enabled;
         self
     }
@@ -791,7 +791,7 @@ pub struct PhotonicPerformanceMetrics {
 }
 
 impl Default for PhotonicAccelerator {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -815,19 +815,19 @@ impl PhotonicAccelerator {
     }
 
     /// Enable optical neural networks
-    pub fn with_optical_neural_networks(mut enabled: bool) -> Self {
+    pub fn with_optical_neural_networks(mut self, enabled: bool) -> Self {
         self.optical_neural_networks = enabled;
         self
     }
 
     /// Enable metamaterial optimization
-    pub fn with_metamaterial_optimization(mut enabled: bool) -> Self {
+    pub fn with_metamaterial_optimization(mut self, enabled: bool) -> Self {
         self.metamaterial_optimization = enabled;
         self
     }
 
     /// Enable temporal encoding
-    pub fn with_temporal_encoding(mut enabled: bool) -> Self {
+    pub fn with_temporal_encoding(mut self, enabled: bool) -> Self {
         self.temporal_encoding = enabled;
         self
     }

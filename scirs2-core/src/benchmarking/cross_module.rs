@@ -44,7 +44,7 @@ use std::time::{Duration, Instant};
 use chrono;
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use crate::parallel_ops::*;
 
 /// Cross-module performance benchmarking configuration
 #[derive(Debug, Clone)]
@@ -787,7 +787,7 @@ impl CrossModuleBenchmarkRunner {
         let items_per_thread = work_items / thread_count;
 
         // Use thread pool to simulate parallel work
-        rayon::ThreadPoolBuilder::new()
+        crate::parallel_ops::ThreadPoolBuilder::new()
             .num_threads(thread_count)
             .build()
             .map_err(|e| CoreError::ComputationError(ErrorContext::new(format!("{e}"))))?

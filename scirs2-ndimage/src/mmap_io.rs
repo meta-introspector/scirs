@@ -267,7 +267,7 @@ where
     // Convert bytes to the target type
     let mut data = Vec::with_capacity(total_elements);
 
-    if std::mem::size_of::<T>() == std::mem::size, _of::<f64>() {
+    if std::mem::size_of::<T>() == std::mem::size_of::<f64>() {
         // Handle f64 case
         for chunk in buffer.chunks_exact(8) {
             let bytes: [u8; 8] = chunk
@@ -279,7 +279,7 @@ where
             })?;
             data.push(converted);
         }
-    } else if std::mem::size_of::<T>() == std::mem::size, _of::<f32>() {
+    } else if std::mem::size_of::<T>() == std::mem::size_of::<f32>() {
         // Handle f32 case
         for chunk in buffer.chunks_exact(4) {
             let bytes: [u8; 4] = chunk

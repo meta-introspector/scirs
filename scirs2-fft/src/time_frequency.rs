@@ -8,7 +8,7 @@ use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
 use crate::{window, WindowFunction};
 use ndarray::Array2;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use std::collections::HashMap;
 use std::f64::consts::PI;

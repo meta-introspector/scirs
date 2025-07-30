@@ -378,7 +378,7 @@ impl AdvancedParallelProcessor {
     {
         DataCharacteristics {
             size: data.len(),
-            memory_footprint: data.len() * std::mem::size, _of::<F>(),
+            memory_footprint: data.len() * std::mem::size_of::<F>(),
             data_distribution: self.detect_data_distribution(data),
             access_pattern: AccessPattern::Sequential, // Default for 1D arrays
             cache_efficiency_estimate: self.estimate_cache_efficiency(data.len()),

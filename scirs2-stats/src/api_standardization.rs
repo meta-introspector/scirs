@@ -321,7 +321,8 @@ where
             NullHandling::Exclude => Ok((Array1::from_vec(finite_data), finite_count)),
             NullHandling::Fail if finite_count != data.len() => Err(StatsError::InvalidArgument(
                 "Null values encountered with Fail strategy".to_string(),
-            ), _ => Ok((Array1::from_vec(finite_data), finite_count)),
+            )),
+            _ => Ok((Array1::from_vec(finite_data), finite_count)),
         }
     }
 
@@ -502,7 +503,7 @@ where
     /// Estimate memory usage
     fn estimate_memory_usage(&self, sample_size: usize) -> Option<usize> {
         if self.config.include_metadata {
-            Some(sample_size * std::mem::_size_of::<F>() * 2) // Rough estimate
+            Some(sample_size * std::mem::size_of::<F>() * 2) // Rough estimate
         } else {
             None
         }
@@ -611,8 +612,9 @@ where
                     crate::correlation::pearson_r(&x, &y)?
                 }
             }
-            CorrelationMethod::Spearman =>, crate::correlation::spearman_r(&x, &y)?,
-            CorrelationMethod::Kendall =>, crate::correlation::kendall_tau(&x, &y, "b")?_ => {
+            CorrelationMethod::Spearman => crate::correlation::spearman_r(&x, &y)?,
+            CorrelationMethod::Kendall => crate::correlation::kendall_tau(&x, &y, "b")?,
+            _ => {
                 warnings.push("Advanced correlation methods not yet implemented".to_string());
                 crate::correlation::pearson_r(&x, &y)?
             }
@@ -695,7 +697,8 @@ where
     fn compute_statistical_inference(
         &self,
         correlation: F,
-        n: usize_warnings: &mut Vec<String>,
+        n: usize,
+        warnings: &mut Vec<String>,
     ) -> StatsResult<(Option<F>, Option<(F, F)>)> {
         // Fisher's z-transformation for confidence intervals
         let z = ((F::one() + correlation) / (F::one() - correlation)).ln() * F::from(0.5).unwrap();
@@ -1428,7 +1431,8 @@ impl APIValidationFramework {
             ValidationCategory::ErrorHandling => self.validate_error_handling(signature),
             ValidationCategory::Documentation => self.validate_documentation(signature),
             ValidationCategory::ScipyCompatibility => self.validate_scipy_compatibility(signature),
-            ValidationCategory::Performance => self.validate_performance(signature, _ => ValidationResult {
+            ValidationCategory::Performance => self.validate_performance(signature),
+            _ => ValidationResult {
                 passed: true,
                 messages: vec![],
                 suggested_fixes: vec![],

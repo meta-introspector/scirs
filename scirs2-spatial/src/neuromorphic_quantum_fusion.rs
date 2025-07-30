@@ -27,7 +27,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::neuromorphic_quantum_fusion::{QuantumSpikingClusterer, NeuralQuantumOptimizer};
+//! use scirs2_spatial::neuromorphic_quantum_fusion::{QuantumSpikingClusterer, NeuralQuantumOptimizer};
 //! use ndarray::array;
 //!
 //! // Quantum-enhanced spiking neural clustering
@@ -53,9 +53,9 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use crate::neuromorphic::SpikingNeuron;
-use crate::quantum__inspired::QuantumState;
+use crate::quantum_inspired::QuantumState;
 use ndarray::{Array1, Array2, ArrayView2};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -1236,7 +1236,7 @@ pub struct OptimizationStep {
 }
 
 impl Default for NeuralQuantumOptimizer {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }

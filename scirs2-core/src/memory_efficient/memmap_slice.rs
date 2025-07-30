@@ -115,11 +115,11 @@ where
         }
 
         // Convert to target dimension type using a more robust approach
-        Self::convert_dims_to_target_type(&result_dims, &self.source.shape)
+        Self::convert_dims_to_target_type(&result_dims)
     }
 
     /// Convert dimensions vector to target dimension type D
-    fn convert_dims_to_target_type(result_dims: &[usize], source_shape: &D) -> CoreResult<D> {
+    fn convert_dims_to_target_type(result_dims: &[usize]) -> CoreResult<D> {
         let source_ndim = result_dims.len();
         let target_ndim = D::NDIM;
 
@@ -261,7 +261,7 @@ where
                     source_ndim,
                     target_ndim,
                     result_dims,
-                    source_shape,
+                    result_dims,
                     result_dims.iter().filter(|&&x| x == 1).count()
                 ))));
             }

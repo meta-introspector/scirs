@@ -581,7 +581,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     /// Reshape operation
     pub fn reshape(&mut self, input: usize, new_shape: &[usize]) -> Result<usize> {
         let input_val = self.get_value(input)?;
-        let original_shape = input_val._shape().to_vec();
+        let original_shape = input_val.shape().to_vec();
 
         let output_id = self.tape.len();
 
@@ -724,7 +724,8 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
         }
 
         match &self.tape[var_id].saved_values {
-            SavedValues::Tensor(tensor) => Ok(tensor.clone(), _ => {
+            SavedValues::Tensor(tensor) => Ok(tensor.clone()),
+            _ => {
                 // For operations, we'd need to compute the forward value
                 // This is simplified - in practice would need full forward evaluation
                 Ok(Array1::zeros(1))

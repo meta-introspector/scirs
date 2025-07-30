@@ -1292,7 +1292,7 @@ impl<T: Float + Send + Sync> EnhancedAuditSystem<T> {
     /// Create new enhanced audit system
     pub fn new(_config: AuditConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             audit_trail: AuditTrail::new(),
             compliance_monitor: ComplianceMonitor::new(),
             verification_engine: FormalVerificationEngine::new(),
@@ -1426,7 +1426,7 @@ impl AuditTrail {
         }
 
         if let Some(ref _event_type) = criteria.event_type {
-            if !matches!(&event.event_type_event_type) {
+            if !matches!(&event.event_type, _event_type) {
                 return false;
             }
         }
@@ -1779,7 +1779,8 @@ impl RegulatoryComplianceChecker {
     pub fn generate_report(
         &self,
         frameworks: &[ComplianceFramework],
-        period: ReportingPeriod_audit_trail: &AuditTrail,
+        period: ReportingPeriod,
+        audit_trail: &AuditTrail,
     ) -> Result<ComplianceReport> {
         let report = ComplianceReport {
             id: format!("report_{}", self.reports.len()),

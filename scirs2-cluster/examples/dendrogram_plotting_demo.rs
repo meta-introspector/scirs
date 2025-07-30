@@ -121,7 +121,7 @@ fn create_dendrograms(
             line_width: 3.0,
             font_size: 14.0,
             truncate_mode: None,
-            styling: scirs2_cluster: hierarchy::visualization::DendrogramStyling::default(),
+            styling: scirs2_cluster::hierarchy::visualization::DendrogramStyling::default(),
         };
 
         let output = PlotOutput {

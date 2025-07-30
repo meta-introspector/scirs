@@ -237,7 +237,7 @@ fn solve_dense_system<F: Float + NumAssign>(a: &[Vec<F>], b: &[F]) -> SparseResu
         }
 
         // Eliminate below
-        for i in (k + 1), n {
+        for i in (k + 1)..n {
             let factor = aug[i][k] / aug[k][k];
             for j in k..=n {
                 aug[i][j] = aug[i][j] - factor * aug[k][j];

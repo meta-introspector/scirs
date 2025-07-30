@@ -466,7 +466,7 @@ fn demonstrate_quantum_amplitude_amplification(
     let start = Instant::now();
 
     // Create target features to amplify
-    let edge_feature = Array2::from_shape_vec(
+    let edge_feature = "Array"2::from_shape_vec(
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )

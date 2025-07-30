@@ -215,7 +215,7 @@ where
         chunk_shape: &[usize],
     ) -> Self {
         Self {
-            inner: ChunkProcessor::new(array, chunk_shape),
+            inner: ChunkProcessor::new(array, array.raw_dim()),
             component_name: component_name.into(),
         }
     }

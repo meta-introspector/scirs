@@ -122,7 +122,7 @@ unsafe impl<T> Sync for CudaBuffer<T> {}
 impl<T> CudaBuffer<T> {
     pub fn new(_size: usize) -> NdimageResult<Self> {
         let mut device_ptr: *mut c_void = ptr::null_mut();
-        let byte_size = _size * std::mem::_size_of::<T>();
+        let byte_size = _size * std::mem::size_of::<T>();
 
         unsafe {
             let result = cudaMalloc(&mut device_ptr, byte_size);

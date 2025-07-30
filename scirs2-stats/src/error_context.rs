@@ -121,7 +121,7 @@ pub mod enhanced_validation {
                     }
                 }
                 ParamType::Probability => {
-                    if value < F::zero() || value >, F::one() {
+                    if value < F::zero() || value > F::one() {
                         return Err(EnhancedError::new(
                             StatsError::domain(format!(
                                 "{} must be in [0, 1], got {}",

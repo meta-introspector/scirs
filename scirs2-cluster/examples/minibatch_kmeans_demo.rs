@@ -1,8 +1,8 @@
 use ndarray::Array2;
 use rand::distr::Uniform;
 use rand::prelude::*;
-use scirs2__cluster::vq::{
 use rand::seq::SliceRandom;
+use scirs2__cluster::vq::{
     kmeans2, minibatch_kmeans, MiniBatchKMeansOptions, MinitMethod, MissingMethod,
 };
 

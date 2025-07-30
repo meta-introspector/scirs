@@ -168,7 +168,7 @@ impl From<ndarray::ShapeError> for OptimError {
 }
 
 impl From<serde_json::Error> for OptimError {
-    fn from(_error: serde_json: Error) -> Self {
+    fn from(_error: serde_json::Error) -> Self {
         OptimError::Other(format!("Serde JSON _error: {_error}"))
     }
 }

@@ -3,24 +3,24 @@
 //! This example demonstrates memory tracking for GPU operations using the
 //! memory metrics system.
 
-#[cfg(not(all(feature = memory_management, feature = gpu)))]
+#[cfg(not(all(feature = "memory_management", feature = "gpu")))]
 #[allow(dead_code)]
 fn main() {
     println!("This example requires both 'memory_management' and 'gpu' features to be enabled.");
     println!("Run with: cargo run --example memory_metrics_gpu --features memory_management,gpu");
 }
 
-#[cfg(all(feature = memory_management, feature = gpu))]
+#[cfg(all(feature = "memory_management", feature = "gpu"))]
 use scirs2_core::gpu::GpuBackend;
-#[cfg(all(feature = memory_management, feature = gpu))]
+#[cfg(all(feature = "memory_management", feature = "gpu"))]
 use scirs2_core::memory::metrics::{
     format_bytes, format_memory_report, generate_memory_report, reset_memory_metrics,
     setup_gpu_memory_tracking, TrackedGpuContext,
 };
-#[cfg(all(feature = memory_management, feature = gpu))]
+#[cfg(all(feature = "memory_management", feature = "gpu"))]
 use std::time::Instant;
 
-#[cfg(all(feature = memory_management, feature = gpu))]
+#[cfg(all(feature = "memory_management", feature = "gpu"))]
 #[allow(dead_code)]
 fn main() {
     println!("Memory Metrics with GPU Operations Example");
@@ -130,7 +130,7 @@ fn main() {
 }
 
 // Simulates a GPU matrix multiplication operation
-#[cfg(all(feature = memory_management, feature = gpu))]
+#[cfg(all(feature = "memory_management", feature = "gpu"))]
 #[allow(dead_code)]
 fn context( &TrackedGpuContext) {
     let start = Instant::now();

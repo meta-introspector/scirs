@@ -115,9 +115,9 @@ pub struct PlanSerializationManager {
 
 impl PlanSerializationManager {
     /// Create a new plan serialization manager
-    pub fn new(_db_path: impl AsRef<Path>) -> Self {
-        let _db_path = _db_path.as_ref().to_path_buf();
-        let database = Self::load_or_create_database(&_db_path).unwrap_or_else(|_| {
+    pub fn new(db_path: impl AsRef<Path>) -> Self {
+        let db_path = db_path.as_ref().to_path_buf();
+        let database = Self::load_or_create_database(&db_path).unwrap_or_else(|_| {
             Arc::new(Mutex::new(PlanDatabase {
                 plans: HashMap::new(),
                 stats: PlanDatabaseStats::default(),
@@ -301,8 +301,8 @@ impl PlanSerializationManager {
 
         db.plans
             .iter()
-            .filter(|(info_)| {
-                info.size == size && info.forward == forward && info.arch_id == arch_id
+            .filter(|(info_, _)| {
+                info_.size == size && info_.forward == forward && info_.arch_id == arch_id
             })
             .min_by_key(|(_, metrics)| metrics.avg_execution_ns)
             .map(|(info, metrics)| (info.clone(), metrics.clone()))

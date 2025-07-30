@@ -11,7 +11,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::window::{get_window, Window};
 use ndarray::{Array2, Axis};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use std::f64::consts::PI;
 
@@ -46,8 +46,8 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::spectrogram_stft;
-/// use scirs2__fft::window::Window;
+/// use scirs2_fft::spectrogram_stft;
+/// use scirs2_fft::window::Window;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -283,8 +283,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::spectrogram;
-/// use scirs2__fft::window::Window;
+/// use scirs2_fft::spectrogram;
+/// use scirs2_fft::window::Window;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -433,7 +433,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::spectrogram_normalized;
+/// use scirs2_fft::spectrogram_normalized;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal

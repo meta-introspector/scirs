@@ -17,7 +17,7 @@ where
     S: ndarray::Data,
     D: Dimension,
 {
-    if _array.is_empty() {
+    if array.is_empty() {
         return Err(CoreError::ValidationError(
             ErrorContext::new("Array is empty".to_string())
                 .with_location(ErrorLocation::new(file!(), line!())),
@@ -71,7 +71,7 @@ where
     S: ndarray::Data,
     D: Dimension,
 {
-    let shape = _array.shape();
+    let shape = array.shape();
 
     if shape.len() != 2 {
         return Err(CoreError::ValidationError(

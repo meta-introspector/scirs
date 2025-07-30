@@ -18,7 +18,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::boolean_ops::{polygon_union, polygon_intersection};
+//! use scirs2_spatial::boolean_ops::{polygon_union, polygon_intersection};
 //! use ndarray::array;
 //!
 //! // Define two overlapping squares
@@ -232,7 +232,7 @@ impl LabeledPolygon {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::boolean_ops::polygon_union;
+/// use scirs2_spatial::boolean_ops::polygon_union;
 /// use ndarray::array;
 ///
 /// let poly1 = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -602,7 +602,8 @@ fn polygons_intersect(_poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
 /// Build intersection graph for Weiler-Atherton algorithm
 #[allow(dead_code)]
 fn build_intersection_graph(
-    _poly1: &LabeledPolygon_poly2: &LabeledPolygon,
+    _poly1: &LabeledPolygon,
+    _poly2: &LabeledPolygon,
 ) -> SpatialResult<HashMap<String, Vec<Point2D>>> {
     // This is a simplified implementation
     // A full implementation would build a proper intersection graph
@@ -630,7 +631,8 @@ fn trace_union_boundary(
 #[allow(dead_code)]
 fn trace_difference_boundary(
     _graph: &HashMap<String, Vec<Point2D>>,
-    poly1: &LabeledPolygon_poly2: &LabeledPolygon,
+    poly1: &LabeledPolygon,
+    _poly2: &LabeledPolygon,
 ) -> SpatialResult<Vec<LabeledPolygon>> {
     // Simplified implementation: return the first polygon
     // A complete implementation would properly trace the difference boundary

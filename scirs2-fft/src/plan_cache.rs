@@ -51,7 +51,7 @@ impl PlanCache {
     pub fn with_config(_max_entries: usize, max_age: Duration) -> Self {
         Self {
             cache: Arc::new(Mutex::new(HashMap::new())),
-            _max_entries,
+            max_entries: _max_entries,
             max_age,
             enabled: Arc::new(Mutex::new(true)),
             hit_count: Arc::new(Mutex::new(0)),
@@ -167,12 +167,12 @@ impl PlanCache {
 
         // If still over capacity, remove least recently used
         while cache.len() >= self.max_entries {
-            if let Some((key_to_remove_)) = cache
+            if let Some((key_to_remove_, _)) = cache
                 .iter()
                 .min_by_key(|(_, v)| (v.last_used, v.usage_count))
                 .map(|(k, v)| (k.clone(), v.clone()))
             {
-                cache.remove(&key_to_remove);
+                cache.remove(&key_to_remove_);
             } else {
                 break;
             }

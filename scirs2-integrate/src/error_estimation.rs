@@ -263,7 +263,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     }
 
     /// Assess solution quality metrics
-    fn assess_solution_quality() -> IntegrateResult<SolutionQualityMetrics<F>> {
+    fn assess_solution_quality(&self) -> IntegrateResult<SolutionQualityMetrics<F>> {
         let mut metrics = SolutionQualityMetrics {
             smoothness: F::zero(),
             regularity: F::zero(),
@@ -437,7 +437,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     }
 
     /// Recommend optimal step size based on error analysis
-    fn recommend_step_size(_result: &ErrorAnalysisResult<F>, current_step: F) -> F {
+    fn recommend_step_size(&self, _result: &ErrorAnalysisResult<F>, current_step: F) -> F {
         let target_error = self.tolerance;
         let current_error = _result.primary_estimate;
 
@@ -483,7 +483,7 @@ impl<F: IntegrateFloat> RichardsonExtrapolator<F> {
     }
 
     /// Add solution for extrapolation
-    pub fn add_solution(_solution: Array1<F>) {
+    pub fn add_solution(&mut self, _solution: Array1<F>) {
         self.solutions.push(_solution);
         if self.solutions.len() > self.order + 1 {
             self.solutions.remove(0);
@@ -539,7 +539,7 @@ impl<F: IntegrateFloat> SpectralErrorIndicator<F> {
     }
 
     /// Add solution to history
-    pub fn add_solution(_solution: Array1<F>) {
+    pub fn add_solution(&mut self, _solution: Array1<F>) {
         self.history.push_back(_solution);
         while self.history.len() > self.window_size {
             self.history.pop_front();

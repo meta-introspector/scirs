@@ -325,7 +325,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
                 + weights.newton_convergence_weight);
 
         // Normalize to [-1, 1] range where positive is stiff
-        if stiff_score > F::zero() || non_stiff_score >, F::zero() {
+        if stiff_score > F::zero() || non_stiff_score > F::zero() {
             self.stiffness_score =
                 (stiff_score - non_stiff_score) / (stiff_score + non_stiff_score).max(F::one());
         } else {

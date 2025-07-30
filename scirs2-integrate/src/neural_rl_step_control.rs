@@ -716,7 +716,7 @@ impl<F: IntegrateFloat> NetworkWeights<F> {
         })
     }
 
-    pub fn initialize_xavier(&self) -> IntegrateResult<()> {
+    pub fn initialize_xavier(&mut self) -> IntegrateResult<()> {
         // Xavier/Glorot initialization for better gradient flow
 
         // Layer 1: 64 -> 128
@@ -985,7 +985,7 @@ impl RLPerformanceAnalytics {
         }
     }
 
-    pub fn update_metrics(_reward: f64_action: usize) -> IntegrateResult<()> {
+    pub fn update_metrics(_reward: f64, _action: usize) -> IntegrateResult<()> {
         self.episode_rewards.push_back(_reward);
         if self.episode_rewards.len() > 1000 {
             self.episode_rewards.pop_front();
@@ -1033,7 +1033,7 @@ pub struct NetworkHyperparameters<F: IntegrateFloat> {
     pub learning_rate: f64,
     pub momentum: f64,
     pub weight_decay: f64,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -1103,7 +1103,7 @@ pub struct ProblemCharacteristics<F: IntegrateFloat> {
     pub problem_size: usize,
     pub problem_type: String,
     pub stiffness_ratio: f64,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -1111,7 +1111,7 @@ pub struct PerformanceMetrics<F: IntegrateFloat> {
     pub throughput: f64,
     pub memory_usage: usize,
     pub accuracy: f64,
-    pub _phantom: std::marker::PhantomData<F>,
+    pub phantom: std::marker::PhantomData<F>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -1156,7 +1156,7 @@ pub struct ProblemState<F: IntegrateFloat> {
 }
 
 impl Default for TrainingConfiguration {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         TrainingConfiguration {
             learning_rate: 0.001,
             discount_factor: 0.99,
@@ -1199,7 +1199,8 @@ mod tests {
         let performance_metrics = PerformanceMetrics {
             throughput: 1000.0,
             memory_usage: 1024 * 1024,
-            accuracy: 1e-8_phantom: std::marker::PhantomData,
+            accuracy: 1e-8,
+            phantom: std::marker::PhantomData,
         };
 
         let features = extractor.extract_features(0.01, 1e-6, &problem_state, &performance_metrics);

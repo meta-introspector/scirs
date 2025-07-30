@@ -4,8 +4,8 @@
 //! memory leak reports for continuous integration pipelines.
 
 use clap::{Arg, Command};
-// use scirs2__optim::benchmarking::advanced_memory_leak_detector::MemoryLeakConfig;
-use scirs2__optim::error::{OptimError, Result};
+// use scirs2_optim::benchmarking::advanced_memory_leak_detector::MemoryLeakConfig;
+use scirs2_optim::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;

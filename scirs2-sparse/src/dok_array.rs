@@ -126,7 +126,7 @@ where
 
         // Sort by row, then column for deterministic output
         let mut entries: Vec<_> = self.data.iter().collect();
-        entries.sort_by_key(|&(&(row, col)_)| (row, col));
+        entries.sort_by_key(|(&(row, col), _)| (row, col));
 
         for (&(row, col), &value) in entries {
             row_indices.push(row);
@@ -750,7 +750,8 @@ mod tests {
 
         // Sum all elements
         match array.sum(None).unwrap() {
-            SparseSum::Scalar(sum) => assert_eq!(sum, 21.0, _ => panic!("Expected scalar sum"),
+            SparseSum::Scalar(sum) => assert_eq!(sum, 21.0),
+            _ => panic!("Expected scalar sum"),
         }
 
         // Sum along rows (axis 0)

@@ -436,7 +436,7 @@ impl CrossPlatformValidator {
             category: TestCategory::NumericalPrecision,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(std::mem::size, _of::<f64>() * sample_count * 2),
+            memory_usage_bytes: Some(std::mem::size_of::<f64>() * sample_count * 2),
             notes: vec!["Testing fundamental arithmetic operations".to_string()],
             accuracy_metrics: Some(accuracy_metrics),
         })
@@ -494,7 +494,7 @@ impl CrossPlatformValidator {
             category: TestCategory::NumericalPrecision,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(std::mem::size, _of::<f64>() * sample_count * 2),
+            memory_usage_bytes: Some(std::mem::size_of::<f64>() * sample_count * 2),
             notes: vec!["Testing transcendental function precision".to_string()],
             accuracy_metrics: Some(accuracy_metrics),
         })
@@ -557,7 +557,7 @@ impl CrossPlatformValidator {
             category: TestCategory::NumericalPrecision,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size, _of::<f64>()),
+            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
             notes: vec!["Testing core statistical function precision".to_string()],
             accuracy_metrics: Some(accuracy_metrics),
         })
@@ -603,7 +603,7 @@ impl CrossPlatformValidator {
             category: TestCategory::NumericalPrecision,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(std::mem::size, _of::<f64>() * 4),
+            memory_usage_bytes: Some(std::mem::size_of::<f64>() * 4),
             notes,
             accuracy_metrics: None,
         })
@@ -671,7 +671,7 @@ impl CrossPlatformValidator {
             category: TestCategory::SIMDCompatibility,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size, _of::<f64>()),
+            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
             notes,
             accuracy_metrics,
         })
@@ -723,7 +723,7 @@ impl CrossPlatformValidator {
             category: TestCategory::SIMDCompatibility,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size, _of::<f64>()),
+            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
             notes,
             accuracy_metrics,
         })
@@ -824,7 +824,7 @@ impl CrossPlatformValidator {
             category: TestCategory::ParallelProcessing,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(test_data.len() * std::mem::size, _of::<f64>()),
+            memory_usage_bytes: Some(test_data.len() * std::mem::size_of::<f64>()),
             notes,
             accuracy_metrics,
         })
@@ -873,7 +873,7 @@ impl CrossPlatformValidator {
             category: TestCategory::ParallelProcessing,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(1000 * std::mem::size, _of::<f64>() * 2),
+            memory_usage_bytes: Some(1000 * std::mem::size_of::<f64>() * 2),
             notes,
             accuracy_metrics: None,
         })
@@ -949,7 +949,7 @@ impl CrossPlatformValidator {
             category: TestCategory::MemoryAllocation,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(large_size * std::mem::size, _of::<f64>()),
+            memory_usage_bytes: Some(large_size * std::mem::size_of::<f64>()),
             notes,
             accuracy_metrics: None,
         })
@@ -975,7 +975,7 @@ impl CrossPlatformValidator {
             category: TestCategory::MemoryAllocation,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(1000 * std::mem::size, _of::<f64>()),
+            memory_usage_bytes: Some(1000 * std::mem::size_of::<f64>()),
             notes,
             accuracy_metrics: None,
         })
@@ -1008,7 +1008,7 @@ impl CrossPlatformValidator {
             category: TestCategory::MemoryAllocation,
             status: TestStatus::Passed,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(allocations.iter().map(|a| a.len() * std::mem::size, _of::<f64>()).sum()),
+            memory_usage_bytes: Some(allocations.iter().map(|a| a.len() * std::mem::size_of::<f64>()).sum()),
             notes,
             accuracy_metrics: None,
         })
@@ -1060,7 +1060,7 @@ impl CrossPlatformValidator {
             category: TestCategory::ArchitectureSpecific,
             status: TestStatus::Passed,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(size * std::mem::size, _of::<f64>()),
+            memory_usage_bytes: Some(size * std::mem::size_of::<f64>()),
             notes,
             accuracy_metrics: None,
         })
@@ -1186,7 +1186,7 @@ impl CrossPlatformValidator {
             category: TestCategory::EndianessHandling,
             status,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
-            memory_usage_bytes: Some(std::mem::size, _of::<f64>() + std::mem::size_of::<u32>()),
+            memory_usage_bytes: Some(std::mem::size_of::<f64>() + std::mem::size_of::<u32>()),
             notes,
             accuracy_metrics: None,
         })

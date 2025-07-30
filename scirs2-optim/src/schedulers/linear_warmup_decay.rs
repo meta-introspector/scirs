@@ -54,7 +54,7 @@ pub enum DecayStrategy<A: Float + Debug> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__optim::schedulers::{LinearWarmupDecay, DecayStrategy, LearningRateScheduler};
+/// use scirs2_optim::schedulers::{LinearWarmupDecay, DecayStrategy, LearningRateScheduler};
 ///
 /// // Create a scheduler with linear warmup for 10 steps, followed by linear decay
 /// // to 0.001 over 90 steps
@@ -159,19 +159,19 @@ impl<A: Float + Debug + ScalarOperand> LinearWarmupDecay<A> {
     /// Initialize the inner decay scheduler once warmup is complete
     fn initialize_decay_scheduler(&mut self) {
         let scheduler = match self.decay_strategy {
-            DecayStrategy::Linear { final_lr } =>, InnerScheduler::Linear(LinearDecay::new(
+            DecayStrategy::Linear { final_lr } => InnerScheduler::Linear(LinearDecay::new(
                 self.initial_lr,
                 final_lr,
                 self.total_decay_steps,
             )),
-            DecayStrategy::Exponential { decay_rate } =>, InnerScheduler::Exponential(
+            DecayStrategy::Exponential { decay_rate } => InnerScheduler::Exponential(
                 ExponentialDecay::new(self.initial_lr, decay_rate, self.total_decay_steps),
             ),
             DecayStrategy::Step {
                 decay_rate,
                 step_size,
             } => InnerScheduler::Step(StepDecay::new(self.initial_lr, decay_rate, step_size)),
-            DecayStrategy::Cosine { min_lr } =>, InnerScheduler::Cosine(CosineAnnealing::new(
+            DecayStrategy::Cosine { min_lr } => InnerScheduler::Cosine(CosineAnnealing::new(
                 self.initial_lr,
                 min_lr,
                 self.total_decay_steps,

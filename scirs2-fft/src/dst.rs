@@ -37,7 +37,7 @@ pub enum DSTType {
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{dst, DSTType};
+/// use scirs2_fft::{dst, DSTType};
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -85,7 +85,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{dst, idst, DSTType};
+/// use scirs2_fft::{dst, idst, DSTType};
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -142,7 +142,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{dst2, DSTType};
+/// use scirs2_fft::{dst2, DSTType};
 /// use ndarray::Array2;
 ///
 /// // Create a 2x2 array
@@ -205,7 +205,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{dst2, idst2, DSTType};
+/// use scirs2_fft::{dst2, idst2, DSTType};
 /// use ndarray::Array2;
 ///
 /// // Create a 2x2 array

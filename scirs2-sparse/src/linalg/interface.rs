@@ -65,7 +65,8 @@ pub trait LinearOperator<F: Float> {
 /// Identity operator: I * x = x
 #[derive(Clone)]
 pub struct IdentityOperator<F> {
-    size: usize_phantom: PhantomData<F>,
+    size: usize,
+    phantom: PhantomData<F>,
 }
 
 impl<F> IdentityOperator<F> {
@@ -241,7 +242,8 @@ pub trait AsLinearOperator<F: Float> {
 
 /// Linear operator wrapper for sparse matrices
 pub struct MatrixLinearOperator<F, M> {
-    matrix: M_phantom: PhantomData<F>,
+    matrix: M,
+    phantom: PhantomData<F>,
 }
 
 impl<F, M> MatrixLinearOperator<F, M> {

@@ -185,8 +185,8 @@ where
 {
     fn clone(&self) -> Self {
         match self {
-            SparseSum::SparseArray(array) =>, SparseSum::SparseArray(array.copy()),
-            SparseSum::Scalar(value) =>, SparseSum::Scalar(*value),
+            SparseSum::SparseArray(array) => SparseSum::SparseArray(array.copy()),
+            SparseSum::Scalar(value) => SparseSum::Scalar(*value),
         }
     }
 }

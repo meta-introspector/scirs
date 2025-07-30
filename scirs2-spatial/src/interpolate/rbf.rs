@@ -171,7 +171,7 @@ impl RBFKernel {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::interpolate::{RBFInterpolator, RBFKernel};
+/// use scirs2_spatial::interpolate::{RBFInterpolator, RBFKernel};
 /// use ndarray::array;
 ///
 /// // Create sample points and values
@@ -510,7 +510,7 @@ impl RBFInterpolator {
     /// # Errors
     ///
     /// * If the point dimensions don't match the interpolator
-    pub fn interpolate(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn interpolate(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
         // Check dimension
         if _point.len() != self.dim {
             return Err(SpatialError::DimensionError(format!(

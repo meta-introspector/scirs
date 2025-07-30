@@ -8,7 +8,7 @@
 use crate::error::FFTResult;
 use crate::fft::algorithms::{parse_norm_mode, NormMode};
 use ndarray::{Array2, Axis};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 
@@ -31,7 +31,7 @@ use scirs2_core::parallel_ops::*;
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::fft2_parallel;
+/// use scirs2_fft::fft2_parallel;
 /// use ndarray::{array, Array2};
 ///
 /// // Create a simple 2x2 array

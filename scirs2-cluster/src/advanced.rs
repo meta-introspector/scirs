@@ -1362,7 +1362,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
             FeatureAlignment::CorrelationAlignment => {
                 self.compute_correlation_alignment(source_centroids, target_data)?
             }
-            FeatureAlignment::None =>, Array2::eye(source_features.min(target_features)),
+            FeatureAlignment::None => Array2::eye(source_features.min(target_features)),
         };
 
         self.transfer_matrix = Some(transfer_matrix.clone());
@@ -1738,7 +1738,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
     }
 
     /// Forward pass through encoder
-    pub fn encode(&self..input: ArrayView2<F>) -> Result<Array2<F>> {
+    pub fn encode(&self, input: ArrayView2<F>) -> Result<Array2<F>> {
         let mut x = input.to_owned();
 
         for (i, (weight, bias)) in self
@@ -1935,7 +1935,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
                 for j in 0..p.ncols() {
                     let p_ij = p[[i, j]];
                     let q_ij = q[[i, j]];
-                    if p_ij > F::zero() && q_ij >, F::zero() {
+                    if p_ij > F::zero() && q_ij > F::zero() {
                         kl_loss = kl_loss + p_ij * (p_ij / q_ij).ln();
                     }
                 }

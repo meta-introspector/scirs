@@ -9,7 +9,7 @@
 //!
 //! ## ODE Verification
 //! ```
-//! use scirs2__integrate::verification::{MMSODEProblem, polynomial_solution};
+//! use scirs2_integrate::verification::{MMSODEProblem, polynomial_solution};
 //! use ndarray::Array1;
 //!
 //! // Create a manufactured ODE problem with polynomial solution
@@ -22,7 +22,7 @@
 //!
 //! ## PDE Verification  
 //! ```
-//! use scirs2__integrate::verification::{MMSPDEProblem, trigonometric_solution_2d};
+//! use scirs2_integrate::verification::{MMSPDEProblem, trigonometric_solution_2d};
 //!
 //! // Create manufactured 2D Poisson problem
 //! let exact = trigonometric_solution_2d(1.0, 2.0); // sin(x) * cos(2y)
@@ -37,20 +37,20 @@ use std::fmt;
 /// Trait for exact solutions in MMS problems
 pub trait ExactSolution<F: IntegrateFloat> {
     /// Evaluate the exact solution at given point(s)
-    fn evaluate(_coordinates: &[F]) -> F;
+    fn evaluate(&self, coordinates: &[F]) -> F;
 
     /// Evaluate the first derivative with respect to specified variable
-    fn derivative(_coordinates: &[F], variable: usize) -> F;
+    fn derivative(&self, coordinates: &[F], variable: usize) -> F;
 
     /// Evaluate the second derivative with respect to specified variable
-    fn second_derivative(_coordinates: &[F], variable: usize) -> F;
+    fn second_derivative(&self, coordinates: &[F], variable: usize) -> F;
 
     /// Evaluate mixed partial derivatives (for PDEs)
-    fn mixed_derivative(_coordinates: &[F], var1: usize, var2: usize) -> F {
+    fn mixed_derivative(&self, coordinates: &[F], var1: usize, var2: usize) -> F {
         // Default implementation using finite differences
         let h = F::from(1e-8).unwrap();
-        let mut coords_plus = _coordinates.to_vec();
-        let mut coords_minus = _coordinates.to_vec();
+        let mut coords_plus = coordinates.to_vec();
+        let mut coords_minus = coordinates.to_vec();
 
         coords_plus[var2] += h;
         coords_minus[var2] -= h;
@@ -62,7 +62,7 @@ pub trait ExactSolution<F: IntegrateFloat> {
     }
 
     /// Get the dimensionality of the problem
-    fn dimension() -> usize;
+    fn dimension(&self) -> usize;
 }
 
 /// Polynomial exact solution for ODE problems
@@ -73,8 +73,8 @@ pub struct PolynomialSolution<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> PolynomialSolution<F> {
     /// Create a new polynomial solution: sum(coeff[i] * t^i)
-    pub fn new(_coefficients: Vec<F>) -> Self {
-        Self { _coefficients }
+    pub fn new(coefficients: Vec<F>) -> Self {
+        Self { coefficients }
     }
 }
 
@@ -92,8 +92,8 @@ impl<F: IntegrateFloat> ExactSolution<F> for PolynomialSolution<F> {
         result
     }
 
-    fn derivative(_coordinates: &[F], _variable: usize) -> F {
-        let t = _coordinates[0];
+    fn derivative(&self, coordinates: &[F], _variable: usize) -> F {
+        let t = coordinates[0];
         let mut result = F::zero();
         let mut t_power = F::one();
 
@@ -105,8 +105,8 @@ impl<F: IntegrateFloat> ExactSolution<F> for PolynomialSolution<F> {
         result
     }
 
-    fn second_derivative(_coordinates: &[F], _variable: usize) -> F {
-        let t = _coordinates[0];
+    fn second_derivative(&self, coordinates: &[F], _variable: usize) -> F {
+        let t = coordinates[0];
         let mut result = F::zero();
         let mut t_power = F::one();
 
@@ -119,7 +119,7 @@ impl<F: IntegrateFloat> ExactSolution<F> for PolynomialSolution<F> {
         result
     }
 
-    fn dimension() -> usize {
+    fn dimension(&self) -> usize {
         1
     }
 }
@@ -135,9 +135,9 @@ pub struct TrigonometricSolution2D<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> TrigonometricSolution2D<F> {
     /// Create sin(freq_x * x + phase_x) * cos(freq_y * y + phase_y)
-    pub fn new(_freq_x: F, freq_y: F, phase_x: F, phase_y: F) -> Self {
+    pub fn new(freq_x: F, freq_y: F, phase_x: F, phase_y: F) -> Self {
         Self {
-            _freq_x,
+            freq_x,
             freq_y,
             phase_x,
             phase_y,
@@ -145,8 +145,8 @@ impl<F: IntegrateFloat> TrigonometricSolution2D<F> {
     }
 
     /// Create sin(freq_x * x) * cos(freq_y * y)
-    pub fn simple(_freq_x: F, freq_y: F) -> Self {
-        Self::new(_freq_x, freq_y, F::zero(), F::zero())
+    pub fn simple(freq_x: F, freq_y: F) -> Self {
+        Self::new(freq_x, freq_y, F::zero(), F::zero())
     }
 }
 
@@ -157,9 +157,9 @@ impl<F: IntegrateFloat> ExactSolution<F> for TrigonometricSolution2D<F> {
         (self.freq_x * x + self.phase_x).sin() * (self.freq_y * y + self.phase_y).cos()
     }
 
-    fn derivative(_coordinates: &[F], variable: usize) -> F {
-        let x = _coordinates[0];
-        let y = _coordinates[1];
+    fn derivative(&self, coordinates: &[F], variable: usize) -> F {
+        let x = coordinates[0];
+        let y = coordinates[1];
 
         match variable {
             0 => {
@@ -176,9 +176,9 @@ impl<F: IntegrateFloat> ExactSolution<F> for TrigonometricSolution2D<F> {
         }
     }
 
-    fn second_derivative(_coordinates: &[F], variable: usize) -> F {
-        let x = _coordinates[0];
-        let y = _coordinates[1];
+    fn second_derivative(&self, coordinates: &[F], variable: usize) -> F {
+        let x = coordinates[0];
+        let y = coordinates[1];
 
         match variable {
             0 => {
@@ -197,7 +197,7 @@ impl<F: IntegrateFloat> ExactSolution<F> for TrigonometricSolution2D<F> {
         }
     }
 
-    fn dimension() -> usize {
+    fn dimension(&self) -> usize {
         2
     }
 }
@@ -206,21 +206,23 @@ impl<F: IntegrateFloat> ExactSolution<F> for TrigonometricSolution2D<F> {
 #[derive(Debug)]
 pub struct MMSODEProblem<F: IntegrateFloat, S: ExactSolution<F>> {
     exact_solution: S,
-    time_span: [F; 2], _phantom: std::marker::PhantomData<F>,
+    time_span: [F; 2],
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat, S: ExactSolution<F>> MMSODEProblem<F, S> {
     /// Create a new manufactured ODE problem
-    pub fn new(_exact_solution: S, time_span: [F; 2]) -> Self {
+    pub fn new(exact_solution: S, time_span: [F; 2]) -> Self {
         Self {
-            _exact_solution,
-            time_span_phantom: std::marker::PhantomData,
+            exact_solution,
+            time_span,
+            _phantom: std::marker::PhantomData,
         }
     }
 
     /// Get the manufactured source term for: y' = f(t, y) + source(t)
     /// where f is the original RHS and source is computed from exact solution
-    pub fn source_term(t: F) -> F {
+    pub fn source_term(&self, t: F) -> F {
         let coords = [t];
         // For y' = f(t, y), source = y_exact'(t) - f(t, y_exact(t))
         // If f is linear: y' = a*y + b, then source = y_exact'(t) - a*y_exact(t) - b
@@ -234,12 +236,12 @@ impl<F: IntegrateFloat, S: ExactSolution<F>> MMSODEProblem<F, S> {
     }
 
     /// Evaluate exact solution at given time
-    pub fn exact_at(t: F) -> F {
+    pub fn exact_at(&self, t: F) -> F {
         self.exact_solution.evaluate(&[t])
     }
 
     /// Get time span
-    pub fn time_span() -> [F; 2] {
+    pub fn time_span(&self) -> [F; 2] {
         self.time_span
     }
 }
@@ -298,14 +300,15 @@ pub enum PDEType {
 
 impl<F: IntegrateFloat, S: ExactSolution<F>> MMSPDEProblem<F, S> {
     /// Create manufactured 2D Poisson problem: -∇²u = f
-    pub fn new_poisson_2d(_exact_solution: S, domain_x: [F; 2], domain_y: [F; 2]) -> Self {
+    pub fn new_poisson_2d(exact_solution: S, domain_x: [F; 2], domain_y: [F; 2]) -> Self {
         Self {
-            _exact_solution,
+            exact_solution,
             domain_x,
             domain_y,
             domain_z: None,
             pde_type: PDEType::Poisson2D,
-            parameters: PDEParameters::default(), _phantom: std::marker::PhantomData,
+            parameters: PDEParameters::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -322,7 +325,8 @@ impl<F: IntegrateFloat, S: ExactSolution<F>> MMSPDEProblem<F, S> {
             domain_y,
             domain_z: Some(domain_z),
             pde_type: PDEType::Poisson3D,
-            parameters: PDEParameters::default(), _phantom: std::marker::PhantomData,
+            parameters: PDEParameters::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -341,7 +345,8 @@ impl<F: IntegrateFloat, S: ExactSolution<F>> MMSPDEProblem<F, S> {
             domain_y,
             domain_z: None,
             pde_type: PDEType::Diffusion2D,
-            parameters: params_phantom: std::marker::PhantomData,
+            parameters: params,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -360,53 +365,55 @@ impl<F: IntegrateFloat, S: ExactSolution<F>> MMSPDEProblem<F, S> {
             domain_y,
             domain_z: None,
             pde_type: PDEType::Wave2D,
-            parameters: params_phantom: std::marker::PhantomData,
+            parameters: params,
+            _phantom: std::marker::PhantomData,
         }
     }
 
     /// Create manufactured 2D Helmholtz problem: ∇²u + k²u = f
-    pub fn new_helmholtz_2d(_exact_solution: S, domain_x: [F; 2], domain_y: [F; 2], k: F) -> Self {
+    pub fn new_helmholtz_2d(exact_solution: S, domain_x: [F; 2], domain_y: [F; 2], k: F) -> Self {
         let mut params = PDEParameters::default();
         params.helmholtz_k = k;
         Self {
-            _exact_solution,
+            exact_solution,
             domain_x,
             domain_y,
             domain_z: None,
             pde_type: PDEType::Helmholtz2D,
-            parameters: params_phantom: std::marker::PhantomData,
+            parameters: params,
+            _phantom: std::marker::PhantomData,
         }
     }
 
     /// Get manufactured source term for the PDE
-    pub fn source_term(_coordinates: &[F]) -> F {
+    pub fn source_term(&self, coordinates: &[F]) -> F {
         match self.pde_type {
             PDEType::Poisson2D => {
                 // For -∇²u = f, source f = -∇²u_exact
-                -(self.exact_solution.second_derivative(_coordinates, 0)
-                    + self.exact_solution.second_derivative(_coordinates, 1))
+                -(self.exact_solution.second_derivative(coordinates, 0)
+                    + self.exact_solution.second_derivative(coordinates, 1))
             }
             PDEType::Poisson3D => {
                 // For -∇²u = f in 3D
-                -(self.exact_solution.second_derivative(_coordinates, 0)
-                    + self.exact_solution.second_derivative(_coordinates, 1)
-                    + self.exact_solution.second_derivative(_coordinates, 2))
+                -(self.exact_solution.second_derivative(coordinates, 0)
+                    + self.exact_solution.second_derivative(coordinates, 1)
+                    + self.exact_solution.second_derivative(coordinates, 2))
             }
             PDEType::Diffusion2D => {
                 // For ∂u/∂t = α∇²u + f
                 // source f = ∂u_exact/∂t - α∇²u_exact
-                let time_dim = _coordinates.len() - 1;
-                let spatial_laplacian = self.exact_solution.second_derivative(_coordinates, 0)
-                    + self.exact_solution.second_derivative(_coordinates, 1);
-                self.exact_solution.derivative(_coordinates, time_dim)
+                let time_dim = coordinates.len() - 1;
+                let spatial_laplacian = self.exact_solution.second_derivative(coordinates, 0)
+                    + self.exact_solution.second_derivative(coordinates, 1);
+                self.exact_solution.derivative(coordinates, time_dim)
                     - self.parameters.diffusion_coeff * spatial_laplacian
             }
             PDEType::Wave2D => {
                 // For ∂²u/∂t² = c²∇²u + f
                 // source f = ∂²u_exact/∂t² - c²∇²u_exact
                 // Simplified: assume time coordinate is last
-                let spatial_laplacian = self.exact_solution.second_derivative(_coordinates, 0)
-                    + self.exact_solution.second_derivative(_coordinates, 1);
+                let spatial_laplacian = self.exact_solution.second_derivative(coordinates, 0)
+                    + self.exact_solution.second_derivative(coordinates, 1);
                 // Second time derivative would need higher-order implementation
                 F::zero()
                     - self.parameters.wave_speed * self.parameters.wave_speed * spatial_laplacian
@@ -414,20 +421,20 @@ impl<F: IntegrateFloat, S: ExactSolution<F>> MMSPDEProblem<F, S> {
             PDEType::Helmholtz2D => {
                 // For ∇²u + k²u = f
                 // source f = ∇²u_exact + k²u_exact
-                let laplacian = self.exact_solution.second_derivative(_coordinates, 0)
-                    + self.exact_solution.second_derivative(_coordinates, 1);
+                let laplacian = self.exact_solution.second_derivative(coordinates, 0)
+                    + self.exact_solution.second_derivative(coordinates, 1);
                 laplacian
                     + self.parameters.helmholtz_k
                         * self.parameters.helmholtz_k
-                        * self.exact_solution.evaluate(_coordinates)
+                        * self.exact_solution.evaluate(coordinates)
             }
             PDEType::AdvectionDiffusion2D => {
                 // For ∂u/∂t + v·∇u = α∇²u + f
                 // source f = ∂u_exact/∂t + v·∇u_exact - α∇²u_exact
-                let time_dim = _coordinates.len() - 1;
-                let time_deriv = self.exact_solution.derivative(_coordinates, time_dim);
-                let spatial_laplacian = self.exact_solution.second_derivative(_coordinates, 0)
-                    + self.exact_solution.second_derivative(_coordinates, 1);
+                let time_dim = coordinates.len() - 1;
+                let time_deriv = self.exact_solution.derivative(coordinates, time_dim);
+                let spatial_laplacian = self.exact_solution.second_derivative(coordinates, 0)
+                    + self.exact_solution.second_derivative(coordinates, 1);
 
                 let mut advection_term = F::zero();
                 for (i, &v_i) in self
@@ -437,7 +444,7 @@ impl<F: IntegrateFloat, S: ExactSolution<F>> MMSPDEProblem<F, S> {
                     .enumerate()
                     .take(2)
                 {
-                    advection_term += v_i * self.exact_solution.derivative(_coordinates, i);
+                    advection_term += v_i * self.exact_solution.derivative(coordinates, i);
                 }
 
                 time_deriv + advection_term - self.parameters.diffusion_coeff * spatial_laplacian
@@ -447,22 +454,22 @@ impl<F: IntegrateFloat, S: ExactSolution<F>> MMSPDEProblem<F, S> {
     }
 
     /// Get boundary condition from exact solution (2D)
-    pub fn boundary_condition(x: F, y: F) -> F {
+    pub fn boundary_condition(&self, x: F, y: F) -> F {
         self.exact_solution.evaluate(&[x, y])
     }
 
     /// Get boundary condition from exact solution (3D)
-    pub fn boundary_condition_3d(x: F, y: F, z: F) -> F {
+    pub fn boundary_condition_3d(&self, x: F, y: F, z: F) -> F {
         self.exact_solution.evaluate(&[x, y, z])
     }
 
     /// Evaluate exact solution (2D)
-    pub fn exact_at(x: F, y: F) -> F {
+    pub fn exact_at(&self, x: F, y: F) -> F {
         self.exact_solution.evaluate(&[x, y])
     }
 
     /// Evaluate exact solution (3D)
-    pub fn exact_at_3d(x: F, y: F, z: F) -> F {
+    pub fn exact_at_3d(&self, x: F, y: F, z: F) -> F {
         self.exact_solution.evaluate(&[x, y, z])
     }
 
@@ -486,7 +493,7 @@ impl<F: IntegrateFloat, S: ExactSolution<F>> MMSPDEProblem<F, S> {
     }
 
     /// Check if problem is 3D
-    pub fn is_3d() -> bool {
+    pub fn is_3d(&self) -> bool {
         self.domain_z.is_some()
     }
 }
@@ -514,16 +521,16 @@ impl<F: IntegrateFloat> ConvergenceAnalysis<F> {
         }
 
         // Use least squares to fit log(error) = log(C) + p*log(h)
-        let n = grid_sizes.len();
+        let n = _grid_sizes.len();
         let mut sum_log_h = F::zero();
         let mut sum_log_e = F::zero();
         let mut sum_log_h_sq = F::zero();
         let mut sum_log_h_log_e = F::zero();
 
-        for (h, e) in grid_sizes.iter().zip(errors.iter()) {
+        for (h, e) in _grid_sizes.iter().zip(errors.iter()) {
             if *e <= F::zero() || *h <= F::zero() {
                 return Err(IntegrateError::ValueError(
-                    "Grid _sizes and errors must be positive".to_string(),
+                    "Grid sizes and errors must be positive".to_string(),
                 ));
             }
 
@@ -541,7 +548,7 @@ impl<F: IntegrateFloat> ConvergenceAnalysis<F> {
 
         if denominator.abs() < F::from(1e-12).unwrap() {
             return Err(IntegrateError::ComputationError(
-                "Cannot compute order - insufficient variation in grid _sizes".to_string(),
+                "Cannot compute order - insufficient variation in grid sizes".to_string(),
             ));
         }
 
@@ -552,7 +559,7 @@ impl<F: IntegrateFloat> ConvergenceAnalysis<F> {
         let order_confidence = (order - confidence_delta, order + confidence_delta);
 
         Ok(Self {
-            grid_sizes,
+            grid_sizes: _grid_sizes,
             errors,
             order,
             order_confidence,
@@ -560,12 +567,12 @@ impl<F: IntegrateFloat> ConvergenceAnalysis<F> {
     }
 
     /// Check if the computed order matches expected order within tolerance
-    pub fn verify_order(_expected_order: F, tolerance: F) -> bool {
-        (self._order - _expected_order).abs() <= tolerance
+    pub fn verify_order(&self, expected_order: F, tolerance: F) -> bool {
+        (self.order - expected_order).abs() <= tolerance
     }
 }
 
-impl<F: IntegrateFloat>, fmt::Display for ConvergenceAnalysis<F> {
+impl<F: IntegrateFloat> fmt::Display for ConvergenceAnalysis<F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Convergence Analysis Results:")?;
         writeln!(f, "Grid Size    Error")?;
@@ -683,15 +690,15 @@ impl<F: IntegrateFloat> ExponentialSolution<F> {
     /// Create exp(decay_rate * t + phase) solution
     pub fn new(_amplitude: F, decay_rate: F, phase: F) -> Self {
         Self {
-            _amplitude,
+            amplitude: _amplitude,
             decay_rate,
             phase,
         }
     }
 
     /// Create simple exp(decay_rate * t) solution
-    pub fn simple(_amplitude: F, decay_rate: F) -> Self {
-        Self::new(_amplitude, decay_rate, F::zero())
+    pub fn simple(amplitude: F, decay_rate: F) -> Self {
+        Self::new(amplitude, decay_rate, F::zero())
     }
 }
 
@@ -701,20 +708,20 @@ impl<F: IntegrateFloat> ExactSolution<F> for ExponentialSolution<F> {
         self.amplitude * (self.decay_rate * t + self.phase).exp()
     }
 
-    fn derivative(_coordinates: &[F], _variable: usize) -> F {
-        let t = _coordinates[0];
+    fn derivative(&self, coordinates: &[F], _variable: usize) -> F {
+        let t = coordinates[0];
         self.amplitude * self.decay_rate * (self.decay_rate * t + self.phase).exp()
     }
 
-    fn second_derivative(_coordinates: &[F], _variable: usize) -> F {
-        let t = _coordinates[0];
+    fn second_derivative(&self, coordinates: &[F], _variable: usize) -> F {
+        let t = coordinates[0];
         self.amplitude
             * self.decay_rate
             * self.decay_rate
             * (self.decay_rate * t + self.phase).exp()
     }
 
-    fn dimension() -> usize {
+    fn dimension(&self) -> usize {
         1
     }
 }
@@ -730,29 +737,29 @@ pub struct CombinedSolution<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> CombinedSolution<F> {
     /// Create a new combined solution
-    pub fn new(_dimension: usize) -> Self {
+    pub fn new(dimension: usize) -> Self {
         Self {
             polynomial: None,
             trigonometric: None,
             exponential: None,
-            _dimension,
+            dimension,
         }
     }
 
     /// Add polynomial component
-    pub fn with_polynomial(mut poly: PolynomialSolution<F>) -> Self {
+    pub fn with_polynomial(mut self, poly: PolynomialSolution<F>) -> Self {
         self.polynomial = Some(poly);
         self
     }
 
     /// Add trigonometric component (for 2D problems)
-    pub fn with_trigonometric(mut trig: TrigonometricSolution2D<F>) -> Self {
+    pub fn with_trigonometric(mut self, trig: TrigonometricSolution2D<F>) -> Self {
         self.trigonometric = Some(trig);
         self
     }
 
     /// Add exponential component
-    pub fn with_exponential(mut exp: ExponentialSolution<F>) -> Self {
+    pub fn with_exponential(mut self, exp: ExponentialSolution<F>) -> Self {
         self.exponential = Some(exp);
         self
     }
@@ -779,47 +786,47 @@ impl<F: IntegrateFloat> ExactSolution<F> for CombinedSolution<F> {
         result
     }
 
-    fn derivative(_coordinates: &[F], variable: usize) -> F {
+    fn derivative(&self, coordinates: &[F], variable: usize) -> F {
         let mut result = F::zero();
 
         if let Some(ref poly) = self.polynomial {
-            result += poly.derivative(_coordinates, variable);
+            result += poly.derivative(coordinates, variable);
         }
 
         if let Some(ref trig) = self.trigonometric {
-            if _coordinates.len() >= 2 {
-                result += trig.derivative(_coordinates, variable);
+            if coordinates.len() >= 2 {
+                result += trig.derivative(coordinates, variable);
             }
         }
 
         if let Some(ref exp) = self.exponential {
-            result += exp.derivative(_coordinates, variable);
+            result += exp.derivative(coordinates, variable);
         }
 
         result
     }
 
-    fn second_derivative(_coordinates: &[F], variable: usize) -> F {
+    fn second_derivative(&self, coordinates: &[F], variable: usize) -> F {
         let mut result = F::zero();
 
         if let Some(ref poly) = self.polynomial {
-            result += poly.second_derivative(_coordinates, variable);
+            result += poly.second_derivative(coordinates, variable);
         }
 
         if let Some(ref trig) = self.trigonometric {
-            if _coordinates.len() >= 2 {
-                result += trig.second_derivative(_coordinates, variable);
+            if coordinates.len() >= 2 {
+                result += trig.second_derivative(coordinates, variable);
             }
         }
 
         if let Some(ref exp) = self.exponential {
-            result += exp.second_derivative(_coordinates, variable);
+            result += exp.second_derivative(coordinates, variable);
         }
 
         result
     }
 
-    fn dimension() -> usize {
+    fn dimension(&self) -> usize {
         self.dimension
     }
 }
@@ -840,7 +847,7 @@ impl<F: IntegrateFloat> TrigonometricSolution3D<F> {
     #[allow(clippy::too_many_arguments)]
     pub fn new(_freq_x: F, freq_y: F, freq_z: F, phase_x: F, phase_y: F, phase_z: F) -> Self {
         Self {
-            _freq_x,
+            freq_x: _freq_x,
             freq_y,
             freq_z,
             phase_x,
@@ -850,8 +857,8 @@ impl<F: IntegrateFloat> TrigonometricSolution3D<F> {
     }
 
     /// Create sin(freq_x * x) * cos(freq_y * y) * sin(freq_z * z)
-    pub fn simple(_freq_x: F, freq_y: F, freq_z: F) -> Self {
-        Self::new(_freq_x, freq_y, freq_z, F::zero(), F::zero(), F::zero())
+    pub fn simple(freq_x: F, freq_y: F, freq_z: F) -> Self {
+        Self::new(freq_x, freq_y, freq_z, F::zero(), F::zero(), F::zero())
     }
 }
 
@@ -865,10 +872,10 @@ impl<F: IntegrateFloat> ExactSolution<F> for TrigonometricSolution3D<F> {
             * (self.freq_z * z + self.phase_z).sin()
     }
 
-    fn derivative(_coordinates: &[F], variable: usize) -> F {
-        let x = _coordinates[0];
-        let y = _coordinates[1];
-        let z = _coordinates[2];
+    fn derivative(&self, coordinates: &[F], variable: usize) -> F {
+        let x = coordinates[0];
+        let y = coordinates[1];
+        let z = coordinates[2];
 
         match variable {
             0 => {
@@ -893,10 +900,10 @@ impl<F: IntegrateFloat> ExactSolution<F> for TrigonometricSolution3D<F> {
         }
     }
 
-    fn second_derivative(_coordinates: &[F], variable: usize) -> F {
-        let x = _coordinates[0];
-        let y = _coordinates[1];
-        let z = _coordinates[2];
+    fn second_derivative(&self, coordinates: &[F], variable: usize) -> F {
+        let x = coordinates[0];
+        let y = coordinates[1];
+        let z = coordinates[2];
 
         match variable {
             0 => {
@@ -924,7 +931,7 @@ impl<F: IntegrateFloat> ExactSolution<F> for TrigonometricSolution3D<F> {
         }
     }
 
-    fn dimension() -> usize {
+    fn dimension(&self) -> usize {
         3
     }
 }
@@ -942,11 +949,12 @@ pub struct SystemVerification<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SystemVerification<F> {
     /// Create new system verification
-    pub fn new(_system_size: usize) -> Self {
-        let component_names = (0.._system_size).map(|i| format!("Component {i}")).collect();
+    pub fn new(system_size: usize) -> Self {
+        let component_names = (0..system_size).map(|i| format!("Component {i}")).collect();
         Self {
             system_size,
-            component_names_phantom: std::marker::PhantomData,
+            component_names,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -955,7 +963,8 @@ impl<F: IntegrateFloat> SystemVerification<F> {
         let system_size = _component_names.len();
         Self {
             system_size,
-            component_names_phantom: std::marker::PhantomData,
+            component_names,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -1012,8 +1021,8 @@ impl<F: IntegrateFloat> VerificationWorkflow<F> {
     }
 
     /// Add test case to workflow
-    pub fn add_test_case(_test_case: VerificationTestCase<F>) {
-        self.test_cases.push(_test_case);
+    pub fn add_test_case(&mut self, test_case: VerificationTestCase<F>) {
+        self.test_cases.push(test_case);
     }
 
     /// Run all verification tests
@@ -1440,7 +1449,7 @@ pub struct ConvergenceCriteria {
 }
 
 impl Default for ConvergenceCriteria {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             min_levels: 3,
             max_levels: 8,
@@ -1452,7 +1461,7 @@ impl Default for ConvergenceCriteria {
 }
 
 impl Default for AdvancedVerificationFramework {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             refinement_strategy: RefinementStrategy::Uniform,
             error_estimation_method: ErrorEstimationMethod::Richardson,

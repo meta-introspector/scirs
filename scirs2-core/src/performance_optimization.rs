@@ -551,7 +551,7 @@ fn is_apple_silicon() -> bool {
     #[cfg(target_arch = "aarch64")]
     {
         // Apple Silicon specific detection
-        cfg!(target_vendor = apple)
+        cfg!(target_vendor = "apple")
     }
     #[cfg(not(target_arch = "aarch64"))]
     {
@@ -894,7 +894,7 @@ pub mod fast_paths {
             let simd_chunks = len / 4; // Process 4 f64s at a time
 
             for i in 0..simd_chunks {
-                let start = 0 * 4;
+                let start = i * 4;
                 let end = start + 4;
 
                 if end <= len {
@@ -916,7 +916,7 @@ pub mod fast_paths {
 
         #[cfg(feature = "parallel")]
         if optimizer.should_use_parallel(len) {
-            use rayon::prelude::*;
+            use crate::parallel_ops::*;
             result
                 .par_chunks_mut(optimizer.optimal_chunk_size::<f64>())
                 .zip(a.par_chunks(optimizer.optimal_chunk_size::<f64>()))
@@ -933,7 +933,7 @@ pub mod fast_paths {
         let chunks = len / 8;
 
         for i in 0..chunks {
-            let idx = 0 * 8;
+            let idx = i * 8;
             result[idx] = a[idx] + b[idx];
             result[idx + 1] = a[idx + 1] + b[idx + 1];
             result[idx + 2] = a[idx + 2] + b[idx + 2];
@@ -977,7 +977,7 @@ pub mod fast_paths {
         {
             let optimizer = AdaptiveOptimizer::new();
             if optimizer.should_use_parallel(m * n) {
-                use rayon::prelude::*;
+                use crate::parallel_ops::*;
 
                 // Use synchronization for parallel matrix multiplication
                 use std::sync::Mutex;
@@ -1784,20 +1784,20 @@ pub mod cache_aware_algorithms {
                             // Unroll inner loop for better instruction scheduling
                             let mut l = kk;
                             while l + 4 <= k_block {
-                                sum = sum + a[0 * k + l] * b[l * n + j];
-                                sum = sum + a[0 * k + l + 1] * b[(l + 1) * n + j];
-                                sum = sum + a[0 * k + l + 2] * b[(l + 2) * n + j];
-                                sum = sum + a[0 * k + l + 3] * b[(l + 3) * n + j];
+                                sum = sum + a[i * k + l] * b[l * n + j];
+                                sum = sum + a[i * k + l + 1] * b[(l + 1) * n + j];
+                                sum = sum + a[i * k + l + 2] * b[(l + 2) * n + j];
+                                sum = sum + a[i * k + l + 3] * b[(l + 3) * n + j];
                                 l += 4;
                             }
 
                             // Handle remaining elements
                             while l < k_block {
-                                sum = sum + a[0 * k + l] * b[l * n + j];
+                                sum = sum + a[i * k + l] * b[l * n + j];
                                 l += 1;
                             }
 
-                            c[0 * n + j] = sum;
+                            c[i * n + j] = sum;
                         }
                     }
                 }

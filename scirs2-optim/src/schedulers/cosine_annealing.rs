@@ -21,8 +21,8 @@ use crate::schedulers::LearningRateScheduler;
 /// # Examples
 ///
 /// ```
-/// use scirs2__optim::schedulers::{CosineAnnealing, LearningRateScheduler};
-/// use scirs2__optim::optimizers::SGD;
+/// use scirs2_optim::schedulers::{CosineAnnealing, LearningRateScheduler};
+/// use scirs2_optim::optimizers::SGD;
 /// use ndarray::Array1;
 ///
 /// // Create a scheduler with initial learning rate 0.1, minimum learning rate 0.001,
@@ -66,14 +66,14 @@ impl<A: Float + Debug> CosineAnnealing<A> {
     /// * `min_lr` - Minimum learning rate
     /// * `t_max` - Maximum number of iterations in a cycle
     /// * `warm_restart` - Whether to use warm restarts
-    pub fn new(_initial_lr: A, min_lr: A, t_max: usize, warm_restart: bool) -> Self {
+    pub fn new(initial_lr: A, min_lr: A, t_max: usize, warm_restart: bool) -> Self {
         Self {
-            _initial_lr,
+            initial_lr,
             min_lr,
             t_max,
             warm_restart,
             step: 0,
-            current_lr: _initial_lr,
+            current_lr: initial_lr,
         }
     }
 }

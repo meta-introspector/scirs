@@ -243,7 +243,7 @@ fn initialize_frequency(_colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
 
     // Take top k _colors
     let mut centers = Vec::new();
-    for ((r, g, b)_) in sorted.iter().take(k.min(sorted.len())) {
+    for (r, g, b) in sorted.iter().take(k.min(sorted.len())) {
         centers.push([*r as f32, *g as f32, *b as f32]);
     }
 
@@ -258,7 +258,7 @@ fn initialize_frequency(_colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
 
 /// Update cluster centers
 #[allow(dead_code)]
-fn update_centers(_colors: &[[f32; 3]]..assignments: &[usize], k: usize) -> Vec<[f32; 3]> {
+fn update_centers(_colors: &[[f32; 3]], assignments: &[usize], k: usize) -> Vec<[f32; 3]> {
     let mut new_centers = vec![[0.0, 0.0, 0.0]; k];
     let mut counts = vec![0; k];
 

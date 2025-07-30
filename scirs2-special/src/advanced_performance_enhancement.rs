@@ -206,7 +206,7 @@ pub fn gamma_array_advancedfast(_input: &ArrayView1<f64>, config: &PerformanceCo
         // Parallel processing for large arrays
         #[cfg(feature = "parallel")]
         {
-            use rayon::prelude::*;
+            use scirs2_core::parallel_ops::*;
             
             _input.as_slice().unwrap()
                 .par_chunks(config.chunk_size)

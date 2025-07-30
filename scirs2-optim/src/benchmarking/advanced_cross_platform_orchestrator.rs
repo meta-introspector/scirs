@@ -4,11 +4,11 @@
 //! integration, containerized testing environments, automated test matrix generation,
 //! and comprehensive platform compatibility validation.
 
-use crate::benchmarking::cross_platform__tester::{
+use crate::benchmarking::cross_platform_tester::{
     CrossPlatformTester, CrossPlatformConfig, PlatformTarget, TestCategory, TestResult,
     TestStatus, PerformanceMetrics, CompatibilityIssue, PlatformRecommendation
 };
-use crate::benchmarking::ci_cd__automation::{CiCdAutomation, CiCdAutomationConfig};
+use crate::benchmarking::ci_cd_automation::{CiCdAutomation, CiCdAutomationConfig};
 use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, BTreeMap};
@@ -2242,7 +2242,8 @@ impl CloudProvider for AzureProvider {
     fn supported_platforms(&self) -> Vec<PlatformTarget> {
         vec![PlatformTarget::LinuxX64, PlatformTarget::WindowsX64]
     }
-    fn provision_instance(&self_spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
+    fn provision_instance(&self,
+        spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
         Err(OptimError::NotImplemented("Azure provisioning not implemented".to_string()))
     }
     fn get_current_costs(&self) -> Result<CloudCosts> {
@@ -2268,7 +2269,8 @@ impl CloudProvider for GcpProvider {
     fn supported_platforms(&self) -> Vec<PlatformTarget> {
         vec![PlatformTarget::LinuxX64, PlatformTarget::LinuxArm64]
     }
-    fn provision_instance(&self_spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
+    fn provision_instance(&self,
+        spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
         Err(OptimError::NotImplemented("GCP provisioning not implemented".to_string()))
     }
     fn get_current_costs(&self) -> Result<CloudCosts> {
@@ -2294,7 +2296,8 @@ impl CloudProvider for GitHubActionsProvider {
     fn supported_platforms(&self) -> Vec<PlatformTarget> {
         vec![PlatformTarget::LinuxX64, PlatformTarget::MacOSX64, PlatformTarget::WindowsX64]
     }
-    fn provision_instance(&self_spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
+    fn provision_instance(&self,
+        spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
         Err(OptimError::NotImplemented("GitHub Actions provisioning not implemented".to_string()))
     }
     fn get_current_costs(&self) -> Result<CloudCosts> {
@@ -2320,7 +2323,8 @@ impl CloudProvider for CustomProvider {
     fn supported_platforms(&self) -> Vec<PlatformTarget> {
         self.config.platform_mappings.keys().cloned().collect()
     }
-    fn provision_instance(&self_spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
+    fn provision_instance(&self,
+        spec: &PlatformSpec) -> Result<Box<dyn CloudInstance>> {
         Err(OptimError::NotImplemented("Custom provider provisioning not implemented".to_string()))
     }
     fn get_current_costs(&self) -> Result<CloudCosts> {
@@ -2344,7 +2348,8 @@ impl ContainerRuntime for DockerRuntime {
     fn build_image(&self, _dockerfile_path: &Path, _tag: &str) -> Result<String> {
         Err(OptimError::NotImplemented("Docker build not implemented".to_string()))
     }
-    fn run_container(&self_image: &str, _config: &ContainerRunConfig) -> Result<String> {
+    fn run_container(&self,
+        image: &str, _config: &ContainerRunConfig) -> Result<String> {
         Ok("dummy_container_id".to_string())
     }
     fn stop_container(&self, _container_id: &str) -> Result<()> { Ok(()) }
@@ -2376,7 +2381,8 @@ impl ContainerRuntime for PodmanRuntime {
     fn build_image(&self, _dockerfile_path: &Path, _tag: &str) -> Result<String> {
         Err(OptimError::NotImplemented("Podman build not implemented".to_string()))
     }
-    fn run_container(&self_image: &str, _config: &ContainerRunConfig) -> Result<String> {
+    fn run_container(&self,
+        image: &str, _config: &ContainerRunConfig) -> Result<String> {
         Ok("dummy_container_id".to_string())
     }
     fn stop_container(&self, _container_id: &str) -> Result<()> { Ok(()) }

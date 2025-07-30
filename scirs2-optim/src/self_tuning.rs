@@ -11,6 +11,7 @@ use crate::optimizers::*;
 use crate::schedulers::*;
 use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
@@ -341,7 +342,7 @@ impl<
     > SelfTuningOptimizer<A, D>
 {
     /// Create new self-tuning optimizer
-    pub fn new(_config: SelfTuningConfig) -> Result<Self> {
+    pub fn new(config: SelfTuningConfig) -> Result<Self> {
         let mut optimizer_candidates = Vec::new();
 
         // Add default optimizer candidates
@@ -400,7 +401,7 @@ impl<
         };
 
         Ok(Self {
-            _config,
+            config,
             current_optimizer,
             optimizer_candidates,
             performance_history: VecDeque::new(),
@@ -494,7 +495,8 @@ impl<
     }
 
     /// Determine if optimizer should be adapted
-    fn should_adapt_optimizer(&self_stats: &PerformanceStats) -> bool {
+    fn should_adapt_optimizer(&self,
+        stats: &PerformanceStats) -> bool {
         if self.performance_history.len() < self.config.evaluation_window / 2 {
             return false;
         }
@@ -594,7 +596,7 @@ impl<
         let mut best_score = f64::NEG_INFINITY;
         let mut best_idx = 0;
 
-        for (i_candidate) in self.optimizer_candidates.iter().enumerate() {
+        for (i, _candidate) in self.optimizer_candidates.iter().enumerate() {
             let ucb_score = if self.bandit_state.selection_counts[i] == 0 {
                 f64::INFINITY
             } else {
@@ -629,7 +631,7 @@ impl<
                 .iter()
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0)
         }
     }
@@ -642,12 +644,12 @@ impl<
         let mut best_sample = f64::NEG_INFINITY;
         let mut best_idx = 0;
 
-        for (i_) in self.optimizer_candidates.iter().enumerate() {
+        for (i, _) in self.optimizer_candidates.iter().enumerate() {
             let mean = self.bandit_state.reward_estimates[i];
             let std = self.bandit_state.confidence_bounds[i];
             let sample = rng.gen_range(mean - std..mean + std);
 
-            if sample > A::from(best_sample).unwrap() {
+            if sample > best_sample {
                 best_sample = sample;
                 best_idx = i;
             }
@@ -672,12 +674,13 @@ impl<
                     .partial_cmp(&b.1.average_performance)
                     .unwrap()
             })
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .unwrap_or(0)
     }
 
     /// Meta-learning based optimizer selection
-    fn select_optimizer_meta_learning(&self_stats: &PerformanceStats) -> usize {
+    fn select_optimizer_meta_learning(&self,
+        stats: &PerformanceStats) -> usize {
         // Simplified meta-learning - would use problem features in practice
         0
     }
@@ -716,7 +719,8 @@ impl<
     }
 
     /// Adapt other hyperparameters
-    fn maybe_adapt_hyperparameters(&mut self_stats: &PerformanceStats) -> Result<()> {
+    fn maybe_adapt_hyperparameters(&mut self,
+        stats: &PerformanceStats) -> Result<()> {
         // Placeholder for hyperparameter adaptation
         // Would implement Bayesian optimization, random search, etc.
         Ok(())
@@ -864,7 +868,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
         HashMap::new()
     }
 
-    fn set_state(&mut self_state: HashMap<String, Vec<u8>>) -> Result<()> {
+    fn set_state(&mut self, _state: HashMap<String, Vec<u8>>) -> Result<()> {
         Ok(())
     }
 
@@ -927,7 +931,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
         HashMap::new()
     }
 
-    fn set_state(&mut self_state: HashMap<String, Vec<u8>>) -> Result<()> {
+    fn set_state(&mut self, _state: HashMap<String, Vec<u8>>) -> Result<()> {
         Ok(())
     }
 
@@ -992,7 +996,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
         HashMap::new()
     }
 
-    fn set_state(&mut self_state: HashMap<String, Vec<u8>>) -> Result<()> {
+    fn set_state(&mut self, _state: HashMap<String, Vec<u8>>) -> Result<()> {
         Ok(())
     }
 

@@ -140,7 +140,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn print_tree_node<F: num_traits: Float + std::fmt::Display>(
+fn print_tree_node<F: num_traits::Float + std::fmt::Display>(
     node: &LeaderNode<F>,
     depth: usize,
     index: usize,

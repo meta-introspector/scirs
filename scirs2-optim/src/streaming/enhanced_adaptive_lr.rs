@@ -586,27 +586,27 @@ pub struct AdaptationStatistics<A: Float> {
 
 impl<A: Float + Default + Clone + Send + Sync> EnhancedAdaptiveLRController<A> {
     /// Create a new enhanced adaptive learning rate controller
-    pub fn new(_config: AdaptiveLRConfig<A>) -> Result<Self> {
-        let adaptation_strategy = MultiSignalAdaptationStrategy::new(&_config)?;
-        let gradient_adapter = GradientBasedAdapter::new(&_config)?;
-        let performance_adapter = PerformanceBasedAdapter::new(&_config)?;
-        let drift_adapter = DriftAwareAdapter::new(&_config)?;
-        let resource_adapter = ResourceAwareAdapter::new(&_config)?;
-        let meta_optimizer = MetaOptimizer::new(&_config)?;
+    pub fn new(config: AdaptiveLRConfig<A>) -> Result<Self> {
+        let adaptation_strategy = MultiSignalAdaptationStrategy::new(&config)?;
+        let gradient_adapter = GradientBasedAdapter::new(&config)?;
+        let performance_adapter = PerformanceBasedAdapter::new(&config)?;
+        let drift_adapter = DriftAwareAdapter::new(&config)?;
+        let resource_adapter = ResourceAwareAdapter::new(&config)?;
+        let meta_optimizer = MetaOptimizer::new(&config)?;
 
         Ok(Self {
-            current_lr: _config.base_lr,
-            base_lr: _config.base_lr,
-            min_lr: _config.min_lr,
-            max_lr: _config.max_lr,
+            current_lr: config.base_lr,
+            base_lr: config.base_lr,
+            min_lr: config.min_lr,
+            max_lr: config.max_lr,
             adaptation_strategy,
             gradient_adapter,
             performance_adapter,
             drift_adapter,
             resource_adapter,
             meta_optimizer,
-            adaptation_history: VecDeque::with_capacity(_config.history_window_size),
-            _config,
+            adaptation_history: VecDeque::with_capacity(config.history_window_size),
+            config,
         })
     }
 
@@ -766,7 +766,7 @@ impl<A: Float + Default + Clone + Send + Sync> EnhancedAdaptiveLRController<A> {
 // In a full implementation, these would contain sophisticated algorithms
 
 impl<A: Float + Default + Clone> MultiSignalAdaptationStrategy<A> {
-    fn new(_config: &AdaptiveLRConfig<A>) -> Result<Self> {
+    fn new(config: &AdaptiveLRConfig<A>) -> Result<Self> {
         Ok(Self {
             signal_weights: HashMap::new(),
             voting_history: VecDeque::new(),
@@ -828,7 +828,7 @@ impl<A: Float + Default + Clone> MultiSignalAdaptationStrategy<A> {
 }
 
 impl<A: Float + Default + Clone> GradientBasedAdapter<A> {
-    fn new(_config: &AdaptiveLRConfig<A>) -> Result<Self> {
+    fn new(config: &AdaptiveLRConfig<A>) -> Result<Self> {
         Ok(Self {
             magnitude_history: VecDeque::new(),
             direction_variance_history: VecDeque::new(),
@@ -875,7 +875,7 @@ impl<A: Float + Default + Clone> GradientBasedAdapter<A> {
 }
 
 impl<A: Float + Default + Clone> PerformanceBasedAdapter<A> {
-    fn new(_config: &AdaptiveLRConfig<A>) -> Result<Self> {
+    fn new(config: &AdaptiveLRConfig<A>) -> Result<Self> {
         Ok(Self {
             metric_history: HashMap::new(),
             trend_analyzer: PerformanceTrendAnalyzer::default(),
@@ -887,7 +887,7 @@ impl<A: Float + Default + Clone> PerformanceBasedAdapter<A> {
 
     fn generate_signal(
         &mut self,
-        loss: A_metrics: &HashMap<String, A>, _step: usize,
+        loss: A, metrics: &HashMap<String, A>, _step: usize,
     ) -> Result<SignalVote<A>> {
         let loss_history = self
             .metric_history
@@ -928,7 +928,7 @@ impl<A: Float + Default + Clone> PerformanceBasedAdapter<A> {
 }
 
 impl<A: Float + Default + Clone> DriftAwareAdapter<A> {
-    fn new(_config: &AdaptiveLRConfig<A>) -> Result<Self> {
+    fn new(config: &AdaptiveLRConfig<A>) -> Result<Self> {
         Ok(Self {
             drift_detectors: vec![],
             distribution_tracker: DistributionTracker::default(),
@@ -937,7 +937,8 @@ impl<A: Float + Default + Clone> DriftAwareAdapter<A> {
         })
     }
 
-    fn generate_signal(&mut self_gradients: &Array1<A>, _step: usize) -> Result<SignalVote<A>> {
+    fn generate_signal(&mut self,
+        gradients: &Array1<A>, _step: usize) -> Result<SignalVote<A>> {
         // Simplified drift detection
         Ok(SignalVote {
             signal_type: AdaptationSignalType::ConceptDrift,
@@ -954,7 +955,7 @@ impl<A: Float + Default + Clone> DriftAwareAdapter<A> {
 }
 
 impl<A: Float + Default + Clone> ResourceAwareAdapter<A> {
-    fn new(_config: &AdaptiveLRConfig<A>) -> Result<Self> {
+    fn new(config: &AdaptiveLRConfig<A>) -> Result<Self> {
         Ok(Self {
             memory_tracker: MemoryUsageTracker::default(),
             compute_tracker: ComputationTimeTracker::default(),
@@ -975,7 +976,8 @@ impl<A: Float + Default + Clone> ResourceAwareAdapter<A> {
         })
     }
 
-    fn generate_signal(&mut self_step: usize) -> Result<SignalVote<A>> {
+    fn generate_signal(&mut self,
+        step: usize) -> Result<SignalVote<A>> {
         // Simplified resource-based adaptation
         let memory_pressure = self.memory_tracker.memory_pressure;
 
@@ -1004,7 +1006,7 @@ impl<A: Float + Default + Clone> ResourceAwareAdapter<A> {
 }
 
 impl<A: Float + Default + Clone> MetaOptimizer<A> {
-    fn new(_config: &AdaptiveLRConfig<A>) -> Result<Self> {
+    fn new(config: &AdaptiveLRConfig<A>) -> Result<Self> {
         Ok(Self {
             lr_predictor: LearningRatePredictorNetwork::default(),
             optimization_history: VecDeque::new(),
@@ -1013,7 +1015,8 @@ impl<A: Float + Default + Clone> MetaOptimizer<A> {
         })
     }
 
-    fn meta_optimize(&mut self_decision: &AdaptationDecision<A>, _step: usize) -> Result<A> {
+    fn meta_optimize(&mut self,
+        decision: &AdaptationDecision<A>, _step: usize) -> Result<A> {
         // Simplified meta-optimization
         Ok(A::from(0.001).unwrap())
     }

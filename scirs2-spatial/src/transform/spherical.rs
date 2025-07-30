@@ -35,7 +35,7 @@ use std::f64::consts::{PI, TAU};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::transform::spherical::cart_to_spherical;
+/// use scirs2_spatial::transform::spherical::cart_to_spherical;
 ///
 /// let cart = array![1.0, 1.0, 1.0]; // Point (1, 1, 1)
 /// let spherical = cart_to_spherical(&cart.view()).unwrap();
@@ -112,7 +112,7 @@ pub fn cart_to_spherical(_cart: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> 
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::transform::spherical::spherical_to_cart;
+/// use scirs2_spatial::transform::spherical::spherical_to_cart;
 /// use std::f64::consts::PI;
 ///
 /// // Point at r=2, theta=π/4 (45°), phi=π/3 (60°)
@@ -172,7 +172,7 @@ pub fn spherical_to_cart(_spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::transform::spherical::cart_to_spherical_batch;
+/// use scirs2_spatial::transform::spherical::cart_to_spherical_batch;
 ///
 /// let cart = array![
 ///     [1.0, 0.0, 0.0],  // Point on x-axis
@@ -219,7 +219,7 @@ pub fn cart_to_spherical_batch(_cart: &ArrayView2<'_, f64>) -> SpatialResult<Arr
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::transform::spherical::spherical_to_cart_batch;
+/// use scirs2_spatial::transform::spherical::spherical_to_cart_batch;
 /// use std::f64::consts::PI;
 ///
 /// let spherical = array![
@@ -268,7 +268,7 @@ pub fn spherical_to_cart_batch(_spherical: &ArrayView2<'_, f64>) -> SpatialResul
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::transform::spherical::geodesic_distance;
+/// use scirs2_spatial::transform::spherical::geodesic_distance;
 /// use std::f64::consts::PI;
 ///
 /// // North pole and a point on the equator
@@ -350,7 +350,7 @@ pub fn geodesic_distance(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::transform::spherical::spherical_triangle_area;
+/// use scirs2_spatial::transform::spherical::spherical_triangle_area;
 /// use std::f64::consts::PI;
 ///
 /// // Three points on a unit sphere

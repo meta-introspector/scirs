@@ -72,7 +72,7 @@ impl<A: Float + Debug + ScalarOperand> CurriculumScheduler<A> {
     /// # Example
     ///
     /// ```
-    /// use scirs2__optim::schedulers::{
+    /// use scirs2_optim::schedulers::{
     ///     CurriculumScheduler, CurriculumStage, TransitionStrategy, LearningRateScheduler
     /// };
     ///

@@ -424,8 +424,9 @@ pub fn diagnose_error(_error: &StatsError) -> DiagnosisReport {
     };
 
     let severity = match error_type {
-        ErrorType::NumericalOverflow | ErrorType::SingularMatrix =>, Severity::High,
-        ErrorType::ConvergenceFailure | ErrorType::InvalidValues => Severity::Medium_ =>, Severity::Low,
+        ErrorType::NumericalOverflow | ErrorType::SingularMatrix => Severity::High,
+        ErrorType::ConvergenceFailure | ErrorType::InvalidValues => Severity::Medium,
+        _ => Severity::Low,
     };
 
     let likely_causes = match error_type {

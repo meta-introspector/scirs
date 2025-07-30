@@ -269,7 +269,8 @@ pub trait LeakDetector: Debug + Send + Sync {
 pub trait PatternDetector: Debug + Send + Sync {
     /// Detect memory usage patterns
     fn detect_patterns(
-        &self_snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self,
+        snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<MemoryPattern>>;
 
     /// Get detector name
@@ -405,7 +406,7 @@ impl MemoryLeakDetector {
     /// Create a new memory leak detector
     pub fn new(_config: MemoryDetectionConfig) -> Self {
         let mut detector = Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             allocation_tracker: AllocationTracker::new(),
             pattern_analyzer: MemoryPatternAnalyzer::new(),
             detectors: Vec::new(),
@@ -429,7 +430,7 @@ impl MemoryLeakDetector {
 
         // Add advanced leak detectors
         if self.config.enable_real_time_monitoring {
-            use crate::benchmarking::advanced_leak__detectors::{
+            use crate::benchmarking::advanced_leak_detectors::{
                 ReferenceCountingConfig, ReferenceCountingDetector,
             };
             let ref_counting_config = ReferenceCountingConfig::default();
@@ -833,10 +834,11 @@ impl MemoryOptimizer {
 
         // Sort by priority and remove duplicates
         recommendations.sort_by(|a, b| match (a.priority.clone(), b.priority.clone()) {
-            (RecommendationPriority:: Critical) =>, std::cmp::Ordering::Less,
-            (_, RecommendationPriority::Critical) =>, std::cmp::Ordering::Greater,
-            (RecommendationPriority:: High) =>, std::cmp::Ordering::Less,
-            (_, RecommendationPriority::High) => std::cmp::Ordering::Greater_ =>, std::cmp::Ordering::Equal,
+            (RecommendationPriority::Critical, _) => std::cmp::Ordering::Less,
+            (_, RecommendationPriority::Critical) => std::cmp::Ordering::Greater,
+            (RecommendationPriority::High, _) => std::cmp::Ordering::Less,
+            (_, RecommendationPriority::High) => std::cmp::Ordering::Greater,
+            _ => std::cmp::Ordering::Equal,
         });
 
         recommendations.dedup_by(|a, b| a.description == b.description);
@@ -1048,7 +1050,8 @@ impl TrendPatternDetector {
 
 impl PatternDetector for TrendPatternDetector {
     fn detect_patterns(
-        &self_snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self,
+        _snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<MemoryPattern>> {
         Ok(vec![MemoryPattern {
             pattern_type: "trend".to_string(),
@@ -1075,7 +1078,8 @@ impl PeriodicPatternDetector {
 
 impl PatternDetector for PeriodicPatternDetector {
     fn detect_patterns(
-        &self_snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self,
+        _snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<MemoryPattern>> {
         Ok(vec![])
     }
@@ -1099,7 +1103,8 @@ impl SpikeAnomalyDetector {
 
 impl AnomalyDetector for SpikeAnomalyDetector {
     fn detect_anomalies(
-        &self_snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self,
+        _snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<MemoryAnomaly>> {
         Ok(vec![])
     }
@@ -1121,7 +1126,8 @@ impl LeakAnomalyDetector {
 
 impl AnomalyDetector for LeakAnomalyDetector {
     fn detect_anomalies(
-        &self_snapshots: &VecDeque<MemoryUsageSnapshot>,
+        &self,
+        _snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<MemoryAnomaly>> {
         Ok(vec![])
     }
@@ -1146,7 +1152,7 @@ impl PoolingStrategy {
 impl OptimizationStrategy for PoolingStrategy {
     fn recommend(
         &self,
-        leak_result: &MemoryLeakResult_usage, _history: &VecDeque<MemoryUsageSnapshot>,
+        leak_result: &MemoryLeakResult, _history: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
 
@@ -1186,7 +1192,7 @@ impl InPlaceStrategy {
 impl OptimizationStrategy for InPlaceStrategy {
     fn recommend(
         &self,
-        leak_result: &MemoryLeakResult_usage, _history: &VecDeque<MemoryUsageSnapshot>,
+        leak_result: &MemoryLeakResult, _history: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
 
@@ -1226,7 +1232,7 @@ impl CacheStrategy {
 
 impl OptimizationStrategy for CacheStrategy {
     fn recommend(
-        &self, _leak_result: &MemoryLeakResult_usage, _history: &VecDeque<MemoryUsageSnapshot>,
+        &self, _leak_result: &MemoryLeakResult, _history: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<Vec<OptimizationRecommendation>> {
         Ok(vec![OptimizationRecommendation {
             recommendation_type: RecommendationType::CacheOptimization,

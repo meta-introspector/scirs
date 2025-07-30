@@ -6,7 +6,7 @@
 use crate::error::FFTResult;
 use crate::fft;
 use ndarray::{Array2, ArrayD, IxDyn};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::fmt::Debug;

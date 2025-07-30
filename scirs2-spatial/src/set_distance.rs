@@ -12,7 +12,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__spatial::set_distance::hausdorff_distance;
+//! use scirs2_spatial::set_distance::hausdorff_distance;
 //!
 //! // Create two point sets
 //! let points1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -53,7 +53,7 @@ use rand::seq::SliceRandom;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::set_distance::directed_hausdorff;
+/// use scirs2_spatial::set_distance::directed_hausdorff;
 ///
 /// // Create two point sets
 /// let points1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -174,7 +174,7 @@ pub fn directed_hausdorff<T: Float + Send + Sync>(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::set_distance::hausdorff_distance;
+/// use scirs2_spatial::set_distance::hausdorff_distance;
 ///
 /// // Create two point sets
 /// let points1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -220,7 +220,7 @@ pub fn hausdorff_distance<T: Float + Send + Sync>(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__spatial::set_distance::wasserstein_distance;
+/// use scirs2_spatial::set_distance::wasserstein_distance;
 ///
 /// // Create two point distributions
 /// let points1 = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];

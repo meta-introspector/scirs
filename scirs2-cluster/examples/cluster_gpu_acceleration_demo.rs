@@ -8,10 +8,10 @@ use scirs2__cluster::preprocess::standardize;
 
 // GPU acceleration imports
 use scirs2__cluster::{
-use statrs::statistics::Statistics;
     gpu_accelerated::{gpu_dbscan, gpu_hierarchical, gpu_kmeans},
     DeviceSelection, GpuBackend, GpuConfig, GpuLinkageMethod, MemoryStrategy,
 };
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

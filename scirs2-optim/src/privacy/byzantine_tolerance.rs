@@ -276,7 +276,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregato
     pub fn new(_config: ByzantineConfig) -> Self {
         let anomaly_threshold = _config.anomaly_threshold;
         Self {
-            _config,
+            config: _config,
             reputation_scores: HashMap::new(),
             behavior_history: HashMap::new(),
             anomaly_detector: AnomalyDetector::new(anomaly_threshold),
@@ -766,7 +766,8 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregato
             // Update trust level based on score
             reputation.trust_level = match reputation.score {
                 s if s >= 0.8 => TrustLevel::High,
-                s if s >= 0.5 => TrustLevel::Medium_ =>, TrustLevel::Low,
+                s if s >= 0.5 => TrustLevel::Medium,
+                _ => TrustLevel::Low,
             };
         }
 
@@ -802,15 +803,15 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregato
     ) -> f64 {
         let mut combined_score = 0.0;
 
-        // Weight anomaly _score (40%)
-        combined_score += anomaly_score._score * 0.4;
+        // Weight anomaly score (40%)
+        combined_score += anomaly_score.score * 0.4;
 
-        // Weight outlier _score (30%)
-        combined_score += outlier_score._score * 0.3;
+        // Weight outlier score (30%)
+        combined_score += outlier_score.score * 0.3;
 
-        // Weight verification _score (30%)
+        // Weight verification score (30%)
         if let Some(verification) = verification_score {
-            combined_score += (1.0 - verification._score) * 0.3;
+            combined_score += (1.0 - verification.score) * 0.3;
         }
 
         combined_score
@@ -878,7 +879,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregato
         scores.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
 
         let mut selected = HashMap::new();
-        for (participant_id_) in scores.into_iter().take(k) {
+        for (participant_id, _) in scores.into_iter().take(k) {
             if let Some(gradient) = gradients.get(&participant_id) {
                 selected.insert(participant_id, gradient.clone());
             }
@@ -982,7 +983,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregato
         norm_a = norm_a.sqrt();
         norm_b = norm_b.sqrt();
 
-        if norm_a > T::zero() && norm_b >, T::zero() {
+        if norm_a > T::zero() && norm_b > T::zero() {
             Ok(dot_product / (norm_a * norm_b))
         } else {
             Ok(T::zero())
@@ -1135,7 +1136,7 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> AnomalyDetector<T> {
     /// Create new anomaly detector
     pub fn new(_threshold: f64) -> Self {
         Self {
-            _threshold,
+            threshold: _threshold,
             gradient_stats: GradientStatistics::new(),
             pattern_model: PatternModel::new(),
         }
@@ -1304,7 +1305,7 @@ impl<T: Float + Send + Sync> StatisticalAnalysis<T> {
     /// Create new statistical analysis engine
     pub fn new(_window_size: usize) -> Self {
         Self {
-            _window_size,
+            window_size: _window_size,
             measures: StatisticalMeasures::new(),
         }
     }

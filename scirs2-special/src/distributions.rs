@@ -27,7 +27,7 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::distributions::ndtr;
+/// use scirs2_special::distributions::ndtr;
 ///
 /// let p = ndtr(0.0);
 /// assert!((p - 0.5).abs() < 1e-10);
@@ -1297,7 +1297,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::chdtri;
+/// use scirs2_special::chdtri;
 /// use approx::assert_relative_eq;
 ///
 /// let x = chdtri(0.95, 2.0).unwrap();
@@ -1353,7 +1353,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::pdtri;
+/// use scirs2_special::pdtri;
 /// use approx::assert_relative_eq;
 ///
 /// let m = pdtri(0.5, 2.0).unwrap();
@@ -1411,7 +1411,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::pdtrik;
+/// use scirs2_special::pdtrik;
 /// use approx::assert_relative_eq;
 ///
 /// let k = pdtrik(0.5, 2.0).unwrap();
@@ -1466,7 +1466,7 @@ where
 ///
 /// # Examples
 /// ```
-/// use scirs2__special::nbdtr;
+/// use scirs2_special::nbdtr;
 /// use approx::assert_relative_eq;
 ///
 /// let cdf = nbdtr(2.0, 3.0, 0.5).unwrap();

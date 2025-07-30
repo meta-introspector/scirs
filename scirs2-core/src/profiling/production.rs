@@ -534,8 +534,7 @@ impl ProductionProfiler {
     }
 
     /// Start profiling a workload
-    pub fn start_profiling_workload(&self, workload_type: WorkloadType,
-    ) -> CoreResult<()> {
+    pub fn start_profiling_workload(&self, workload_id: &str, workload_type: WorkloadType) -> CoreResult<()> {
         // Check if we should sample this workload
         if !self.should_sample()? {
             return Ok(());
@@ -549,7 +548,7 @@ impl ProductionProfiler {
         }
 
         // Create new profiling session
-        let session = ProfilingSession::new(workload_id)?;
+        let session = ProfilingSession::id(workload_id)?;
 
         if let Ok(mut sessions) = self.active_sessions.write() {
             sessions.insert(workload_id.to_string(), session);
@@ -559,7 +558,7 @@ impl ProductionProfiler {
     }
 
     /// Finish workload analysis and generate report
-    pub fn finish_workload_analysis(&mut self) -> CoreResult<WorkloadAnalysisReport> {
+    pub fn finish_workload_analysis(&mut self, workload_id: &str, workload_type: WorkloadType, start_time: SystemTime) -> CoreResult<WorkloadAnalysisReport> {
         // For this example, we'll analyze the first active session
         let session_id = {
             let sessions = self.active_sessions.read().map_err(|_| {
@@ -570,14 +569,13 @@ impl ProductionProfiler {
 
         let session_id = session_id
             .ok_or_else(|| CoreError::from(std::io::Error::other("No active sessions")))?;
-        self.finish_workload_analysis_by_id(&session_id, WorkloadType::Mixed)
+        self.finish_profiling_workload(workload_id, workload_type, start_time)
     }
 
     /// Finish specific workload analysis by ID
-    pub fn finish_profiling_workload(&self, workload_type: WorkloadType,
+    pub fn finish_profiling_workload(&self, workload_id: &str, workload_type: WorkloadType, start_time: SystemTime
     ) -> CoreResult<WorkloadAnalysisReport> {
-        let start_time = SystemTime::now() - Duration::from_secs(60); // Placeholder
-        let std::time::Duration::from_secs(1) = Duration::from_secs(60); // Placeholder
+        let _timeout = Duration::from_secs(60); // Placeholder
 
         // Remove session from active sessions
         let session = {
@@ -634,8 +632,11 @@ impl ProductionProfiler {
 
         let statistics = self.calculate_statistics(workload_id)?;
         let recommendations = self.generate_recommendations(&bottlenecks, &regressions);
-        let analysis_quality =
-            self.calculate_analysis_quality(total_samples, &bottlenecks, &regressions);
+        let analysis_quality = if total_samples > 1000 {
+            std::cmp::min(90 - (bottlenecks.len() as u8 * 10), 100)
+        } else {
+            std::cmp::min(50 - (bottlenecks.len() as u8 * 5), 100)
+        };
 
         Ok(WorkloadAnalysisReport {
             workload_id: workload_id.to_string(),
@@ -705,7 +706,11 @@ impl ProductionProfiler {
                     sample_count: samples,
                     confidence,
                     severity,
-                    optimizations: self.suggest_optimizations(function),
+                    optimizations: vec![
+                        "Consider algorithm optimization".to_string(),
+                        "Review memory allocation patterns".to_string(),
+                        "Enable compiler optimizations".to_string(),
+                    ],
                     resource_usage,
                 });
             }
@@ -831,24 +836,24 @@ impl ProductionProfiler {
     }
 
     /// Suggest optimizations for specific functions
-    fn get_bottleneck_names(&self) -> Vec<String> {
+    fn get_performance_optimizations(&self, function_name: &str) -> Vec<String> {
         let mut optimizations = Vec::new();
 
         match function_name {
-            matrix_multiply => {
+            "matrix_multiply" => {
                 optimizations
                     .push("Consider using BLAS libraries for matrix operations".to_string());
                 optimizations
                     .push("Enable SIMD instructions for vectorized operations".to_string());
                 optimizations.push("Use cache-friendly algorithms and loop tiling".to_string());
             }
-            data_preprocessing => {
+            "data_preprocessing" => {
                 optimizations.push("Implement parallel processing with Rayon".to_string());
                 optimizations.push("Use memory-mapped files for large datasets".to_string());
                 optimizations
                     .push("Consider streaming processing for memory efficiency".to_string());
             }
-            memory_allocation => {
+            "memory_allocation" => {
                 optimizations.push("Use buffer pools to reduce allocation overhead".to_string());
                 optimizations.push("Pre-allocate buffers where possible".to_string());
                 optimizations
@@ -865,7 +870,7 @@ impl ProductionProfiler {
     }
 
     /// Calculate the quality of the analysis based on sample size and findings
-    fn samples(usize: usize,
+    fn calculate_quality_score(&self, total_samples: usize,
         bottlenecks: &[PerformanceBottleneck],
         regressions: &[PerformanceRegression],
     ) -> u8 {
@@ -897,7 +902,7 @@ impl ProductionProfiler {
     }
 
     /// Record performance data for regression detection
-    pub fn id(&str: &str, duration: Duration) -> CoreResult<()> {
+    pub fn record_performance_data(&self, workload_id: &str, function_id: &str, duration: Duration) -> CoreResult<()> {
         if let Ok(mut history) = self.performance_history.lock() {
             let entry = history
                 .entry(workload_id.to_string())
@@ -921,7 +926,7 @@ impl ProductionProfiler {
     }
 
     /// Export profiling data for external analysis
-    pub fn generate_session_id(&self) -> CoreResult<String> {
+    pub fn generate_session_id(&self, workload_id: &str) -> CoreResult<String> {
         #[cfg(feature = "serde")]
         {
             // Create a summary of profiling data

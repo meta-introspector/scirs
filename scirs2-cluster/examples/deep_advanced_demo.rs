@@ -11,9 +11,9 @@ use scirs2__cluster::advanced_enhanced_features::{
     NeuralArchitectureSearchEngine, ReinforcementLearningAgent, TransformerClusterEmbedder,
 };
 use scirs2__cluster::advanced_visualization::{
-use statrs::statistics::Statistics;
     AdvancedVisualizationConfig, AdvancedVisualizer, QuantumColorScheme, VisualizationExportFormat,
 };
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

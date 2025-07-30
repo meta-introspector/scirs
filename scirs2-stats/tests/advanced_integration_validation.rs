@@ -75,7 +75,7 @@ fn test_optimization_mode_selection() {
             ..Default::default()
         };
 
-        let mut processor = scirs2_stats::unified, _processor::AdvancedUnifiedProcessor::new(config);
+        let mut processor = scirs2_stats::unified_processor::AdvancedUnifiedProcessor::new(config);
         let result = processor
             .process_comprehensive_statistics(&test_data.view())
             .unwrap();
@@ -104,7 +104,7 @@ fn test_optimization_mode_selection() {
 #[allow(dead_code)]
 fn test_numerical_stability_integration() {
     let mut processor =
-        scirs2_stats::unified, _processor::AdvancedUnifiedProcessor::new(AdvancedProcessorConfig {
+        scirs2_stats::unified_processor::AdvancedUnifiedProcessor::new(AdvancedProcessorConfig {
             enable_stability_testing: true,
             ..Default::default()
         });
@@ -217,7 +217,7 @@ fn test_time_series_processing() {
 #[allow(dead_code)]
 fn test_performance_monitoring() {
     let mut processor =
-        scirs2_stats::unified, _processor::AdvancedUnifiedProcessor::new(AdvancedProcessorConfig {
+        scirs2_stats::unified_processor::AdvancedUnifiedProcessor::new(AdvancedProcessorConfig {
             enable_performance_monitoring: true,
             ..Default::default()
         });
@@ -332,7 +332,7 @@ fn test_processing_strategy_effectiveness() {
 fn test_comprehensive_workflow() {
     // This test demonstrates a complete Advanced workflow
     let mut processor =
-        scirs2_stats::unified, _processor::AdvancedUnifiedProcessor::new(AdvancedProcessorConfig {
+        scirs2_stats::unified_processor::AdvancedUnifiedProcessor::new(AdvancedProcessorConfig {
             optimization_mode: OptimizationMode::Adaptive,
             enable_stability_testing: true,
             enable_performance_monitoring: true,

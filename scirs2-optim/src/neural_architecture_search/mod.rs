@@ -20,11 +20,11 @@ pub mod progressive_search;
 pub mod search_strategies;
 
 // Re-export key types
-pub use architecture__space::{
+pub use architecture_space::{
     ComponentType, ConnectionPattern, ConnectionType, OptimizerArchitecture, OptimizerComponent,
     SearchSpace,
 };
-pub use automated_hyperparameter__optimization::{
+pub use automated_hyperparameter_optimization::{
     BayesianOptimizationStrategy, HyperOptStrategy, HyperparameterConfig, HyperparameterOptimizer,
     HyperparameterSearchSpace, OptimizationResults,
 };
@@ -32,14 +32,14 @@ pub use controllers::{
     ArchitectureController, EvolutionaryController, RNNController, RandomController,
     TransformerController,
 };
-pub use multi__objective::{
+pub use multi_objective::{
     MOEADOptimizer, MultiObjectiveOptimizer, ParetoFront, WeightedSum, NSGA2,
 };
-pub use performance__evaluation::{BenchmarkSuite, PerformanceEvaluator, PerformancePredictor};
-pub use progressive__search::{
+pub use performance_evaluation::{BenchmarkSuite, PerformanceEvaluator, PerformancePredictor};
+pub use progressive_search::{
     ArchitectureProgression, ComplexityScheduler, ProgressiveNAS, SearchPhase,
 };
-pub use search__strategies::{
+pub use search_strategies::{
     BayesianOptimization, DifferentiableSearch, EvolutionarySearch, RandomSearch,
     ReinforcementLearningSearch, SearchStrategy,
 };
@@ -1300,7 +1300,7 @@ impl<
         };
 
         Ok(Self {
-            _config,
+            config: _config,
             search_strategy,
             evaluator,
             multi_objective_optimizer,
@@ -1721,7 +1721,8 @@ impl<
             )?)),
             MultiObjectiveAlgorithm::WeightedSum => Ok(Box::new(
                 multi_objective::WeightedSum::new(&config.objectives)?,
-            ), _ => {
+            )),
+            _ => {
                 // Default to NSGA2
                 Ok(Box::new(multi_objective::NSGA2::new(
                     config.pareto_front_size,
@@ -1867,7 +1868,8 @@ impl<
             ComponentType::AdaptiveRegularization => 31,
             ComponentType::LSTMOptimizer => 32,
             ComponentType::TransformerOptimizer => 33,
-            ComponentType::AttentionOptimizer => 34_ => 255, // Default for unknown types
+            ComponentType::AttentionOptimizer => 34,
+            _ => 255, // Default for unknown types
         }
     }
 
@@ -2021,7 +2023,7 @@ impl<
                     let top_indices: Vec<_> = arch_performance
                         .iter()
                         .take(10)
-                        .map(|(idx_)| *idx)
+                        .map(|(idx, _)| *idx)
                         .collect();
 
                     let mut new_best = Vec::new();

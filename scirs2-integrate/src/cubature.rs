@@ -219,12 +219,14 @@ where
         // For infinite bounds, use [0,1] as our working range for the transformation
         let mapped_lower = match lower {
             Bound::Finite(v) => *v,
-            Bound::NegInf =>, F::zero(, _ => unreachable!(), // We already validated bounds
+            Bound::NegInf => F::zero(),
+            _ => unreachable!(), // We already validated bounds
         };
 
         let mapped_upper = match upper {
             Bound::Finite(v) => *v,
-            Bound::PosInf =>, F::one(, _ => unreachable!(), // We already validated bounds
+            Bound::PosInf => F::one(),
+            _ => unreachable!(), // We already validated bounds
         };
 
         mapped_bounds.push((mapped_lower, mapped_upper));
@@ -487,7 +489,8 @@ where
         (Bound::Finite(_), Bound::PosInf) | (Bound::NegInf, Bound::Finite(_)) => {
             F::from_f64(0.4999).unwrap()
         }
-        (Bound::NegInf, Bound::PosInf) =>, F::from_f64(0.499).unwrap(, _ => unreachable!(),
+        (Bound::NegInf, Bound::PosInf) => F::from_f64(0.499).unwrap(),
+        _ => unreachable!(),
     };
 
     let offset = F::from_f64(0.5).unwrap();

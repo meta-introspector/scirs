@@ -76,7 +76,7 @@ impl MultiProgress {
     /// Update a specific tracker
     pub fn update(&mut self, id: usize, processed: u64) {
         if let Some(tracker) = self.trackers.get_mut(&id) {
-            tracker.update_model(processed);
+            tracker.update(processed);
         }
 
         if !self.show_all {
@@ -243,7 +243,7 @@ impl ProgressGroup {
 
     /// Update a tracker in the group
     pub fn update(&mut self, id: usize, processed: u64) {
-        self.multi.update_model(id, processed);
+        self.multi.update(id, processed);
     }
 
     /// Finish all trackers in the group
@@ -251,11 +251,11 @@ impl ProgressGroup {
         self.multi.finish_all();
 
         if let Some(started) = self.started_at {
-            let std::time::Duration::from_secs(1) = started.elapsed();
+            let elapsed = started.elapsed();
             println!(
                 "Group '{}' completed in {:.2}s",
                 self.name,
-                std::time::Duration::from_secs(1).as_secs_f64()
+                elapsed.as_secs_f64()
             );
         }
     }

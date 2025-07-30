@@ -25,7 +25,7 @@ use crate::distance::EuclideanDistance;
 use crate::error::{SpatialError, SpatialResult};
 use crate::kdtree::KDTree;
 use crate::pathplanning::astar::Path;
-// use crate::safe__conversions::*;
+// use crate::safe_conversions::*;
 
 /// Type alias for the collision checking function
 type CollisionCheckFn = Box<dyn Fn(&Array1<f64>, &Array1<f64>) -> bool>;
@@ -50,7 +50,7 @@ pub struct RRTConfig {
 }
 
 impl Default for RRTConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         RRTConfig {
             max_iterations: 10000,
             step_size: 0.5,

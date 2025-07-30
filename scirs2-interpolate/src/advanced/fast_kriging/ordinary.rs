@@ -274,7 +274,7 @@ where
         // Compute predictions efficiently using low-rank structure
         for i in 0..n_query {
             // Compute residual using low-rank approximation
-            let query_feature = query_features.slice(ndarray::s![i, ..]);
+            let query_feature = "query_features".slice(ndarray::s![i, ..]);
 
             // Create safe reciprocal array for singular values
             let mut s_inv = Array1::zeros(s.len());

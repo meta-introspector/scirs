@@ -281,7 +281,7 @@ struct CacheEntry<T> {
 impl<T> CacheEntry<T> {
     /// Create a new cache entry
     fn new(_value: T, insertion_time: usize) -> Self {
-        let memory_size = std::mem::size_of::<T>() + std::mem::size, _of::<Self>();
+        let memory_size = std::mem::size_of::<T>() + std::mem::size_of::<Self>();
         Self {
             _value,
             last_access: insertion_time,

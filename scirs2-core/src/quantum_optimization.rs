@@ -12,7 +12,7 @@ use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use crate::parallel_ops::*;
 
 /// Quantum-inspired optimization strategy
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

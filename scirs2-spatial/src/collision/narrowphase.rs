@@ -1345,7 +1345,8 @@ fn handle_simplex(_simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
     match _simplex.size() {
         2 => handle_line_simplex(_simplex, direction),
         3 => handle_triangle_simplex(_simplex, direction),
-        4 => handle_tetrahedron_simplex(_simplex, direction, _ => false,
+        4 => handle_tetrahedron_simplex(_simplex, direction),
+        _ => false,
     }
 }
 
@@ -1364,7 +1365,7 @@ fn handle_simplex(_simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::collision::{gjk_collision_detection, Sphere, Box3D};
+/// use scirs2_spatial::collision::{gjk_collision_detection, Sphere, Box3D};
 ///
 /// let sphere = Sphere {
 ///     center: [0.0, 0.0, 0.0],

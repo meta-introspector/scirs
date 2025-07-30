@@ -485,7 +485,7 @@ where
 
     // Record memory usage
     let memory_used =
-        n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size, _of::<F>();
+        n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size_of::<F>();
     manager.record_operation(OperationMetrics {
         operation_type: "streaming_pca_enhanced".to_string(),
         memory_used,
@@ -588,7 +588,7 @@ where
         }
     }
 
-    let memory_used = n_bins * (std::mem::size_of::<F>() + std::mem::size, _of::<usize>());
+    let memory_used = n_bins * (std::mem::size_of::<F>() + std::mem::size_of::<usize>());
     manager.record_operation(OperationMetrics {
         operation_type: "streaming_histogram_adaptive".to_string(),
         memory_used,
@@ -867,7 +867,7 @@ where
     let coefficients = solve_linear_system(&xtx.view(), &xty.view())?;
 
     let memory_used =
-        n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size, _of::<F>();
+        n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size_of::<F>();
     manager.record_operation(OperationMetrics {
         operation_type: "streaming_regression_enhanced".to_string(),
         memory_used,

@@ -1106,7 +1106,7 @@ impl ResourceMonitor {
         {
             // On macOS, use vm_stat command
             use std::process::Command;
-            if let Ok(output) = Command::new(vm_stat).output() {
+            if let Ok(output) = Command::new("vm_stat").output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     let mut pages_free = 0u64;
@@ -1229,7 +1229,7 @@ impl ResourceMonitor {
         {
             // On macOS, use system command to get load average
             use std::process::Command;
-            if let Ok(output) = Command::new(uptime).output() {
+            if let Ok(output) = Command::new("uptime").output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     // Parse load average from uptime output
@@ -1237,7 +1237,12 @@ impl ResourceMonitor {
                         let load_parts: Vec<&str> = load_section.split_whitespace().collect();
                         if !load_parts.is_empty() {
                             if let Ok(load_1min) = load_parts[0usize].parse::<f64>() {
+                                #[cfg(feature = "parallel")]
                                 let cpu_count = num_cpus::get() as f64;
+                                #[cfg(not(feature = "parallel"))]
+                                let cpu_count = std::thread::available_parallelism()
+                                    .map(|n| n.get() as f64)
+                                    .unwrap_or(4.0);
                                 let contention = if load_1min > cpu_count {
                                     ((load_1min - cpu_count) / cpu_count).min(1.0)
                                 } else {

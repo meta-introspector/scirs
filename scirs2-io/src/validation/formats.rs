@@ -67,7 +67,8 @@ impl DataFormat {
             "PNG" => Some(DataFormat::PNG),
             "JPEG" | "JPG" => Some(DataFormat::JPEG),
             "TIFF" | "TIF" => Some(DataFormat::TIFF),
-            "WAV" => Some(DataFormat::WAV, _ => None,
+            "WAV" => Some(DataFormat::WAV),
+            _ => None,
         }
     }
 }
@@ -327,7 +328,8 @@ pub fn validate_file_format<P: AsRef<Path>>(
         DataFormat::CSV => validate_csv_format(path),
         DataFormat::JSON => validate_json_format(path),
         DataFormat::ARFF => validate_arff_format(path),
-        DataFormat::WAV => validate_wav_format(path, _ => {
+        DataFormat::WAV => validate_wav_format(path),
+        _ => {
             // For other formats, basic validation is sufficient for now
             Ok(FormatValidationResult {
                 valid: true,
@@ -480,7 +482,7 @@ fn validate_json_format<P: AsRef<Path>>(_path: P) -> Result<FormatValidationResu
 
     let reader = BufReader::new(file);
 
-    match serde_json::from, _reader::<_, serde_json::Value>(reader) {
+    match serde_json::from_reader::<_, serde_json::Value>(reader) {
         Ok(_) => Ok(FormatValidationResult {
             valid: true,
             format: "JSON".to_string(),

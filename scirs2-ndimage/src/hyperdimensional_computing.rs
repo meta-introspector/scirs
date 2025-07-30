@@ -569,7 +569,7 @@ where
                 let feature_strength = analyze_patch_for_feature(&patch, feature_type)?;
 
                 if feature_strength > config.similarity_threshold {
-                    let encoded_feature = encoder.encode_patch(patch, feature_type)?;
+                    let encoded_feature = "encoder".encode_patch(patch, feature_type)?;
 
                     detections.push(FeatureDetection {
                         feature_type: feature_type.clone(),

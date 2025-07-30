@@ -19,7 +19,7 @@
 //! # Examples
 //!
 //! ```
-//! # use scirs2__spatial::halfspace::{HalfspaceIntersection, Halfspace};
+//! # use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
 //! # use ndarray::array;
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Define halfspaces for a unit square: x ≥ 0, y ≥ 0, x ≤ 1, y ≤ 1
@@ -42,7 +42,7 @@
 //! # }
 //! ```
 
-use crate::convex__hull::ConvexHull;
+use crate::convex_hull::ConvexHull;
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{arr1, Array1, Array2, ArrayView1};
 use statrs::statistics::Statistics;
@@ -71,7 +71,7 @@ impl Halfspace {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::halfspace::Halfspace;
+    /// use scirs2_spatial::halfspace::Halfspace;
     /// use ndarray::array;
     ///
     /// // Halfspace x + y ≤ 1
@@ -105,7 +105,7 @@ impl Halfspace {
     /// # Returns
     ///
     /// * true if point satisfies a·x ≤ b, false otherwise
-    pub fn contains(_point: &ArrayView1<f64>) -> bool {
+    pub fn contains(&self, _point: &ArrayView1<f64>) -> bool {
         if _point.len() != self.normal.len() {
             return false;
         }
@@ -206,7 +206,7 @@ impl HalfspaceIntersection {
     /// # Examples
     ///
     /// ```
-    /// # use scirs2__spatial::halfspace::{HalfspaceIntersection, Halfspace};
+    /// # use scirs2_spatial::halfspace::{HalfspaceIntersection, Halfspace};
     /// # use ndarray::array;
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let halfspaces = vec![
@@ -875,7 +875,8 @@ impl HalfspaceIntersection {
 
         match self.dim {
             2 => self.compute_polygon_area(),
-            3 => self.compute_polyhedron_volume(, _ => self.compute_high_dim_volume(),
+            3 => self.compute_polyhedron_volume(),
+            _ => self.compute_high_dim_volume(),
         }
     }
 

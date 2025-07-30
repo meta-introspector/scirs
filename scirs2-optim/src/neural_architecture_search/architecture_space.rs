@@ -620,7 +620,7 @@ pub struct ArchitectureValidator {
 impl ArchitectureValidator {
     /// Create new validator with search space
     pub fn new(_search_space: SearchSpace) -> Self {
-        Self { _search_space }
+        Self { search_space: _search_space }
     }
 
     /// Validate an architecture

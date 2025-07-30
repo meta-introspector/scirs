@@ -5,7 +5,7 @@
 //! vocabularies, entity recognition, and preprocessing pipelines.
 
 use crate::error::{Result, TextError};
-use crate::information__extraction::{Entity, EntityType};
+use crate::information_extraction::{Entity, EntityType};
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 

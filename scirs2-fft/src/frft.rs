@@ -37,7 +37,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::{fft, ifft};
 use crate::frft_ozaktas;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{NumCast, Zero};
 use std::f64::consts::PI;
 
@@ -64,7 +64,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::frft;
+/// use scirs2_fft::frft;
 /// use std::f64::consts::PI;
 ///
 /// // Create a simple signal
@@ -81,8 +81,8 @@ use std::f64::consts::PI;
 /// For complex inputs, use `frft_complex` directly:
 ///
 /// ```
-/// use scirs2__fft::frft_complex;
-/// use num__complex::Complex64;
+/// use scirs2_fft::frft_complex;
+/// use num_complex::Complex64;
 /// use std::f64::consts::PI;
 ///
 /// // Create a complex signal
@@ -284,8 +284,8 @@ fn frft_near_special_case(x: &[Complex64], alpha: f64, _d: f64) -> FFTResult<Vec
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::frft_complex;
-/// use num__complex::Complex64;
+/// use scirs2_fft::frft_complex;
+/// use num_complex::Complex64;
 /// use std::f64::consts::PI;
 ///
 /// // Create a complex signal
@@ -365,7 +365,7 @@ pub fn frft_complex(x: &[Complex64], alpha: f64, d: Option<f64>) -> FFTResult<Ve
 /// # Example
 ///
 /// ```
-/// use scirs2__fft::frft_stable;
+/// use scirs2_fft::frft_stable;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 /// let result = frft_stable(&signal, 0.5).unwrap();
@@ -396,7 +396,7 @@ where
 /// # Example
 ///
 /// ```
-/// use scirs2__fft::frft_dft;
+/// use scirs2_fft::frft_dft;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 /// let result = frft_dft(&signal, 0.5).unwrap();

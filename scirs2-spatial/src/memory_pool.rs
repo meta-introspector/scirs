@@ -16,7 +16,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::memory_pool::{DistancePool, ClusteringArena};
+//! use scirs2_spatial::memory_pool::{DistancePool, ClusteringArena};
 //!
 //! // Create a distance computation pool
 //! let mut pool = DistancePool::new(1000);
@@ -89,7 +89,7 @@ pub struct MemoryPoolConfig {
 }
 
 impl Default for MemoryPoolConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             max_pool_size: 1000,
             cache_line_size: 64,
@@ -145,9 +145,9 @@ impl DistancePool {
     }
 
     /// Get a cache-aligned distance buffer
-    pub fn get_distance_buffer(_size: usize) -> DistanceBuffer {
+    pub fn get_distance_buffer(&self, _size: usize) -> DistanceBuffer {
         // Check if this is a large object
-        let buffer_size_bytes = _size * std::mem::_size_of::<f64>();
+        let buffer_size_bytes = _size * std::mem::size_of::<f64>();
         let is_large = buffer_size_bytes > self.config.large_object_threshold;
 
         // Check memory usage limit
@@ -205,7 +205,7 @@ impl DistancePool {
     }
 
     /// Get an index buffer for storing indices
-    pub fn get_index_buffer(_size: usize) -> IndexBuffer {
+    pub fn get_index_buffer(&self, _size: usize) -> IndexBuffer {
         let mut buffers = self.index_buffers.lock().unwrap();
 
         // Try to reuse existing buffer
@@ -224,7 +224,7 @@ impl DistancePool {
     }
 
     /// Get a distance matrix buffer
-    pub fn get_matrix_buffer(_rows: usize, cols: usize) -> MatrixBuffer {
+    pub fn get_matrix_buffer(&self, _rows: usize, cols: usize) -> MatrixBuffer {
         let mut buffers = self.matrix_buffers.lock().unwrap();
 
         // Try to reuse existing matrix
@@ -248,7 +248,7 @@ impl DistancePool {
     /// Create cache-aligned buffer for optimal SIMD performance
     fn create_aligned_buffer(_size: usize) -> Box<[f64]> {
         let layout = Layout::from_size_align(
-            _size * std::mem::_size_of::<f64>(),
+            _size * std::mem::size_of::<f64>(),
             self.config.cache_line_size,
         )
         .unwrap();
@@ -321,7 +321,8 @@ impl DistancePool {
     /// Linux-specific NUMA-aware allocation (fallback without actual NUMA binding)
     #[cfg(target_os = "linux")]
     fn allocate_on_numa_node_linux(
-        size: usize_node: u32,
+        size: usize,
+        node: u32,
     ) -> Result<Box<[f64]>, Box<dyn std::error::Error>> {
         let total_size = size * std::mem::size_of::<f64>();
         let layout = Layout::from_size_align(total_size, 64)?;
@@ -343,7 +344,8 @@ impl DistancePool {
     /// Windows-specific NUMA-aware allocation
     #[cfg(target_os = "windows")]
     fn allocate_on_numa_node_windows(
-        size: usize_node: u32,
+        size: usize,
+        node: u32,
     ) -> Result<Box<[f64]>, Box<dyn std::error::Error>> {
         // Windows NUMA allocation using VirtualAllocExNuma would go here
         // For now, fallback to regular allocation
@@ -796,7 +798,7 @@ impl<'a> DistanceBuffer<'a> {
     }
 
     /// Get a view as ndarray Array1
-    pub fn as_array_mut(&self) -> ArrayViewMut1<f64> {
+    pub fn as_array_mut(&mut self) -> ArrayViewMut1<f64> {
         ArrayViewMut1::from(self.as_mut_slice())
     }
 }
@@ -973,7 +975,7 @@ impl ClusteringArena {
 }
 
 impl Default for ClusteringArena {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -1036,7 +1038,8 @@ impl Drop for ArenaBlock {
 /// RAII wrapper for arena-allocated vectors
 pub struct ArenaVec<T> {
     ptr: *mut T,
-    len: usize_phantom: std::marker::PhantomData<T>,
+    len: usize,
+    phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> ArenaVec<T> {
@@ -1048,7 +1051,7 @@ impl<T> ArenaVec<T> {
     }
 
     /// Get a mutable slice of the vector
-    pub fn as_mut_slice(&self) -> &mut [T] {
+    pub fn as_mut_slice(&mut self) -> &mut [T] {
         unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
     }
 
@@ -1063,7 +1066,7 @@ impl<T> ArenaVec<T> {
     }
 
     /// Check if vector is empty
-    pub fn is_empty() -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 }
@@ -1248,7 +1251,7 @@ pub struct NumaNode {
 }
 
 impl Default for NumaTopology {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             nodes: vec![NumaNode {
                 id: 0,
@@ -1294,12 +1297,12 @@ impl NumaTopology {
     }
 
     /// Check if a specific NUMA node exists
-    pub fn has_node(_node_id: u32) -> bool {
+    pub fn has_node(&self, _node_id: u32) -> bool {
         self.nodes.iter().any(|node| node._id == _node_id)
     }
 
     /// Get memory information for a specific node
-    pub fn get_node_info(_node_id: u32) -> Option<&NumaNode> {
+    pub fn get_node_info(&self, _node_id: u32) -> Option<&NumaNode> {
         self.nodes.iter().find(|node| node._id == _node_id)
     }
 }
@@ -1362,7 +1365,7 @@ pub struct NumaCapabilities {
 
 impl NumaCapabilities {
     /// Detect NUMA capabilities of the current system
-    pub fn detect(&self) -> Self {
+    pub fn detect() -> Self {
         #[cfg(target_os = "linux")]
         {
             Self::detect_linux()
@@ -1384,7 +1387,7 @@ impl NumaCapabilities {
     }
 
     #[cfg(target_os = "linux")]
-    fn detect_linux(&self) -> Self {
+    fn detect_linux() -> Self {
         let numa_available = std::path::Path::new("/sys/devices/system/node").exists();
         let num_nodes = if numa_available {
             DistancePool::get_numa_topology().nodes.len() as u32
@@ -1402,7 +1405,7 @@ impl NumaCapabilities {
     }
 
     #[cfg(target_os = "windows")]
-    fn detect_windows(&self) -> Self {
+    fn detect_windows() -> Self {
         Self {
             numa_available: true, // Windows typically has NUMA support
             num_nodes: 1,         // Would be detected using Windows APIs

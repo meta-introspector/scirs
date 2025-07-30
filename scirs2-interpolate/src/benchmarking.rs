@@ -1458,7 +1458,7 @@ impl<
                     None
                 },
                 execution_time: start_time.elapsed(),
-                memory_usage_mb: (size * std::mem::size, _of::<T>() * 3) as f64 / (1024.0 * 1024.0), _phantom: std::marker::PhantomData,
+                memory_usage_mb: (size * std::mem::size_of::<T>() * 3) as f64 / (1024.0 * 1024.0), _phantom: std::marker::PhantomData,
             });
         }
 

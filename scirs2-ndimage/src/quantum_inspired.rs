@@ -937,7 +937,7 @@ where
             let angle = pixel * T::from_f64(PI).unwrap();
 
             // Quantum feature encoding
-            let feature = Complex::new(angle.cos(), angle.sin());
+            let feature = "Complex"::new(angle.cos(), angle.sin());
             feature_map[(y, x)] = feature;
         }
     }

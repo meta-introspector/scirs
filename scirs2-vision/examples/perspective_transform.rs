@@ -108,10 +108,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn create_tilt_transform(_width: u32, height: u32, tilt_factor: f64) -> PerspectiveTransform {
     // Create a transform that makes the bottom of the image wider than the top
     let src_points = [
-        (0.0, 0.0),                    // Top-left
+        (0.0, 0.0),                     // Top-left
         (_width as f64, 0.0),           // Top-right
         (_width as f64, height as f64), // Bottom-right
-        (0.0, height as f64),          // Bottom-left
+        (0.0, height as f64),           // Bottom-left
     ];
 
     let dst_points = [
@@ -130,10 +130,10 @@ fn create_tilt_transform(_width: u32, height: u32, tilt_factor: f64) -> Perspect
 fn create_birds_eye_transform(_width: u32, height: u32) -> PerspectiveTransform {
     // Create a transform that makes the image appear as if viewed from above
     let src_points = [
-        (0.0, 0.0),                    // Top-left
+        (0.0, 0.0),                     // Top-left
         (_width as f64, 0.0),           // Top-right
         (_width as f64, height as f64), // Bottom-right
-        (0.0, height as f64),          // Bottom-left
+        (0.0, height as f64),           // Bottom-left
     ];
 
     let dst_points = [
@@ -376,7 +376,8 @@ fn draw_char(_img: &mut RgbaImage, c: char, x: u32, y: u32, color: image::Rgba<u
         ],
         '3' => &[
             0b01100000, 0b10010000, 0b00010000, 0b00100000, 0b00010000, 0b10010000, 0b01100000,
-        ]_ => &[
+        ],
+        _ => &[
             0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000,
         ],
     };

@@ -131,7 +131,8 @@ impl Parameter {
     pub fn as_float(&self) -> Option<f64> {
         match self {
             Parameter::Float(val) => Some(*val),
-            Parameter::Int(val) => Some(*val as f64, _ => None,
+            Parameter::Int(val) => Some(*val as f64),
+            _ => None,
         }
     }
 
@@ -139,28 +140,32 @@ impl Parameter {
     pub fn as_int(&self) -> Option<i64> {
         match self {
             Parameter::Int(val) => Some(*val),
-            Parameter::Float(val) => Some(*val as i64, _ => None,
+            Parameter::Float(val) => Some(*val as i64),
+            _ => None,
         }
     }
 
     /// Get parameter as boolean
     pub fn as_bool(&self) -> Option<bool> {
         match self {
-            Parameter::Bool(val) => Some(*val, _ => None,
+            Parameter::Bool(val) => Some(*val),
+            _ => None,
         }
     }
 
     /// Get parameter as string
     pub fn as_string(&self) -> Option<&String> {
         match self {
-            Parameter::String(val) => Some(val, _ => None,
+            Parameter::String(val) => Some(val),
+            _ => None,
         }
     }
 
     /// Get parameter as float array
     pub fn as_float_array(&self) -> Option<&[f64]> {
         match self {
-            Parameter::FloatArray(val) => Some(val, _ => None,
+            Parameter::FloatArray(val) => Some(val),
+            _ => None,
         }
     }
 }

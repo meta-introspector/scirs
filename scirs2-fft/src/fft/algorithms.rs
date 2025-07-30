@@ -7,7 +7,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use ndarray::{Array2, ArrayD, Axis, IxDyn};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 use scirs2_core::safe_ops::{safe_divide, safe_sqrt};
@@ -139,8 +139,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::fft;
-/// use num__complex::Complex64;
+/// use scirs2_fft::fft;
+/// use num_complex::Complex64;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -214,8 +214,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{fft, ifft};
-/// use num__complex::Complex64;
+/// use scirs2_fft::{fft, ifft};
+/// use num_complex::Complex64;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -304,7 +304,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::fft2;
+/// use scirs2_fft::fft2;
 /// use ndarray::{array, Array2};
 ///
 /// // Create a simple 2x2 array
@@ -443,7 +443,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{fft2, ifft2};
+/// use scirs2_fft::{fft2, ifft2};
 /// use ndarray::{array, Array2};
 ///
 /// // Create a simple 2x2 array
@@ -586,7 +586,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::fftn;
+/// use scirs2_fft::fftn;
 /// use ndarray::{Array, IxDyn};
 ///
 /// // Create a 3D array
@@ -749,9 +749,9 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::{fftn, ifftn};
+/// use scirs2_fft::{fftn, ifftn};
 /// use ndarray::{Array, IxDyn};
-/// use num__complex::Complex64;
+/// use num_complex::Complex64;
 ///
 /// // Create a 3D array
 /// let mut data = Array::zeros(IxDyn(&[2, 2, 2]));

@@ -10,7 +10,7 @@
 //!
 //! ```
 //! use ndarray::Array1;
-//! use scirs2__spatial::pathplanning::{PRMPlanner, PRMConfig};
+//! use scirs2_spatial::pathplanning::{PRMPlanner, PRMConfig};
 //!
 //! // Create a configuration for the PRM planner
 //! let config = PRMConfig::new()
@@ -159,7 +159,7 @@ impl PRMConfig {
 }
 
 impl Default for PRMConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         PRMConfig::new()
     }
 }

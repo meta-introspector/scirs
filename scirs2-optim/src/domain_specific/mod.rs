@@ -4,7 +4,7 @@
 //! machine learning domains, building on the adaptive selection framework to provide
 //! domain-aware optimization approaches.
 
-use crate::adaptive__selection::{OptimizerType, ProblemCharacteristics};
+use crate::adaptive_selection::{OptimizerType, ProblemCharacteristics};
 use crate::error::{OptimError, Result};
 use ndarray::ScalarOperand;
 use num_traits::Float;
@@ -99,7 +99,7 @@ pub struct DomainSpecificSelector<A: Float> {
     /// Cross-domain transfer learning data
     transfer_knowledge: Vec<CrossDomainKnowledge<A>>,
     /// Current optimization context
-    current_context: Option<OptimizationContext<A>>,
+    currentcontext: Option<OptimizationContext<A>>,
 }
 
 /// Performance metrics specific to domains
@@ -248,23 +248,23 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         let config = Self::default_config_for_strategy(&_strategy);
 
         Self {
-            _strategy,
+            strategy: _strategy,
             config,
             domain_performance: HashMap::new(),
             transfer_knowledge: Vec::new(),
-            current_context: None,
+            currentcontext: None,
         }
     }
 
     /// Set optimization context
-    pub fn set_context(&mut self, context: OptimizationContext<A>) {
-        self.current_context = Some(context);
+    pub fn setcontext(&mut self, context: OptimizationContext<A>) {
+        self.currentcontext = Some(context);
     }
 
     /// Select optimal configuration for the current domain and context
     pub fn select_optimal_config(&mut self) -> Result<DomainOptimizationConfig<A>> {
         let context = self
-            .current_context
+            .currentcontext
             .as_ref()
             .ok_or_else(|| OptimError::InvalidConfig("No optimization context set".to_string()))?;
 
@@ -334,7 +334,8 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Optimize for computer vision tasks
     fn optimize_computer_vision(
-        &self_context: &OptimizationContext<A>,
+        &self,
+        context: &OptimizationContext<A>,
         resolution_adaptive: bool,
         batch_norm_tuning: bool,
         augmentation_aware: bool,
@@ -343,12 +344,12 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
         // Resolution-_adaptive optimization
         if resolution_adaptive {
-            let resolution_factor = self.estimate_resolution_factor(&_context.problem_chars);
+            let resolution_factor = self.estimate_resolution_factor(&context.problem_chars);
             config.learning_rate =
                 self.config.base_learning_rate * A::from(resolution_factor).unwrap();
 
             // Larger images need smaller learning rates
-            if _context.problem_chars.input_dim > 512 * 512 {
+            if context.problem_chars.input_dim > 512 * 512 {
                 config.learning_rate = config.learning_rate * A::from(0.5).unwrap();
             }
         }
@@ -377,12 +378,12 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         }
 
         // CV-specific optimizations
-        config.batch_size = self.select_cv_batch_size(&_context.resource_constraints);
+        config.batch_size = self.select_cv_batch_size(&context.resource_constraints);
         config.gradient_clip_norm = Some(A::from(1.0).unwrap());
 
         // Use cosine annealing for CV tasks
         config.lr_schedule = LearningRateScheduleType::CosineAnnealing {
-            t_max: _context.training_config.max_epochs,
+            t_max: context.training_config.max_epochs,
         };
 
         Ok(config)
@@ -390,7 +391,8 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Optimize for natural language processing tasks
     fn optimize_natural_language(
-        &self_context: &OptimizationContext<A>,
+        &self,
+        context: &OptimizationContext<A>,
         sequence_adaptive: bool,
         attention_optimized: bool,
         vocab_aware: bool,
@@ -399,7 +401,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
         // Sequence-_adaptive optimization
         if sequence_adaptive {
-            let seq_length = _context.problem_chars.input_dim; // Assuming input_dim represents sequence length
+            let seq_length = context.problem_chars.input_dim; // Assuming input_dim represents sequence length
 
             // Longer sequences need more careful optimization
             if seq_length > 512 {
@@ -429,7 +431,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
         // Vocabulary-_aware optimization
         if vocab_aware {
-            let vocab_size = _context.problem_chars.output_dim; // Assuming output_dim represents vocab size
+            let vocab_size = context.problem_chars.output_dim; // Assuming output_dim represents vocab size
 
             // Large vocabularies need special handling
             if vocab_size > 30000 {
@@ -443,7 +445,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         }
 
         // NLP-specific optimizations
-        config.batch_size = self.select_nlp_batch_size(&_context.resource_constraints);
+        config.batch_size = self.select_nlp_batch_size(&context.resource_constraints);
         config.lr_schedule = LearningRateScheduleType::OneCycle {
             max_lr: config.learning_rate.to_f64().unwrap(),
         };
@@ -458,7 +460,8 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Optimize for recommendation systems
     fn optimize_recommendation_systems(
-        &self_context: &OptimizationContext<A>,
+        &self,
+        context: &OptimizationContext<A>,
         collaborative_filtering: bool,
         matrix_factorization: bool,
         cold_start_aware: bool,
@@ -496,7 +499,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
         }
 
         // RecSys-specific optimizations
-        config.batch_size = self.select_recsys_batch_size(&_context.resource_constraints);
+        config.batch_size = self.select_recsys_batch_size(&context.resource_constraints);
         config.gradient_clip_norm = Some(A::from(5.0).unwrap()); // Higher clip for sparse gradients
 
         Ok(config)
@@ -504,7 +507,8 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Optimize for time series tasks
     fn optimize_time_series(
-        &self_context: &OptimizationContext<A>,
+        &self,
+        context: &OptimizationContext<A>,
         temporal_aware: bool,
         seasonality_adaptive: bool,
         multi_step: bool,
@@ -517,7 +521,7 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
             config.learning_rate = A::from(0.001).unwrap(); // Conservative for temporal stability
             config.specialized_params.insert(
                 "sequence_length".to_string(),
-                A::from(_context.problem_chars.input_dim as f64).unwrap(),
+                A::from(context.problem_chars.input_dim as f64).unwrap(),
             );
         }
 
@@ -554,7 +558,8 @@ impl<A: Float + ScalarOperand + Debug + std::iter::Sum> DomainSpecificSelector<A
 
     /// Optimize for reinforcement learning tasks
     fn optimize_reinforcement_learning(
-        &self_context: &OptimizationContext<A>,
+        &self,
+        context: &OptimizationContext<A>,
         policy_gradient: bool,
         value_function: bool,
         exploration_aware: bool,
@@ -879,7 +884,7 @@ pub enum RecommendationType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::adaptive__selection::ProblemType;
+    use crate::adaptive_selection::ProblemType;
 
     #[test]
     fn test_domain_specific_selector_creation() {
@@ -935,7 +940,7 @@ mod tests {
             domain_metadata: HashMap::new(),
         };
 
-        selector.set_context(context);
+        selector.setcontext(context);
         let config = selector.select_optimal_config().unwrap();
 
         assert_eq!(config.optimizer_type, OptimizerType::AdamW);
@@ -985,7 +990,7 @@ mod tests {
             domain_metadata: HashMap::new(),
         };
 
-        selector.set_context(context);
+        selector.setcontext(context);
         let config = selector.select_optimal_config().unwrap();
 
         assert_eq!(config.optimizer_type, OptimizerType::AdamW);
@@ -1038,7 +1043,7 @@ mod tests {
             domain_metadata: HashMap::new(),
         };
 
-        selector.set_context(context);
+        selector.setcontext(context);
         let config = selector.select_optimal_config().unwrap();
 
         assert_eq!(config.optimizer_type, OptimizerType::RMSprop);
@@ -1144,7 +1149,7 @@ mod tests {
             domain_metadata: HashMap::new(),
         };
 
-        selector.set_context(context);
+        selector.setcontext(context);
         let config = selector.select_optimal_config().unwrap();
 
         assert_eq!(config.optimizer_type, OptimizerType::LBFGS);

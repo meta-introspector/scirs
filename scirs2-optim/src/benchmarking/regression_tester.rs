@@ -562,7 +562,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
             .unwrap_or_else(|_| PerformanceDatabase::new());
 
         let mut tester = Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             performance_db,
             baselines: HashMap::new(),
             detectors: Vec::new(),
@@ -1505,7 +1505,8 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract memory usage information from benchmark result
-    fn extract_memory_usage(&self_result: &BenchmarkResult<A>) -> Option<usize> {
+    fn extract_memory_usage(&self,
+        result: &BenchmarkResult<A>) -> Option<usize> {
         // Use system memory profiling if available
         #[cfg(target_os = "linux")]
         {
@@ -1519,21 +1520,24 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract average memory usage
-    fn extract_avg_memory_usage(&self_result: &BenchmarkResult<A>) -> Option<usize> {
+    fn extract_avg_memory_usage(&self,
+        result: &BenchmarkResult<A>) -> Option<usize> {
         // For now, assume 80% of peak memory as average
-        self.extract_memory_usage(_result)
+        self.extract_memory_usage(result)
             .map(|peak| (peak as f64 * 0.8) as usize)
     }
 
     /// Extract allocation count (simplified)
-    fn extract_allocation_count(&self_result: &BenchmarkResult<A>) -> Option<usize> {
+    fn extract_allocation_count(&self,
+        result: &BenchmarkResult<A>) -> Option<usize> {
         // This would require memory profiling integration
         // For now, provide a reasonable estimate
         Some(1000) // Default estimate
     }
 
     /// Calculate memory efficiency score
-    fn calculate_memory_efficiency(&self_result: &BenchmarkResult<A>) -> f64 {
+    fn calculate_memory_efficiency(&self,
+        result: &BenchmarkResult<A>) -> f64 {
         // Simple efficiency calculation based on memory usage patterns
         0.85 // Default efficiency score
     }
@@ -1622,7 +1626,8 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract CPU utilization
-    fn extract_cpu_utilization(&self_result: &BenchmarkResult<A>) -> Option<f64> {
+    fn extract_cpu_utilization(&self,
+        result: &BenchmarkResult<A>) -> Option<f64> {
         // This would require system monitoring integration
         // For now, provide a reasonable estimate for single-threaded optimization
         Some(0.75) // 75% utilization estimate
@@ -1860,7 +1865,8 @@ impl SlidingWindowDetector {
 
 impl<A: Float + Debug> RegressionDetector<A> for SlidingWindowDetector {
     fn detect_regression(
-        &self_baseline: &PerformanceBaseline<A>,
+        &self,
+        baseline: &PerformanceBaseline<A>,
         current_metrics: &PerformanceMetrics<A>,
         history: &VecDeque<PerformanceRecord<A>>,
     ) -> Result<RegressionResult<A>> {
@@ -1906,7 +1912,7 @@ impl<A: Float + Debug> RegressionDetector<A> for SlidingWindowDetector {
             .iter()
             .rev()
             .take(self.window_size)
-            .map(|r| r._metrics.timing.mean_time_ns as f64)
+            .map(|r| r.metrics.timing.mean_time_ns as f64)
             .collect();
 
         let recent_avg = recent_times.iter().sum::<f64>() / recent_times.len() as f64;
@@ -1996,7 +2002,9 @@ impl ChangePointDetector {
 
 impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
     fn detect_regression(
-        &self_baseline: &PerformanceBaseline<A>, _current_metrics: &PerformanceMetrics<A>,
+        &self,
+        _baseline: &PerformanceBaseline<A>, 
+        _current_metrics: &PerformanceMetrics<A>,
         history: &VecDeque<PerformanceRecord<A>>,
     ) -> Result<RegressionResult<A>> {
         // Simplified change point detection using variance change
@@ -2043,31 +2051,31 @@ impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
         let first_half: Vec<f64> = history
             .iter()
             .take(mid_point)
-            .map(|r| r._metrics.timing.mean_time_ns as f64)
+            .map(|r| r.metrics.timing.mean_time_ns as f64)
             .collect();
 
         let second_half: Vec<f64> = history
             .iter()
             .skip(mid_point)
-            .map(|r| r._metrics.timing.mean_time_ns as f64)
+            .map(|r| r.metrics.timing.mean_time_ns as f64)
             .collect();
 
         let first_mean = first_half.iter().sum::<f64>() / first_half.len() as f64;
         let second_mean = second_half.iter().sum::<f64>() / second_half.len() as f64;
 
-        let change_percent = ((second_mean - first_mean) / first_mean) * 100.0;
-        let change_detected = change_percent.abs() > 5.0; // 5% change threshold
+        let change_percent = A::from((second_mean - first_mean) / first_mean).unwrap() * A::from(100.0).unwrap();
+        let change_detected = change_percent.abs() > A::from(5.0).unwrap(); // 5% change threshold
 
         Ok(RegressionResult {
             test_id: "change_point".to_string(),
-            regression_detected: change_detected && change_percent > 0.0,
+            regression_detected: change_detected && change_percent > A::zero(),
             severity: if change_detected {
-                (change_percent.abs() / 100.0).min(1.0)
+                (change_percent.abs() / A::from(100.0).unwrap()).min(A::one()).to_f64().unwrap_or(0.0)
             } else {
                 0.0
             },
             confidence: if change_detected { 0.7 } else { 0.3 },
-            performance_change_percent: change_percent,
+            performance_change_percent: change_percent.to_f64().unwrap_or(0.0),
             memory_change_percent: 0.0,
             affected_metrics: if change_detected {
                 vec!["timing".to_string()]
@@ -2077,12 +2085,12 @@ impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
             statistical_tests: vec![],
             analysis: RegressionAnalysis {
                 trend_analysis: TrendAnalysis {
-                    direction: if change_percent > 0.0 {
+                    direction: if change_percent > A::zero() {
                         TrendDirection::Degrading
                     } else {
                         TrendDirection::Improving
                     },
-                    magnitude: change_percent.abs(),
+                    magnitude: change_percent.abs().to_f64().unwrap_or(0.0),
                     significance: if change_detected { 0.7 } else { 0.3 },
                     start_point: Some(mid_point),
                 },
@@ -2093,7 +2101,7 @@ impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
                         vec![]
                     },
                     magnitudes: if change_detected {
-                        vec![change_percent]
+                        vec![change_percent.to_f64().unwrap_or(0.0)]
                     } else {
                         vec![]
                     },
@@ -2357,7 +2365,8 @@ impl AlertSystem {
             severity: match regression.severity {
                 s if s >= 0.8 => AlertSeverity::Critical,
                 s if s >= 0.6 => AlertSeverity::High,
-                s if s >= 0.3 => AlertSeverity::Medium_ =>, AlertSeverity::Low,
+                s if s >= 0.3 => AlertSeverity::Medium,
+                _ => AlertSeverity::Low,
             },
             message: format!(
                 "Performance regression detected in {}: {:.2}% degradation",

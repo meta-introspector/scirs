@@ -553,7 +553,7 @@ fn generate_tensor_core_gemm_kernel(
 
 /// Generate CUDA tensor core kernel (placeholder implementation)
 fn generate_cuda_tensor_core_kernel(
-    _data_type: TensorDataType,
+    data_type: TensorDataType,
     _tile_size: usize,
     _m: usize,
     _n: usize,
@@ -566,7 +566,7 @@ fn generate_cuda_tensor_core_kernel(
 
 /// Generate ROCm matrix core kernel (placeholder implementation)
 fn generate_rocm_matrix_core_kernel(
-    _data_type: TensorDataType,
+    data_type: TensorDataType,
     _tile_size: usize,
     _m: usize,
     _n: usize,
@@ -579,7 +579,7 @@ fn generate_rocm_matrix_core_kernel(
 
 /// Generate Metal MPS kernel (placeholder implementation)
 fn generate_metal_mps_kernel(
-    _data_type: TensorDataType,
+    data_type: TensorDataType,
     _tile_size: usize,
     _m: usize,
     _n: usize,

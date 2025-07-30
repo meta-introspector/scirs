@@ -5,7 +5,7 @@
 //! triangular part of the matrix.
 
 use crate::coo::CooMatrix;
-use crate::coo__array::CooArray;
+use crate::coo_array::CooArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use num_traits::Float;

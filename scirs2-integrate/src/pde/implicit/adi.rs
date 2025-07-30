@@ -9,7 +9,7 @@ use ndarray::{s, Array1, Array2, Array3, ArrayView1};
 use std::time::Instant;
 
 use super::ImplicitOptions;
-use crate::pde::finite__difference::FiniteDifferenceScheme;
+use crate::pde::finite_difference::FiniteDifferenceScheme;
 use crate::pde::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, PDEError, PDEResult,
     PDESolution, PDESolverInfo,
@@ -170,7 +170,7 @@ impl ADI2D {
     }
 
     /// Set the finite difference scheme for spatial discretization
-    pub fn with_fd_scheme(mut scheme: FiniteDifferenceScheme) -> Self {
+    pub fn with_fd_scheme(mut self, scheme: FiniteDifferenceScheme) -> Self {
         self.fd_scheme = scheme;
         self
     }

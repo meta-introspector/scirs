@@ -33,7 +33,7 @@ use std::fmt::Debug;
 ///
 /// ```no_run
 /// use ndarray::Array1;
-/// use scirs2__optim::optimizers::{LARS, Optimizer};
+/// use scirs2_optim::optimizers::{LARS, Optimizer};
 ///
 /// let mut optimizer = LARS::new(0.01)
 ///     .with_momentum(0.9)
@@ -59,9 +59,9 @@ pub struct LARS<A: Float> {
 
 impl<A: Float + ScalarOperand + Debug> LARS<A> {
     /// Create a new LARS optimizer with the given learning rate
-    pub fn new(_learning_rate: A) -> Self {
+    pub fn new(learning_rate: A) -> Self {
         Self {
-            _learning_rate,
+            learning_rate,
             momentum: A::from(0.9).unwrap(),
             weight_decay: A::from(0.0001).unwrap(),
             trust_coefficient: A::from(0.001).unwrap(),
@@ -147,7 +147,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> Optimizer<A, 
         let should_apply_lars = !self.exclude_bias_and_norm || weight_norm > A::zero();
 
         // Calculate local learning rate using trust ratio
-        let local_lr = if should_apply_lars && weight_norm > A::zero() && grad_norm >, A::zero() {
+        let local_lr = if should_apply_lars && weight_norm > A::zero() && grad_norm > A::zero() {
             self.trust_coefficient * weight_norm
                 / (grad_norm + self.weight_decay * weight_norm + self.eps)
         } else {

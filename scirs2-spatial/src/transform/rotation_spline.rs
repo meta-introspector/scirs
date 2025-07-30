@@ -31,7 +31,7 @@ fn rotation_from_euler(x: f64, y: f64, z: f64, convention: &str) -> SpatialResul
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::transform::{Rotation, RotationSpline};
+/// use scirs2_spatial::transform::{Rotation, RotationSpline};
 /// use ndarray::array;
 /// use std::f64::consts::PI;
 ///
@@ -81,7 +81,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -148,7 +148,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -332,7 +332,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -370,7 +370,8 @@ impl RotationSpline {
         // Interpolate within the segment based on interpolation type
         match self.interpolation_type.as_str() {
             "slerp" => self.interpolate_slerp(t, idx),
-            "cubic" => self.interpolate_cubic(t, idx, _ => self.interpolate_slerp(t, idx), // Default to slerp
+            "cubic" => self.interpolate_cubic(t, idx),
+            _ => self.interpolate_slerp(t, idx), // Default to slerp
         }
     }
 
@@ -444,7 +445,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     ///
     /// let rotations = vec![
@@ -470,7 +471,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     ///
     /// let rotations = vec![
@@ -500,7 +501,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -552,7 +553,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -578,7 +579,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     ///
     /// let rotations = vec![
@@ -607,7 +608,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///
@@ -642,7 +643,8 @@ impl RotationSpline {
         // Calculate angular velocity based on interpolation type
         match self.interpolation_type.as_str() {
             "slerp" => self.angular_velocity_slerp(t, idx),
-            "cubic" => Ok(self.angular_velocity_cubic(t, idx), _ => self.angular_velocity_slerp(t, idx), // Default to slerp
+            "cubic" => self.angular_velocity_cubic(t, idx),
+            _ => self.angular_velocity_slerp(t, idx), // Default to slerp
         }
     }
 
@@ -743,7 +745,7 @@ impl RotationSpline {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__spatial::transform::{Rotation, RotationSpline};
+    /// use scirs2_spatial::transform::{Rotation, RotationSpline};
     /// use ndarray::array;
     /// use std::f64::consts::PI;
     ///

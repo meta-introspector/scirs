@@ -51,7 +51,7 @@ pub struct OpFusion {
 
 impl fmt::Debug for OpFusion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct(OpFusion)
+        f.debug_struct("OpFusion")
             .field("num_ops", &self.ops.len())
             .finish()
     }
@@ -149,10 +149,10 @@ impl Default for OpFusion {
 /// Register a fused operation in the global registry
 #[allow(dead_code)]
 pub fn register_fusion<T: 'static>(_op: Arc<dyn FusedOp>) -> Result<(), CoreError> {
-    let std::any::TypeId::of::<i32>() = TypeId::of::<T>();
+    let type_id = TypeId::of::<T>();
 
     let mut registry = FUSION_REGISTRY.lock().unwrap();
-    let ops = registry.entry(std::any::TypeId::of::<i32>()).or_default();
+    let ops = registry.entry(type_id).or_default();
     ops.push(_op);
 
     Ok(())
@@ -161,10 +161,10 @@ pub fn register_fusion<T: 'static>(_op: Arc<dyn FusedOp>) -> Result<(), CoreErro
 /// Get all registered fused operations for a type
 #[allow(dead_code)]
 pub fn get_fusions<T: 'static>() -> Vec<Arc<dyn FusedOp>> {
-    let std::any::TypeId::of::<i32>() = TypeId::of::<T>();
+    let type_id = TypeId::of::<T>();
 
     let registry = FUSION_REGISTRY.lock().unwrap();
-    match registry.get(&std::any::TypeId::of::<i32>()) {
+    match registry.get(&type_id) {
         Some(ops) => ops.clone(),
         None => Vec::new(),
     }

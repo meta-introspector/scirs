@@ -204,7 +204,7 @@ impl From<MemoryReport> for SnapshotReport {
             total_allocation_count: report.total_allocation_count,
             total_allocated_bytes: report.total_allocated_bytes,
             component_stats,
-            duration_ms: duration.as_millis() as u64,
+            duration_ms: report.duration.as_millis() as u64,
         }
     }
 }

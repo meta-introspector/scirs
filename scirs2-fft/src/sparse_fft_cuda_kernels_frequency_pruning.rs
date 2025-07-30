@@ -4,8 +4,8 @@
 //! All actual GPU operations must be migrated to use scirs2-core::gpu module.
 
 use crate::error::{FFTError, FFTResult};
-use crate::gpu_kernel__stub::MIGRATION_MESSAGE;
-use crate::sparse__fft::SparseFFTResult;
+use crate::gpu_kernel_stub::MIGRATION_MESSAGE;
+use crate::sparse_fft::SparseFFTResult;
 use num_traits::NumCast;
 use std::fmt::Debug;
 

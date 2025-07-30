@@ -24,7 +24,7 @@
 
 use crate::error::{FFTError, FFTResult};
 use ndarray::{Array1, Array2, ArrayBase, ArrayD, Data, Dimension};
-use num__complex::Complex;
+use num_complex::Complex;
 use num_traits::{Float, Zero};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
@@ -2375,7 +2375,7 @@ pub fn create_advanced_fft_coordinator_with_config<F: Float + Debug + std::ops::
 
 #[allow(dead_code)]
 fn example_usage() -> FFTResult<()> {
-    use num__complex::Complex64;
+    use num_complex::Complex64;
 
     // Create coordinator
     let coordinator = create_advanced_fft_coordinator::<f64>()?;

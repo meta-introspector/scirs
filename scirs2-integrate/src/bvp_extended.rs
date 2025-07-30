@@ -25,7 +25,8 @@ pub enum BoundaryConditionType<F: IntegrateFloat> {
 impl<F: IntegrateFloat> BoundaryConditionType<F> {
     /// Evaluate the boundary condition residual
     pub fn evaluate_residual(
-        &self_x: F,
+        &self,
+        x: F,
         y: ArrayView1<F>,
         dydt: ArrayView1<F>,
         component: usize,
@@ -46,20 +47,20 @@ impl<F: IntegrateFloat> BoundaryConditionType<F> {
     /// Get derivative of residual with respect to y[component]
     pub fn derivative_y(_component: usize) -> F {
         match self {
-            BoundaryConditionType::Dirichlet { .. } =>, F::one(),
-            BoundaryConditionType::Neumann { .. } =>, F::zero(),
+            BoundaryConditionType::Dirichlet { .. } => F::one(),
+            BoundaryConditionType::Neumann { .. } => F::zero(),
             BoundaryConditionType::Robin { a, .. } => *a,
-            BoundaryConditionType::Periodic =>, F::one(),
+            BoundaryConditionType::Periodic => F::one(),
         }
     }
 
     /// Get derivative of residual with respect to dydt[component]  
     pub fn derivative_dydt(_component: usize) -> F {
         match self {
-            BoundaryConditionType::Dirichlet { .. } =>, F::zero(),
-            BoundaryConditionType::Neumann { .. } =>, F::one(),
+            BoundaryConditionType::Dirichlet { .. } => F::zero(),
+            BoundaryConditionType::Neumann { .. } => F::one(),
             BoundaryConditionType::Robin { b, .. } => *b,
-            BoundaryConditionType::Periodic =>, F::zero(),
+            BoundaryConditionType::Periodic => F::zero(),
         }
     }
 }
@@ -505,7 +506,7 @@ fn apply_initial_boundary_values<F: IntegrateFloat>(
     // Apply Dirichlet _conditions at boundaries if available
     for (_dim, bc) in boundary_conditions.left.iter().enumerate() {
         if let BoundaryConditionType::Dirichlet { value } = bc {
-            y_solution[[0_dim]] = *value;
+            y_solution[[0, _dim]] = *value;
         }
     }
 

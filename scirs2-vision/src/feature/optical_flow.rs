@@ -156,7 +156,7 @@ fn simple_lucas_kanade(
         let mut a12 = 0.0f32;
         let mut a22 = 0.0f32;
 
-        for ((ix_val, iy_val)_) in window_ix.iter().zip(window_iy.iter()).zip(window_i1.iter()) {
+        for ((ix_val, iy_val), _) in window_ix.iter().zip(window_iy.iter()).zip(window_i1.iter()) {
             a11 += ix_val * ix_val;
             a12 += ix_val * iy_val;
             a22 += iy_val * iy_val;
@@ -440,7 +440,8 @@ fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (f32, f32, f32) {
         1 => (x, c, 0.0),
         2 => (0.0, c, x),
         3 => (0.0, x, c),
-        4 => (x, 0.0, c, _ => (c, 0.0, x),
+        4 => (x, 0.0, c),
+        _ => (c, 0.0, x),
     };
 
     (r + m, g + m, b + m)
@@ -450,8 +451,11 @@ fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (f32, f32, f32) {
 #[allow(dead_code)]
 pub fn farneback_flow(
     img1: &DynamicImage,
-    img2: &DynamicImage_pyr_scale: f32, _levels: usize,
-    winsize: usize_iterations: usize,
+    img2: &DynamicImage,
+    _pyr_scale: f32,
+    _levels: usize,
+    winsize: usize,
+    _iterations: usize,
 ) -> Result<Array2<FlowVector>> {
     let gray1 = img1.to_luma8();
     let gray2 = img2.to_luma8();

@@ -6,7 +6,7 @@
 #![allow(dead_code)]
 
 use super::core::*;
-use crate::benchmarking::cross_platform__tester::{PerformanceBaseline, PlatformTarget};
+use crate::benchmarking::cross_platform_tester::{PerformanceBaseline, PlatformTarget};
 use crate::error::{OptimError, Result};
 use ndarray::Array1;
 use num_traits::Float;
@@ -31,7 +31,7 @@ pub struct BaseOptimizerPlugin<A: Float + std::fmt::Debug> {
     event_handlers: Vec<Box<dyn PluginEventHandler>>,
 }
 
-impl<A: Float + std::fmt::Debug> + std::fmt::Debug for BaseOptimizerPlugin<A> {
+impl<A: Float + std::fmt::Debug> std::fmt::Debug for BaseOptimizerPlugin<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("BaseOptimizerPlugin")
             .field("info", &self.info)
@@ -509,7 +509,7 @@ impl PluginTemplate {
     pub fn new(_name: &str) -> Self {
         let structure = Self::create_default_structure(_name);
         Self {
-            _name: _name.to_string(),
+            name: _name.to_string(),
             structure,
         }
     }
@@ -548,7 +548,7 @@ impl PluginTemplate {
 //!
 //! This is an auto-generated plugin template.
 
-use scirs2__optim::plugin::*;
+use scirs2_optim::plugin::*;
 use ndarray::Array1;
 use num_traits::Float;
 
@@ -600,7 +600,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for 
         OptimizerConfig::default()
     }}
     
-    fn set_config(&mut self_config: OptimizerConfig) -> Result<()> {{
+    fn set_config(&mut self, _config: OptimizerConfig) -> Result<()> {{
         Ok(())
     }}
     
@@ -608,7 +608,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for 
         Ok(OptimizerState::default())
     }}
     
-    fn set_state(&mut self_state: OptimizerState) -> Result<()> {{
+    fn set_state(&mut self, _state: OptimizerState) -> Result<()> {{
         Ok(())
     }}
     
@@ -763,7 +763,7 @@ impl<A: Float + Debug + Send + Sync + 'static> BaseOptimizerPlugin<A> {
     /// Create a new base optimizer plugin
     pub fn new(_info: PluginInfo, capabilities: PluginCapabilities) -> Self {
         Self {
-            _info,
+            info: _info,
             capabilities,
             config: OptimizerConfig::default(),
             state: BaseOptimizerState::new(),

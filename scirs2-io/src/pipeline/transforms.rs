@@ -13,7 +13,8 @@ use statrs::statistics::Statistics;
 
 /// Normalization transformer
 pub struct NormalizeTransform<T> {
-    method: NormalizationMethod_phantom: PhantomData<T>,
+    method: NormalizationMethod,
+    _phantom: PhantomData<T>,
 }
 
 #[derive(Debug, Clone)]
@@ -188,7 +189,8 @@ impl<From, To> Default for TypeConvertTransform<From, To> {
 impl<From, To> TypeConvertTransform<From, To> {
     pub fn new() -> Self {
         Self {
-            _from: PhantomData_to: PhantomData,
+            _from: PhantomData,
+            _to: PhantomData,
         }
     }
 }

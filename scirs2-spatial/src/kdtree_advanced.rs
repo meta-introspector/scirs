@@ -17,7 +17,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::kdtree_advanced::{AdvancedKDTree, KDTreeConfig};
+//! use scirs2_spatial::kdtree_advanced::{AdvancedKDTree, KDTreeConfig};
 //! use ndarray::array;
 //!
 //! // Create advanced-optimized KD-Tree
@@ -37,7 +37,7 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use crate::memory__pool::DistancePool;
+use crate::memory_pool::DistancePool;
 use ndarray::{Array2, ArrayView1, ArrayView2};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
@@ -69,7 +69,7 @@ pub struct KDTreeConfig {
 }
 
 impl Default for KDTreeConfig {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }
@@ -91,38 +91,38 @@ impl KDTreeConfig {
     }
 
     /// Configure cache-aware layout
-    pub fn with_cache_aware_layout(mut enabled: bool) -> Self {
+    pub fn with_cache_aware_layout(mut self, enabled: bool) -> Self {
         self.cache_aware_layout = enabled;
         self
     }
 
     /// Configure vectorized search
-    pub fn with_vectorized_search(mut enabled: bool) -> Self {
+    pub fn with_vectorized_search(mut self, enabled: bool) -> Self {
         self.vectorized_search = enabled;
         self
     }
 
     /// Configure NUMA awareness
-    pub fn with_numa_aware(mut enabled: bool) -> Self {
+    pub fn with_numa_aware(mut self, enabled: bool) -> Self {
         self.numa_aware = enabled;
         self
     }
 
     /// Set leaf size
-    pub fn with_leaf_size(mut leaf_size: usize) -> Self {
+    pub fn with_leaf_size(mut self, leaf_size: usize) -> Self {
         self.leaf_size = leaf_size;
         self
     }
 
     /// Configure parallel construction
-    pub fn with_parallel_construction(mut enabled: bool, threshold: usize) -> Self {
+    pub fn with_parallel_construction(&mut self, enabled: bool, threshold: usize) -> &mut Self {
         self.parallel_construction = enabled;
         self.parallel_threshold = threshold;
         self
     }
 
     /// Configure memory pool usage
-    pub fn with_memory_pools(mut enabled: bool) -> Self {
+    pub fn with_memory_pools(mut self, enabled: bool) -> Self {
         self.use_memory_pools = enabled;
         self
     }
@@ -184,36 +184,36 @@ pub struct BoundingBox {
 }
 
 impl BoundingBox {
-    fn new(_dimensions: usize) -> Self {
-        assert!(_dimensions <= 8, "BoundingBox supports up to 8 _dimensions");
+    fn new(dimensions: usize) -> Self {
+        assert!(dimensions <= 8, "BoundingBox supports up to 8 dimensions");
         Self {
             min_coords: [f64::INFINITY; 8],
             max_coords: [f64::NEG_INFINITY; 8],
-            _dimensions,
+            dimensions,
         }
     }
 
-    fn update_with_point(_point: &ArrayView1<f64>) {
-        for (i, &coord) in _point.iter().enumerate().take(self.dimensions) {
+    fn update_with_point(&mut self, point: &ArrayView1<f64>) {
+        for (i, &coord) in point.iter().enumerate().take(self.dimensions) {
             self.min_coords[i] = self.min_coords[i].min(coord);
             self.max_coords[i] = self.max_coords[i].max(coord);
         }
     }
 
     #[allow(dead_code)]
-    fn contains_point(_point: &ArrayView1<f64>) -> bool {
+    fn contains_point(&self, point: &ArrayView1<f64>) -> bool {
         for i in 0..self.dimensions {
-            if _point[i] < self.min_coords[i] || _point[i] > self.max_coords[i] {
+            if point[i] < self.min_coords[i] || point[i] > self.max_coords[i] {
                 return false;
             }
         }
         true
     }
 
-    fn distance_to_point(_point: &ArrayView1<f64>) -> f64 {
+    fn distance_to_point(&self, point: &ArrayView1<f64>) -> f64 {
         let mut distance_sq = 0.0;
         for i in 0..self.dimensions {
-            let coord = _point[i];
+            let coord = point[i];
             if coord < self.min_coords[i] {
                 let diff = self.min_coords[i] - coord;
                 distance_sq += diff * diff;
@@ -245,13 +245,13 @@ pub struct TreeStatistics {
 
 impl AdvancedKDTree {
     /// Create a new advanced-optimized KD-Tree
-    pub fn new(_points: &ArrayView2<'_, f64>, config: KDTreeConfig) -> SpatialResult<Self> {
+    pub fn new(points: &ArrayView2<'_, f64>, config: KDTreeConfig) -> SpatialResult<Self> {
         let start_time = std::time::Instant::now();
 
-        if _points.is_empty() {
+        if points.is_empty() {
             return Ok(Self {
                 nodes: Vec::new(),
-                _points: Array2::zeros((0, 0)),
+                points: Array2::zeros((0, 0)),
                 config,
                 root_index: None,
                 stats: TreeStatistics::default(),
@@ -260,12 +260,12 @@ impl AdvancedKDTree {
         }
 
         // Validate input
-        let n_points = _points.nrows();
-        let n_dims = _points.ncols();
+        let n_points = points.nrows();
+        let n_dims = points.ncols();
 
         if n_points > 10_000_000 {
             return Err(SpatialError::ValueError(format!(
-                "Dataset too large: {n_points} _points. Advanced KD-Tree supports up to 10M _points"
+                "Dataset too large: {n_points} points. Advanced KD-Tree supports up to 10M points"
             )));
         }
 
@@ -276,7 +276,7 @@ impl AdvancedKDTree {
         }
 
         // Validate point coordinates
-        for (i, row) in _points.outer_iter().enumerate() {
+        for (i, row) in points.outer_iter().enumerate() {
             for (j, &coord) in row.iter().enumerate() {
                 if !coord.is_finite() {
                     return Err(SpatialError::ValueError(format!(
@@ -286,8 +286,8 @@ impl AdvancedKDTree {
             }
         }
 
-        // Copy _points for cache-friendly access
-        let points_copy = _points.to_owned();
+        // Copy points for cache-friendly access
+        let points_copy = points.to_owned();
 
         // Get memory pool
         let memory_pool = if config.use_memory_pools {
@@ -322,7 +322,8 @@ impl AdvancedKDTree {
         };
 
         Ok(Self {
-            nodes_points: points_copy,
+            nodes,
+            points: points_copy,
             config,
             root_index,
             stats,
@@ -477,7 +478,7 @@ impl AdvancedKDTree {
         results.reverse(); // Convert from max-heap to min-heap order
         results.truncate(k);
 
-        let indices: Vec<usize> = results.iter().map(|(idx_)| *idx).collect();
+        let indices: Vec<usize> = results.iter().map(|(idx, _)| *idx).collect();
         let distances: Vec<f64> = results.iter().map(|(_, dist)| *dist).collect();
 
         Ok((indices, distances))
@@ -504,13 +505,15 @@ impl AdvancedKDTree {
         // Update heap
         if heap.len() < k {
             heap.push(KNNItem {
-                distance_index: node.point_index as usize,
+                distance,
+                index: node.point_index as usize,
             });
         } else if let Some(top) = heap.peek() {
             if distance < top.distance {
                 heap.pop();
                 heap.push(KNNItem {
-                    distance_index: node.point_index as usize,
+                    distance,
+                    index: node.point_index as usize,
                 });
             }
         }
@@ -556,7 +559,7 @@ impl AdvancedKDTree {
     }
 
     /// SIMD-accelerated distance calculation
-    fn distance_simd(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+    fn distance_simd(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
         if PlatformCapabilities::detect().simd_available {
             // Use SIMD operations from scirs2-core
             let diff = f64::simd_sub(a, b);
@@ -568,7 +571,7 @@ impl AdvancedKDTree {
     }
 
     /// Scalar distance calculation fallback
-    fn distance_scalar(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+    fn distance_scalar(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
         a.iter()
             .zip(b.iter())
             .map(|(x, y)| (x - y).powi(2))

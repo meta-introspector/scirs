@@ -574,7 +574,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         Ok(BenchmarkResult {
             tensor_size: size,
             analysis_duration: duration,
-            memory_usage: size * std::mem::size, _of::<F>(),
+            memory_usage: size * std::mem::size_of::<F>(),
             operations_per_second: (size as f64 / duration.as_secs_f64()) as u64,
         })
     }

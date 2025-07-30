@@ -7,7 +7,7 @@
 use crate::error::{FFTError, FFTResult};
 use crate::fft::fft;
 use ndarray::{s, ArrayBase, ArrayD, Data, Dimension, IxDyn};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 use std::sync::Arc;

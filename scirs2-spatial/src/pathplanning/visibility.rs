@@ -9,7 +9,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__spatial::pathplanning::VisibilityGraphPlanner;
+//! use scirs2_spatial::pathplanning::VisibilityGraphPlanner;
 //!
 //! // Create some polygon obstacles
 //! let obstacles = vec![
@@ -339,7 +339,7 @@ impl VisibilityGraph {
 }
 
 impl Default for VisibilityGraph {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }

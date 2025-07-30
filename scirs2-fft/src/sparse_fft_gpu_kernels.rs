@@ -6,8 +6,8 @@
 //! GPU backends (CUDA, HIP, SYCL).
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse__fft::{SparseFFTAlgorithm, WindowFunction};
-use num__complex::Complex64;
+use crate::sparse_fft::{SparseFFTAlgorithm, WindowFunction};
+use num_complex::Complex64;
 use num_traits::NumCast;
 use std::fmt::Debug;
 
@@ -105,14 +105,14 @@ pub struct FFTKernel {
 
 impl FFTKernel {
     /// Create a new FFT kernel
-    pub fn new(_input_size: usize, input_address: usize, output_address: usize) -> Self {
+    pub fn new(input_size: usize, input_address: usize, output_address: usize) -> Self {
         let mut config = KernelConfig::default();
         // Calculate grid _size based on input _size and block _size
-        config.grid_size = _input_size.div_ceil(config.block_size);
+        config.grid_size = input_size.div_ceil(config.block_size);
 
         Self {
             config,
-            _input_size,
+            input_size,
             input_address,
             output_address,
         }
@@ -487,9 +487,9 @@ pub struct KernelLauncher {
 
 impl KernelLauncher {
     /// Create a new kernel launcher
-    pub fn new(_factory: KernelFactory) -> Self {
+    pub fn new(factory: KernelFactory) -> Self {
         Self {
-            _factory,
+            factory,
             active_kernels: Vec::new(),
             total_memory_allocated: 0,
         }
@@ -497,7 +497,7 @@ impl KernelLauncher {
 
     /// Allocate memory for FFT operation
     pub fn allocate_fft_memory(&mut self, input_size: usize) -> FFTResult<(usize, usize)> {
-        let element_size = std::mem::_size_of::<Complex64>();
+        let element_size = std::mem::size_of::<Complex64>();
         let input_bytes = input_size * element_size;
         let output_bytes = input_size * element_size;
 
@@ -520,8 +520,8 @@ impl KernelLauncher {
         input_size: usize,
         sparsity: usize,
     ) -> FFTResult<(usize, usize, usize)> {
-        let element_size = std::mem::_size_of::<Complex64>();
-        let index_size = std::mem::_size_of::<usize>();
+        let element_size = std::mem::size_of::<Complex64>();
+        let index_size = std::mem::size_of::<usize>();
 
         let input_bytes = input_size * element_size;
         let output_values_bytes = sparsity * element_size;

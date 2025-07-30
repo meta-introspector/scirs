@@ -450,7 +450,8 @@ impl<
             self.structure.index = match self.structure.diff_index {
                 0 | 1 => DAEIndex::Index1,
                 2 => DAEIndex::Index2,
-                3 => DAEIndex::Index3_ =>, DAEIndex::HigherIndex,
+                3 => DAEIndex::Index3,
+                _ => DAEIndex::HigherIndex,
             };
         }
 
@@ -599,7 +600,7 @@ impl<
     }
 
     /// Update variable and equation dependencies after structural changes
-    fn update_dependencies_after_structure_change(&self) -> IntegrateResult<()> {
+    fn update_dependencies_after_structure_change(&mut self) -> IntegrateResult<()> {
         if let Some(ref incidence) = self.structure.incidence_matrix {
             let n_eqs = incidence.nrows();
             let n_vars = incidence.ncols();
@@ -1334,7 +1335,7 @@ where
         + std::iter::Sum
         + crate::common::IntegrateFloat,
 {
-    use crate::dae::utils::linear__solvers::solve_linear_system;
+    use crate::dae::utils::linear_solvers::solve_linear_system;
 
     // For underconstrained systems, we use the pseudoinverse (minimum norm solution)
     // J·J^T·λ = b

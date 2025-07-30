@@ -5,11 +5,11 @@
 
 use clap::{Arg, ArgMatches, Command};
 use ndarray::Array1;
-use scirs2__optim::benchmarking::regression_tester::{
+use scirs2_optim::benchmarking::regression_tester::{
     CiReportFormat, RegressionConfig, RegressionTester,
 };
-use scirs2__optim::benchmarking::{BenchmarkResult, OptimizerBenchmark};
-use scirs2__optim::error::{OptimError, Result};
+use scirs2_optim::benchmarking::{BenchmarkResult, OptimizerBenchmark};
+use scirs2_optim::error::{OptimError, Result};
 use std::fs;
 use std::path::PathBuf;
 

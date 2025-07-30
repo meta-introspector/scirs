@@ -112,7 +112,7 @@ enum ForwardOpData<T: Float> {
 impl<T: Float + Default + Clone> DualNumber<T> {
     /// Create a new dual number
     pub fn new(_value: T, tangent: T) -> Self {
-        Self { _value, tangent }
+        Self { value: _value, tangent }
     }
 
     /// Create a constant (zero tangent)
@@ -129,7 +129,7 @@ impl<T: Float + Default + Clone> DualNumber<T> {
 impl<T: Float + Default + Clone> VectorDual<T> {
     /// Create a new vector dual number
     pub fn new(_value: Array1<T>, tangent: Array1<T>) -> Self {
-        Self { _value, tangent }
+        Self { value: _value, tangent }
     }
 
     /// Create a constant vector
@@ -370,7 +370,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T>
                         .variables
                         .iter()
                         .find(|(_, &id)| id == op.output)
-                        .map(|(name_)| name.clone())
+                        .map(|(name_, _)| name_.clone())
                         .ok_or_else(|| {
                             OptimError::InvalidConfig("Variable not found".to_string())
                         })?;
@@ -675,7 +675,7 @@ pub struct ForwardModeStats {
 }
 
 // Implement arithmetic operations for dual numbers
-impl<T: Float + Default + Clone> + std::ops::Add for DualNumber<T> {
+impl<T: Float + Default + Clone> std::ops::Add for DualNumber<T> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
@@ -686,7 +686,7 @@ impl<T: Float + Default + Clone> + std::ops::Add for DualNumber<T> {
     }
 }
 
-impl<T: Float + Default + Clone> + std::ops::Sub for DualNumber<T> {
+impl<T: Float + Default + Clone> std::ops::Sub for DualNumber<T> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
@@ -697,7 +697,7 @@ impl<T: Float + Default + Clone> + std::ops::Sub for DualNumber<T> {
     }
 }
 
-impl<T: Float + Default + Clone> + std::ops::Mul for DualNumber<T> {
+impl<T: Float + Default + Clone> std::ops::Mul for DualNumber<T> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self {
@@ -708,7 +708,7 @@ impl<T: Float + Default + Clone> + std::ops::Mul for DualNumber<T> {
     }
 }
 
-impl<T: Float + Default + Clone> + std::ops::Div for DualNumber<T> {
+impl<T: Float + Default + Clone> std::ops::Div for DualNumber<T> {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self {

@@ -272,7 +272,8 @@ impl SpectralElementMesh2D {
                         .enumerate()
                         .filter(|(_, (idx_))| self.nodes[*idx].1 < 1e-10)
                         .map(|(i_)| i)
-                        .collect::<Vec<_>>(, _ => {
+                        .collect::<Vec<_>>(),
+                    _ => {
                         return Err(PDEError::DomainError(format!(
                             "Invalid dimension: {}",
                             bc.dimension
@@ -293,7 +294,8 @@ impl SpectralElementMesh2D {
                         .enumerate()
                         .filter(|(_, (idx_))| (self.nodes[*idx].1 - 1.0).abs() < 1e-10)
                         .map(|(i_)| i)
-                        .collect::<Vec<_>>(, _ => {
+                        .collect::<Vec<_>>(),
+                    _ => {
                         return Err(PDEError::DomainError(format!(
                             "Invalid dimension: {}",
                             bc.dimension
@@ -315,7 +317,8 @@ impl SpectralElementMesh2D {
                         let edge_matches = match bc.location {
                             BoundaryLocation::Lower => match bc.dimension {
                                 0 => element.vertices[0].0 < 1e-10 && element.vertices[3].0 < 1e-10,
-                                1 => element.vertices[0].1 < 1e-10 && element.vertices[1].1 < 1e-10_ => false,
+                                1 => element.vertices[0].1 < 1e-10 && element.vertices[1].1 < 1e-10,
+                                _ => false,
                             },
                             BoundaryLocation::Upper => match bc.dimension {
                                 0 => {
@@ -368,7 +371,7 @@ pub struct SpectralElementOptions {
 }
 
 impl Default for SpectralElementOptions {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         SpectralElementOptions {
             order: 4,
             nx: 4,

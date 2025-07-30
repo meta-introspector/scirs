@@ -217,7 +217,7 @@ impl ConfigManager {
                         "float32" => PrecisionLevel::Float32,
                         "float64" => PrecisionLevel::Float64,
                         "mixed" => PrecisionLevel::Mixed,
-                        "adaptive" => PrecisionLevel::Adaptive_ => {
+                        _ => {
                             return Err(IntegrationError::ConfigMismatch(format!(
                                 "Invalid precision level: {value}"
                             )))
@@ -229,7 +229,7 @@ impl ConfigManager {
                         "shared" => MemoryStrategy::Shared,
                         "copy" => MemoryStrategy::Copy,
                         "memory_mapped" => MemoryStrategy::MemoryMapped,
-                        "adaptive" => MemoryStrategy::Adaptive_ => {
+                        _ => {
                             return Err(IntegrationError::ConfigMismatch(format!(
                                 "Invalid memory strategy: {value}"
                             )))
@@ -265,7 +265,7 @@ impl ConfigManager {
                 "float32" => PrecisionLevel::Float32,
                 "float64" => PrecisionLevel::Float64,
                 "mixed" => PrecisionLevel::Mixed,
-                "adaptive" => PrecisionLevel::Adaptive_ => {
+                _ => {
                     return Err(IntegrationError::ConfigMismatch(format!(
                         "Invalid precision level: {precision}"
                     )))
@@ -278,7 +278,7 @@ impl ConfigManager {
                 "shared" => MemoryStrategy::Shared,
                 "copy" => MemoryStrategy::Copy,
                 "memory_mapped" => MemoryStrategy::MemoryMapped,
-                "adaptive" => MemoryStrategy::Adaptive_ => {
+                _ => {
                     return Err(IntegrationError::ConfigMismatch(format!(
                         "Invalid memory strategy: {strategy}"
                     )))

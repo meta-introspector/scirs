@@ -315,7 +315,8 @@ impl Dataset {
     pub fn as_float_vec(&self) -> Option<Vec<f64>> {
         match &self.data {
             DataArray::Float(data) => Some(data.clone()),
-            DataArray::Integer(data) => Some(data.iter().map(|&x| x as f64).collect(), _ => None,
+            DataArray::Integer(data) => Some(data.iter().map(|&x| x as f64).collect()),
+            _ => None,
         }
     }
 
@@ -323,14 +324,16 @@ impl Dataset {
     pub fn as_integer_vec(&self) -> Option<Vec<i64>> {
         match &self.data {
             DataArray::Integer(data) => Some(data.clone()),
-            DataArray::Float(data) => Some(data.iter().map(|&x| x as i64).collect(), _ => None,
+            DataArray::Float(data) => Some(data.iter().map(|&x| x as i64).collect()),
+            _ => None,
         }
     }
 
     /// Get data as string vector (if possible)
     pub fn as_string_vec(&self) -> Option<Vec<String>> {
         match &self.data {
-            DataArray::String(data) => Some(data.clone(), _ => None,
+            DataArray::String(data) => Some(data.clone()),
+            _ => None,
         }
     }
 }
@@ -413,14 +416,14 @@ impl HDF5File {
         #[cfg(feature = "hdf5")]
         {
             let native_file = match mode {
-                FileMode::ReadOnly =>, File::open(&path_str)
+                FileMode::ReadOnly => File::open(&path_str)
                     .map_err(|e| IoError::FormatError(format!("Failed to open HDF5 file: {e}")))?,
-                FileMode::ReadWrite =>, File::open_rw(&path_str)
+                FileMode::ReadWrite => File::open_rw(&path_str)
                     .map_err(|e| IoError::FormatError(format!("Failed to open HDF5 file: {e}")))?,
-                FileMode::Create =>, File::create(&path_str).map_err(|e| {
+                FileMode::Create => File::create(&path_str).map_err(|e| {
                     IoError::FormatError(format!("Failed to create HDF5 file: {e}"))
                 })?,
-                FileMode::Truncate =>, File::create(&path_str).map_err(|e| {
+                FileMode::Truncate => File::create(&path_str).map_err(|e| {
                     IoError::FormatError(format!("Failed to create HDF5 file: {e}"))
                 })?,
             };

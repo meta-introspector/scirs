@@ -7,11 +7,12 @@
 
 use ndarray::{Array1, Array2};
 use num_traits::Float;
+use rand::Rng;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
 
 use crate::error::Result;
-use crate::learned__optimizers::neural_architecture_search::ArchitectureSearchSpace;
+use crate::learned_optimizers::neural_architecture_search::ArchitectureSearchSpace;
 use crate::neural_architecture_search::{NASConfig, SearchStrategy};
 
 /// Adaptive NAS System that learns from optimization performance
@@ -510,7 +511,7 @@ impl ValidationRules {
 impl<T: Float + Send + Sync> DiversityMaintainer<T> {
     fn new(_diversity_weight: T) -> Self {
         Self {
-            _diversity_weight,
+            diversity_weight: _diversity_weight,
             min_distance_threshold: T::from(0.1).unwrap(),
             diversity_metrics: vec![
                 DiversityMetric::StructuralDistance,
@@ -623,7 +624,8 @@ impl<T: Float + Send + Sync> DiversityMaintainer<T> {
         arch2: &ArchitectureCandidate<T>,
     ) -> Result<T> {
         match (arch1.estimated_quality, arch2.estimated_quality) {
-            (Some(qual1), Some(qual2)) => Ok((qual1 - qual2).abs(), _ => Ok(T::zero()), // If no quality estimates, assume similar
+            (Some(qual1), Some(qual2)) => Ok((qual1 - qual2).abs()),
+            _ => Ok(T::zero()), // If no quality estimates, assume similar
         }
     }
 
@@ -2187,7 +2189,7 @@ impl<
             adaptation_engine: ContinuousAdaptationEngine::new(&_config)?,
             quality_assessor: ArchitectureQualityAssessor::new(&_config)?,
             state_tracker: NASSystemStateTracker::new()?,
-            _config,
+            config: _config,
         })
     }
 
@@ -2275,7 +2277,8 @@ impl<
     }
 
     fn generate_recommendation(
-        &self_selected: Vec<ArchitectureCandidate<T>>, _predictions: Vec<PerformancePrediction<T>>, _quality_assessments: Vec<QualityAssessment<T>>,
+        &self,
+        selected: Vec<ArchitectureCandidate<T>>, _predictions: Vec<PerformancePrediction<T>>, _quality_assessments: Vec<QualityAssessment<T>>,
     ) -> Result<ArchitectureRecommendation<T>> {
         // Simplified implementation
         Ok(ArchitectureRecommendation {
@@ -2600,7 +2603,8 @@ impl<T: Float + Send + Sync> ArchitecturePerformanceDatabase<T> {
     }
 
     fn record_search_result(
-        &mut self_recommendation: &ArchitectureRecommendation<T>,
+        &mut self,
+        recommendation: &ArchitectureRecommendation<T>,
     ) -> Result<()> {
         // Record search results in database
         Ok(())
@@ -2809,7 +2813,8 @@ impl<T: Float + Send + Sync> MultiObjectiveArchitectureOptimizer<T> {
     }
 
     fn select_candidates(
-        &self_candidates: &[ArchitectureCandidate<T>], _predictions: &[PerformancePrediction<T>],
+        &self,
+        candidates: &[ArchitectureCandidate<T>], _predictions: &[PerformancePrediction<T>],
     ) -> Result<Vec<ArchitectureCandidate<T>>> {
         Ok(vec![])
     }
@@ -3039,13 +3044,15 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
 
     // Helper methods (simplified implementations)
     fn extract_best_configurations(
-        &self_history: &SearchHistory<T>, _count: usize,
+        &self,
+        history: &SearchHistory<T>, _count: usize,
     ) -> Vec<ArchitectureSpecification> {
         vec![] // Placeholder
     }
 
     fn mutate_architecture_spec(
-        &self_base: &ArchitectureSpecification,
+        &self,
+        base: &ArchitectureSpecification,
     ) -> Result<ArchitectureSpecification> {
         Ok(ArchitectureSpecification::default()) // Placeholder
     }
@@ -3056,12 +3063,14 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
         Ok(ArchitectureSpecification::default()) // Placeholder
     }
 
-    fn extract_successful_patterns(&self_history: &SearchHistory<T>) -> Vec<ArchitecturePattern> {
+    fn extract_successful_patterns(&self,
+        history: &SearchHistory<T>) -> Vec<ArchitecturePattern> {
         vec![] // Placeholder
     }
 
     fn combine_successful_patterns(
-        &self_patterns: &[ArchitecturePattern], _task_context: &OptimizationTask,
+        &self,
+        patterns: &[ArchitecturePattern], _task_context: &OptimizationTask,
     ) -> Result<ArchitectureSpecification> {
         Ok(ArchitectureSpecification::default()) // Placeholder
     }
@@ -3345,7 +3354,7 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
                 );
                 parameters.insert(
                     "dropout".to_string(),
-                    LayerParameter::Float(scirs2_core::random::rng().gen_range(0.0..0.5)).. );
+                    LayerParameter::Float(scirs2_core::random::rng().gen_range(0.0..0.5)) );
             }
             LayerType::Transformer => {
                 parameters.insert(
@@ -3358,7 +3367,7 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
                 );
                 parameters.insert(
                     "dropout".to_string(),
-                    LayerParameter::Float(scirs2_core::random::rng().gen_range(0.0..0.3)).. );
+                    LayerParameter::Float(scirs2_core::random::rng().gen_range(0.0..0.3)) );
             }
             LayerType::Convolution1D => {
                 parameters.insert(
@@ -3510,7 +3519,7 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
                         *value *= scirs2_core::random::rng().gen_range(0.8..1.2);
                     }
                     LayerParameter::Integer(ref mut value) => {
-                        *value = (*value as f64 * scirs2_core::random::rng().random_range(0.9..1.1)) as i64;
+                        *value = (*value as f64 * scirs2_core::random::rng().random_range(0.9, 1.1)) as i64;
                     }
                     _ => {}
                 }
@@ -3871,7 +3880,7 @@ impl<T: Float + Send + Sync + std::fmt::Debug> PerformanceFeedbackProcessor<T> {
     ) -> Result<Option<T>> {
         // Simple distance calculation based on ID similarity and generation method
         let id_similarity = if candidate
-            ._id
+            .id
             .contains(&historical_id[..3.min(historical_id.len())])
         {
             T::from(0.8).unwrap()
@@ -4130,11 +4139,13 @@ impl<T: Float + Send + Sync> ContinuousAdaptationEngine<T> {
         })
     }
 
-    fn adapt_to_performance(&mut self_history: &[T]) -> Result<()> {
+    fn adapt_to_performance(&mut self,
+        history: &[T]) -> Result<()> {
         Ok(())
     }
 
-    fn should_adapt(&self_feedback: &PerformanceFeedback<T>) -> Result<bool> {
+    fn should_adapt(&self,
+        feedback: &PerformanceFeedback<T>) -> Result<bool> {
         Ok(false)
     }
 
@@ -4160,7 +4171,7 @@ impl<T: Float + Send + Sync + std::cmp::Eq + std::hash::Hash + std::iter::Sum>
         quality_metrics.push(QualityMetric::Performance);
         quality_metrics.push(QualityMetric::Efficiency);
         quality_metrics.push(QualityMetric::Complexity);
-        quality_metrics.push(QualityMetric::Robustness);
+        quality_metrics.push(QualityMetric::Robustness_Phantom(std::marker::PhantomData));
 
         Ok(Self {
             quality_metrics,
@@ -4242,15 +4253,16 @@ impl<T: Float + Send + Sync + std::cmp::Eq + std::hash::Hash + std::iter::Sum>
                         .unwrap());
                 (layer_complexity + connection_complexity) / T::from(2.0).unwrap()
             }
-            QualityMetric::Robustness => {
+            QualityMetric::Robustness_Phantom(_) => {
                 // Simplified robustness score based on architecture diversity
                 match candidate.generation_method {
-                    GenerationMethod::Random =>, T::from(0.3).unwrap(),
-                    GenerationMethod::Evolutionary =>, T::from(0.7).unwrap(),
-                    GenerationMethod::Learned => T::from(0.8).unwrap(, _ =>, T::from(0.5).unwrap(),
+                    GenerationMethod::Random => T::from(0.3).unwrap(),
+                    GenerationMethod::Evolutionary => T::from(0.7).unwrap(),
+                    GenerationMethod::Learned => T::from(0.8).unwrap(),
+                    _ => T::from(0.5).unwrap(),
                 }
             }
-            QualityMetric::_Phantom(_) => {
+            QualityMetric::Robustness_Phantom(_) => {
                 // Phantom variant should not be used
                 T::zero()
             }
@@ -4277,9 +4289,10 @@ impl<T: Float + Send + Sync + std::cmp::Eq + std::hash::Hash + std::iter::Sum>
 
         // Factor 3: Generation method reliability
         confidence_factors.push(match candidate.generation_method {
-            GenerationMethod::Learned =>, T::from(0.9).unwrap(),
-            GenerationMethod::Evolutionary =>, T::from(0.8).unwrap(),
-            GenerationMethod::GradientBased => T::from(0.7).unwrap(, _ =>, T::from(0.6).unwrap(),
+            GenerationMethod::Learned => T::from(0.9).unwrap(),
+            GenerationMethod::Evolutionary => T::from(0.8).unwrap(),
+            GenerationMethod::GradientBased => T::from(0.7).unwrap(),
+            _ => T::from(0.6).unwrap(),
         });
 
         // Average confidence factors
@@ -4331,7 +4344,8 @@ impl<T: Float + Send + Sync> NASSystemStateTracker<T> {
         })
     }
 
-    fn update_state(&mut self_task: &OptimizationTask, _history: &[T]) -> Result<()> {
+    fn update_state(&mut self,
+        task: &OptimizationTask, _history: &[T]) -> Result<()> {
         Ok(())
     }
 }
@@ -4570,7 +4584,7 @@ pub struct ComplexityLimits {
 
 impl Default for ArchitectureSearchSpace {
     fn default() -> Self {
-        use crate::learned__optimizers::neural_architecture_search::{
+        use crate::learned_optimizers::neural_architecture_search::{
             ActivationType, AttentionType, ConnectionPattern, LayerType, MemoryType,
             NormalizationType, OptimizerComponent, SkipConnectionType,
         };
@@ -4642,7 +4656,8 @@ impl<T: Float + Send + Sync> SearchSpaceOptimizer<T> {
     }
 
     fn expand_region(
-        &self_space: &mut ArchitectureSearchSpace,
+        &self,
+        space: &mut ArchitectureSearchSpace,
         region: &PromisingRegion<T>,
     ) -> Result<()> {
         // Expand search _space boundaries based on promising region
@@ -4691,13 +4706,15 @@ impl<T: Float + Send + Sync> SearchSpaceOptimizer<T> {
         Ok(())
     }
 
-    fn apply_gradient_evolution(&self_space: &mut ArchitectureSearchSpace) -> Result<()> {
+    fn apply_gradient_evolution(&self,
+        space: &mut ArchitectureSearchSpace) -> Result<()> {
         // Placeholder for gradient-based _space evolution
         Ok(())
     }
 
     fn apply_statistical_evolution(
-        &self_space: &mut ArchitectureSearchSpace, _history: &[SearchSpaceSnapshot],
+        &self,
+        space: &mut ArchitectureSearchSpace, _history: &[SearchSpaceSnapshot],
     ) -> Result<()> {
         // Placeholder for statistical _space evolution
         Ok(())
@@ -4816,12 +4833,12 @@ impl<T: Float + Send + Sync> ArchitecturePerformancePredictor<T> for ComplexityB
         Ok((self.base_performance + complexity_score * T::from(0.3).unwrap()).min(T::one()))
     }
 
-    fn update(&mut self_architecture: &ArchitectureSpecification, _performance: T) -> Result<()> {
+    fn update(&mut self, _architecture: &ArchitectureSpecification, _performance: T) -> Result<()> {
         // This predictor doesn't learn from feedback
         Ok(())
     }
 
-    fn get_confidence(&self_architecture: &ArchitectureSpecification) -> Result<T> {
+    fn get_confidence(&self, _architecture: &ArchitectureSpecification) -> Result<T> {
         Ok(T::from(0.7).unwrap()) // Fixed confidence
     }
 }
@@ -4886,7 +4903,7 @@ impl<T: Float + Send + Sync> ArchitecturePerformancePredictor<T> for HistoryBase
         // Confidence based on similarity to historical data
         let mut max_similarity = T::zero();
         for (hist_features_) in &self.performance_history {
-            let similarity = self.calculate_similarity(&features, hist_features);
+            let similarity = self.calculate_similarity(&features, &hist_features_.0);
             max_similarity = max_similarity.max(similarity);
         }
 
@@ -4972,7 +4989,7 @@ impl<T: Float + Send + Sync + std::iter::Sum> PredictionAggregator<T> {
             }
             _ => {
                 // Simplified - just return average
-                let sum: T = predictions.iter().map(|(p_)| *p).sum();
+                let sum: T = predictions.iter().map(|(p, _)| *p).sum();
                 Ok(sum / T::from(predictions.len()).unwrap())
             }
         }
@@ -4998,12 +5015,12 @@ impl<T: Float + Send + Sync + std::iter::Sum> EnsembleUncertaintyEstimator<T> {
 
         // Calculate variance of predictions as uncertainty measure
         let mean: T =
-            predictions.iter().map(|(p_)| *p).sum::<T>() / T::from(predictions.len()).unwrap();
+            predictions.iter().map(|(p, _)| *p).sum::<T>() / T::from(predictions.len()).unwrap();
 
         let variance: T = predictions
             .iter()
             .map(|(p_)| {
-                let diff = *p - mean;
+                let diff = p_.0 - mean;
                 diff * diff
             })
             .sum::<T>()
@@ -5024,13 +5041,14 @@ impl<T: Float + Send + Sync + std::iter::Sum> PredictorQualityTracker<T> {
     fn new(_confidence_threshold: T) -> Self {
         Self {
             predictor_scores: vec![T::one(); 3], // Initialize with 3 predictors
-            _confidence_threshold,
+            confidence_threshold: _confidence_threshold,
             error_history: VecDeque::new(),
         }
     }
 
     fn update_predictor_performance(
-        &mut self_id: &str, _feedback: &PerformanceFeedback<T>,
+        &mut self,
+        id: &str, _feedback: &PerformanceFeedback<T>,
     ) -> Result<()> {
         // Update predictor performance tracking
         Ok(())
@@ -5085,7 +5103,7 @@ pub struct QualityThresholdManager<T: Float> {
 impl<T: Float + Send + Sync> QualityThresholdManager<T> {
     fn new(_min_performance: T) -> Self {
         Self {
-            _min_performance,
+            min_performance: _min_performance,
             min_efficiency: T::from(0.3).unwrap(),
             max_complexity: T::from(0.8).unwrap(),
             adaptive_thresholds: true,

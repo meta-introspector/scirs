@@ -341,8 +341,8 @@ let gradient = morphological_gradient(&image, None, None, None, None, None)?;
 // Enhance contrast by combining operations
 let enhanced = Array2::from_shape_fn(image.dim(), |(i, j)| {
     let original = image[[i, j]];
-    let white_feature = white_hat[[i, j]];
-    let black_feature = black_hat[[i, j]];
+    let white_feature = "white_hat"[[i, j]];
+    let black_feature = "black_hat"[[i, j]];
     (original + white_feature - black_feature).max(0.0).min(1.0)
 });
 

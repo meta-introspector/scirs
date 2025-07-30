@@ -413,7 +413,7 @@ impl MemoryProfiler {
     /// Generate profiling summary with insights and recommendations
     fn generate_profiling_summary(&self, 
         memory_report: &MemoryReport,
-        leak_results: &[crate::memory::leak_detection::LeakDetectionResult],
+        leak_results: &[crate::memory::metrics::analytics::LeakDetectionResult],
         pattern_analysis: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
     ) -> ProfilingSummary {
         let mut health_score = 1.0;

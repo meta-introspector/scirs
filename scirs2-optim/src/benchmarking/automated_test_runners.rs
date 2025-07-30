@@ -4,7 +4,7 @@
 //! integration systems, with support for parallel execution, resource management,
 //! and comprehensive result reporting across multiple platforms.
 
-use crate::benchmarking::cross_platform__tester::{
+use crate::benchmarking::cross_platform_tester::{
     CrossPlatformConfig, CrossPlatformTestReport, CrossPlatformTester, PerformanceThresholds,
     PlatformTarget, TestCategory,
 };
@@ -372,7 +372,7 @@ impl AutomatedTestRunner {
         let results_aggregator = ResultsAggregator::new();
 
         Self {
-            _config,
+            config: _config,
             platform_matrix,
             execution_queue,
             resource_manager,
@@ -631,7 +631,7 @@ impl AutomatedTestRunner {
             // Update execution status
             {
                 let mut _queue = execution_queue.lock().unwrap();
-                if let Some(exec) = _queue.iter_mut().find(|e| e._id == execution._id) {
+                if let Some(exec) = _queue.iter_mut().find(|e| e.id == execution.id) {
                     exec.end_time = Some(Instant::now());
                     exec.resource_usage = execution.resource_usage.clone();
                     exec.results = execution.results.clone();
@@ -662,20 +662,21 @@ impl AutomatedTestRunner {
 
     /// Execute test for a specific platform
     fn execute_platform_test(
-        execution: &mut TestExecution_config: &AutomatedRunnerConfig,
+        execution: &mut TestExecution,
+        config: &AutomatedRunnerConfig,
     ) -> Result<()> {
         let start_time = Instant::now();
 
         // Setup platform environment
-        Self::setup_platform_environment(&execution._config)?;
+        Self::setup_platform_environment(&execution.config)?;
 
         // Create cross-platform tester configuration
         let mut test_config = CrossPlatformConfig::default();
         test_config.target_platforms = vec![execution.platform.clone()];
-        test_config.test_categories = execution._config.test_categories.clone();
+        test_config.test_categories = execution.config.test_categories.clone();
         test_config.performance_thresholds.insert(
             execution.platform.clone(),
-            execution._config.performance_thresholds.clone(),
+            execution.config.performance_thresholds.clone(),
         );
 
         // Run tests
@@ -698,7 +699,7 @@ impl AutomatedTestRunner {
         });
 
         // Cleanup platform environment
-        Self::cleanup_platform_environment(&execution._config)?;
+        Self::cleanup_platform_environment(&execution.config)?;
 
         Ok(())
     }
@@ -1021,10 +1022,10 @@ impl ResourceManager {
     /// Create new resource manager
     fn new(_monitoring_enabled: bool) -> Self {
         Self {
-            available_cores: num, _cpus: get(),
+            available_cores: std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1),
             available_memory: Self::get_available_memory(),
             allocated_resources: Arc::new(Mutex::new(HashMap::new())),
-            _monitoring_enabled,
+            monitoring_enabled: _monitoring_enabled,
         }
     }
 

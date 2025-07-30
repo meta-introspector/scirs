@@ -425,13 +425,13 @@ pub trait PluginLifecycle {
 /// Plugin event system
 pub trait PluginEventHandler {
     /// Handle optimization step event
-    fn on_step(&mut self_step: usize, _params: &Array1<f64>, _gradients: &Array1<f64>) {}
+    fn on_step(&mut self, _step: usize, _params: &Array1<f64>, _gradients: &Array1<f64>) {}
 
     /// Handle convergence event
     fn on_convergence(&mut self, _final_params: &Array1<f64>) {}
 
     /// Handle error event
-    fn on_error(&mut self_error: &OptimError) {}
+    fn on_error(&mut self, _error: &OptimError) {}
 
     /// Handle custom event
     fn on_custom_event(&mut self, _event_name: &str, _data: &dyn Any) {}
@@ -554,7 +554,7 @@ impl Default for OptimizerState {
 #[allow(dead_code)]
 pub fn create_plugin_info(_name: &str, version: &str, author: &str) -> PluginInfo {
     PluginInfo {
-        _name: _name.to_string(),
+        name: _name.to_string(),
         version: version.to_string(),
         author: author.to_string(),
         ..Default::default()
@@ -610,7 +610,8 @@ pub fn validate_config_against_schema(
         let value = match field_name.as_str() {
             "learning_rate" => Some(ConfigValue::Float(config.learning_rate)),
             "weight_decay" => Some(ConfigValue::Float(config.weight_decay)),
-            "momentum" => Some(ConfigValue::Float(config.momentum), _ => config.custom_params.get(field_name).cloned(),
+            "momentum" => Some(ConfigValue::Float(config.momentum)),
+            _ => config.custom_params.get(field_name).cloned(),
         };
 
         if let Some(value) = value {

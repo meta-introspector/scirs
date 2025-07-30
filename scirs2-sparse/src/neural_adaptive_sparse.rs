@@ -515,7 +515,7 @@ impl NeuralAdaptiveSparseProcessor {
     fn execute_strategy<T>(
         &self,
         strategy: OptimizationStrategy,
-        rows: usize_cols: usize,
+        rows: usize, _cols: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -1229,7 +1229,7 @@ impl NeuralAdaptiveSparseProcessor {
         match strategy {
             OptimizationStrategy::SIMDVectorized => 0.9,
             OptimizationStrategy::AdaptiveHybrid => 0.7,
-            OptimizationStrategy::RowWiseCache => 0.5_ => 0.3,
+            OptimizationStrategy::RowWiseCache => 0.5,
         }
     }
 
@@ -1237,7 +1237,7 @@ impl NeuralAdaptiveSparseProcessor {
         let parallelism_factor = match strategy {
             OptimizationStrategy::ParallelWorkStealing => 0.95,
             OptimizationStrategy::AdaptiveHybrid => 0.8,
-            OptimizationStrategy::BlockStructured => 0.7_ => 0.5,
+            OptimizationStrategy::BlockStructured => 0.7,
         };
 
         // Adjust for problem size
@@ -1247,7 +1247,7 @@ impl NeuralAdaptiveSparseProcessor {
 
     fn estimate_memory_bandwidth(&self, data_size: usize, execution_time: f64) -> f64 {
         if execution_time > 0.0 {
-            (data_size as f64 * std::mem::_size_of::<f64>() as f64) / execution_time / 1e9
+            (data_size as f64 * std::mem::size_of::<f64>() as f64) / execution_time / 1e9
         // GB/s
         } else {
             0.0
@@ -1628,7 +1628,8 @@ impl RLAgent {
             RLAlgorithm::ActorCritic | RLAlgorithm::PPO | RLAlgorithm::SAC => (
                 Some(NeuralNetwork::new(_config)),
                 Some(NeuralNetwork::new(_config)),
-            , _ => (None, None),
+            ),
+            _ => (None, None),
         };
 
         Self {

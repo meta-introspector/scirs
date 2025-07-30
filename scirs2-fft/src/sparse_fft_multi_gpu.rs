@@ -4,13 +4,13 @@
 //! allowing parallel processing across multiple GPU devices for maximum performance.
 
 use crate::error::{FFTError, FFTResult};
-use crate::sparse__fft::{SparseFFTAlgorithm, SparseFFTConfig, SparseFFTResult, WindowFunction};
-use crate::sparse_fft__gpu::{GPUBackend, GPUSparseFFTConfig};
-use crate::sparse_fft_gpu__memory::{
+use crate::sparse_fft::{SparseFFTAlgorithm, SparseFFTConfig, SparseFFTResult, WindowFunction};
+use crate::sparse_fft_gpu::{GPUBackend, GPUSparseFFTConfig};
+use crate::sparse_fft_gpu_memory::{
     init_cuda_device, init_hip_device, init_sycl_device, is_cuda_available, is_hip_available,
     is_sycl_available,
 };
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
@@ -177,7 +177,7 @@ impl MultiGPUSparseFFT {
             memory_total: 16 * 1024 * 1024 * 1024, // Assume 16GB RAM
             memory_free: 8 * 1024 * 1024 * 1024,   // Assume half available
             compute_capability: 1.0,
-            compute_units: num, _cpus: get(),
+            compute_units: num_cpus::get(),
             max_threads_per_block: 1,
             is_available: true,
         });
@@ -270,14 +270,14 @@ impl MultiGPUSparseFFT {
         }
 
         // Determine how many devices to use
-        let max_devices = if self.config.max_devices == 0 {
+        let max_devices = if self._config.max_devices == 0 {
             available_devices.len()
         } else {
-            self.config.max_devices.min(available_devices.len())
+            self._config.max_devices.min(available_devices.len())
         };
 
         // Select devices based on strategy
-        match self.config.distribution {
+        match self._config.distribution {
             WorkloadDistribution::Equal => {
                 // Use first N available devices
                 for i in 0..max_devices {
@@ -395,7 +395,7 @@ impl MultiGPUSparseFFT {
         let signal_len = signal.len();
 
         // Check if signal is large enough for multi-GPU processing
-        if signal_len < self.config.min_signal_size || self.selected_devices.len() <= 1 {
+        if signal_len < self._config.min_signal_size || self.selected_devices.len() <= 1 {
             // Fall back to single-device processing
             return self.single_device_sparse_fft(signal);
         }
@@ -415,7 +415,7 @@ impl MultiGPUSparseFFT {
 
         // Create GPU configuration for the selected device
         let gpu_config = GPUSparseFFTConfig {
-            base_config: self.config.base_config.clone(),
+            base_config: self._config.base_config.clone(),
             backend: device.backend,
             device_id: device.device_id,
             ..GPUSparseFFTConfig::default()
@@ -496,7 +496,7 @@ impl MultiGPUSparseFFT {
     ) -> FFTResult<Vec<usize>> {
         let mut chunk_sizes = Vec::with_capacity(num_devices);
 
-        match self.config.distribution {
+        match self._config.distribution {
             WorkloadDistribution::Equal => {
                 let base_size = signal_len / num_devices;
                 let remainder = signal_len % num_devices;
@@ -516,14 +516,14 @@ impl MultiGPUSparseFFT {
                     .selected_devices
                     .iter()
                     .map(|&idx| {
-                        self._devices[idx].compute_capability
-                            * self._devices[idx].compute_units as f32
+                        self.devices[idx].compute_capability
+                            * self.devices[idx].compute_units as f32
                     })
                     .sum();
 
                 let mut remaining = signal_len;
                 for (i, &device_idx) in self.selected_devices.iter().enumerate() {
-                    let device = &self._devices[device_idx];
+                    let device = &self.devices[device_idx];
                     let device_compute = device.compute_capability * device.compute_units as f32;
                     let ratio = device_compute / total_compute;
 
@@ -543,12 +543,12 @@ impl MultiGPUSparseFFT {
                 let total_memory: usize = self
                     .selected_devices
                     .iter()
-                    .map(|&idx| self._devices[idx].memory_free)
+                    .map(|&idx| self.devices[idx].memory_free)
                     .sum();
 
                 let mut remaining = signal_len;
                 for (i, &device_idx) in self.selected_devices.iter().enumerate() {
-                    let device = &self._devices[device_idx];
+                    let device = &self.devices[device_idx];
                     let ratio = device.memory_free as f32 / total_memory as f32;
 
                     let size = if i == num_devices - 1 {
@@ -563,16 +563,16 @@ impl MultiGPUSparseFFT {
                 }
             }
             WorkloadDistribution::Manual => {
-                if self.config.manual_ratios._len() != num_devices {
+                if self._config.manual_ratios.len() != num_devices {
                     return Err(FFTError::ValueError(
                         "Manual ratios length must match number of selected _devices".to_string(),
                     ));
                 }
 
-                let total_ratio: f32 = self.config.manual_ratios.iter().sum();
+                let total_ratio: f32 = self._config.manual_ratios.iter().sum();
                 let mut remaining = signal_len;
 
-                for (i, &ratio) in self.config.manual_ratios.iter().enumerate() {
+                for (i, &ratio) in self._config.manual_ratios.iter().enumerate() {
                     let size = if i == num_devices - 1 {
                         remaining
                     } else {
@@ -674,9 +674,9 @@ impl MultiGPUSparseFFT {
         }
 
         let mut sorted_entries: Vec<_> = frequency_map.into_iter().collect();
-        sorted_entries.sort_by_key(|&(idx_)| idx);
+        sorted_entries.sort_by_key(|&(idx_, _)| idx_);
 
-        let final_indices: Vec<usize> = sorted_entries.iter().map(|(idx_)| *idx).collect();
+        let final_indices: Vec<usize> = sorted_entries.iter().map(|(idx_, _)| *idx_).collect();
         let final_values: Vec<Complex64> = sorted_entries.iter().map(|(_, val)| *val).collect();
 
         // Calculate combined sparsity
@@ -687,7 +687,7 @@ impl MultiGPUSparseFFT {
             indices: final_indices,
             estimated_sparsity: total_estimated_sparsity,
             computation_time: max_computation_time,
-            algorithm: self.config.base_config.algorithm,
+            algorithm: self._config.base_config.algorithm,
         })
     }
 

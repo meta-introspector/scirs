@@ -209,10 +209,10 @@ impl EnhancedImageProcessor {
         let dynamic_img = image::DynamicImage::ImageRgb8(img_buffer);
 
         let filter = match method {
-            InterpolationMethod::Nearest =>, image::imageops::FilterType::Nearest,
-            InterpolationMethod::Linear =>, image::imageops::FilterType::Triangle,
-            InterpolationMethod::Cubic =>, image::imageops::FilterType::CatmullRom,
-            InterpolationMethod::Lanczos =>, image::imageops::FilterType::Lanczos3,
+            InterpolationMethod::Nearest => image::imageops::FilterType::Nearest,
+            InterpolationMethod::Linear => image::imageops::FilterType::Triangle,
+            InterpolationMethod::Cubic => image::imageops::FilterType::CatmullRom,
+            InterpolationMethod::Lanczos => image::imageops::FilterType::Lanczos3,
         };
 
         let resized_img = dynamic_img.resize(new_width, new_height, filter);
@@ -489,13 +489,13 @@ impl EnhancedImageProcessor {
 impl From<ImageFormat> for image::ImageFormat {
     fn from(_format: ImageFormat) -> Self {
         match _format {
-            ImageFormat::PNG =>, image::ImageFormat::Png,
-            ImageFormat::JPEG =>, image::ImageFormat::Jpeg,
-            ImageFormat::BMP =>, image::ImageFormat::Bmp,
-            ImageFormat::TIFF =>, image::ImageFormat::Tiff,
-            ImageFormat::GIF =>, image::ImageFormat::Gif,
-            ImageFormat::WEBP =>, image::ImageFormat::WebP,
-            ImageFormat::Other =>, image::ImageFormat::Png, // Default fallback
+            ImageFormat::PNG => image::ImageFormat::Png,
+            ImageFormat::JPEG => image::ImageFormat::Jpeg,
+            ImageFormat::BMP => image::ImageFormat::Bmp,
+            ImageFormat::TIFF => image::ImageFormat::Tiff,
+            ImageFormat::GIF => image::ImageFormat::Gif,
+            ImageFormat::WEBP => image::ImageFormat::WebP,
+            ImageFormat::Other => image::ImageFormat::Png, // Default fallback
         }
     }
 }

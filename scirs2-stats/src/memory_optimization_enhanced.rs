@@ -564,10 +564,10 @@ impl EnhancedMemoryOptimizer {
         conditions: &MemoryConditions,
     ) -> MemoryLayout {
         match conditions.pressure {
-            MemoryPressure::Low =>, MemoryLayout::Contiguous,
-            MemoryPressure::Medium =>, MemoryLayout::Chunked(self.optimal_chunk_size(data_size)),
-            MemoryPressure::High =>, MemoryLayout::Streaming,
-            MemoryPressure::Critical =>, MemoryLayout::MemoryMapped,
+            MemoryPressure::Low => MemoryLayout::Contiguous,
+            MemoryPressure::Medium => MemoryLayout::Chunked(self.optimal_chunk_size(data_size)),
+            MemoryPressure::High => MemoryLayout::Streaming,
+            MemoryPressure::Critical => MemoryLayout::MemoryMapped,
         }
     }
 
@@ -598,12 +598,13 @@ impl EnhancedMemoryOptimizer {
         data_size: usize,
         operation: &str,
     ) -> MemoryRequirements {
-        let base_memory = data_size * std::mem::_size_of::<f64>();
+        let base_memory = data_size * std::mem::size_of::<f64>();
         let overhead_multiplier = match operation {
             "mean" => 1.1,
             "variance" => 1.3,
             "correlation" => 2.0,
-            "regression" => 2.5_ => 1.5,
+            "regression" => 2.5,
+            _ => 1.5,
         };
 
         MemoryRequirements {

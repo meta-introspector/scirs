@@ -15,7 +15,7 @@ use crate::pde::{PDEError, PDEResult};
 use ndarray::{Array1, Array2, ArrayView1};
 
 // Re-export important types from irregular_domains
-pub use irregular__domains::{
+pub use irregular_domains::{
     BoundaryCondition, DerivativeType, GridPoint, ImmersedBoundary, IrregularGrid,
     IrregularStencils, PointType,
 };

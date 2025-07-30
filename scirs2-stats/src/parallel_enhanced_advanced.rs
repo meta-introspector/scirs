@@ -5,8 +5,8 @@
 //! optimal performance across different hardware configurations.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error__standardization::ErrorMessages;
-use crate::simd_enhanced__core::{mean_enhanced, variance_enhanced, ComprehensiveStats};
+use crate::error_standardization::ErrorMessages;
+use crate::simd_enhanced_core::{mean_enhanced, variance_enhanced, ComprehensiveStats};
 use crossbeam;
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, One, Zero};
@@ -731,7 +731,7 @@ where
         D: Data<Elem = F> + Sync + Send,
     {
         use rand::{rng, Rng, SeedableRng};
-        use rand__chacha::ChaCha8Rng;
+        use rand_chacha::ChaCha8Rng;
 
         let num_threads = self
             .config
@@ -788,7 +788,8 @@ where
 
 /// Simple thread pool for parallel execution
 struct ThreadPool {
-    workers: Vec<thread::JoinHandle<()>>..sender: std::sync::mpsc::Sender<Message>,
+    workers: Vec<thread::JoinHandle<()>>,
+    sender: std::sync::mpsc::Sender<Message>,
 }
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
@@ -799,7 +800,7 @@ enum Message {
 }
 
 impl ThreadPool {
-    fn new(_size: usize_config: AdvancedParallelConfig) -> StatsResult<ThreadPool> {
+    fn new(_size: usize, _config: AdvancedParallelConfig) -> StatsResult<ThreadPool> {
         if _size == 0 {
             return Err(ErrorMessages::invalid_probability("thread count", 0.0));
         }

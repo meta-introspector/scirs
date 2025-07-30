@@ -19,7 +19,7 @@
 //! ## Setting up a Research Project
 //!
 //! ```rust
-//! use scirs2__optim::research::*;
+//! use scirs2_optim::research::*;
 //!
 //! let project = ResearchProject::new("Neural Optimizer Comparison")
 //!     .add_researcher("Dr. Alice Smith", "alice@university.edu")
@@ -56,7 +56,7 @@ pub use citations::*;
 pub use benchmarks::*;
 pub use reproducibility::*;
 pub use conferences::*;
-pub use peer__review::*;
+pub use peer_review::*;
 pub use datasets::*;
 pub use funding::*;
 

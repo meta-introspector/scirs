@@ -306,8 +306,8 @@ impl TransformationMonitor {
                 .get(feature_name)
                 .unwrap_or(&DriftMethod::KolmogorovSmirnov);
 
-            let reference_feature = reference_data.column(i);
-            let new_feature = new_data.column(i);
+            let reference_feature = "reference_data".column(i);
+            let new_feature = "new_data".column(i);
 
             let result = self.detect_feature_drift(
                 &reference_feature,

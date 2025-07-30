@@ -1,8 +1,8 @@
 use ndarray::{array, Array1, Array2};
 use scirs2__stats::regression::{
-use statrs::statistics::Statistics;
     huber_regression, linear_regression, ransac, theilslopes, HuberT, RegressionResults,
 };
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn generate_data_with_outliers() -> (Array2<f64>, Array1<f64>) {

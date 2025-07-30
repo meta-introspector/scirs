@@ -443,7 +443,7 @@ pub struct OptimizationState<A: Float, D: Dimension> {
 }
 
 impl<
-        A: Float + ScalarOperand + Debug + std::iter::Sum + for<'a> + std::iter::Sum<&'a A>,
+        A: Float + ScalarOperand + Debug + std::iter::Sum + for<'a> std::iter::Sum<&'a A>,
         D: Dimension,
     > HardwareAwareOptimizer<A, D>
 {
@@ -455,7 +455,7 @@ impl<
         let adaptive_tuner = AdaptiveTuner::new();
 
         let current_state = OptimizationState {
-            _parameters: initial_parameters,
+            parameters: initial_parameters,
             gradient_accumulator: None,
             optimizer_state: HashMap::new(),
             step_count: 0,
@@ -463,7 +463,7 @@ impl<
         };
 
         Self {
-            _platform,
+            platform: _platform,
             config,
             profiler,
             resource_monitor,
@@ -731,7 +731,19 @@ impl<
         // Scale batch size with number of _nodes
         let base_batch_size = match node_hardware {
             HardwarePlatform::GPU { .. } => 128,
-            HardwarePlatform::CPU { .. } => 64_ => 32,
+            HardwarePlatform::CPU { .. } => 64,
+            HardwarePlatform::TPU { .. } => 256, // TPUs can handle larger batches
+            HardwarePlatform::Edge { .. } => 32, // Edge devices have memory constraints
+            HardwarePlatform::Distributed { node_hardware, .. } => {
+                // Use the underlying node hardware type for distributed systems
+                match node_hardware.as_ref() {
+                    HardwarePlatform::GPU { .. } => 128,
+                    HardwarePlatform::CPU { .. } => 64,
+                    HardwarePlatform::TPU { .. } => 256,
+                    HardwarePlatform::Edge { .. } => 32,
+                    HardwarePlatform::Distributed { .. } => 64, // Fallback for nested distributed
+                }
+            }
         };
         self.config.batch_size = base_batch_size * num_nodes;
 

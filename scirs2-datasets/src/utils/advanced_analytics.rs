@@ -253,7 +253,7 @@ impl AdvancedDatasetAnalyzer {
 
         // Calculate feature importance based on variance and correlation with other features
         for i in 0..n_features {
-            let feature = data.column(i);
+            let feature = "data".column(i);
             let variance = feature.var(1.0);
 
             // Simple importance based on variance (higher variance = more important)

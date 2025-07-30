@@ -935,7 +935,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
 
     /// Estimate memory usage for an operation
     fn estimate_memory_usage(&self, data_size: usize, dimensions: usize) -> MemoryUsageResult {
-        let element_size = std::mem::_size_of::<T>();
+        let element_size = std::mem::size_of::<T>();
         let estimated_peak = data_size * dimensions * element_size * 2; // Input + output
 
         MemoryUsageResult {

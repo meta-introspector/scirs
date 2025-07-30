@@ -1290,22 +1290,22 @@ pub mod utils {
             // We've reached the deepest dimension, copy this chunk
 
             // Calculate the slice ranges for this chunk
-            let chunk_shape = &target_array.config.chunk_shape;
+            let chunk_shape = &targetarray.config.chunk_shape;
             let mut slices = vec![];
 
             for (i, (&coord, &chunk_size)) in
                 chunk_coords.iter().zip(chunk_shape.iter()).enumerate()
             {
                 let start = coord * chunk_size;
-                let end = ((coord + 1) * chunk_size).min(source_array.shape()[i]);
+                let end = ((coord + 1) * chunk_size).min(sourcearray.shape()[i]);
                 slices.push(start..end);
             }
 
             // Extract the chunk data from the source array
-            let chunk_data = extract_chunk_data(source_array, &slices)?;
+            let chunk_data = extract_chunk_data(sourcearray, &slices)?;
 
             // Set the chunk data in the target array
-            target_array.set_chunk(chunk_coords, chunk_data)?;
+            targetarray.set_chunk(chunk_coords, chunk_data)?;
 
             Ok(())
         } else {
@@ -1313,8 +1313,8 @@ pub mod utils {
             for i in 0..chunks_per_dim[dimension] {
                 chunk_coords[dimension] = i;
                 copy_chunks_recursive(
-                    source_array,
-                    target_array,
+                    sourcearray,
+                    targetarray,
                     chunks_per_dim,
                     chunk_coords,
                     dimension + 1,

@@ -71,7 +71,7 @@ pub struct PerformanceProfiler {
 }
 
 impl Default for PerformanceMetrics {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self {
             total_time: Duration::ZERO,
             phase_times: HashMap::new(),
@@ -110,7 +110,7 @@ impl PerformanceProfiler {
     }
 
     /// Start profiling a specific phase
-    pub fn start_phase(_phase_name: &str) {
+    pub fn start_phase(&mut self, _phase_name: &str) {
         if !self.is_active {
             return;
         }
@@ -119,7 +119,7 @@ impl PerformanceProfiler {
     }
 
     /// End profiling a specific phase
-    pub fn end_phase(_phase_name: &str) {
+    pub fn end_phase(&mut self, _phase_name: &str) {
         if !self.is_active {
             return;
         }
@@ -169,7 +169,7 @@ impl PerformanceProfiler {
     }
 
     /// Record convergence information
-    pub fn record_convergence(_residual_norm: f64) {
+    pub fn record_convergence(&mut self, _residual_norm: f64) {
         if !self.is_active {
             return;
         }
@@ -213,7 +213,7 @@ impl PerformanceProfiler {
     }
 
     /// Update memory statistics
-    pub fn update_memory_stats(_current_memory: usize, peak_memory: usize) {
+    pub fn update_memory_stats(&mut self, _current_memory: usize, peak_memory: usize) {
         if !self.is_active {
             return;
         }
@@ -228,7 +228,7 @@ impl PerformanceProfiler {
     }
 
     /// Estimate FLOPS based on operations and time
-    pub fn estimate_flops(_operations: usize, time: Duration) {
+    pub fn estimate_flops(&mut self, _operations: usize, time: Duration) {
         if !self.is_active || time.is_zero() {
             return;
         }
@@ -321,7 +321,7 @@ impl PerformanceProfiler {
     }
 
     /// Disable profiling for performance-critical sections
-    pub fn disable() {
+    pub fn disable(&mut self) {
         self.is_active = false;
     }
 

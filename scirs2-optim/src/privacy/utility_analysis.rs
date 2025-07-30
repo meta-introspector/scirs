@@ -8,6 +8,7 @@ use crate::error::Result;
 use crate::privacy::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use ndarray::{ArrayBase, Data, Dimension};
 use num_traits::Float;
+use rand::Rng;
 use std::collections::HashMap;
 
 /// Comprehensive privacy-utility tradeoff analyzer
@@ -1122,7 +1123,7 @@ pub struct UtilityDegradationPredictor<T: Float> {
 
 impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Create a new privacy-utility analyzer
-    pub fn new(_config: AnalysisConfig) -> Self {
+    pub fn new(config: AnalysisConfig) -> Self {
         Self {
             parameter_explorer: PrivacyParameterExplorer {
                 phantom: std::marker::PhantomData,
@@ -1151,7 +1152,7 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
             degradation_predictor: UtilityDegradationPredictor {
                 phantom: std::marker::PhantomData,
             },
-            _config,
+            config,
         }
     }
 
@@ -1702,7 +1703,10 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Evaluate robustness
     #[allow(dead_code)]
     pub fn evaluate_robustness<D: Data<Elem = T> + Sync, Dim: Dimension>(
-        &self_data: &ArrayBase<D, Dim>, _model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T> + Sync_config: &PrivacyConfiguration<T>,
+        &self,
+        data: &ArrayBase<D, Dim>,
+        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T> + Sync,
+        config: &PrivacyConfiguration<T>,
     ) -> Result<RobustnessResults<T>> {
         // Implementation would go here
         todo!("Implementation of robustness evaluation")
@@ -1720,7 +1724,8 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Assess privacy risk
     #[allow(dead_code)]
     pub fn assess_privacy_risk<D: Data<Elem = T> + Sync, Dim: Dimension>(
-        &self_data: &ArrayBase<D, Dim>, _config: &PrivacyConfiguration<T>,
+        &self,
+        data: &ArrayBase<D, Dim>, _config: &PrivacyConfiguration<T>,
     ) -> Result<PrivacyRiskAssessment<T>> {
         // Implementation would go here
         todo!("Implementation of privacy risk assessment")
@@ -1729,7 +1734,8 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Perform statistical significance testing
     #[allow(dead_code)]
     pub fn perform_statistical_tests(
-        &self_results: &[(T, T)], _baseline: &[(T, T)],
+        &self,
+        results: &[(T, T)], _baseline: &[(T, T)],
     ) -> Result<StatisticalTestResults<T>> {
         // Implementation would go here
         todo!("Implementation of statistical significance testing")

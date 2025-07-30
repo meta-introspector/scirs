@@ -18,7 +18,7 @@ use crate::regularizers::Regularizer;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__optim::regularizers::{L2, Regularizer};
+/// use scirs2_optim::regularizers::{L2, Regularizer};
 ///
 /// // Create an L2 regularizer with strength 0.01
 /// let regularizer = L2::new(0.01);
@@ -45,8 +45,8 @@ impl<A: Float + Debug> L2<A> {
     /// # Arguments
     ///
     /// * `alpha` - Regularization strength
-    pub fn new(_alpha: A) -> Self {
-        Self { _alpha }
+    pub fn new(alpha: A) -> Self {
+        Self { alpha }
     }
 
     /// Get the regularization strength

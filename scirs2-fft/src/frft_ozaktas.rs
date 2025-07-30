@@ -10,7 +10,7 @@
 
 use crate::error::FFTResult;
 use crate::fft::{fft, ifft};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::Zero;
 use std::f64::consts::PI;
 

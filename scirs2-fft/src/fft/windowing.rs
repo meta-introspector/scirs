@@ -54,7 +54,7 @@ pub enum WindowType {
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::fft::windowing::{create_window, WindowType};
+/// use scirs2_fft::fft::windowing::{create_window, WindowType};
 ///
 /// // Create a Hann window of length 10
 /// let window = create_window(WindowType::Hann, 10).unwrap();
@@ -63,7 +63,7 @@ pub enum WindowType {
 /// assert!(window[5] > 0.9); // Near one in the middle
 /// ```
 #[allow(dead_code)]
-pub fn create_window(_window_type: WindowType, length: usize) -> FFTResult<Vec<f64>> {
+pub fn create_window(window_type: WindowType, length: usize) -> FFTResult<Vec<f64>> {
     if length == 0 {
         return Err(FFTError::ValueError("Window length cannot be zero".into()));
     }
@@ -206,7 +206,7 @@ pub fn create_window(_window_type: WindowType, length: usize) -> FFTResult<Vec<f
 /// # Examples
 ///
 /// ```
-/// use scirs2__fft::fft::windowing::{apply_window, create_window, WindowType};
+/// use scirs2_fft::fft::windowing::{apply_window, create_window, WindowType};
 ///
 /// // Create a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];

@@ -326,7 +326,7 @@ pub struct SweepAndPrune {
 }
 
 impl Default for SweepAndPrune {
-    fn default(&self) -> Self {
+    fn default() -> Self {
         Self::new()
     }
 }

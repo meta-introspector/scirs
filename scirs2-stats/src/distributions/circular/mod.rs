@@ -10,5 +10,5 @@
 pub mod von_mises;
 pub mod wrapped_cauchy;
 
-pub use von__mises::*;
-pub use wrapped__cauchy::*;
+pub use von_mises::*;
+pub use wrapped_cauchy::*;

@@ -5,7 +5,7 @@
 //! for production-grade statistical computing.
 
 use crate::error::StatsError;
-use crate::error__standardization::PerformanceImpact;
+use crate::error_standardization::PerformanceImpact;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};

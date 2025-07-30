@@ -32,17 +32,17 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 either = { workspace = true }
 chrono = { workspace = true }
-memmap2 = "0.9"
-quickcheck = "1.0"
+memmap2 = { workspace = true }
+quickcheck = { workspace = true }
 crossbeam = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
 plotters = { workspace = true }
-quickcheck = "1.0"
-quickcheck_macros = "1.0"
+quickcheck = { workspace = true }
+quickcheck_macros = { workspace = true }
 rand = { workspace = true }
-approx = "0.5"
+approx = { workspace = true }
 
 [features]
 default = []

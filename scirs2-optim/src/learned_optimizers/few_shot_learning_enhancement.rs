@@ -1315,7 +1315,7 @@ impl<T: Float> Default for FewShotConfig<T> {
     }
 }
 
-impl<T: Float + Send + Sync + std::iter::Sum + for<'a> + std::iter::Sum<&'a T>>
+impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
     FewShotLearningEnhancement<T>
 {
     /// Create new few-shot learning enhancement
@@ -1328,7 +1328,7 @@ impl<T: Float + Send + Sync + std::iter::Sum + for<'a> + std::iter::Sum<&'a T>>
             task_analyzer: TaskDistributionAnalyzer::new(&_config)?,
             adaptation_controller: AdaptationController::new(&_config)?,
             performance_tracker: FewShotPerformanceTracker::new(&_config)?,
-            _config,
+            config: _config,
         })
     }
 
@@ -1587,7 +1587,7 @@ impl<T: Float + Send + Sync> EpisodeMemory<T> {
         Self {
             episodes: VecDeque::new(),
             episode_features: HashMap::new(),
-            _capacity,
+            capacity: _capacity,
             retrieval_mechanism: MemoryRetrievalMechanism::MostSimilar,
         }
     }
@@ -1626,7 +1626,7 @@ impl<T: Float + Send + Sync> FastAdaptationEngine<T> {
 impl<T: Float + Send + Sync> PrototypeUpdateRule<T> {
     fn new(_method: PrototypeUpdateMethod) -> Self {
         Self {
-            _method,
+            method: _method,
             parameters: HashMap::new(),
             update_history: VecDeque::new(),
         }
@@ -1636,7 +1636,7 @@ impl<T: Float + Send + Sync> PrototypeUpdateRule<T> {
 impl<T: Float + Send + Sync> DistanceComputer<T> {
     fn new(_metric: DistanceMetric) -> Self {
         Self {
-            _metric,
+            metric: _metric,
             parameters: HashMap::new(),
             distance_cache: HashMap::new(),
             normalization: DistanceNormalization::L2,
@@ -1660,7 +1660,7 @@ impl<T: Float + Send + Sync> SimilarityCache<T> {
         Self {
             cache: HashMap::new(),
             hit_rate: 0.0,
-            _capacity,
+            capacity: _capacity,
             eviction_policy: CacheEvictionPolicy::LRU,
         }
     }
@@ -1733,7 +1733,7 @@ impl<T: Float + Send + Sync> ConvergenceDetector<T> {
 impl<T: Float + Send + Sync> EarlyStoppingMechanism<T> {
     fn new(_patience: usize) -> Self {
         Self {
-            _patience,
+            patience: _patience,
             best_performance: T::neg_infinity(),
             steps_since_improvement: 0,
             stopping_criterion: StoppingCriterion::default(),
@@ -1744,7 +1744,7 @@ impl<T: Float + Send + Sync> EarlyStoppingMechanism<T> {
 impl<T: Float + Send + Sync> AdaptationStrategy<T> {
     fn new(_strategy_type: AdaptationStrategyType) -> Self {
         Self {
-            _strategy_type,
+            strategy_type: _strategy_type,
             parameters: HashMap::new(),
             history: VecDeque::new(),
         }
@@ -1754,7 +1754,7 @@ impl<T: Float + Send + Sync> AdaptationStrategy<T> {
 impl<T: Float + Send + Sync> AdaptationRateController<T> {
     fn new(_base_rate: T) -> Self {
         Self {
-            _base_rate,
+            base_rate: _base_rate,
             current_rate: _base_rate,
             schedule: LearningRateSchedule::Constant,
             adaptive_control: false,
@@ -1766,7 +1766,7 @@ impl<T: Float + Send + Sync> AdaptationMemory<T> {
     fn new(_capacity: usize) -> Self {
         Self {
             entries: VecDeque::new(),
-            _capacity,
+            capacity: _capacity,
             access_patterns: HashMap::new(),
         }
     }
@@ -1776,7 +1776,7 @@ impl<T: Float + Send + Sync> AdaptationPerformanceMonitor<T> {
     fn new(_window_size: usize) -> Self {
         Self {
             performance_history: VecDeque::new(),
-            _window_size,
+            window_size: _window_size,
             trends: PerformanceTrends::default(),
             alert_thresholds: HashMap::new(),
         }
@@ -1786,7 +1786,7 @@ impl<T: Float + Send + Sync> AdaptationPerformanceMonitor<T> {
 impl<T: Float + Send + Sync> TaskPerformance<T> {
     fn new(_task_id: String) -> Self {
         Self {
-            _task_id,
+            task_id: _task_id,
             metrics: HashMap::new(),
             history: VecDeque::new(),
             adaptation_stats: AdaptationStatistics::default(),

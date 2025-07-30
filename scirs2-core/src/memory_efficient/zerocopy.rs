@@ -259,7 +259,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let num_chunks = self.size.div_ceil(chunk_size);
 
             // Process each chunk sequentially to avoid mutable borrow issues
-            let array = self.asarray::<ndarray::IxDyn>()?;
+            let array = self.as_array::<ndarray::IxDyn>()?;
             let mut out_array = output.as_array_mut::<ndarray::IxDyn>()?;
 
             for chunk_idx in 0..num_chunks {
@@ -307,7 +307,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
                 let end = (start + chunk_size).min(self.size);
 
                 // Get the data for this chunk
-                let array = self.asarray::<ndarray::IxDyn>()?;
+                let array = self.as_array::<ndarray::IxDyn>()?;
                 let slice = array.as_slice().ok_or_else(|| {
                     CoreError::ValidationError(
                         ErrorContext::new("Array is not contiguous in memory".to_string())
@@ -357,7 +357,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let end = (start + chunk_size).min(self.size);
 
             // Load the array
-            let array = self.asarray::<ndarray::IxDyn>()?;
+            let array = self.as_array::<ndarray::IxDyn>()?;
             let slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
@@ -437,8 +437,8 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let len = end - start;
 
             // Load chunks from both arrays
-            let self_array = self.asarray::<ndarray::IxDyn>()?;
-            let other_array = other.asarray::<ndarray::IxDyn>()?;
+            let self_array = self.as_array::<ndarray::IxDyn>()?;
+            let other_array = other.as_array::<ndarray::IxDyn>()?;
 
             let self_slice = self_array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
@@ -492,7 +492,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
             let end = (start + chunk_size).min(self.size);
 
             // Load the array
-            let array = self.asarray::<ndarray::IxDyn>()?;
+            let array = self.as_array::<ndarray::IxDyn>()?;
             let array_slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
@@ -528,7 +528,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
         // Read the first element to initialize
         let first_element = {
-            let array = self.asarray::<ndarray::IxDyn>()?;
+            let array = self.as_array::<ndarray::IxDyn>()?;
             let slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
@@ -555,7 +555,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> ZeroCopyOps<A
 
         // Read the first element to initialize
         let first_element = {
-            let array = self.asarray::<ndarray::IxDyn>()?;
+            let array = self.as_array::<ndarray::IxDyn>()?;
             let slice = array.as_slice().ok_or_else(|| {
                 CoreError::ValidationError(
                     ErrorContext::new("Array is not contiguous in memory".to_string())
@@ -737,8 +737,8 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> BroadcastOps<
         )?;
 
         // Load both arrays into memory (for broadcasting, we need random access)
-        let self_array = self.asarray::<ndarray::IxDyn>()?;
-        let other_array = other.asarray::<ndarray::IxDyn>()?;
+        let self_array = self.as_array::<ndarray::IxDyn>()?;
+        let other_array = other.as_array::<ndarray::IxDyn>()?;
 
         // Create ndarray views for easier broadcasting
         let self_view = self_array.view();

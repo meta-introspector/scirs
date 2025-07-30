@@ -5,10 +5,12 @@
 //! sensitive information about the training data.
 
 use crate::error::{OptimError, Result};
-use crate::privacy::moment__accountant::MomentsAccountant;
+use crate::privacy::moment_accountant::MomentsAccountant;
 use crate::privacy::{DifferentialPrivacyConfig, PrivacyBudget};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
+use rand::rngs::StdRng;
+use rand::Rng;
 use std::collections::HashMap;
 
 /// Privacy-preserving hyperparameter optimizer
@@ -42,7 +44,7 @@ pub struct PrivateHyperparameterOptimizer<T: Float> {
 #[derive(Debug, Clone)]
 pub struct PrivateHPOConfig<T: Float> {
     /// Base differential privacy configuration
-    pub base_privacy_config: DifferentialPrivacyConfig,
+    pub base_privacyconfig: DifferentialPrivacyConfig,
 
     /// Privacy budget allocation strategy
     pub budget_allocation: BudgetAllocationStrategy,
@@ -259,7 +261,7 @@ pub struct ParameterSpace<T: Float> {
     pub constraints: Vec<ParameterConstraint<T>>,
 
     /// Default configuration
-    pub default_config: Option<ParameterConfiguration<T>>,
+    pub defaultconfig: Option<ParameterConfiguration<T>>,
 }
 
 /// Individual parameter definition
@@ -436,7 +438,7 @@ pub struct ObjectiveNoiseMechanism<T: Float> {
     noise_params: NoiseParameters<T>,
 
     /// Random number generator
-    rng: scirs2_core: random::Random,
+    rng: scirs2_core::random::Random,
 }
 
 /// Noise parameters
@@ -945,47 +947,47 @@ pub enum EvaluationStatus {
 
 impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
     /// Create new private hyperparameter optimizer
-    pub fn new(_config: PrivateHPOConfig<T>, parameter_space: ParameterSpace<T>) -> Result<Self> {
+    pub fn new(config: PrivateHPOConfig<T>, parameter_space: ParameterSpace<T>) -> Result<Self> {
         let budget_manager = HPOBudgetManager::new(
-            _config.base_privacy_config.clone(),
-            _config.budget_allocation,
-            _config.num_evaluations,
+            config.base_privacyconfig.clone(),
+            config.budget_allocation,
+            config.num_evaluations,
         )?;
 
         let privacy_accountant = MomentsAccountant::new(
-            _config.base_privacy_config.noise_multiplier,
-            _config.base_privacy_config.target_delta,
-            _config.base_privacy_config.batch_size,
-            _config.base_privacy_config.dataset_size,
+            config.base_privacyconfig.noise_multiplier,
+            config.base_privacyconfig.target_delta,
+            config.base_privacyconfig.batch_size,
+            config.base_privacyconfig.dataset_size,
         );
 
         let mut noisy_optimizers: HashMap<String, Box<dyn NoisyOptimizer<T>>> = HashMap::new();
 
         // Add default noisy optimizers based on configuration
-        match _config.search_algorithm {
+        match config.search_algorithm {
             SearchAlgorithm::RandomSearch => {
                 noisy_optimizers.insert(
                     "random_search".to_string(),
-                    Box::new(PrivateRandomSearch::new(_config.clone())?),
+                    Box::new(PrivateRandomSearch::new(config.clone())?),
                 );
             }
             SearchAlgorithm::BayesianOptimization => {
                 noisy_optimizers.insert(
                     "bayesian_opt".to_string(),
-                    Box::new(PrivateBayesianOptimization::new(_config.clone())?),
+                    Box::new(PrivateBayesianOptimization::new(config.clone())?),
                 );
             }
             _ => {
                 // Default to random search
                 noisy_optimizers.insert(
                     "random_search".to_string(),
-                    Box::new(PrivateRandomSearch::new(_config.clone())?),
+                    Box::new(PrivateRandomSearch::new(config.clone())?),
                 );
             }
         }
 
         Ok(Self {
-            _config,
+            config,
             budget_manager,
             noisy_optimizers,
             parameter_space,
@@ -1005,13 +1007,14 @@ impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
         self.private_objective.set_objective(objective_fn)?;
 
         let mut evaluations = Vec::new();
-        let mut best_config: Option<ParameterConfiguration<T>> = None;
+        let mut bestconfig: Option<ParameterConfiguration<T>> = None;
         let mut best_score = T::neg_infinity();
 
         // Get the primary optimizer
         let optimizer_name = match self.config.search_algorithm {
             SearchAlgorithm::RandomSearch => "random_search",
-            SearchAlgorithm::BayesianOptimization => "bayesian_opt"_ => "random_search",
+            SearchAlgorithm::BayesianOptimization => "bayesian_opt",
+            _ => "random_search",
         };
 
         for iteration in 0..self.config.num_evaluations {
@@ -1053,7 +1056,7 @@ impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
             // Update best configuration
             if result.objective_value > best_score {
                 best_score = result.objective_value;
-                best_config = Some(config.clone());
+                bestconfig = Some(config.clone());
             }
 
             // Update optimizer with result
@@ -1080,7 +1083,7 @@ impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
         let final_results = self.results_aggregator.aggregate_results(&evaluations)?;
 
         Ok(PrivateHPOResults {
-            best_configuration: best_config,
+            bestconfiguration: bestconfig,
             best_score,
             all_evaluations: evaluations,
             final_results,
@@ -1140,7 +1143,7 @@ impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
 #[derive(Debug, Clone)]
 pub struct PrivateHPOResults<T: Float> {
     /// Best configuration found
-    pub best_configuration: Option<ParameterConfiguration<T>>,
+    pub bestconfiguration: Option<ParameterConfiguration<T>>,
 
     /// Best objective score
     pub best_score: T,
@@ -1162,7 +1165,7 @@ pub struct PrivateHPOResults<T: Float> {
 #[derive(Debug, Clone)]
 pub struct AggregatedResults<T: Float> {
     /// Top-k configurations
-    pub top_configurations: Vec<(ParameterConfiguration<T>, T)>,
+    pub topconfigurations: Vec<(ParameterConfiguration<T>, T)>,
 
     /// Confidence intervals for best score
     pub confidence_intervals: Option<(T, T)>,
@@ -1194,7 +1197,7 @@ pub struct SummaryStatistics<T: Float> {
 #[derive(Debug, Clone)]
 pub struct ModelSelectionResults<T: Float> {
     /// Selected model configuration
-    pub selected_config: ParameterConfiguration<T>,
+    pub selectedconfig: ParameterConfiguration<T>,
 
     /// Selection confidence
     pub selection_confidence: f64,
@@ -1237,17 +1240,17 @@ pub struct PrivateRandomSearch<T: Float> {
     config: PrivateHPOConfig<T>,
 
     /// Random number generator
-    rng: scirs2_core: random::Random,
+    rng: scirs2_core::random::Random<StdRng>,
 
     /// Evaluation history
     history: Vec<HPOEvaluation<T>>,
 }
 
 impl<T: Float + Send + Sync> PrivateRandomSearch<T> {
-    pub fn new(_config: PrivateHPOConfig<T>) -> Result<Self> {
+    pub fn new(config: PrivateHPOConfig<T>) -> Result<Self> {
         Ok(Self {
-            _config,
-            rng: scirs2_core: random::Random::with_seed(42),
+            config: config,
+            rng: scirs2_core::random::Random::seed(42),
             history: Vec::new(),
         })
     }
@@ -1281,9 +1284,9 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                         .unwrap_or(T::from(100).unwrap())
                         .to_i64()
                         .unwrap_or(100);
-                    ParameterValue::Integer(self.rng.random_range(min..max + 1))
+                    ParameterValue::Integer(self.rng.random_range(min, max + 1))
                 }
-                ParameterType::Boolean =>, ParameterValue::Boolean(self.rng.gen_range(0..2) == 1),
+                ParameterType::Boolean => ParameterValue::Boolean(self.rng.gen_range(0..2) == 1),
                 ParameterType::Categorical(categories) => {
                     let idx = self.rng.gen_range(0..categories.len());
                     ParameterValue::Categorical(categories[idx].clone())
@@ -1299,13 +1302,13 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
 
         Ok(ParameterConfiguration {
             values,
-            id: format!("config_{}", self._history.len()),
+            id: format!("config_{}", self.history.len()),
             metadata: HashMap::new(),
         })
     }
 
     fn update(
-        &mut self_config: &ParameterConfiguration<T>, _result: &HPOResult<T>, _privacy_budget: &PrivacyBudget,
+        &mut self, config: &ParameterConfiguration<T>, _result: &HPOResult<T>, _privacy_budget: &PrivacyBudget,
     ) -> Result<()> {
         // Random search doesn't need to update based on results
         Ok(())
@@ -1332,9 +1335,9 @@ pub struct PrivateBayesianOptimization<T: Float> {
 }
 
 impl<T: Float + Send + Sync> PrivateBayesianOptimization<T> {
-    pub fn new(_config: PrivateHPOConfig<T>) -> Result<Self> {
+    pub fn new(config: PrivateHPOConfig<T>) -> Result<Self> {
         Ok(Self {
-            _config,
+            config,
             gp_model: None,
             acquisition_fn: AcquisitionFunction::new(),
             history: Vec::new(),
@@ -1350,7 +1353,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
     ) -> Result<ParameterConfiguration<T>> {
         if evaluation_history.is_empty() {
             // First evaluation - use random sampling
-            let mut rng = scirs2_core::random::Random::with_seed(42);
+            let mut rng = scirs2_core::random::Random::seed(42);
             let mut values = HashMap::new();
 
             for (param_name, param_def) in &parameter_space.parameters {
@@ -1371,7 +1374,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
 
             return Ok(ParameterConfiguration {
                 values,
-                id: "initial_config".to_string(),
+                id: "initialconfig".to_string(),
                 metadata: HashMap::new(),
             });
         }
@@ -1380,13 +1383,13 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
         // This is a simplified implementation
         Ok(ParameterConfiguration {
             values: HashMap::new(),
-            id: format!("bayesian_config_{}", evaluation_history.len()),
+            id: format!("bayesianconfig_{}", evaluation_history.len()),
             metadata: HashMap::new(),
         })
     }
 
     fn update(
-        &mut self_config: &ParameterConfiguration<T>, _result: &HPOResult<T>, _privacy_budget: &PrivacyBudget,
+        &mut self, config: &ParameterConfiguration<T>, _result: &HPOResult<T>, _privacy_budget: &PrivacyBudget,
     ) -> Result<()> {
         // Update Gaussian process model with new data point
         // This is a simplified implementation
@@ -1469,15 +1472,15 @@ pub enum AcquisitionFunctionType {
 // Implementation stubs for other components
 impl HPOBudgetManager {
     pub fn new(
-        base_config: DifferentialPrivacyConfig,
+        baseconfig: DifferentialPrivacyConfig,
         allocation_strategy: BudgetAllocationStrategy,
         num_evaluations: usize,
     ) -> Result<Self> {
         let total_budget = PrivacyBudget {
             epsilon_consumed: 0.0,
             delta_consumed: 0.0,
-            epsilon_remaining: base_config.target_epsilon,
-            delta_remaining: base_config.target_delta,
+            epsilon_remaining: baseconfig.target_epsilon,
+            delta_remaining: baseconfig.target_delta,
             steps_taken: 0,
             accounting_method: crate::privacy::AccountingMethod::MomentsAccountant,
             estimated_steps_remaining: num_evaluations,
@@ -1490,8 +1493,8 @@ impl HPOBudgetManager {
             consumed_budget: PrivacyBudget {
                 epsilon_consumed: 0.0,
                 delta_consumed: 0.0,
-                epsilon_remaining: base_config.target_epsilon,
-                delta_remaining: base_config.target_delta,
+                epsilon_remaining: baseconfig.target_epsilon,
+                delta_remaining: baseconfig.target_delta,
                 steps_taken: 0,
                 accounting_method: crate::privacy::AccountingMethod::MomentsAccountant,
                 estimated_steps_remaining: num_evaluations,
@@ -1607,12 +1610,12 @@ impl<T: Float + Send + Sync> ObjectiveNoiseMechanism<T> {
                 epsilon: 1.0,
                 delta: Some(1e-5),
             },
-            rng: scirs2_core: random::Random::with_seed(42),
+            rng: scirs2_core::random::Random::default(),
         }
     }
 
     pub fn add_noise(&mut self, value: f64, _privacy_budget: &PrivacyBudget) -> Result<f64> {
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
 
         match self.mechanism_type {
             HyperparameterNoiseMechanism::Gaussian => {
@@ -1733,7 +1736,7 @@ impl<T: Float + Send + Sync> PrivateResultsAggregator<T> {
         &self,
         evaluations: &[HPOEvaluation<T>],
     ) -> Result<AggregatedResults<T>> {
-        let mut top_configs = Vec::new();
+        let mut topconfigs = Vec::new();
 
         // Sort evaluations by objective value
         let mut sorted_evals = evaluations.to_vec();
@@ -1746,7 +1749,7 @@ impl<T: Float + Send + Sync> PrivateResultsAggregator<T> {
 
         // Take top configurations
         for eval in sorted_evals.iter().take(5) {
-            top_configs.push((eval.configuration.clone(), eval.result.objective_value));
+            topconfigs.push((eval.configuration.clone(), eval.result.objective_value));
         }
 
         // Compute summary statistics
@@ -1770,7 +1773,7 @@ impl<T: Float + Send + Sync> PrivateResultsAggregator<T> {
         };
 
         Ok(AggregatedResults {
-            top_configurations: top_configs,
+            topconfigurations: topconfigs,
             confidence_intervals: None,
             summary_stats,
             model_selection: None,
@@ -1858,9 +1861,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_private_hpo_config() {
+    fn test_private_hpoconfig() {
         let config = PrivateHPOConfig {
-            base_privacy_config: DifferentialPrivacyConfig::default(),
+            base_privacyconfig: DifferentialPrivacyConfig::default(),
             budget_allocation: BudgetAllocationStrategy::Equal,
             search_algorithm: SearchAlgorithm::RandomSearch,
             num_evaluations: 100,
@@ -1909,7 +1912,7 @@ mod tests {
         let parameter_space = ParameterSpace {
             parameters,
             constraints: Vec::new(),
-            default_config: None,
+            defaultconfig: None,
         };
 
         assert!(parameter_space.parameters.contains_key("learning_rate"));
@@ -1917,9 +1920,9 @@ mod tests {
 
     #[test]
     fn test_budget_manager() {
-        let base_config = DifferentialPrivacyConfig::default();
+        let baseconfig = DifferentialPrivacyConfig::default();
         let budget_manager =
-            HPOBudgetManager::new(base_config, BudgetAllocationStrategy::Equal, 10).unwrap();
+            HPOBudgetManager::new(baseconfig, BudgetAllocationStrategy::Equal, 10).unwrap();
 
         assert!(budget_manager.has_budget_remaining().unwrap());
     }
@@ -1927,7 +1930,7 @@ mod tests {
     #[test]
     fn test_private_random_search() {
         let config = PrivateHPOConfig {
-            base_privacy_config: DifferentialPrivacyConfig::default(),
+            base_privacyconfig: DifferentialPrivacyConfig::default(),
             budget_allocation: BudgetAllocationStrategy::Equal,
             search_algorithm: SearchAlgorithm::RandomSearch,
             num_evaluations: 10,

@@ -123,14 +123,16 @@ impl Metadata {
     /// Get a typed metadata value
     pub fn get_string(&self, key: &str) -> Option<&str> {
         match self.get(key)? {
-            MetadataValue::String(s) => Some(s, _ => None,
+            MetadataValue::String(s) => Some(s),
+            _ => None,
         }
     }
 
     /// Get integer metadata value
     pub fn get_integer(&self, key: &str) -> Option<i64> {
         match self.get(key)? {
-            MetadataValue::Integer(i) => Some(*i, _ => None,
+            MetadataValue::Integer(i) => Some(*i),
+            _ => None,
         }
     }
 
@@ -138,7 +140,8 @@ impl Metadata {
     pub fn get_float(&self, key: &str) -> Option<f64> {
         match self.get(key)? {
             MetadataValue::Float(f) => Some(*f),
-            MetadataValue::Integer(i) => Some(*i as f64, _ => None,
+            MetadataValue::Integer(i) => Some(*i as f64),
+            _ => None,
         }
     }
 
@@ -181,7 +184,7 @@ impl Metadata {
     /// Convert metadata to a specific format
     pub fn to_format(&self, format: MetadataFormat) -> Result<String> {
         match format {
-            MetadataFormat::Json =>, serde_json::to_string_pretty(self)
+            MetadataFormat::Json => serde_json::to_string_pretty(self)
                 .map_err(|e| IoError::SerializationError(e.to_string())),
             MetadataFormat::Yaml => {
                 serde_yaml::to_string(self).map_err(|e| IoError::SerializationError(e.to_string()))
@@ -222,7 +225,8 @@ impl Metadata {
         let format = match extension {
             "json" => MetadataFormat::Json,
             "yaml" | "yml" => MetadataFormat::Yaml,
-            "toml" => MetadataFormat::Toml_ => {
+            "toml" => MetadataFormat::Toml,
+            _ => {
                 return Err(IoError::UnsupportedFormat(format!(
                     "Unknown metadata format: {}",
                     extension
@@ -237,13 +241,15 @@ impl Metadata {
     /// Add processing history entry
     pub fn add_processing_history(&mut self, entry: ProcessingHistoryEntry) -> Result<()> {
         let history = match self.data.get_mut(standard_keys::PROCESSING_HISTORY) {
-            Some(MetadataValue::Array(arr)) => arr_ => {
+            Some(MetadataValue::Array(arr)) => arr,
+            _ => {
                 self.data.insert(
                     standard_keys::PROCESSING_HISTORY.to_string(),
                     MetadataValue::Array(Vec::new()),
                 );
                 match self.data.get_mut(standard_keys::PROCESSING_HISTORY) {
-                    Some(MetadataValue::Array(arr)) => arr_ => {
+                    Some(MetadataValue::Array(arr)) => arr,
+                    _ => {
                         return Err(IoError::Other(
                             "Failed to create processing history array".to_string(),
                         ))
@@ -408,7 +414,8 @@ impl MetadataSchema {
             (MetadataValue::Array(arr), MetadataFieldType::Array(elem_type)) => {
                 arr.iter().all(|v| self.validate_type(v, elem_type))
             }
-            (MetadataValue::Object(_), MetadataFieldType::Object) => true_ => false,
+            (MetadataValue::Object(_), MetadataFieldType::Object) => true,
+            _ => false,
         }
     }
 
@@ -1426,7 +1433,8 @@ impl MetadataExtractor {
             "png" | "jpg" | "jpeg" | "gif" | "bmp" | "tiff" => "image",
             "wav" | "mp3" | "flac" | "ogg" => "audio",
             "nc" | "nc4" => "netcdf",
-            "h5" | "hdf5" => "hdf5"_ => {
+            "h5" | "hdf5" => "hdf5",
+            _ => {
                 return Err(IoError::UnsupportedFormat(format!(
                     "No extractor for format: {}",
                     extension

@@ -13,7 +13,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2__spatial::distance::{euclidean, manhattan, minkowski};
+//! use scirs2_spatial::distance::{euclidean, manhattan, minkowski};
 //!
 //! let point1 = &[1.0, 2.0, 3.0];
 //! let point2 = &[4.0, 5.0, 6.0];
@@ -47,7 +47,7 @@ pub trait Distance<T: Float>: Clone + Send + Sync {
     /// # Returns
     ///
     /// * The distance between the points
-    fn distance(a: &[T], b: &[T]) -> T;
+    fn distance(&self, a: &[T], b: &[T]) -> T;
 
     /// Compute the minimum possible distance between a point and a rectangle
     ///
@@ -62,7 +62,7 @@ pub trait Distance<T: Float>: Clone + Send + Sync {
     /// # Returns
     ///
     /// * The minimum possible distance from the point to any point in the rectangle
-    fn min_distance_point_rectangle(_point: &[T], mins: &[T], maxes: &[T]) -> T;
+    fn min_distance_point_rectangle(&self, _point: &[T], mins: &[T], maxes: &[T]) -> T;
 }
 
 /// Euclidean distance metric (L2 norm)
@@ -96,7 +96,7 @@ impl<T: Float + Send + Sync> Distance<T> for EuclideanDistance<T> {
         sum.sqrt()
     }
 
-    fn min_distance_point_rectangle(_point: &[T], mins: &[T], maxes: &[T]) -> T {
+    fn min_distance_point_rectangle(&self, _point: &[T], mins: &[T], maxes: &[T]) -> T {
         let mut sum = T::zero();
 
         for i in 0.._point.len() {
@@ -146,7 +146,7 @@ impl<T: Float + Send + Sync> Distance<T> for ManhattanDistance<T> {
         sum
     }
 
-    fn min_distance_point_rectangle(_point: &[T], mins: &[T], maxes: &[T]) -> T {
+    fn min_distance_point_rectangle(&self, _point: &[T], mins: &[T], maxes: &[T]) -> T {
         let mut sum = T::zero();
 
         for i in 0.._point.len() {
@@ -197,7 +197,7 @@ impl<T: Float + Send + Sync> Distance<T> for ChebyshevDistance<T> {
         max_diff
     }
 
-    fn min_distance_point_rectangle(_point: &[T], mins: &[T], maxes: &[T]) -> T {
+    fn min_distance_point_rectangle(&self, _point: &[T], mins: &[T], maxes: &[T]) -> T {
         let mut max_diff = T::zero();
 
         for i in 0.._point.len() {
@@ -284,7 +284,7 @@ impl<T: Float + Send + Sync> Distance<T> for MinkowskiDistance<T> {
         }
     }
 
-    fn min_distance_point_rectangle(_point: &[T], mins: &[T], maxes: &[T]) -> T {
+    fn min_distance_point_rectangle(&self, _point: &[T], mins: &[T], maxes: &[T]) -> T {
         if self.p == T::one() {
             // Manhattan distance
             let mut sum = T::zero();
@@ -361,7 +361,7 @@ impl<T: Float + Send + Sync> Distance<T> for MinkowskiDistance<T> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::euclidean;
+/// use scirs2_spatial::distance::euclidean;
 ///
 /// let point1 = &[1.0, 2.0, 3.0];
 /// let point2 = &[4.0, 5.0, 6.0];
@@ -389,7 +389,7 @@ pub fn euclidean<T: Float + Send + Sync>(_point1: &[T], point2: &[T]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::sqeuclidean;
+/// use scirs2_spatial::distance::sqeuclidean;
 ///
 /// let point1 = &[1.0, 2.0, 3.0];
 /// let point2 = &[4.0, 5.0, 6.0];
@@ -425,7 +425,7 @@ pub fn sqeuclidean<T: Float>(_point1: &[T], point2: &[T]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::manhattan;
+/// use scirs2_spatial::distance::manhattan;
 ///
 /// let point1 = &[1.0, 2.0, 3.0];
 /// let point2 = &[4.0, 5.0, 6.0];
@@ -453,7 +453,7 @@ pub fn manhattan<T: Float + Send + Sync>(_point1: &[T], point2: &[T]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::chebyshev;
+/// use scirs2_spatial::distance::chebyshev;
 ///
 /// let point1 = &[1.0, 2.0, 3.0];
 /// let point2 = &[4.0, 5.0, 6.0];
@@ -482,7 +482,7 @@ pub fn chebyshev<T: Float + Send + Sync>(_point1: &[T], point2: &[T]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::minkowski;
+/// use scirs2_spatial::distance::minkowski;
 ///
 /// let point1 = &[1.0, 2.0, 3.0];
 /// let point2 = &[4.0, 5.0, 6.0];
@@ -510,7 +510,7 @@ pub fn minkowski<T: Float + Send + Sync>(_point1: &[T], point2: &[T], p: T) -> T
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::canberra;
+/// use scirs2_spatial::distance::canberra;
 ///
 /// let point1 = &[1.0, 2.0, 3.0];
 /// let point2 = &[4.0, 5.0, 6.0];
@@ -528,7 +528,7 @@ pub fn canberra<T: Float>(_point1: &[T], point2: &[T]) -> T {
     for i in 0.._point1.len() {
         let num = (_point1[i] - point2[i]).abs();
         let denom = _point1[i].abs() + point2[i].abs();
-        if num > T::zero() && denom >, T::zero() {
+        if num > T::zero() && denom > T::zero() {
             sum = sum + num / denom;
         }
     }
@@ -563,7 +563,7 @@ pub fn canberra<T: Float>(_point1: &[T], point2: &[T]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::cosine;
+/// use scirs2_spatial::distance::cosine;
 ///
 /// let point1 = &[1.0, 0.0];
 /// let point2 = &[0.0, 1.0];
@@ -608,7 +608,7 @@ pub fn cosine<T: Float>(_point1: &[T], point2: &[T]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::correlation;
+/// use scirs2_spatial::distance::correlation;
 ///
 /// let point1 = &[1.0, 2.0, 3.0];
 /// let point2 = &[3.0, 2.0, 1.0];
@@ -663,7 +663,7 @@ pub fn correlation<T: Float>(_point1: &[T], point2: &[T]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::jaccard;
+/// use scirs2_spatial::distance::jaccard;
 ///
 /// let point1 = &[1.0, 0.0, 1.0];
 /// let point2 = &[0.0, 1.0, 1.0];
@@ -689,7 +689,7 @@ pub fn correlation<T: Float>(_point1: &[T], point2: &[T]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::mahalanobis;
+/// use scirs2_spatial::distance::mahalanobis;
 /// use ndarray::array;
 ///
 /// let u = &[1.0, 0.0, 0.0];
@@ -750,7 +750,7 @@ pub fn mahalanobis<T: Float>(_point1: &[T], point2: &[T], vi: &Array2<T>) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::seuclidean;
+/// use scirs2_spatial::distance::seuclidean;
 ///
 /// let u = &[1.0, 2.0, 3.0];
 /// let v = &[4.0, 5.0, 6.0];
@@ -796,7 +796,7 @@ pub fn seuclidean<T: Float>(_point1: &[T], point2: &[T], variance: &[T]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::braycurtis;
+/// use scirs2_spatial::distance::braycurtis;
 ///
 /// let u = &[1.0, 2.0, 3.0];
 /// let v = &[4.0, 5.0, 6.0];
@@ -870,7 +870,7 @@ pub fn jaccard<T: Float>(_point1: &[T], point2: &[T]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::{pdist, euclidean};
+/// use scirs2_spatial::distance::{pdist, euclidean};
 /// use ndarray::array;
 ///
 /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
@@ -920,7 +920,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::{cdist, euclidean};
+/// use scirs2_spatial::distance::{cdist, euclidean};
 /// use ndarray::array;
 ///
 /// let x_a = array![[0.0, 0.0], [1.0, 0.0]];
@@ -1094,7 +1094,7 @@ pub fn squareform_to_condensed<T: Float>(_distances: &Array2<T>) -> SpatialResul
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::dice;
+/// use scirs2_spatial::distance::dice;
 ///
 /// let u = &[true, false, true, false];
 /// let v = &[true, true, false, false];
@@ -1150,7 +1150,7 @@ pub fn dice<T: Float>(_point1: &[bool], point2: &[bool]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::kulsinski;
+/// use scirs2_spatial::distance::kulsinski;
 ///
 /// let u = &[true, false, true, false];
 /// let v = &[true, true, false, false];
@@ -1207,7 +1207,7 @@ pub fn kulsinski<T: Float>(_point1: &[bool], point2: &[bool]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::rogerstanimoto;
+/// use scirs2_spatial::distance::rogerstanimoto;
 ///
 /// let u = &[true, false, true, false];
 /// let v = &[true, true, false, false];
@@ -1268,7 +1268,7 @@ pub fn rogerstanimoto<T: Float>(_point1: &[bool], point2: &[bool]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::russellrao;
+/// use scirs2_spatial::distance::russellrao;
 ///
 /// let u = &[true, false, true, false];
 /// let v = &[true, true, false, false];
@@ -1319,7 +1319,7 @@ pub fn russellrao<T: Float>(_point1: &[bool], point2: &[bool]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::sokalmichener;
+/// use scirs2_spatial::distance::sokalmichener;
 ///
 /// let u = &[true, false, true, false];
 /// let v = &[true, true, false, false];
@@ -1351,7 +1351,7 @@ pub fn sokalmichener<T: Float>(_point1: &[bool], point2: &[bool]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::sokalsneath;
+/// use scirs2_spatial::distance::sokalsneath;
 ///
 /// let u = &[true, false, true, false];
 /// let v = &[true, true, false, false];
@@ -1409,7 +1409,7 @@ pub fn sokalsneath<T: Float>(_point1: &[bool], point2: &[bool]) -> T {
 /// # Examples
 ///
 /// ```
-/// use scirs2__spatial::distance::yule;
+/// use scirs2_spatial::distance::yule;
 ///
 /// let u = &[true, false, true, false];
 /// let v = &[true, true, false, false];
