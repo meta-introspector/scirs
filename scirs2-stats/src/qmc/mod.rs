@@ -524,4 +524,4 @@ pub fn star_discrepancy(_samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> 
 pub mod advanced;
 pub mod enhanced_sequences;
 pub use advanced::*;
-pub use enhanced__sequences::*;
+pub use enhanced_sequences::*;

@@ -125,7 +125,7 @@ impl DistributedReader {
             partition_strategy: PartitionStrategy::SizeBased {
                 chunk_size_bytes: 64 * 1024 * 1024,
             }, // 64MB default
-            num_workers: num, _cpus: get(),
+            num_workers: num_cpus::get(),
             worker_pool: None,
             progress_callback: None,
         }
@@ -347,7 +347,7 @@ impl DistributedReader {
 
         // Sort results by partition index and extract values
         let mut results_guard = results.lock().unwrap();
-        results_guard.sort_by_key(|(idx_)| *idx);
+        results_guard.sort_by_key(|(idx_)| *idx_);
 
         // Drain the results to own them, avoiding cloning issues
         let sorted_results: Vec<_> = results_guard.drain(..).collect();
@@ -398,7 +398,7 @@ impl DistributedWriter {
     pub fn new<P: AsRef<Path>>(_output_dir: P) -> Self {
         Self {
             output_dir: _output_dir.as_ref().to_path_buf(),
-            num_partitions: num, _cpus: get(),
+            num_partitions: num_cpus::get(),
             partition_naming: Arc::new(|idx| format!("partition_{idx:04}.dat")),
             merge_strategy: MergeStrategy::None,
         }
@@ -561,7 +561,7 @@ impl DistributedArray {
     pub fn new(_shape: Vec<usize>, distribution: Distribution) -> Self {
         Self {
             partitions: Vec::new(),
-            _shape,
+            shape: _shape,
             distribution,
         }
     }
@@ -723,7 +723,6 @@ impl DistributedFileSystem for LocalFileSystem {
 
 // Helper for s! macro
 use ndarray::s;
-use std::path::PathBuf;
 
 #[cfg(test)]
 mod tests {

@@ -52,7 +52,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::coo::CooMatrix;
+    /// use scirs2_sparse::coo::CooMatrix;
     ///
     /// // Create a 3x3 sparse matrix with 5 non-zero elements
     /// let rows = vec![0, 0, 1, 2, 2];

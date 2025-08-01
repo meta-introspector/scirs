@@ -110,7 +110,7 @@ impl PerformanceProfiler {
     }
 
     /// Start profiling a specific phase
-    pub fn start_phase(&mut self, _phase_name: &str) {
+    pub fn start_phase(&mut self, phase_name: &str) {
         if !self.is_active {
             return;
         }
@@ -119,7 +119,7 @@ impl PerformanceProfiler {
     }
 
     /// End profiling a specific phase
-    pub fn end_phase(&mut self, _phase_name: &str) {
+    pub fn end_phase(&mut self, phase_name: &str) {
         if !self.is_active {
             return;
         }
@@ -136,7 +136,7 @@ impl PerformanceProfiler {
     }
 
     /// Record a function evaluation
-    pub fn record_function_evaluation() {
+    pub fn record_function_evaluation(&mut self) {
         if !self.is_active {
             return;
         }
@@ -147,7 +147,7 @@ impl PerformanceProfiler {
     }
 
     /// Record a Jacobian evaluation
-    pub fn record_jacobian_evaluation() {
+    pub fn record_jacobian_evaluation(&mut self) {
         if !self.is_active {
             return;
         }
@@ -158,7 +158,7 @@ impl PerformanceProfiler {
     }
 
     /// Record a linear system solve
-    pub fn record_linear_solve() {
+    pub fn record_linear_solve(&mut self) {
         if !self.is_active {
             return;
         }
@@ -169,7 +169,7 @@ impl PerformanceProfiler {
     }
 
     /// Record convergence information
-    pub fn record_convergence(&mut self, _residual_norm: f64) {
+    pub fn record_convergence(&mut self, residual_norm: f64) {
         if !self.is_active {
             return;
         }
@@ -213,7 +213,7 @@ impl PerformanceProfiler {
     }
 
     /// Update memory statistics
-    pub fn update_memory_stats(&mut self, _current_memory: usize, peak_memory: usize) {
+    pub fn update_memory_stats(&mut self, current_memory: usize, peak_memory: usize) {
         if !self.is_active {
             return;
         }
@@ -256,7 +256,7 @@ impl PerformanceProfiler {
     }
 
     /// Compute efficiency and derived metrics
-    fn compute_efficiency_metrics(_metrics: &mut PerformanceMetrics) {
+    fn compute_efficiency_metrics(&self, _metrics: &mut PerformanceMetrics) {
         // Compute convergence rate if we have history
         if _metrics.convergence_history.len() > 1 {
             let rates: Vec<f64> = _metrics
@@ -281,7 +281,8 @@ impl PerformanceProfiler {
 
         // Compute function evaluation efficiency
         if _metrics.function_evaluations > 0 && !_metrics.total_time.is_zero() {
-            let eval_rate = _metrics.function_evaluations as f64 / _metrics.total_time.as_secs_f64();
+            let eval_rate =
+                _metrics.function_evaluations as f64 / _metrics.total_time.as_secs_f64();
             _metrics
                 .algorithm_metrics
                 .insert("evaluations_per_second".to_string(), eval_rate);
@@ -326,7 +327,7 @@ impl PerformanceProfiler {
     }
 
     /// Re-enable profiling
-    pub fn enable() {
+    pub fn enable(&mut self) {
         self.is_active = true;
     }
 
@@ -431,7 +432,8 @@ impl PerformanceAnalyzer {
 
         // Function evaluation efficiency
         if _metrics.function_evaluations > 0 && !_metrics.total_time.is_zero() {
-            let eval_rate = _metrics.function_evaluations as f64 / _metrics.total_time.as_secs_f64();
+            let eval_rate =
+                _metrics.function_evaluations as f64 / _metrics.total_time.as_secs_f64();
             if eval_rate < 100.0 {
                 // Less than 100 evaluations per second
                 bottlenecks.push(PerformanceBottleneck {
@@ -456,7 +458,7 @@ impl PerformanceAnalyzer {
         let bottlenecks = Self::identify_bottlenecks(_metrics);
 
         PerformanceReport {
-            _metrics: _metrics.clone(),
+            metrics: _metrics.clone(),
             convergence_analysis,
             bottlenecks,
             recommendations: Self::generate_recommendations(_metrics),

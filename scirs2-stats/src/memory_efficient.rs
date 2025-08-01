@@ -4,7 +4,7 @@
 //! that minimize allocations and use streaming/chunked processing for large datasets.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 #[cfg(feature = "memmap")]
 use memmap2::Mmap;
 use ndarray::{s, ArrayBase, ArrayViewMut1, Data, Ix1, Ix2};
@@ -156,7 +156,7 @@ where
         ));
     }
 
-    if q < F::zero() || q >, F::one() {
+    if q < F::zero() || q > F::one() {
         return Err(StatsError::domain("Quantile must be between 0 and 1"));
     }
 
@@ -211,7 +211,7 @@ fn partition<F: Float>(_data: &mut [F], left: usize, right: usize) -> usize {
     _data.swap(pivot_idx, right);
 
     let mut store_idx = left;
-    for i in left, right {
+    for i in left..right {
         if _data[i] < pivot {
             _data.swap(i, store_idx);
             store_idx += 1;
@@ -481,8 +481,8 @@ impl<F: Float + NumCast + std::fmt::Display> RollingStats<F> {
         }
 
         Ok(Self {
-            window_size,
-            buffer: vec![F::zero(); window_size],
+            window_size: _window_size,
+            buffer: vec![F::zero(); _window_size],
             position: 0,
             is_full: false,
             sum: F::zero(),

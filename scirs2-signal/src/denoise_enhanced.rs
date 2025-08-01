@@ -738,7 +738,8 @@ fn standard_denoise_1d(
     let effective_df = compute_effective_df(&thresholded_coeffs);
 
     let risk_estimate = match config.threshold_rule {
-        ThresholdRule::SURE => Some(compute_sure_risk(&coeffs, &thresholds, noise_sigma)?, _ => None,
+        ThresholdRule::SURE => Some(compute_sure_risk(&coeffs, &thresholds, noise_sigma)?),
+        _ => None,
     };
 
     Ok(DenoiseResult {
@@ -785,7 +786,7 @@ fn translation_invariant_denoise_1d(
 
                 standard_denoise_1d(&shifted, &shift_config)
             })
-            .collect::<Result<Vec<_>_>>()?
+            .collect::<Result<Vec<_>, _>>()?
     } else {
         (0..n_shifts)
             .map(|shift| {
@@ -799,7 +800,7 @@ fn translation_invariant_denoise_1d(
 
                 standard_denoise_1d(&shifted, &shift_config)
             })
-            .collect::<Result<Vec<_>_>>()?
+            .collect::<Result<Vec<_>, _>>()?
     };
 
     // Average the unshifted results
@@ -1347,13 +1348,15 @@ fn threshold_subband(
     let threshold = match config.threshold_rule {
         ThresholdRule::Universal => subband_sigma * (2.0 * (flat.len() as f64).ln()).sqrt(),
         ThresholdRule::SURE => compute_sure_threshold(&flat_array, subband_sigma)?,
-        ThresholdRule::Bayes => compute_bayes_threshold(&flat_array, subband_sigma, _ => subband_sigma * (2.0 * (flat.len() as f64).ln()).sqrt(),
+        ThresholdRule::Bayes => compute_bayes_threshold(&flat_array, subband_sigma)?,
+        _ => subband_sigma * (2.0 * (flat.len() as f64).ln()).sqrt(),
     };
 
     // Apply thresholding
     let (thresholded_flat, retention) = match config.method {
         ThresholdMethod::Soft => soft_threshold(&flat_array, threshold),
-        ThresholdMethod::Hard => hard_threshold(&flat_array, threshold, _ => soft_threshold(&flat_array, threshold),
+        ThresholdMethod::Hard => hard_threshold(&flat_array, threshold),
+        _ => soft_threshold(&flat_array, threshold),
     };
 
     // Reshape back to 2D
@@ -1876,7 +1879,8 @@ fn apply_enhanced_thresholding(
         let (thresholded_detail, retention) = if config.use_simd && detail.len() >= 64 {
             match config.method {
                 ThresholdMethod::Soft => simd_soft_threshold(detail, scaled_threshold)?,
-                ThresholdMethod::Hard => simd_hard_threshold(detail, scaled_threshold)?_ => match config.method {
+                ThresholdMethod::Hard => simd_hard_threshold(detail, scaled_threshold)?,
+                _ => match config.method {
                     ThresholdMethod::Garotte => garotte_threshold(detail, scaled_threshold),
                     ThresholdMethod::SCAD { a } => scad_threshold(detail, scaled_threshold, a),
                     ThresholdMethod::Firm { alpha } => {

@@ -4,7 +4,9 @@
 //! optimizing memory-intensive operations.
 
 use crate::error::CoreResult;
+#[cfg(target_os = "linux")]
 use crate::CoreError;
+#[cfg(target_os = "linux")]
 use std::fs;
 
 /// Memory system information

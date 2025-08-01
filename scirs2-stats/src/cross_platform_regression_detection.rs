@@ -30,7 +30,7 @@ pub struct CrossPlatformRegressionConfig {
     /// Statistical significance level for regression detection
     pub significance_level: f64,
     /// Minimum number of samples for statistical analysis
-    pub min_samples: usize,
+    pub min_samples_: usize,
     /// Maximum historical data retention (days)
     pub max_data_retention_days: usize,
     /// Enable platform-specific baselines
@@ -53,7 +53,7 @@ impl Default for CrossPlatformRegressionConfig {
             baseline_storage_path: "./performance_baselines".to_string(),
             regression_threshold_percent: 10.0, // 10% performance degradation
             significance_level: 0.05,
-            min_samples: 30,
+            min_samples_: 30,
             max_data_retention_days: 90,
             platform_specific_baselines: true,
             hardware_aware_normalization: true,
@@ -101,7 +101,7 @@ impl PlatformInfo {
             os: std::env::consts::OS.to_string(),
             arch: std::env::consts::ARCH.to_string(),
             cpu_model: Self::detect_cpu_model(),
-            cpu_cores: num, _cpus: get(),
+            cpu_cores: num_cpus::get(),
             memory_gb: Self::detect_memory_gb(),
             rustc_version: Self::detect_rustc_version(),
             optimization_level: Self::detect_optimization_level(),
@@ -410,7 +410,7 @@ impl CrossPlatformRegressionDetector {
                     if path.extension().map_or(false, |ext| ext == "json") {
                         if let Ok(content) = fs::read_to_string(&path) {
                             if let Ok(baseline) =
-                                serde_json::from, _str::<PerformanceBaseline>(&content)
+                                serde_json::from_str::<PerformanceBaseline>(&content)
                             {
                                 let key = format!(
                                     "{}-{}",
@@ -822,7 +822,7 @@ impl CrossPlatformRegressionDetector {
     fn generate_recommendations(
         &self, _function_name: &str,
         performance_change_percent: f64,
-        baseline_stats: &BaselineStatistics_current, _measurement: &PerformanceMeasurement,
+        baseline_stats: &BaselineStatistics, _measurement: &PerformanceMeasurement,
     ) -> StatsResult<Vec<PerformanceRecommendation>> {
         let mut recommendations = Vec::new();
 

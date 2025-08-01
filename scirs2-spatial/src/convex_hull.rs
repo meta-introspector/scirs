@@ -48,7 +48,7 @@ pub enum ConvexHullAlgorithm {
 ///
 /// # Arguments
 ///
-/// * `points` - Input points (shape: n_points x n_dim)
+/// * `points` - Input points (shape: npoints x n_dim)
 ///
 /// # Returns
 ///
@@ -68,8 +68,8 @@ pub enum ConvexHullAlgorithm {
 /// assert!(hull_vertices.nrows() >= 3);
 /// ```
 #[allow(dead_code)]
-pub fn convex_hull(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
-    let hull = ConvexHull::new(_points)?;
+pub fn convex_hull(points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+    let hull = ConvexHull::new(points)?;
     Ok(hull.vertices_array())
 }
 
@@ -77,7 +77,7 @@ pub fn convex_hull(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> 
 ///
 /// # Arguments
 ///
-/// * `points` - Input points (shape: n_points x n_dim)
+/// * `points` - Input points (shape: npoints x n_dim)
 /// * `algorithm` - Algorithm to use for convex hull computation
 ///
 /// # Returns
@@ -127,7 +127,7 @@ impl ConvexHull {
     ///
     /// # Arguments
     ///
-    /// * `points` - Input points (shape: n_points x n_dim)
+    /// * `points` - Input points (shape: npoints x n_dim)
     ///
     /// # Returns
     ///
@@ -146,15 +146,15 @@ impl ConvexHull {
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
     /// let hull = ConvexHull::new(&points.view()).unwrap();
     /// ```
-    pub fn new(_points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        Self::new_with_algorithm(_points, ConvexHullAlgorithm::default())
+    pub fn new(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        Self::new_with_algorithm(points, ConvexHullAlgorithm::default())
     }
 
     /// Create a new ConvexHull from a set of points using a specific algorithm.
     ///
     /// # Arguments
     ///
-    /// * `points` - Input points (shape: n_points x n_dim)
+    /// * `points` - Input points (shape: npoints x n_dim)
     /// * `algorithm` - Algorithm to use for convex hull computation
     ///
     /// # Returns
@@ -212,55 +212,56 @@ impl ConvexHull {
     }
 
     /// Create a ConvexHull using QHull algorithm (original implementation)
-    fn new_qhull(_points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        let npoints = _points.nrows();
-        let ndim = _points.ncols();
+    fn new_qhull(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        let npoints = points.nrows();
+        let ndim = points.ncols();
 
         // Handle special cases for 2D and 3D
         if ndim == 2 && (npoints == 3 || npoints == 4) {
-            return Self::handle_special_case_2d(_points);
+            return Self::handle_special_case_2d(points);
         } else if ndim == 3 && npoints == 4 {
-            return Self::handle_special_case_3d(_points);
+            return Self::handle_special_case_3d(points);
         }
 
-        // Extract _points as Vec of Vec
-        let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| _points.row(i).to_vec()).collect();
+        // Extract points as Vec of Vec
+        let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| points.row(i).to_vec()).collect();
 
         // Try using standard approach
         let qh_result = Qh::builder()
             .compute(true)
             .triangulate(true)
-            .build_from_iter(points_vec.clone());
+            .build_from_iter(_points_vec.clone());
 
         // If that fails, try with perturbation
         let qh = match qh_result {
             Ok(qh) => qh,
             Err(_) => {
-                // Add some random jitter to _points
-                let mut perturbed_points = vec![];
+                // Add some random jitter to points
+                let mut perturbedpoints = vec![];
                 use rand::Rng;
                 let mut rng = rand::rng();
 
                 for i in 0..npoints {
-                    let mut pt = _points.row(i).to_vec();
+                    let mut pt = points.row(i).to_vec();
                     for val in pt.iter_mut().take(ndim) {
                         *val += rng.gen_range(-0.0001..0.0001);
                     }
-                    perturbed_points.push(pt);
+                    perturbedpoints.push(pt);
                 }
 
-                // Try again with perturbed _points
+                // Try again with perturbed points
                 match Qh::builder()
                     .compute(true)
                     .triangulate(true)
-                    .build_from_iter(perturbed_points)
+                    .build_from_iter(perturbedpoints)
                 {
-                    Ok(qh2) => qh2, Err(e) => {
+                    Ok(qh2) => qh2,
+                    Err(e) => {
                         // If that also fails, try 2D or 3D cases
                         if ndim == 2 {
-                            return Self::handle_special_case_2d(_points);
+                            return Self::handle_special_case_2d(points);
                         } else if ndim == 3 {
-                            return Self::handle_special_case_3d(_points);
+                            return Self::handle_special_case_3d(points);
                         } else {
                             return Err(SpatialError::ComputationError(format!(
                                 "Qhull error: {e}"
@@ -341,7 +342,7 @@ impl ConvexHull {
         let equations = ConvexHull::extract_equations(&qh, ndim);
 
         Ok(ConvexHull {
-            _points: _points.to_owned(),
+            points: points.to_owned(),
             qh,
             vertex_indices,
             simplices,
@@ -350,22 +351,22 @@ impl ConvexHull {
     }
 
     /// Create a ConvexHull using Graham scan algorithm (2D only)
-    fn new_graham_scan(_points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        let npoints = _points.nrows();
+    fn new_graham_scan(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        let npoints = points.nrows();
 
         if npoints < 3 {
             return Err(SpatialError::ValueError(
-                "Need at least 3 _points for 2D convex hull".to_string(),
+                "Need at least 3 points for 2D convex hull".to_string(),
             ));
         }
 
-        // Convert _points to indexed _points for sorting
-        let mut indexed_points: Vec<(usize, [f64; 2])> = (0..npoints)
-            .map(|i| (i, [_points[[i, 0]], _points[[i, 1]]]))
+        // Convert points to indexed points for sorting
+        let mut indexedpoints: Vec<(usize, [f64; 2])> = (0..npoints)
+            .map(|i| (i, [points[[i, 0]], points[[i, 1]]]))
             .collect();
 
         // Find the bottom-most point (lowest y-coordinate, then leftmost x)
-        let start_idx = indexed_points
+        let start_idx = indexedpoints
             .iter()
             .min_by(|a, b| {
                 let cmp = a.1[1].partial_cmp(&b.1[1]).unwrap();
@@ -378,10 +379,10 @@ impl ConvexHull {
             .unwrap()
             .0;
 
-        let start_point = indexed_points[start_idx].1;
+        let start_point = indexedpoints[start_idx].1;
 
-        // Sort _points by polar angle with respect to start point
-        indexed_points.sort_by(|a, b| {
+        // Sort points by polar angle with respect to start point
+        indexedpoints.sort_by(|a, b| {
             if a.0 == start_idx {
                 return std::cmp::Ordering::Less;
             }
@@ -406,14 +407,14 @@ impl ConvexHull {
         // Graham scan algorithm
         let mut stack: Vec<usize> = Vec::new();
 
-        for (point_idx, point) in indexed_points {
-            // Remove _points from stack while they make a clockwise turn
+        for (point_idx, point) in indexedpoints {
+            // Remove points from stack while they make a clockwise turn
             while stack.len() >= 2 {
                 let top = stack[stack.len() - 1];
                 let second = stack[stack.len() - 2];
 
-                let p1 = [_points[[second, 0]], _points[[second, 1]]];
-                let p2 = [_points[[top, 0]], _points[[top, 1]]];
+                let p1 = [points[[second, 0]], points[[second, 1]]];
+                let p2 = [points[[top, 0]], points[[top, 1]]];
                 let p3 = point;
 
                 if Self::cross_product_2d(p1, p2, p3) <= 0.0 {
@@ -436,17 +437,17 @@ impl ConvexHull {
         }
 
         // Create a dummy QHull instance for compatibility
-        let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| _points.row(i).to_vec()).collect();
+        let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| points.row(i).to_vec()).collect();
         let qh = Qh::builder()
             .compute(false)
-            .build_from_iter(points_vec)
+            .build_from_iter(_points_vec)
             .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
 
         // Compute facet equations for 2D hull
-        let equations = Self::compute_2d_hull_equations(_points, &vertex_indices);
+        let equations = Self::compute_2d_hull_equations(points, &vertex_indices);
 
         Ok(ConvexHull {
-            _points: _points.to_owned(),
+            points: points.to_owned(),
             qh,
             vertex_indices,
             simplices,
@@ -455,19 +456,19 @@ impl ConvexHull {
     }
 
     /// Create a ConvexHull using Jarvis march (gift wrapping) algorithm (2D only)
-    fn new_jarvis_march(_points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        let npoints = _points.nrows();
+    fn new_jarvis_march(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        let npoints = points.nrows();
 
         if npoints < 3 {
             return Err(SpatialError::ValueError(
-                "Need at least 3 _points for 2D convex hull".to_string(),
+                "Need at least 3 points for 2D convex hull".to_string(),
             ));
         }
 
         // Find the leftmost point
         let mut leftmost = 0;
         for i in 1..npoints {
-            if _points[[i, 0]] < _points[[leftmost, 0]] {
+            if points[[i, 0]] < points[[leftmost, 0]] {
                 leftmost = i;
             }
         }
@@ -486,9 +487,9 @@ impl ConvexHull {
                     continue;
                 }
 
-                let p1 = [_points[[current, 0]], _points[[current, 1]]];
-                let p2 = [_points[[next, 0]], _points[[next, 1]]];
-                let p3 = [_points[[i, 0]], _points[[i, 1]]];
+                let p1 = [points[[current, 0]], points[[current, 1]]];
+                let p2 = [points[[next, 0]], points[[next, 1]]];
+                let p3 = [points[[i, 0]], points[[i, 1]]];
 
                 let cross = Self::cross_product_2d(p1, p2, p3);
 
@@ -518,17 +519,17 @@ impl ConvexHull {
         }
 
         // Create a dummy QHull instance for compatibility
-        let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| _points.row(i).to_vec()).collect();
+        let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| points.row(i).to_vec()).collect();
         let qh = Qh::builder()
             .compute(false)
-            .build_from_iter(points_vec)
+            .build_from_iter(_points_vec)
             .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
 
         // Compute facet equations for 2D hull
-        let equations = Self::compute_2d_hull_equations(_points, &vertex_indices);
+        let equations = Self::compute_2d_hull_equations(points, &vertex_indices);
 
         Ok(ConvexHull {
-            _points: _points.to_owned(),
+            points: points.to_owned(),
             qh,
             vertex_indices,
             simplices,
@@ -579,23 +580,24 @@ impl ConvexHull {
     }
 
     /// Handle special case for 2D hulls with 3 or 4 points
-    fn handle_special_case_2d(_points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        let npoints = _points.nrows();
+    fn handle_special_case_2d(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        let npoints = points.nrows();
         let _ndim = 2;
 
-        // Special case for triangle (3 _points in 2D)
+        // Special case for triangle (3 points in 2D)
         if npoints == 3 {
-            // All 3 _points form the convex hull
+            // All 3 points form the convex hull
             let vertex_indices = vec![0, 1, 2];
             // Simplices are the edges
             let simplices = vec![vec![0, 1], vec![1, 2], vec![2, 0]];
 
             // Build dummy Qhull instance
-            let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| _points.row(i).to_vec()).collect();
+            let _points_vec: Vec<Vec<f64>> =
+                (0..npoints).map(|i| points.row(i).to_vec()).collect();
 
             let qh = match Qh::builder()
                 .compute(false)  // Don't actually compute the hull
-                .build_from_iter(points_vec)
+                .build_from_iter(_points_vec)
             {
                 Ok(qh) => qh,
                 Err(e) => return Err(SpatialError::ComputationError(format!("Qhull error: {e}"))),
@@ -605,7 +607,7 @@ impl ConvexHull {
             let equations = None;
 
             return Ok(ConvexHull {
-                _points: _points.to_owned(),
+                points: points.to_owned(),
                 qh,
                 vertex_indices,
                 simplices,
@@ -613,13 +615,13 @@ impl ConvexHull {
             });
         }
 
-        // Special case for quadrilateral (4 _points in 2D)
+        // Special case for quadrilateral (4 points in 2D)
         if npoints == 4 {
-            // For a square/rectangle, all 4 _points form the convex hull
+            // For a square/rectangle, all 4 points form the convex hull
             // For other shapes, we need to check
 
-            // For 2D with 4 _points, we could compute convex hull using Graham scan
-            // but for simplicity in this special case, we'll just use all four _points
+            // For 2D with 4 points, we could compute convex hull using Graham scan
+            // but for simplicity in this special case, we'll just use all four points
 
             // We're using all original vertices 0, 1, 2, 3 since we're dealing with a square
             let vertex_indices = vec![0, 1, 2, 3];
@@ -633,11 +635,12 @@ impl ConvexHull {
             }
 
             // Build dummy Qhull instance
-            let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| _points.row(i).to_vec()).collect();
+            let _points_vec: Vec<Vec<f64>> =
+                (0..npoints).map(|i| points.row(i).to_vec()).collect();
 
             let qh = match Qh::builder()
                 .compute(false)  // Don't actually compute the hull
-                .build_from_iter(points_vec)
+                .build_from_iter(_points_vec)
             {
                 Ok(qh) => qh,
                 Err(e) => return Err(SpatialError::ComputationError(format!("Qhull error: {e}"))),
@@ -647,7 +650,7 @@ impl ConvexHull {
             let equations = None;
 
             return Ok(ConvexHull {
-                _points: _points.to_owned(),
+                points: points.to_owned(),
                 qh,
                 vertex_indices,
                 simplices,
@@ -657,28 +660,29 @@ impl ConvexHull {
 
         // If we get here, it's an error
         Err(SpatialError::ValueError(
-            "Invalid number of _points for special case".to_string(),
+            "Invalid number of points for special case".to_string(),
         ))
     }
 
     /// Handle special case for 3D hulls with 4 points (tetrahedron)
-    fn handle_special_case_3d(_points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
-        let npoints = _points.nrows();
+    fn handle_special_case_3d(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
+        let npoints = points.nrows();
         let _ndim = 3;
 
-        // Special case for tetrahedron (4 _points in 3D)
+        // Special case for tetrahedron (4 points in 3D)
         if npoints == 4 {
-            // All 4 _points form the convex hull
+            // All 4 points form the convex hull
             let vertex_indices = vec![0, 1, 2, 3];
             // Simplices are the triangular faces
             let simplices = vec![vec![0, 1, 2], vec![0, 1, 3], vec![0, 2, 3], vec![1, 2, 3]];
 
             // Build dummy Qhull instance
-            let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| _points.row(i).to_vec()).collect();
+            let _points_vec: Vec<Vec<f64>> =
+                (0..npoints).map(|i| points.row(i).to_vec()).collect();
 
             let qh = match Qh::builder()
                 .compute(false)  // Don't actually compute the hull
-                .build_from_iter(points_vec)
+                .build_from_iter(_points_vec)
             {
                 Ok(qh) => qh,
                 Err(e) => return Err(SpatialError::ComputationError(format!("Qhull error: {e}"))),
@@ -688,7 +692,7 @@ impl ConvexHull {
             let equations = None;
 
             return Ok(ConvexHull {
-                _points: _points.to_owned(),
+                points: points.to_owned(),
                 qh,
                 vertex_indices,
                 simplices,
@@ -698,7 +702,7 @@ impl ConvexHull {
 
         // If we get here, it's an error
         Err(SpatialError::ValueError(
-            "Invalid number of _points for special case".to_string(),
+            "Invalid number of points for special case".to_string(),
         ))
     }
 
@@ -834,7 +838,7 @@ impl ConvexHull {
     /// // Check a point outside the hull
     /// assert!(!hull.contains(&[2.0, 2.0]).unwrap());
     /// ```
-    pub fn contains<T: AsRef<[f64]>>(_point: T) -> SpatialResult<bool> {
+    pub fn contains<T: AsRef<[f64]>>(&self, _point: T) -> SpatialResult<bool> {
         let point_slice = _point.as_ref();
 
         if point_slice.len() != self.points.ncols() {
@@ -1024,7 +1028,7 @@ impl ConvexHull {
     }
 
     /// Compute the area of a 2D polygon using the shoelace formula
-    fn compute_polygon_area(_points: &Array2<f64>, vertex_indices: &[usize]) -> SpatialResult<f64> {
+    fn compute_polygon_area(points: &Array2<f64>, vertex_indices: &[usize]) -> SpatialResult<f64> {
         if vertex_indices.len() < 3 {
             return Ok(0.0);
         }
@@ -1034,10 +1038,10 @@ impl ConvexHull {
 
         for i in 0..n {
             let j = (i + 1) % n;
-            let xi = _points[[vertex_indices[i], 0]];
-            let yi = _points[[vertex_indices[i], 1]];
-            let xj = _points[[vertex_indices[j], 0]];
-            let yj = _points[[vertex_indices[j], 1]];
+            let xi = points[[vertex_indices[i], 0]];
+            let yi = points[[vertex_indices[i], 1]];
+            let xj = points[[vertex_indices[j], 0]];
+            let yj = points[[vertex_indices[j], 1]];
 
             area += xi * yj - xj * yi;
         }
@@ -1281,7 +1285,8 @@ impl ConvexHull {
     /// This is a simplified approach that works for well-formed convex hulls
     fn estimate_facet_area(
         points: &Array2<f64>,
-        vertex_indices: &[usize], _facet_idx: usize,
+        vertex_indices: &[usize],
+        _facet_idx: usize,
         ndim: usize,
     ) -> SpatialResult<f64> {
         // For high dimensions, computing exact facet areas is complex
@@ -1393,7 +1398,7 @@ impl ConvexHull {
     /// # Errors
     ///
     /// * Returns error if point dimension doesn't match hull dimension
-    fn is_in_convex_combination(_point: &[f64]) -> SpatialResult<bool> {
+    fn is_in_convex_combination(&self, _point: &[f64]) -> SpatialResult<bool> {
         // This is a fallback method and not fully robust for all cases,
         // especially for higher dimensions. A complete implementation would use
         // linear programming to find convex coefficients.
@@ -1664,14 +1669,14 @@ mod tests {
     #[test]
     fn test_volume_area_calculations() {
         // Test 2D square area
-        let square_points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
-        let square_hull = ConvexHull::new(&square_points.view()).unwrap();
+        let squarepoints = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
+        let square_hull = ConvexHull::new(&squarepoints.view()).unwrap();
         let area = square_hull.volume().unwrap();
         assert!((area - 1.0).abs() < 1e-10, "Expected area 1.0, got {area}");
 
         // Test 2D triangle area
-        let triangle_points = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
-        let triangle_hull = ConvexHull::new(&triangle_points.view()).unwrap();
+        let trianglepoints = arr2(&[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]]);
+        let triangle_hull = ConvexHull::new(&trianglepoints.view()).unwrap();
         let triangle_area = triangle_hull.volume().unwrap();
         assert!(
             (triangle_area - 0.5).abs() < 1e-10,
@@ -1689,7 +1694,7 @@ mod tests {
     #[test]
     fn test_3d_volume_calculation() {
         // Test 3D unit cube volume
-        let cube_points = arr2(&[
+        let cubepoints = arr2(&[
             [0.0, 0.0, 0.0],
             [1.0, 0.0, 0.0],
             [1.0, 1.0, 0.0],
@@ -1699,7 +1704,7 @@ mod tests {
             [1.0, 1.0, 1.0],
             [0.0, 1.0, 1.0],
         ]);
-        let cube_hull = ConvexHull::new(&cube_points.view()).unwrap();
+        let cube_hull = ConvexHull::new(&cubepoints.view()).unwrap();
         let volume = cube_hull.volume().unwrap();
 
         // The volume should be close to 1.0 (allowing for numerical precision)

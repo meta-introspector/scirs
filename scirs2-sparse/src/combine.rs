@@ -4,8 +4,8 @@
 // including hstack, vstack, block diagonal combinations,
 // and Kronecker products/sums.
 
-use crate::coo__array::CooArray;
-use crate::csr__array::CsrArray;
+use crate::coo_array::CooArray;
+use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use num_traits::Float;
@@ -24,8 +24,8 @@ use std::ops::{Add, AddAssign, Div, Mul, Sub};
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::construct::eye_array;
-/// use scirs2__sparse::combine::hstack;
+/// use scirs2_sparse::construct::eye_array;
+/// use scirs2_sparse::combine::hstack;
 ///
 /// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").unwrap();
 /// let b: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").unwrap();
@@ -122,8 +122,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::construct::eye_array;
-/// use scirs2__sparse::combine::vstack;
+/// use scirs2_sparse::construct::eye_array;
+/// use scirs2_sparse::combine::vstack;
 ///
 /// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").unwrap();
 /// let b: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").unwrap();
@@ -220,8 +220,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::construct::eye_array;
-/// use scirs2__sparse::combine::block_diag;
+/// use scirs2_sparse::construct::eye_array;
+/// use scirs2_sparse::combine::block_diag;
 ///
 /// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(2, "csr").unwrap();
 /// let b: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").unwrap();
@@ -316,8 +316,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::construct::eye_array;
-/// use scirs2__sparse::combine::tril;
+/// use scirs2_sparse::construct::eye_array;
+/// use scirs2_sparse::combine::tril;
 ///
 /// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").unwrap();
 /// let b = tril(&*a, 0, "csr").unwrap();
@@ -392,8 +392,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::construct::eye_array;
-/// use scirs2__sparse::combine::triu;
+/// use scirs2_sparse::construct::eye_array;
+/// use scirs2_sparse::combine::triu;
 ///
 /// let a: Box<dyn scirs2_sparse::SparseArray<f64>> = eye_array(3, "csr").unwrap();
 /// let b = triu(&*a, 0, "csr").unwrap();
@@ -475,8 +475,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::construct::eye_array;
-/// use scirs2__sparse::combine::kron;
+/// use scirs2_sparse::construct::eye_array;
+/// use scirs2_sparse::combine::kron;
 ///
 /// let a = eye_array::<f64>(2, "csr").unwrap();
 /// let b = eye_array::<f64>(2, "csr").unwrap();
@@ -606,8 +606,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::construct::eye_array;
-/// use scirs2__sparse::combine::kronsum;
+/// use scirs2_sparse::construct::eye_array;
+/// use scirs2_sparse::combine::kronsum;
 ///
 /// let a = eye_array::<f64>(2, "csr").unwrap();
 /// let b = eye_array::<f64>(2, "csr").unwrap();
@@ -775,8 +775,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::construct::eye_array;
-/// use scirs2__sparse::combine::bmat;
+/// use scirs2_sparse::construct::eye_array;
+/// use scirs2_sparse::combine::bmat;
 ///
 /// let a = eye_array::<f64>(2, "csr").unwrap();
 /// let b = eye_array::<f64>(2, "csr").unwrap();
@@ -944,15 +944,15 @@ where
             if let Some(block) = blocks[i][j] {
                 let (block_rows, block_cols, block_data) = block.find();
 
-                for (((&row, &col), &val)) in block_rows
+                for (((row, col), val), _) in block_rows
                     .iter()
                     .zip(block_cols.iter())
                     .zip(block_data.iter())
                     .zip(0..block_data.len())
                 {
-                    rows.push(row + *row_offset);
-                    cols.push(col + *col_offset);
-                    data.push(val);
+                    rows.push(*row + *row_offset);
+                    cols.push(*col + *col_offset);
+                    data.push(*val);
                 }
             }
         }
@@ -1254,7 +1254,7 @@ mod tests {
         assert_eq!(c2.get(3, 3), 1.0);
 
         // Let's use blocks with consistent dimensions
-        let b1 = eye__array::<f64>(2, "csr").unwrap();
+        let b1 = eye_array::<f64>(2, "csr").unwrap();
         let b2 = eye_array::<f64>(2, "csr").unwrap();
 
         let blocks3 = vec![vec![Some(&*b1), Some(&*b2)], vec![Some(&*b2), Some(&*b1)]];

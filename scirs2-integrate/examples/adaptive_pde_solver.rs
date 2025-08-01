@@ -14,7 +14,7 @@
 //! - Pattern formation in biology
 
 use ndarray::{s, Array1, Array2, ArrayView1};
-use scirs2__integrate::{
+use scirs2_integrate::{
     // Advanced modules
     amr_advanced::{
         AdaptiveCell, AdaptiveMeshLevel, AdvancedAMRManager, CellId, FeatureDetectionCriterion,
@@ -350,8 +350,8 @@ impl AdaptivePDESolver {
 pub struct SolverStepResult {
     pub time: f64,
     pub solution: Array2<f64>,
-    pub error_analysis: scirs2, _integrate: error_estimation: :ErrorAnalysisResult<f64>,
-    pub adaptation_result: scirs2, _integrate: amr_advanced: :AMRAdaptationResult<f64>,
+    pub error_analysis: scirs2_integrate::error_estimation::ErrorAnalysisResult<f64>,
+    pub adaptation_result: scirs2_integrate::amr_advanced::AMRAdaptationResult<f64>,
     pub active_cells: usize,
 }
 

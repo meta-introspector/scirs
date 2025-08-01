@@ -6,11 +6,11 @@
 
 #![allow(dead_code)]
 
-use crate::advanced_memory__optimization::AdvancedMemoryOptimizer;
-use crate::advanced_simd__acceleration::AdvancedSimdAccelerator;
+use crate::advanced_memory_optimization::AdvancedMemoryOptimizer;
+use crate::advanced_simd_acceleration::AdvancedSimdAccelerator;
 use crate::error::IntegrateResult;
-use crate::gpu_advanced__acceleration::AdvancedGPUAccelerator;
-use crate::realtime_performance__adaptation::{
+use crate::gpu_advanced_acceleration::AdvancedGPUAccelerator;
+use crate::realtime_performance_adaptation::{
     AdaptationStrategy, AdaptationTriggers, OptimizationObjectives, PerformanceConstraints,
     RealTimeAdaptiveOptimizer, TargetMetrics,
 };
@@ -143,6 +143,7 @@ mod gpu_acceleration_tests {
 
 /// Test suite for advanced memory optimization functionality
 mod memory_optimization_tests {
+    use crate::AdvancedMemoryOptimizer;
 
     #[test]
     pub fn test_advanced_memory_optimizer_creation() {
@@ -221,6 +222,8 @@ mod memory_optimization_tests {
 
 /// Test suite for advanced SIMD acceleration functionality
 mod simd_acceleration_tests {
+    use crate::{AdvancedSimdAccelerator, IntegrateResult};
+    use ndarray::{Array1, Array2, ArrayView1};
 
     #[test]
     pub fn test_advanced_simd_accelerator_creation() {
@@ -400,15 +403,16 @@ mod simd_acceleration_tests {
 
 /// Test suite for real-time performance adaptation functionality
 mod performance_adaptation_tests {
+    use crate::realtime_performance_adaptation::types::{
+        AdaptationTriggers, OptimizationObjectives, PerformanceConstraints, TargetMetrics,
+    };
+    use crate::{AdaptationStrategy, RealTimeAdaptiveOptimizer};
+    use std::time::Duration;
 
     #[test]
     pub fn test_real_time_adaptive_optimizer_creation() {
-        let result = RealTimeAdaptiveOptimizer::<f64>::new();
-        assert!(
-            result.is_ok(),
-            "Failed to create RealTimeAdaptiveOptimizer: {:?}",
-            result.err()
-        );
+        let _optimizer = RealTimeAdaptiveOptimizer::<f64>::new();
+        // Test passes if no panic occurs during creation
     }
 
     #[test]
@@ -440,7 +444,7 @@ mod performance_adaptation_tests {
             },
         };
 
-        let optimizer = RealTimeAdaptiveOptimizer::<f64>::new().unwrap();
+        let mut optimizer = RealTimeAdaptiveOptimizer::<f64>::new();
         let result = optimizer.start_optimization(strategy);
         assert!(
             result.is_ok(),
@@ -451,7 +455,7 @@ mod performance_adaptation_tests {
 
     #[test]
     fn test_anomaly_detection() {
-        let optimizer = RealTimeAdaptiveOptimizer::<f64>::new().unwrap();
+        let optimizer = RealTimeAdaptiveOptimizer::<f64>::new();
 
         // Create mock performance metrics
         let metrics = vec![
@@ -486,6 +490,15 @@ mod performance_adaptation_tests {
 
 /// Integration tests combining multiple Advanced mode components
 mod integration_tests {
+    use crate::realtime_performance_adaptation::types::{
+        AdaptationTriggers, OptimizationObjectives, PerformanceConstraints, TargetMetrics,
+    };
+    use crate::{
+        AdaptationStrategy, AdvancedGPUAccelerator, AdvancedMemoryOptimizer,
+        AdvancedSimdAccelerator, RealTimeAdaptiveOptimizer,
+    };
+    use ndarray::Array1;
+    use std::time::Duration;
 
     #[test]
     pub fn test_full_advanced_mode_integration() {
@@ -499,7 +512,7 @@ mod integration_tests {
         };
         let memory_optimizer = AdvancedMemoryOptimizer::<f64>::new().unwrap();
         let simd_accelerator = AdvancedSimdAccelerator::<f64>::new().unwrap();
-        let adaptive_optimizer = RealTimeAdaptiveOptimizer::<f64>::new().unwrap();
+        let mut adaptive_optimizer = RealTimeAdaptiveOptimizer::<f64>::new();
 
         // Test problem setup - use smaller size for faster testing
         let problem_size = 10;

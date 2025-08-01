@@ -52,8 +52,8 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use std::collections::{HashMap, VecDeque};
 use statrs::statistics::Statistics;
+use std::collections::{HashMap, VecDeque};
 // Constants removed - not used in this module
 
 /// Neuromorphic spike event
@@ -106,7 +106,7 @@ impl SpikingNeuron {
     }
 
     /// Update neuron state and check for spike
-    pub fn update(_dt: f64, input_current: f64) -> bool {
+    pub fn update(&mut self, _dt: f64, input_current: f64) -> bool {
         self.time_since_spike += _dt;
 
         // Check if in refractory period
@@ -130,7 +130,7 @@ impl SpikingNeuron {
     }
 
     /// Calculate distance-based influence on another neuron
-    pub fn calculate_influence(_other_position: &[f64]) -> f64 {
+    pub fn calculate_influence(&self, _other_position: &[f64]) -> f64 {
         let distance: f64 = self
             ._position
             .iter()
@@ -177,12 +177,12 @@ impl Synapse {
     }
 
     /// Update synaptic weight using STDP rule
-    pub fn update_stdp(_current_time: f64, pre_spiked: bool, post_spiked: bool) {
+    pub fn update_stdp(&mut self, _current_time: f64, pre_spiked: bool, post_spiked: bool) {
         if pre_spiked {
             self.last_pre_spike = _current_time;
         }
         if post_spiked {
-            self.last_post_spike = current_time;
+            self.last_post_spike = _current_time;
         }
 
         // Apply STDP learning rule
@@ -209,7 +209,7 @@ impl Synapse {
     }
 
     /// Calculate synaptic current
-    pub fn synaptic_current(_pre_spike_strength: f64) -> f64 {
+    pub fn synaptic_current(&self, _pre_spike_strength: f64) -> f64 {
         self.weight * _pre_spike_strength
     }
 }
@@ -311,7 +311,7 @@ impl SpikingNeuralClusterer {
     }
 
     /// Initialize spiking neural network
-    fn initialize_network(_input_dims: usize) -> SpatialResult<()> {
+    fn initialize_network(&mut self, _input_dims: usize) -> SpatialResult<()> {
         self.neurons.clear();
         self.synapses.clear();
 
@@ -325,16 +325,16 @@ impl SpikingNeuralClusterer {
 
         // Create output neurons (cluster centers)
         for _i in 0..self.num_clusters {
-            let position = (0..input_dims).map(|_| rand::random::<f64>()).collect();
+            let position = (0.._input_dims).map(|_| rand::random::<f64>()).collect();
             let mut neuron = SpikingNeuron::new(position);
             neuron.threshold = self.spike_threshold;
             self.neurons.push(neuron);
         }
 
         // Create synaptic connections (input to output)
-        for i in 0..input_dims {
+        for i in 0.._input_dims {
             for j in 0..self.num_clusters {
-                let output_idx = input_dims + j;
+                let output_idx = _input_dims + j;
                 let weight = rand::random::<f64>() * 0.5;
                 let synapse = Synapse::new(i, output_idx, weight);
                 self.synapses.push(synapse);
@@ -346,8 +346,8 @@ impl SpikingNeuralClusterer {
             for i in 0..self.num_clusters {
                 for j in 0..self.num_clusters {
                     if i != j {
-                        let neuron_i = input_dims + i;
-                        let neuron_j = input_dims + j;
+                        let neuron_i = _input_dims + i;
+                        let neuron_j = _input_dims + j;
                         let synapse = Synapse::new(neuron_i, neuron_j, -0.5);
                         self.synapses.push(synapse);
                     }
@@ -359,7 +359,7 @@ impl SpikingNeuralClusterer {
     }
 
     /// Encode spatial point as spike train
-    fn encode_point_as_spikes(_point: &Array1<f64>) -> SpatialResult<Vec<SpikeEvent>> {
+    fn encode_point_as_spikes(&self, _point: &Array1<f64>) -> SpatialResult<Vec<SpikeEvent>> {
         let mut spike_train = Vec::new();
 
         // Rate coding: spike frequency proportional to coordinate value
@@ -389,7 +389,7 @@ impl SpikingNeuralClusterer {
     }
 
     /// Process spike train through network
-    fn process_spike_train(_spike_train: &[SpikeEvent]) -> SpatialResult<usize> {
+    fn process_spike_train(&mut self, _spike_train: &[SpikeEvent]) -> SpatialResult<usize> {
         let input_dims = self.neurons.len() - self.num_clusters;
         let mut neuron_spike_counts = vec![0; self.num_clusters];
 
@@ -448,14 +448,14 @@ impl SpikingNeuralClusterer {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.cmp(b))
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .unwrap_or(0);
 
         Ok(winning_cluster)
     }
 
     /// Apply STDP learning to synapses
-    fn apply_stdp_learning(_spike_train: &[SpikeEvent]) -> SpatialResult<()> {
+    fn apply_stdp_learning(&mut self, _spike_train: &[SpikeEvent]) -> SpatialResult<()> {
         // Create spike timing map
         let mut spike_times: HashMap<usize, Vec<f64>> = HashMap::new();
         for spike in _spike_train {
@@ -508,7 +508,7 @@ impl SpikingNeuralClusterer {
     }
 
     /// Apply lateral inhibition between output neurons
-    fn apply_lateral_inhibition(&self) -> SpatialResult<()> {
+    fn apply_lateral_inhibition(&mut self) -> SpatialResult<()> {
         let input_dims = self.neurons.len() - self.num_clusters;
 
         // Strengthen inhibitory connections between active neurons
@@ -644,7 +644,7 @@ impl NeuromorphicProcessor {
     }
 
     /// Process events through neuromorphic pipeline
-    pub fn process_events(_events: &[SpikeEvent]) -> SpatialResult<Vec<SpikeEvent>> {
+    pub fn process_events(&mut self, _events: &[SpikeEvent]) -> SpatialResult<Vec<SpikeEvent>> {
         let mut processed_events = Vec::new();
 
         for event in _events {
@@ -673,7 +673,7 @@ impl NeuromorphicProcessor {
     }
 
     /// Initialize memristive crossbar array
-    fn initialize_crossbar() {
+    fn initialize_crossbar(&mut self) {
         let (rows, cols) = self.crossbar_size;
 
         // Initialize conductances with random values
@@ -686,7 +686,7 @@ impl NeuromorphicProcessor {
     }
 
     /// Process event through memristive crossbar
-    fn process_through_crossbar(_event: &SpikeEvent) -> SpatialResult<Vec<SpikeEvent>> {
+    fn process_through_crossbar(&mut self, _event: &SpikeEvent) -> SpatialResult<Vec<SpikeEvent>> {
         let (rows, cols) = self.crossbar_size;
         let mut output_events = Vec::new();
 
@@ -701,7 +701,7 @@ impl NeuromorphicProcessor {
             // Generate output spike if current exceeds threshold
             if output_current > 0.5 {
                 let output_event = SpikeEvent {
-                    neuron_id: rows + col,            // Offset for output neurons
+                    neuron_id: rows + col,             // Offset for output neurons
                     timestamp: _event.timestamp + 0.1, // Small delay
                     amplitude: output_current,
                     spatial_coords: _event.spatial_coords.clone(),
@@ -832,7 +832,7 @@ impl CompetitiveNeuralClusterer {
         // Initialize inhibition matrix
         let inhibition_strengths =
             Array2::from_shape_fn(
-                (num_clusters, num_clusters),
+                (_num_clusters, _num_clusters),
                 |(i, j)| {
                     if i == j {
                         0.0
@@ -857,8 +857,8 @@ impl CompetitiveNeuralClusterer {
         points: &ArrayView2<'_, f64>,
         epochs: usize,
     ) -> SpatialResult<Array1<usize>> {
-        let (n_points_) = points.dim();
-        let mut assignments = Array1::zeros(n_points);
+        let n_points_ = points.dim().0;
+        let mut assignments = Array1::zeros(n_points_);
 
         for epoch in 0..epochs {
             // Adjust learning rate and neighborhood size
@@ -882,7 +882,7 @@ impl CompetitiveNeuralClusterer {
     }
 
     /// Find winning neuron using competitive dynamics
-    fn find_winner(_input: &Array1<f64>) -> SpatialResult<usize> {
+    fn find_winner(&self, _input: &Array1<f64>) -> SpatialResult<usize> {
         let mut min_distance = f64::INFINITY;
         let mut winner = 0;
 
@@ -931,7 +931,7 @@ impl CompetitiveNeuralClusterer {
     }
 
     /// Apply lateral inhibition between neurons
-    fn apply_lateral_inhibition(_winner: usize) -> SpatialResult<()> {
+    fn apply_lateral_inhibition(&mut self, _winner: usize) -> SpatialResult<()> {
         // Strengthen inhibitory connections from _winner to others
         for i in 0..self.neurons.len() {
             if i != _winner {
@@ -1069,14 +1069,14 @@ impl HomeostaticNeuralClusterer {
             output_neurons.push(HomeostaticNeuron::new());
         }
 
-        let weights = Array2::zeros((num_clusters, input_dim));
+        let weights = Array2::zeros((_num_clusters, input_dim));
 
         let learning_rate_adaptation = LearningRateAdaptation::new(0.01);
-        let metaplasticity = MetaplasticityController::new(num_clusters, input_dim);
+        let metaplasticity = MetaplasticityController::new(_num_clusters, input_dim);
         let multi_timescale = MultiTimescaleAdaptation::new();
 
         Self {
-            num_clusters,
+            num_clusters: _num_clusters,
             input_dim,
             output_neurons,
             weights,
@@ -1101,7 +1101,11 @@ impl HomeostaticNeuralClusterer {
     }
 
     /// Fit homeostatic clustering model
-    pub fn fit(_points: &ArrayView2<f64>, epochs: usize) -> SpatialResult<Array1<usize>> {
+    pub fn fit(
+        &mut self,
+        _points: &ArrayView2<f64>,
+        epochs: usize,
+    ) -> SpatialResult<Array1<usize>> {
         let (n_samples, n_features) = _points.dim();
 
         if n_features != self.input_dim {
@@ -1203,7 +1207,7 @@ impl HomeostaticNeuralClusterer {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(i_)| i)
+            .map(|(i_, _)| i_)
             .unwrap_or(0);
 
         // Update firing rates
@@ -1213,7 +1217,7 @@ impl HomeostaticNeuralClusterer {
     }
 
     /// Initialize weights randomly
-    fn initialize_weights(&self) -> SpatialResult<()> {
+    fn initialize_weights(&mut self) -> SpatialResult<()> {
         use rand::Rng;
         let mut rng = rand::rng();
 
@@ -1236,11 +1240,13 @@ impl HomeostaticNeuralClusterer {
 
     /// Homeostatic learning update
     fn homeostatic_learning_update(
-        &mut self, input: &ArrayView1<f64>,
+        &mut self,
+        input: &ArrayView1<f64>,
         winner_idx: usize,
         activities: &Array1<f64>,
         error: f64,
-        current_time: f64,) -> SpatialResult<()> {
+        current_time: f64,
+    ) -> SpatialResult<()> {
         // Get current learning rate
         let learning_rate = self.learning_rate_adaptation.base_rate;
 
@@ -1276,7 +1282,7 @@ impl HomeostaticNeuralClusterer {
     }
 
     /// Update homeostatic mechanisms
-    fn update_homeostatic_mechanisms(_dt: f64) -> SpatialResult<()> {
+    fn update_homeostatic_mechanisms(&mut self, _dt: f64) -> SpatialResult<()> {
         for neuron in &mut self.output_neurons {
             neuron.update_homeostatic_mechanisms(_dt);
         }
@@ -1302,7 +1308,7 @@ impl HomeostaticNeuron {
     }
 
     /// Update membrane potential
-    fn update_membrane_potential(_input: f64, current_time: f64) {
+    fn update_membrane_potential(&mut self, _input: f64, current_time: f64) {
         let dt = current_time - self.last_spike_time;
 
         // Leaky integrate-and-fire dynamics
@@ -1311,7 +1317,7 @@ impl HomeostaticNeuron {
     }
 
     /// Record spike and update firing rate
-    fn record_spike(_current_time: f64) {
+    fn record_spike(&mut self, _current_time: f64) {
         self.spike_history.push_back(_current_time);
 
         // Keep only recent spikes (last 1 second)
@@ -1331,7 +1337,7 @@ impl HomeostaticNeuron {
     }
 
     /// Update homeostatic mechanisms
-    fn update_homeostatic_mechanisms(_dt: f64) {
+    fn update_homeostatic_mechanisms(&mut self, _dt: f64) {
         // Intrinsic plasticity: adjust excitability to maintain target firing rate
         let rate_error = self.target_firing_rate - self.actual_firing_rate;
         let excitability_update = 0.001 * rate_error * _dt;
@@ -1367,7 +1373,7 @@ impl LearningRateAdaptation {
     }
 
     /// Update learning rate based on performance
-    fn update_learning_rate(_current_error: f64) {
+    fn update_learning_rate(&mut self, _current_error: f64) {
         self.performance_history.push_back(_current_error);
 
         // Keep only recent errors
@@ -1421,10 +1427,11 @@ impl MetaplasticityController {
     }
 
     /// Compute metaplastic modulation
-    fn compute_modulation(_neuron_idx: usize, error: f64) -> f64 {
+    fn compute_modulation(&self, _neuron_idx: usize, error: f64) -> f64 {
         let meta_var_avg = self
             .metaplastic_variables
             .row(_neuron_idx)
+            .to_owned()
             .mean()
             .unwrap_or(1.0);
 
@@ -1439,7 +1446,8 @@ impl MetaplasticityController {
     fn update_metaplastic_variables(
         &mut self,
         winner_idx: usize,
-        activities: &Array1<f64>, _current_time: f64,
+        activities: &Array1<f64>,
+        _current_time: f64,
     ) {
         let dt = 1.0; // Assume 1ms updates
         let decay_factor = (-dt / self.meta_tau).exp();
@@ -1463,7 +1471,7 @@ impl MultiTimescaleAdaptation {
     }
 
     /// Update all adaptation scales
-    fn update(_error: f64, dt: f64) {
+    fn update(&mut self, _error: f64, dt: f64) {
         self.fast_adaptation.update(_error, dt);
         self.medium_adaptation.update(_error, dt);
         self.slow_adaptation.update(_error, dt);
@@ -1493,7 +1501,7 @@ impl AdaptationScale {
     }
 
     /// Update this adaptation scale
-    fn update(_error: f64, dt: f64) {
+    fn update(&mut self, _error: f64, dt: f64) {
         let decay = (-dt / self.time_constant).exp();
         self.memory_trace = self.memory_trace * decay + (1.0 - decay) * (1.0 - _error);
         self.memory_trace = self.memory_trace.clamp(0.0, 2.0);
@@ -1604,11 +1612,11 @@ impl DendriticSpatialClusterer {
             ));
         }
 
-        let lateral_connections = Array2::zeros((num_neurons, num_neurons));
+        let lateral_connections = Array2::zeros((_num_neurons, _num_neurons));
         let global_learning_params = GlobalLearningParams::new();
 
         Self {
-            num_neurons,
+            num_neurons: _num_neurons,
             input_dim,
             _neurons,
             lateral_connections,
@@ -1617,7 +1625,11 @@ impl DendriticSpatialClusterer {
     }
 
     /// Fit dendritic clustering model
-    pub fn fit(_points: &ArrayView2<f64>, epochs: usize) -> SpatialResult<Array1<usize>> {
+    pub fn fit(
+        &mut self,
+        _points: &ArrayView2<f64>,
+        epochs: usize,
+    ) -> SpatialResult<Array1<usize>> {
         let (n_samples, n_features) = _points.dim();
 
         if n_features != self.input_dim {
@@ -1639,7 +1651,7 @@ impl DendriticSpatialClusterer {
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                    .map(|(i_)| i)
+                    .map(|(i_, _)| i_)
                     .unwrap_or(0);
 
                 assignments[sample_idx] = winner_idx;
@@ -1665,7 +1677,7 @@ impl DendriticSpatialClusterer {
     }
 
     /// Forward pass with dendritic computation
-    fn dendritic_forward_pass(_input: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+    fn dendritic_forward_pass(&mut self, _input: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
         let mut outputs = Array1::zeros(self.num_neurons);
 
         for (neuron_idx, neuron) in self.neurons.iter_mut().enumerate() {
@@ -1677,7 +1689,7 @@ impl DendriticSpatialClusterer {
     }
 
     /// Initialize lateral connections
-    fn initialize_lateral_connections(&self) -> SpatialResult<()> {
+    fn initialize_lateral_connections(&mut self) -> SpatialResult<()> {
         for i in 0..self.num_neurons {
             for j in 0..self.num_neurons {
                 if i != j {
@@ -1696,7 +1708,7 @@ impl DendriticSpatialClusterer {
     }
 
     /// Compute distance between neurons
-    fn compute_neuron_distance(i: usize, j: usize) -> f64 {
+    fn compute_neuron_distance(&self, i: usize, j: usize) -> f64 {
         let pos_i = &self.neurons[i].position;
         let pos_j = &self.neurons[j].position;
 
@@ -1712,7 +1724,8 @@ impl DendriticSpatialClusterer {
     fn dendritic_learning_update(
         &mut self,
         input: &ArrayView1<f64>,
-        winner_idx: usize, _outputs: &Array1<f64>,
+        winner_idx: usize,
+        _outputs: &Array1<f64>,
     ) -> SpatialResult<()> {
         // Update winner neuron
         self.neurons[winner_idx].update_synapses(input, true, &self.global_learning_params)?;
@@ -1740,7 +1753,7 @@ impl DendriticNeuron {
     }
 
     /// Compute neuron output through dendritic computation
-    fn compute_output(_input: &ArrayView1<f64>) -> SpatialResult<f64> {
+    fn compute_output(&mut self, _input: &ArrayView1<f64>) -> SpatialResult<f64> {
         // Compute dendritic activations
         let mut dendritic_inputs = Vec::new();
         for dendrite in &mut self.dendrites {
@@ -1806,7 +1819,8 @@ impl DendriticCompartment {
         let local_learning_params = LocalLearningParams::new();
 
         Self {
-            weights, activation: 0.0,
+            weights,
+            activation: 0.0,
             local_learning_params,
             nmda_threshold: 0.5,
             time_constant: 10.0,
@@ -1814,7 +1828,7 @@ impl DendriticCompartment {
     }
 
     /// Compute compartment activation with NMDA-like non-linearity
-    fn compute_activation(_input: &ArrayView1<f64>) -> SpatialResult<f64> {
+    fn compute_activation(&mut self, _input: &ArrayView1<f64>) -> SpatialResult<f64> {
         // Linear integration
         let linear_sum: f64 = _input
             .iter()
@@ -1834,7 +1848,7 @@ impl DendriticCompartment {
     }
 
     /// Update compartment weights
-    fn update_weights(_input: &ArrayView1<f64>, learning_rate: f64) -> SpatialResult<()> {
+    fn update_weights(&mut self, _input: &ArrayView1<f64>, learning_rate: f64) -> SpatialResult<()> {
         for (weight, &input_val) in self.weights.iter_mut().zip(_input.iter()) {
             // Activity-dependent learning with local modulation
             let local_modulation = self.activation * self.local_learning_params.activity_scaling;
@@ -2289,7 +2303,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Enable specific plasticity mechanism
-    pub fn enable_plasticity(mut plasticity_type: PlasticityType) -> Self {
+    pub fn enable_plasticity(mut self, plasticity_type: PlasticityType) -> Self {
         for mechanism in &mut self.plasticity_mechanisms {
             if std::mem::discriminant(&mechanism.mechanism_type)
                 == std::mem::discriminant(&plasticity_type)
@@ -2364,11 +2378,11 @@ impl AdvancedMemristiveLearning {
         spatial_data: &ArrayView2<'_, f64>,
         target_outputs: &ArrayView1<'_, f64>,
     ) -> SpatialResult<PerformanceMetrics> {
-        let (n_samples_) = spatial_data.dim();
+        let n_samples_ = spatial_data.dim().0;
         let mut total_error = 0.0;
         let mut correct_predictions = 0;
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let input = spatial_data.row(i);
             let target = target_outputs[i];
 
@@ -2391,8 +2405,8 @@ impl AdvancedMemristiveLearning {
             self.update_memristive_devices(&input, error).await?;
         }
 
-        let accuracy = correct_predictions as f64 / n_samples as f64;
-        let average_error = total_error / n_samples as f64;
+        let accuracy = correct_predictions as f64 / n_samples_ as f64;
+        let average_error = total_error / n_samples_ as f64;
 
         Ok(PerformanceMetrics {
             accuracy,
@@ -2407,7 +2421,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Forward pass through memristive crossbar
-    async fn forward_pass(_input: &ArrayView1<'_, f64>) -> SpatialResult<f64> {
+    async fn forward_pass(&self, _input: &ArrayView1<'_, f64>) -> SpatialResult<f64> {
         let mut output = 0.0;
 
         for (i, &input_val) in _input.iter().enumerate() {
@@ -2425,11 +2439,11 @@ impl AdvancedMemristiveLearning {
         }
 
         // Apply activation function
-        Ok(self.sigmoid(output))
+        Ok(AdvancedMemristiveLearning::sigmoid(output))
     }
 
     /// Apply device-specific non-linearity
-    fn apply_device_nonlinearity(_current: f64, row: usize, col: usize) -> f64 {
+    fn apply_device_nonlinearity(&self, _current: f64, row: usize, col: usize) -> f64 {
         match self.crossbar_array.device_type {
             MemristiveDeviceType::TitaniumDioxide => {
                 // TiO2 exponential switching
@@ -2543,7 +2557,8 @@ impl AdvancedMemristiveLearning {
 
     /// Apply homeostatic scaling
     async fn apply_homeostatic_scaling(
-        &mut self_input: &ArrayView1<'_, f64>,
+        &mut self,
+        self_input: &ArrayView1<'_, f64>,
         output: f64,
         mechanism: &PlasticityMechanism,
     ) -> SpatialResult<()> {
@@ -2575,7 +2590,7 @@ impl AdvancedMemristiveLearning {
         mechanism: &PlasticityMechanism,
     ) -> SpatialResult<()> {
         // Simulate calcium dynamics
-        let calcium_level = self.compute_calcium_level(input, output, target);
+        let calcium_level = AdvancedMemristiveLearning::compute_calcium_level(input, output, target);
 
         let ltp_threshold = mechanism.thresholds.ltp_threshold;
         let ltd_threshold = mechanism.thresholds.ltd_threshold;
@@ -2670,7 +2685,8 @@ impl AdvancedMemristiveLearning {
     /// Update memristive device characteristics
     async fn update_memristive_devices(
         &mut self,
-        input: &ArrayView1<'_, f64>, _error: f64,
+        input: &ArrayView1<'_, f64>,
+        _error: f64,
     ) -> SpatialResult<()> {
         for (i, &input_val) in input.iter().enumerate() {
             if i < self.crossbar_array.dimensions.0 {
@@ -2701,7 +2717,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Apply device aging effects
-    fn apply_device_aging(_row: usize, col: usize) {
+    fn apply_device_aging(&mut self, _row: usize, col: usize) {
         let cycles = self.crossbar_array.endurance_cycles[[_row, col]];
         let aging_factor = 1.0 - (cycles as f64) * 1e-8; // Small aging effect
 
@@ -2709,7 +2725,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Apply device-to-device variability
-    fn apply_device_variability(_row: usize, col: usize) {
+    fn apply_device_variability(&mut self, _row: usize, col: usize) {
         let variability = self.crossbar_array.device_variability[[_row, col]];
         let noise = (rand::random::<f64>() - 0.5) * variability;
 
@@ -2719,7 +2735,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Apply homeostatic regulation
-    async fn apply_homeostatic_regulation() -> SpatialResult<()> {
+    async fn apply_homeostatic_regulation(&mut self) -> SpatialResult<()> {
         // Update firing rate history
         let current_rates = self.compute_current_firing_rates();
         self.homeostatic_system
@@ -2767,7 +2783,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Apply synaptic scaling homeostasis
-    async fn apply_synaptic_scaling() -> SpatialResult<()> {
+    async fn apply_synaptic_scaling(&mut self) -> SpatialResult<()> {
         let current_rates = self.compute_current_firing_rates();
 
         for j in 0..self.crossbar_array.dimensions.1 {
@@ -2789,7 +2805,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Apply intrinsic excitability adjustment
-    async fn apply_intrinsic_excitability_adjustment() -> SpatialResult<()> {
+    async fn apply_intrinsic_excitability_adjustment(&mut self) -> SpatialResult<()> {
         // Adjust switching thresholds based on activity
         let current_rates = self.compute_current_firing_rates();
 
@@ -2811,7 +2827,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Apply structural plasticity (simplified)
-    async fn apply_structural_plasticity() -> SpatialResult<()> {
+    async fn apply_structural_plasticity(&mut self) -> SpatialResult<()> {
         // Add or remove connections based on activity
         let current_rates = self.compute_current_firing_rates();
 
@@ -2876,7 +2892,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Adapt learning rates based on performance
-    async fn adapt_learning_rates(_metrics: &PerformanceMetrics) -> SpatialResult<()> {
+    async fn adapt_learning_rates(&mut self, _metrics: &PerformanceMetrics) -> SpatialResult<()> {
         let performance_trend = self.compute_performance_trend();
 
         for mechanism in &mut self.plasticity_mechanisms {
@@ -2918,7 +2934,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Adapt thresholds based on performance
-    async fn adapt_thresholds(_metrics: &PerformanceMetrics) -> SpatialResult<()> {
+    async fn adapt_thresholds(&mut self, _metrics: &PerformanceMetrics) -> SpatialResult<()> {
         // Adjust plasticity thresholds based on learning progress
         for mechanism in &mut self.plasticity_mechanisms {
             if _metrics.learning_speed > 1.0 {
@@ -2940,7 +2956,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Update neuromodulation system
-    async fn update_neuromodulation(_metrics: &PerformanceMetrics) -> SpatialResult<()> {
+    async fn update_neuromodulation(&mut self, _metrics: &PerformanceMetrics) -> SpatialResult<()> {
         // Update dopamine based on performance
         let performance_change = _metrics.accuracy - 0.5; // Baseline accuracy
         self.neuromodulation
@@ -2968,9 +2984,9 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Apply neuromodulation effects to plasticity
-    async fn apply_neuromodulation_effects() -> SpatialResult<()> {
-        let avg_dopamine = self.neuromodulation.dopamine_levels.mean().unwrap_or(0.5);
-        let avg_serotonin = self.neuromodulation.serotonin_levels.mean().unwrap_or(0.5);
+    async fn apply_neuromodulation_effects(&mut self) -> SpatialResult<()> {
+        let avg_dopamine = self.neuromodulation.dopamine_levels.clone().mean();
+        let avg_serotonin = self.neuromodulation.serotonin_levels.clone().mean();
 
         for mechanism in &mut self.plasticity_mechanisms {
             // Dopamine affects learning rate
@@ -2990,7 +3006,8 @@ impl AdvancedMemristiveLearning {
     /// Record learning history
     async fn record_learning_history(
         &mut self,
-        metrics: &PerformanceMetrics, timestamp: f64,
+        metrics: &PerformanceMetrics,
+        timestamp: f64,
     ) -> SpatialResult<()> {
         // Record performance metrics
         self.learning_history
@@ -3014,7 +3031,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Check if memory consolidation should be triggered
-    fn should_trigger_consolidation(_epoch: usize) -> bool {
+    fn should_trigger_consolidation(&mut self, _epoch: usize) -> bool {
         // Trigger consolidation every 100 epochs or when performance is high
         _epoch % 100 == 0
             || self
@@ -3026,7 +3043,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Trigger memory consolidation
-    async fn trigger_memory_consolidation() -> SpatialResult<()> {
+    async fn trigger_memory_consolidation(&mut self) -> SpatialResult<()> {
         // Systems consolidation: strengthen important connections
         self.strengthen_important_connections().await?;
 
@@ -3049,7 +3066,7 @@ impl AdvancedMemristiveLearning {
     }
 
     /// Strengthen important connections during consolidation
-    async fn strengthen_important_connections() -> SpatialResult<()> {
+    async fn strengthen_important_connections(&mut self) -> SpatialResult<()> {
         // Calculate connection importance based on usage and performance contribution
         let mut importance_matrix = Array2::zeros(self.crossbar_array.dimensions);
 
@@ -3099,7 +3116,7 @@ impl AdvancedMemristiveLearning {
 
     fn compute_weight_stability(&self) -> f64 {
         // Simplified stability measure
-        let weight_variance = self.crossbar_array.conductances.variance();
+        let weight_variance = self.crossbar_array.conductances.clone().variance();
         1.0 / (1.0 + weight_variance)
     }
 
@@ -3277,7 +3294,7 @@ impl NeuromodulationSystem {
             release_patterns: NeuromodulatorReleasePatterns {
                 phasic_dopamine: Vec::new(),
                 tonic_serotonin: 0.5,
-                cholinergic_attention: Array1::from_elem(num_neurons, 0.5),
+                cholinergic_attention: Array1::from_elem(_num_neurons, 0.5),
                 stress_noradrenaline: 0.3,
             },
         }

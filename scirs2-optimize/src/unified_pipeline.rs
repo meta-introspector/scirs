@@ -801,7 +801,7 @@ mod tests {
     fn test_bounds_application() {
         // Test bounds constraint application
         let config = UnifiedOptimizationConfig::default();
-        let _optimizer: Result<UnifiedOptimizer<crate::distributed::MockMPI>_> =
+        let _optimizer: Result<UnifiedOptimizer<crate::distributed::MockMPI>, _> =
             UnifiedOptimizer::new(config, None);
 
         // This would test the bounds application logic

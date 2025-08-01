@@ -41,7 +41,7 @@ pub struct BayesianRegressionResult {
     /// Posterior scale parameter
     pub posterior_beta: f64,
     /// Number of training samples
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Number of features
     pub n_features: usize,
     /// Training data mean (for centering)
@@ -80,8 +80,8 @@ impl BayesianLinearRegression {
         prior_beta: f64,
         fit_intercept: bool,
     ) -> StatsResult<Self> {
-        check_array_finite(&prior_mean, "prior_mean")?;
-        check_array_finite(&prior_precision, "prior_precision")?;
+        checkarray_finite(&prior_mean, "prior_mean")?;
+        checkarray_finite(&prior_precision, "prior_precision")?;
         check_positive(prior_alpha, "prior_alpha")?;
         check_positive(prior_beta, "prior_beta")?;
 
@@ -111,28 +111,28 @@ impl BayesianLinearRegression {
         x: ArrayView2<f64>,
         y: ArrayView1<f64>,
     ) -> StatsResult<BayesianRegressionResult> {
-        check_array_finite(&x, "x")?;
-        check_array_finite(&y, "y")?;
-        let (n_samples, n_features) = x.dim();
+        checkarray_finite(&x, "x")?;
+        checkarray_finite(&y, "y")?;
+        let (n_samples_, n_features) = x.dim();
 
-        if y.len() != n_samples {
+        if y.len() != n_samples_ {
             return Err(StatsError::DimensionMismatch(format!(
                 "y length ({}) must match x rows ({})",
                 y.len(),
-                n_samples
+                n_samples_
             )));
         }
 
-        if n_samples < 2 {
+        if n_samples_ < 2 {
             return Err(StatsError::InvalidArgument(
-                "n_samples must be at least 2".to_string(),
+                "n_samples_ must be at least 2".to_string(),
             ));
         }
 
         // Center data if fitting intercept
         let (x_centered, y_centered, x_mean, y_mean) = if self.fit_intercept {
             let x_mean = x.mean_axis(Axis(0)).unwrap();
-            let y_mean = y.mean().unwrap();
+            let y_mean = y.mean();
 
             let mut x_centered = x.to_owned();
             for mut row in x_centered.rows_mut() {
@@ -163,7 +163,7 @@ impl BayesianLinearRegression {
         let posterior_mean = posterior_covariance.dot(&(&prior_contribution + data_contribution));
 
         // Posterior shape and scale for noise variance
-        let posterior_alpha = self.prior_alpha + n_samples as f64 / 2.0;
+        let posterior_alpha = self.prior_alpha + n_samples_ as f64 / 2.0;
 
         // Compute residual sum of squares
         let y_pred = x_centered.dot(&posterior_mean);
@@ -193,7 +193,7 @@ impl BayesianLinearRegression {
             posterior_covariance,
             posterior_alpha,
             posterior_beta,
-            n_samples,
+            n_samples_,
             n_features,
             x_mean,
             y_mean,
@@ -251,7 +251,7 @@ impl BayesianLinearRegression {
         x: ArrayView2<f64>,
         result: &BayesianRegressionResult,
     ) -> StatsResult<BayesianPredictionResult> {
-        check_array_finite(&x, "x")?;
+        checkarray_finite(&x, "x")?;
         let (n_test, n_features) = x.dim();
 
         if n_features != result.n_features {
@@ -396,22 +396,22 @@ impl ARDBayesianRegression {
 
     /// Fit ARD Bayesian regression using iterative optimization
     pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView1<f64>) -> StatsResult<ARDRegressionResult> {
-        check_array_finite(&x, "x")?;
-        check_array_finite(&y, "y")?;
-        let (n_samples, n_features) = x.dim();
+        checkarray_finite(&x, "x")?;
+        checkarray_finite(&y, "y")?;
+        let (n_samples_, n_features) = x.dim();
 
-        if y.len() != n_samples {
+        if y.len() != n_samples_ {
             return Err(StatsError::DimensionMismatch(format!(
                 "y length ({}) must match x rows ({})",
                 y.len(),
-                n_samples
+                n_samples_
             )));
         }
 
         // Center data if fitting intercept
         let (x_centered, y_centered, x_mean, y_mean) = if self.fit_intercept {
             let x_mean = x.mean_axis(Axis(0)).unwrap();
-            let y_mean = y.mean().unwrap();
+            let y_mean = y.mean();
 
             let mut x_centered = x.to_owned();
             for mut row in x_centered.rows_mut() {
@@ -467,7 +467,7 @@ impl ARDBayesianRegression {
 
             let _trace_cov = covariance.diag().sum();
             let new_beta =
-                (n_samples as f64 - new_alpha.sum() + alpha.dot(&covariance.diag())) / rss;
+                (n_samples_ as f64 - new_alpha.sum() + alpha.dot(&covariance.diag())) / rss;
 
             // Check convergence
             let log_ml = self.compute_ard_log_marginal_likelihood(
@@ -508,7 +508,7 @@ impl ARDBayesianRegression {
             posterior_covariance: covariance,
             alpha,
             beta,
-            n_samples,
+            n_samples_,
             n_features,
             x_mean,
             y_mean,
@@ -582,7 +582,7 @@ pub struct ARDRegressionResult {
     /// Noise precision parameter
     pub beta: f64,
     /// Number of training samples
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Number of features
     pub n_features: usize,
     /// Training data mean (for centering)

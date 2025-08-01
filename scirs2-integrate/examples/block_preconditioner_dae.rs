@@ -10,7 +10,7 @@
 //!    - With block-structured preconditioning
 
 use ndarray::{Array1, ArrayView1};
-use scirs2__integrate::dae::{krylov_bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEType};
+use scirs2_integrate::dae::{krylov_bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEType};
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -239,8 +239,10 @@ fn heat_system_f(
 /// These constraints enforce boundary conditions and internal relationships.
 #[allow(dead_code)]
 fn heat_system_g(
-    t: f64_x: ArrayView1<f64>,
-    y: ArrayView1<f64>, _n_x: usize,
+    t: f64,
+    x: ArrayView1<f64>,
+    y: ArrayView1<f64>,
+    _n_x: usize,
     n_y: usize,
 ) -> Array1<f64> {
     let mut g = Array1::zeros(_y.len());

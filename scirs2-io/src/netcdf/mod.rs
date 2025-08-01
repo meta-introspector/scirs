@@ -587,7 +587,7 @@ impl NetCDFFile {
             .map(|&x| {
                 // Use any::Any for safe downcasting
                 let value: Box<dyn std::any::Any> =
-                    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<_f64>() {
+                    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
                         Box::new(x)
                     } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() {
                         Box::new(x as f32)

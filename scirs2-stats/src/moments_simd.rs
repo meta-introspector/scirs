@@ -4,7 +4,7 @@
 //! including skewness and kurtosis, using scirs2-core's unified SIMD operations.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
@@ -41,7 +41,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
     D: Data<Elem = F>,
 {
-    check_array_finite(x, "x")?;
+    checkarray_finite(x, "x")?;
 
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
@@ -113,7 +113,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
     D: Data<Elem = F>,
 {
-    check_array_finite(x, "x")?;
+    checkarray_finite(x, "x")?;
 
     if x.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -197,7 +197,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
     D: Data<Elem = F>,
 {
-    check_array_finite(x, "x")?;
+    checkarray_finite(x, "x")?;
 
     if x.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -264,7 +264,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
     D: Data<Elem = F>,
 {
-    check_array_finite(x, "x")?;
+    checkarray_finite(x, "x")?;
 
     if x.is_empty() {
         return Err(StatsError::InvalidArgument(

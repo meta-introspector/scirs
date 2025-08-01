@@ -1,17 +1,18 @@
 //! Finite difference methods for option pricing
 
 use crate::error::IntegrateResult;
-use crate::specialized::finance::types::{FinancialOption, OptionType, OptionStyle};
 use crate::specialized::finance::models::VolatilityModel;
 use crate::specialized::finance::solvers::StochasticPDESolver;
+use crate::specialized::finance::types::{FinancialOption, OptionStyle, OptionType};
 use ndarray::Array2;
 
 /// Main finite difference pricing function
-pub fn price_finite_difference(solver: &StochasticPDESolver, option: &FinancialOption) -> IntegrateResult<f64> {
+pub fn price_finite_difference(
+    solver: &StochasticPDESolver,
+    option: &FinancialOption,
+) -> IntegrateResult<f64> {
     match &solver.volatility_model {
-        VolatilityModel::Constant(sigma) => {
-            black_scholes_finite_difference(solver, option, *sigma)
-        }
+        VolatilityModel::Constant(sigma) => black_scholes_finite_difference(solver, option, *sigma),
         VolatilityModel::Heston {
             v0,
             theta,
@@ -21,7 +22,7 @@ pub fn price_finite_difference(solver: &StochasticPDESolver, option: &FinancialO
         } => heston_finite_difference(solver, option, *v0, *theta, *kappa, *sigma, *rho),
         // Add other models as needed
         _ => Err(crate::error::IntegrateError::ValueError(
-            "Finite difference not implemented for this volatility model".to_string()
+            "Finite difference not implemented for this volatility model".to_string(),
         )),
     }
 }
@@ -30,7 +31,7 @@ pub fn price_finite_difference(solver: &StochasticPDESolver, option: &FinancialO
 pub fn black_scholes_finite_difference(
     solver: &StochasticPDESolver,
     option: &FinancialOption,
-    sigma: f64
+    sigma: f64,
 ) -> IntegrateResult<f64> {
     let dt = option.maturity / (solver.n_time - 1) as f64;
     let s_max = option.spot * 3.0;
@@ -70,12 +71,17 @@ pub fn black_scholes_finite_difference(
             let s = i as f64 * ds;
 
             // Finite difference coefficients
-            let a = 0.5 * dt * (sigma * sigma * (i as f64) * (i as f64) - option.risk_free_rate * i as f64);
+            let a = 0.5
+                * dt
+                * (sigma * sigma * (i as f64) * (i as f64) - option.risk_free_rate * i as f64);
             let b = 1.0 - dt * (sigma * sigma * (i as f64) * (i as f64) + option.risk_free_rate);
-            let c = 0.5 * dt * (sigma * sigma * (i as f64) * (i as f64) + option.risk_free_rate * i as f64);
+            let c = 0.5
+                * dt
+                * (sigma * sigma * (i as f64) * (i as f64) + option.risk_free_rate * i as f64);
 
             // Explicit scheme
-            let v_new = a * v[[t_idx + 1, i - 1]] + b * v[[t_idx + 1, i]] + c * v[[t_idx + 1, i + 1]];
+            let v_new =
+                a * v[[t_idx + 1, i - 1]] + b * v[[t_idx + 1, i]] + c * v[[t_idx + 1, i + 1]];
 
             // For American options, apply early exercise condition
             if option.option_style == OptionStyle::American {
@@ -89,7 +95,7 @@ pub fn black_scholes_finite_difference(
     // Interpolate to get option value at initial spot price
     let spot_idx = ((option.spot / ds) as usize).min(solver.n_asset - 2);
     let weight = (option.spot - spot_idx as f64 * ds) / ds;
-    
+
     Ok(v[[0, spot_idx]] * (1.0 - weight) + v[[0, spot_idx + 1]] * weight)
 }
 
@@ -106,6 +112,6 @@ pub fn heston_finite_difference(
     // TODO: Implement Heston finite difference
     // This is a placeholder implementation
     Err(crate::error::IntegrateError::NotImplementedError(
-        "Heston finite difference implementation in progress".to_string()
+        "Heston finite difference implementation in progress".to_string(),
     ))
 }

@@ -834,7 +834,7 @@ where
         let rates = self.strategy_success_rates.lock().unwrap();
         let mut strategies: Vec<_> = rates.iter().map(|(k, v)| (k.clone(), *v)).collect();
         strategies.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-        strategies.into_iter().take(5).collect()
+        strategies.into().iter().take(5).collect()
     }
 }
 

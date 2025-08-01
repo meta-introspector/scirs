@@ -1,5 +1,5 @@
 use ndarray::{array, ArrayView1};
-use scirs2__integrate::{
+use scirs2_integrate::{
     gaussian::gauss_legendre,
     monte_carlo::{monte_carlo, MonteCarloOptions},
     ode::{solve_ivp, ODEMethod, ODEOptions},

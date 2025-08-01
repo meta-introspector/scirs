@@ -72,8 +72,8 @@ pub struct GCROTResult<T> {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__sparse::csr_array::CsrArray;
-/// use scirs2__sparse::linalg::gcrot::{gcrot, GCROTOptions};
+/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::gcrot::{gcrot, GCROTOptions};
 /// use ndarray::Array1;
 ///
 /// // Create a simple matrix
@@ -365,7 +365,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
 
     #[test]
     fn test_gcrot_simple_system() {

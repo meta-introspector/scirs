@@ -3,7 +3,7 @@
 //! This module provides specialized high-performance solvers for banded matrices,
 //! including Cholesky decomposition, LDLT factorization, and block-based algorithms.
 
-use crate::banded__array::BandedArray;
+use crate::banded_array::BandedArray;
 use crate::error::{SparseError, SparseResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, Zero, One};
@@ -77,8 +77,8 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::banded_array::BandedArray;
-    /// use scirs2__sparse::linalg::banded_solvers::BandedSolver;
+    /// use scirs2_sparse::banded_array::BandedArray;
+    /// use scirs2_sparse::linalg::banded_solvers::BandedSolver;
     ///
     /// // Create a symmetric positive definite tridiagonal matrix
     /// let diag = vec![4.0, 4.0, 4.0];

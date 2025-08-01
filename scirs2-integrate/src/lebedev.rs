@@ -738,7 +738,7 @@ mod tests {
         ];
 
         for &order in &orders {
-            let result = lebedev_integrate(|___| 1.0, order).unwrap();
+            let result = lebedev_integrate(|_x, _y, _z| 1.0, order).unwrap();
             // Our implementation may not have exact weights, so allow some tolerance
             assert!(
                 (result - 4.0 * PI).abs() < 1.0,
@@ -764,7 +764,7 @@ mod tests {
         ];
 
         for &order in &orders {
-            let result = lebedev_integrate(|___: f64| 1.0, order).unwrap();
+            let result = lebedev_integrate(|_x: f64, _y: f64, _z: f64| 1.0, order).unwrap();
             // Allow higher tolerance due to approximation in implementation
             assert!(
                 (result - 4.0 * PI).abs() < 1.0,
@@ -778,7 +778,7 @@ mod tests {
         // Test that odd functions integrate to approximately 0 due to symmetry
         // The function z should integrate to 0 on the sphere
         for &order in &[LebedevOrder::Order14, LebedevOrder::Order26] {
-            let result = lebedev_integrate(|__, z: f64| z, order).unwrap();
+            let result = lebedev_integrate(|_x: f64, _y: f64, z: f64| z, order).unwrap();
             // Higher tolerance due to approximation in weights
             assert!(
                 result.abs() < 0.5,
@@ -812,9 +812,9 @@ mod tests {
         let expected = 4.0 * PI / 3.0;
 
         for &order in &orders {
-            let result_x = lebedev_integrate(|x: f64, __| x * x, order).unwrap();
-            let result_y = lebedev_integrate(|_, y: f64_| y * y, order).unwrap();
-            let result_z = lebedev_integrate(|__, z: f64| z * z, order).unwrap();
+            let result_x = lebedev_integrate(|x: f64, _y: f64, _z: f64| x * x, order).unwrap();
+            let result_y = lebedev_integrate(|_x: f64, y: f64, _z: f64| y * y, order).unwrap();
+            let result_z = lebedev_integrate(|_x: f64, _y: f64, z: f64| z * z, order).unwrap();
 
             // With approximate weights, allow higher tolerance
             assert_abs_diff_eq!(result_x, expected, epsilon = 0.5);
@@ -839,7 +839,7 @@ mod tests {
         assert_eq!(rule.npoints, 6);
 
         // Integration should work with f32
-        let result = lebedev_integrate(|___| 1.0_f32, LebedevOrder::Order6).unwrap();
+        let result = lebedev_integrate(|_x, _y, _z| 1.0_f32, LebedevOrder::Order6).unwrap();
         assert_abs_diff_eq!(result, 4.0 * PI as f32, epsilon = 1e-5_f32);
     }
 }

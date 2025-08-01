@@ -49,12 +49,12 @@ impl<F: IntegrateFloat> MemoryPool<F> {
             buffers: std::collections::HashMap::new(),
             max_buffer_size: _max_total_memory / 4, // Quarter of total for single buffer
             total_allocated: 0,
-            _max_total_memory,
+            max_total_memory: _max_total_memory,
         }
     }
 
     /// Allocate a buffer of specified size
-    pub fn allocate(_size: usize) -> PooledBuffer<F> {
+    pub fn allocate(&mut self, _size: usize) -> PooledBuffer<F> {
         if _size <= self.max_buffer_size {
             // Try to reuse existing buffer
             if let Some(queue) = self.buffers.get_mut(&_size) {
@@ -83,7 +83,7 @@ impl<F: IntegrateFloat> MemoryPool<F> {
     }
 
     /// Return a buffer to the pool
-    pub fn deallocate(_buffer: Vec<F>) {
+    pub fn deallocate(&mut self, _buffer: Vec<F>) {
         let size = _buffer.len();
         if size <= self.max_buffer_size && self.buffers.len() < 100 {
             self.buffers.entry(size).or_default().push_back(_buffer);
@@ -112,7 +112,7 @@ impl<F: IntegrateFloat> MemoryPool<F> {
     }
 
     /// Clear all pooled buffers
-    pub fn clear() {
+    pub fn clear(&mut self) {
         self.buffers.clear();
         self.total_allocated = 0;
     }
@@ -128,7 +128,7 @@ pub struct PooledBuffer<F: IntegrateFloat> {
 impl<F: IntegrateFloat> PooledBuffer<F> {
     fn new(_buffer: Vec<F>, pool_size: Option<usize>) -> Self {
         Self {
-            _buffer: Some(_buffer),
+            buffer: Some(_buffer),
             pool_size,
         }
     }
@@ -154,7 +154,7 @@ impl<F: IntegrateFloat> PooledBuffer<F> {
     }
 
     /// Check if buffer is empty
-    pub fn is_empty() -> bool {
+    pub fn is_empty(&self) -> bool {
         self.buffer.as_ref().unwrap().is_empty()
     }
 }
@@ -190,7 +190,7 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
         let data = vec![F::zero(); _rows * cols];
         Self {
             data,
-            _rows,
+            rows: _rows,
             cols,
             layout,
         }
@@ -211,19 +211,19 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
     }
 
     /// Get element at (row, col)
-    pub fn get(_row: usize, col: usize) -> F {
+    pub fn get(&self, _row: usize, col: usize) -> F {
         let index = self.compute_index(_row, col);
         self.data[index]
     }
 
     /// Set element at (row, col)
-    pub fn set(_row: usize, col: usize, value: F) {
+    pub fn set(&mut self, _row: usize, col: usize, value: F) {
         let index = self.compute_index(_row, col);
         self.data[index] = value;
     }
 
     /// Compute linear index based on layout
-    fn compute_index(_row: usize, col: usize) -> usize {
+    fn compute_index(&self, _row: usize, col: usize) -> usize {
         match self.layout {
             MatrixLayout::RowMajor => _row * self.cols + col,
             MatrixLayout::ColumnMajor => col * self.rows + _row,
@@ -248,7 +248,7 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
     }
 
     /// Cache-friendly matrix-vector multiplication
-    pub fn matvec(x: ArrayView1<F>) -> Array1<F> {
+    pub fn matvec(&self, x: ArrayView1<F>) -> Array1<F> {
         let mut y = Array1::zeros(self.rows);
 
         match self.layout {
@@ -278,7 +278,7 @@ impl<F: IntegrateFloat> CacheFriendlyMatrix<F> {
     }
 
     /// Blocked matrix-vector multiplication for better cache performance
-    fn blocked_matvec(x: ArrayView1<F>, mut y: ArrayViewMut1<F>, block_size: usize) {
+    fn blocked_matvec(&self, x: ArrayView1<F>, mut y: ArrayViewMut1<F>, block_size: usize) {
         let rows_blocks = self.rows.div_ceil(block_size);
         let cols_blocks = self.cols.div_ceil(block_size);
 
@@ -316,14 +316,14 @@ impl BlockingStrategy {
     /// Create blocking strategy with specified L1 block size
     pub fn new(_l1_block_size: usize) -> Self {
         Self {
-            _l1_block_size,
+            l1_block_size: _l1_block_size,
             l2_block_size: _l1_block_size * 4,
             l3_block_size: _l1_block_size * 16,
         }
     }
 
     /// Get optimal block size for given matrix dimension and cache level
-    pub fn optimal_block_size(_matrix_size: usize, cache_level: CacheLevel) -> usize {
+    pub fn optimal_block_size(&self, _matrix_size: usize, cache_level: CacheLevel) -> usize {
         let block_size = match cache_level {
             CacheLevel::L1 => self.l1_block_size,
             CacheLevel::L2 => self.l2_block_size,
@@ -331,7 +331,7 @@ impl BlockingStrategy {
         };
 
         // Adjust for small matrices
-        block_size.min(matrix_size)
+        block_size.min(_matrix_size)
     }
 }
 
@@ -514,7 +514,7 @@ mod tests {
         let mut pool = MemoryPool::<f64>::new(1024 * 1024); // 1MB
 
         // Allocate buffer
-        let buffer = pool.allocate(100);
+        let mut buffer = pool.allocate(100);
         assert_eq!(buffer.len(), 100);
 
         // Check memory usage

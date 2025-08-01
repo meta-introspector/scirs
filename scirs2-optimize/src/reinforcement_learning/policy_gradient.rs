@@ -73,7 +73,7 @@ impl MetaPolicyNetwork {
         }
 
         Self {
-            policy_weights..meta_weights,
+            policy_weights, meta_weights,
             policy_bias: Array2::zeros((num_layers, max_layer_size)),
             meta_bias: Array2::zeros((num_layers, max_layer_size)),
             layer_sizes,
@@ -432,9 +432,9 @@ impl MetaExperienceBuffer {
     }
 }
 
-impl AdvancedAdvancedPolicyGradientOptimizer {
+impl AdvancedPolicyGradientOptimizer {
     /// Create new advanced policy gradient optimizer
-    pub fn new(_config: RLOptimizationConfig..state_size: usize, action_size: usize) -> Self {
+    pub fn new(_config: RLOptimizationConfig, state_size: usize, action_size: usize) -> Self {
         let hidden_sizes = vec![state_size * 2, state_size * 3, state_size * 2];
         let meta_policy = MetaPolicyNetwork::new(state_size, action_size, hidden_sizes);
 
@@ -572,7 +572,7 @@ impl AdvancedAdvancedPolicyGradientOptimizer {
                     .max(0.1)
                     .min(2.0),
             },
-            4 => OptimizationAction::ResetToBest_ =>, OptimizationAction::Terminate,
+            4 => OptimizationAction::ResetToBest, _ => OptimizationAction::Terminate,
         }
     }
 

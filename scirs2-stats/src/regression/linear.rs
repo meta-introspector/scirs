@@ -4,7 +4,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::regression::{MultilinearRegressionResult, RegressionResults};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
-use scirs2__linalg::{lstsq, svd};
+use scirs2_linalg::{lstsq, svd};
 
 /// Perform multiple linear regression and return a tuple containing
 /// coefficients, residuals, rank, and singular values.
@@ -80,7 +80,7 @@ where
     // to solve the linear system X beta = y
 
     // Compute the SVD of X
-    let (_u, s_vt) = match svd(x, false, None) {
+    let (_u, s, _vt) = match svd(x, false, None) {
         Ok(svd_result) => svd_result,
         Err(e) => {
             return Err(StatsError::ComputationError(format!(
@@ -439,11 +439,11 @@ where
     let residual_ss = ss_y - ss_xy * ss_xy / ss_x;
 
     // Standard error of the estimate
-    let std_err = num_traits::Float::sqrt(residual_ss / df) / num, _traits::Float::sqrt(ss_x);
+    let std_err = num_traits::Float::sqrt(residual_ss / df) / num_traits::Float::sqrt(ss_x);
 
     // Calculate p-value from t-distribution
     // t = r * sqrt(df) / sqrt(1 - r^2)
-    let t_stat = r * num_traits::Float::sqrt(df) / num, _traits::Float::sqrt(F::one() - r * r);
+    let t_stat = r * num_traits::Float::sqrt(df) / num_traits::Float::sqrt(F::one() - r * r);
 
     // Calculate p-value using a two-tailed test
     // We're using a simple approximation for the p-value based on the t-statistic
@@ -526,8 +526,8 @@ where
         [beta[0], beta[1]]
     } else {
         // Use linear regression for initial guess
-        let (slope, intercept___) = linregress(x, y)?;
-        [intercept, slope]
+        let (slope, intercept___, _, _, _) = linregress(x, y)?;
+        [intercept___, slope]
     };
 
     // Orthogonal Distance Regression Implementation

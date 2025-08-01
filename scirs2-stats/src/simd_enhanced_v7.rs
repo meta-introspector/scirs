@@ -177,8 +177,8 @@ where
         x: &ArrayView2<F>,
         include_intercept: bool,
     ) -> StatsResult<SimdRegressionResult<F>> {
-        check_array_finite(&y, "y")?;
-        check_array_finite(&x, "x")?;
+        checkarray_finite(&y, "y")?;
+        checkarray_finite(&x, "x")?;
 
         let n = y.len();
         let k = x.ncols();
@@ -265,7 +265,7 @@ where
         data: &ArrayView2<F>,
         bias_correction: bool,
     ) -> StatsResult<SimdCovarianceResult<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         let (n, p) = data.dim();
         if n < 2 {
@@ -312,8 +312,8 @@ where
         group2: &ArrayView2<F>,
         test_type: StatisticalTestType,
     ) -> StatsResult<SimdMultiTestResult<F>> {
-        check_array_finite(group1, "group1")?;
-        check_array_finite(group2, "group2")?;
+        checkarray_finite(group1, "group1")?;
+        checkarray_finite(group2, "group2")?;
 
         if group1.ncols() != group2.ncols() {
             return Err(StatsError::DimensionMismatch(

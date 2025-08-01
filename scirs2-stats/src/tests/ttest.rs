@@ -144,7 +144,7 @@ where
             F::from(2.0).unwrap() * (F::one() - t_dist.cdf(abs_t))
         }
         Alternative::Less => t_dist.cdf(t_stat),
-        Alternative::Greater =>, F::one() - t_dist.cdf(t_stat),
+        Alternative::Greater => F::one() - t_dist.cdf(t_stat),
     };
 
     // Create additional info string
@@ -306,7 +306,7 @@ where
             F::from(2.0).unwrap() * (F::one() - t_dist.cdf(abs_t))
         }
         Alternative::Less => t_dist.cdf(t_stat),
-        Alternative::Greater =>, F::one() - t_dist.cdf(t_stat),
+        Alternative::Greater => F::one() - t_dist.cdf(t_stat),
     };
 
     // Create additional info string
@@ -607,7 +607,7 @@ where
             F::from(2.0).unwrap() * (F::one() - t_dist.cdf(abs_t))
         }
         Alternative::Less => t_dist.cdf(t_stat),
-        Alternative::Greater =>, F::one() - t_dist.cdf(t_stat),
+        Alternative::Greater => F::one() - t_dist.cdf(t_stat),
     };
 
     // Create additional info string

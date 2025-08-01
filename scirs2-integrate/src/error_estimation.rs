@@ -110,7 +110,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
     /// Create new advanced error estimator
     pub fn new(_tolerance: F, max_richardson_order: usize) -> Self {
         Self {
-            _tolerance,
+            tolerance: _tolerance,
             max_richardson_order,
             solution_history: VecDeque::new(),
             step_size_history: VecDeque::new(),
@@ -147,7 +147,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
             quality_metrics: self.assess_solution_quality()?,
             recommended_step_size: step_size,
             confidence: F::from(0.5).unwrap(), // Default confidence
-            _error_distribution: self.analyze_error_distribution(current_solution)?,
+            error_distribution: self.analyze_error_distribution(current_solution)?,
         };
 
         // Richardson extrapolation if we have enough history
@@ -164,7 +164,7 @@ impl<F: IntegrateFloat> AdvancedErrorEstimator<F> {
         result.defect_error = self.defect_based_error(current_solution, &ode_function)?;
 
         // Compute overall confidence and recommendations
-        result.confidence = self.compute_confidence(&result);
+        result.confidence = Self::compute_confidence(&result);
         result.recommended_step_size = self.recommend_step_size(&result, step_size);
 
         // Store _error estimate for history
@@ -476,7 +476,7 @@ impl<F: IntegrateFloat> RichardsonExtrapolator<F> {
     /// Create new Richardson extrapolator
     pub fn new(_order: usize) -> Self {
         Self {
-            _order,
+            order: _order,
             step_ratios: vec![F::from(0.5).unwrap(), F::from(0.25).unwrap()],
             solutions: Vec::new(),
         }
@@ -532,7 +532,7 @@ impl<F: IntegrateFloat> SpectralErrorIndicator<F> {
     /// Create new spectral error indicator
     pub fn new(_window_size: usize, decay_threshold: F) -> Self {
         Self {
-            _window_size,
+            window_size: _window_size,
             decay_threshold,
             history: VecDeque::new(),
         }

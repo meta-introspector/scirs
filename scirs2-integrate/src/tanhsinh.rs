@@ -122,7 +122,7 @@ impl TanhSinhRule {
     }
 
     /// Get points and weights transformed to the interval [a, b]
-    fn get_transformed(a: f64, b: f64) -> (Vec<f64>, Vec<f64>) {
+    fn get_transformed(&self, a: f64, b: f64) -> (Vec<f64>, Vec<f64>) {
         let mid = (a + b) / 2.0;
         let len = (b - a) / 2.0;
 
@@ -361,12 +361,12 @@ fn evaluate_with_rule<F>(
     match transform {
         None => {
             // Standard finite interval [a, b]
-            let (points, weights) = TanhSinhRule::get_transformed(state.a, state.b);
+            let (points, weights) = rule.get_transformed(state.a, state.b);
             compute_sum(state, &points, &weights, f, None, log_space);
         }
         Some(TransformType::SemiInfiniteRight(a)) => {
             // [a, ∞) -> [a, 1] via x = a + t/(1-t)
-            let (mut points, mut weights) = TanhSinhRule::get_transformed(0.0, 1.0);
+            let (mut points, mut weights) = rule.get_transformed(0.0, 1.0);
 
             // Adjust weights for the transformation
             for i in 0..points.len() {
@@ -388,7 +388,7 @@ fn evaluate_with_rule<F>(
         }
         Some(TransformType::SemiInfiniteLeft(b)) => {
             // (-∞, b] -> [0, b] via x = b - t/(1-t)
-            let (mut points, mut weights) = TanhSinhRule::get_transformed(0.0, 1.0);
+            let (mut points, mut weights) = rule.get_transformed(0.0, 1.0);
 
             // Adjust weights for the transformation
             for i in 0..points.len() {
@@ -410,7 +410,7 @@ fn evaluate_with_rule<F>(
         }
         Some(TransformType::DoubleInfinite) => {
             // (-∞, ∞) -> (-1, 1) via x = t/(1-t²)
-            let (mut points, mut weights) = TanhSinhRule::get_transformed(-1.0, 1.0);
+            let (mut points, mut weights) = rule.get_transformed(-1.0, 1.0);
 
             // Adjust weights for the transformation
             for i in 0..points.len() {
@@ -591,7 +591,7 @@ where
     for level in state.level..=options.max_level {
         // Get the rule for this level
         let rule = cache.get_rule(level);
-        let (points, weights) = TanhSinhRule::get_transformed(-1.0, 1.0);
+        let (points, weights) = rule.get_transformed(-1.0, 1.0);
 
         // Compute sum for this level, applying the transformation for infinity
         let mut sum = 0.0;

@@ -546,15 +546,15 @@ mod tests {
     #[test]
     fn test_newton_cotes_integrate() {
         // Test integration of x^2 from 0 to 1 = 1/3
-        let (result_) =
+        let (result_, _error) =
             newton_cotes_integrate(|x| x * x, 0.0, 1.0, 3, NewtonCotesType::Closed).unwrap();
-        assert_abs_diff_eq!(result, 1.0 / 3.0, epsilon = 1e-14);
+        assert_abs_diff_eq!(result_, 1.0 / 3.0, epsilon = 1e-14);
 
         // Test integration of sin(x) from 0 to pi = 2
         // Simpson's rule gives 2π/3 ≈ 2.094, which has ~5% error
-        let (result_) =
+        let (result_, _error) =
             newton_cotes_integrate(|x| x.sin(), 0.0, PI, 3, NewtonCotesType::Closed).unwrap();
-        assert_abs_diff_eq!(result, 2.0, epsilon = 0.1);
+        assert_abs_diff_eq!(result_, 2.0, epsilon = 0.1);
     }
 
     #[test]

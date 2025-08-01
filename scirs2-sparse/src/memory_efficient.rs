@@ -3,7 +3,7 @@
 //! This module provides advanced memory optimization techniques for sparse matrix operations,
 //! including streaming algorithms, out-of-core processing, and cache-aware implementations.
 
-use crate::csr__array::CsrArray;
+use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};
@@ -31,7 +31,7 @@ impl MemoryTracker {
         Self {
             current_usage: 0,
             peak_usage: 0,
-            _memory_limit,
+            memory_limit: _memory_limit,
         }
     }
 
@@ -179,7 +179,7 @@ where
         let chunk_size = _memory_limit / (8 * std::mem::size_of::<T>()); // Conservative estimate
 
         Self {
-            _memory_limit,
+            memory_limit: _memory_limit,
             chunk_size,
             temp_storage: VecDeque::new(),
         }
@@ -337,7 +337,7 @@ where
         let mut chunk_indptr = vec![0];
 
         let (a_row_indices, a_col_indices, a_values) = a.find();
-        let (b_row_indices_b_col_indices, b_values) = b_csc.find();
+        let (b_row_indices, b_col_indices, b_values) = b_csc.find();
         let b_indptr = b_csc
             .get_indptr()
             .ok_or_else(|| SparseError::ValueError("CSC matrix must have indptr".to_string()))?;
@@ -449,7 +449,7 @@ impl CacheAwareOps {
             .map(|((&row, &col), &val)| (row, col, val))
             .collect();
 
-        sorted_ops.sort_by_key(|&(_, col_)| col);
+        sorted_ops.sort_by_key(|&(_, col_, _)| col_);
 
         // Process in cache-friendly chunks
         for chunk in sorted_ops.chunks(elements_per_cache_line) {
@@ -488,17 +488,17 @@ impl CacheAwareOps {
         }
 
         // Sort by new row index (original column)
-        transposed_triplets.sort_by_key(|&(new_row__)| new_row);
+        transposed_triplets.sort_by_key(|&(new_row_, _, _)| new_row_);
 
         let new_rows: Vec<usize> = transposed_triplets
             .iter()
-            .map(|&(new_row__)| new_row)
+            .map(|&(new_row_, _, _)| new_row_)
             .collect();
         let new_cols: Vec<usize> = transposed_triplets
             .iter()
-            .map(|&(_, new_col_)| new_col)
+            .map(|&(_, new_col_, _)| new_col_)
             .collect();
-        let new_values: Vec<T> = transposed_triplets.iter().map(|&(__, val)| val).collect();
+        let new_values: Vec<T> = transposed_triplets.iter().map(|&(_, _, val)| val).collect();
 
         CsrArray::from_triplets(&new_rows, &new_cols, &new_values, (cols, rows), false)
     }
@@ -523,7 +523,7 @@ where
         Self {
             available_buffers: Vec::new(),
             allocated_buffers: Vec::new(),
-            _pool_size_limit,
+            pool_size_limit: _pool_size_limit,
         }
     }
 
@@ -771,9 +771,9 @@ impl ChunkedOperations {
         }
 
         // Create the final matrix from all triplets
-        let result_rows: Vec<usize> = all_triplets.iter().map(|&(r__)| r).collect();
-        let result_cols: Vec<usize> = all_triplets.iter().map(|&(_, c_)| c).collect();
-        let result_values: Vec<T> = all_triplets.iter().map(|&(__, v)| v).collect();
+        let result_rows: Vec<usize> = all_triplets.iter().map(|&(r_, _, _)| r_).collect();
+        let result_cols: Vec<usize> = all_triplets.iter().map(|&(_, c_, _)| c_).collect();
+        let result_values: Vec<T> = all_triplets.iter().map(|&(_, _, v)| v).collect();
 
         CsrArray::from_triplets(
             &result_rows,
@@ -814,10 +814,10 @@ impl ChunkedOperations {
         }
 
         // Build adjacency list representation
-        let (row_indices, col_indices_) = matrix.find();
+        let (row_indices, col_indices_, _) = matrix.find();
         let mut adj_list: Vec<Vec<usize>> = vec![Vec::new(); rows];
 
-        for (&row, &col) in row_indices.iter().zip(col_indices.iter()) {
+        for (&row, &col) in row_indices.iter().zip(col_indices_.iter()) {
             if row != col {
                 adj_list[row].push(col);
                 adj_list[col].push(row);
@@ -908,7 +908,7 @@ impl ChunkedOperations {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
     use approx::assert_relative_eq;
 
     #[test]

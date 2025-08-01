@@ -586,7 +586,7 @@ impl DistributedSpatialCluster {
 
         // Create node instances
         for node_id in 0.._config.node_count {
-            let (sender_receiver) = mpsc::channel(1000);
+            let (sender, _receiver) = mpsc::channel(1000);
             channels.insert(node_id, sender);
 
             let node = NodeInstance {
@@ -619,7 +619,7 @@ impl DistributedSpatialCluster {
         let fault_detector = FaultDetector {
             node_health: HashMap::new(),
             failure_threshold: Duration::from_secs(10),
-            recovery_strategies: Self::default_recovery_strategies(),
+            recovery_strategies: HashMap::new(),
         };
 
         let communication = CommunicationLayer {
@@ -648,7 +648,7 @@ impl DistributedSpatialCluster {
         };
 
         Ok(Self {
-            _config,
+            config: _config,
             nodes,
             master_node_id: 0,
             partitions: Arc::new(TokioRwLock::new(HashMap::new())),
@@ -725,7 +725,7 @@ impl DistributedSpatialCluster {
         }
 
         // Sort by Z-order
-        point_z_orders.sort_by_key(|(_, z_order_)| *z_order);
+        point_z_orders.sort_by_key(|(_, z_order_, _)| *z_order_);
 
         // Create partitions
         let points_per_partition = n_points.div_ceil(target_partitions);
@@ -745,7 +745,7 @@ impl DistributedSpatialCluster {
             let mut partition_min = Array1::from_elem(n_dims, f64::INFINITY);
             let mut partition_max = Array1::from_elem(n_dims, f64::NEG_INFINITY);
 
-            for (i, (__, point)) in point_z_orders[start_idx..end_idx].iter().enumerate() {
+            for (i, (_, _, point)) in point_z_orders[start_idx..end_idx].iter().enumerate() {
                 partition_data.row_mut(i).assign(point);
 
                 for (j, &coord) in point.iter().enumerate() {
@@ -837,8 +837,8 @@ impl DistributedSpatialCluster {
                 if let Some(ref existing_data) = node.local_data {
                     // Concatenate existing data with new partition data
                     let (existing_rows, cols) = existing_data.dim();
-                    let (new_rows_) = partition.data.dim();
-                    let total_rows = existing_rows + new_rows;
+                    let (new_rows_, _) = partition.data.dim();
+                    let total_rows = existing_rows + new_rows_;
 
                     let mut combined_data = Array2::zeros((total_rows, cols));
                     combined_data
@@ -865,8 +865,8 @@ impl DistributedSpatialCluster {
                 if let Some(ref existing_data) = node.local_data {
                     // Concatenate existing data with new partition data
                     let (existing_rows, cols) = existing_data.dim();
-                    let (new_rows_) = partition.data.dim();
-                    let total_rows = existing_rows + new_rows;
+                    let (new_rows_, _) = partition.data.dim();
+                    let total_rows = existing_rows + new_rows_;
 
                     let mut combined_data = Array2::zeros((total_rows, cols));
                     combined_data
@@ -1061,7 +1061,10 @@ impl DistributedSpatialCluster {
     }
 
     /// Select next centroid using weighted probability
-    async fn select_next_centroid_weighted(&self, _distances: &[f64]) -> SpatialResult<Array1<f64>> {
+    async fn select_next_centroid_weighted(
+        &self,
+        _distances: &[f64],
+    ) -> SpatialResult<Array1<f64>> {
         let total_distance: f64 = _distances.iter().sum();
         let target = rand::random::<f64>() * total_distance;
 
@@ -1104,8 +1107,8 @@ impl DistributedSpatialCluster {
         for (node_id, node_arc) in self.nodes.iter().enumerate() {
             let node = node_arc.read().await;
             if let Some(ref local_data) = node.local_data {
-                let (n_points_) = local_data.dim();
-                let mut assignments = Array1::zeros(n_points);
+                let (n_points_, _) = local_data.dim();
+                let mut assignments = Array1::zeros(n_points_);
 
                 for (i, point) in local_data.outer_iter().enumerate() {
                     let mut best_cluster = 0;

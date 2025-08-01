@@ -55,7 +55,7 @@ impl<F: Float> Default for MINRESOptions<F> {
 ///
 /// # Example
 /// ```
-/// use scirs2__sparse::linalg::{minres, MINRESOptions, IdentityOperator};
+/// use scirs2_sparse::linalg::{minres, MINRESOptions, IdentityOperator};
 ///
 /// let identity = IdentityOperator::<f64>::new(3);
 /// let b = vec![1.0, 2.0, 3.0];

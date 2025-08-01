@@ -73,8 +73,8 @@ pub struct TFQMRResult<T> {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__sparse::csr_array::CsrArray;
-/// use scirs2__sparse::linalg::tfqmr::{tfqmr, TFQMROptions};
+/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::tfqmr::{tfqmr, TFQMROptions};
 /// use ndarray::Array1;
 ///
 /// // Create a simple matrix
@@ -303,7 +303,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
     use approx::assert_relative_eq;
 
     #[test]

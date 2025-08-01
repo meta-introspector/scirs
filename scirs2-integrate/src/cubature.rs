@@ -127,7 +127,7 @@ fn transform_for_infinite_bounds<F: IntegrateFloat>(x: F, a: &Bound<F>, b: &Boun
         }
 
         // Invalid or unsupported interval types
-        (Bound::Finite(_), Bound::NegInf) | (Bound::NegInf, Bound::NegInf) | (Bound:: PosInf) => {
+        (Bound::Finite(_), Bound::NegInf) | (Bound::NegInf, Bound::NegInf) | (Bound::PosInf, _) => {
             // These cases represent invalid integration ranges
             // Return zero values to ensure the integral is zero
             (F::zero(), F::zero())
@@ -188,7 +188,7 @@ where
     // Validate bounds: check for invalid integration ranges
     for (lower, upper) in bounds {
         match (lower, upper) {
-            (Bound:: PosInf) => {
+            (Bound::PosInf, _) => {
                 return Err(IntegrateError::ValueError(
                     "Lower bound cannot be positive infinity".to_string(),
                 ));

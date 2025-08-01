@@ -140,7 +140,8 @@ pub fn procrustes(
 #[allow(dead_code)]
 fn procrustes_basic_impl(
     centered1: &ArrayView2<'_, f64>,
-    centered2: &ArrayView2<'_, f64>, _mean1: &Array1<f64>,
+    centered2: &ArrayView2<'_, f64>,
+    _mean1: &Array1<f64>,
     mean2: &Array1<f64>,
 ) -> SpatialResult<(Array2<f64>, Array2<f64>, f64)> {
     let n_points = centered1.nrows() as f64;

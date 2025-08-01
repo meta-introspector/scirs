@@ -1,9 +1,9 @@
 use ndarray::{Array1, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::ode::utils::jacobian::{
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::ode::utils::jacobian::{
     parallel_finite_difference_jacobian, JacobianManager, JacobianStrategy, JacobianStructure,
 };
-use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::time::Instant;
 
 /// This example demonstrates the parallel Jacobian computation capabilities

@@ -57,7 +57,7 @@ where
         }
 
         Ok(Self {
-            _data,
+            data: _data,
             kl,
             ku,
             shape,
@@ -73,7 +73,7 @@ where
             data,
             kl,
             ku,
-            _shape,
+            shape: _shape,
         }
     }
 

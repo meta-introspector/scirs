@@ -1,6 +1,6 @@
 // Removed unused import Array2
-use scirs2__integrate::pde::implicit::{ImplicitOptions, ADI2D};
-use scirs2__integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
+use scirs2_integrate::pde::implicit::{ImplicitOptions, ADI2D};
+use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
 
 /// Example demonstrating the ADI method for a 2D advection-diffusion problem
 ///
@@ -57,12 +57,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     // Define diffusion coefficients
-    let diffusion_x = move |_x: f64_y: f64, _t: f64_u: f64| diffusion_coeff_x;
-    let diffusion_y = move |_x: f64_y: f64, _t: f64_u: f64| diffusion_coeff_y;
+    let diffusion_x = move |_x: f64, _y: f64, _t: f64, _u: f64| diffusion_coeff_x;
+    let diffusion_y = move |_x: f64, _y: f64, _t: f64, _u: f64| diffusion_coeff_y;
 
     // Define advection velocities
-    let advection_x = move |_x: f64_y: f64, _t: f64_u: f64| velocity_x;
-    let advection_y = move |_x: f64_y: f64, _t: f64_u: f64| velocity_y;
+    let advection_x = move |_x: f64, _y: f64, _t: f64, _u: f64| velocity_x;
+    let advection_y = move |_x: f64, _y: f64, _t: f64, _u: f64| velocity_y;
 
     // Define initial condition: Gaussian pulse at (0.5, 0.5)
     let initial_condition = |x: f64, y: f64| {
@@ -188,7 +188,7 @@ fn analyze_solution(
         let diff_total = (diff_x.powi(2) + diff_y.powi(2)).sqrt();
 
         println!(
-            " {t:.4} | ({_x_peak:.3},{_y_peak:.3}) | ({_x_expected:.3},{_y_expected:.3}) | {diff_total:.4e}"
+            " {t:.4} | ({x_peak:.3},{y_peak:.3}) | ({x_expected:.3},{y_expected:.3}) | {diff_total:.4e}"
         );
     }
 

@@ -1,8 +1,8 @@
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
-use rand__distr::{Distribution, Normal};
-use scirs2__integrate::monte_carlo::{importance_sampling, monte_carlo, MonteCarloOptions};
-use scirs2__integrate::qmc::{qmc_quad, Halton, QRNGEngine, Sobol};
+use rand_distr::{Distribution, Normal};
+use scirs2_integrate::monte_carlo::{importance_sampling, monte_carlo, MonteCarloOptions};
+use scirs2_integrate::qmc::{qmc_quad, Halton, QRNGEngine, Sobol};
 use std::f64::consts::PI;
 
 /// Function with a singularity at (1,0) for demonstrating adaptive integration
@@ -103,7 +103,7 @@ where
         let radius = match center_value.abs() {
             v if v > 1e6 => 0.01,
             v if v > 1e3 => 0.05,
-            v if v > 1e0 => 0.1_ => 0.2,
+            v if v > 1e0 => 0.2,
         };
 
         println!(
@@ -262,7 +262,7 @@ where
 
     // Step 1: First do a standard QMC integration of the whole domain
     // to establish a baseline and identify important regions
-    let a = Array1::from_iter(ranges.iter().map(|&(a_)| a));
+    let a = Array1::from_iter(ranges.iter().map(|&(a_, _)| a_));
     let b = Array1::from_iter(ranges.iter().map(|&(_, b)| b));
 
     // Get the total domain volume for later calculations
@@ -344,7 +344,7 @@ where
         let radius = match center_value.abs() {
             v if v > 1e6 => 0.05 * radius_scale,
             v if v > 1e3 => 0.1 * radius_scale,
-            v if v > 1e0 => 0.15 * radius_scale_ => 0.2 * radius_scale,
+            v if v > 1e0 => 0.2 * radius_scale,
         };
 
         println!(

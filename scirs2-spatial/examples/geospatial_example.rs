@@ -346,7 +346,8 @@ fn spherical_geometry_example() -> Result<(), Box<dyn std::error::Error>> {
         let name = match i {
             0 => "Miami",
             1 => "Bermuda",
-            2 => "San Juan"_ => "Unknown",
+            2 => "San Juan",
+            _ => "Unknown",
         };
         println!("  {name}: ({lat:.4}°, {lon:.4}°)");
     }

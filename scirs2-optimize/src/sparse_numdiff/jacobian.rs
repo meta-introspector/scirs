@@ -87,7 +87,8 @@ where
     match options.method.as_str() {
         "2-point" => compute_jacobian_2point(func, x, f0_ref, sparsity, &options),
         "3-point" => compute_jacobian_3point(func, x, sparsity, &options),
-        "cs" => compute_jacobian_complex_step(func, x, sparsity, &options, _ => Err(OptimizeError::ValueError(format!(
+        "cs" => compute_jacobian_complex_step(func, x, sparsity, &options),
+        _ => Err(OptimizeError::ValueError(format!(
             "Unknown method: {}. Valid options are '2-point', '3-point', and 'cs'",
             options.method
         ))),

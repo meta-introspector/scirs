@@ -1,8 +1,8 @@
 //! Safe numeric conversion utilities for spatial algorithms
 
 use crate::error::{SpatialError, SpatialResult};
-use num_traits::Float;
 use ndarray::ArrayView1;
+use num_traits::Float;
 
 /// Safely convert a numeric literal to type T
 ///
@@ -47,7 +47,8 @@ where
     I: Iterator<Item = T>,
     T: PartialOrd,
 {
-    _iter.min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+    _iter
+        .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .ok_or_else(|| {
             SpatialError::ComputationError(format!(
                 "Failed to find minimum value in {context} (empty iterator or all NaN)"
@@ -62,7 +63,8 @@ where
     I: Iterator<Item = T>,
     T: PartialOrd,
 {
-    _iter.max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+    _iter
+        .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .ok_or_else(|| {
             SpatialError::ComputationError(format!(
                 "Failed to find maximum value in {context} (empty iterator or all NaN)"

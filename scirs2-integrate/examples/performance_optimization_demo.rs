@@ -7,7 +7,7 @@
 //! performance characteristics and providing optimization recommendations.
 
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2__integrate::{
+use scirs2_integrate::{
     monte_carlo::{monte_carlo, MonteCarloOptions},
 
     // Standard integration methods
@@ -24,7 +24,7 @@ use scirs2__integrate::{
     romberg::romberg,
     IntegrateResult,
 };
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 /// Benchmark different integration methods with performance monitoring
 #[allow(dead_code)]
@@ -93,7 +93,7 @@ fn benchmark_ode_methods() -> IntegrateResult<()> {
             match method {
                 ODEMethod::RK45 => solution.t.len() * 6, // 6 evaluations per step for RK45
                 ODEMethod::Bdf => solution.t.len() * 3,  // Fewer for implicit methods
-                ODEMethod::Radau => solution.t.len() * 4_ => solution.t.len() * 4,
+                ODEMethod::Radau => solution.t.len() * 4,
             }
         } else {
             100 // Default estimate
@@ -330,7 +330,7 @@ fn benchmark_memory_efficiency() -> IntegrateResult<()> {
 #[allow(dead_code)]
 fn print_method_performance(
     method_name: &str,
-    metrics: &scirs2_integrate::performance, _monitor::PerformanceMetrics,
+    metrics: &scirs2_integrate::performance_monitor::PerformanceMetrics,
 ) {
     println!("   {method_name}: ");
     println!("     Time: {:.3}s", metrics.total_time.as_secs_f64());
@@ -365,15 +365,15 @@ fn estimate_memory_usage() -> usize {
 
     // Return a rough estimate based on typical allocation patterns
     // In practice, you'd want to use tools like jemalloc's stats or system APIs
-    std::mem::size__of::<usize>() * 1024 // Placeholder value
+    std::mem::size_of::<usize>() * 1024 // Placeholder value
 }
 
 /// Create an optimization report
 #[allow(dead_code)]
 fn create_optimization_report() -> PerformanceReport {
     // This would typically be generated from actual performance data
-    let metrics = scirs2_integrate::performance, _monitor::PerformanceMetrics::default();
-    scirs2_integrate::performance, _monitor::PerformanceAnalyzer::generate_report(&metrics)
+    let metrics = scirs2_integrate::performance_monitor::PerformanceMetrics::default();
+    scirs2_integrate::performance_monitor::PerformanceAnalyzer::generate_report(&metrics)
 }
 
 #[cfg(test)]

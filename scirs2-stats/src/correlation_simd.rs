@@ -3,7 +3,7 @@
 //! This module provides SIMD-accelerated implementations of correlation
 //! functions using scirs2-core's unified SIMD operations.
 
-use crate::descriptive__simd::mean_simd;
+use crate::descriptive_simd::mean_simd;
 use crate::error::{StatsError, StatsResult};
 use ndarray::{ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};

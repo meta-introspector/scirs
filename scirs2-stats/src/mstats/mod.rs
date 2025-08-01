@@ -106,11 +106,11 @@ impl<T: Copy> MaskedArray2<T> {
 /// assert!((mean - 3.0).abs() < 1e-10); // Mean of [1, 2, 4, 5] = 3.0
 /// ```
 #[allow(dead_code)]
-pub fn masked_mean<T>(_masked_array: &MaskedArray<T>, _axis: Option<usize>) -> StatsResult<f64>
+pub fn masked_mean<T>(masked_array: &MaskedArray<T>, _axis: Option<usize>) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
 {
-    if !_masked_array.has_valid_values() {
+    if !masked_array.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
@@ -196,11 +196,11 @@ where
 /// # Returns
 /// * Median of valid values
 #[allow(dead_code)]
-pub fn masked_median<T>(_masked_array: &MaskedArray<T>) -> StatsResult<f64>
+pub fn masked_median<T>(masked_array: &MaskedArray<T>) -> StatsResult<f64>
 where
     T: Copy + Into<f64> + PartialOrd,
 {
-    if !_masked_array.has_valid_values() {
+    if !masked_array.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
@@ -513,11 +513,11 @@ where
 /// # Returns
 /// * Skewness of valid values
 #[allow(dead_code)]
-pub fn masked_skew<T>(_masked_array: &MaskedArray<T>, bias: bool) -> StatsResult<f64>
+pub fn masked_skew<T>(masked_array: &MaskedArray<T>, bias: bool) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
 {
-    if !_masked_array.has_valid_values() {
+    if !masked_array.has_valid_values() {
         return Err(StatsError::InvalidArgument(
             "Array has no valid values".to_string(),
         ));
@@ -633,7 +633,7 @@ where
 /// # Returns
 /// * Trimmed mean of valid values
 #[allow(dead_code)]
-pub fn masked_tmean<T>(_masked_array: &MaskedArray<T>, proportiontocut: f64) -> StatsResult<f64>
+pub fn masked_tmean<T>(masked_array: &MaskedArray<T>, proportiontocut: f64) -> StatsResult<f64>
 where
     T: Copy + Into<f64> + PartialOrd,
 {

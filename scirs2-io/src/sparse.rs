@@ -128,7 +128,7 @@ where
             shape: (_coo.rows, _coo.cols),
             nnz,
             format: SparseFormat::COO,
-            _coo,
+            coo: _coo,
             csr: None,
             csc: None,
             metadata: HashMap::new(),
@@ -268,8 +268,8 @@ where
         triplets.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.cmp(&b.1)));
 
         // Extract values and column indices
-        let values: Vec<T> = triplets.iter().map(|(__, val)| (*val).clone()).collect();
-        let col_indices: Vec<usize> = triplets.iter().map(|(_, col_)| *col).collect();
+        let values: Vec<T> = triplets.iter().map(|(_row, _col, val)| (*val).clone()).collect();
+        let col_indices: Vec<usize> = triplets.iter().map(|(_, col, _)| *col).collect();
 
         Ok(SparseMatrixCSR {
             rows,
@@ -322,8 +322,8 @@ where
         triplets.sort_by(|a, b| a.1.cmp(&b.1).then(a.0.cmp(&b.0)));
 
         // Extract values and row indices
-        let values: Vec<T> = triplets.iter().map(|(__, val)| (*val).clone()).collect();
-        let row_indices: Vec<usize> = triplets.iter().map(|(row__)| *row).collect();
+        let values: Vec<T> = triplets.iter().map(|(_row, _col, val)| (*val).clone()).collect();
+        let row_indices: Vec<usize> = triplets.iter().map(|(row, _col, _val)| *row).collect();
 
         Ok(SparseMatrixCSC {
             rows: self.shape.0,

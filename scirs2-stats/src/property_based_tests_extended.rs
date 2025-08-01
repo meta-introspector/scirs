@@ -28,7 +28,7 @@ pub struct StatisticalTestData {
 
 impl StatisticalTestData {
     pub fn new(_data: Vec<f64>) -> Self {
-        Self { _data }
+        Self { data: _data }
     }
 
     pub fn generate_sample() -> Self {
@@ -54,7 +54,7 @@ impl MatrixTestData {
     pub fn new(_data: Vec<Vec<f64>>) -> Self {
         let rows = _data.len();
         let cols = if rows > 0 { _data[0].len() } else { 0 };
-        Self { _data, rows, cols }
+        Self { data: _data, rows, cols }
     }
 
     pub fn generate_sample() -> Self {
@@ -74,12 +74,12 @@ pub struct SimdConsistencyTester;
 
 impl SimdConsistencyTester {
     /// Test that SIMD and scalar implementations produce identical results
-    pub fn test_mean_consistency(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 1 {
+    pub fn test_mean_consistency(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 1 {
             return false;
         }
 
-        let arr = Array1::from_vec(test_data._data.clone());
+        let arr = Array1::from_vec(test_data.data.clone());
 
         match (mean(&arr.view()), mean_simd(&arr.view())) {
             (Ok(scalar_result), Ok(simd_result)) => {
@@ -91,12 +91,12 @@ impl SimdConsistencyTester {
         }
     }
 
-    pub fn test_variance_consistency(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 2 {
+    pub fn test_variance_consistency(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 2 {
             return false;
         }
 
-        let arr = Array1::from_vec(test_data._data.clone());
+        let arr = Array1::from_vec(test_data.data.clone());
 
         match (var(&arr.view(), 1, None), variance_simd(&arr.view(), 1)) {
             (Ok(scalar_result), Ok(simd_result)) => {
@@ -108,12 +108,12 @@ impl SimdConsistencyTester {
         }
     }
 
-    pub fn test_skewness_consistency(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 3 {
+    pub fn test_skewness_consistency(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 3 {
             return false;
         }
 
-        let arr = Array1::from_vec(test_data._data.clone());
+        let arr = Array1::from_vec(test_data.data.clone());
 
         match (
             skew(&arr.view(), false, None),
@@ -128,12 +128,12 @@ impl SimdConsistencyTester {
         }
     }
 
-    pub fn test_kurtosis_consistency(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 4 {
+    pub fn test_kurtosis_consistency(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 4 {
             return false;
         }
 
-        let arr = Array1::from_vec(test_data._data.clone());
+        let arr = Array1::from_vec(test_data.data.clone());
 
         match (
             kurtosis(&arr.view(), true, false, None),
@@ -153,14 +153,14 @@ impl SimdConsistencyTester {
 pub struct ParallelConsistencyTester;
 
 impl ParallelConsistencyTester {
-    pub fn test_correlation_matrix_consistency(_matrix_data: &MatrixTestData) -> bool {
-        if _matrix_data.rows < 3 || _matrix_data.cols < 2 {
+    pub fn test_correlation_matrix_consistency(matrix_data: &MatrixTestData) -> bool {
+        if matrix_data.rows < 3 || matrix_data.cols < 2 {
             return false;
         }
 
         // Convert to ndarray
         let mut _data = Array2::zeros((matrix_data.rows, matrix_data.cols));
-        for (i, row) in matrix_data._data.iter().enumerate() {
+        for (i, row) in matrix_data.data.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
                 _data[[i, j]] = val;
             }
@@ -206,17 +206,18 @@ impl MathematicalInvariantTester {
         let arr2 = Array1::from_vec(test_data2.data.clone());
 
         match pearson_r(&arr1.view(), &arr2.view()) {
-            Ok(corr) => corr >= -1.0 && corr <= 1.0_ => false,
+            Ok(corr) => corr >= -1.0 && corr <= 1.0,
+            _ => false,
         }
     }
 
     /// Test mathematical properties of variance
-    pub fn test_variance_properties(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 2 {
+    pub fn test_variance_properties(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 2 {
             return true; // Variance is undefined for n < 2
         }
 
-        let arr = Array1::from_vec(test_data._data.clone());
+        let arr = Array1::from_vec(test_data.data.clone());
 
         // Test 1: Variance is non-negative
         let variance_result = var(&arr.view(), 1, None);
@@ -229,7 +230,7 @@ impl MathematicalInvariantTester {
         }
 
         // Test 2: Var(X + c) = Var(X) for constant c
-        let shifted_data: Vec<f64> = test_data._data.iter().map(|&x| x + 100.0).collect();
+        let shifted_data: Vec<f64> = test_data.data.iter().map(|&x| x + 100.0).collect();
         let shifted_arr = Array1::from_vec(shifted_data);
 
         match (var(&arr.view(), 1, None), var(&shifted_arr.view(), 1, None)) {
@@ -242,12 +243,12 @@ impl MathematicalInvariantTester {
     }
 
     /// Test properties of statistical moments
-    pub fn test_moment_properties(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 2 {
+    pub fn test_moment_properties(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 2 {
             return true;
         }
 
-        let arr = Array1::from_vec(test_data._data.clone());
+        let arr = Array1::from_vec(test_data.data.clone());
 
         // Test: First moment (mean) should equal first raw moment
         match (mean(&arr.view()), moment(&arr.view(), 1, false, None)) {
@@ -260,14 +261,14 @@ impl MathematicalInvariantTester {
     }
 
     /// Test symmetry properties of correlation matrices
-    pub fn test_correlation_matrix_symmetry(_matrix_data: &MatrixTestData) -> bool {
-        if _matrix_data.rows < 2 || _matrix_data.cols < 2 {
+    pub fn test_correlation_matrix_symmetry(matrix_data: &MatrixTestData) -> bool {
+        if matrix_data.rows < 2 || matrix_data.cols < 2 {
             return true;
         }
 
         // Convert to ndarray
         let mut _data = Array2::zeros((matrix_data.rows, matrix_data.cols));
-        for (i, row) in matrix_data._data.iter().enumerate() {
+        for (i, row) in matrix_data.data.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
                 _data[[i, j]] = val;
             }
@@ -305,17 +306,17 @@ impl MathematicalInvariantTester {
     }
 
     /// Test linearity properties of mean
-    pub fn test_mean_linearity(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 1 {
+    pub fn test_mean_linearity(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 1 {
             return true;
         }
 
-        let arr = Array1::from_vec(test_data._data.clone());
+        let arr = Array1::from_vec(test_data.data.clone());
         let a = 2.5;
         let b = 10.0;
 
         // Test: E[aX + b] = a*E[X] + b
-        let transformed_data: Vec<f64> = test_data._data.iter().map(|&x| a * x + b).collect();
+        let transformed_data: Vec<f64> = test_data.data.iter().map(|&x| a * x + b).collect();
         let transformed_arr = Array1::from_vec(transformed_data);
 
         match (mean(&arr.view()), mean(&transformed_arr.view())) {
@@ -329,16 +330,16 @@ impl MathematicalInvariantTester {
     }
 
     /// Test scaling properties of variance
-    pub fn test_variance_scaling(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 2 {
+    pub fn test_variance_scaling(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 2 {
             return true;
         }
 
-        let arr = Array1::from_vec(test_data._data.clone());
+        let arr = Array1::from_vec(test_data.data.clone());
         let a = 3.0;
 
         // Test: Var(aX) = a²*Var(X)
-        let scaled_data: Vec<f64> = test_data._data.iter().map(|&x| a * x).collect();
+        let scaled_data: Vec<f64> = test_data.data.iter().map(|&x| a * x).collect();
         let scaled_arr = Array1::from_vec(scaled_data);
 
         match (var(&arr.view(), 1, None), var(&scaled_arr.view(), 1, None)) {
@@ -384,20 +385,20 @@ impl MathematicalInvariantTester {
     }
 
     /// Test skewness sign properties
-    pub fn test_skewness_properties(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 3 {
+    pub fn test_skewness_properties(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 3 {
             return true;
         }
 
-        let _arr = Array1::from_vec(test_data._data.clone());
+        let _arr = Array1::from_vec(test_data.data.clone());
 
         // Create right-skewed _data (add some large values)
-        let mut right_skewed = test_data._data.clone();
+        let mut right_skewed = test_data.data.clone();
         right_skewed.extend(vec![100.0, 200.0, 300.0]);
         let right_skewed_arr = Array1::from_vec(right_skewed);
 
         // Create left-skewed _data (add some small values)
-        let mut left_skewed = test_data._data.clone();
+        let mut left_skewed = test_data.data.clone();
         left_skewed.extend(vec![-100.0, -200.0, -300.0]);
         let left_skewed_arr = Array1::from_vec(left_skewed);
 
@@ -415,8 +416,8 @@ impl MathematicalInvariantTester {
     }
 
     /// Test kurtosis properties
-    pub fn test_kurtosis_properties(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 4 {
+    pub fn test_kurtosis_properties(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 4 {
             return true;
         }
 
@@ -440,8 +441,8 @@ pub struct BatchProcessingTester;
 
 impl BatchProcessingTester {
     /// Test that batch and individual processing produce the same results
-    pub fn test_batch_mean_consistency(_matrix_data: &MatrixTestData) -> bool {
-        if _matrix_data.rows < 1 || _matrix_data.cols < 1 {
+    pub fn test_batch_mean_consistency(matrix_data: &MatrixTestData) -> bool {
+        if matrix_data.rows < 1 || matrix_data.cols < 1 {
             return false;
         }
 
@@ -458,7 +459,8 @@ impl BatchProcessingTester {
         for col_idx in 0..matrix_data.cols {
             let column = data.column(col_idx);
             match mean(&column) {
-                Ok(col_mean) => individual_means.push(col_mean, _ => return false,
+                Ok(col_mean) => individual_means.push(col_mean),
+                _ => return false,
             }
         }
 
@@ -485,14 +487,14 @@ impl BatchProcessingTester {
     }
 
     /// Test batch correlation consistency
-    pub fn test_batch_correlation_consistency(_matrix_data: &MatrixTestData) -> bool {
-        if _matrix_data.rows < 3 || _matrix_data.cols < 3 {
+    pub fn test_batch_correlation_consistency(matrix_data: &MatrixTestData) -> bool {
+        if matrix_data.rows < 3 || matrix_data.cols < 3 {
             return false;
         }
 
         // Convert to ndarray
         let mut _data = Array2::zeros((matrix_data.rows, matrix_data.cols));
-        for (i, row) in matrix_data._data.iter().enumerate() {
+        for (i, row) in matrix_data.data.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
                 _data[[i, j]] = val;
             }
@@ -539,14 +541,14 @@ pub struct MemoryOptimizationTester;
 
 impl MemoryOptimizationTester {
     /// Test memory-optimized vs standard correlation computation
-    pub fn test_memory_optimized_correlation(_matrix_data: &MatrixTestData) -> bool {
-        if _matrix_data.rows < 2 || _matrix_data.cols < 2 {
+    pub fn test_memory_optimized_correlation(matrix_data: &MatrixTestData) -> bool {
+        if matrix_data.rows < 2 || matrix_data.cols < 2 {
             return false;
         }
 
         // Convert to ndarray
         let mut _data = Array2::zeros((matrix_data.rows, matrix_data.cols));
-        for (i, row) in matrix_data._data.iter().enumerate() {
+        for (i, row) in matrix_data.data.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
                 _data[[i, j]] = val;
             }
@@ -620,7 +622,8 @@ impl NumericalStabilityTester {
 
         // Should compute variance without numerical issues
         match var(&arr.view(), 1, None) {
-            Ok(variance) => variance >= 0.0 && (variance as f64).is_finite(, _ => false,
+            Ok(variance) => variance >= 0.0 && (variance as f64).is_finite(),
+            _ => false,
         }
     }
 
@@ -653,7 +656,8 @@ impl NumericalStabilityTester {
         let arr_y = Array1::from_vec(y);
 
         match pearson_r(&arr_x.view(), &arr_y.view()) {
-            Ok(corr) => ((corr - 1.0) as f64).abs() < 1e-12_ => false,
+            Ok(corr) => ((corr - 1.0) as f64).abs() < 1e-12,
+            _ => false,
         }
     }
 
@@ -666,7 +670,8 @@ impl NumericalStabilityTester {
         let arr_y = Array1::from_vec(y);
 
         match pearson_r(&arr_x.view(), &arr_y.view()) {
-            Ok(corr) => ((corr + 1.0) as f64).abs() < 1e-12_ => false,
+            Ok(corr) => ((corr + 1.0) as f64).abs() < 1e-12,
+            _ => false,
         }
     }
 
@@ -677,7 +682,8 @@ impl NumericalStabilityTester {
 
         // Variance should be exactly zero
         match var(&arr.view(), 1, None) {
-            Ok(variance) => (variance as f64).abs() < 1e-15_ => false,
+            Ok(variance) => (variance as f64).abs() < 1e-15,
+            _ => false,
         }
     }
 
@@ -720,7 +726,8 @@ impl FuzzingTester {
 
     /// Generate data with specific distribution characteristics
     pub fn generate_skewed_data(
-        size: usize..skew_direction: f64,
+        size: usize,
+        skew_direction: f64,
         seed: u64,) -> StatisticalTestData {
         use rand::rngs::StdRng;
         use rand::{Rng, SeedableRng};
@@ -730,10 +737,10 @@ impl FuzzingTester {
 
         // Apply transformation to create skewness
         if skew_direction > 0.0 {
-            data = data.into_iter().map(|x| x.powf(skew_direction)).collect();
+            data = data.into().iter().map(|x| x.powf(skew_direction)).collect();
         } else if skew_direction < 0.0 {
             data = data
-                .into_iter()
+                .into().iter()
                 .map(|x| 1.0 - (1.0 - x).powf(-skew_direction))
                 .collect();
         }
@@ -743,7 +750,8 @@ impl FuzzingTester {
 
     /// Generate outlier-prone data
     pub fn generate_outlier_data(
-        size: usize..outlier_fraction: f64,
+        size: usize,
+        outlier_fraction: f64,
         seed: u64,) -> StatisticalTestData {
         use rand::rngs::StdRng;
         use rand::{Rng, SeedableRng};
@@ -839,16 +847,16 @@ pub struct CrossPlatformTester;
 
 impl CrossPlatformTester {
     /// Test that results are consistent across different floating-point precisions
-    pub fn test_floating_point_consistency(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 2 {
+    pub fn test_floating_point_consistency(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 2 {
             return true;
         }
 
         // Convert to f32 and back to f64 to test precision handling
-        let f32_data: Vec<f32> = test_data._data.iter().map(|&x| x as f32).collect();
+        let f32_data: Vec<f32> = test_data.data.iter().map(|&x| x as f32).collect();
         let f64_from_f32: Vec<f64> = f32_data.iter().map(|&x| x as f64).collect();
 
-        let original_arr = Array1::from_vec(test_data._data.clone());
+        let original_arr = Array1::from_vec(test_data.data.clone());
         let converted_arr = Array1::from_vec(f64_from_f32);
 
         // Mean should be close (within f32 precision)
@@ -863,20 +871,21 @@ impl CrossPlatformTester {
     }
 
     /// Test endianness-independent behavior
-    pub fn test_endianness_independence(_test_data: &StatisticalTestData) -> bool {
+    pub fn test_endianness_independence(test_data: &StatisticalTestData) -> bool {
         // This is a conceptual test - in practice, endianness shouldn't affect
         // pure mathematical computations, but it's good to verify
-        if _test_data._data.len() < 2 {
+        if test_data.data.len() < 2 {
             return true;
         }
 
-        let arr = Array1::from_vec(test_data._data.clone());
+        let arr = Array1::from_vec(test_data.data.clone());
 
         // Compute statistics multiple times to ensure consistency
         let mut means = Vec::new();
         for _ in 0..10 {
             match mean(&arr.view()) {
-                Ok(m) => means.push(m, _ => return false,
+                Ok(m) => means.push(m),
+                _ => return false,
             }
         }
 
@@ -1075,13 +1084,13 @@ impl ExtendedMathematicalTester {
         y_data: &StatisticalTestData,
         z_data: &StatisticalTestData,
     ) -> bool {
-        if x_data._data.len() != y_data._data.len() || y_data._data.len() != z_data._data.len() {
+        if x_data.data.len() != y_data.data.len() || y_data.data.len() != z_data.data.len() {
             return false;
         }
 
-        let x_arr = Array1::from_vec(x_data._data.clone());
-        let y_arr = Array1::from_vec(y_data._data.clone());
-        let z_arr = Array1::from_vec(z_data._data.clone());
+        let x_arr = Array1::from_vec(x_data.data.clone());
+        let y_arr = Array1::from_vec(y_data.data.clone());
+        let z_arr = Array1::from_vec(z_data.data.clone());
 
         match (
             pearson_r(&x_arr.view(), &y_arr.view()),
@@ -1103,13 +1112,13 @@ impl ExtendedMathematicalTester {
         y_data: &StatisticalTestData,
         z_data: &StatisticalTestData,
     ) -> bool {
-        if x_data._data.len() != y_data._data.len() || y_data._data.len() != z_data._data.len() {
+        if x_data.data.len() != y_data.data.len() || y_data.data.len() != z_data.data.len() {
             return false;
         }
 
-        let x_arr = Array1::from_vec(x_data._data.clone());
-        let y_arr = Array1::from_vec(y_data._data.clone());
-        let z_arr = Array1::from_vec(z_data._data.clone());
+        let x_arr = Array1::from_vec(x_data.data.clone());
+        let y_arr = Array1::from_vec(y_data.data.clone());
+        let z_arr = Array1::from_vec(z_data.data.clone());
 
         // Use correlation distance: d(x,y) = 1 - |r(x,y)|
         match (
@@ -1130,13 +1139,13 @@ impl ExtendedMathematicalTester {
     }
 
     /// Test Jensen's inequality for convex functions
-    pub fn test_jensen_inequality(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 2 {
+    pub fn test_jensen_inequality(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 2 {
             return true;
         }
 
         // Test with exp function (convex)
-        let positive_data: Vec<f64> = test_data._data.iter()
+        let positive_data: Vec<f64> = test_data.data.iter()
             .map(|&x| x.abs().min(10.0)) // Bound to prevent overflow
             .collect();
 
@@ -1158,18 +1167,18 @@ impl ExtendedMathematicalTester {
         x_data: &StatisticalTestData,
         y_data: &StatisticalTestData,
     ) -> bool {
-        if x_data._data.len() != y_data._data.len() || x_data._data.len() < 2 {
+        if x_data.data.len() != y_data.data.len() || x_data.data.len() < 2 {
             return false;
         }
 
-        let x_arr = Array1::from_vec(x_data._data.clone());
-        let y_arr = Array1::from_vec(y_data._data.clone());
+        let x_arr = Array1::from_vec(x_data.data.clone());
+        let y_arr = Array1::from_vec(y_data.data.clone());
 
         // Compute sum array
         let sum_data: Vec<f64> = x_data
-            ._data
+            .data
             .iter()
-            .zip(y_data._data.iter())
+            .zip(y_data.data.iter())
             .map(|(&x, &y)| x + y)
             .collect();
         let sum_arr = Array1::from_vec(sum_data);
@@ -1195,12 +1204,12 @@ impl ExtendedMathematicalTester {
     }
 
     /// Test Chebyshev's inequality approximation
-    pub fn test_chebyshev_inequality(_test_data: &StatisticalTestData) -> bool {
-        if _test_data._data.len() < 10 {
+    pub fn test_chebyshev_inequality(test_data: &StatisticalTestData) -> bool {
+        if test_data.data.len() < 10 {
             return true;
         }
 
-        let arr = Array1::from_vec(test_data._data.clone());
+        let arr = Array1::from_vec(test_data.data.clone());
 
         match (mean(&arr.view()), var(&arr.view(), 1, None)) {
             (Ok(mean_val), Ok(var_val)) => {
@@ -1215,12 +1224,12 @@ impl ExtendedMathematicalTester {
                 let upper_bound = mean_val + k * std_val;
 
                 let within_bounds = test_data
-                    ._data
+                    .data
                     .iter()
                     .filter(|&&x| x >= lower_bound && x <= upper_bound)
                     .count();
 
-                let proportion_within = within_bounds as f64 / test_data._data.len() as f64;
+                let proportion_within = within_bounds as f64 / test_data.data.len() as f64;
 
                 // Chebyshev's inequality: P(|X - μ| < kσ) ≥ 1 - 1/k²
                 let chebyshev_bound = 1.0 - 1.0 / (k * k);

@@ -46,7 +46,7 @@ impl Point {
     }
 
     /// Calculate the distance to another point
-    pub fn distance(_other: &Point) -> f64 {
+    pub fn distance(&self, _other: &Point) -> f64 {
         ((self.x - _other.x).powi(2) + (self.y - _other.y).powi(2)).sqrt()
     }
 }
@@ -64,7 +64,10 @@ pub struct Triangle {
 impl Triangle {
     /// Create a new triangle
     pub fn new(_nodes: [usize; 3], marker: Option<i32>) -> Self {
-        Triangle { _nodes, marker }
+        Triangle {
+            nodes: _nodes,
+            marker,
+        }
     }
 }
 
@@ -231,7 +234,7 @@ impl TriangularMesh {
     }
 
     /// Compute area of a triangle
-    pub fn triangle_area(_element: &Triangle) -> f64 {
+    pub fn triangle_area(&self, _element: &Triangle) -> f64 {
         let [i, j, k] = _element.nodes;
         let pi = &self.points[i];
         let pj = &self.points[j];
@@ -242,7 +245,7 @@ impl TriangularMesh {
     }
 
     /// Compute shape function gradients for a linear triangular element
-    pub fn shape_function_gradients(_element: &Triangle) -> PDEResult<[Point; 3]> {
+    pub fn shape_function_gradients(&self, _element: &Triangle) -> PDEResult<[Point; 3]> {
         let [i, j, k] = _element.nodes;
         let pi = &self.points[i];
         let pj = &self.points[j];
@@ -398,7 +401,7 @@ impl FEMPoissonSolver {
     }
 
     /// Solve Poisson's equation using the Finite Element Method
-    pub fn solve(&self) -> PDEResult<FEMResult> {
+    pub fn solve(&mut self) -> PDEResult<FEMResult> {
         let start_time = Instant::now();
 
         // Apply boundary conditions to the mesh
@@ -419,10 +422,10 @@ impl FEMPoissonSolver {
         self.apply_dirichlet_boundary_conditions(&mut a, &mut b)?;
 
         // Solve the linear system
-        let u = self.solve_linear_system(&a, &b)?;
+        let u = FEMPoissonSolver::solve_linear_system(&a, &b)?;
 
         // Compute residual norm
-        let residual_norm = self.compute_residual(&a, &b, &u);
+        let residual_norm = FEMPoissonSolver::compute_residual(&a, &b, &u);
 
         let computation_time = start_time.elapsed().as_secs_f64();
 
@@ -498,7 +501,7 @@ impl FEMPoissonSolver {
     }
 
     /// Compute element stiffness matrix and load vector for linear elements
-    fn element_matrices_linear(_element: &Triangle) -> PDEResult<([[f64; 3]; 3], [f64; 3])> {
+    fn element_matrices_linear(&self, _element: &Triangle) -> PDEResult<([[f64; 3]; 3], [f64; 3])> {
         // Get nodes
         let [i, j, k] = _element.nodes;
         let pi = &self.mesh.points[i];
@@ -668,11 +671,11 @@ impl FEMPoissonSolver {
                     .mesh
                     .boundary_edges
                     .iter()
-                    .filter(|&&(n1, n2_)| n1 == node_idx || n2 == node_idx)
+                    .filter(|&&(n1, n2, _)| n1 == node_idx || n2 == node_idx)
                     .collect();
 
                 // For each boundary edge, apply the Neumann condition
-                for &(n1, n2_) in &boundary_edges {
+                for &(n1, n2, _) in &boundary_edges {
                     let other_node = if *n1 == node_idx { *n2 } else { *n1 };
 
                     // Get the coordinates of the nodes
@@ -688,16 +691,16 @@ impl FEMPoissonSolver {
                 }
             } else if bc_info.bc_type == BoundaryConditionType::Robin {
                 // Robin boundary conditions (a*u + b*∂u/∂n = c)
-                if let Some([a_coef_b_coef, c_coef]) = bc_info.coefficients {
+                if let Some([a_coef, b_coef, c_coef]) = bc_info.coefficients {
                     // Similar to Neumann, we need to find boundary edges
                     let boundary_edges: Vec<_> = self
                         .mesh
                         .boundary_edges
                         .iter()
-                        .filter(|&&(n1, n2_)| n1 == node_idx || n2 == node_idx)
+                        .filter(|&&(n1, n2, _)| n1 == node_idx || n2 == node_idx)
                         .collect();
 
-                    for &(n1, n2_) in &boundary_edges {
+                    for &(n1, n2, _) in &boundary_edges {
                         let other_node = if *n1 == node_idx { *n2 } else { *n1 };
 
                         // Get the coordinates of the nodes

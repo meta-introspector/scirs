@@ -4,7 +4,7 @@
 //! It includes simple reactions, enzyme kinetics, and reaction-diffusion systems.
 
 use ndarray::{array, Array1, ArrayView1};
-use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 
 /// Simple reversible reaction: A ⇌ B
 /// Rate equations: d[A]/dt = -k₁[A] + k₋₁[B], d[B]/dt = k₁[A] - k₋₁[B]

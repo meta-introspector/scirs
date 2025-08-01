@@ -4,7 +4,7 @@
 //! Quadratic Discriminant Analysis (QDA) for classification and dimensionality reduction.
 
 use crate::error::{StatsError, StatsResult as Result};
-use crate::error_handling__v2::ErrorCode;
+use crate::error_handling_v2::ErrorCode;
 use crate::{unified_error_handling::global_error_handler, validate_or_error};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 
@@ -110,28 +110,28 @@ impl LinearDiscriminantAnalysis {
         let handler = global_error_handler();
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "LDA fit");
 
-        let (n_samples, n_features) = x.dim();
+        let (n_samples_, n_features) = x.dim();
         let n_targets = y.len();
 
-        if n_samples != n_targets {
+        if n_samples_ != n_targets {
             return Err(handler
                 .create_validation_error(
                     ErrorCode::E2001,
                     "LDA fit",
                     "sample_size_mismatch",
-                    format!("x: {}, y: {}", n_samples, n_targets),
+                    format!("x: {}, y: {}", n_samples_, n_targets),
                     "Number of samples in X and y must be equal",
                 )
                 .error);
         }
 
-        if n_samples < 2 {
+        if n_samples_ < 2 {
             return Err(handler
                 .create_validation_error(
                     ErrorCode::E2003,
                     "LDA fit",
-                    "n_samples",
-                    n_samples,
+                    "n_samples_",
+                    n_samples_,
                     "LDA requires at least 2 samples",
                 )
                 .error);
@@ -153,18 +153,18 @@ impl LinearDiscriminantAnalysis {
                 .error);
         }
 
-        if n_features >= n_samples && self.solver == LDASolver::Eigen {
+        if n_features >= n_samples_ && self.solver == LDASolver::Eigen {
             return Err(handler
                 .create_error(
                     ErrorCode::E1001,
                     "LDA fit",
-                    "Use SVD solver when n_features >= n_samples for numerical stability",
+                    "Use SVD solver when n_features >= n_samples_ for numerical stability",
                 )
                 .error);
         }
 
         // Compute class statistics
-        let (class_means, class_priors_class_counts) =
+        let (class_means, class_priors, _class_counts) =
             self.compute_class_statistics(x, y, &unique_classes)?;
 
         // Compute within-class and between-class scatter matrices
@@ -227,7 +227,7 @@ impl LinearDiscriminantAnalysis {
         y: ArrayView1<i32>,
         classes: &Array1<i32>,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<usize>)> {
-        let (n_samples, n_features) = x.dim();
+        let (n_samples_, n_features) = x.dim();
         let n_classes = classes.len();
 
         let mut class_means = Array2::zeros((n_classes, n_features));
@@ -239,7 +239,7 @@ impl LinearDiscriminantAnalysis {
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == class_label)
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .collect();
 
             if class_indices.is_empty() {
@@ -273,7 +273,7 @@ impl LinearDiscriminantAnalysis {
             priors.clone()
         } else {
             // Empirical priors
-            class_counts.mapv(|count| count as f64 / n_samples as f64)
+            class_counts.mapv(|count| count as f64 / n_samples_ as f64)
         };
 
         Ok((class_means, class_priors, class_counts.mapv(|x| x)))
@@ -287,7 +287,7 @@ impl LinearDiscriminantAnalysis {
         classes: &Array1<i32>,
         class_means: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
-        let (_n_samples, n_features) = x.dim();
+        let (_n_samples_, n_features) = x.dim();
         let _n_classes = classes.len();
 
         // Overall mean
@@ -317,7 +317,7 @@ impl LinearDiscriminantAnalysis {
         }
 
         // Compute between-class scatter
-        for (class_idx_) in classes.iter().enumerate() {
+        for (class_idx, _) in classes.iter().enumerate() {
             let class_mean = class_means.row(class_idx);
             let class_count = y
                 .iter()
@@ -359,7 +359,7 @@ impl LinearDiscriminantAnalysis {
 
     /// SVD-based solver (more numerically stable)
     fn solve_svd(&self, sw: &Array2<f64>, sb: &Array2<f64>) -> Result<(Array2<f64>, Array1<f64>)> {
-        use ndarray__linalg::SVD;
+        use ndarray_linalg::SVD;
 
         // Cholesky decomposition of Sw = L * L^T
         let l = scirs2_linalg::cholesky(&sw.view(), None).map_err(|e| {
@@ -382,6 +382,7 @@ impl LinearDiscriminantAnalysis {
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
         let u = u.unwrap();
+        let s = s_vt.unwrap();
 
         // Transform back: scalings = L^{-T} * U
         let scalings = l_inv.t().dot(&u);
@@ -390,7 +391,7 @@ impl LinearDiscriminantAnalysis {
         let mut eigen_pairs: Vec<_> = s.iter().cloned().zip(scalings.columns()).collect();
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
 
-        let eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val_)| *val).collect();
+        let eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val_, _)| *val_).collect();
         let eigenvectors: Array2<f64> = Array2::from_shape_vec(
             (scalings.nrows(), eigenvalues.len()),
             eigen_pairs
@@ -424,7 +425,7 @@ impl LinearDiscriminantAnalysis {
         sw: &Array2<f64>,
         sb: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
-        use ndarray__linalg::Eigh;
+        use ndarray_linalg::Eigh;
 
         // Compute Sw^{-1} * Sb
         let sw_inv = scirs2_linalg::inv(&sw.view(), None).map_err(|e| {
@@ -449,7 +450,7 @@ impl LinearDiscriminantAnalysis {
             .collect();
         eigen_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
 
-        let sorted_eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val_)| *val).collect();
+        let sorted_eigenvalues: Vec<f64> = eigen_pairs.iter().map(|(val_, _)| *val_).collect();
         let sorted_eigenvectors: Array2<f64> = Array2::from_shape_vec(
             (eigenvectors.nrows(), sorted_eigenvalues.len()),
             eigen_pairs
@@ -524,12 +525,12 @@ impl LinearDiscriminantAnalysis {
         let scores = self.decision_function(x, result)?;
         let mut predictions = Array1::zeros(x.nrows());
 
-        for (i, row) in scores.rows().into_iter().enumerate() {
+        for (i, row) in scores.rows().into().iter().enumerate() {
             let max_idx = row
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap();
             predictions[i] = result.classes[max_idx];
         }
@@ -540,12 +541,12 @@ impl LinearDiscriminantAnalysis {
     /// Compute decision function scores
     pub fn decision_function(&self, x: ArrayView2<f64>, result: &LDAResult) -> Result<Array2<f64>> {
         let projected = self.transform(x, result)?;
-        let n_samples = projected.nrows();
+        let n_samples_ = projected.nrows();
         let n_classes = result.classes.len();
 
-        let mut scores = Array2::zeros((n_samples, n_classes));
+        let mut scores = Array2::zeros((n_samples_, n_classes));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let sample = projected.row(i);
             for j in 0..n_classes {
                 let class_mean = result.means.row(j);
@@ -564,7 +565,7 @@ impl LinearDiscriminantAnalysis {
         let scores = self.decision_function(x, result)?;
         let mut probabilities = Array2::zeros(scores.dim());
 
-        for (i, mut row) in probabilities.rows_mut().into_iter().enumerate() {
+        for (i, mut row) in probabilities.rows_mut().into().iter().enumerate() {
             let score_row = scores.row(i);
             let max_score = score_row.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 
@@ -657,15 +658,15 @@ impl QuadraticDiscriminantAnalysis {
         let handler = global_error_handler();
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "QDA fit");
 
-        let (n_samples, n_features) = x.dim();
+        let (n_samples_, n_features) = x.dim();
 
-        if n_samples != y.len() {
+        if n_samples_ != y.len() {
             return Err(handler
                 .create_validation_error(
                     ErrorCode::E2001,
                     "QDA fit",
                     "sample_size_mismatch",
-                    format!("x: {}, y: {}", n_samples, y.len()),
+                    format!("x: {}, y: {}", n_samples_, y.len()),
                     "Number of samples in X and y must be equal",
                 )
                 .error);
@@ -700,7 +701,7 @@ impl QuadraticDiscriminantAnalysis {
                 .iter()
                 .enumerate()
                 .filter(|(_, &label)| label == class_label)
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .collect();
 
             let class_size = class_indices.len();
@@ -757,7 +758,7 @@ impl QuadraticDiscriminantAnalysis {
             }
             priors.clone()
         } else {
-            class_counts.mapv(|count| count as f64 / n_samples as f64)
+            class_counts.mapv(|count| count as f64 / n_samples_ as f64)
         };
 
         Ok(QDAResult {
@@ -778,12 +779,12 @@ impl QuadraticDiscriminantAnalysis {
         let scores = self.decision_function(x, result)?;
         let mut predictions = Array1::zeros(x.nrows());
 
-        for (i, row) in scores.rows().into_iter().enumerate() {
+        for (i, row) in scores.rows().into().iter().enumerate() {
             let max_idx = row
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap();
             predictions[i] = result.classes[max_idx];
         }
@@ -815,9 +816,9 @@ impl QuadraticDiscriminantAnalysis {
         }
 
         let covariances = result.covariances.as_ref().unwrap();
-        let n_samples = x.nrows();
+        let n_samples_ = x.nrows();
         let n_classes = result.classes.len();
-        let mut scores = Array2::zeros((n_samples, n_classes));
+        let mut scores = Array2::zeros((n_samples_, n_classes));
 
         for class_idx in 0..n_classes {
             let class_mean = result.means.row(class_idx);
@@ -848,7 +849,7 @@ impl QuadraticDiscriminantAnalysis {
             let log_det_term = -0.5 * det_cov.ln();
             let prior_term = result.priors[class_idx].ln();
 
-            for sample_idx in 0..n_samples {
+            for sample_idx in 0..n_samples_ {
                 let sample = x.row(sample_idx);
                 let diff = &sample - &class_mean;
 
@@ -867,7 +868,7 @@ impl QuadraticDiscriminantAnalysis {
         let scores = self.decision_function(x, result)?;
         let mut probabilities = Array2::zeros(scores.dim());
 
-        for (i, mut row) in probabilities.rows_mut().into_iter().enumerate() {
+        for (i, mut row) in probabilities.rows_mut().into().iter().enumerate() {
             let score_row = scores.row(i);
             let max_score = score_row.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 

@@ -164,7 +164,7 @@ impl ThreadPool {
             cpu_workers,
             io_sender,
             cpu_sender,
-            _config,
+            config,
             stats,
             shutdown,
         }

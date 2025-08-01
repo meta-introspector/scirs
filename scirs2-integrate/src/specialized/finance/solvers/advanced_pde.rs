@@ -1,8 +1,8 @@
 //! Advanced PDE solvers with cutting-edge techniques
-//! 
+//!
 //! This module implements state-of-the-art PDE solving techniques including spectral methods,
 //! discontinuous Galerkin methods, and machine learning-enhanced solvers.
-//! 
+//!
 //! # Features
 //! - Spectral methods for high accuracy
 //! - Discontinuous Galerkin (DG) methods

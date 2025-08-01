@@ -426,7 +426,8 @@ where
                 let solve_newton_stage = |mass_mat: &Option<Array2<F>>,
                                           residual: &Array1<F>,
                                           jacobian: &Array2<F>,
-                                          a_coeff: F_k, _prime: &Array1<F>|
+                                          a_coeff: F,
+                                          _prime: &Array1<F>|
                  -> IntegrateResult<Array1<F>> {
                     match mass_mat {
                         Some(m) => {
@@ -461,7 +462,9 @@ where
 
                             // Solve with iterative improvement for better numerical stability
                             let solve_with_conditioning =
-                                |_matrix: &Array2<F>, b: &Array1<F>| -> IntegrateResult<Array1<F>> {
+                                |_matrix: &Array2<F>,
+                                 b: &Array1<F>|
+                                 -> IntegrateResult<Array1<F>> {
                                     // First attempt with original _matrix
                                     match solve_linear_system(&_matrix.view(), &b.view()) {
                                         Ok(solution) => {

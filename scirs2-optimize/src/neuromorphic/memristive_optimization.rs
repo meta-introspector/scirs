@@ -674,7 +674,7 @@ impl MemristiveOptimizer {
         Ok(OptimizeResults::<f64> {
             x: self.best_parameters.clone(),
             fun: self.best_objective,
-            success: self.best_objective < 1e-6_nit: self._nit,
+            success: self.best_objective < 1e-6, nit: self._nit,
             message: "Memristive optimization completed".to_string(),
         })
     }

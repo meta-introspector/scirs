@@ -6,11 +6,11 @@
 //! problem complexities and system configurations.
 
 use ndarray::ArrayView1;
-use scirs2__integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
+use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
 use std::time::Instant;
 
 #[cfg(feature = "parallel")]
-use scirs2__integrate::monte_carlo_parallel::{
+use scirs2_integrate::monte_carlo_parallel::{
     adaptive_parallel_monte_carlo, parallel_monte_carlo, ParallelMonteCarloOptions,
 };
 

@@ -202,7 +202,7 @@
 // let union_result = polygon_union(&poly1.view(), &poly2.view()).unwrap();
 // println!("Union has {} vertices", union_result.nrows());
 //
-// // Compute intersection  
+// // Compute intersection
 // let intersection_result = polygon_intersection(&poly1.view(), &poly2.view()).unwrap();
 // println!("Intersection has {} vertices", intersection_result.nrows());
 //
@@ -715,7 +715,7 @@ pub use halfspace::{Halfspace, HalfspaceIntersection};
 // Boolean operations
 pub mod boolean_ops;
 pub use boolean_ops::{
-    compute_polygon_area, is_convex_polygon, is__intersecting, polygon_difference,
+    compute_polygon_area, is_convex_polygon, is_self_intersecting, polygon_difference,
     polygon_intersection, polygon_symmetric_difference, polygon_union,
 };
 

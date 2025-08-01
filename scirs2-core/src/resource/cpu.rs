@@ -4,6 +4,7 @@
 //! optimizing computational workloads.
 
 use crate::error::{CoreError, CoreResult};
+#[cfg(target_os = "linux")]
 use std::fs;
 
 /// CPU information and capabilities

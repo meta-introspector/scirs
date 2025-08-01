@@ -598,7 +598,7 @@ impl AdvancedErrorEngine {
     }
 
     /// Find related errors that often occur together
-    fn find_related_errors(&self_error: &StatsError) -> Vec<String> {
+    fn find_related_errors(&self, &StatsError) -> Vec<String> {
         // In a real implementation, this would use machine learning
         // to find patterns in _error co-occurrence
         vec![
@@ -825,7 +825,7 @@ fn add_ridge_regularization(_matrix: &mut Array2<f64>, lambda: f64) {
 
     /// Assess performance impact
     fn assess_performance_impact(
-        &self_error: &StatsError,
+        &self, &StatsError,
         context: &OperationContext,
     ) -> PerformanceAssessment {
         let baseline = PerformanceMetrics {
@@ -952,7 +952,7 @@ pub fn create_enhanced_error_context(
         execution_environment: ExecutionEnvironment {
             cpu_info: CpuInfo {
                 architecture: "x86_64".to_string(),
-                core_count: num, _cpus: get(),
+                core_count: num_cpus::get(),
                 simd_support: vec!["AVX2".to_string(), "SSE4.2".to_string()],
                 cache_sizes: vec![32_768, 262_144, 8_388_608], // L1, L2, L3
             },
@@ -963,7 +963,7 @@ pub fn create_enhanced_error_context(
             },
             optimization_level: OptimizationLevel::Release,
             threading_info: ThreadingInfo {
-                thread_count: num, _cpus: get(),
+                thread_count: num_cpus::get(),
                 thread_affinity: None,
                 numa_topology: None,
             },

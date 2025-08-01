@@ -65,9 +65,11 @@ impl DatasetGenerator {
 
     /// Generate data with outliers (common in spatial analysis)
     pub fn generate_data_with_outliers(
-        &self..n_points: usize,
+        &self,
+        n_points: usize,
         dimensions: usize,
-        outlier_fraction: f64,) -> Array2<f64> {
+        outlier_fraction: f64,
+    ) -> Array2<f64> {
         let mut rng = StdRng::seed_from_u64(self.seed);
         let n_outliers = (n_points as f64 * outlier_fraction) as usize;
 

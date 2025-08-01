@@ -33,7 +33,7 @@ where
         + std::fmt::Display
         + std::iter::Sum<F>,
 {
-    check_array_finite(data, "data")?;
+    checkarray_finite(data, "data")?;
     check_positive(window_size, "window_size")?;
 
     if window_size > data.len() {
@@ -85,7 +85,7 @@ pub struct RollingStatsResult<F> {
 }
 
 impl<F: Zero + Clone> RollingStatsResult<F> {
-    fn new(_n_windows: usize, statistics: &[RollingStatistic]) -> Self {
+    fn new(n_windows: usize, statistics: &[RollingStatistic]) -> Self {
         let mut result = RollingStatsResult {
             means: None,
             variances: None,
@@ -317,7 +317,7 @@ where
         + std::fmt::Display
         + std::iter::Sum<F>,
 {
-    check_array_finite(data, "data")?;
+    checkarray_finite(data, "data")?;
 
     let (n_rows, n_cols) = data.dim();
 
@@ -419,7 +419,7 @@ where
         + std::fmt::Display
         + std::iter::Sum<F>,
 {
-    let (n_rows_n_cols) = data.dim();
+    let (n_rows, _n_cols) = data.dim();
     let mut results = MatrixStatsResult::new_row_wise(n_rows, operations);
 
     // Process rows sequentially (parallel version would need different data structure)
@@ -702,7 +702,7 @@ fn compute_vector_operation<F>(
 }
 
 impl<F: Zero + Clone> MatrixStatsResult<F> {
-    fn new_column_wise(_n_cols: usize, operations: &[MatrixOperation]) -> Self {
+    fn new_column_wise(n_cols: usize, operations: &[MatrixOperation]) -> Self {
         let mut result = MatrixStatsResult {
             means: None,
             variances: None,
@@ -725,7 +725,7 @@ impl<F: Zero + Clone> MatrixStatsResult<F> {
         result
     }
 
-    fn new_row_wise(_n_rows: usize, operations: &[MatrixOperation]) -> Self {
+    fn new_row_wise(n_rows: usize, operations: &[MatrixOperation]) -> Self {
         let mut result = MatrixStatsResult {
             means: None,
             variances: None,
@@ -815,7 +815,7 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    check_array_finite(data, "data")?;
+    checkarray_finite(data, "data")?;
     check_positive(n_bootstrap, "n_bootstrap")?;
     check_probability(confidence_level, "confidence_level")?;
 
@@ -919,7 +919,7 @@ where
 }
 
 #[allow(dead_code)]
-fn compute_bootstrap_statistic<F>(_data: &ArrayView1<F>..statistic: &BootstrapStatistic) -> F
+fn compute_bootstrap_statistic<F>(_data: &ArrayView1<F>, statistic: &BootstrapStatistic) -> F
 where
     F: Float
         + NumCast
@@ -1166,8 +1166,8 @@ where
         + std::fmt::Display
         + std::iter::Sum<F>,
 {
-    check_array_finite(data, "data")?;
-    check_array_finite(eval_points, "eval_points")?;
+    checkarray_finite(data, "data")?;
+    checkarray_finite(eval_points, "eval_points")?;
 
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(

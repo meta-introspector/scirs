@@ -5,7 +5,7 @@
 //! triangular part of the matrix.
 
 use crate::csr::CsrMatrix;
-use crate::csr__array::CsrArray;
+use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use num_traits::Float;
 use std::fmt::Debug;

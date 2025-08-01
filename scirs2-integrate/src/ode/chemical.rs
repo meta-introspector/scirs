@@ -4,6 +4,7 @@
 //! kinetics and reaction networks, including stiff reaction systems, enzyme
 //! kinetics, and chemical equilibrium calculations.
 
+use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{Array1, Array2};
 
 /// Types of chemical systems supported
@@ -209,7 +210,7 @@ impl ChemicalIntegrator {
     /// Create a new chemical integrator
     pub fn new(_config: ChemicalConfig, properties: ChemicalProperties) -> Self {
         Self {
-            _config,
+            config: _config,
             properties,
             previous_state: None,
             jacobian_cache: None,
@@ -218,11 +219,7 @@ impl ChemicalIntegrator {
     }
 
     /// Perform one integration step
-    pub fn step(
-        &mut self,
-        t: f64,
-        state: &ChemicalState,
-    ) -> IntegrateResult<ChemicalResult, Box<dyn std::error::Error>> {
+    pub fn step(&mut self, t: f64, state: &ChemicalState) -> IntegrateResult<ChemicalResult> {
         let start_time = std::time::Instant::now();
 
         // Calculate reaction rates
@@ -278,10 +275,10 @@ impl ChemicalIntegrator {
         let conservation_error = self.calculate_conservation_error(&new_state.concentrations);
 
         // Calculate constraint violation
-        let constraint_violation = self.calculate_constraint_violation(&new_state.concentrations);
+        let constraint_violation = Self::calculate_constraint_violation(&new_state.concentrations);
 
         // Calculate stiffness ratio
-        let stiffness_ratio = self.estimate_stiffness_ratio(&final_reaction_rates);
+        let stiffness_ratio = Self::estimate_stiffness_ratio(&final_reaction_rates);
 
         // Store history
         self.reaction_rate_history.push(final_reaction_rates);
@@ -313,7 +310,7 @@ impl ChemicalIntegrator {
     fn calculate_reaction_rates(
         &self,
         concentrations: &Array1<f64>,
-    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>> {
         let mut rates = Array1::zeros(self.properties.reactions.len());
 
         for (i, reaction) in self.properties.reactions.iter().enumerate() {
@@ -328,7 +325,7 @@ impl ChemicalIntegrator {
         &self,
         reaction: &Reaction,
         concentrations: &Array1<f64>,
-    ) -> IntegrateResult<f64, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<f64> {
         let mut rate = reaction.rate_constant;
 
         // Apply temperature dependence if Arrhenius parameters are provided
@@ -350,7 +347,7 @@ impl ChemicalIntegrator {
             }
             ReactionType::MichaelisMenten => {
                 // Michaelis-Menten: rate = Vmax * [S] / (Km + [S])
-                if let Some(&(substrate_idx_)) = reaction.reactants.first() {
+                if let Some(&(substrate_idx, _)) = reaction.reactants.first() {
                     if substrate_idx < concentrations.len() {
                         let substrate_conc = concentrations[substrate_idx];
                         let km = 0.1; // Should be parameterized
@@ -360,7 +357,7 @@ impl ChemicalIntegrator {
             }
             ReactionType::Hill { coefficient } => {
                 // Hill kinetics: rate = Vmax * [S]^n / (K^n + [S]^n)
-                if let Some(&(substrate_idx_)) = reaction.reactants.first() {
+                if let Some(&(substrate_idx, _)) = reaction.reactants.first() {
                     if substrate_idx < concentrations.len() {
                         let substrate_conc = concentrations[substrate_idx];
                         let k_half = 0.1_f64; // Should be parameterized
@@ -372,7 +369,7 @@ impl ChemicalIntegrator {
             }
             ReactionType::CompetitiveInhibition => {
                 // Competitive inhibition: rate = Vmax * [S] / (Km * (1 + [I]/Ki) + [S])
-                if let Some(&(substrate_idx_)) = reaction.reactants.first() {
+                if let Some(&(substrate_idx, _)) = reaction.reactants.first() {
                     if substrate_idx < concentrations.len() {
                         let substrate_conc = concentrations[substrate_idx];
                         let km = 0.1; // Should be parameterized
@@ -389,7 +386,7 @@ impl ChemicalIntegrator {
             }
             ReactionType::NonCompetitiveInhibition => {
                 // Non-competitive inhibition: rate = Vmax * [S] / ((Km + [S]) * (1 + [I]/Ki))
-                if let Some(&(substrate_idx_)) = reaction.reactants.first() {
+                if let Some(&(substrate_idx, _)) = reaction.reactants.first() {
                     if substrate_idx < concentrations.len() {
                         let substrate_conc = concentrations[substrate_idx];
                         let km = 0.1; // Should be parameterized
@@ -412,7 +409,7 @@ impl ChemicalIntegrator {
                     }
                 }
                 let ki = 0.1; // Should be parameterized
-                for &(product_idx_) in &reaction.products {
+                for &(product_idx, _) in &reaction.products {
                     if product_idx < concentrations.len() {
                         rate /= 1.0 + concentrations[product_idx] / ki;
                     }
@@ -427,7 +424,7 @@ impl ChemicalIntegrator {
     fn calculate_concentration_derivatives(
         &self,
         reaction_rates: &Array1<f64>,
-    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>> {
         let mut derivatives = Array1::zeros(self.properties.num_species);
 
         for (reaction_idx, rate) in reaction_rates.iter().enumerate() {
@@ -457,7 +454,7 @@ impl ChemicalIntegrator {
         concentrations: &Array1<f64>,
         derivatives: &Array1<f64>,
         dt: f64,
-    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>> {
         if let Some(ref _prev_state) = self.previous_state {
             // BDF2: (3/2)*y_n+1 - 2*y_n + (1/2)*y_n-1 = dt * f(t_n+1, y_n+1)
             // Simplified as explicit step for now
@@ -475,7 +472,7 @@ impl ChemicalIntegrator {
         concentrations: &Array1<f64>,
         derivatives: &Array1<f64>,
         dt: f64,
-    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>> {
         // Simplified: y_n+1 = y_n + dt * f(t_n+1, y_n+1)
         // For now, use explicit step as approximation
         let new_concentrations = concentrations + &(derivatives * dt);
@@ -488,7 +485,7 @@ impl ChemicalIntegrator {
         concentrations: &Array1<f64>,
         derivatives: &Array1<f64>,
         dt: f64,
-    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>> {
         // Simplified Rosenbrock method
         let new_concentrations = concentrations + &(derivatives * dt);
         Ok(new_concentrations)
@@ -500,7 +497,7 @@ impl ChemicalIntegrator {
         concentrations: &Array1<f64>,
         derivatives: &Array1<f64>,
         dt: f64,
-    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>> {
         // Simplified Cash-Karp method
         let new_concentrations = concentrations + &(derivatives * dt);
         Ok(new_concentrations)
@@ -512,7 +509,7 @@ impl ChemicalIntegrator {
         concentrations: &Array1<f64>,
         derivatives: &Array1<f64>,
         dt: f64,
-    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>> {
         // Simplified adaptive method
         let new_concentrations = concentrations + &(derivatives * dt);
         Ok(new_concentrations)
@@ -522,7 +519,7 @@ impl ChemicalIntegrator {
     fn enforce_positivity_constraints(
         &self,
         concentrations: Array1<f64>,
-    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>> {
         Ok(concentrations.mapv(|x| x.max(0.0)))
     }
 
@@ -530,14 +527,14 @@ impl ChemicalIntegrator {
     fn enforce_conservation_constraints(
         &self,
         concentrations: Array1<f64>,
-    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>> {
         // For now, just return the input concentrations
         // In a full implementation, this would project onto the conservation manifold
         Ok(concentrations)
     }
 
     /// Calculate conservation error
-    fn calculate_conservation_error(_concentrations: &Array1<f64>) -> f64 {
+    fn calculate_conservation_error(&self, _concentrations: &Array1<f64>) -> f64 {
         if let Some(ref conservation_matrix) = self.properties.conservation_matrix {
             // Calculate conservation error as || C * x - C * x0 ||
             let initial_conservation =
@@ -567,8 +564,8 @@ impl ChemicalIntegrator {
             return 1.0;
         }
 
-        let max_rate = reaction_rates.iter().fold(0.0_f64, |a, &b| a.max(b.abs()));
-        let min_rate = reaction_rates.iter().fold(f64::INFINITY, |a, &b| {
+        let max_rate = _reaction_rates.iter().fold(0.0_f64, |a, &b| a.max(b.abs()));
+        let min_rate = _reaction_rates.iter().fold(f64::INFINITY, |a, &b| {
             if b.abs() > 1e-12 {
                 a.min(b.abs())
             } else {
@@ -598,7 +595,7 @@ impl ChemicalIntegrator {
             num_reactions,
             total_concentration,
             average_reaction_rate: avg_rate,
-            stiffness_estimate: self.estimate_stiffness_ratio(
+            stiffness_estimate: Self::estimate_stiffness_ratio(
                 self.reaction_rate_history
                     .last()
                     .unwrap_or(&Array1::zeros(num_reactions)),
@@ -669,14 +666,14 @@ pub mod systems {
 
         let reactions = vec![
             Reaction {
-                _rate_constant: forward_rate,
+                rate_constant: forward_rate,
                 reactants: vec![(0, 1.0)], // A -> B
                 products: vec![(1, 1.0)],
                 reaction_type: ReactionType::Elementary,
                 arrhenius: None,
             },
             Reaction {
-                _rate_constant: reverse_rate,
+                rate_constant: reverse_rate,
                 reactants: vec![(1, 1.0)], // B -> A
                 products: vec![(0, 1.0)],
                 reaction_type: ReactionType::Elementary,
@@ -857,14 +854,14 @@ pub mod systems {
 
         let reactions = vec![
             Reaction {
-                _rate_constant: fast_rate,
+                rate_constant: fast_rate,
                 reactants: vec![(0, 1.0)], // A -> B (fast)
                 products: vec![(1, 1.0)],
                 reaction_type: ReactionType::Elementary,
                 arrhenius: None,
             },
             Reaction {
-                _rate_constant: slow_rate,
+                rate_constant: slow_rate,
                 reactants: vec![(1, 1.0)], // B -> C (slow)
                 products: vec![(2, 1.0)],
                 reaction_type: ReactionType::Elementary,
@@ -887,7 +884,7 @@ pub mod systems {
         };
 
         let state = ChemicalState {
-            _concentrations: initial_conc_array,
+            concentrations: initial_conc_array,
             reaction_rates: Array1::zeros(2),
             time: 0.0,
         };
@@ -898,6 +895,7 @@ pub mod systems {
 
 #[cfg(test)]
 mod tests {
+    use crate::ode::{chemical::systems, ChemicalIntegrator};
     use approx::assert_abs_diff_eq;
 
     #[test]

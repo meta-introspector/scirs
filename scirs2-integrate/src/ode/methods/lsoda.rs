@@ -110,14 +110,14 @@ impl<F: IntegrateFloat> LsodaState<F> {
     }
 
     /// Update tolerance scaling factors
-    fn update_tol_scale(_rtol: F, atol: F) {
+    fn update_tol_scale(&mut self, _rtol: F, atol: F) {
         for i in 0..self.y.len() {
             self.tol_scale[i] = atol + _rtol * self.y[i].abs();
         }
     }
 
     /// Add current state to history
-    fn add_to_history() {
+    fn add_to_history(&mut self) {
         self.t_history.push(self.t);
         self.y_history.push(self.y.clone());
         self.dy_history.push(self.dy.clone());
@@ -136,7 +136,7 @@ impl<F: IntegrateFloat> LsodaState<F> {
     }
 
     /// Switch method type
-    fn switch_method(_new_method: LsodaMethodType) {
+    fn switch_method(&mut self, _new_method: LsodaMethodType) {
         // Track switches between methods
         if self.method_type == LsodaMethodType::Adams && _new_method == LsodaMethodType::Bdf {
             self.nonstiff_to_stiff_switches += 1;
@@ -145,7 +145,8 @@ impl<F: IntegrateFloat> LsodaState<F> {
             self.order = 1;
             self.jacobian = None;
             self.jacobian_age = 0;
-        } else if self.method_type == LsodaMethodType::Bdf && new_method == LsodaMethodType::Adams {
+        } else if self.method_type == LsodaMethodType::Bdf && _new_method == LsodaMethodType::Adams
+        {
             self.stiff_to_nonstiff_switches += 1;
 
             // When switching to Adams, be more conservative
@@ -169,7 +170,7 @@ impl<F: IntegrateFloat> LsodaState<F> {
         self.recently_switched = true;
 
         // Update _method type
-        self.method_type = new_method;
+        self.method_type = _new_method;
     }
 }
 
@@ -204,7 +205,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Check if the problem is stiff based on multiple indicators
-    fn is_stiff(_state: &LsodaState<F>) -> bool {
+    fn is_stiff(&self, _state: &LsodaState<F>) -> bool {
         // Don't switch methods too frequently
         if _state.steps_since_switch < self.min_steps_before_switch {
             return false;

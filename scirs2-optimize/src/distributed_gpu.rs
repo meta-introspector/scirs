@@ -278,7 +278,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Evaluate population using GPU acceleration
     fn evaluate_population_gpu<F>(
-        &mut self..function: &F,
+        &mut self,
+        function: &F,
         population: &Array2<f64>,) -> ScirsResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
@@ -521,7 +522,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     }
 
     /// Generate j_rand values for crossover
-    fn generate_j_rand(&self..pop_size: usize, dims: usize) -> ScirsResult<Array1<i32>> {
+    fn generate_j_rand(&self, pop_size: usize, dims: usize) -> ScirsResult<Array1<i32>> {
         use rand::Rng;
         let mut rng = rand::rng();
         let mut j_rand = Array1::zeros(pop_size);

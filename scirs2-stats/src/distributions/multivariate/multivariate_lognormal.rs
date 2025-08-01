@@ -566,12 +566,12 @@ mod tests {
         let mvln = MultivariateLognormal::new(mu, sigma).unwrap();
 
         // Generate samples
-        let n_samples = 1000;
-        let samples = mvln.rvs(n_samples).unwrap();
-        assert_eq!(samples.shape(), &[n_samples, 2]);
+        let n_samples_ = 1000;
+        let samples = mvln.rvs(n_samples_).unwrap();
+        assert_eq!(samples.shape(), &[n_samples_, 2]);
 
         // Check all samples are positive
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             for j in 0..2 {
                 assert!(samples[[i, j]] > 0.0);
             }

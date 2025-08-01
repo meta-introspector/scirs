@@ -343,7 +343,8 @@ impl PipelineProfile {
     }
 
     fn is_better_configuration(
-        &self_config: &OptimizedPipelineConfig,
+        &self,
+        _config: &OptimizedPipelineConfig,
         metrics: &PipelinePerformanceMetrics,
     ) -> bool {
         // Score based on throughput, memory efficiency, and CPU utilization
@@ -1911,7 +1912,7 @@ impl ConsciousnessInspiredOptimizer {
     /// Advanced-advanced consciousness-inspired optimization with self-awareness
     pub fn conscious_optimize(
         &mut self,
-        optimization_goal: &ConsciousnessOptimizationGoal_consciousness, _parameters: &ConsciousnessParameters,
+        optimization_goal: &ConsciousnessOptimizationGoal, _parameters: &ConsciousnessParameters,
     ) -> Result<ConsciousnessOptimizationResult> {
         // Set intentional _goal in consciousness system
         self.intentionality_engine
@@ -2109,7 +2110,7 @@ impl ConsciousnessInspiredOptimizer {
     }
 
     fn measure_satisfaction(
-        &self_state: &ConsciousnessState,
+        self_state: &ConsciousnessState,
         solution: &EvaluatedSolution,
     ) -> f64 {
         // Measure consciousness-level satisfaction with solution
@@ -2117,7 +2118,7 @@ impl ConsciousnessInspiredOptimizer {
     }
 
     fn measure_awareness_level(
-        &self_state: &ConsciousnessState,
+        self_state: &ConsciousnessState,
         solutions: &[EvaluatedSolution],
     ) -> f64 {
         // Measure level of conscious awareness in optimization process
@@ -2655,7 +2656,7 @@ impl BioinspiredAdaptationEngine {
     }
 
     pub fn adapt_network(
-        &mut self_network: &mut SpikingNeuralNetwork, _memory: &NeuromorphicMemory,
+        self_network: &mut SpikingNeuralNetwork, _memory: &NeuromorphicMemory,
     ) -> Result<()> {
         // Implement bio-inspired _network adaptation
         Ok(())
@@ -2724,7 +2725,7 @@ impl GlobalWorkspace {
     }
 
     pub fn broadcast(
-        &mut self, _attention_focus: &AttentionFocus_working_memory, _contents: &[WorkingMemoryItem],
+        &mut self, _attention_focus: &AttentionFocus, _contents: &[WorkingMemoryItem],
     ) -> Result<WorkspaceContents> {
         // Implement global workspace broadcasting
         let mut active_ideas = Vec::new();
@@ -3602,7 +3603,7 @@ impl ReinforcementLearningOptimizer {
         })
     }
 
-    fn compute_state_diversity(&self_state: &OptimizationState) -> f64 {
+    fn compute_state_diversity(self_state: &OptimizationState) -> f64 {
         // Compute diversity measure for _state space
         let mut rng = rand::rng();
         rng.random::<f64>() // Placeholder implementation
@@ -3695,7 +3696,7 @@ impl DQNAgent {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(idx_)| idx)
+                .map(|(idx_, _)| idx_)
                 .unwrap_or(0);
 
             Ok(OptimizationAction::from_index(best_action_idx))
@@ -3924,7 +3925,7 @@ impl MultiArmedBandit {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(idx_)| idx)
+                .map(|(idx_, _)| idx_)
                 .unwrap_or(0);
 
             Ok(best_arm)
@@ -4849,7 +4850,7 @@ impl RealTimePerformancePredictor {
     }
 
     fn generate_maintenance_actions(
-        &self_degradation: &DegradationAnalysis,
+        self_degradation: &DegradationAnalysis,
         priority: MaintenancePriority,
     ) -> Result<Vec<MaintenanceAction>> {
         let mut actions = Vec::new();
@@ -4907,7 +4908,7 @@ impl RealTimePerformancePredictor {
         })
     }
 
-    fn build_causal_graph(&self_metrics: &ProcessedMetrics) -> Result<CausalGraph> {
+    fn build_causal_graph(self_metrics: &ProcessedMetrics) -> Result<CausalGraph> {
         // Build causal graph for root cause analysis
         Ok(CausalGraph {
             nodes: vec![
@@ -4937,7 +4938,7 @@ impl RealTimePerformancePredictor {
     }
 
     fn calculate_correlation_matrix(
-        &self_metrics: &ProcessedMetrics,
+        self_metrics: &ProcessedMetrics,
     ) -> Result<CorrelationMatrix> {
         // Calculate correlation matrix between performance _metrics
         Ok(CorrelationMatrix {
@@ -5501,14 +5502,14 @@ impl PerformanceBaselineTracker {
         Ok(())
     }
 
-    pub fn calculate_deviation(&self_metrics: &ProcessedMetrics) -> Result<f64> {
+    pub fn calculate_deviation(self_metrics: &ProcessedMetrics) -> Result<f64> {
         Ok(0.1) // Placeholder deviation
     }
 }
 
 impl AdaptiveAlertSystem {
     pub fn generate_alerts(
-        &self_metrics: &ProcessedMetrics, _predictions: &[MetricsPrediction],
+        self_metrics: &ProcessedMetrics, _predictions: &[MetricsPrediction],
         anomaly_score: f64, _trend_analysis: &TrendAnalysis,
     ) -> Result<Vec<PerformanceAlert>> {
         let mut alerts = Vec::new();
@@ -5528,7 +5529,7 @@ impl AdaptiveAlertSystem {
 }
 
 impl PerformanceTrendAnalyzer {
-    pub fn analyze_trends(&self_metrics: &ProcessedMetrics) -> Result<TrendAnalysis> {
+    pub fn analyze_trends(self_metrics: &ProcessedMetrics) -> Result<TrendAnalysis> {
         Ok(TrendAnalysis {
             trend_direction: TrendDirection::Stable,
             trend_strength: 0.5,
@@ -5624,7 +5625,7 @@ impl IsolationForest {
         Self
     }
 
-    pub fn detect(&self_metrics: &ProcessedMetrics) -> Result<f64> {
+    pub fn detect(self_metrics: &ProcessedMetrics) -> Result<f64> {
         let mut rng = rand::rng();
         Ok(rng.random::<f64>() * 0.5) // Random anomaly score
     }
@@ -5635,7 +5636,7 @@ impl LSTMAutoencoder {
         Self
     }
 
-    pub fn detect(&self_metrics: &ProcessedMetrics) -> Result<f64> {
+    pub fn detect(self_metrics: &ProcessedMetrics) -> Result<f64> {
         let mut rng = rand::rng();
         Ok(rng.random::<f64>() * 0.4) // Random reconstruction error
     }
@@ -5650,7 +5651,7 @@ impl StatisticalAnomalyDetector {
 }
 
 impl EnsembleAnomalyDetector {
-    pub fn detect(&self_metrics: &ProcessedMetrics) -> Result<f64> {
+    pub fn detect(self_metrics: &ProcessedMetrics) -> Result<f64> {
         let mut rng = rand::rng();
         Ok(rng.random::<f64>() * 0.6) // Random ensemble score
     }

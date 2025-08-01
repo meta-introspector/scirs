@@ -4,7 +4,7 @@
 //! dispersion measures using scirs2-core's unified SIMD operations.
 
 use crate::error::{StatsError, StatsResult};
-use crate::quantile__simd::{median_simd, quantile_simd};
+use crate::quantile_simd::{median_simd, quantile_simd};
 use ndarray::{ArrayBase, Data, DataMut, Ix1};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
@@ -150,7 +150,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
     D: Data<Elem = F>,
 {
-    use crate::descriptive__simd::{mean_simd, std_simd};
+    use crate::descriptive_simd::{mean_simd, std_simd};
 
     // Handle NaN values
     let valid_data = match nan_policy {
@@ -310,7 +310,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
     D: Data<Elem = F>,
 {
-    use crate::descriptive__simd::std_simd;
+    use crate::descriptive_simd::std_simd;
 
     let n = x.len();
     if n <= ddof {

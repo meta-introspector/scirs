@@ -131,7 +131,8 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
             n_samples,
             n_features,
             leaf_size,
-            distance_phantom: PhantomData,
+            distance,
+            _phantom: PhantomData,
         };
 
         // Build the tree
@@ -187,7 +188,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // Calculate radius (maximum distance from centroid to any point)
         let mut radius = T::zero();
-        for i in start_idx..end_idx {
+        for i in _start_idx..end_idx {
             let point_idx = self.indices[i];
             let point = self.data.row(point_idx);
 
@@ -201,7 +202,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         // Create node
         let node_idx = self.nodes.len();
         let node = BallTreeNode {
-            start_idx,
+            start_idx: _start_idx,
             end_idx,
             centroid,
             radius,
@@ -218,12 +219,12 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
 
         // Otherwise, split the points and recursively build subtrees
         // We'll split along the direction of maximum variance
-        self.split_points(node_idx, start_idx, end_idx)?;
+        self.split_points(node_idx, _start_idx, end_idx)?;
 
         // Recursively build left and right subtrees
-        let mid_idx = start_idx + n_points / 2;
+        let mid_idx = _start_idx + n_points / 2;
 
-        let left_idx = self.build_subtree(start_idx, mid_idx)?;
+        let left_idx = self.build_subtree(_start_idx, mid_idx)?;
         let right_idx = self.build_subtree(mid_idx, end_idx)?;
 
         // Update node with child indices
@@ -275,12 +276,12 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
         let _mid_idx = start_idx + (end_idx - start_idx) / 2;
         let mut new_indices = Vec::with_capacity(end_idx - start_idx);
 
-        for (i_) in distances {
-            new_indices.push(self.indices[i]);
+        for (i_, _) in distances {
+            new_indices.push(self.indices[i_]);
         }
 
-        for (i_idx) in new_indices.into_iter().enumerate() {
-            self.indices[start_idx + i] = _idx;
+        for (i, idx) in new_indices.into_iter().enumerate() {
+            self.indices[start_idx + i] = idx;
         }
 
         Ok(())
@@ -389,7 +390,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                                 safe_partial_cmp(&a.0, &b.0, "balltree max distance")
                                     .unwrap_or(Ordering::Equal)
                             })
-                            .map(|(idx_)| _idx)
+                            .map(|(idx_, _)| idx_)
                             .unwrap_or(0);
 
                         // Remove that point
@@ -398,7 +399,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + Send + Sync + 'static> B
                         // Update max_dist to the new maximum distance
                         *max_dist = nearest
                             .iter()
-                            .map(|(dist_)| *_dist)
+                            .map(|(dist_, _)| *dist_)
                             .max_by(|a, b| {
                                 safe_partial_cmp(a, b, "balltree update max_dist")
                                     .unwrap_or(Ordering::Equal)

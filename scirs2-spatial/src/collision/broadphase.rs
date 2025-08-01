@@ -17,7 +17,7 @@ pub struct AABB {
 impl AABB {
     /// Creates a new AABB with the given minimum and maximum corners
     pub fn new(_min: [f64; 3], max: [f64; 3]) -> Self {
-        AABB { _min, max }
+        AABB { min: _min, max }
     }
 
     /// Creates an AABB from a 3D box
@@ -63,7 +63,7 @@ impl AABB {
     }
 
     /// Tests if this AABB intersects with another AABB
-    pub fn intersects(_other: &AABB) -> bool {
+    pub fn intersects(&self, _other: &AABB) -> bool {
         self.min[0] <= _other.max[0]
             && self.max[0] >= _other.min[0]
             && self.min[1] <= _other.max[1]
@@ -94,7 +94,7 @@ impl SpatialGrid2D {
         let cells_y = (height / cell_size).ceil() as usize;
         SpatialGrid2D {
             cell_size,
-            _width,
+            width: _width,
             height,
             cells_x,
             cells_y,
@@ -102,7 +102,7 @@ impl SpatialGrid2D {
     }
 
     /// Returns the cell indices for a given 2D position
-    pub fn get_cell_indices(_pos: &[f64; 2]) -> Option<(usize, usize)> {
+    pub fn get_cell_indices(&self, _pos: &[f64; 2]) -> Option<(usize, usize)> {
         if _pos[0] < 0.0 || _pos[0] >= self.width || _pos[1] < 0.0 || _pos[1] >= self.height {
             return None;
         }
@@ -119,7 +119,7 @@ impl SpatialGrid2D {
     }
 
     /// Returns the cell indices for a 2D circle, potentially spanning multiple cells
-    pub fn get_circle_cell_indices(_circle: &Circle) -> Vec<(usize, usize)> {
+    pub fn get_circle_cell_indices(&self, _circle: &Circle) -> Vec<(usize, usize)> {
         let min_x = (_circle.center[0] - _circle.radius).max(0.0);
         let min_y = (_circle.center[1] - _circle.radius).max(0.0);
         let max_x = (_circle.center[0] + _circle.radius).min(self.width);
@@ -143,7 +143,7 @@ impl SpatialGrid2D {
     }
 
     /// Returns the cell indices for a 2D box, potentially spanning multiple cells
-    pub fn get_box_cell_indices(_box2d: &Box2D) -> Vec<(usize, usize)> {
+    pub fn get_box_cell_indices(&self, _box2d: &Box2D) -> Vec<(usize, usize)> {
         let min_x = _box2d.min[0].max(0.0);
         let min_y = _box2d.min[1].max(0.0);
         let max_x = _box2d.max[0].min(self.width);
@@ -193,7 +193,7 @@ impl SpatialGrid3D {
         let cells_z = (depth / cell_size).ceil() as usize;
         SpatialGrid3D {
             cell_size,
-            _width,
+            width: _width,
             height,
             depth,
             cells_x,
@@ -203,7 +203,7 @@ impl SpatialGrid3D {
     }
 
     /// Returns the cell indices for a given 3D position
-    pub fn get_cell_indices(_pos: &[f64; 3]) -> Option<(usize, usize, usize)> {
+    pub fn get_cell_indices(&self, _pos: &[f64; 3]) -> Option<(usize, usize, usize)> {
         if _pos[0] < 0.0
             || _pos[0] >= self.width
             || _pos[1] < 0.0
@@ -227,7 +227,7 @@ impl SpatialGrid3D {
     }
 
     /// Returns the cell indices for a 3D sphere, potentially spanning multiple cells
-    pub fn get_sphere_cell_indices(_sphere: &Sphere) -> Vec<(usize, usize, usize)> {
+    pub fn get_sphere_cell_indices(&self, _sphere: &Sphere) -> Vec<(usize, usize, usize)> {
         let min_x = (_sphere.center[0] - _sphere.radius).max(0.0);
         let min_y = (_sphere.center[1] - _sphere.radius).max(0.0);
         let min_z = (_sphere.center[2] - _sphere.radius).max(0.0);
@@ -257,7 +257,7 @@ impl SpatialGrid3D {
     }
 
     /// Returns the cell indices for a 3D box, potentially spanning multiple cells
-    pub fn get_box_cell_indices(_box3d: &Box3D) -> Vec<(usize, usize, usize)> {
+    pub fn get_box_cell_indices(&self, _box3d: &Box3D) -> Vec<(usize, usize, usize)> {
         let min_x = _box3d.min[0].max(0.0);
         let min_y = _box3d.min[1].max(0.0);
         let min_z = _box3d.min[2].max(0.0);
@@ -296,21 +296,22 @@ pub struct SweepAndPrune1D {
 impl SweepAndPrune1D {
     /// Creates a new sweep and prune algorithm for the given axis
     pub fn new(_axis: usize) -> Self {
-        SweepAndPrune1D { _axis }
+        SweepAndPrune1D { axis: _axis }
     }
 
     /// Checks if two AABBs could be colliding along the chosen axis
-    pub fn may_collide(_aabb1: &AABB, aabb2: &AABB) -> bool {
-        _aabb1.min[self.axis] <= aabb2.max[self.axis] && _aabb1.max[self.axis] >= aabb2.min[self.axis]
+    pub fn may_collide(&self, _aabb1: &AABB, aabb2: &AABB) -> bool {
+        _aabb1.min[self.axis] <= aabb2.max[self.axis]
+            && _aabb1.max[self.axis] >= aabb2.min[self.axis]
     }
 
     /// Gets the starting point of an AABB along the chosen axis
-    pub fn get_start(_aabb: &AABB) -> f64 {
+    pub fn get_start(&self, _aabb: &AABB) -> f64 {
         _aabb.min[self.axis]
     }
 
     /// Gets the ending point of an AABB along the chosen axis
-    pub fn get_end(_aabb: &AABB) -> f64 {
+    pub fn get_end(&self, _aabb: &AABB) -> f64 {
         _aabb.max[self.axis]
     }
 }
@@ -342,7 +343,7 @@ impl SweepAndPrune {
     }
 
     /// Checks if two AABBs could potentially be colliding
-    pub fn may_collide(_aabb1: &AABB, aabb2: &AABB) -> bool {
+    pub fn may_collide(&self, _aabb1: &AABB, aabb2: &AABB) -> bool {
         self.x_axis.may_collide(_aabb1, aabb2)
             && self.y_axis.may_collide(_aabb1, aabb2)
             && self.z_axis.may_collide(_aabb1, aabb2)

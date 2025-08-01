@@ -222,7 +222,8 @@ impl OptimizationVisualizer {
         match self.config.format {
             OutputFormat::Svg => self.plot_convergence_svg(trajectory, output_path),
             OutputFormat::Html => self.plot_convergence_html(trajectory, output_path),
-            OutputFormat::Data => self.export_convergence_data(trajectory, output_path, _ => Err(ScirsError::NotImplementedError(error_context!(
+            OutputFormat::Data => self.export_convergence_data(trajectory, output_path),
+            _ => Err(ScirsError::NotImplementedError(error_context!(
                 "PNG output not yet implemented"
             ))),
         }
@@ -247,7 +248,8 @@ impl OptimizationVisualizer {
         match self.config.format {
             OutputFormat::Svg => self.plot_trajectory_svg(trajectory, output_path),
             OutputFormat::Html => self.plot_trajectory_html(trajectory, output_path),
-            OutputFormat::Data => self.export_trajectory_data(trajectory, output_path, _ => Err(ScirsError::NotImplementedError(error_context!(
+            OutputFormat::Data => self.export_trajectory_data(trajectory, output_path),
+            _ => Err(ScirsError::NotImplementedError(error_context!(
                 "PNG output not yet implemented"
             ))),
         }

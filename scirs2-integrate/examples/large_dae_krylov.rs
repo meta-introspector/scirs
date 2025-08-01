@@ -6,7 +6,7 @@
 
 use ndarray::{Array1, ArrayView1};
 // use plotters::prelude::*;
-use scirs2__integrate::{
+use scirs2_integrate::{
     bdf_semi_explicit_dae, krylov_bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEType, ODEMethod,
 };
 use std::f64::consts::PI;

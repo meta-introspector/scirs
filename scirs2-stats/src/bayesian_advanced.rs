@@ -131,7 +131,7 @@ pub enum DistributionType<F> {
     },
 }
 
-impl<F: std::fmt::Debug> + std::fmt::Debug for DistributionType<F> {
+impl<F: std::fmt::Debug> std::fmt::Debug for DistributionType<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DistributionType::Normal { mean, precision } => f
@@ -224,7 +224,7 @@ impl<F: Clone> Clone for DistributionType<F> {
             DistributionType::Exponential { rate } => {
                 DistributionType::Exponential { rate: rate.clone() }
             }
-            DistributionType::Horseshoe { tau } =>, DistributionType::Horseshoe { tau: tau.clone() },
+            DistributionType::Horseshoe { tau } => DistributionType::Horseshoe { tau: tau.clone() },
             DistributionType::Laplace { location, scale } => DistributionType::Laplace {
                 location: location.clone(),
                 scale: scale.clone(),
@@ -409,7 +409,7 @@ pub struct AdvancedBayesianRegression<F> {
 #[derive(Debug, Clone)]
 pub struct MCMCConfig {
     /// Number of MCMC samples
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Number of burn-in samples
     pub n_burnin: usize,
     /// Thinning interval
@@ -630,8 +630,8 @@ where
         x: &ArrayView2<F>,
         y: &ArrayView1<F>,
     ) -> StatsResult<ModelComparisonResult<F>> {
-        check_array_finite(x, "x")?;
-        check_array_finite(y, "y")?;
+        checkarray_finite(x, "x")?;
+        checkarray_finite(y, "y")?;
 
         if x.nrows() != y.len() {
             return Err(StatsError::DimensionMismatch(
@@ -671,7 +671,7 @@ where
             // Sort by criterion (lower is better for most criteria)
             model_scores.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-            let ranking: Vec<String> = model_scores.into_iter().map(|(id_)| id).collect();
+            let ranking: Vec<String> = model_scores.into().iter().map(|(id_)| id_).collect();
             rankings.insert(*criterion, ranking);
         }
 
@@ -704,16 +704,16 @@ where
 
     /// Fit a single model
     fn fit_single_model(
-        &self_model: &BayesianModel<F>,
+        model: &BayesianModel<F>,
         x: &ArrayView2<F>,
         y: &ArrayView1<F>,
     ) -> StatsResult<AdvancedBayesianResult<F>> {
         // Simplified _model fitting - would implement actual inference
         let n_params = x.ncols();
-        let n_samples = 1000;
+        let n_samples_ = 1000;
 
         // Generate dummy posterior samples (would use actual MCMC/VI)
-        let posterior_samples = Array2::zeros((n_samples, n_params));
+        let posterior_samples = Array2::zeros((n_samples_, n_params));
 
         let posterior_summary = PosteriorSummary {
             means: Array1::zeros(n_params),
@@ -773,7 +773,8 @@ where
 
     /// Cross-validate model
     fn cross_validate_model(
-        &self_model: &BayesianModel<F>,
+        &self,
+        model: &BayesianModel<F>,
         x: &ArrayView2<F>, _y: &ArrayView1<F>,
     ) -> StatsResult<CrossValidationResult<F>> {
         let k = self.cv_config.k_folds;
@@ -846,7 +847,7 @@ impl Default for ParallelConfig {
 impl Default for MCMCConfig {
     fn default() -> Self {
         Self {
-            n_samples: 2000,
+            n_samples_: 2000,
             n_burnin: 1000,
             thin: 1,
             n_chains: 4,
@@ -909,8 +910,8 @@ where
         kernel: KernelType,
         noise_level: F,
     ) -> StatsResult<Self> {
-        check_array_finite(&x_train.view(), "x_train")?;
-        check_array_finite(&y_train.view(), "y_train")?;
+        checkarray_finite(&x_train.view(), "x_train")?;
+        checkarray_finite(&y_train.view(), "y_train")?;
 
         if x_train.nrows() != y_train.len() {
             return Err(StatsError::DimensionMismatch(
@@ -1023,7 +1024,7 @@ where
 
     /// Make predictions at new input points
     pub fn predict(&self, x_test: &ArrayView2<F>) -> StatsResult<(Array1<F>, Array1<F>)> {
-        check_array_finite(x_test, "x_test")?;
+        checkarray_finite(x_test, "x_test")?;
 
         let n_test = x_test.nrows();
 
@@ -1128,7 +1129,7 @@ where
                     F::zero()
                 }
             }
-            ActivationType::Sigmoid =>, F::one() / (F::one() + (-x).exp()),
+            ActivationType::Sigmoid => F::one() / (F::one() + (-x).exp()),
             ActivationType::Tanh => x.tanh(),
             ActivationType::Swish => x / (F::one() + (-x).exp()),
             ActivationType::GELU => {
@@ -1148,7 +1149,7 @@ where
         weights: &[Array2<F>],
         biases: &[Array1<F>],
     ) -> StatsResult<Array2<F>> {
-        check_array_finite(x, "x")?;
+        checkarray_finite(x, "x")?;
 
         if weights.len() != self.architecture.len() - 1 {
             return Err(StatsError::InvalidArgument(
@@ -1233,9 +1234,9 @@ where
     /// Make predictions with uncertainty quantification
     pub fn predict_with_uncertainty(
         &self,
-        x: &ArrayView2<F>, _n_samples: usize,
+        x: &ArrayView2<F>, _n_samples_: usize,
     ) -> StatsResult<(Array2<F>, Array2<F>)> {
-        check_array_finite(x, "x")?;
+        checkarray_finite(x, "x")?;
 
         let n_test = x.nrows();
         let output_dim = self.architecture.last().unwrap();

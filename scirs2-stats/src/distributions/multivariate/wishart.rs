@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use rand::rng;
-use rand__distr::{ChiSquared, Distribution, Normal as RandNormal};
+use rand_distr::{ChiSquared, Distribution, Normal as RandNormal};
 use std::fmt::Debug;
 
 // Import helper functions from the multivariate module
@@ -654,11 +654,11 @@ mod tests {
         let wishart = Wishart::new(scale.clone(), df).unwrap();
 
         // Generate samples
-        let n_samples = 100;
-        let samples = wishart.rvs(n_samples).unwrap();
+        let n_samples_ = 100;
+        let samples = wishart.rvs(n_samples_).unwrap();
 
         // Check number of samples
-        assert_eq!(samples.len(), n_samples);
+        assert_eq!(samples.len(), n_samples_);
 
         // Check dimensions of each sample
         for sample in &samples {
@@ -670,7 +670,7 @@ mod tests {
         for sample in &samples {
             sample_mean += sample;
         }
-        sample_mean /= n_samples as f64;
+        sample_mean /= n_samples_ as f64;
 
         // Expected mean is ν × Σ
         let expected_mean = scale * df;

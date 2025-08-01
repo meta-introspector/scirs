@@ -287,7 +287,7 @@ impl PoissonSolver2D {
 
         // Solve the linear system using Gaussian elimination
         // For a real implementation, use a sparse solver library
-        let u_flat = self.solve_linear_system(&a, &b)?;
+        let u_flat = PoissonSolver2D::solve_linear_system(&a, &b)?;
 
         // Reshape the solution to 2D
         let mut u = Array2::zeros((ny, nx));
@@ -571,7 +571,9 @@ impl PoissonSolver2D {
     fn apply_boundary_conditions_to_system(
         &self,
         a: &mut Array2<f64>,
-        b: &mut Array1<f64>, _x_grid: &Array1<f64>, _y_grid: &Array1<f64>,
+        b: &mut Array1<f64>,
+        _x_grid: &Array1<f64>,
+        _y_grid: &Array1<f64>,
         nx: usize,
         ny: usize,
         dx: f64,
@@ -877,7 +879,7 @@ impl LaplaceSolver2D {
     ) -> PDEResult<Self> {
         // Create a Poisson solver with zero source term
         let poisson_solver =
-            PoissonSolver2D::new(domain, |_x_y| 0.0, boundary_conditions, options)?;
+            PoissonSolver2D::new(domain, |_x, _y| 0.0, boundary_conditions, options)?;
 
         Ok(LaplaceSolver2D { poisson_solver })
     }

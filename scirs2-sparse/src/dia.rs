@@ -40,7 +40,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::dia::DiaMatrix;
+    /// use scirs2_sparse::dia::DiaMatrix;
     ///
     /// // Create a 3x3 sparse matrix with main diagonal and upper diagonal
     /// let data = vec![

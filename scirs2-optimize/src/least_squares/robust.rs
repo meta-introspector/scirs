@@ -505,7 +505,7 @@ where
 #[allow(dead_code)]
 fn gradient_based_robust_optimizer<F, J, L, D, S1, S2>(
     _residuals: F,
-    x0: &ArrayBase<S1, Ix1>, _loss: L_jacobian: Option<J>, _data: &ArrayBase<S2, Ix1>, _options: &RobustOptions,
+    x0: &ArrayBase<S1, Ix1>, _loss: L, _jacobian: Option<J>, _data: &ArrayBase<S2, Ix1>, _options: &RobustOptions,
 ) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&[f64], &[D]) -> Array1<f64>,
@@ -641,11 +641,11 @@ mod tests {
     #[test]
     fn test_irls_convergence() {
         // Simple quadratic minimization
-        fn residual(x: &[f64]_: &[f64]) -> Array1<f64> {
+        fn residual(x: &[f64], _: &[f64]) -> Array1<f64> {
             array![x[0] - 1.0, x[1] - 2.0]
         }
 
-        fn jacobian(_x: &[f64]_: &[f64]) -> Array2<f64> {
+        fn jacobian(_x: &[f64], _: &[f64]) -> Array2<f64> {
             array![[1.0, 0.0], [0.0, 1.0]]
         }
 

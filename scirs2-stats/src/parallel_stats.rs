@@ -4,7 +4,7 @@
 //! that can significantly improve performance on multi-core systems.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 use crate::{mean, quantile, var, QuantileInterpolation};
 use ndarray::{s, Array1, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
@@ -148,7 +148,7 @@ where
 
     // Validate quantiles
     for &q in quantiles {
-        if q < F::zero() || q >, F::one() {
+        if q < F::zero() || q > F::one() {
             return Err(StatsError::domain("Quantiles must be between 0 and 1"));
         }
     }
@@ -229,7 +229,7 @@ where
     let row_indices: Vec<usize> = (0..nrows).collect();
     let results: Result<Vec<F>, StatsError> =
         parallel_map(&row_indices, |&i| stat_fn(&data.slice(s![i, ..]).view()))
-            .into_iter()
+            .into().iter()
             .collect();
 
     Ok(Array1::from_vec(results?))
@@ -283,7 +283,7 @@ where
         let corr = pearson_r(&var_i, &var_j)?;
         Ok(((i, j), corr))
     })
-    .into_iter()
+    .into().iter()
     .collect::<StatsResult<Vec<_>>>()?;
 
     // Fill the correlation matrix
@@ -306,7 +306,7 @@ where
 /// # Arguments
 ///
 /// * `data` - Input data array
-/// * `n_samples` - Number of bootstrap samples
+/// * `n_samples_` - Number of bootstrap samples
 /// * `statistic` - Function to compute statistic on each sample
 /// * `seed` - Random seed
 ///
@@ -316,7 +316,7 @@ where
 #[allow(dead_code)]
 pub fn bootstrap_parallel<F, S>(
     data: &Array1<F>,
-    n_samples: usize,
+    n_samples_: usize,
     statistic: S,
     seed: Option<u64>,
 ) -> StatsResult<Array1<F>>
@@ -329,11 +329,11 @@ where
 {
     use crate::sampling::bootstrap;
 
-    if n_samples < PARALLEL_THRESHOLD / data.len() {
+    if n_samples_ < PARALLEL_THRESHOLD / data.len() {
         // Sequential bootstrap for small number of _samples
-        let _samples = bootstrap(&data.view(), n_samples, seed)?;
-        let mut results = Array1::zeros(n_samples);
-        for (i, sample) in _samples.outer_iter().enumerate() {
+        let _samples = bootstrap(&data.view(), n_samples_, seed)?;
+        let mut results = Array1::zeros(n_samples_);
+        for (i, sample) in _samples.outer.iter().enumerate() {
             results[i] = statistic(&sample)?;
         }
         return Ok(results);
@@ -341,7 +341,7 @@ where
 
     // Generate seeds for parallel random number generation
     let base_seed = seed.unwrap_or(42);
-    let seeds: Vec<u64> = (0..n_samples)
+    let seeds: Vec<u64> = (0..n_samples_)
         .map(|i| base_seed.wrapping_add(i as u64))
         .collect();
 
@@ -350,7 +350,7 @@ where
         let sample = bootstrap(&data.view(), 1, Some(seed))?;
         statistic(&sample.slice(s![0, ..]))
     })
-    .into_iter()
+    .into().iter()
     .collect::<StatsResult<Vec<_>>>()?;
 
     Ok(Array1::from_vec(results))

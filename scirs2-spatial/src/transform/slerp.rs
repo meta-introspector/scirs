@@ -151,7 +151,7 @@ impl Slerp {
     /// // Get rotation at t=0.75 (75% from rot1 to rot2)
     /// let rot_75 = slerp.interpolate(0.75);
     /// ```
-    pub fn interpolate(t: f64) -> Rotation {
+    pub fn interpolate(&self, t: f64) -> Rotation {
         // Clamp t to [0, 1]
         let t = t.clamp(0.0, 1.0);
 

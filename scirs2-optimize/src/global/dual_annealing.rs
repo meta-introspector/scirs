@@ -84,7 +84,8 @@ where
         let temperature = options.initial_temp;
 
         Self {
-            _func..x0: x0.clone(),
+            func: _func,
+            x0: x0.clone(),
             options,
             ndim,
             rng,
@@ -133,7 +134,7 @@ where
     }
 
     /// Calculate acceptance probability
-    fn accept_probability(&self..energy_new: f64) -> f64 {
+    fn accept_probability(&self, energy_new: f64) -> f64 {
         if energy_new <= self.current_energy {
             1.0
         } else {

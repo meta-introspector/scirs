@@ -7,7 +7,7 @@ use crate::sampling::SampleableDistribution;
 use crate::traits::{Distribution as DistributionTrait, MultivariateDistribution};
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Axis, Data, Ix1, Ix2};
 use rand::rng;
-use rand__distr::{Distribution as RandDistribution, Normal as RandNormal};
+use rand_distr::{Distribution as RandDistribution, Normal as RandNormal};
 use std::fmt::Debug;
 use statrs::statistics::Statistics;
 
@@ -574,9 +574,9 @@ mod tests {
         let mvn = MultivariateNormal::new(mean, cov).unwrap();
 
         // Generate samples and check dimensions
-        let n_samples = 500;
-        let samples = mvn.rvs(n_samples).unwrap();
-        assert_eq!(samples.shape(), &[n_samples, 2]);
+        let n_samples_ = 500;
+        let samples = mvn.rvs(n_samples_).unwrap();
+        assert_eq!(samples.shape(), &[n_samples_, 2]);
 
         // Check statistics (rough check as it's random)
         let sample_mean = samples.mean_axis(Axis(0)).unwrap();
@@ -585,7 +585,7 @@ mod tests {
 
         // Calculate sample covariance
         let centered = samples.mapv(|x| x) - &sample_mean;
-        let sample_cov = centered.t().dot(&centered) / (n_samples as f64 - 1.0);
+        let sample_cov = centered.t().dot(&centered) / (n_samples_ as f64 - 1.0);
         assert_relative_eq!(sample_cov[[0, 0]], 1.0, epsilon = 0.5);
         assert_relative_eq!(sample_cov[[1, 1]], 2.0, epsilon = 0.5);
         assert_relative_eq!(sample_cov[[0, 1]].abs(), 0.5, epsilon = 0.3);

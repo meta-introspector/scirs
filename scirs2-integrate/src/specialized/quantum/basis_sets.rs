@@ -67,12 +67,20 @@ impl AdvancedBasisSets {
         for (i, param) in self.parameters.iter().enumerate() {
             for (j, coord_row) in coordinates.axis_iter(ndarray::Axis(0)).enumerate() {
                 let x = coord_row[0];
-                let y = if coord_row.len() > 1 { coord_row[1] } else { 0.0 };
-                let z = if coord_row.len() > 2 { coord_row[2] } else { 0.0 };
+                let y = if coord_row.len() > 1 {
+                    coord_row[1]
+                } else {
+                    0.0
+                };
+                let z = if coord_row.len() > 2 {
+                    coord_row[2]
+                } else {
+                    0.0
+                };
 
-                let r_squared = (x - param.center_x).powi(2) + 
-                               (y - param.center_y).powi(2) + 
-                               (z - param.center_z).powi(2);
+                let r_squared = (x - param.center_x).powi(2)
+                    + (y - param.center_y).powi(2)
+                    + (z - param.center_z).powi(2);
 
                 let gaussian = (-param.exponent * r_squared).exp();
                 basis_functions[[j, i]] = Complex64::new(gaussian * param.normalization, 0.0);
@@ -91,12 +99,21 @@ impl AdvancedBasisSets {
         for (i, param) in self.parameters.iter().enumerate() {
             for (j, coord_row) in coordinates.axis_iter(ndarray::Axis(0)).enumerate() {
                 let x = coord_row[0];
-                let y = if coord_row.len() > 1 { coord_row[1] } else { 0.0 };
-                let z = if coord_row.len() > 2 { coord_row[2] } else { 0.0 };
+                let y = if coord_row.len() > 1 {
+                    coord_row[1]
+                } else {
+                    0.0
+                };
+                let z = if coord_row.len() > 2 {
+                    coord_row[2]
+                } else {
+                    0.0
+                };
 
-                let r = ((x - param.center_x).powi(2) + 
-                        (y - param.center_y).powi(2) + 
-                        (z - param.center_z).powi(2)).sqrt();
+                let r = ((x - param.center_x).powi(2)
+                    + (y - param.center_y).powi(2)
+                    + (z - param.center_z).powi(2))
+                .sqrt();
 
                 let slater = r.powf(param.angular_momentum as f64) * (-param.exponent * r).exp();
                 basis_functions[[j, i]] = Complex64::new(slater * param.normalization, 0.0);
@@ -117,8 +134,16 @@ impl AdvancedBasisSets {
         for (i, param) in self.parameters.iter().enumerate() {
             for (j, coord_row) in coordinates.axis_iter(ndarray::Axis(0)).enumerate() {
                 let x = coord_row[0];
-                let y = if coord_row.len() > 1 { coord_row[1] } else { 0.0 };
-                let z = if coord_row.len() > 2 { coord_row[2] } else { 0.0 };
+                let y = if coord_row.len() > 1 {
+                    coord_row[1]
+                } else {
+                    0.0
+                };
+                let z = if coord_row.len() > 2 {
+                    coord_row[2]
+                } else {
+                    0.0
+                };
 
                 let k_dot_r = param.kx * x + param.ky * y + param.kz * z;
                 let plane_wave = Complex64::new(
@@ -142,12 +167,21 @@ impl AdvancedBasisSets {
         for (i, param) in self.parameters.iter().enumerate() {
             for (j, coord_row) in coordinates.axis_iter(ndarray::Axis(0)).enumerate() {
                 let x = coord_row[0];
-                let y = if coord_row.len() > 1 { coord_row[1] } else { 0.0 };
-                let z = if coord_row.len() > 2 { coord_row[2] } else { 0.0 };
+                let y = if coord_row.len() > 1 {
+                    coord_row[1]
+                } else {
+                    0.0
+                };
+                let z = if coord_row.len() > 2 {
+                    coord_row[2]
+                } else {
+                    0.0
+                };
 
-                let r = ((x - param.center_x).powi(2) + 
-                        (y - param.center_y).powi(2) + 
-                        (z - param.center_z).powi(2)).sqrt();
+                let r = ((x - param.center_x).powi(2)
+                    + (y - param.center_y).powi(2)
+                    + (z - param.center_z).powi(2))
+                .sqrt();
 
                 // Simplified hydrogen-like orbital
                 let radial = r.powf(param.angular_momentum as f64) * (-param.exponent * r).exp();
@@ -190,7 +224,8 @@ impl AdvancedBasisSets {
                     let norm_j = self.overlap_matrix[[j, j]].sqrt();
                     if norm_j > 1e-12 {
                         let projection_coeff = overlap / norm_j;
-                        self.parameters[i].normalization -= projection_coeff * self.parameters[j].normalization;
+                        self.parameters[i].normalization -=
+                            projection_coeff * self.parameters[j].normalization;
                     }
                 }
             }
@@ -200,26 +235,35 @@ impl AdvancedBasisSets {
     }
 
     /// Transform basis functions
-    pub fn transform_basis(&self, transformation_matrix: &Array2<f64>) -> Result<AdvancedBasisSets> {
-        if transformation_matrix.nrows() != self.n_basis || transformation_matrix.ncols() != self.n_basis {
+    pub fn transform_basis(
+        &self,
+        transformation_matrix: &Array2<f64>,
+    ) -> Result<AdvancedBasisSets> {
+        if transformation_matrix.nrows() != self.n_basis
+            || transformation_matrix.ncols() != self.n_basis
+        {
             return Err(IntegrateError::InvalidInput(
                 "Transformation matrix dimension mismatch".to_string(),
             ));
         }
 
         let mut transformed_basis = self.clone();
-        
+
         // Apply transformation to basis parameters
         for i in 0..self.n_basis {
             let mut new_normalization = 0.0;
             for j in 0..self.n_basis {
-                new_normalization += transformation_matrix[[i, j]] * self.parameters[j].normalization;
+                new_normalization +=
+                    transformation_matrix[[i, j]] * self.parameters[j].normalization;
             }
             transformed_basis.parameters[i].normalization = new_normalization;
         }
 
         // Transform overlap matrix
-        let overlap_transformed = transformation_matrix.t().dot(&self.overlap_matrix).dot(transformation_matrix);
+        let overlap_transformed = transformation_matrix
+            .t()
+            .dot(&self.overlap_matrix)
+            .dot(transformation_matrix);
         transformed_basis.overlap_matrix = overlap_transformed;
 
         Ok(transformed_basis)
@@ -291,7 +335,7 @@ mod tests {
     #[test]
     fn test_gaussian_basis_generation() {
         let mut basis = AdvancedBasisSets::new(2, BasisSetType::Gaussian);
-        
+
         // Set up simple Gaussian parameters
         basis.parameters[0].exponent = 1.0;
         basis.parameters[0].normalization = 1.0;
@@ -299,11 +343,9 @@ mod tests {
         basis.parameters[1].normalization = 1.0;
         basis.parameters[1].center_x = 1.0;
 
-        let coordinates = Array2::from_shape_vec((3, 3), vec![
-            0.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,
-            0.5, 0.5, 0.0,
-        ]).unwrap();
+        let coordinates =
+            Array2::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0])
+                .unwrap();
 
         let basis_functions = basis.generate_basis_functions(&coordinates);
         assert!(basis_functions.is_ok());
@@ -316,19 +358,15 @@ mod tests {
     #[test]
     fn test_overlap_matrix_calculation() {
         let mut basis = AdvancedBasisSets::new(2, BasisSetType::Gaussian);
-        
-        let coordinates = Array2::from_shape_vec((10, 3), vec![
-            0.0, 0.0, 0.0,
-            0.1, 0.0, 0.0,
-            0.2, 0.0, 0.0,
-            0.3, 0.0, 0.0,
-            0.4, 0.0, 0.0,
-            0.5, 0.0, 0.0,
-            0.6, 0.0, 0.0,
-            0.7, 0.0, 0.0,
-            0.8, 0.0, 0.0,
-            0.9, 0.0, 0.0,
-        ]).unwrap();
+
+        let coordinates = Array2::from_shape_vec(
+            (10, 3),
+            vec![
+                0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.2, 0.0, 0.0, 0.3, 0.0, 0.0, 0.4, 0.0, 0.0, 0.5,
+                0.0, 0.0, 0.6, 0.0, 0.0, 0.7, 0.0, 0.0, 0.8, 0.0, 0.0, 0.9, 0.0, 0.0,
+            ],
+        )
+        .unwrap();
 
         let result = basis.calculate_overlap_matrix(&coordinates);
         assert!(result.is_ok());

@@ -20,20 +20,23 @@ pub struct Dual<F: IntegrateFloat> {
 impl<F: IntegrateFloat> Dual<F> {
     /// Create a new dual number
     pub fn new(_val: F, der: F) -> Self {
-        Dual { _val, der }
+        Dual { val: _val, der }
     }
 
     /// Create a constant dual number (zero derivative)
     pub fn constant(_val: F) -> Self {
         Dual {
-            _val,
+            val: _val,
             der: F::zero(),
         }
     }
 
     /// Create a variable dual number (unit derivative)
     pub fn variable(_val: F) -> Self {
-        Dual { _val, der: F::one() }
+        Dual {
+            val: _val,
+            der: F::one(),
+        }
     }
 
     /// Extract the value
@@ -89,7 +92,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute x^y for constant y
-    pub fn powf(n: F) -> Self {
+    pub fn powf(&self, n: F) -> Self {
         Dual {
             val: self.val.powf(n),
             der: self.der * n * self.val.powf(n - F::one()),
@@ -99,9 +102,9 @@ impl<F: IntegrateFloat> Dual<F> {
     /// Compute abs(x)
     pub fn abs(&self) -> Self {
         if self.val >= F::zero() {
-            self
+            *self
         } else {
-            -self
+            -*self
         }
     }
 
@@ -164,7 +167,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute atan2(y, x)
-    pub fn atan2(x: Self) -> Self {
+    pub fn atan2(&self, x: Self) -> Self {
         let r2 = self.val * self.val + x.val * x.val;
         Dual {
             val: self.val.atan2(x.val),
@@ -173,9 +176,9 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute max(self, other)
-    pub fn max(_other: Self) -> Self {
+    pub fn max(&self, _other: Self) -> Self {
         if self.val > _other.val {
-            self
+            *self
         } else if self.val < _other.val {
             _other
         } else {
@@ -188,9 +191,9 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute min(self, other)
-    pub fn min(_other: Self) -> Self {
+    pub fn min(&self, _other: Self) -> Self {
         if self.val < _other.val {
-            self
+            *self
         } else if self.val > _other.val {
             _other
         } else {
@@ -203,7 +206,7 @@ impl<F: IntegrateFloat> Dual<F> {
     }
 
     /// Compute x^y where both x and y are dual numbers
-    pub fn pow(_other: Self) -> Self {
+    pub fn pow(&self, _other: Self) -> Self {
         let val = self.val.powf(_other.val);
         let der = if self.val > F::zero() {
             val * (_other.der * self.val.ln() + _other.val * self.der / self.val)
@@ -333,7 +336,10 @@ pub struct DualVector<F: IntegrateFloat> {
 impl<F: IntegrateFloat> DualVector<F> {
     /// Create a new dual vector
     pub fn new(_values: Array1<F>, jacobian: Array1<Array1<F>>) -> Self {
-        DualVector { _values, jacobian }
+        DualVector {
+            values: _values,
+            jacobian,
+        }
     }
 
     /// Create from a regular vector with specified active variable
@@ -345,7 +351,7 @@ impl<F: IntegrateFloat> DualVector<F> {
         jacobian[active_var][active_var] = F::one();
 
         DualVector {
-            _values: _values.to_owned(),
+            values: _values.to_owned(),
             jacobian,
         }
     }
@@ -354,7 +360,10 @@ impl<F: IntegrateFloat> DualVector<F> {
     pub fn constant(_values: Array1<F>) -> Self {
         let n = _values.len();
         let jacobian = Array1::from_elem(n, Array1::zeros(n));
-        DualVector { _values, jacobian }
+        DualVector {
+            values: _values,
+            jacobian,
+        }
     }
 
     /// Get the dimension

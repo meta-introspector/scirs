@@ -65,7 +65,8 @@ impl<F: IntegrateFloat> Default for StiffnessDetectionConfig<F> {
             error_ratio_threshold: F::from_f64(10.0).unwrap(),
             use_eigenvalue_estimation: false,
             eigenvalue_est_period: 25,
-            indicator_weights: IndicatorWeights::default(), _phantom: PhantomData,
+            indicator_weights: IndicatorWeights::default(),
+            _phantom: PhantomData,
         }
     }
 }
@@ -134,7 +135,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     /// Create a new stiffness detector with specific configuration
     pub fn with_config(_config: StiffnessDetectionConfig<F>) -> Self {
         StiffnessDetector {
-            _config,
+            config: _config,
             step_size_history: Vec::with_capacity(20),
             error_history: Vec::with_capacity(20),
             newton_iter_history: Vec::with_capacity(20),
@@ -203,7 +204,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Basic analysis looking at the most recent step
-    fn analyze_basic() {
+    fn analyze_basic(&mut self) {
         if self.step_size_history.is_empty() {
             return;
         }
@@ -237,7 +238,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Analyze error patterns for stiffness indicators
-    fn analyze_error_pattern() {
+    fn analyze_error_pattern(&mut self) {
         if self.error_history.len() < 3 {
             return;
         }
@@ -274,7 +275,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Analyze step size patterns for stiffness indicators
-    fn analyze_step_pattern() {
+    fn analyze_step_pattern(&mut self) {
         if self.step_size_history.len() < 3 {
             return;
         }
@@ -310,7 +311,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Update the combined stiffness score based on all indicators
-    fn update_stiffness_score() {
+    fn update_stiffness_score(&mut self) {
         let weights = &self.config.indicator_weights;
 
         // Calculate weighted stiffness score
@@ -334,7 +335,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Check if the problem is stiff based on collected indicators
-    pub fn is_stiff(_current_method_is_stiff: bool, steps_since_switch: usize) -> bool {
+    pub fn is_stiff(&self, _current_method_is_stiff: bool, steps_since_switch: usize) -> bool {
         // Don't _switch methods too frequently
         if steps_since_switch < self.config.min_steps_before_switch {
             return _current_method_is_stiff;
@@ -342,7 +343,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
 
         // For advanced methods, use the stiffness score
         if self.config.method == StiffnessDetectionMethod::Combined {
-            if current_method_is_stiff {
+            if _current_method_is_stiff {
                 // We're using BDF (_stiff), consider switching to Adams (non-_stiff)
                 // Higher threshold to _switch away from _stiff method
                 return self.stiffness_score > F::from_f64(-0.3).unwrap();
@@ -354,7 +355,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
         }
 
         // For basic method, use simple counters
-        if current_method_is_stiff {
+        if _current_method_is_stiff {
             // Currently using BDF, check if we should _switch to Adams
             self.non_stiffness_indicators >= self.config.non_stiffness_threshold
         } else {
@@ -364,7 +365,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Reset indicators after method switch
-    pub fn reset_after_switch() {
+    pub fn reset_after_switch(&mut self) {
         self.stiffness_indicators = 0;
         self.non_stiffness_indicators = 0;
         self.stiffness_score = F::zero();
@@ -372,12 +373,12 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Get current stiffness score (-1.0 to 1.0, where positive means stiff)
-    pub fn stiffness_score() -> F {
+    pub fn stiffness_score(&self) -> F {
         self.stiffness_score
     }
 
     /// Estimate stiffness ratio using eigenvalues of the Jacobian
-    pub fn estimate_stiffness_from_jacobian(_jacobian: &Array2<F>) -> F {
+    pub fn estimate_stiffness_from_jacobian(&mut self, _jacobian: &Array2<F>) -> F {
         // Estimate the largest and smallest eigenvalues to compute stiffness ratio
         // For efficiency, we use power iteration methods rather than full eigenvalue decomposition
 
@@ -413,7 +414,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Estimate the largest eigenvalue magnitude using power iteration
-    fn estimate_largest_eigenvalue_magnitude(_jacobian: &Array2<F>) -> F {
+    fn estimate_largest_eigenvalue_magnitude(&self, _jacobian: &Array2<F>) -> F {
         let n = _jacobian.nrows();
         let max_iterations = 20;
         let tolerance = F::from_f64(1e-6).unwrap();
@@ -461,7 +462,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Estimate the smallest eigenvalue magnitude using inverse power iteration
-    fn estimate_smallest_eigenvalue_magnitude(_jacobian: &Array2<F>) -> F {
+    fn estimate_smallest_eigenvalue_magnitude(&self, _jacobian: &Array2<F>) -> F {
         let n = _jacobian.nrows();
         let max_iterations = 20;
         let tolerance = F::from_f64(1e-6).unwrap();
@@ -593,7 +594,7 @@ impl<F: IntegrateFloat> MethodSwitchInfo<F> {
     }
 
     /// Get a summary of method switching
-    pub fn summary() -> String {
+    pub fn summary(&self) -> String {
         format!(
             "Method switching summary: {} non-stiff to stiff, {} stiff to non-stiff",
             self.nonstiff_to_stiff_switches, self.stiff_to_nonstiff_switches

@@ -1,8 +1,8 @@
 //! Simulation utilities for Monte Carlo methods
-//! 
+//!
 //! This module provides efficient random number generation, path simulation, and
 //! variance reduction techniques for Monte Carlo pricing.
-//! 
+//!
 //! # Features
 //! - Low-discrepancy sequences (Sobol, Halton)
 //! - Brownian bridge construction

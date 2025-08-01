@@ -322,7 +322,7 @@ fn greedy_coloring(_sparsity_pattern: &Array2<bool>) -> Vec<usize> {
         let mut used_colors = Vec::new();
         for &row in &non_zero_rows {
             for k in 0..j {
-                if sparsity_pattern[[row, k]] && colors[k] != usize::MAX {
+                if _sparsity_pattern[[row, k]] && colors[k] != usize::MAX {
                     used_colors.push(colors[k]);
                 }
             }
@@ -425,7 +425,7 @@ impl ParallelJacobianStrategy {
 
         #[cfg(not(feature = "parallel_jacobian"))]
         let (use_parallel, num_threads) = {
-            let _ = n_dim;
+            let _ = _n_dim;
             (false, 1)
         };
 
@@ -439,7 +439,7 @@ impl ParallelJacobianStrategy {
     }
 
     /// Set the sparsity pattern
-    pub fn set_sparsity_pattern(_pattern: Array2<bool>) {
+    pub fn set_sparsity_pattern(&mut self, _pattern: Array2<bool>) {
         self.sparsity_pattern = Some(_pattern);
         self.is_sparse = true;
     }
@@ -509,7 +509,9 @@ impl ParallelJacobianStrategy {
 
 #[cfg(test)]
 mod tests {
-use ndarray::array;
+    use super::greedy_coloring;
+    use crate::ode::utils::{parallel_finite_difference_jacobian, parallel_sparse_jacobian};
+    use ndarray::{array, Array1, Array2, ArrayView1};
 
     // Test function for Jacobian computation
     fn test_func(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {

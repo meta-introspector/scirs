@@ -71,9 +71,9 @@ pub struct TapeNode<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> TapeNode<F> {
     /// Create a new tape node
-    pub fn new(_value: F, operation: Operation<F>) -> Self {
+    pub fn new(value: F, operation: Operation<F>) -> Self {
         TapeNode {
-            _value,
+            value,
             operation,
             gradient: RefCell::new(F::zero()),
         }
@@ -98,7 +98,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Add a variable to the tape
-    pub fn variable(_idx: usize, value: F) -> usize {
+    pub fn variable(&mut self, _idx: usize, value: F) -> usize {
         let node_idx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(value, Operation::Variable(_idx))));
@@ -107,7 +107,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Add a constant to the tape
-    pub fn constant(_value: F) -> usize {
+    pub fn constant(&mut self, _value: F) -> usize {
         let node_idx = self.nodes.len();
         self.nodes
             .push(Rc::new(TapeNode::new(_value, Operation::Constant(_value))));
@@ -115,7 +115,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record addition
-    pub fn add(a: usize, b: usize) -> usize {
+    pub fn add(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value + self.nodes[b].value;
         let node_idx = self.nodes.len();
         self.nodes
@@ -124,7 +124,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record subtraction
-    pub fn sub(a: usize, b: usize) -> usize {
+    pub fn sub(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value - self.nodes[b].value;
         let node_idx = self.nodes.len();
         self.nodes
@@ -133,7 +133,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record multiplication
-    pub fn mul(a: usize, b: usize) -> usize {
+    pub fn mul(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value * self.nodes[b].value;
         let node_idx = self.nodes.len();
         self.nodes
@@ -142,7 +142,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record division
-    pub fn div(a: usize, b: usize) -> usize {
+    pub fn div(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value / self.nodes[b].value;
         let node_idx = self.nodes.len();
         self.nodes
@@ -151,7 +151,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record negation
-    pub fn neg(a: usize) -> usize {
+    pub fn neg(&mut self, a: usize) -> usize {
         let value = -self.nodes[a].value;
         let node_idx = self.nodes.len();
         self.nodes
@@ -160,7 +160,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record power
-    pub fn pow(a: usize, n: F) -> usize {
+    pub fn pow(&mut self, a: usize, n: F) -> usize {
         let value = self.nodes[a].value.powf(n);
         let node_idx = self.nodes.len();
         self.nodes
@@ -169,7 +169,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record sin
-    pub fn sin(a: usize) -> usize {
+    pub fn sin(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.sin();
         let node_idx = self.nodes.len();
         self.nodes
@@ -178,7 +178,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record cos
-    pub fn cos(a: usize) -> usize {
+    pub fn cos(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.cos();
         let node_idx = self.nodes.len();
         self.nodes
@@ -187,7 +187,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record exp
-    pub fn exp(a: usize) -> usize {
+    pub fn exp(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.exp();
         let node_idx = self.nodes.len();
         self.nodes
@@ -196,7 +196,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record ln
-    pub fn ln(a: usize) -> usize {
+    pub fn ln(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.ln();
         let node_idx = self.nodes.len();
         self.nodes
@@ -205,7 +205,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record sqrt
-    pub fn sqrt(a: usize) -> usize {
+    pub fn sqrt(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.sqrt();
         let node_idx = self.nodes.len();
         self.nodes
@@ -214,7 +214,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record general power where both base and exponent are variables
-    pub fn pow_general(a: usize, b: usize) -> usize {
+    pub fn pow_general(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value.powf(self.nodes[b].value);
         let node_idx = self.nodes.len();
         self.nodes
@@ -223,7 +223,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record tan
-    pub fn tan(a: usize) -> usize {
+    pub fn tan(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.tan();
         let node_idx = self.nodes.len();
         self.nodes
@@ -232,7 +232,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record tanh
-    pub fn tanh(a: usize) -> usize {
+    pub fn tanh(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.tanh();
         let node_idx = self.nodes.len();
         self.nodes
@@ -241,7 +241,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record sinh
-    pub fn sinh(a: usize) -> usize {
+    pub fn sinh(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.sinh();
         let node_idx = self.nodes.len();
         self.nodes
@@ -250,7 +250,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record cosh
-    pub fn cosh(a: usize) -> usize {
+    pub fn cosh(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.cosh();
         let node_idx = self.nodes.len();
         self.nodes
@@ -259,7 +259,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record atan2
-    pub fn atan2(y: usize, x: usize) -> usize {
+    pub fn atan2(&mut self, y: usize, x: usize) -> usize {
         let value = self.nodes[y].value.atan2(self.nodes[x].value);
         let node_idx = self.nodes.len();
         self.nodes
@@ -268,7 +268,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record abs
-    pub fn abs(a: usize) -> usize {
+    pub fn abs(&mut self, a: usize) -> usize {
         let value = self.nodes[a].value.abs();
         let node_idx = self.nodes.len();
         self.nodes
@@ -277,7 +277,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record max
-    pub fn max(a: usize, b: usize) -> usize {
+    pub fn max(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value.max(self.nodes[b].value);
         let node_idx = self.nodes.len();
         self.nodes
@@ -286,7 +286,7 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Record min
-    pub fn min(a: usize, b: usize) -> usize {
+    pub fn min(&mut self, a: usize, b: usize) -> usize {
         let value = self.nodes[a].value.min(self.nodes[b].value);
         let node_idx = self.nodes.len();
         self.nodes
@@ -295,12 +295,12 @@ impl<F: IntegrateFloat> Tape<F> {
     }
 
     /// Get the value at a node
-    pub fn value(_idx: usize) -> F {
+    pub fn value(&self, _idx: usize) -> F {
         self.nodes[_idx].value
     }
 
     /// Backward pass to compute gradients
-    pub fn backward(_output_idx: usize, n_vars: usize) -> Array1<F> {
+    pub fn backward(&mut self, output_idx: usize, n_vars: usize) -> Array1<F> {
         // Initialize gradients to zero
         for node in &self.nodes {
             *node.gradient.borrow_mut() = F::zero();
@@ -462,15 +462,17 @@ pub struct ReverseAD<F: IntegrateFloat> {
     /// Number of independent variables
     n_vars: usize,
     /// Checkpointing strategy
-    checkpoint_strategy: CheckpointStrategy, _phantom: std::marker::PhantomData<F>,
+    checkpoint_strategy: CheckpointStrategy,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> ReverseAD<F> {
     /// Create a new reverse AD engine
-    pub fn new(_n_vars: usize) -> Self {
+    pub fn new(n_vars: usize) -> Self {
         ReverseAD {
-            _n_vars,
-            checkpoint_strategy: CheckpointStrategy::None, _phantom: std::marker::PhantomData,
+            n_vars,
+            checkpoint_strategy: CheckpointStrategy::None,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -481,7 +483,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
     }
 
     /// Compute gradient using reverse mode AD
-    pub fn gradient<Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array1<F>>
+    pub fn gradient<Func>(&mut self, f: Func, x: ArrayView1<F>) -> IntegrateResult<Array1<F>>
     where
         Func: Fn(&mut Tape<F>, &[usize]) -> usize,
     {
@@ -510,7 +512,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
     }
 
     /// Compute Jacobian using reverse mode AD
-    pub fn jacobian<Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array2<F>>
+    pub fn jacobian<Func>(&mut self, f: Func, x: ArrayView1<F>) -> IntegrateResult<Array2<F>>
     where
         Func: Fn(&mut Tape<F>, &[usize]) -> Vec<usize>,
     {
@@ -547,7 +549,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
     }
 
     /// Compute Hessian (second derivatives) using reverse-over-forward AD
-    pub fn hessian<Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array2<F>>
+    pub fn hessian<Func>(&mut self, f: Func, x: ArrayView1<F>) -> IntegrateResult<Array2<F>>
     where
         Func: Fn(&mut Tape<F>, &[usize]) -> usize + Clone,
     {
@@ -591,7 +593,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
 
     /// Compute gradients for multiple inputs in batch
     pub fn batch_gradient<Func>(
-        &self,
+        &mut self,
         f: Func,
         x_batch: &[Array1<F>],
     ) -> IntegrateResult<Vec<Array1<F>>>
@@ -609,7 +611,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
 
     /// Compute Jacobian-vector product efficiently without forming full Jacobian
     pub fn jvp<Func>(
-        &self,
+        &mut self,
         f: Func,
         x: ArrayView1<F>,
         v: ArrayView1<F>,
@@ -661,7 +663,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
 
     /// Compute vector-Jacobian product (useful for backpropagation)
     pub fn vjp<Func>(
-        &self,
+        &mut self,
         f: Func,
         x: ArrayView1<F>,
         v: ArrayView1<F>,
@@ -716,7 +718,7 @@ where
     F: IntegrateFloat,
     Func: Fn(&mut Tape<F>, &[usize]) -> usize,
 {
-    let ad = ReverseAD::new(x.len());
+    let mut ad = ReverseAD::new(x.len());
     ad.gradient(f, x)
 }
 
@@ -727,7 +729,7 @@ where
     F: IntegrateFloat,
     Func: Fn(&mut Tape<F>, &[usize]) -> Vec<usize>,
 {
-    let ad = ReverseAD::new(x.len());
+    let mut ad = ReverseAD::new(x.len());
     ad.jacobian(f, x)
 }
 

@@ -377,7 +377,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
     /// let result = quad.integrate(|x| x * x, 0.0, 1.0);
     /// assert!((result - 1.0/3.0).abs() < 1e-10);
     /// ```
-    pub fn integrate<Func>(f: Func, a: F, b: F) -> F
+    pub fn integrate<Func>(&self, f: Func, a: F, b: F) -> F
     where
         Func: Fn(F) -> F,
     {

@@ -21,7 +21,7 @@ pub fn black_scholes_price(
     let d1 = ((spot / strike).ln() + (rate - dividend + 0.5 * volatility * volatility) * time)
         / (volatility * time.sqrt());
     let d2 = d1 - volatility * time.sqrt();
-    
+
     match option_type {
         OptionType::Call => {
             spot * (-(dividend * time)).exp() * normal_cdf(d1)

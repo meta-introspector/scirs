@@ -5,9 +5,9 @@
 
 use ndarray::Array1;
 use ndarray::ArrayView1;
-use scirs2__integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
-use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
-use scirs2__integrate::quad::{quad, QuadOptions};
+use scirs2_integrate::monte_carlo::{monte_carlo, MonteCarloOptions};
+use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2_integrate::quad::{quad, QuadOptions};
 use std::time::Instant;
 
 /// Simple timing utility
@@ -284,7 +284,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Parallel Monte Carlo Performance:");
         println!("---------------------------------");
 
-        use scirs2__integrate::monte_carlo_parallel::{
+        use scirs2_integrate::monte_carlo_parallel::{
             parallel_monte_carlo, ParallelMonteCarloOptions,
         };
 

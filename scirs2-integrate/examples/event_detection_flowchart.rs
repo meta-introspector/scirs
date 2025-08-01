@@ -5,8 +5,8 @@
 //! It simulates a simple system with multiple events and explains what happens at each step.
 
 use ndarray::{array, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::ode::{
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::ode::{
     solve_ivp_with_events, terminal_event, EventAction, EventDirection, EventSpec, ODEMethod,
     ODEOptions, ODEOptionsWithEvents,
 };
@@ -142,7 +142,8 @@ fn main() -> IntegrateResult<()> {
             ("zero_crossing", -1) => "↓ (falling)",
             ("peak", 1) => "↑ (valley)",
             ("peak", -1) => "↓ (peak)",
-            ("threshold"_) => "↓ (terminal)"_ => "?",
+            ("threshold", _) => "↓ (terminal)",
+            _ => "?",
         };
 
         println!("  t = {time:.4}: {id:15} | y = {value:.6} | direction: {dir_str}");

@@ -116,7 +116,7 @@ impl<
     /// Create a new DAE structure for a semi-explicit system
     pub fn new_semi_explicit(_n_differential: usize, n_algebraic: usize) -> Self {
         DAEStructure {
-            _n_differential,
+            n_differential: _n_differential,
             n_algebraic,
             n_diff_eqs: _n_differential,
             n_alg_eqs: n_algebraic,
@@ -273,7 +273,7 @@ impl<
     /// Create a new Pantelides reducer for index reduction
     pub fn new(_structure: DAEStructure<F>) -> Self {
         PantelidesReducer {
-            _structure,
+            structure: _structure,
             max_diff_steps: 5, // Default limit on differentiation
             tol: F::from_f64(1e-10).unwrap(),
         }
@@ -709,7 +709,7 @@ impl<
     /// Create a new dummy derivative reducer
     pub fn new(_structure: DAEStructure<F>) -> Self {
         DummyDerivativeReducer {
-            _structure,
+            structure: _structure,
             dummy_variables: Vec::new(),
             dummy_equations: Vec::new(),
         }
@@ -894,7 +894,7 @@ impl<
         let (q, r, pivots) = self.qr_decomposition_with_pivoting(extended_jacobian)?;
 
         // Determine the rank of the matrix
-        let rank = self.compute_matrix_rank(&r)?;
+        let rank = Self::compute_matrix_rank(&r)?;
 
         // The number of dummy variables needed
         let n_dummy = total_vars.saturating_sub(rank);
@@ -1007,7 +1007,7 @@ impl<
     }
 
     /// Update the DAE structure after adding dummy variables
-    fn update_structure_with_dummies() -> IntegrateResult<()> {
+    fn update_structure_with_dummies(&mut self) -> IntegrateResult<()> {
         let n_dummy = self.dummy_variables.len();
 
         // Increase the number of variables and equations
@@ -1027,7 +1027,8 @@ impl<
         &self,
         t: F,
         x: ArrayView1<F>,
-        y: ArrayView1<F>, _f: &FFunc,
+        y: ArrayView1<F>,
+        _f: &FFunc,
         g: &GFunc,
     ) -> IntegrateResult<DAEIndex>
     where
@@ -1105,7 +1106,7 @@ impl<
     /// Create a new projection method for constraint satisfaction
     pub fn new(_structure: DAEStructure<F>) -> Self {
         ProjectionMethod {
-            _structure,
+            structure: _structure,
             project_after_step: true,
             consistent_initialization: true,
             constraint_tol: F::from_f64(1e-8).unwrap(),

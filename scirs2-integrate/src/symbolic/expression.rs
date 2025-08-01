@@ -9,6 +9,13 @@ use std::collections::HashMap;
 use std::fmt;
 use std::ops::{Add as StdAdd, Div as StdDiv, Mul as StdMul, Neg as StdNeg, Sub as StdSub};
 
+// Import enum variants for local use in this module
+use Pattern::{DifferenceOfSquares, PythagoreanIdentity, SumOfSquares};
+use SymbolicExpression::{
+    Abs, Add, Atan, Constant, Cos, Cosh, Div, Exp, Ln, Mul, Neg, Pow, Sin, Sinh, Sqrt, Sub, Tan,
+    Tanh, Var,
+};
+
 /// Represents a symbolic variable
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Variable {
@@ -20,7 +27,7 @@ impl Variable {
     /// Create a new variable
     pub fn new(_name: impl Into<String>) -> Self {
         Variable {
-            _name: _name.into(),
+            name: _name.into(),
             index: None,
         }
     }
@@ -28,7 +35,7 @@ impl Variable {
     /// Create an indexed variable
     pub fn indexed(_name: impl Into<String>, index: usize) -> Self {
         Variable {
-            _name: _name.into(),
+            name: _name.into(),
             index: Some(index),
         }
     }
@@ -133,7 +140,7 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
     }
 
     /// Differentiate with respect to a variable
-    pub fn differentiate(_var: &Variable) -> SymbolicExpression<F> {
+    pub fn differentiate(&self, _var: &Variable) -> SymbolicExpression<F> {
         use SymbolicExpression::*;
 
         match self {
@@ -268,7 +275,6 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
 
     /// Evaluate the expression with given variable values
     pub fn evaluate(&self, _values: &HashMap<Variable, F>) -> IntegrateResult<F> {
-
         match self {
             Constant(c) => Ok(*c),
             Var(v) => _values.get(v).copied().ok_or_else(|| {
@@ -322,7 +328,7 @@ impl<F: IntegrateFloat> SymbolicExpression<F> {
     }
 
     /// Get all variables in the expression
-    pub fn variables() -> Vec<Variable> {
+    pub fn variables(&self) -> Vec<Variable> {
         let mut vars = Vec::new();
 
         match self {
@@ -364,7 +370,6 @@ pub enum Pattern<F: IntegrateFloat> {
 /// Pattern matching for common mathematical expressions
 #[allow(dead_code)]
 pub fn match_pattern<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> Option<Pattern<F>> {
-
     match _expr {
         // Match a^2 + b^2 (sum of squares)
         Add(a, b) => {
@@ -373,7 +378,7 @@ pub fn match_pattern<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> Option
                     if (*n_a - F::from(2.0).unwrap()).abs() < F::epsilon()
                         && (*n_b - F::from(2.0).unwrap()).abs() < F::epsilon()
                     {
-                        return Some(SumOfSquares(base_a.clone(), base_b.clone()));
+                        return Some(Pattern::SumOfSquares(base_a.clone(), base_b.clone()));
                     }
                 }
             }
@@ -390,7 +395,7 @@ pub fn match_pattern<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> Option
                         && (*n1 - F::from(2.0).unwrap()).abs() < F::epsilon()
                         && (*n2 - F::from(2.0).unwrap()).abs() < F::epsilon()
                     {
-                        return Some(PythagoreanIdentity(sin_arg.clone()));
+                        return Some(Pattern::PythagoreanIdentity(sin_arg.clone()));
                     }
                 }
             }
@@ -403,7 +408,7 @@ pub fn match_pattern<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> Option
                     if (*n_a - F::from(2.0).unwrap()).abs() < F::epsilon()
                         && (*n_b - F::from(2.0).unwrap()).abs() < F::epsilon()
                     {
-                        return Some(DifferenceOfSquares(base_a.clone(), base_b.clone()));
+                        return Some(Pattern::DifferenceOfSquares(base_a.clone(), base_b.clone()));
                     }
                 }
             }
@@ -419,7 +424,6 @@ fn match_expressions<F: IntegrateFloat>(
     expr1: &SymbolicExpression<F>,
     expr2: &SymbolicExpression<F>,
 ) -> bool {
-
     match (expr1, expr2) {
         (Constant(a), Constant(b)) => (*a - *b).abs() < F::epsilon(),
         (Var(a), Var(b)) => a == b,
@@ -430,14 +434,13 @@ fn match_expressions<F: IntegrateFloat>(
 /// Apply pattern-based simplifications
 #[allow(dead_code)]
 pub fn pattern_simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
-
     if let Some(pattern) = match_pattern(_expr) {
         match pattern {
-            DifferenceOfSquares(a, b) => {
+            Pattern::DifferenceOfSquares(a, b) => {
                 // a^2 - b^2 = (a + b)(a - b)
                 Mul(Box::new(Add(a.clone(), b.clone())), Box::new(Sub(a, b)))
             }
-            PythagoreanIdentity(_) => {
+            Pattern::PythagoreanIdentity(_) => {
                 // sin^2(x) + cos^2(x) = 1
                 Constant(F::one())
             }
@@ -469,7 +472,6 @@ pub fn pattern_simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> Sym
 /// Simplify a symbolic expression
 #[allow(dead_code)]
 pub fn simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
-
     match _expr {
         // Identity simplifications
         Add(a, b) => {
@@ -654,7 +656,6 @@ impl<F: IntegrateFloat> StdNeg for SymbolicExpression<F> {
 
 impl<F: IntegrateFloat> fmt::Display for SymbolicExpression<F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-
         match self {
             Constant(c) => write!(f, "{c}"),
             Var(v) => write!(f, "{v}"),

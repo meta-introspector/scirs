@@ -292,7 +292,7 @@ pub mod utils {
 
     /// Create optimization state from parameters and objective
     pub fn create_state<F>(
-        parameters: Array1<f64>..objective: &F,
+        parameters: Array1<f64>, objective: &F,
         step: usize,
         prev_state: Option<&OptimizationState>,) -> OptimizationState
     where

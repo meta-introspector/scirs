@@ -1,8 +1,8 @@
 //! Value at Risk (VaR) and risk metrics
-//! 
+//!
 //! This module implements various VaR calculation methods including historical simulation,
 //! parametric VaR, and Monte Carlo VaR, along with backtesting frameworks.
-//! 
+//!
 //! # Features
 //! - Historical VaR calculation
 //! - Parametric (variance-covariance) VaR

@@ -27,7 +27,7 @@ mod executors;
 mod stages;
 mod transforms;
 
-pub use advanced__optimization::*;
+pub use advanced_optimization::*;
 pub use builders::*;
 pub use executors::*;
 pub use stages::*;
@@ -48,7 +48,7 @@ impl<T> PipelineData<T> {
     /// Create new pipeline data
     pub fn new(_data: T) -> Self {
         Self {
-            _data,
+            data: _data,
             metadata: Metadata::new(),
             context: PipelineContext::new(),
         }
@@ -57,7 +57,7 @@ impl<T> PipelineData<T> {
     /// Create with metadata
     pub fn with_metadata(_data: T, metadata: Metadata) -> Self {
         Self {
-            _data,
+            data: _data,
             metadata,
             context: PipelineContext::new(),
         }
@@ -428,7 +428,7 @@ where
     O: 'static + Send + Sync,
 {
     Box::new(FunctionStage {
-        _name: _name.to_string(),
+        name: _name.to_string(),
         function: Box::new(move |input: Box<dyn Any + Send + Sync>| {
             let typed_input = input
                 .downcast::<I>()
@@ -467,7 +467,6 @@ impl PipelineStage for FunctionStage {
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 /// Pipeline serialization for saving/loading pipeline configurations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -534,7 +533,7 @@ where
     O: 'static + Send + Sync,
 {
     pub fn new(_first: Pipeline<I, M>, second: Pipeline<M, O>) -> Self {
-        Self { _first, second }
+        Self { first: _first, second }
     }
 
     pub fn execute(&self, input: I) -> Result<O> {
@@ -567,7 +566,7 @@ impl DataLineage {
         let now = Utc::now();
         Self {
             id: uuid::Uuid::new_v4().to_string(),
-            _source: _source.into(),
+            source: _source.into(),
             transformations: Vec::new(),
             created_at: now,
             last_modified: now,
@@ -726,7 +725,7 @@ pub enum AlertSeverity {
 impl PipelineMonitor {
     pub fn new(_thresholds: MonitoringThresholds) -> Self {
         Self {
-            _thresholds,
+            thresholds: _thresholds,
             alerts: Vec::new(),
         }
     }

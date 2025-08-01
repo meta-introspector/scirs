@@ -86,8 +86,8 @@ pub struct LSQRResult<T> {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__sparse::csr_array::CsrArray;
-/// use scirs2__sparse::linalg::lsqr::{lsqr, LSQROptions};
+/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::lsqr::{lsqr, LSQROptions};
 /// use ndarray::Array1;
 ///
 /// // Create an overdetermined system
@@ -377,7 +377,7 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (m_) = _matrix.shape();
+    let (m, _) = _matrix.shape();
 
     // Simplified standard error computation
     // In practice, this should use the diagonal of (A^T A)^(-1)
@@ -394,7 +394,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
     use approx::assert_relative_eq;
 
     #[test]

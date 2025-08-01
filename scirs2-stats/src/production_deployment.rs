@@ -291,9 +291,9 @@ pub enum HealthStatus {
 
 impl ProductionDeploymentValidator {
     /// Create a new production deployment validator
-    pub fn new(_config: ProductionConfig) -> Self {
+    pub fn new(config: ProductionConfig) -> Self {
         Self {
-            _config,
+            config,
             validation_results: Arc::new(RwLock::new(ValidationResults::default())),
             performance_monitor: Arc::new(Mutex::new(PerformanceMonitor::new())),
             health_checker: Arc::new(Mutex::new(HealthChecker::new())),
@@ -1769,7 +1769,7 @@ pub fn create_cloud_production_config(_cloud_provider: CloudProvider) -> Product
     let mut config = ProductionConfig::default();
 
     config.environment.environment_type = EnvironmentType::Cloud {
-        _provider: _cloud_provider,
+        provider: _cloud_provider,
         instance_type: "m5.large".to_string(),
         region: "us-east-1".to_string(),
     };
@@ -1792,7 +1792,7 @@ pub fn create_container_production_config(_container_runtime: ContainerRuntime) 
     let mut config = ProductionConfig::default();
 
     config.environment.environment_type = EnvironmentType::Container {
-        _runtime: _container_runtime,
+        runtime: _container_runtime,
         resources: ContainerResources {
             cpu_cores: 2.0,
             memory_mb: 4096,

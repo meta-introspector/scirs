@@ -10,8 +10,8 @@ use std::fmt::Debug;
 use std::ops::{Add, Mul};
 
 use crate::error::SparseResult;
-use crate::sym__coo::SymCooMatrix;
-use crate::sym__csr::SymCsrMatrix;
+use crate::sym_coo::SymCooMatrix;
+use crate::sym_csr::SymCsrMatrix;
 
 // Import parallel operations from scirs2-core
 use scirs2_core::parallel_ops::*;
@@ -36,8 +36,8 @@ use scirs2_core::parallel_ops::*;
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__sparse::sym_csr::SymCsrMatrix;
-/// use scirs2__sparse::sym_ops::sym_csr_matvec;
+/// use scirs2_sparse::sym_csr::SymCsrMatrix;
+/// use scirs2_sparse::sym_ops::sym_csr_matvec;
 ///
 /// // Create a symmetric matrix
 /// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
@@ -61,7 +61,7 @@ pub fn sym_csr_matvec<T>(_matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> Sparse
 where
     T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
 {
-    let (n_) = _matrix.shape();
+    let (n, _) = _matrix.shape();
     if x.len() != n {
         return Err(crate::error::SparseError::DimensionMismatch {
             expected: n,
@@ -88,7 +88,7 @@ fn sym_csr_matvec_parallel<T>(
 where
     T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
 {
-    let (n_) = matrix.shape();
+    let (n, _) = matrix.shape();
     let mut y = Array1::zeros(n);
 
     // Determine optimal chunk size based on matrix size
@@ -143,7 +143,7 @@ fn sym_csr_matvec_scalar<T>(_matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> Spa
 where
     T: Float + Debug + Copy + Add<Output = T>,
 {
-    let (n_) = _matrix.shape();
+    let (n, _) = _matrix.shape();
     let mut y = Array1::zeros(n);
 
     // Standard scalar implementation
@@ -184,8 +184,8 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__sparse::sym_coo::SymCooMatrix;
-/// use scirs2__sparse::sym_ops::sym_coo_matvec;
+/// use scirs2_sparse::sym_coo::SymCooMatrix;
+/// use scirs2_sparse::sym_ops::sym_coo_matvec;
 ///
 /// // Create a symmetric matrix
 /// let rows = vec![0, 1, 1, 2, 2];
@@ -209,7 +209,7 @@ pub fn sym_coo_matvec<T>(_matrix: &SymCooMatrix<T>, x: &ArrayView1<T>) -> Sparse
 where
     T: Float + Debug + Copy + Add<Output = T>,
 {
-    let (n_) = _matrix.shape();
+    let (n, _) = _matrix.shape();
     if x.len() != n {
         return Err(crate::error::SparseError::DimensionMismatch {
             expected: n,
@@ -265,7 +265,7 @@ pub fn sym_csr_rank1_update<T>(
 where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + std::ops::AddAssign,
 {
-    let (n_) = matrix.shape();
+    let (n, _) = matrix.shape();
     if x.len() != n {
         return Err(crate::error::SparseError::DimensionMismatch {
             expected: n,
@@ -331,8 +331,8 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__sparse::sym_csr::SymCsrMatrix;
-/// use scirs2__sparse::sym_ops::sym_csr_quadratic_form;
+/// use scirs2_sparse::sym_csr::SymCsrMatrix;
+/// use scirs2_sparse::sym_ops::sym_csr_quadratic_form;
 ///
 /// // Create a symmetric matrix
 /// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
@@ -381,8 +381,8 @@ where
 /// # Example
 ///
 /// ```
-/// use scirs2__sparse::sym_csr::SymCsrMatrix;
-/// use scirs2__sparse::sym_ops::sym_csr_trace;
+/// use scirs2_sparse::sym_csr::SymCsrMatrix;
+/// use scirs2_sparse::sym_ops::sym_csr_trace;
 ///
 /// // Create a symmetric matrix
 /// let data = vec![2.0, 1.0, 2.0, 3.0, 1.0];
@@ -401,7 +401,7 @@ pub fn sym_csr_trace<T>(_matrix: &SymCsrMatrix<T>) -> T
 where
     T: Float + Debug + Copy + Add<Output = T>,
 {
-    let (n_) = _matrix.shape();
+    let (n, _) = _matrix.shape();
     let mut trace = T::zero();
 
     // Sum the diagonal elements
@@ -421,8 +421,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sym__coo::SymCooMatrix;
-    use crate::sym__csr::SymCsrMatrix;
+    use crate::sym_coo::SymCooMatrix;
+    use crate::sym_csr::SymCsrMatrix;
     use crate::AsLinearOperator; // For the test_compare_with_standard_matvec test
     use approx::assert_relative_eq;
     use ndarray::Array1;

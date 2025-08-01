@@ -1,8 +1,8 @@
 //! Monte Carlo methods for option pricing
 
 use crate::error::IntegrateResult;
-use crate::specialized::finance::types::FinancialOption;
 use crate::specialized::finance::solvers::StochasticPDESolver;
+use crate::specialized::finance::types::FinancialOption;
 
 /// Monte Carlo pricing implementation
 pub fn price_monte_carlo(
@@ -14,6 +14,6 @@ pub fn price_monte_carlo(
     // TODO: Implement Monte Carlo pricing
     // This is a placeholder implementation
     Err(crate::error::IntegrateError::NotImplementedError(
-        "Monte Carlo pricing implementation in progress".to_string()
+        "Monte Carlo pricing implementation in progress".to_string(),
     ))
 }

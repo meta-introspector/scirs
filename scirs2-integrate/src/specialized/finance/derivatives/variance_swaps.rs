@@ -1,8 +1,8 @@
 //! Variance and volatility derivatives
-//! 
+//!
 //! This module implements pricing and hedging strategies for variance swaps, volatility swaps,
 //! and other volatility-based derivatives.
-//! 
+//!
 //! # Features
 //! - Variance swap pricing and replication
 //! - Volatility swap approximations

@@ -8,8 +8,8 @@
 //! where M is a matrix that depends on both time t and state y.
 
 use ndarray::{array, Array2, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::ode::{solve_ivp, MassMatrix, ODEMethod, ODEOptions};
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::ode::{solve_ivp, MassMatrix, ODEMethod, ODEOptions};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

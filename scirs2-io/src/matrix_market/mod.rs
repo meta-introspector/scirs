@@ -1009,7 +1009,7 @@ pub fn write_sparse_matrix_parallel<P: AsRef<Path>>(
             .into_inner()
             .unwrap();
 
-        all_formatted.sort_by_key(|&(idx_)| idx);
+        all_formatted.sort_by_key(|&(idx_, _)| idx_);
 
         for (_, lines) in all_formatted {
             for line in lines {

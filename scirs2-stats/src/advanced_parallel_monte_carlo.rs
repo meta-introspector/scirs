@@ -25,7 +25,8 @@ pub struct AdvancedParallelMonteCarlo<F> {
     /// Variance reduction techniques
     pub variance_reduction: VarianceReductionConfig,
     /// Performance metrics
-    pub metrics: Arc<Mutex<IntegrationMetrics>>, _phantom: PhantomData<F>,
+    pub metrics: Arc<Mutex<IntegrationMetrics>>,
+    _phantom: PhantomData<F>,
 }
 
 /// Monte Carlo integration configuration
@@ -61,7 +62,7 @@ impl Default for MonteCarloConfig {
             target_relative_error: 0.01,
             confidence_level: 0.95,
             parallel: true,
-            num_workers: num, _cpus: get(),
+            num_workers: num_cpus::get(),
             chunk_size: 1000,
             adaptive_sampling: true,
             seed: None,
@@ -104,7 +105,7 @@ impl Default for VarianceReductionConfig {
 #[derive(Debug, Clone)]
 pub struct AdaptiveState<F> {
     /// Current sample count
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Running mean estimate
     pub running_mean: F,
     /// Running variance estimate
@@ -129,7 +130,7 @@ pub struct IntegrationRegion<F> {
     /// Estimated error
     pub estimated_error: F,
     /// Number of samples in this region
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Priority for refinement
     pub priority: f64,
 }
@@ -165,7 +166,7 @@ pub struct MonteCarloResult<F> {
     /// Relative error
     pub relative_error: F,
     /// Number of samples used
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Integration metrics
     pub metrics: IntegrationMetrics,
     /// Convergence achieved
@@ -187,12 +188,12 @@ where
     fn bounds(&self) -> (Array1<F>, Array1<F>);
 
     /// Provide importance sampling density (optional)
-    fn importance_density(&self_x: &ArrayView1<F>) -> Option<F> {
+    fn importance_density(&self, _x: &ArrayView1<F>) -> Option<F> {
         None
     }
 
     /// Provide control variate function (optional)
-    fn control_variate(&self_x: &ArrayView1<F>) -> Option<F> {
+    fn control_variate(&self, _x: &ArrayView1<F>) -> Option<F> {
         None
     }
 }
@@ -212,9 +213,9 @@ where
         + std::fmt::Display,
 {
     /// Create new advanced parallel Monte Carlo integrator
-    pub fn new(_config: MonteCarloConfig, variance_reduction: VarianceReductionConfig) -> Self {
+    pub fn new(config: MonteCarloConfig, variance_reduction: VarianceReductionConfig) -> Self {
         let adaptive_state = Arc::new(Mutex::new(AdaptiveState {
-            n_samples: 0,
+            n_samples_: 0,
             running_mean: F::zero(),
             running_variance: F::zero(),
             regions: vec![],
@@ -225,10 +226,11 @@ where
         let metrics = Arc::new(Mutex::new(IntegrationMetrics::default()));
 
         Self {
-            _config,
+            config,
             adaptive_state,
             variance_reduction,
-            metrics_phantom: PhantomData,
+            metrics,
+            _phantom: PhantomData,
         }
     }
 
@@ -249,7 +251,7 @@ where
                 upper_bounds: upper_bounds.clone(),
                 estimated_value: F::zero(),
                 estimated_error: F::infinity(),
-                n_samples: 0,
+                n_samples_: 0,
                 priority: 1.0,
             }];
         }
@@ -321,13 +323,13 @@ where
             value: current_estimate,
             standard_error: current_error,
             confidence_interval,
-            relative_error: F::from(if current_estimate.abs() >, F::zero() {
+            relative_error: F::from(if current_estimate.abs() > F::zero() {
                 (current_error / current_estimate.abs()).to_f64().unwrap()
             } else {
                 current_error.to_f64().unwrap()
             })
             .unwrap(),
-            n_samples: total_samples,
+            n_samples_: total_samples,
             metrics: self.metrics.lock().unwrap().clone(),
             converged,
         })
@@ -337,14 +339,14 @@ where
     fn parallel_sampling<T>(
         &self,
         function: &T,
-        n_samples: usize,
+        n_samples_: usize,
         rng: &mut StdRng,
     ) -> StatsResult<Array1<F>>
     where
         T: IntegrableFunction<F>,
     {
         let chunk_size = self.config.chunk_size;
-        let num_chunks = (n_samples + chunk_size - 1) / chunk_size;
+        let num_chunks = (n_samples_ + chunk_size - 1) / chunk_size;
 
         // Generate seeds for parallel workers
         let seeds: Vec<u64> = (0..num_chunks).map(|_| rng.random()).collect();
@@ -355,7 +357,7 @@ where
             .enumerate()
             .map(|(chunk_idx, &seed)| {
                 let start = chunk_idx * chunk_size;
-                let end = ((chunk_idx + 1) * chunk_size).min(n_samples);
+                let end = ((chunk_idx + 1) * chunk_size).min(n_samples_);
                 let actual_chunk_size = end - start;
 
                 self.evaluate_chunk(function, actual_chunk_size, seed)
@@ -376,26 +378,26 @@ where
     fn sequential_sampling<T>(
         &self,
         function: &T,
-        n_samples: usize,
+        n_samples_: usize,
         rng: &mut StdRng,
     ) -> StatsResult<Array1<F>>
     where
         T: IntegrableFunction<F>,
     {
-        self.evaluate_chunk(function, n_samples, rng.random())
+        self.evaluate_chunk(function, n_samples_, rng.random())
     }
 
     /// Evaluate function on a chunk of samples
-    fn evaluate_chunk<T>(&self, function: &T, n_samples: usize, seed: u64) -> StatsResult<Array1<F>>
+    fn evaluate_chunk<T>(&self, function: &T, n_samples_: usize, seed: u64) -> StatsResult<Array1<F>>
     where
         T: IntegrableFunction<F>,
     {
         let mut rng = StdRng::seed_from_u64(seed);
         let (lower_bounds, upper_bounds) = function.bounds();
         let dimension = function.dimension();
-        let mut values = Vec::with_capacity(n_samples);
+        let mut values = Vec::with_capacity(n_samples_);
 
-        for _ in 0..n_samples {
+        for _ in 0..n_samples_ {
             // Generate sample point
             let mut point = Array1::zeros(dimension);
             for j in 0..dimension {
@@ -483,7 +485,7 @@ where
         let batch_mean = new_values.mean().unwrap();
         let batch_size = new_values.len();
 
-        if state.n_samples == 0 {
+        if state.n_samples_ == 0 {
             state.running_mean = batch_mean;
             state.running_variance = if batch_size > 1 {
                 new_values.var(F::one())
@@ -492,7 +494,7 @@ where
             };
         } else {
             // Online update of mean and variance
-            let old_n = state.n_samples as f64;
+            let old_n = state.n_samples_ as f64;
             let new_n = total_samples as f64;
             let old_mean = state.running_mean;
 
@@ -514,23 +516,23 @@ where
                 / F::from(new_n - 1.0).unwrap();
         }
 
-        state.n_samples = total_samples;
+        state.n_samples_ = total_samples;
         Ok(state.running_mean)
     }
 
     /// Estimate current error
-    fn estimate_error(&self, n_samples: usize) -> StatsResult<F> {
+    fn estimate_error(&self, n_samples_: usize) -> StatsResult<F> {
         let state = self.adaptive_state.lock().unwrap();
-        if n_samples <= 1 {
+        if n_samples_ <= 1 {
             return Ok(F::infinity());
         }
 
-        let standard_error = (state.running_variance / F::from(n_samples).unwrap()).sqrt();
+        let standard_error = (state.running_variance / F::from(n_samples_).unwrap()).sqrt();
         Ok(standard_error)
     }
 
     /// Adaptive refinement of integration regions
-    fn adaptive_refinement<T>(&self_function: &T) -> StatsResult<()>
+    fn adaptive_refinement<T>(&self, function: &T) -> StatsResult<()>
     where
         T: IntegrableFunction<F>,
     {
@@ -544,13 +546,13 @@ where
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| {
-                let ratio_a = a.estimated_error.to_f64().unwrap() / (a.n_samples + 1) as f64;
-                let ratio_b = b.estimated_error.to_f64().unwrap() / (b.n_samples + 1) as f64;
+                let ratio_a = a.estimated_error.to_f64().unwrap() / (a.n_samples_ + 1) as f64;
+                let ratio_b = b.estimated_error.to_f64().unwrap() / (b.n_samples_ + 1) as f64;
                 ratio_a
                     .partial_cmp(&ratio_b)
                     .unwrap_or(std::cmp::Ordering::Equal)
             })
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
         {
             // Simple subdivision along the first dimension
             let region = state.regions[worst_region_idx].clone();
@@ -568,7 +570,7 @@ where
                     upper_bounds: left_upper,
                     estimated_value: region.estimated_value / F::from(2.0).unwrap(),
                     estimated_error: region.estimated_error / F::from(2.0).unwrap(),
-                    n_samples: 0,
+                    n_samples_: 0,
                     priority: 1.0,
                 };
 
@@ -577,7 +579,7 @@ where
                     upper_bounds: region.upper_bounds.clone(),
                     estimated_value: region.estimated_value / F::from(2.0).unwrap(),
                     estimated_error: region.estimated_error / F::from(2.0).unwrap(),
-                    n_samples: 0,
+                    n_samples_: 0,
                     priority: 1.0,
                 };
 
@@ -595,7 +597,8 @@ where
         match confidence_level {
             x if x >= 0.99 => 2.576,
             x if x >= 0.95 => 1.96,
-            x if x >= 0.90 => 1.645_ => 1.96,
+            x if x >= 0.90 => 1.645,
+            _ => 1.96,
         }
     }
 
@@ -660,7 +663,7 @@ pub struct TestFunction {
 impl TestFunction {
     pub fn new(_dimension: usize) -> Self {
         Self {
-            _dimension,
+            dimension: _dimension,
             lower_bounds: Array1::zeros(_dimension),
             upper_bounds: Array1::ones(_dimension),
         }

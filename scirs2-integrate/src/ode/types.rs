@@ -132,7 +132,7 @@ impl<F: IntegrateFloat> MassMatrix<F> {
     /// Create a new constant mass matrix
     pub fn constant(_matrix: ndarray::Array2<F>) -> Self {
         MassMatrix {
-            _matrix_type: MassMatrixType::Constant,
+            matrix_type: MassMatrixType::Constant,
             constant_matrix: Some(_matrix),
             time_function: None,
             state_function: None,
@@ -175,7 +175,7 @@ impl<F: IntegrateFloat> MassMatrix<F> {
     }
 
     /// Set the matrix as banded with specified bandwidths
-    pub fn with_bandwidth(mut lower: usize, upper: usize) -> Self {
+    pub fn with_bandwidth(&mut self, lower: usize, upper: usize) -> &mut Self {
         self.is_banded = true;
         self.lower_bandwidth = Some(lower);
         self.upper_bandwidth = Some(upper);
@@ -183,7 +183,7 @@ impl<F: IntegrateFloat> MassMatrix<F> {
     }
 
     /// Get the mass matrix at a given time and state
-    pub fn evaluate(t: F, y: ndarray::ArrayView1<F>) -> Option<ndarray::Array2<F>> {
+    pub fn evaluate(&self, t: F, y: ndarray::ArrayView1<F>) -> Option<ndarray::Array2<F>> {
         match self.matrix_type {
             MassMatrixType::Identity => None, // Identity is handled specially
             MassMatrixType::Constant => self.constant_matrix.clone(),

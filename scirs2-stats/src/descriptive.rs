@@ -4,7 +4,7 @@
 //! following SciPy's stats module.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast, Signed};
 use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};

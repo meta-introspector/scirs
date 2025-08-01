@@ -1,7 +1,7 @@
 //! GPU-accelerated quantum solvers and computations
 //!
 //! This module provides GPU acceleration for quantum computations,
-//! including quantum state evolution, matrix operations, and 
+//! including quantum state evolution, matrix operations, and
 //! multi-body quantum systems.
 
 use crate::error::{IntegrateError, IntegrateResult as Result};
@@ -55,15 +55,18 @@ impl GPUQuantumSolver {
         }
 
         // Allocate GPU memory
-        self.memory_manager.allocate_state_vector(initial_state.len())?;
-        self.memory_manager.allocate_hamiltonian(hamiltonian.nrows(), hamiltonian.ncols())?;
+        self.memory_manager
+            .allocate_state_vector(initial_state.len())?;
+        self.memory_manager
+            .allocate_hamiltonian(hamiltonian.nrows(), hamiltonian.ncols())?;
 
         // Copy data to GPU (simulated)
         let mut current_state = initial_state.clone();
 
         // Time evolution using GPU-accelerated matrix exponential
         for _step in 0..n_steps {
-            current_state = self.apply_time_evolution_operator(&current_state, hamiltonian, time_step)?;
+            current_state =
+                self.apply_time_evolution_operator(&current_state, hamiltonian, time_step)?;
         }
 
         Ok(current_state)
@@ -78,7 +81,7 @@ impl GPUQuantumSolver {
     ) -> Result<Array1<Complex64>> {
         // Simplified GPU-accelerated time evolution
         // In practice, this would use CUDA kernels or similar
-        
+
         match self.parallel_strategy {
             QuantumParallelStrategy::StateVectorParallel => {
                 self.state_vector_parallel_evolution(state, hamiltonian, dt)
@@ -101,7 +104,7 @@ impl GPUQuantumSolver {
     ) -> Result<Array1<Complex64>> {
         // Apply exp(-i * H * dt) |ψ⟩ using parallel state vector operations
         let mut evolved_state = Array1::zeros(state.len());
-        
+
         // Simplified implementation - parallel matrix-vector multiplication
         for i in 0..state.len() {
             let mut sum = Complex64::new(0.0, 0.0);
@@ -163,7 +166,7 @@ impl GPUQuantumSolver {
 
         // GPU-accelerated gate application
         let mut result_state = state.clone();
-        
+
         // Apply gate to target qubits (simplified implementation)
         let gate_size = 1 << target_qubits.len();
         if gate_matrix.nrows() != gate_size || gate_matrix.ncols() != gate_size {
@@ -187,10 +190,10 @@ impl GPUQuantumSolver {
     ) -> Result<()> {
         let n_qubits = (state.len() as f64).log2() as usize;
         let gate_size = 1 << target_qubits.len();
-        
+
         // Create mapping for target qubit configurations
         let mut temp_state = state.clone();
-        
+
         // Iterate through all basis states
         for basis_state in 0..state.len() {
             // Extract target qubit configuration
@@ -200,49 +203,57 @@ impl GPUQuantumSolver {
                     target_config |= 1 << bit_pos;
                 }
             }
-            
+
             // Apply gate matrix to this configuration
             temp_state[basis_state] = Complex64::new(0.0, 0.0);
             for input_config in 0..gate_size {
-                let input_basis_state = self.construct_basis_state(basis_state, target_qubits, input_config, n_qubits);
+                let input_basis_state =
+                    self.construct_basis_state(basis_state, target_qubits, input_config, n_qubits);
                 if input_basis_state < state.len() {
-                    temp_state[basis_state] += gate_matrix[[target_config, input_config]] * state[input_basis_state];
+                    temp_state[basis_state] +=
+                        gate_matrix[[target_config, input_config]] * state[input_basis_state];
                 }
             }
         }
-        
+
         *state = temp_state;
         Ok(())
     }
 
     /// Construct basis state with specific target qubit configuration
-    fn construct_basis_state(&self, basis_state: usize, target_qubits: &[usize], target_config: usize, n_qubits: usize) -> usize {
+    fn construct_basis_state(
+        &self,
+        basis_state: usize,
+        target_qubits: &[usize],
+        target_config: usize,
+        n_qubits: usize,
+    ) -> usize {
         let mut new_state = basis_state;
-        
+
         // Set target qubits according to target_config
         for (bit_pos, &qubit) in target_qubits.iter().enumerate() {
             let qubit_bit = (target_config >> bit_pos) & 1;
             let mask = 1 << (n_qubits - 1 - qubit);
-            
+
             if qubit_bit == 1 {
                 new_state |= mask;
             } else {
                 new_state &= !mask;
             }
         }
-        
+
         new_state
     }
 
     /// Measure quantum state probabilities using GPU
     pub fn measure_probabilities(&self, state: &Array1<Complex64>) -> Result<Array1<f64>> {
         let mut probabilities = Array1::zeros(state.len());
-        
+
         // GPU-parallel probability calculation
         for (i, &amplitude) in state.iter().enumerate() {
             probabilities[i] = (amplitude.conj() * amplitude).re;
         }
-        
+
         Ok(probabilities)
     }
 
@@ -291,9 +302,19 @@ impl GPUMultiBodyQuantumSolver {
     ) -> Result<Array1<Complex64>> {
         // Use tensor network decomposition for large systems
         if initial_state.len() > 1024 {
-            self.tensor_network_evolution(initial_state, interaction_hamiltonian, time_step, n_steps)
+            self.tensor_network_evolution(
+                initial_state,
+                interaction_hamiltonian,
+                time_step,
+                n_steps,
+            )
         } else {
-            self.base_solver.evolve_quantum_state(initial_state, interaction_hamiltonian, time_step, n_steps)
+            self.base_solver.evolve_quantum_state(
+                initial_state,
+                interaction_hamiltonian,
+                time_step,
+                n_steps,
+            )
         }
     }
 
@@ -307,18 +328,22 @@ impl GPUMultiBodyQuantumSolver {
     ) -> Result<Array1<Complex64>> {
         // Decompose state into tensor network
         self.tensor_network.decompose_state(initial_state)?;
-        
+
         // Evolve tensor network
         for _step in 0..n_steps {
             self.tensor_network.apply_time_evolution(hamiltonian, dt)?;
         }
-        
+
         // Reconstruct final state
         self.tensor_network.reconstruct_state()
     }
 
     /// Calculate entanglement entropy using GPU
-    pub fn calculate_entanglement_entropy(&self, state: &Array1<Complex64>, subsystem_size: usize) -> Result<f64> {
+    pub fn calculate_entanglement_entropy(
+        &self,
+        state: &Array1<Complex64>,
+        subsystem_size: usize,
+    ) -> Result<f64> {
         if subsystem_size >= self.n_particles {
             return Err(IntegrateError::InvalidInput(
                 "Subsystem size must be smaller than total system".to_string(),
@@ -327,10 +352,10 @@ impl GPUMultiBodyQuantumSolver {
 
         // GPU-accelerated reduced density matrix calculation
         let rho_reduced = self.compute_reduced_density_matrix(state, subsystem_size)?;
-        
+
         // Calculate eigenvalues and entropy
         let eigenvalues = self.compute_eigenvalues_gpu(&rho_reduced)?;
-        
+
         let mut entropy = 0.0;
         for &lambda in &eigenvalues {
             if lambda > 1e-12 {
@@ -342,7 +367,11 @@ impl GPUMultiBodyQuantumSolver {
     }
 
     /// Compute reduced density matrix using GPU
-    fn compute_reduced_density_matrix(&self, state: &Array1<Complex64>, subsystem_size: usize) -> Result<Array2<Complex64>> {
+    fn compute_reduced_density_matrix(
+        &self,
+        state: &Array1<Complex64>,
+        subsystem_size: usize,
+    ) -> Result<Array2<Complex64>> {
         let subsystem_dim = 1 << subsystem_size;
         let mut rho_reduced = Array2::zeros((subsystem_dim, subsystem_dim));
 
@@ -350,19 +379,19 @@ impl GPUMultiBodyQuantumSolver {
         for i in 0..subsystem_dim {
             for j in 0..subsystem_dim {
                 let mut sum = Complex64::new(0.0, 0.0);
-                
+
                 let env_size = self.n_particles - subsystem_size;
                 let env_dim = 1 << env_size;
-                
+
                 for env_config in 0..env_dim {
                     let full_i = (i << env_size) | env_config;
                     let full_j = (j << env_size) | env_config;
-                    
+
                     if full_i < state.len() && full_j < state.len() {
                         sum += state[full_i].conj() * state[full_j];
                     }
                 }
-                
+
                 rho_reduced[[i, j]] = sum;
             }
         }
@@ -374,12 +403,12 @@ impl GPUMultiBodyQuantumSolver {
     fn compute_eigenvalues_gpu(&self, matrix: &Array2<Complex64>) -> Result<Vec<f64>> {
         let n = matrix.nrows();
         let mut eigenvalues = Vec::new();
-        
+
         // Simplified eigenvalue computation (diagonal elements)
         for i in 0..n {
             eigenvalues.push(matrix[[i, i]].re);
         }
-        
+
         Ok(eigenvalues)
     }
 }
@@ -426,7 +455,8 @@ impl GPUMemoryManager {
         }
 
         self.allocated_memory += required_memory;
-        self.allocations.insert("state_vector".to_string(), required_memory);
+        self.allocations
+            .insert("state_vector".to_string(), required_memory);
         Ok(())
     }
 
@@ -440,7 +470,8 @@ impl GPUMemoryManager {
         }
 
         self.allocated_memory += required_memory;
-        self.allocations.insert("hamiltonian".to_string(), required_memory);
+        self.allocations
+            .insert("hamiltonian".to_string(), required_memory);
         Ok(())
     }
 
@@ -449,7 +480,10 @@ impl GPUMemoryManager {
         let mut stats = HashMap::new();
         stats.insert("total_memory".to_string(), self.total_memory);
         stats.insert("allocated_memory".to_string(), self.allocated_memory);
-        stats.insert("free_memory".to_string(), self.total_memory - self.allocated_memory);
+        stats.insert(
+            "free_memory".to_string(),
+            self.total_memory - self.allocated_memory,
+        );
         stats
     }
 }
@@ -482,7 +516,7 @@ impl TensorNetwork {
     pub fn decompose_state(&mut self, state: &Array1<Complex64>) -> Result<()> {
         // Simplified tensor network decomposition
         // In practice, this would use SVD or other decomposition methods
-        
+
         let n_qubits = (state.len() as f64).log2() as usize;
         if n_qubits != self.n_particles {
             return Err(IntegrateError::InvalidInput(
@@ -499,7 +533,11 @@ impl TensorNetwork {
     }
 
     /// Apply time evolution to tensor network
-    pub fn apply_time_evolution(&mut self, _hamiltonian: &Array2<Complex64>, _dt: f64) -> Result<()> {
+    pub fn apply_time_evolution(
+        &mut self,
+        _hamiltonian: &Array2<Complex64>,
+        _dt: f64,
+    ) -> Result<()> {
         // Simplified time evolution for tensor network
         // In practice, this would use TEBD or similar algorithms
         Ok(())
@@ -509,10 +547,10 @@ impl TensorNetwork {
     pub fn reconstruct_state(&self) -> Result<Array1<Complex64>> {
         let state_size = 1 << self.n_particles;
         let mut state = Array1::zeros(state_size);
-        
+
         // Simplified reconstruction
         state[0] = Complex64::new(1.0, 0.0);
-        
+
         Ok(state)
     }
 }
@@ -526,7 +564,7 @@ mod tests {
     fn test_gpu_quantum_solver_creation() {
         let solver = GPUQuantumSolver::new(0, 4);
         assert!(solver.is_ok());
-        
+
         let gpu_solver = solver.unwrap();
         assert_eq!(gpu_solver.device_id, 0);
         assert_eq!(gpu_solver.max_qubits, 4);
@@ -535,7 +573,7 @@ mod tests {
     #[test]
     fn test_quantum_state_evolution() {
         let mut solver = GPUQuantumSolver::new(0, 2).unwrap();
-        
+
         // Simple 2-qubit state
         let initial_state = Array1::from_vec(vec![
             Complex64::new(1.0, 0.0),
@@ -543,13 +581,13 @@ mod tests {
             Complex64::new(0.0, 0.0),
             Complex64::new(0.0, 0.0),
         ]);
-        
+
         // Identity Hamiltonian for simple test
         let hamiltonian = Array2::eye(4);
-        
+
         let evolved_state = solver.evolve_quantum_state(&initial_state, &hamiltonian, 0.1, 10);
         assert!(evolved_state.is_ok());
-        
+
         let final_state = evolved_state.unwrap();
         assert_eq!(final_state.len(), 4);
     }
@@ -557,10 +595,10 @@ mod tests {
     #[test]
     fn test_gpu_memory_manager() {
         let mut memory_manager = GPUMemoryManager::new(1_000_000).unwrap();
-        
+
         let result = memory_manager.allocate_state_vector(1000);
         assert!(result.is_ok());
-        
+
         let stats = memory_manager.get_memory_stats();
         assert!(stats["allocated_memory"] > 0);
         assert!(stats["free_memory"] < stats["total_memory"]);
@@ -570,7 +608,7 @@ mod tests {
     fn test_multi_body_solver() {
         let solver = GPUMultiBodyQuantumSolver::new(0, 3);
         assert!(solver.is_ok());
-        
+
         let multi_body_solver = solver.unwrap();
         assert_eq!(multi_body_solver.n_particles, 3);
         assert_eq!(multi_body_solver.base_solver.max_qubits, 6);

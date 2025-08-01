@@ -4,6 +4,7 @@
 //! suggestions, detailed diagnostics, and context-aware error reporting.
 
 use crate::error::StatsError;
+use num_cpus;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -376,7 +377,7 @@ impl ErrorRecoverySystem {
         Self {
             error_history: Vec::new(),
             recovery_success_rates: HashMap::new(),
-            _config,
+            config: _config,
         }
     }
 
@@ -447,7 +448,7 @@ impl ErrorRecoverySystem {
     }
 
     /// Infer data characteristics from error
-    fn infer_data_characteristics(&self_error: &StatsError) -> DataCharacteristics {
+    fn infer_data_characteristics(&self, error: &StatsError) -> DataCharacteristics {
         // This would analyze the _error to infer data properties
         DataCharacteristics {
             size_info: None,
@@ -462,7 +463,7 @@ impl ErrorRecoverySystem {
     fn gather_system_info(&self) -> SystemInfo {
         SystemInfo {
             available_memory_mb: self.get_available_memory(),
-            cpu_cores: Some(num, _cpus::get()),
+            cpu_cores: Some(num_cpus::get()),
             simd_capabilities: self.detect_simd_capabilities(),
             parallel_available: true,
         }
@@ -499,7 +500,8 @@ impl ErrorRecoverySystem {
 
     /// Infer computation state
     fn infer_computation_state(
-        &self_error: &StatsError,
+        &self,
+        error: &StatsError,
         function_name: &str,
     ) -> ComputationState {
         ComputationState {
@@ -555,7 +557,9 @@ impl ErrorRecoverySystem {
 
     /// Generate suggestions for invalid argument errors
     fn generate_invalid_argument_suggestions(
-        &self_msg: &str, _context: &ErrorContext,
+        &self,
+        msg: &str,
+        _context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         vec![RecoverySuggestion {
             suggestion_type: SuggestionType::InputValidation,
@@ -575,7 +579,9 @@ impl ErrorRecoverySystem {
 
     /// Generate suggestions for dimension mismatch errors
     fn generate_dimension_mismatch_suggestions(
-        &self_msg: &str, _context: &ErrorContext,
+        &self,
+        msg: &str,
+        _context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         vec![RecoverySuggestion {
             suggestion_type: SuggestionType::DataPreprocessing,
@@ -638,7 +644,9 @@ impl ErrorRecoverySystem {
 
     /// Generate suggestions for convergence errors
     fn generate_convergence_error_suggestions(
-        &self_msg: &str, _context: &ErrorContext,
+        &self,
+        msg: &str,
+        _context: &ErrorContext,
     ) -> Vec<RecoverySuggestion> {
         vec![RecoverySuggestion {
             suggestion_type: SuggestionType::ParameterAdjustment,
@@ -687,7 +695,8 @@ impl ErrorRecoverySystem {
 
     /// Generate example code snippets
     fn generate_example_snippets(
-        &self_error: &StatsError,
+        &self,
+        error: &StatsError,
         suggestions: &[RecoverySuggestion],
     ) -> Vec<CodeSnippet> {
         let mut snippets = Vec::new();
@@ -777,7 +786,7 @@ impl ErrorRecoverySystem {
         let mut report = String::new();
 
         report.push_str(&format!("# Error Report\n\n"));
-        report.push_str(&format!("**Error:** {}\n\n", enhanced_error._error));
+        report.push_str(&format!("**Error:** {}\n\n", enhanced_error.error));
         report.push_str(&format!("**Severity:** {:?}\n\n", enhanced_error.severity));
         report.push_str(&format!(
             "**Function:** {}\n",
@@ -881,7 +890,7 @@ pub fn enhance_error_with_recovery(
                     },
                     system_info: SystemInfo {
                         available_memory_mb: None,
-                        cpu_cores: Some(num, _cpus::get()),
+                        cpu_cores: Some(num_cpus::get()),
                         simd_capabilities: vec![],
                         parallel_available: true,
                     },

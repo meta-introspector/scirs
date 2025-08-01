@@ -38,7 +38,7 @@ impl ErrorMessages {
     }
 
     /// Standard empty array messages
-    pub fn empty_array(_array_name: &str) -> StatsError {
+    pub fn empty_array(array_name: &str) -> StatsError {
         StatsError::invalid_argument(format!(
             "Array '{}' cannot be empty. {}",
             array_name, "Provide an array with at least one element."
@@ -93,7 +93,7 @@ impl ErrorMessages {
     }
 
     /// Standard matrix not positive definite messages
-    pub fn not_positive_definite(_matrix_name: &str) -> StatsError {
+    pub fn not_positive_definite(matrix_name: &str) -> StatsError {
         StatsError::computation(format!(
             "Matrix '{}' is not positive definite. {}",
             matrix_name,
@@ -102,7 +102,7 @@ impl ErrorMessages {
     }
 
     /// Standard singular matrix messages
-    pub fn singular_matrix(_matrix_name: &str) -> StatsError {
+    pub fn singular_matrix(matrix_name: &str) -> StatsError {
         StatsError::computation(format!(
             "Matrix '{}' is singular (non-invertible). {}",
             matrix_name, "Check for linear dependencies in your data or add regularization."
@@ -175,7 +175,7 @@ impl ErrorValidator {
     /// Validate probability value
     pub fn validate_probability(_value: f64, name: &str) -> StatsResult<()> {
         if _value < 0.0 || _value > 1.0 {
-            return Err(ErrorMessages::invalid_probability(name_value));
+            return Err(ErrorMessages::invalid_probability(name, _value));
         }
         if _value.is_nan() {
             return Err(ErrorMessages::nan_detected(name));
@@ -186,7 +186,7 @@ impl ErrorValidator {
     /// Validate positive value
     pub fn validate_positive(_value: f64, name: &str) -> StatsResult<()> {
         if _value <= 0.0 {
-            return Err(ErrorMessages::non_positive_value(name_value));
+            return Err(ErrorMessages::non_positive_value(name, _value));
         }
         if _value.is_nan() {
             return Err(ErrorMessages::nan_detected(name));
@@ -613,8 +613,8 @@ impl BatchErrorHandler {
     pub fn get_error_summary(&self) -> HashMap<String, usize> {
         let mut summary = HashMap::new();
 
-        for (_, error_) in &self.errors {
-            let error_type = match error {
+        for (_, error_, _) in &self.errors {
+            let error_type = match error_ {
                 StatsError::ComputationError(_) => "Computation",
                 StatsError::DomainError(_) => "Domain",
                 StatsError::DimensionMismatch(_) => "Dimension",
@@ -727,7 +727,7 @@ impl ErrorDiagnostics {
 
         DataDiagnostics {
             shape: vec![_data.len()],
-            _data_type: "f64".to_string(),
+            data_type: "f64".to_string(),
             summary: StatsSummary {
                 min,
                 max,
@@ -775,8 +775,8 @@ impl InterModuleErrorChecker {
         // Check for similar error patterns across modules
         let mut error_patterns: HashMap<String, Vec<String>> = HashMap::new();
 
-        for (module_errors) in module_errors {
-            for error in _errors {
+        for (module, errors) in module_errors {
+            for error in errors {
                 let pattern = Self::extract_error_pattern(error);
                 error_patterns
                     .entry(pattern)

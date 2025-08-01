@@ -163,7 +163,7 @@ impl RotationSpline {
     /// // Set the interpolation type to cubic (natural cubic spline)
     /// spline.set_interpolation_type("cubic").unwrap();
     /// ```
-    pub fn set_interpolation_type(_interp_type: &str) -> SpatialResult<()> {
+    pub fn set_interpolation_type(&mut self, _interp_type: &str) -> SpatialResult<()> {
         match _interp_type.to_lowercase().as_str() {
             "slerp" => {
                 self.interpolation_type = "slerp".to_string();
@@ -177,13 +177,13 @@ impl RotationSpline {
                 Ok(())
             }
             _ => Err(SpatialError::ValueError(format!(
-                "Invalid interpolation _type: {interp_type}. Must be 'slerp' or 'cubic'"
+                "Invalid interpolation _type: {_interp_type}. Must be 'slerp' or 'cubic'"
             ))),
         }
     }
 
     /// Compute velocities for natural cubic spline interpolation
-    fn compute_velocities() {
+    fn compute_velocities(&mut self) {
         if self.velocities.is_some() {
             return; // Already computed
         }
@@ -242,7 +242,7 @@ impl RotationSpline {
 
     /// Compute the second derivatives for natural cubic spline interpolation
     #[allow(dead_code)]
-    fn compute_natural_spline_second_derivatives(_values: &[f64]) -> Vec<f64> {
+    fn compute_natural_spline_second_derivatives(&self, _values: &[f64]) -> Vec<f64> {
         let n = _values.len();
         if n <= 2 {
             return vec![0.0; n];
@@ -347,7 +347,7 @@ impl RotationSpline {
     /// // Interpolate at t=0.5 (halfway between the first two rotations)
     /// let rot_half = spline.interpolate(0.5);
     /// ```
-    pub fn interpolate(t: f64) -> Rotation {
+    pub fn interpolate(&self, t: f64) -> Rotation {
         let n = self.times.len();
 
         // Handle boundary cases
@@ -376,7 +376,7 @@ impl RotationSpline {
     }
 
     /// Interpolate the rotation spline at a given time using Slerp
-    fn interpolate_slerp(t: f64, idx: usize) -> Rotation {
+    fn interpolate_slerp(&self, t: f64, idx: usize) -> Rotation {
         let t0 = self.times[idx];
         let t1 = self.times[idx + 1];
         let normalized_t = (t - t0) / (t1 - t0);
@@ -389,7 +389,7 @@ impl RotationSpline {
     }
 
     /// Interpolate the rotation spline at a given time using cubic spline
-    fn interpolate_cubic(t: f64, idx: usize) -> Rotation {
+    fn interpolate_cubic(&self, t: f64, idx: usize) -> Rotation {
         // Ensure velocities are computed
         if self.velocities.is_none() {
             let mut mutable_self = self.clone();
@@ -517,7 +517,7 @@ impl RotationSpline {
     /// assert_eq!(sample_times.len(), 5);
     /// assert_eq!(sample_rotations.len(), 5);
     /// ```
-    pub fn sample(n: usize) -> (Vec<f64>, Vec<Rotation>) {
+    pub fn sample(&self, n: usize) -> (Vec<f64>, Vec<Rotation>) {
         if n <= 1 {
             return (vec![self.times[0]], vec![self.rotations[0].clone()]);
         }
@@ -623,7 +623,7 @@ impl RotationSpline {
     /// let velocity = spline.angular_velocity(0.5);
     /// // Should be approximately [0, 0, PI]
     /// ```
-    pub fn angular_velocity(t: f64) -> SpatialResult<Array1<f64>> {
+    pub fn angular_velocity(&self, t: f64) -> SpatialResult<Array1<f64>> {
         let n = self.times.len();
 
         // Handle boundary cases
@@ -649,7 +649,7 @@ impl RotationSpline {
     }
 
     /// Calculate angular velocity using Slerp interpolation
-    fn angular_velocity_slerp(t: f64, idx: usize) -> SpatialResult<Array1<f64>> {
+    fn angular_velocity_slerp(&self, t: f64, idx: usize) -> SpatialResult<Array1<f64>> {
         let t0 = self.times[idx];
         let t1 = self.times[idx + 1];
         let dt = t1 - t0;
@@ -690,7 +690,7 @@ impl RotationSpline {
     }
 
     /// Calculate angular velocity using cubic spline interpolation
-    fn angular_velocity_cubic(t: f64, idx: usize) -> Array1<f64> {
+    fn angular_velocity_cubic(&self, t: f64, idx: usize) -> Array1<f64> {
         // Ensure velocities are computed
         if self.velocities.is_none() {
             let mut mutable_self = self.clone();
@@ -763,7 +763,7 @@ impl RotationSpline {
     /// // Calculate angular acceleration at t=0.5
     /// let acceleration = spline.angular_acceleration(0.5);
     /// ```
-    pub fn angular_acceleration(t: f64) -> Array1<f64> {
+    pub fn angular_acceleration(&self, t: f64) -> Array1<f64> {
         // Cubic interpolation is needed for meaningful acceleration
         if self.interpolation_type != "cubic" {
             return Array1::zeros(3); // Slerp has constant velocity, so acceleration is zero
@@ -790,7 +790,7 @@ impl RotationSpline {
     }
 
     /// Calculate angular acceleration using cubic spline interpolation
-    fn angular_acceleration_cubic(t: f64, idx: usize) -> Array1<f64> {
+    fn angular_acceleration_cubic(&self, t: f64, idx: usize) -> Array1<f64> {
         // Ensure velocities are computed
         if self.velocities.is_none() {
             let mut mutable_self = self.clone();

@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution, Geometric as RandGeometric};
+use rand_distr::{Distribution, Geometric as RandGeometric};
 use statrs::statistics::Statistics;
 
 /// Geometric distribution structure
@@ -41,7 +41,7 @@ impl<F: Float + NumCast + std::fmt::Display> Geometric<F> {
     /// ```
     pub fn new(p: F) -> StatsResult<Self> {
         // Validate parameters
-        if p <= F::zero() || p >, F::one() {
+        if p <= F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Success probability must be between 0 and 1, exclusive of 0".to_string(),
             ));

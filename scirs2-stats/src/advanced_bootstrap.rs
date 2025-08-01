@@ -274,8 +274,9 @@ where
         };
 
         Self {
-            _config,
-            rng_phantom: PhantomData,
+            config: _config,
+            rng,
+            _phantom: PhantomData,
         }
     }
 
@@ -288,7 +289,7 @@ where
     where
         T: Into<F> + Copy + Send + Sync,
     {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         if data.is_empty() {
             return Err(StatsError::InvalidArgument(
@@ -387,7 +388,7 @@ where
                 .collect();
 
             let sample_values = samples?;
-            for (i..value) in sample_values.into_iter().enumerate() {
+            for (i, value) in sample_values.into().iter().enumerate() {
                 bootstrap_samples[i] = value;
             }
         } else {
@@ -482,16 +483,16 @@ where
 
         for i in 0..self.config.n_bootstrap {
             let resample = match block_type {
-                BlockType::Moving => self.moving_block_bootstrap(data, block_length)?,
-                BlockType::Circular => self.circular_block_bootstrap(data, block_length)?,
+                BlockType::Moving => self.moving_blockbootstrap(data, block_length)?,
+                BlockType::Circular => self.circular_blockbootstrap(data, block_length)?,
                 BlockType::NonOverlapping => {
-                    self.non_overlapping_block_bootstrap(data, block_length)?
+                    self.non_overlapping_blockbootstrap(data, block_length)?
                 }
                 BlockType::Stationary { expected_length } => {
-                    self.stationary_bootstrap(data, *expected_length)?
+                    self.stationarybootstrap(data, *expected_length)?
                 }
                 BlockType::Tapered { taper_function } => {
-                    self.tapered_block_bootstrap(data, block_length, taper_function)?
+                    self.tapered_blockbootstrap(data, block_length, taper_function)?
                 }
             };
 
@@ -502,7 +503,7 @@ where
     }
 
     /// Moving block bootstrap
-    fn moving_block_bootstrap(
+    fn moving_blockbootstrap(
         &mut self,
         data: &ArrayView1<F>,
         block_length: usize,
@@ -518,7 +519,7 @@ where
             }
 
             let start_idx = self.rng.gen_range(0..=(n - block_length));
-            let copy_length = std::cmp::min(block_length..n - pos);
+            let copy_length = std::cmp::min(block_length, n - pos);
 
             for i in 0..copy_length {
                 resample[pos + i] = data[start_idx + i];
@@ -530,7 +531,7 @@ where
     }
 
     /// Circular block bootstrap
-    fn circular_block_bootstrap(
+    fn circular_blockbootstrap(
         &mut self,
         data: &ArrayView1<F>,
         block_length: usize,
@@ -546,7 +547,7 @@ where
             }
 
             let start_idx = self.rng.gen_range(0..n);
-            let copy_length = std::cmp::min(block_length..n - pos);
+            let copy_length = std::cmp::min(block_length, n - pos);
 
             for i in 0..copy_length {
                 let idx = (start_idx + i) % n; // Circular indexing
@@ -559,7 +560,7 @@ where
     }
 
     /// Non-overlapping block bootstrap
-    fn non_overlapping_block_bootstrap(
+    fn non_overlapping_blockbootstrap(
         &mut self,
         data: &ArrayView1<F>,
         block_length: usize,
@@ -589,7 +590,7 @@ where
         while pos < n {
             let block_idx = self.rng.gen_range(0..blocks.len());
             let block = &blocks[block_idx];
-            let copy_length = std::cmp::min(block.len()..n - pos);
+            let copy_length = std::cmp::min(block.len(), n - pos);
 
             for i in 0..copy_length {
                 resample[pos + i] = block[i];
@@ -601,7 +602,7 @@ where
     }
 
     /// Stationary bootstrap with random block lengths
-    fn stationary_bootstrap(
+    fn stationarybootstrap(
         &mut self,
         data: &ArrayView1<F>,
         expected_length: f64,
@@ -636,10 +637,12 @@ where
     }
 
     /// Tapered block bootstrap
-    fn tapered_block_bootstrap(
-        &mut self..data: &ArrayView1<F>,
+    fn tapered_blockbootstrap(
+        &mut self,
+        data: &ArrayView1<F>,
         block_length: usize,
-        taper_function: &TaperFunction,) -> StatsResult<Array1<F>> {
+        taper_function: &TaperFunction,
+    ) -> StatsResult<Array1<F>> {
         let n = data.len();
         let mut resample = Array1::zeros(n);
         let n_blocks = (n + block_length - 1) / block_length;
@@ -651,7 +654,7 @@ where
             }
 
             let start_idx = self.rng.gen_range(0..=(n - block_length));
-            let copy_length = std::cmp::min(block_length..n - pos);
+            let copy_length = std::cmp::min(block_length, n - pos);
 
             // Apply tapering weights
             for i in 0..copy_length {
@@ -818,7 +821,7 @@ where
                 ParametricBootstrapParams::Beta { alpha, beta } => {
                     self.generate_beta_sample(n, *alpha, *beta)?
                 }
-                ParametricBootstrapParams::Custom { name_params: _ } => {
+                ParametricBootstrapParams::Custom { name, .. } => {
                     return Err(StatsError::InvalidArgument(format!(
                         "Custom distribution '{}' not implemented",
                         name
@@ -964,7 +967,8 @@ where
     fn compute_confidence_intervals(
         &self,
         bootstrap_samples: &Array1<F>,
-        original_statistic: F_standard, _error: F,
+        original_statistic: F,
+        _standard_error: F,
     ) -> StatsResult<BootstrapConfidenceIntervals<F>> {
         let alpha = 1.0 - self.config.confidence_level;
         let lower_percentile = alpha / 2.0;
@@ -1245,7 +1249,7 @@ where
     config.n_bootstrap = n_bootstrap.unwrap_or(1000);
 
     let mut processor = AdvancedBootstrapProcessor::new(config);
-    processor._bootstrap(data, statistic_fn)
+    processor.bootstrap(data, statistic_fn)
 }
 
 /// Convenience function for circular block bootstrap
@@ -1277,7 +1281,7 @@ where
     config.n_bootstrap = n_bootstrap.unwrap_or(1000);
 
     let mut processor = AdvancedBootstrapProcessor::new(config);
-    processor._bootstrap(data, statistic_fn)
+    processor.bootstrap(data, statistic_fn)
 }
 
 /// Convenience function for stationary bootstrap
@@ -1310,7 +1314,7 @@ where
     config.n_bootstrap = n_bootstrap.unwrap_or(1000);
 
     let mut processor = AdvancedBootstrapProcessor::new(config);
-    processor._bootstrap(data, statistic_fn)
+    processor.bootstrap(data, statistic_fn)
 }
 
 #[cfg(test)]
@@ -1319,7 +1323,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_basic_bootstrap() {
+    fn test_basicbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
@@ -1338,12 +1342,12 @@ mod tests {
     }
 
     #[test]
-    fn test_stratified_bootstrap() {
+    fn test_stratifiedbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let strata = vec![0, 0, 1, 1, 2, 2]; // Three strata
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
-        let result = stratified_bootstrap(
+        let result = stratifiedbootstrap(
             &data.view(),
             &strata,
             mean_fn,
@@ -1360,11 +1364,11 @@ mod tests {
     }
 
     #[test]
-    fn test_moving_block_bootstrap() {
+    fn test_moving_blockbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
-        let result = moving_block_bootstrap(
+        let result = moving_blockbootstrap(
             &data.view(),
             mean_fn,
             Some(3),  // block length
@@ -1377,11 +1381,11 @@ mod tests {
     }
 
     #[test]
-    fn test_circular_block_bootstrap() {
+    fn test_circular_blockbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
-        let result = circular_block_bootstrap(&data.view(), mean_fn, Some(2), Some(30)).unwrap();
+        let result = circular_blockbootstrap(&data.view(), mean_fn, Some(2), Some(30)).unwrap();
 
         assert_eq!(result.n_successful, 30);
     }

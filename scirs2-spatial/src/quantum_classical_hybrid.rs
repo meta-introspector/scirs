@@ -205,14 +205,14 @@ impl HybridSpatialOptimizer {
     }
 
     /// Configure quantum-classical balance
-    pub fn with_quantum_classical_coupling(mut quantum_weight: f64) -> Self {
+    pub fn with_quantum_classical_coupling(mut self, quantum_weight: f64) -> Self {
         self.quantum_weight = quantum_weight.clamp(0.0, 1.0);
         self.classical_weight = 1.0 - self.quantum_weight;
         self
     }
 
     /// Enable variational quantum component
-    pub fn with_variational_quantum_component(mut enabled: bool) -> Self {
+    pub fn with_variational_quantum_component(mut self, enabled: bool) -> Self {
         if enabled {
             self.vqe = Some(VariationalQuantumEigensolver::new(8)); // Default 8 qubits
         } else {
@@ -222,7 +222,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Enable adaptive quantum-classical switching
-    pub fn with_adaptive_switching(mut enabled: bool) -> Self {
+    pub fn with_adaptive_switching(mut self, enabled: bool) -> Self {
         self.adaptive_switching = enabled;
         self
     }
@@ -304,7 +304,7 @@ impl HybridSpatialOptimizer {
         self.performance_metrics.total_runtime_ms = start_time.elapsed().as_millis() as f64;
         self.performance_metrics.speedup_factor = self.calculate_speedup_factor();
         self.performance_metrics.solution_quality =
-            self.evaluate_solution_quality(&best_solution, &objective_function);
+            HybridSpatialOptimizer::evaluate_solution_quality(&best_solution, &objective_function);
 
         Ok(HybridOptimizationResult {
             optimal_parameters: best_solution,
@@ -317,7 +317,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Initialize optimization parameters
-    fn initialize_parameters(_dim: usize) {
+    fn initialize_parameters(&mut self, _dim: usize) {
         self.classical_state.parameters =
             Array1::from_shape_fn(_dim, |_| rand::random::<f64>() * 2.0 - 1.0);
         self.classical_state.gradients = Array1::zeros(_dim);
@@ -331,7 +331,8 @@ impl HybridSpatialOptimizer {
     /// Select optimal paradigm (quantum vs classical) for current iteration
     async fn select_optimal_paradigm<F>(
         &self,
-        iteration: usize_objective_function: &F,
+        iteration: usize,
+        objective_function: &F,
     ) -> SpatialResult<bool>
     where
         F: Fn(&Array1<f64>) -> f64 + Send + Sync,
@@ -389,7 +390,7 @@ impl HybridSpatialOptimizer {
                 gradient: None, // Quantum gradients computed differently
                 convergence_info: QuantumConvergenceInfo {
                     ground_energy: vqe_result.ground_energy,
-                    quantum_variance: self.calculate_quantum_variance(&vqe_result.ground_state),
+                    quantum_variance: HybridSpatialOptimizer::calculate_quantum_variance(&vqe_result.ground_state),
                     entanglement_entropy: vqe_result.spatial_features.entanglement_entropy,
                 },
             })
@@ -400,9 +401,9 @@ impl HybridSpatialOptimizer {
                 self.classical_state.parameters[i.min(self.classical_state.parameters.len() - 1)]
                     + j as f64
             });
-            let (centroids_) = quantum_clusterer.fit(&dummy_data.view())?;
+            let (centroids_, _) = quantum_clusterer.fit(&dummy_data.view())?;
 
-            let quantum_parameters = centroids.row(0).to_owned();
+            let quantum_parameters = centroids_.row(0).to_owned();
             let value = objective_function(&quantum_parameters);
 
             Ok(OptimizationStepResult {
@@ -533,16 +534,16 @@ impl HybridSpatialOptimizer {
     }
 
     /// Calculate quantum variance for convergence assessment
-    fn calculate_quantum_variance(_quantum_state: &QuantumState) -> f64 {
+    fn calculate_quantum_variance(quantum_state: &QuantumState) -> f64 {
         let mut variance = 0.0;
-        let mean_amplitude = _quantum_state
+        let mean_amplitude = quantum_state
             .amplitudes
             .iter()
             .map(|a| a.norm())
             .sum::<f64>()
-            / _quantum_state.amplitudes.len() as f64;
+            / quantum_state.amplitudes.len() as f64;
 
-        for amplitude in &_quantum_state.amplitudes {
+        for amplitude in &quantum_state.amplitudes {
             let deviation = amplitude.norm() - mean_amplitude;
             variance += deviation * deviation;
         }
@@ -608,7 +609,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Synchronize quantum and classical states
-    async fn synchronize_quantum_classical_states() -> SpatialResult<()> {
+    async fn synchronize_quantum_classical_states(&mut self) -> SpatialResult<()> {
         if self.coupling_parameters.cross_validation {
             // Cross-validate quantum and classical solutions
             // Implement consensus mechanism for parameter values
@@ -630,7 +631,7 @@ impl HybridSpatialOptimizer {
     }
 
     /// Check convergence criteria
-    fn check_convergence(_solution: &Array1<f64>, iteration: usize) -> bool {
+    fn check_convergence(&self, _solution: &Array1<f64>, iteration: usize) -> bool {
         // Simple convergence check - could be made more sophisticated
         iteration > 10
             && (self
@@ -747,7 +748,7 @@ impl HybridClusterer {
     /// Create new hybrid clusterer
     pub fn new(_num_clusters: usize) -> Self {
         Self {
-            _num_clusters,
+            num_clusters: _num_clusters,
             quantum_exploration_ratio: 0.7,
             classical_refinement: true,
             adaptive_switching: true,
@@ -765,25 +766,25 @@ impl HybridClusterer {
     }
 
     /// Configure quantum exploration ratio
-    pub fn with_quantum_exploration_ratio(mut ratio: f64) -> Self {
+    pub fn with_quantum_exploration_ratio(mut self, ratio: f64) -> Self {
         self.quantum_exploration_ratio = ratio.clamp(0.0, 1.0);
         self
     }
 
     /// Enable classical refinement
-    pub fn with_classical_refinement(mut enabled: bool) -> Self {
+    pub fn with_classical_refinement(mut self, enabled: bool) -> Self {
         self.classical_refinement = enabled;
         self
     }
 
     /// Enable adaptive switching
-    pub fn with_adaptive_switching(mut enabled: bool) -> Self {
+    pub fn with_adaptive_switching(mut self, enabled: bool) -> Self {
         self.adaptive_switching = enabled;
         self
     }
 
     /// Enable quantum error correction
-    pub fn with_quantum_error_correction(mut enabled: bool) -> Self {
+    pub fn with_quantum_error_correction(mut self, enabled: bool) -> Self {
         self.quantum_error_correction = enabled;
         self
     }
@@ -919,7 +920,8 @@ impl HybridClusterer {
     /// Calculate silhouette score for clustering quality
     fn calculate_silhouette_score(
         &self,
-        points: &ArrayView2<'_, f64>, _centroids: &Array2<f64>,
+        points: &ArrayView2<'_, f64>,
+        _centroids: &Array2<f64>,
         assignments: &Array1<usize>,
     ) -> f64 {
         let n_points = points.nrows();

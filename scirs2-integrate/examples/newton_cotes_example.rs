@@ -1,4 +1,4 @@
-use scirs2__integrate::newton_cotes::{newton_cotes, newton_cotes_integrate, NewtonCotesType};
+use scirs2_integrate::newton_cotes::{newton_cotes, newton_cotes_integrate, NewtonCotesType};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -134,7 +134,7 @@ fn main() {
             let panel_b = panel_a + panel_width;
             let (panel_result_) =
                 newton_cotes_integrate(f, panel_a, panel_b, 2, NewtonCotesType::Closed).unwrap();
-            trap_sum += panel_result;
+            trap_sum += panel_result_;
         }
 
         // Composite Simpson's rule (requires even number of panels)
@@ -146,7 +146,7 @@ fn main() {
                 let (panel_result_) =
                     newton_cotes_integrate(f, panel_a, panel_b, 3, NewtonCotesType::Closed)
                         .unwrap();
-                simp_sum += panel_result;
+                simp_sum += panel_result_;
             }
         }
 
@@ -188,7 +188,7 @@ fn main() {
 
                 let (poly_result_) =
                     newton_cotes_integrate(poly, 0.0, 1.0, n, NewtonCotesType::Closed).unwrap();
-                let poly_error = (poly_result - exact_integral).abs();
+                let poly_error = (poly_result_ - exact_integral).abs();
 
                 println!("  Integration of x^{exact_degree} (should be exact):");
                 println!(

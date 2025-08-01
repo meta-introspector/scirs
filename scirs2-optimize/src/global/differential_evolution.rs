@@ -156,7 +156,8 @@ impl Strategy {
             "rand2bin" => Some(Strategy::Rand2Bin),
             "rand2exp" => Some(Strategy::Rand2Exp),
             "currenttobest1bin" => Some(Strategy::CurrentToBest1Bin),
-            "currenttobest1exp" => Some(Strategy::CurrentToBest1Exp, _ => None,
+            "currenttobest1exp" => Some(Strategy::CurrentToBest1Exp),
+            _ => None,
         }
     }
 }
@@ -261,7 +262,8 @@ where
         match self.options.init.as_str() {
             "latinhypercube" => self.init_latinhypercube(),
             "halton" => self.init_halton(),
-            "sobol" => self.init_sobol(, _ => self.init_random(),
+            "sobol" => self.init_sobol(),
+            _ => self.init_random(),
         }
 
         // If x0 is provided, replace one member with it (bounds-checked)

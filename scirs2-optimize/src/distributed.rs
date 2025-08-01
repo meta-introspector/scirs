@@ -517,7 +517,8 @@ pub mod algorithms {
         }
 
         fn evaluate_local_population<F>(
-            &self..function: &F,
+            &self,
+            function: &F,
             population: &Array2<f64>,) -> ScirsResult<Array1<f64>>
         where
             F: Fn(&ArrayView1<f64>) -> f64,
@@ -779,7 +780,8 @@ pub mod algorithms {
         }
 
         fn evaluate_swarm<F>(
-            &self..function: &F,
+            &self,
+            function: &F,
             positions: &Array2<f64>,) -> ScirsResult<Array1<f64>>
         where
             F: Fn(&ArrayView1<f64>) -> f64,
@@ -971,13 +973,13 @@ impl MPIInterface for MockMPI {
     fn barrier(&self) -> ScirsResult<()> {
         Ok(())
     }
-    fn send<T>(&self_data: &[T], _dest: i32_tag: i32) -> ScirsResult<()>
+    fn send<T>(&self, _data: &[T], _dest: i32, _tag: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
     {
         Ok(())
     }
-    fn recv<T>(&self_data: &mut [T], _source: i32_tag: i32) -> ScirsResult<()>
+    fn recv<T>(&self, _data: &mut [T], _source: i32, _tag: i32) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
     {

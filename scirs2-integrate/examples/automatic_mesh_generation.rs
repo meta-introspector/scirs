@@ -4,8 +4,8 @@
 //! various geometric domains. The mesh generator can create structured and
 //! unstructured meshes with quality control and refinement options.
 
-use scirs2__integrate::pde::finite_element::ElementType;
-use scirs2__integrate::pde::mesh_generation::{
+use scirs2_integrate::pde::finite_element::ElementType;
+use scirs2_integrate::pde::mesh_generation::{
     AutoMeshGenerator, BoundarySpecification, Domain, MeshGenerationParams,
 };
 
@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 1: Rectangle mesh with default parameters
     println!("1. Rectangle Mesh Generation");
-    let generator = AutoMeshGenerator::default();
+    let mut generator = AutoMeshGenerator::default();
     let rectangle_domain = Domain::Rectangle {
         x_min: 0.0,
         y_min: 0.0,
@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         boundary_refinement_iterations: 3,
     };
 
-    let fine_generator = AutoMeshGenerator::new(custom_params);
+    let mut fine_generator = AutoMeshGenerator::new(custom_params);
     let circle_domain = Domain::Circle {
         center_x: 0.0,
         center_y: 0.0,
@@ -140,7 +140,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 6: Custom polygon mesh
     println!("6. Custom Polygon Mesh Generation");
-    use scirs2__integrate::pde::finite_element::Point;
+    use scirs2_integrate::pde::finite_element::Point;
 
     // Create a pentagon
     let mut pentagon_vertices = Vec::new();
@@ -195,7 +195,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("Fine", AutoMeshGenerator::new(fine_params)),
     ];
 
-    for (name, gen) in &generators {
+    for (name, mut gen) in generators {
         let mesh = gen.generate_mesh(&test_domain, &boundary_spec)?;
         let quality = gen.assess_mesh_quality(&mesh);
 
@@ -220,7 +220,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         boundary_refinement_iterations: 5,
     };
 
-    let hq_generator = AutoMeshGenerator::new(high_quality_params);
+    let mut hq_generator = AutoMeshGenerator::new(high_quality_params);
     let hq_mesh = hq_generator.generate_mesh(&circle_domain, &boundary_spec)?;
     let hq_quality = hq_generator.assess_mesh_quality(&hq_mesh);
 
@@ -258,7 +258,7 @@ mod tests {
 
     #[test]
     fn test_rectangle_mesh_basic() {
-        let generator = AutoMeshGenerator::default();
+        let mut generator = AutoMeshGenerator::default();
         let domain = Domain::Rectangle {
             x_min: 0.0,
             y_min: 0.0,
@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn test_circle_mesh_basic() {
-        let generator = AutoMeshGenerator::default();
+        let mut generator = AutoMeshGenerator::default();
         let domain = Domain::Circle {
             center_x: 0.0,
             center_y: 0.0,
@@ -303,7 +303,7 @@ mod tests {
 
     #[test]
     fn test_mesh_quality_metrics() {
-        let generator = AutoMeshGenerator::default();
+        let mut generator = AutoMeshGenerator::default();
         let domain = Domain::Rectangle {
             x_min: 0.0,
             y_min: 0.0,
@@ -342,7 +342,7 @@ mod tests {
         let boundary_spec = BoundarySpecification::default();
 
         let coarse_generator = AutoMeshGenerator::new(coarse_params);
-        let fine_generator = AutoMeshGenerator::new(fine_params);
+        let mut fine_generator = AutoMeshGenerator::new(fine_params);
 
         let coarse_mesh = coarse_generator
             .generate_mesh(&domain, &boundary_spec)
@@ -364,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_annulus_mesh() {
-        let generator = AutoMeshGenerator::default();
+        let mut generator = AutoMeshGenerator::default();
         let domain = Domain::Annulus {
             center_x: 0.0,
             center_y: 0.0,

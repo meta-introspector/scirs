@@ -206,8 +206,8 @@ where
     {
         let start_time = Instant::now();
         
-        check_array_finite(a, "a")?;
-        check_array_finite(b, "b")?;
+        checkarray_finite(a, "a")?;
+        checkarray_finite(b, "b")?;
 
         let (m, k) = a.dim();
         let (k2, n) = b.dim();
@@ -270,7 +270,7 @@ where
     {
         let start_time = Instant::now();
         
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
         
         if n_bootstrap == 0 {
             return Err(StatsError::InvalidArgument(
@@ -283,16 +283,16 @@ where
 
         let results = match sampling_strategy {
             BootstrapSamplingStrategy::Standard => {
-                self.parallel_standard_bootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
+                self.parallel_standardbootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
             }
             BootstrapSamplingStrategy::Stratified => {
-                self.parallel_stratified_bootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
+                self.parallel_stratifiedbootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
             }
             BootstrapSamplingStrategy::Block => {
-                self.parallel_block_bootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
+                self.parallel_blockbootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
             }
             BootstrapSamplingStrategy::Bayesian => {
-                self.parallel_bayesian_bootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
+                self.parallel_bayesianbootstrap(data, statistic_fn, n_bootstrap, chunk_size)?
             }
         };
 
@@ -318,12 +318,12 @@ where
         &mut self,
         integrand: impl Fn(F) -> F + Send + Sync + Copy,
         bounds: (F, F),
-        n_samples: usize,
+        n_samples_: usize,
         adaptive_refinement: bool,
     ) -> StatsResult<MonteCarloResult<F>> {
         let start_time = Instant::now();
         
-        if n_samples == 0 {
+        if n_samples_ == 0 {
             return Err(StatsError::InvalidArgument(
                 "Number of _samples must be positive".to_string(),
             ));
@@ -339,9 +339,9 @@ where
         let num_threads = self.config.num_threads.unwrap_or_else(|| num_cpus::get());
         
         let result = if adaptive_refinement {
-            self.adaptive_monte_carlo_integration(integrand, bounds, n_samples, num_threads)?
+            self.adaptive_monte_carlo_integration(integrand, bounds, n_samples_, num_threads)?
         } else {
-            self.static_monte_carlo_integration(integrand, bounds, n_samples, num_threads)?
+            self.static_monte_carlo_integration(integrand, bounds, n_samples_, num_threads)?
         };
 
         if self.config.performance_monitoring {
@@ -352,7 +352,7 @@ where
                 sequential_time_ms: total_time * 0.10,
                 thread_efficiency: 0.88,
                 load_balance_efficiency: 0.85,
-                memory_overhead_bytes: n_samples * std::mem::size_of::<F>(),
+                memory_overhead_bytes: n_samples_ * std::mem::size_of::<F>(),
                 cache_miss_rate: 0.12,
             });
         }
@@ -373,8 +373,8 @@ where
     {
         let start_time = Instant::now();
         
-        check_array_finite(data, "data")?;
-        check_array_finite(labels, "labels")?;
+        checkarray_finite(data, "data")?;
+        checkarray_finite(labels, "labels")?;
 
         if data.nrows() != labels.len() {
             return Err(StatsError::DimensionMismatch(
@@ -625,7 +625,7 @@ where
 
     // Bootstrap implementation methods
     
-    fn parallel_standard_bootstrap(
+    fn parallel_standardbootstrap(
         &self,
         data: &ArrayView1<F>,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
@@ -666,17 +666,17 @@ where
         Ok(Array1::from_vec(final_results))
     }
 
-    fn parallel_stratified_bootstrap(
+    fn parallel_stratifiedbootstrap(
         &self..data: &ArrayView1<F>,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
         n_bootstrap: usize,
         chunk_size: usize,
     ) -> StatsResult<Array1<F>> {
         // Simplified stratified _bootstrap - would stratify by data value ranges
-        self.parallel_standard_bootstrap(data, statistic_fn, n_bootstrap, chunk_size)
+        self.parallel_standardbootstrap(data, statistic_fn, n_bootstrap, chunk_size)
     }
 
-    fn parallel_block_bootstrap(
+    fn parallel_blockbootstrap(
         &self,
         data: &ArrayView1<F>,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
@@ -723,7 +723,7 @@ where
         Ok(Array1::from_vec(final_results))
     }
 
-    fn parallel_bayesian_bootstrap(
+    fn parallel_bayesianbootstrap(
         &self..data: &ArrayView1<F>,
         statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
         n_bootstrap: usize,
@@ -739,7 +739,7 @@ where
             let mut chunk_results = Vec::with_capacity(end_idx - start_idx);
             
             use rand::{rngs::StdRng, SeedableRng};
-            use rand__distr::{Gamma, Distribution};
+            use rand_distr::{Gamma, Distribution};
             let mut rng = StdRng::seed_from_u64((chunk_id as u64).wrapping_mul(98765));
             
             for _ in start_idx..end_idx {
@@ -789,13 +789,13 @@ where
         &self,
         integrand: impl Fn(F) -> F + Send + Sync + Copy,
         bounds: (F, F),
-        n_samples: usize,
+        n_samples_: usize,
         num_cpus::get: usize,
     ) -> StatsResult<MonteCarloResult<F>> {
         let (a, b) = bounds;
         let range = b - a;
-        let samples_per_thread = n_samples / num_cpus::get;
-        let remainder = n_samples % num_cpus::get;
+        let samples_per_thread = n_samples_ / num_cpus::get;
+        let remainder = n_samples_ % num_cpus::get;
         
         let results = Arc::new(Mutex::new(Vec::new()));
         
@@ -838,7 +838,7 @@ where
         Ok(MonteCarloResult {
             integral: integral_estimate,
             standard_error,
-            n_samples: total_samples,
+            n_samples_: total_samples,
             convergence_rate: F::one() / F::from(total_samples as f64).unwrap().sqrt(),
         })
     }
@@ -847,25 +847,25 @@ where
         &self,
         integrand: impl Fn(F) -> F + Send + Sync + Copy,
         bounds: (F, F),
-        n_samples: usize,
+        n_samples_: usize,
         num_cpus::get: usize,
     ) -> StatsResult<MonteCarloResult<F>> {
         // Adaptive refinement based on variance - simplified implementation
-        let initial_samples = n_samples / 4;
+        let initial_samples = n_samples_ / 4;
         let initial_result = self.static_monte_carlo_integration(
             integrand, bounds, initial_samples, num_cpus::get
         )?;
         
         // Use remaining _samples for refinement in high-variance regions
-        let remaining_samples = n_samples - initial_samples;
+        let remaining_samples = n_samples_ - initial_samples;
         let refinement_result = self.static_monte_carlo_integration(
             integrand, bounds, remaining_samples, num_cpus::get
         )?;
         
         // Combine results
-        let total_samples = initial_result.n_samples + refinement_result.n_samples;
-        let combined_integral = (initial_result.integral * F::from(initial_result.n_samples).unwrap() +
-                               refinement_result.integral * F::from(refinement_result.n_samples).unwrap()) /
+        let total_samples = initial_result.n_samples_ + refinement_result.n_samples_;
+        let combined_integral = (initial_result.integral * F::from(initial_result.n_samples_).unwrap() +
+                               refinement_result.integral * F::from(refinement_result.n_samples_).unwrap()) /
                                F::from(total_samples).unwrap();
         
         let combined_error = (initial_result.standard_error * initial_result.standard_error +
@@ -874,7 +874,7 @@ where
         Ok(MonteCarloResult {
             integral: combined_integral,
             standard_error: combined_error,
-            n_samples: total_samples,
+            n_samples_: total_samples,
             convergence_rate: F::one() / F::from(total_samples as f64).unwrap().sqrt(),
         })
     }
@@ -1174,7 +1174,7 @@ pub enum OptimizationStrategy {
 pub struct MonteCarloResult<F> {
     pub integral: F,
     pub standard_error: F,
-    pub n_samples: usize,
+    pub n_samples_: usize,
     pub convergence_rate: F,
 }
 
@@ -1261,14 +1261,14 @@ mod tests {
     }
 
     #[test]
-    fn test_parallel_bootstrap() {
+    fn test_parallelbootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         
         let statistic_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> {
             Ok(x.iter().sum::<f64>() / x.len() as f64)
         };
         
-        let result = advanced_parallel_bootstrap(
+        let result = advanced_parallelbootstrap(
             &data.view(),
             statistic_fn,
             100,

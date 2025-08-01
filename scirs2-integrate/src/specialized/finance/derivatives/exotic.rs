@@ -1,8 +1,8 @@
 //! Exotic derivatives pricing and analysis
-//! 
+//!
 //! This module implements pricing models for exotic derivatives including barrier options,
 //! Asian options, lookback options, and other path-dependent derivatives.
-//! 
+//!
 //! # Features
 //! - Barrier options (knock-in/knock-out)
 //! - Asian options (arithmetic and geometric averaging)

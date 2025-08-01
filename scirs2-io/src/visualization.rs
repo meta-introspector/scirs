@@ -298,6 +298,10 @@ fn get_exporter(_format: VisualizationFormat) -> Box<dyn VisualizationExporter> 
         VisualizationFormat::MatplotlibPython => Box::new(MatplotlibExporter),
         VisualizationFormat::Gnuplot => Box::new(GnuplotExporter),
         VisualizationFormat::VegaLite => Box::new(VegaLiteExporter),
+        VisualizationFormat::D3Json => Box::new(PlotlyExporter), // Placeholder
+        VisualizationFormat::BokehJson => Box::new(PlotlyExporter), // Placeholder
+        VisualizationFormat::Svg => Box::new(PlotlyExporter), // Placeholder
+        VisualizationFormat::Html => Box::new(PlotlyExporter), // Placeholder
     }
 }
 
@@ -312,7 +316,7 @@ impl VisualizationExporter for PlotlyExporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let json_str = self.to_string(data, config_metadata)?;
+        let json_str = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(json_str.as_bytes()).map_err(IoError::Io)?;
         Ok(())
@@ -422,7 +426,7 @@ impl VisualizationExporter for MatplotlibExporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let script = self.to_string(data, config_metadata)?;
+        let script = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(script.as_bytes()).map_err(IoError::Io)?;
         Ok(())
@@ -506,7 +510,7 @@ impl VisualizationExporter for GnuplotExporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let script = self.to_string(data, config_metadata)?;
+        let script = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(script.as_bytes()).map_err(IoError::Io)?;
         Ok(())
@@ -595,7 +599,7 @@ impl VisualizationExporter for VegaLiteExporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let spec = self.to_string(data, config_metadata)?;
+        let spec = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(spec.as_bytes()).map_err(IoError::Io)?;
         Ok(())
@@ -1022,7 +1026,7 @@ impl DashboardBuilder {
         Self {
             plots: Vec::new(),
             layout: DashboardLayout {
-                _rows,
+                rows: _rows,
                 cols,
                 spacing: 10.0,
             },
@@ -1137,14 +1141,14 @@ impl VisualizationExporter for D3Exporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let html = self.to_string(data, config_metadata)?;
+        let html = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(html.as_bytes()).map_err(IoError::Io)?;
         Ok(())
     }
 
     fn to_string(
-        &self_data: &[DataSeries],
+        _data: &[DataSeries],
         config: &PlotConfig,
         _metadata: &Metadata,
     ) -> Result<String> {
@@ -1206,14 +1210,14 @@ impl VisualizationExporter for BokehExporter {
         _metadata: &Metadata,
         path: &Path,
     ) -> Result<()> {
-        let json = self.to_string(data, config_metadata)?;
+        let json = self.to_string(data, config, _metadata)?;
         let mut file = File::create(path).map_err(IoError::Io)?;
         file.write_all(json.as_bytes()).map_err(IoError::Io)?;
         Ok(())
     }
 
     fn to_string(
-        &self_data: &[DataSeries],
+        _data: &[DataSeries],
         config: &PlotConfig,
         _metadata: &Metadata,
     ) -> Result<String> {
@@ -1335,7 +1339,7 @@ pub mod external {
 
     impl PlotlyCloud {
         pub fn new(_api_key: String, username: String) -> Self {
-            Self { _api_key, username }
+            Self { api_key: _api_key, username }
         }
 
         /// Upload visualization to Plotly cloud
@@ -1352,7 +1356,7 @@ pub mod external {
     impl JupyterIntegration {
         /// Generate notebook cell with visualization
         pub fn create_cell(_viz: &VisualizationBuilder) -> serde_json::Value {
-            serde_json::_json!({
+            serde_json::json!({
                 "cell_type": "code",
                 "execution_count": null,
                 "metadata": {},

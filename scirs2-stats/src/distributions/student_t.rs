@@ -8,7 +8,7 @@ use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution, StudentT as RandStudentT};
+use rand_distr::{Distribution, StudentT as RandStudentT};
 use std::f64::consts::PI;
 use statrs::statistics::Statistics;
 
@@ -443,7 +443,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousD
     fn ppf(&self, p: F) -> StatsResult<F> {
         // Student's t-distribution doesn't have a closed-form quantile function
         // Implement a basic numerical approximation for common cases
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));

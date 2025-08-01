@@ -90,7 +90,7 @@ where
         + std::fmt::Display,
 {
     // Validate inputs
-    check_array_finite_2d(data, "data")?;
+    checkarray_finite_2d(data, "data")?;
 
     match method {
         "pearson" | "spearman" | "kendall" => {}
@@ -198,7 +198,8 @@ where
                     }
                 }
                 "spearman" => spearman_r(&var_i, &var_j)?,
-                "kendall" => kendall_tau(&var_i, &var_j, "b")?_ => unreachable!(),
+                "kendall" => kendall_tau(&var_i, &var_j, "b")?,
+                _ => unreachable!(),
             };
 
             corr_mat[[i, j]] = corr;
@@ -380,7 +381,8 @@ where
                         }
                     }
                     "spearman" => spearman_r(x, y),
-                    "kendall" => kendall_tau(x, y, "b", _ => unreachable!(),
+                    "kendall" => kendall_tau(x, y, "b"),
+                    _ => unreachable!(),
                 };
 
                 match corr {
@@ -421,7 +423,8 @@ where
                     }
                 }
                 "spearman" => spearman_r(x, y)?,
-                "kendall" => kendall_tau(x, y, "b")?_ => unreachable!(),
+                "kendall" => kendall_tau(x, y, "b")?,
+                _ => unreachable!(),
             };
             results.push(corr);
         }
@@ -495,7 +498,7 @@ where
 
 // Helper function for 2D array validation
 #[allow(dead_code)]
-fn check_array_finite_2d<F, D>(_arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
+fn checkarray_finite_2d<F, D>(_arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,
     D: Data<Elem = F>,

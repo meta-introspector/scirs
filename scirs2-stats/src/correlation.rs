@@ -7,7 +7,7 @@
 pub mod intraclass;
 
 use crate::error::StatsResult;
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 use crate::{mean, std};
 use ndarray::{s, Array1, Array2, ArrayBase, Data, Dimension, Ix1, Ix2};
 use num_traits::{Float, NumCast};
@@ -193,16 +193,16 @@ where
 
 /// Helper function to assign ranks to sorted data
 #[allow(dead_code)]
-fn assign_ranks<F: Float>(_sorted_data: &[(F, usize)], ranks: &mut [F]) -> StatsResult<()> {
-    let n = _sorted_data.len();
+fn assign_ranks<F: Float>(sorted_data: &[(F, usize)], ranks: &mut [F]) -> StatsResult<()> {
+    let n = sorted_data.len();
 
     let mut i = 0;
     while i < n {
-        let current_val = _sorted_data[i].0;
+        let current_val = sorted_data[i].0;
         let mut j = i;
 
         // Find the end of the tie group
-        while j < n - 1 && _sorted_data[j + 1].0 == current_val {
+        while j < n - 1 && sorted_data[j + 1].0 == current_val {
             j += 1;
         }
 
@@ -301,7 +301,7 @@ where
                 ties_x += 1;
             } else if y_diff.is_zero() {
                 ties_y += 1;
-            } else if (x_diff > F::zero() && y_diff >, F::zero())
+            } else if (x_diff > F::zero() && y_diff > F::zero())
                 || (x_diff < F::zero() && y_diff < F::zero())
             {
                 concordant += 1;
@@ -1007,7 +1007,7 @@ where
     let correlations: StatsResult<Vec<((usize, usize), F)>> = if pairs.len() > 50 {
         // Parallel computation for large correlation matrices
         pairs
-            .par_iter()
+            .par.iter()
             .map(|&(i, j)| {
                 let var_i = _data.slice(s![.., i]);
                 let var_j = _data.slice(s![.., j]);
@@ -1015,7 +1015,8 @@ where
                 let corr = match method {
                     "pearson" => pearson_r::<F>(&var_i, &var_j)?,
                     "spearman" => spearman_r::<F>(&var_i, &var_j)?,
-                    "kendall" => kendall_tau::<F>(&var_i, &var_j, "b")?_ => unreachable!(),
+                    "kendall" => kendall_tau::<F>(&var_i, &var_j, "b")?,
+                    _ => unreachable!(),
                 };
 
                 Ok(((i, j), corr))
@@ -1032,7 +1033,8 @@ where
                 let corr = match method {
                     "pearson" => pearson_r::<F>(&var_i, &var_j)?,
                     "spearman" => spearman_r::<F>(&var_i, &var_j)?,
-                    "kendall" => kendall_tau::<F>(&var_i, &var_j, "b")?_ => unreachable!(),
+                    "kendall" => kendall_tau::<F>(&var_i, &var_j, "b")?,
+                    _ => unreachable!(),
                 };
 
                 Ok(((i, j), corr))
@@ -1675,7 +1677,7 @@ where
                 ties_x += 1;
             } else if y_diff.is_zero() {
                 ties_y += 1;
-            } else if (x_diff > F::zero() && y_diff >, F::zero())
+            } else if (x_diff > F::zero() && y_diff > F::zero())
                 || (x_diff < F::zero() && y_diff < F::zero())
             {
                 concordant += 1;

@@ -1,4 +1,4 @@
-use scirs2__integrate::{
+use scirs2_integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, EllipticOptions,
     PoissonSolver2D,
 };

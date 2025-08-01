@@ -132,7 +132,8 @@ pub fn get_method_documentation(_method_name: &str) -> Option<MethodDocumentatio
         "rbf" => Some(rbf_interpolation_docs()),
         "kriging" => Some(kriging_interpolation_docs()),
         "akima" => Some(akima_interpolation_docs()),
-        "hermite" => Some(hermite_interpolation_docs(), _ => None,
+        "hermite" => Some(hermite_interpolation_docs()),
+        _ => None,
     }
 }
 

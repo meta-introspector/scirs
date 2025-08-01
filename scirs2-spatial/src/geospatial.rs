@@ -244,7 +244,7 @@ pub fn initial_bearing(_point1: (f64, f64), point2: (f64, f64)) -> f64 {
 /// * Final bearing in radians
 #[allow(dead_code)]
 pub fn final_bearing(_point1: (f64, f64), point2: (f64, f64)) -> f64 {
-    let reverse_bearing = initial_bearing(point2_point1);
+    let reverse_bearing = initial_bearing(point2, _point1);
     normalize_angle(reverse_bearing + PI)
 }
 

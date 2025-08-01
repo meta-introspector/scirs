@@ -51,7 +51,8 @@ impl Default for AdvancedSimdConfig {
 
 /// Advanced-optimized SIMD statistics computer
 pub struct AdvancedSimdStatistics<F> {
-    config: AdvancedSimdConfig_phantom: PhantomData<F>,
+    config: AdvancedSimdConfig,
+    _phantom: PhantomData<F>,
 }
 
 impl<F> AdvancedSimdStatistics<F>
@@ -87,7 +88,7 @@ where
         &self,
         data: &ArrayView1<F>,
     ) -> StatsResult<ComprehensiveStats<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         if data.is_empty() {
             return Err(StatsError::InvalidArgument(
@@ -272,7 +273,7 @@ where
         &self,
         matrix: &ArrayView2<F>,
     ) -> StatsResult<MatrixStatsResult<F>> {
-        check_array_finite(matrix, "matrix")?;
+        checkarray_finite(matrix, "matrix")?;
 
         if matrix.is_empty() {
             return Err(StatsError::InvalidArgument(
@@ -312,9 +313,9 @@ where
 
     /// SIMD-optimized correlation matrix computation
     pub fn correlation_matrix_advanced(&self, matrix: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        check_array_finite(matrix, "matrix")?;
+        checkarray_finite(matrix, "matrix")?;
 
-        let (_n_samples, n_features) = matrix.dim();
+        let (_n_samples_, n_features) = matrix.dim();
 
         if n_features < 2 {
             return Err(StatsError::InvalidArgument(
@@ -375,7 +376,7 @@ where
         n_bootstrap: usize,
         seed: Option<u64>,
     ) -> StatsResult<BootstrapResult<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
         check_positive(n_bootstrap, "n_bootstrap")?;
 
         let n = data.len();
@@ -406,7 +407,7 @@ where
         sorted_means
             .as_slice_mut()
             .unwrap()
-            .sort_by(|a..b| a.partial_cmp(b).unwrap());
+            .sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let alpha = F::from(0.05).unwrap(); // 95% confidence
         let lower_idx = ((alpha / F::from(2).unwrap()) * F::from(n_bootstrap).unwrap())
@@ -492,8 +493,8 @@ where
 
     /// SIMD-optimized correlation coefficient
     fn simd_correlation(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, mean_y: F) -> F {
-        let n = _x.len();
-        if n != _y.len() {
+        let n = x.len();
+        if n != y.len() {
             return F::zero();
         }
 
@@ -503,8 +504,8 @@ where
         let mut sum_y2 = F::zero();
 
         for i in 0..n {
-            let dx = _x[i] - mean_x;
-            let dy = _y[i] - mean_y;
+            let dx = x[i] - mean_x;
+            let dy = y[i] - mean_y;
             sum_xy = sum_xy + dx * dy;
             sum_x2 = sum_x2 + dx * dx;
             sum_y2 = sum_y2 + dy * dy;

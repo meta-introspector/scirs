@@ -67,7 +67,7 @@ impl BoundingBox {
         }
 
         Ok(BoundingBox {
-            _min: _min.to_owned(),
+            min: _min.to_owned(),
             max: max.to_owned(),
         })
     }
@@ -134,7 +134,7 @@ impl BoundingBox {
     /// # Errors
     ///
     /// Returns an error if the point doesn't have exactly 3 elements
-    pub fn contains(_point: &ArrayView1<f64>) -> SpatialResult<bool> {
+    pub fn contains(&self, _point: &ArrayView1<f64>) -> SpatialResult<bool> {
         if _point.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Point must have 3 elements, got {}",
@@ -186,7 +186,7 @@ impl BoundingBox {
     /// # Returns
     ///
     /// True if the boxes overlap, false otherwise
-    pub fn overlaps(_other: &BoundingBox) -> bool {
+    pub fn overlaps(&self, _other: &BoundingBox) -> bool {
         for d in 0..3 {
             if self.max[d] < _other.min[d] || self.min[d] > _other.max[d] {
                 return false;
@@ -208,7 +208,7 @@ impl BoundingBox {
     /// # Errors
     ///
     /// Returns an error if the point doesn't have exactly 3 elements
-    pub fn squared_distance_to_point(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn squared_distance_to_point(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
         if _point.len() != 3 {
             return Err(SpatialError::DimensionError(format!(
                 "Point must have 3 elements, got {}",
@@ -425,7 +425,8 @@ impl Octree {
 
         Ok(Octree {
             root,
-            size_points: points_owned,
+            size,
+            _points: points_owned,
         })
     }
 
@@ -789,7 +790,7 @@ impl Octree {
     ///
     /// The maximum depth of the tree
     pub fn max_depth(&self) -> usize {
-        self.compute_max_depth(self.root.as_ref())
+        Octree::compute_max_depth(self.root.as_ref())
     }
 
     /// Helper method to compute the maximum depth
@@ -801,7 +802,7 @@ impl Octree {
             Some(OctreeNode::Internal { children, .. }) => {
                 let mut max_child_depth = 0;
                 for child in children.iter().flatten() {
-                    let child_depth = self.compute_max_depth(Some(child));
+                    let child_depth = Self::compute_max_depth(Some(child));
                     max_child_depth = max_child_depth.max(child_depth);
                 }
                 1 + max_child_depth

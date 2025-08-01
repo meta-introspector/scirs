@@ -113,7 +113,7 @@ impl Domain {
         }
 
         Ok(Domain {
-            _ranges,
+            ranges: _ranges,
             grid_points,
         })
     }

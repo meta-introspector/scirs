@@ -94,9 +94,9 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
     /// - if n_population, n_success, or n_draws is 0
     /// - if n_success > n_population
     /// - if n_draws > n_population
-    pub fn new(_n_population: usize, n_success: usize, n_draws: usize, loc: F) -> StatsResult<Self> {
+    pub fn new(n_population: usize, n_success: usize, n_draws: usize, loc: F) -> StatsResult<Self> {
         // Check parameter validity
-        if _n_population == 0 {
+        if n_population == 0 {
             return Err(StatsError::InvalidArgument(
                 "Population size must be positive".to_string(),
             ));
@@ -290,7 +290,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
 
 /// Computes the natural logarithm of the binomial coefficient "n choose k"
 #[allow(dead_code)]
-fn ln_binomial(n: usize..k: usize) -> f64 {
+fn ln_binomial(n: usize, k: usize) -> f64 {
     if k > n {
         return f64::NEG_INFINITY;
     }

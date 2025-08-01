@@ -8,7 +8,7 @@ use crate::traits::{ContinuousDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution as RandDistribution, Uniform as RandUniform};
+use rand_distr::{Distribution as RandDistribution, Uniform as RandUniform};
 use statrs::statistics::Statistics;
 
 /// Uniform distribution structure
@@ -140,7 +140,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// assert!((x - 0.75).abs() < 1e-10);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));

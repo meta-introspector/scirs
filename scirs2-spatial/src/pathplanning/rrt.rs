@@ -129,7 +129,7 @@ impl RRTPlanner {
     /// Set the collision checking function
     ///
     /// The function should return true if there is a collision between the two points
-    pub fn with_collision_checker<F>(mut collision_checker: F) -> Self
+    pub fn with_collision_checker<F>(mut self, collision_checker: F) -> Self
     where
         F: Fn(&Array1<f64>, &Array1<f64>) -> bool + 'static,
     {
@@ -167,7 +167,7 @@ impl RRTPlanner {
     }
 
     /// Sample a random point in the configuration space
-    fn sample_random_point(&self) -> SpatialResult<Array1<f64>> {
+    fn sample_random_point(&mut self) -> SpatialResult<Array1<f64>> {
         let (min_bounds, max_bounds) = self.bounds.as_ref().ok_or_else(|| {
             SpatialError::ValueError("Bounds must be set before sampling".to_string())
         })?;
@@ -181,7 +181,7 @@ impl RRTPlanner {
     }
 
     /// Sample a random point with goal bias
-    fn sample_with_goal_bias(_goal: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+    fn sample_with_goal_bias(&mut self, _goal: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
         if self.rng.gen_range(0.0..1.0) < self.config.goal_bias {
             Ok(_goal.to_owned())
         } else {
@@ -191,15 +191,18 @@ impl RRTPlanner {
 
     /// Find the nearest node in the tree to the given point
     fn find_nearest_node(
-        &self, point: &ArrayView1<f64>, _nodes: &[RRTNode],
-        kdtree: &KDTree<f64, EuclideanDistance<f64>>,) -> SpatialResult<usize> {
+        &self,
+        point: &ArrayView1<f64>,
+        _nodes: &[RRTNode],
+        kdtree: &KDTree<f64, EuclideanDistance<f64>>,
+    ) -> SpatialResult<usize> {
         let point_vec = point.to_vec();
         let (indices_) = kdtree.query(point_vec.as_slice(), 1)?;
-        Ok(indices[0])
+        Ok(indices_[0])
     }
 
     /// Compute a new point that is step_size distance from nearest toward random_point
-    fn steer(_nearest: &ArrayView1<f64>, random_point: &ArrayView1<f64>) -> Array1<f64> {
+    fn steer(&self, _nearest: &ArrayView1<f64>, random_point: &ArrayView1<f64>) -> Array1<f64> {
         let mut direction = random_point - _nearest;
         let norm = direction.iter().map(|&x| x * x).sum::<f64>().sqrt();
 
@@ -216,7 +219,7 @@ impl RRTPlanner {
     }
 
     /// Check if there is a valid path between two points
-    fn is_valid_connection(_from: &ArrayView1<f64>, to: &ArrayView1<f64>) -> bool {
+    fn is_valid_connection(&self, _from: &ArrayView1<f64>, to: &ArrayView1<f64>) -> bool {
         if let Some(ref collision_checker) = self.collision_checker {
             !collision_checker(&_from.to_owned(), &to.to_owned())
         } else {
@@ -500,7 +503,7 @@ impl RRTPlanner {
             .iter()
             .enumerate()
             .filter(|(_, node)| node.parent == Some(node_idx))
-            .map(|(idx_)| _idx)
+            .map(|(idx_)| idx_)
             .collect();
 
         // Update each child's cost and recursively update its subtree
@@ -514,7 +517,7 @@ impl RRTPlanner {
             _nodes[child_idx].cost = parent_cost + edge_cost;
 
             // Recursively update this child's subtree
-            self.update_subtree_costs(_nodes, child_idx);
+            Self::update_subtree_costs(_nodes, child_idx);
         }
     }
 

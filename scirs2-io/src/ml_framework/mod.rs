@@ -56,11 +56,12 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::collections::VecDeque;
 
 // Include remaining modules from the parent file
-pub use super::converters as common_converters;
-pub use super::serving;
-pub use super::model_hub;
-pub use super::pytorch_enhanced;
-pub use super::tensorflow_enhanced;
-pub use super::onnx_enhanced;
-pub use super::versioning;
-pub use super::error_handling;
+// Note: The following modules are not available in the root and have been commented out
+// pub use super::converters as common_converters;
+// pub use super::serving;
+// pub use super::model_hub;
+// pub use super::pytorch_enhanced;
+// pub use super::tensorflow_enhanced;
+// pub use super::onnx_enhanced;
+// pub use super::versioning;
+// pub use super::error_handling;

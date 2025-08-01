@@ -4,6 +4,7 @@
 //! M(t,y)·y' = f(t,y), where M is a mass matrix that may depend on time t and state y.
 
 use crate::common::IntegrateFloat;
+use crate::dae::utils::linear_solvers::solve_linear_system;
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::ode::types::{MassMatrix, MassMatrixType};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
@@ -58,8 +59,6 @@ fn solve_matrix_system<F>(_matrix: ArrayView2<F>, b: ArrayView1<F>) -> Integrate
 where
     F: IntegrateFloat,
 {
-    use crate::ode::utils::linear_solvers::solve_linear_system;
-
     // Use our custom solver
     solve_linear_system(&_matrix, &b).map_err(|err| {
         IntegrateError::ComputationError(format!("Failed to solve mass _matrix system: {err}"))
@@ -181,8 +180,7 @@ impl<F: IntegrateFloat> LUDecomposition<F> {
     }
 
     /// Solve a linear system using the LU decomposition
-    fn solve(b: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
-
+    fn solve(&self, b: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
         // Use our custom solver with the matrix
         // Note: For a proper LU-based solver, we would need to implement one
         // For now, this is a simpler approach that still works
@@ -302,13 +300,14 @@ where
 /// Compute determinant for small matrices (up to 3x3)
 #[allow(dead_code)]
 fn compute_determinant<F: IntegrateFloat>(_matrix: &ArrayView2<F>) -> F {
-    let (n_) = _matrix.dim();
+    let (n, _) = _matrix.dim();
 
     match n {
         1 => _matrix[[0, 0]],
         2 => _matrix[[0, 0]] * _matrix[[1, 1]] - _matrix[[0, 1]] * _matrix[[1, 0]],
         3 => {
-            _matrix[[0, 0]] * (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]])
+            _matrix[[0, 0]]
+                * (_matrix[[1, 1]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 1]])
                 - _matrix[[0, 1]]
                     * (_matrix[[1, 0]] * _matrix[[2, 2]] - _matrix[[1, 2]] * _matrix[[2, 0]])
                 + _matrix[[0, 2]]

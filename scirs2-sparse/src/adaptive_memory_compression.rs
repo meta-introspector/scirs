@@ -20,7 +20,6 @@ use std::os::unix::fs::FileExt;
 // Memory mapping support
 #[cfg(windows)]
 use std::os::windows::fs::FileExt;
-use std::path::PathBuf;
 
 /// Configuration for adaptive memory compression
 #[derive(Debug, Clone)]
@@ -253,13 +252,13 @@ struct MemoryMappedFile {
 impl MemoryMappedFile {
     /// Create a new memory-mapped file
     #[allow(dead_code)]
-    fn new(_file_path: PathBuf, size: usize) -> SparseResult<Self> {
+    fn new(file_path: PathBuf, size: usize) -> SparseResult<Self> {
         let file = OpenOptions::new()
             .create(true)
             .truncate(true)
             .read(true)
             .write(true)
-            .open(&_file_path)
+            .open(&file_path)
             .map_err(|e| SparseError::Io(format!("Failed to create file {file_path:?}: {e}")))?;
 
         // Set file size if creating new file
@@ -391,7 +390,7 @@ impl AdaptiveMemoryCompressor {
         };
 
         Ok(Self {
-            _config,
+            config: _config,
             memory_usage: AtomicUsize::new(0),
             compression_stats: Arc::new(Mutex::new(CompressionStats::default())),
             block_cache: Arc::new(Mutex::new(block_cache)),
@@ -1314,7 +1313,7 @@ impl AdaptiveMemoryCompressor {
         let mut codes_assigned = 0u32;
         let _total_symbols = sorted_freq.len();
 
-        for (value_freq) in sorted_freq {
+        for (value, freq) in sorted_freq {
             // Simple code assignment - in practice, this would be a proper Huffman tree
             let code = codes_assigned;
             huffman_codes.insert(value, (code, code_length));
@@ -1899,7 +1898,7 @@ impl AdaptiveMemoryCompressor {
         Ok(values)
     }
 
-    fn parse_combined_data<T>(&self_data: &[u8]) -> SparseResult<(Vec<usize>, Vec<usize>, Vec<T>)>
+    fn parse_combined_data<T>(&self, data: &[u8]) -> SparseResult<(Vec<usize>, Vec<usize>, Vec<T>)>
     where
         T: Float + NumAssign + Send + Sync + Copy,
     {
@@ -2002,7 +2001,7 @@ impl BlockCache {
         Self {
             cache: HashMap::new(),
             access_order: VecDeque::new(),
-            _max_size,
+            max_size: _max_size,
             current_size: 0,
         }
     }
@@ -2087,6 +2086,7 @@ impl OutOfCoreManager {
                 1 => BlockType::Indices,
                 2 => BlockType::Data,
                 3 => BlockType::Combined,
+                _ => return Err(SparseError::InvalidFormat(format!("Unknown block type: {}", header.block_type))),
             },
             compressed_data,
             original_size: header.original_size,

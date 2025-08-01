@@ -490,7 +490,8 @@ fn create_window(_window_type: &str, length: usize) -> SignalResult<Vec<f64>> {
         "hamming" => Ok(window::hamming(length, true)?),
         "blackman" => Ok(window::blackman(length, true)?),
         "bartlett" => Ok(window::bartlett(length, true)?),
-        "rectangular" | "boxcar" => Ok(window::boxcar(length, true)?, _ => Err(SignalError::ValueError(format!(
+        "rectangular" | "boxcar" => Ok(window::boxcar(length, true)?),
+        _ => Err(SignalError::ValueError(format!(
             "Unsupported window _type: {}",
             window_type
         ))),

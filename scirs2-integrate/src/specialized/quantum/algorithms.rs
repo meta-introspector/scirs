@@ -166,10 +166,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Find ground state energy using VQE
-    pub fn find_ground_state(
-        &self,
-        hamiltonian: &Array2<Complex64>,
-    ) -> Result<(f64, Array1<f64>)> {
+    pub fn find_ground_state(&self, hamiltonian: &Array2<Complex64>) -> Result<(f64, Array1<f64>)> {
         let mut rng = rand::thread_rng();
 
         // Initialize random variational parameters
@@ -231,10 +228,11 @@ impl VariationalQuantumEigensolver {
     ) -> Result<f64> {
         // Create ansatz state vector
         let state_vector = self.create_ansatz_state(params)?;
-        
+
         // Compute <ψ|H|ψ>
         let h_psi = hamiltonian.dot(&state_vector);
-        let expectation: Complex64 = state_vector.iter()
+        let expectation: Complex64 = state_vector
+            .iter()
             .zip(h_psi.iter())
             .map(|(&psi, &h_psi)| psi.conj() * h_psi)
             .sum();
@@ -458,10 +456,14 @@ impl QuantumErrorCorrection {
     }
 
     /// Apply quantum gates with error correction
-    pub fn apply_logical_x(&self, state: &Array1<Complex64>, qubit: usize) -> Result<Array1<Complex64>> {
+    pub fn apply_logical_x(
+        &self,
+        state: &Array1<Complex64>,
+        qubit: usize,
+    ) -> Result<Array1<Complex64>> {
         // Apply logical X gate with error correction
         let mut result = state.clone();
-        
+
         // For simplicity, apply a basic transformation
         let n_states = state.len();
         for i in 0..n_states {
@@ -476,11 +478,15 @@ impl QuantumErrorCorrection {
     }
 
     /// Apply Hadamard gate with error correction
-    pub fn apply_hadamard(&self, state: &Array1<Complex64>, _qubit: usize) -> Result<Array1<Complex64>> {
+    pub fn apply_hadamard(
+        &self,
+        state: &Array1<Complex64>,
+        _qubit: usize,
+    ) -> Result<Array1<Complex64>> {
         // Simplified Hadamard implementation
         let mut result = Array1::zeros(state.len());
         let sqrt_2_inv = 1.0 / 2.0_f64.sqrt();
-        
+
         for (i, &amp) in state.iter().enumerate() {
             result[i] = amp * Complex64::new(sqrt_2_inv, 0.0);
         }
@@ -489,12 +495,21 @@ impl QuantumErrorCorrection {
     }
 
     /// Apply Pauli-X gate with error correction
-    pub fn apply_pauli_x(&self, state: &Array1<Complex64>, qubit: usize) -> Result<Array1<Complex64>> {
+    pub fn apply_pauli_x(
+        &self,
+        state: &Array1<Complex64>,
+        qubit: usize,
+    ) -> Result<Array1<Complex64>> {
         self.apply_logical_x(state, qubit)
     }
 
     /// Apply CNOT gate with error correction
-    pub fn apply_cnot(&self, state: &Array1<Complex64>, _control: usize, _target: usize) -> Result<Array1<Complex64>> {
+    pub fn apply_cnot(
+        &self,
+        state: &Array1<Complex64>,
+        _control: usize,
+        _target: usize,
+    ) -> Result<Array1<Complex64>> {
         // Simplified CNOT implementation
         Ok(state.clone())
     }
@@ -503,17 +518,17 @@ impl QuantumErrorCorrection {
     pub fn error_correction_cycle(&mut self, state: &mut Array1<Complex64>) -> Result<f64> {
         // Measure syndromes
         let syndromes = self.measure_syndromes(state)?;
-        
+
         // Store in history for improved decoding
         self.syndrome_history.push(syndromes.clone());
-        
+
         // Decode and apply corrections
         let corrections = self.decode_syndromes(&syndromes)?;
         self.apply_corrections(state, &corrections)?;
-        
+
         // Estimate error probability
         let error_prob = self.estimate_error_probability(&syndromes);
-        
+
         Ok(error_prob)
     }
 
@@ -524,11 +539,11 @@ impl QuantumErrorCorrection {
             ErrorCorrectionCode::Surface => 8,
             ErrorCorrectionCode::Repetition => 2,
         };
-        
+
         // Simplified syndrome measurement
         let mut syndromes = Array1::zeros(n_syndromes);
         let mut rng = rand::thread_rng();
-        
+
         for syndrome in syndromes.iter_mut() {
             *syndrome = if rng.gen::<f64>() < self.noise_parameters.measurement_error_rate {
                 1
@@ -536,7 +551,7 @@ impl QuantumErrorCorrection {
                 0
             };
         }
-        
+
         Ok(syndromes)
     }
 
@@ -544,19 +559,23 @@ impl QuantumErrorCorrection {
     fn decode_syndromes(&self, syndromes: &Array1<i8>) -> Result<Array1<i8>> {
         let n_physical = self.get_physical_qubit_count();
         let mut corrections = Array1::zeros(n_physical);
-        
+
         // Simplified decoding based on syndrome pattern
         for (i, &syndrome) in syndromes.iter().enumerate() {
             if syndrome != 0 && i < n_physical {
                 corrections[i] = 1; // Apply X correction
             }
         }
-        
+
         Ok(corrections)
     }
 
     /// Apply corrections to the quantum state
-    fn apply_corrections(&self, state: &mut Array1<Complex64>, corrections: &Array1<i8>) -> Result<()> {
+    fn apply_corrections(
+        &self,
+        state: &mut Array1<Complex64>,
+        corrections: &Array1<i8>,
+    ) -> Result<()> {
         // Apply corrections (simplified)
         for (qubit, &correction) in corrections.iter().enumerate() {
             if correction != 0 {
@@ -565,7 +584,7 @@ impl QuantumErrorCorrection {
                 *state = corrected_state;
             }
         }
-        
+
         Ok(())
     }
 
@@ -611,10 +630,10 @@ mod tests {
         // Test Ising problem
         let j_matrix = Array2::zeros((4, 4));
         let h_fields = Array1::from_vec(vec![0.1, -0.2, 0.3, -0.1]);
-        
+
         let result = annealer.solve_ising(&j_matrix, &h_fields);
         assert!(result.is_ok());
-        
+
         let (spins, energy) = result.unwrap();
         assert_eq!(spins.len(), 4);
         assert!(energy.is_finite());
@@ -644,24 +663,22 @@ mod tests {
     #[test]
     fn test_quantum_error_correction() {
         let mut qec = QuantumErrorCorrection::new(1, ErrorCorrectionCode::Steane7);
-        
+
         // Test encoding
-        let logical_state = Array1::from_vec(vec![
-            Complex64::new(0.707, 0.0),
-            Complex64::new(0.707, 0.0),
-        ]);
-        
+        let logical_state =
+            Array1::from_vec(vec![Complex64::new(0.707, 0.0), Complex64::new(0.707, 0.0)]);
+
         let encoded = qec.encode(&logical_state);
         assert!(encoded.is_ok());
-        
+
         let physical_state = encoded.unwrap();
         assert_eq!(physical_state.len(), 1 << qec.get_physical_qubit_count());
-        
+
         // Test error correction cycle
         let mut test_state = physical_state;
         let error_prob = qec.error_correction_cycle(&mut test_state);
         assert!(error_prob.is_ok());
-        
+
         let error_rate = qec.estimate_logical_error_rate();
         assert!(error_rate >= 0.0 && error_rate <= 1.0);
     }

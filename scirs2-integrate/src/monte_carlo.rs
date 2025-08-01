@@ -42,7 +42,8 @@ impl<F: IntegrateFloat> Default for MonteCarloOptions<F> {
             n_samples: 10000,
             seed: None,
             error_method: ErrorEstimationMethod::StandardError,
-            use_antithetic: false, phantom: PhantomData,
+            use_antithetic: false,
+            phantom: PhantomData,
         }
     }
 }
@@ -449,7 +450,7 @@ where
     #[cfg(feature = "parallel")]
     {
         if workers.is_some() {
-use crate::monte_carlo__parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
+            use crate::monte_carlo__parallel::{parallel_monte_carlo, ParallelMonteCarloOptions};
 
             let opts = options.unwrap_or_default();
             let parallel_opts = ParallelMonteCarloOptions {
@@ -459,7 +460,8 @@ use crate::monte_carlo__parallel::{parallel_monte_carlo, ParallelMonteCarloOptio
                 use_antithetic: opts.use_antithetic,
                 n_threads: workers,
                 batch_size: 1000,
-                use_chunking: true, phantom: PhantomData,
+                use_chunking: true,
+                phantom: PhantomData,
             };
 
             return parallel_monte_carlo(f, ranges, Some(parallel_opts));
@@ -473,8 +475,12 @@ use crate::monte_carlo__parallel::{parallel_monte_carlo, ParallelMonteCarloOptio
 
 #[cfg(test)]
 mod tests {
-
+    use crate::{importance_sampling, monte_carlo, monte_carlo_parallel, MonteCarloOptions};
+    use ndarray::{Array1, ArrayView1};
+    use rand::rngs::StdRng;
+    use rand_distr::Distribution;
     use std::f64::consts::PI;
+    use std::marker::PhantomData;
 
     // Helper function to check if result is within expected error margin
     fn is_close_enough(_result: f64, expected: f64, epsilon: f64) -> bool {
@@ -523,7 +529,8 @@ mod tests {
         let options = MonteCarloOptions {
             n_samples: 100000,
             seed: Some(12345), // For reproducibility
-            use_antithetic: true, phantom: PhantomData,
+            use_antithetic: true,
+            phantom: PhantomData,
             ..Default::default()
         };
 

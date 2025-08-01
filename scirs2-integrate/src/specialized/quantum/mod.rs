@@ -7,15 +7,15 @@
 //! - Advanced basis sets for quantum calculations
 //! - GPU-accelerated quantum computations
 
-pub mod core;
 pub mod algorithms;
-pub mod entanglement;
 pub mod basis_sets;
+pub mod core;
+pub mod entanglement;
 pub mod gpu;
 
 // Re-export all public types for backward compatibility
-pub use core::*;
 pub use algorithms::*;
-pub use entanglement::*;
 pub use basis_sets::*;
+pub use core::*;
+pub use entanglement::*;
 pub use gpu::*;

@@ -22,7 +22,7 @@ impl<F: Float + std::fmt::Display> CorrelationResult<F> {
     /// Create a new correlation result with just the coefficient
     pub fn new(_coefficient: F) -> Self {
         Self {
-            _coefficient,
+            coefficient: _coefficient,
             p_value: None,
         }
     }
@@ -30,7 +30,7 @@ impl<F: Float + std::fmt::Display> CorrelationResult<F> {
     /// Create a new correlation result with coefficient and p-value
     pub fn with_p_value(_coefficient: F, p_value: F) -> Self {
         Self {
-            _coefficient,
+            coefficient: _coefficient,
             p_value: Some(p_value),
         }
     }
@@ -250,7 +250,7 @@ impl<F: Float + std::fmt::Display> TestResult<F> {
     /// Create a basic test result
     pub fn new(_statistic: F, p_value: F) -> Self {
         Self {
-            _statistic,
+            statistic: _statistic,
             p_value,
             df: None,
             effect_size: None,

@@ -439,7 +439,8 @@ where
 
         let result = match algorithm {
             AlgorithmChoice::Streaming => self.compute_mean_streaming(data),
-            AlgorithmChoice::Chunked => self.compute_mean_chunked(data, _ => self.compute_mean_standard(data),
+            AlgorithmChoice::Chunked => self.compute_mean_chunked(data),
+            _ => self.compute_mean_standard(data),
         }?;
 
         // Record allocation timing

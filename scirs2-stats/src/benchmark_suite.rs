@@ -287,7 +287,7 @@ impl BenchmarkSuite {
         };
 
         Self {
-            _config,
+            config: _config,
             memory_tracker,
             baseline_cache: HashMap::new(),
         }
@@ -529,7 +529,7 @@ impl BenchmarkSuite {
 
     /// Generate test data for benchmarking
     fn generate_test_data(&self, size: usize) -> StatsResult<Array1<f64>> {
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
         use scirs2_core::rng;
 
         let mut rng = rand::rng();
@@ -548,7 +548,7 @@ impl BenchmarkSuite {
         base_data: &Array1<f64>,
         correlation: f64,
     ) -> StatsResult<Array1<f64>> {
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
         use scirs2_core::rng;
 
         let mut rng = rand::rng();
@@ -568,7 +568,7 @@ impl BenchmarkSuite {
 
     /// Generate matrix test data
     fn generate_matrix_data(&self, rows: usize, cols: usize) -> StatsResult<Array2<f64>> {
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
         use scirs2_core::rng;
 
         let mut rng = rand::rng();
@@ -789,7 +789,7 @@ impl BenchmarkSuite {
     }
 
     /// Generate threshold recommendations for algorithm switching
-    fn generate_thresholds(&self_metrics: &[&BenchmarkMetrics]) -> Vec<ThresholdRecommendation> {
+    fn generate_thresholds(&self, metrics: &[&BenchmarkMetrics]) -> Vec<ThresholdRecommendation> {
         // Placeholder implementation - would analyze performance crossover points
         // between different algorithm variants
         Vec::new()
@@ -841,7 +841,8 @@ impl BenchmarkSuite {
 
     /// Generate optimization recommendations
     fn generate_recommendations(
-        &self_metrics: &[BenchmarkMetrics],
+        &self,
+        metrics: &[BenchmarkMetrics],
         analysis: &PerformanceAnalysis,
     ) -> Vec<OptimizationRecommendation> {
         let mut recommendations = Vec::new();

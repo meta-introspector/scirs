@@ -230,7 +230,7 @@ pub fn continuous_point_triangle3d_collision(
 
     // Check if the intersection occurs within the time _step
     match intersection {
-        Some((t_hit_point_barycentric)) => {
+        Some((t, _hit_point, _barycentric)) => {
             let actual_t = t / speed; // Convert from ray parameter to time
             if actual_t >= 0.0 && actual_t <= time_step {
                 Some(actual_t)

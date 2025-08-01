@@ -21,7 +21,8 @@ pub struct EnhancedBayesianRegression<F> {
     /// Inference method
     pub inference_method: InferenceMethod,
     /// Model configuration
-    pub config: BayesianRegressionConfig_phantom: PhantomData<F>,
+    pub config: BayesianRegressionConfig,
+    _phantom: PhantomData<F>,
 }
 
 /// Prior specification for Bayesian regression
@@ -130,10 +131,10 @@ where
         prior: BayesianRegressionPrior<F>,
         inference_method: InferenceMethod,
     ) -> StatsResult<Self> {
-        check_array_finite(&design_matrix, "design_matrix")?;
-        check_array_finite(&response, "response")?;
-        check_array_finite(&prior.beta_mean, "beta_mean")?;
-        check_array_finite(&prior.beta_precision, "beta_precision")?;
+        checkarray_finite(&design_matrix, "design_matrix")?;
+        checkarray_finite(&response, "response")?;
+        checkarray_finite(&prior.beta_mean, "beta_mean")?;
+        checkarray_finite(&prior.beta_precision, "beta_precision")?;
 
         let (n, p) = design_matrix.dim();
 
@@ -276,7 +277,7 @@ where
     fn fit_variational_bayes(&self) -> StatsResult<BayesianRegressionResult<F>> {
         let x = &self.design_matrix;
         let y = &self.response;
-        let (n_p) = x.dim();
+        let (n, _p) = x.dim();
 
         // Initialize variational parameters
         let mut q_beta_mean = self.prior.beta_mean.clone();
@@ -368,15 +369,15 @@ where
     fn fit_mcmc(&self) -> StatsResult<BayesianRegressionResult<F>> {
         use rand::rngs::StdRng;
         use rand::SeedableRng;
-        use rand__distr::{Distribution, Gamma};
+        use rand_distr::{Distribution, Gamma};
 
         let x = &self.design_matrix;
         let y = &self.response;
         let (n, p) = x.dim();
 
         // Initialize MCMC chain
-        let n_samples = self.config.max_iter;
-        let n_burnin = n_samples / 4; // 25% burn-in
+        let n_samples_ = self.config.max_iter;
+        let n_burnin = n_samples_ / 4; // 25% burn-in
         let n_thin = 1; // No thinning for simplicity
 
         let mut rng = match self.config.seed {
@@ -393,8 +394,8 @@ where
         let mut noise_precision = self.prior.noise_shape / self.prior.noise_rate;
 
         // Storage for samples
-        let mut beta_samples = Vec::with_capacity(n_samples - n_burnin);
-        let mut noise_precision_samples = Vec::with_capacity(n_samples - n_burnin);
+        let mut beta_samples = Vec::with_capacity(n_samples_ - n_burnin);
+        let mut noise_precision_samples_ = Vec::with_capacity(n_samples_ - n_burnin);
         let mut log_likelihood_history = Vec::new();
 
         // Precompute matrices for efficiency
@@ -402,7 +403,7 @@ where
         let xty = x.t().dot(y);
 
         // Gibbs sampling
-        for iter in 0..n_samples {
+        for iter in 0..n_samples_ {
             // Sample beta | noise_precision, y
             let precision_matrix =
                 self.prior.beta_precision.clone() + xtx.mapv(|v| v * noise_precision);
@@ -439,7 +440,7 @@ where
             // Store samples after burn-in
             if iter >= n_burnin && (iter - n_burnin) % n_thin == 0 {
                 beta_samples.push(beta.clone());
-                noise_precision_samples.push(noise_precision);
+                noise_precision_samples_.push(noise_precision);
             }
 
             // Compute log-likelihood for convergence monitoring
@@ -479,13 +480,13 @@ where
             posterior_beta_cov / F::from(n_kept_samples.saturating_sub(1).max(1)).unwrap();
 
         // Posterior statistics for noise precision
-        let noise_precision_mean = noise_precision_samples
+        let noise_precision_mean = noise_precision_samples_
             .iter()
             .fold(F::zero(), |acc, &x| acc + x)
             / F::from(n_kept_samples).unwrap();
 
         let noise_precision_var = {
-            let mean_sq = noise_precision_samples
+            let mean_sq = noise_precision_samples_
                 .iter()
                 .map(|&x| (x - noise_precision_mean) * (x - noise_precision_mean))
                 .fold(F::zero(), |acc, x| acc + x)
@@ -506,7 +507,7 @@ where
         };
 
         // Check convergence based on effective sample size and stability
-        let converged = self.check_mcmc_convergence(&beta_samples, &noise_precision_samples)?;
+        let converged = self.check_mcmc_convergence(&beta_samples, &noise_precision_samples_)?;
 
         Ok(BayesianRegressionResult {
             beta_mean: posterior_beta_mean,
@@ -518,7 +519,7 @@ where
             predictive_var,
             convergence_info: ConvergenceInfo {
                 converged,
-                iterations: n_samples,
+                iterations: n_samples_,
                 final_tolerance: if converged {
                     self.config.tolerance
                 } else {
@@ -562,7 +563,8 @@ where
         prior_precision: &Array2<f64>, _prior_mean: &Array1<f64>,
         noise_shape: f64,
         noise_rate: f64,
-        n: f64_p: usize,
+        n: f64,
+        p: usize,
     ) -> StatsResult<F> {
         // This is a simplified version - full implementation would include all normalization terms
         let posterior_precision = xtx + prior_precision;
@@ -597,13 +599,13 @@ where
     }
 
     /// Sample from multivariate normal distribution
-    fn sample_multivariate_normal<R: scirs2_core: Rng>(
+    fn sample_multivariate_normal<R: rand::Rng>(
         &self,
         mean: &Array1<f64>,
         covariance: &Array2<f64>,
         rng: &mut R,
     ) -> StatsResult<Array1<F>> {
-        use rand__distr::{Distribution, StandardNormal};
+        use rand_distr::{Distribution, StandardNormal};
 
         let d = mean.len();
 
@@ -643,7 +645,7 @@ where
     fn check_mcmc_convergence(
         &self,
         beta_samples: &[Array1<F>],
-        noise_precision_samples: &[F],
+        noise_precision_samples_: &[F],
     ) -> StatsResult<bool> {
         if beta_samples.len() < 100 {
             return Ok(false); // Need minimum _samples for convergence assessment
@@ -672,7 +674,7 @@ where
         }
 
         // Check effective sample size (simplified)
-        let eff_sample_size = self.compute_effective_sample_size(noise_precision_samples)?;
+        let eff_sample_size = self.compute_effective_sample_size(noise_precision_samples_)?;
         if eff_sample_size < 100.0 {
             return Ok(false); // Need larger effective sample size
         }
@@ -739,7 +741,7 @@ where
         x_new: &Array2<F>,
         result: &BayesianRegressionResult<F>,
     ) -> StatsResult<(Array1<F>, Array1<F>)> {
-        check_array_finite(x_new, "x_new")?;
+        checkarray_finite(x_new, "x_new")?;
 
         if x_new.ncols() != self.design_matrix.ncols() {
             return Err(StatsError::DimensionMismatch(format!(

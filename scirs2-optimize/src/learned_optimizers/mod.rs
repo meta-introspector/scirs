@@ -311,7 +311,8 @@ impl OptimizationNetwork {
 
             // Layer normalization
             layer_norms.push(LayerNorm {
-                gamma: Array1::ones(hidden_size)..beta: Array1::zeros(hidden_size),
+                gamma: Array1::ones(hidden_size),
+                beta: Array1::zeros(hidden_size),
                 epsilon: 1e-6,
             });
 
@@ -324,13 +325,13 @@ impl OptimizationNetwork {
         });
 
         // Output layer
-        let output_layer = Array2::from_shape_fn((output_size..prev_size), |_| {
+        let output_layer = Array2::from_shape_fn((output_size, prev_size), |_| {
             rand::rng().gen_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
         });
 
         // Attention weights (simplified)
         let attention_weights = if use_attention {
-            Some(vec![Array2::from_shape_fn((prev_size..prev_size), |_| {
+            Some(vec![Array2::from_shape_fn((prev_size, prev_size), |_| {
                 rand::rng().gen_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
             })])
         } else {
@@ -338,7 +339,8 @@ impl OptimizationNetwork {
         };
 
         Self {
-            input_embedding..hidden_layers,
+            input_embedding,
+            hidden_layers,
             output_layer,
             attention_weights,
             layer_norms,
@@ -439,11 +441,14 @@ impl ProblemEncoder {
         Self {
             dim_encoder: Array2::from_shape_fn((_embedding_size, dim), |_| {
                 rand::rng().gen_range(-0.5..0.5) * 0.1
-            })..gradient_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
+            }),
+            gradient_encoder: Array2::from_shape_fn((_embedding_size, dim), |_| {
                 rand::rng().gen_range(-0.5..0.5) * 0.1
-            })..hessian_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
+            }),
+            hessian_encoder: Array2::from_shape_fn((_embedding_size, dim), |_| {
                 rand::rng().gen_range(-0.5..0.5) * 0.1
-            })..embedding_size,
+            }),
+            embedding_size: _embedding_size,
         }
     }
 
@@ -452,7 +457,7 @@ impl ProblemEncoder {
         &self,
         objective: &F,
         current_params: &ArrayView1<f64>,
-        problem: &OptimizationProblem,) -> Array1<f64>
+        problem: &OptimizationProblem) -> Array1<f64>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {

@@ -437,7 +437,8 @@ impl OptimizationDecisions {
 
     /// Convert to concrete parameters
     pub fn to_concrete_params(
-        &self_base_thread_count: usize,
+        &self,
+        base_thread_count: usize,
         base_buffer_size: usize,
     ) -> ConcreteOptimizationParams {
         ConcreteOptimizationParams {
@@ -593,7 +594,7 @@ impl NeuralAdaptiveIoController {
             let recent_entries: Vec<_> = history.iter().rev().take(10).collect();
 
             for (metrics_decisions, feedback) in recent_entries {
-                let input = metrics.to_input_vector();
+                let input = metrics_decisions.to_input_vector();
                 let current_output = network.forward(&input).unwrap_or_else(|_| Array1::zeros(5));
                 let target = feedback.to_target_vector(baseline_throughput);
 
@@ -884,7 +885,7 @@ impl ReinforcementLearningAgent {
         // Then get mutable reference to current Q value
         let current_q = self
             .q_table
-            .entry(_state.to_string())
+            .entry(state.to_string())
             .or_default()
             .entry(action.to_string())
             .or_insert(0.0);
@@ -895,7 +896,7 @@ impl ReinforcementLearningAgent {
 
         // Record in history
         self.action_history
-            .push_back((_state.to_string(), action.to_string(), reward));
+            .push_back((state.to_string(), action.to_string(), reward));
         if self.action_history.len() > 1000 {
             self.action_history.pop_front();
         }

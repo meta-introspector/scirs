@@ -464,7 +464,7 @@ impl NeuralAdaptiveOptimizer {
         let max_buffer_size = _config.max_parameters.max(1000); // Reasonable upper bound
 
         Self {
-            _config,
+            config: _config,
             optimization_network,
             adaptation_controller,
             performance_predictor,

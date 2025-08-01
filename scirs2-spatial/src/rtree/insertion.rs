@@ -309,7 +309,7 @@ impl<T: Clone> RTree<T> {
     }
 
     /// Split a node that has more than max_entries
-    pub(crate) fn split_node(_node: &mut Node<T>) -> SpatialResult<(Node<T>, Node<T>)> {
+    pub(crate) fn split_node(&self, _node: &mut Node<T>) -> SpatialResult<(Node<T>, Node<T>)> {
         // Create two new nodes: the original (which will be replaced) and the split _node
         let mut node1 = Node::new(_node.is_leaf, _node.level);
         let mut node2 = Node::new(_node.is_leaf, _node.level);
@@ -397,7 +397,7 @@ impl<T: Clone> RTree<T> {
     }
 
     /// Choose two entries to be the seeds for node splitting
-    pub(crate) fn choose_split_seeds(_node: &Node<T>) -> SpatialResult<(usize, usize)> {
+    pub(crate) fn choose_split_seeds(&self, _node: &Node<T>) -> SpatialResult<(usize, usize)> {
         let mut max_waste = -f64::MAX;
         let mut seed1 = 0;
         let mut seed2 = 0;

@@ -278,7 +278,8 @@ impl RBFInterpolator {
             Self::solve_rbf_system(points, values, kernel, epsilon, polynomial)?;
 
         Ok(Self {
-            points: points.to_owned(), _values: values.to_owned(),
+            points: points.to_owned(),
+            _values: values.to_owned(),
             dim,
             n_points,
             kernel,
@@ -557,7 +558,7 @@ impl RBFInterpolator {
     /// # Errors
     ///
     /// * If the points dimensions don't match the interpolator
-    pub fn interpolate_many(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
+    pub fn interpolate_many(&self, _points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
         // Check dimensions
         if _points.ncols() != self.dim {
             return Err(SpatialError::DimensionError(format!(

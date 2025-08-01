@@ -272,7 +272,7 @@ impl AdaptiveTransformerOptimizer {
         let history_buffer = OptimizationHistory::new(100);
 
         Self {
-            _config,
+            config: _config,
             transformer,
             problem_encoder,
             history_buffer,
@@ -929,7 +929,7 @@ impl FeedForwardNetwork {
         let linear1 = Array2::from_shape_fn((hidden_dim, _input_dim), |_| {
             (rand::rng().random_f64() - 0.5) * (2.0 / _input_dim as f64).sqrt()
         });
-        let linear2 = Array2::from_shape_fn((input_dim, hidden_dim), |_| {
+        let linear2 = Array2::from_shape_fn((_input_dim, hidden_dim), |_| {
             (rand::rng().random_f64() - 0.5) * (2.0 / hidden_dim as f64).sqrt()
         });
 
@@ -937,7 +937,7 @@ impl FeedForwardNetwork {
             linear1,
             linear2,
             bias1: Array1::zeros(hidden_dim),
-            bias2: Array1::zeros(input_dim),
+            bias2: Array1::zeros(_input_dim),
             activation: ActivationType::GELU,
             hidden_dim,
         }
@@ -1017,19 +1017,19 @@ impl TransformerProblemEncoder {
             gradient_encoder: Array2::from_shape_fn((_embedding_dim, feature_dim), |_| {
                 (rand::rng().random_f64() - 0.5) * 0.1
             }),
-            hessian_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
+            hessian_encoder: Array2::from_shape_fn((_embedding_dim, feature_dim), |_| {
                 (rand::rng().random_f64() - 0.5) * 0.1
             }),
-            parameter_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
+            parameter_encoder: Array2::from_shape_fn((_embedding_dim, feature_dim), |_| {
                 (rand::rng().random_f64() - 0.5) * 0.1
             }),
-            temporal_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
+            temporal_encoder: Array2::from_shape_fn((_embedding_dim, feature_dim), |_| {
                 (rand::rng().random_f64() - 0.5) * 0.1
             }),
-            context_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
+            context_encoder: Array2::from_shape_fn((_embedding_dim, feature_dim), |_| {
                 (rand::rng().random_f64() - 0.5) * 0.1
             }),
-            embedding_dim,
+            embedding_dim: _embedding_dim,
         }
     }
 
@@ -1142,7 +1142,10 @@ impl TransformerProblemEncoder {
         match problem.problem_class.as_str() {
             "quadratic" => features[3] = 1.0,
             "neural_network" => features[4] = 1.0,
-            "sparse" => features[5] = 1.0_ => features[6] = 1.0,
+            "sparse" => {
+                features[5] = 1.0;
+                features[6] = 1.0;
+            }
         }
 
         features
@@ -1171,7 +1174,7 @@ impl OptimizationHistory {
             gradient_history: VecDeque::with_capacity(_max_length),
             step_size_history: VecDeque::with_capacity(_max_length),
             success_history: VecDeque::with_capacity(_max_length),
-            _max_length,
+            max_length: _max_length,
             current_step: 0,
         }
     }
@@ -1307,7 +1310,7 @@ impl GradientScaler {
                 count: 0,
                 momentum: 0.9,
             },
-            scaling_params: Array1::from_elem(model_dim, 1.0),
+            scaling_params: Array1::from_elem(_model_dim, 1.0),
         }
     }
 }
@@ -1319,7 +1322,7 @@ impl StepSizePredictor {
             predictor_network: Array2::from_shape_fn((1, _feature_dim), |_| {
                 (rand::rng().random_f64() - 0.5) * 0.1
             }),
-            feature_dim,
+            feature_dim: _feature_dim,
             prediction_history: Vec::new(),
             actual_steps: Vec::new(),
         }
@@ -1393,7 +1396,8 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
             // Process a few optimization steps
             for _ in 0..10 {
                 let step = self.process_optimization_step(
-                    &training_objective..&initial_params.view(),
+                    &training_objective,
+                    &initial_params.view(),
                     &task.problem,
                 )?;
                 self.update_performance_metrics();
@@ -1405,7 +1409,8 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
 
     fn adapt_to_problem(
         &mut self,
-        problem: &OptimizationProblem_initial_params: &ArrayView1<f64>,
+        problem: &OptimizationProblem,
+        initial_params: &ArrayView1<f64>,
     ) -> OptimizeResult<()> {
         self.adapt_to_problem_class(&problem.problem_class)
     }

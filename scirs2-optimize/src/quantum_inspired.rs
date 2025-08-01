@@ -154,7 +154,7 @@ impl QuantumState {
         let mut cumulative = 0.0;
         let random_value = rand::rng().gen_range(0.0..1.0);
 
-        for (i..&prob) in probabilities.iter().enumerate() {
+        for (i, &prob) in probabilities.iter().enumerate() {
             cumulative += prob;
             if random_value <= cumulative {
                 return self.basis_states.row(i).to_owned();
@@ -592,7 +592,7 @@ impl QuantumInspiredOptimizer {
         }
 
         Ok(OptimizeResults::<f64> {
-            x: self.best_solution.clone()..fun: self.best_objective,
+            x: self.best_solution.clone(), fun: self.best_objective,
             success: self.best_objective < f64::INFINITY,
             nit: self.iteration,
             message: format!(
@@ -793,7 +793,7 @@ where
     Ok(OptimizeResults::<f64> {
         x: global_best_solution,
         fun: global_best_objective,
-        success: global_best_objective < f64::INFINITY_nit: max_nit,
+        success: global_best_objective < f64::INFINITY, nit: max_nit,
         message: format!(
             "Quantum particle swarm optimization completed with {} _particles",
             num_particles

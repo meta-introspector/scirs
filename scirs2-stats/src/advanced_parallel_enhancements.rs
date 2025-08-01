@@ -7,7 +7,7 @@
 
 use crate::error::StatsResult;
 use crate::error_handling__enhancements::{AdvancedContextBuilder, AdvancedErrorMessages};
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::{num_threads, par_chunks, parallel_map, ParallelIterator};
@@ -253,7 +253,7 @@ impl AdvancedParallelProcessor {
             .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
             .collect();
 
-        let total_sum = chunk_sums.into_iter().fold(F::zero(), |acc, sum| acc + sum);
+        let total_sum = chunk_sums.into().iter().fold(F::zero(), |acc, sum| acc + sum);
         let mean = total_sum / F::from(n).unwrap();
 
         Ok(mean)

@@ -1,8 +1,8 @@
 //! Enhanced PDE solvers for financial applications
-//! 
+//!
 //! This module provides advanced partial differential equation solvers optimized for
 //! financial derivative pricing with improved stability and performance.
-//! 
+//!
 //! # Features
 //! - ADI (Alternating Direction Implicit) schemes
 //! - Operator splitting methods

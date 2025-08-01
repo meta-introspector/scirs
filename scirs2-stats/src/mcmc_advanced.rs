@@ -61,34 +61,34 @@ where
     }
 
     /// Compute Hessian matrix (for manifold methods)
-    fn hessian(&self_x: &Array1<F>) -> Option<Array2<F>> {
+    fn hessian(x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 
     /// Compute Fisher information matrix
-    fn fisher_information(&self_x: &Array1<F>) -> Option<Array2<F>> {
+    fn fisher_information(x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 
     /// Compute Riemann metric tensor (for Riemannian methods)
-    fn riemann_metric(&self_x: &Array1<F>) -> Option<Array2<F>> {
+    fn riemann_metric(x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 
     /// Support for discontinuous model spaces (for Reversible Jump)
-    fn model_dimension(&self_model_id: usize) -> usize {
+    fn model_dimension(&self, model_id: usize) -> usize {
         self.dim()
     }
 
     /// Model transition probability (for Reversible Jump)
-    fn model_transition_prob(&self_from_model: usize, _to_model: usize) -> F {
+    fn model_transition_prob(from_model: usize, _to_model: usize) -> F {
         F::zero()
     }
 
     /// Support parallel evaluation of multiple points
     fn batch_log_density(&self, x_batch: &Array2<F>) -> Array1<F> {
         let mut results = Array1::zeros(x_batch.nrows());
-        for (i, x) in x_batch.outer_iter().enumerate() {
+        for (i, x) in x_batch.outer.iter().enumerate() {
             results[i] = self.log_density(&x.to_owned());
         }
         results
@@ -511,15 +511,18 @@ where
             SamplingMethod::RiemannianHMC { .. } => self.riemannian_hmc_iteration(iteration),
             SamplingMethod::Ensemble { .. } => self.ensemble_iteration(iteration),
             SamplingMethod::SliceSampling { .. } => self.slice_sampling_iteration(iteration),
-            SamplingMethod::Langevin { .. } => self.langevin_iteration(iteration, _ => {
+            SamplingMethod::Langevin { .. } => {
                 // Fallback to basic Metropolis-Hastings
                 self.metropolis_iteration(iteration)
-            }
+            },
+            SamplingMethod::MultipleTryMetropolis { .. } => self.metropolis_iteration(iteration),
+            SamplingMethod::ZigZag { .. } => self.metropolis_iteration(iteration),
+            SamplingMethod::BouncyParticle { .. } => self.metropolis_iteration(iteration),
         }
     }
 
     /// Enhanced HMC iteration
-    fn enhanced_hmc_iteration(&mut self_iteration: usize) -> StatsResult<()> {
+    fn enhanced_hmc_iteration(&mut self, _iteration: usize) -> StatsResult<()> {
         // Implement enhanced HMC with SIMD optimizations
         // Process chains one at a time to avoid borrowing conflicts
         let num_chains = self.chains.len();
@@ -672,44 +675,44 @@ where
     }
 
     /// Stub implementations for other methods
-    fn nuts_iteration(&mut self.._iteration: usize) -> StatsResult<()> {
+    fn nuts_iteration(&mut self, _iteration: usize) -> StatsResult<()> {
         // Would implement NUTS algorithm
         Ok(())
     }
 
-    fn riemannian_hmc_iteration(&mut self_iteration: usize) -> StatsResult<()> {
+    fn riemannian_hmc_iteration(&mut self, iteration: usize) -> StatsResult<()> {
         // Would implement Riemannian HMC
         Ok(())
     }
 
-    fn ensemble_iteration(&mut self_iteration: usize) -> StatsResult<()> {
+    fn ensemble_iteration(&mut self, iteration: usize) -> StatsResult<()> {
         // Would implement ensemble sampler
         Ok(())
     }
 
-    fn slice_sampling_iteration(&mut self_iteration: usize) -> StatsResult<()> {
+    fn slice_sampling_iteration(&mut self, iteration: usize) -> StatsResult<()> {
         // Would implement slice sampling
         Ok(())
     }
 
-    fn langevin_iteration(&mut self_iteration: usize) -> StatsResult<()> {
+    fn langevin_iteration(&mut self, iteration: usize) -> StatsResult<()> {
         // Would implement Langevin dynamics
         Ok(())
     }
 
-    fn metropolis_iteration(&mut self_iteration: usize) -> StatsResult<()> {
+    fn metropolis_iteration(&mut self, iteration: usize) -> StatsResult<()> {
         // Would implement basic Metropolis-Hastings
         Ok(())
     }
 
     /// Adapt sampler parameters
-    fn adapt_parameters(&mut self_iteration: usize) -> StatsResult<()> {
+    fn adapt_parameters(&mut self, iteration: usize) -> StatsResult<()> {
         // Would implement adaptation algorithms
         Ok(())
     }
 
     /// Monitor convergence diagnostics
-    fn monitor_convergence(&mut self_iteration: usize) -> StatsResult<()> {
+    fn monitor_convergence(&mut self, iteration: usize) -> StatsResult<()> {
         // Would implement convergence monitoring
         Ok(())
     }

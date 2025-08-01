@@ -9,6 +9,7 @@ use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
 use ndarray::{Array1, ArrayView1};
 use std::collections::HashMap;
+use SymbolicExpression::{Add, Constant, Cos, Div, Exp, Ln, Mul, Neg, Pow, Sin, Sqrt, Sub, Var};
 
 /// Represents a conservation law
 #[derive(Clone)]
@@ -27,7 +28,7 @@ impl<F: IntegrateFloat> ConservationLaw<F> {
     /// Create a new conservation law
     pub fn new(_name: impl Into<String>, expression: SymbolicExpression<F>, tolerance: F) -> Self {
         ConservationLaw {
-            _name: _name.into(),
+            name: _name.into(),
             expression,
             conserved_value: None,
             tolerance,
@@ -35,7 +36,7 @@ impl<F: IntegrateFloat> ConservationLaw<F> {
     }
 
     /// Evaluate the conserved quantity at a given state
-    pub fn evaluate(t: F, y: ArrayView1<F>) -> IntegrateResult<F> {
+    pub fn evaluate(&self, t: F, y: ArrayView1<F>) -> IntegrateResult<F> {
         let mut values = HashMap::new();
         values.insert(Variable::new("t"), t);
 
@@ -48,7 +49,7 @@ impl<F: IntegrateFloat> ConservationLaw<F> {
     }
 
     /// Check if the conservation law is satisfied
-    pub fn is_conserved(t: F, y: ArrayView1<F>) -> IntegrateResult<bool> {
+    pub fn is_conserved(&self, t: F, y: ArrayView1<F>) -> IntegrateResult<bool> {
         let current_value = self.evaluate(t, y)?;
 
         if let Some(expected) = self.conserved_value {
@@ -60,7 +61,7 @@ impl<F: IntegrateFloat> ConservationLaw<F> {
     }
 
     /// Set the conserved value based on initial conditions
-    pub fn set_initial_value(_t0: F, y0: ArrayView1<F>) -> IntegrateResult<()> {
+    pub fn set_initial_value(&mut self, _t0: F, y0: ArrayView1<F>) -> IntegrateResult<()> {
         self.conserved_value = Some(self.evaluate(_t0, y0)?);
         Ok(())
     }
@@ -207,7 +208,6 @@ fn extract_linear_coefficient<F: IntegrateFloat>(
     expr: &SymbolicExpression<F>,
     var: &Variable,
 ) -> Option<F> {
-
     match expr {
         Var(v) if v == var => Some(F::one()),
         Mul(a, b) => {
@@ -235,7 +235,6 @@ fn integrate_expression<F: IntegrateFloat>(
     expr: &SymbolicExpression<F>,
     var: &Variable,
 ) -> Option<SymbolicExpression<F>> {
-
     match expr {
         Constant(c) => Some(Mul(Box::new(Constant(*c)), Box::new(Var(var.clone())))),
         Var(v) if v == var => Some(Div(
@@ -321,7 +320,6 @@ fn expressions_equal<F: IntegrateFloat>(
     expr1: &SymbolicExpression<F>,
     expr2: &SymbolicExpression<F>,
 ) -> bool {
-
     match (expr1, expr2) {
         (Constant(a), Constant(b)) => (*a - *b).abs() < F::epsilon(),
         (Var(a), Var(b)) => a == b,
@@ -346,7 +344,6 @@ fn detect_linear_conservation<F: IntegrateFloat>(
     expressions: &[SymbolicExpression<F>],
     state_vars: &[Variable],
 ) -> IntegrateResult<Vec<ConservationLaw<F>>> {
-
     let mut laws = Vec::new();
     let _n = state_vars.len();
 
@@ -385,7 +382,6 @@ fn detect_quadratic_conservation<F: IntegrateFloat>(
     expressions: &[SymbolicExpression<F>],
     state_vars: &[Variable],
 ) -> IntegrateResult<Vec<ConservationLaw<F>>> {
-
     let mut laws = Vec::new();
 
     // Check for norm conservation (common in many physical systems)
@@ -434,11 +430,11 @@ pub struct ConservationEnforcer<F: IntegrateFloat> {
 impl<F: IntegrateFloat> ConservationEnforcer<F> {
     /// Create a new conservation enforcer
     pub fn new(_laws: Vec<ConservationLaw<F>>) -> Self {
-        ConservationEnforcer { _laws }
+        ConservationEnforcer { laws: _laws }
     }
 
     /// Initialize conservation laws with initial conditions
-    pub fn initialize(_t0: F, y0: ArrayView1<F>) -> IntegrateResult<()> {
+    pub fn initialize(&mut self, _t0: F, y0: ArrayView1<F>) -> IntegrateResult<()> {
         for law in &mut self.laws {
             law.set_initial_value(_t0, y0)?;
         }
@@ -446,7 +442,7 @@ impl<F: IntegrateFloat> ConservationEnforcer<F> {
     }
 
     /// Project a state onto the conservation manifold
-    pub fn project(t: F, y: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
+    pub fn project(&self, t: F, y: ArrayView1<F>) -> IntegrateResult<Array1<F>> {
         let mut y_proj = y.to_owned();
 
         // Simple projection: scale to maintain conservation
@@ -468,7 +464,7 @@ impl<F: IntegrateFloat> ConservationEnforcer<F> {
     }
 
     /// Check all conservation laws
-    pub fn check_all(t: F, y: ArrayView1<F>) -> IntegrateResult<Vec<(String, bool)>> {
+    pub fn check_all(&self, t: F, y: ArrayView1<F>) -> IntegrateResult<Vec<(String, bool)>> {
         let mut results = Vec::new();
 
         for law in &self.laws {
@@ -480,7 +476,7 @@ impl<F: IntegrateFloat> ConservationEnforcer<F> {
     }
 
     /// Get conservation errors
-    pub fn get_errors(t: F, y: ArrayView1<F>) -> IntegrateResult<Vec<(String, F)>> {
+    pub fn get_errors(&self, t: F, y: ArrayView1<F>) -> IntegrateResult<Vec<(String, F)>> {
         let mut errors = Vec::new();
 
         for law in &self.laws {
@@ -497,7 +493,6 @@ impl<F: IntegrateFloat> ConservationEnforcer<F> {
 /// Example: Create conservation laws for a pendulum
 #[allow(dead_code)]
 pub fn example_pendulum_conservation<F: IntegrateFloat>() -> Vec<ConservationLaw<F>> {
-
     // For a pendulum with state [theta, omega]
     // Energy = 0.5 * omega^2 - cos(theta)
 
@@ -525,7 +520,6 @@ pub fn example_pendulum_conservation<F: IntegrateFloat>() -> Vec<ConservationLaw
 /// Example: Create conservation laws for N-body gravitational system
 #[allow(dead_code)]
 pub fn example_nbody_conservation<F: IntegrateFloat>(n: usize) -> Vec<ConservationLaw<F>> {
-
     let mut laws = Vec::new();
 
     // State vector: [x1, y1, z1, vx1, vy1, vz1, x2, y2, z2, vx2, vy2, vz2, ...]
@@ -615,7 +609,6 @@ pub fn example_nbody_conservation<F: IntegrateFloat>(n: usize) -> Vec<Conservati
 /// Example: Create conservation laws for a coupled oscillator system
 #[allow(dead_code)]
 pub fn example_coupled_oscillators<F: IntegrateFloat>(n: usize) -> Vec<ConservationLaw<F>> {
-
     let mut laws = Vec::new();
 
     // State: [x1, v1, x2, v2, ..., xn, vn]
@@ -690,10 +683,16 @@ pub fn example_coupled_oscillators<F: IntegrateFloat>(n: usize) -> Vec<Conservat
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::{
+        ConservationLaw,
+        SymbolicExpression::{Add, Constant, Pow, Var},
+        Variable,
+    };
+    use ndarray::Array1;
 
     #[test]
     fn test_conservation_evaluation() {
-
         // Test norm conservation: x^2 + y^2
         let x = Var(Variable::indexed("y", 0));
         let y = Var(Variable::indexed("y", 1));

@@ -60,7 +60,7 @@ impl BanditOptimizer {
     }
 
     /// Update arm with reward
-    pub fn update_arm(&mut self..arm: usize, reward: f64) {
+    pub fn update_arm(&mut self, arm: usize, reward: f64) {
         if arm < self.num_arms {
             self.arm_rewards[arm] += reward;
             self.arm_counts[arm] += 1;
@@ -110,7 +110,7 @@ where
     Ok(OptimizeResults::<f64> {
         x: _params,
         fun: best_obj,
-        success: true_nit: num_nit,
+        success: true, nit: num_nit,
         message: "Bandit optimization completed".to_string(),
         jac: None,
         hess: None,

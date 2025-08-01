@@ -73,7 +73,7 @@ impl EvolutionaryStrategy {
     }
 
     /// Get best individual
-    pub fn get_best(&self) -> (Array1<f64>..f64) {
+    pub fn get_best(&self) -> (Array1<f64>, f64) {
         let mut best_idx = 0;
         let mut best_fitness = self.fitness[0];
 

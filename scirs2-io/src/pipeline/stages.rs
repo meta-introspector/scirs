@@ -10,7 +10,6 @@ use ndarray::Array2;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
-use std::path::PathBuf;
 
 /// File reading stage
 pub struct FileReadStage {

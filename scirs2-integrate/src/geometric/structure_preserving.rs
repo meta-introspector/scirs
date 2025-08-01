@@ -3,7 +3,7 @@
 //! This module provides integrators that preserve various geometric structures
 //! such as energy, momentum, symplectic structure, and other invariants.
 
-use crate::error::IntegrateResult as Result;
+use crate::error::{IntegrateResult, IntegrateResult as Result};
 use ndarray::{Array1, Array2, ArrayView1};
 
 // Type aliases for complex function types
@@ -52,9 +52,9 @@ pub enum StructurePreservingMethod {
 
 impl StructurePreservingIntegrator {
     /// Create a new structure-preserving integrator
-    pub fn new(_dt: f64, method: StructurePreservingMethod) -> Self {
+    pub fn new(dt: f64, method: StructurePreservingMethod) -> Self {
         Self {
-            _dt,
+            dt,
             method,
             invariants: Vec::new(),
             tol: 1e-10,
@@ -62,7 +62,7 @@ impl StructurePreservingIntegrator {
     }
 
     /// Add an invariant to preserve
-    pub fn add_invariant(mut invariant: Box<dyn GeometricInvariant>) -> Self {
+    pub fn add_invariant(&mut self, invariant: Box<dyn GeometricInvariant>) -> &mut Self {
         self.invariants.push(invariant);
         self
     }
@@ -99,8 +99,8 @@ pub struct EnergyPreservingMethod {
 
 impl EnergyPreservingMethod {
     /// Create a new energy-preserving integrator
-    pub fn new(_hamiltonian: HamiltonianFn, dim: usize) -> Self {
-        Self { _hamiltonian, dim }
+    pub fn new(hamiltonian: HamiltonianFn, dim: usize) -> Self {
+        Self { hamiltonian, dim }
     }
 
     /// Discrete gradient method
@@ -227,8 +227,8 @@ pub struct MomentumPreservingMethod {
 
 impl MomentumPreservingMethod {
     /// Create a new momentum-preserving integrator
-    pub fn new(_dim: usize, force: ForceFn, mass: Array1<f64>) -> Self {
-        Self { _dim, force, mass }
+    pub fn new(dim: usize, force: ForceFn, mass: Array1<f64>) -> Self {
+        Self { dim, force, mass }
     }
 
     /// Integrate one step preserving total momentum
@@ -353,10 +353,10 @@ pub struct SplittingIntegrator {
 
 impl SplittingIntegrator {
     /// Create a new splitting integrator with Strang splitting
-    pub fn strang(_kinetic: KineticFn, potential: PotentialFn, dim: usize) -> Self {
+    pub fn strang(kinetic: KineticFn, potential: PotentialFn, dim: usize) -> Self {
         let coefficients = vec![(0.5, 1.0), (0.5, 0.0)];
         Self {
-            _kinetic,
+            kinetic,
             potential,
             dim,
             coefficients,
@@ -376,7 +376,7 @@ impl SplittingIntegrator {
         ];
 
         Self {
-            _kinetic,
+            kinetic: _kinetic,
             potential,
             dim,
             coefficients,
@@ -411,7 +411,7 @@ impl SplittingIntegrator {
     }
 
     /// Compute gradient of kinetic energy
-    fn gradient_kinetic(p: &ArrayView1<f64>) -> Array1<f64> {
+    fn gradient_kinetic(&self, p: &ArrayView1<f64>) -> Array1<f64> {
         let h = 1e-8;
         let mut grad = Array1::zeros(self.dim);
 
@@ -429,7 +429,7 @@ impl SplittingIntegrator {
     }
 
     /// Compute gradient of potential energy
-    fn gradient_potential(q: &ArrayView1<f64>) -> Array1<f64> {
+    fn gradient_potential(&self, q: &ArrayView1<f64>) -> Array1<f64> {
         let h = 1e-8;
         let mut grad = Array1::zeros(self.dim);
 
@@ -460,10 +460,10 @@ pub struct EnergyMomentumIntegrator {
 
 impl EnergyMomentumIntegrator {
     /// Create a new energy-momentum integrator
-    pub fn new(_mass: Array1<f64>, stiffness: StiffnessFn) -> Self {
-        let dim = _mass.len();
+    pub fn new(mass: Array1<f64>, stiffness: StiffnessFn) -> Self {
+        let dim = mass.len();
         Self {
-            _mass,
+            mass,
             stiffness,
             dim,
         }
@@ -527,7 +527,7 @@ impl ConstrainedIntegrator {
         n_constraints: usize,
     ) -> Self {
         Self {
-            _constraints,
+            constraints,
             constraint_jacobian,
             dim,
             n_constraints,
@@ -666,11 +666,11 @@ impl MultiSymplecticIntegrator {
         dt: f64,
         dx: f64,
     ) -> IntegrateResult<ndarray::Array2<f64>> {
-        let (nx_) = z.dim();
+        let (nx_, _) = z.dim();
         let mut z_new = z.clone();
 
         // Iterate through spatial grid
-        for i in 1..nx {
+        for i in 1..nx_ {
             // Box average
             let z_avg = (&z.row(i - 1) + &z.row(i) + z_new.row(i - 1) + z_new.row(i)) / 4.0;
 
@@ -704,8 +704,8 @@ pub mod invariants {
     }
 
     impl EnergyInvariant {
-        pub fn new(_hamiltonian: HamiltonianFn) -> Self {
-            Self { _hamiltonian }
+        pub fn new(hamiltonian: HamiltonianFn) -> Self {
+            Self { hamiltonian }
         }
     }
 
@@ -726,8 +726,8 @@ pub mod invariants {
     }
 
     impl LinearMomentumInvariant {
-        pub fn new(_masses: Array1<f64>, component: usize) -> Self {
-            Self { _masses, component }
+        pub fn new(masses: Array1<f64>, component: usize) -> Self {
+            Self { masses, component }
         }
     }
 
@@ -747,8 +747,8 @@ pub mod invariants {
     }
 
     impl AngularMomentumInvariant2D {
-        pub fn new(_masses: Array1<f64>) -> Self {
-            Self { _masses }
+        pub fn new(masses: Array1<f64>) -> Self {
+            Self { masses }
         }
     }
 
@@ -777,7 +777,10 @@ pub mod invariants {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::{EnergyPreservingMethod, MomentumPreservingMethod};
     use approx::assert_relative_eq;
+    use ndarray::{Array1, ArrayView1};
 
     #[test]
     fn test_energy_preservation() {

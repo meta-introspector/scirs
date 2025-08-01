@@ -32,7 +32,8 @@ use std::f64::consts::PI;
 pub fn autodiff_jacobian<F, Func>(
     f: &Func,
     t: F,
-    y: &Array1<F>, _f_current: &Array1<F>, // Not needed but kept for API compatibility
+    y: &Array1<F>,
+    _f_current: &Array1<F>, // Not needed but kept for API compatibility
     _perturbation_scale: F, // Not used but kept for API compatibility
 ) -> IntegrateResult<Array2<F>>
 where

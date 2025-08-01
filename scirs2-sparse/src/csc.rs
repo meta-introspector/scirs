@@ -44,7 +44,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::csc::CscMatrix;
+    /// use scirs2_sparse::csc::CscMatrix;
     ///
     /// // Create a 3x3 sparse matrix with 5 non-zero elements
     /// let rows = vec![0, 0, 1, 2, 2];
@@ -91,7 +91,7 @@ where
             .zip(data)
             .map(|((c, r), v)| (c, r, v))
             .collect();
-        triplets.sort_by_key(|&(c, r_)| (c, r));
+        triplets.sort_by_key(|&(c, r_, _)| (c, r_));
 
         // Create indptr, _indices, and data arrays
         let nnz = triplets.len();
@@ -100,8 +100,8 @@ where
         let mut data_out = Vec::with_capacity(nnz);
 
         // Count elements per column to build indptr
-        for &(c__) in &triplets {
-            indptr[c + 1] += 1;
+        for &(c_, _, _) in &triplets {
+            indptr[c_ + 1] += 1;
         }
 
         // Compute cumulative sum for indptr
@@ -119,7 +119,7 @@ where
             rows,
             cols,
             indptr,
-            _indices,
+            indices: _indices,
             data: data_out,
         })
     }
@@ -396,7 +396,7 @@ impl CscMatrix<f64> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::csc::CscMatrix;
+    /// use scirs2_sparse::csc::CscMatrix;
     ///
     /// let rows = vec![0, 0, 1, 2, 2];
     /// let cols = vec![0, 2, 2, 0, 1];

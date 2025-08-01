@@ -21,26 +21,27 @@ where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display + std::iter::Sum + Send + Sync,
     D: Data<Elem = F> + std::fmt::Display,
 {
-    let (n_samples, n_features) = data.dim();
+    let (n_samples_, n_features) = data.dim();
 
-    if n_samples == 0 || n_features == 0 {
+    if n_samples_ == 0 || n_features == 0 {
         return Err(StatsError::InvalidArgument(
             "Data matrix cannot be empty".to_string(),
         ));
     }
 
-    let mut distances = ndarray::Array2::zeros((n_samples, n_samples));
+    let mut distances = ndarray::Array2::zeros((n_samples_, n_samples_));
 
     // Only compute upper triangle (distance matrix is symmetric)
-    for i in 0..n_samples {
-        for j in (i + 1)..n_samples {
+    for i in 0..n_samples_ {
+        for j in (i + 1)..n_samples_ {
             let row_i = data.row(i);
             let row_j = data.row(j);
 
             let distance = match metric {
                 "euclidean" => euclidean_distance_simd(&row_i, &row_j)?,
                 "manhattan" => manhattan_distance_simd(&row_i, &row_j)?,
-                "cosine" => cosine_distance_simd(&row_i, &row_j)?_ => {
+                "cosine" => cosine_distance_simd(&row_i, &row_j)?,
+                _ => {
                     return Err(StatsError::InvalidArgument(format!(
                         "Unknown metric: {}",
                         metric

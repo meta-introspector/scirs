@@ -110,7 +110,8 @@ where
             compute_hessian_2point(func, x, f0_val, &symmetric_sparsity, &options)
         }
         "3-point" => compute_hessian_3point(func, x, &symmetric_sparsity, &options),
-        "cs" => compute_hessian_complex_step(func, x, &symmetric_sparsity, &options, _ => Err(OptimizeError::ValueError(format!(
+        "cs" => compute_hessian_complex_step(func, x, &symmetric_sparsity, &options),
+        _ => Err(OptimizeError::ValueError(format!(
             "Unknown method: {}. Valid options are '2-point', '3-point', and 'cs'",
             options.method
         ))),

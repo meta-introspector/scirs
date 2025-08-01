@@ -674,15 +674,15 @@ impl AIAlgorithmSelector {
         let (num_points, dimensionality) = data.dim();
 
         // Basic statistics
-        let density = self.calculate_data_density(data);
-        let noise_level = self.estimate_noise_level(data);
-        let outlier_ratio = self.detect_outlier_ratio(data);
+        let density = Self::calculate_data_density(data);
+        let noise_level = Self::estimate_noise_level(data);
+        let outlier_ratio = Self::detect_outlier_ratio(data);
 
         // Cluster structure analysis using graph neural network
         let cluster_structure = self.analyze_cluster_structure(data).await?;
 
         // Correlation analysis
-        let correlations = self.compute_correlation_matrix(data);
+        let correlations = Self::compute_correlation_matrix(data);
 
         Ok(DataCharacteristics {
             num_points,
@@ -697,7 +697,7 @@ impl AIAlgorithmSelector {
 
     /// Calculate data density
     fn calculate_data_density(_data: &ArrayView2<'_, f64>) -> f64 {
-        let (n_points, n_dims) = _data.dim();
+        let (n_points_, n_dims) = _data.dim();
 
         // Estimate volume using bounding box
         let mut min_coords = Array1::from_elem(n_dims, f64::INFINITY);
@@ -716,20 +716,20 @@ impl AIAlgorithmSelector {
             .map(|(&min_val, &max_val)| (max_val - min_val).max(1e-10))
             .product();
 
-        n_points as f64 / volume
+        n_points_ as f64 / volume
     }
 
     /// Estimate noise level
     fn estimate_noise_level(_data: &ArrayView2<'_, f64>) -> f64 {
-        let (n_points_) = _data.dim();
+        let (n_points_, _) = _data.dim();
 
-        if n_points < 5 {
+        if n_points_ < 5 {
             return 0.0;
         }
 
         // Use nearest neighbor distances to estimate noise
         let mut total_variance = 0.0;
-        let k = 5.min(n_points - 1);
+        let k = 5.min(n_points_ - 1);
 
         for (i, point) in _data.outer_iter().enumerate() {
             let mut distances = Vec::new();
@@ -760,20 +760,20 @@ impl AIAlgorithmSelector {
             }
         }
 
-        (total_variance / n_points as f64).sqrt()
+        (total_variance / n_points_ as f64).sqrt()
     }
 
     /// Detect outlier ratio
     fn detect_outlier_ratio(_data: &ArrayView2<'_, f64>) -> f64 {
-        let (n_points_) = _data.dim();
+        let (n_points_, _) = _data.dim();
 
-        if n_points < 10 {
+        if n_points_ < 10 {
             return 0.0;
         }
 
         // Use distance-based outlier detection
         let mut outlier_count = 0;
-        let k = 5.min(n_points - 1);
+        let k = 5.min(n_points_ - 1);
 
         for (i, point) in _data.outer_iter().enumerate() {
             let mut distances = Vec::new();
@@ -796,9 +796,9 @@ impl AIAlgorithmSelector {
                 let mean_knn_dist: f64 = distances[..k].iter().sum::<f64>() / k as f64;
 
                 // Calculate global mean distance
-                let global_distances: Vec<f64> = (0..n_points)
+                let global_distances: Vec<f64> = (0..n_points_)
                     .flat_map(|i| {
-                        (i + 1..n_points).map(move |j| {
+                        (i + 1..n_points_).map(move |j| {
                             let point_i = _data.row(i);
                             let point_j = _data.row(j);
                             point_i
@@ -821,7 +821,7 @@ impl AIAlgorithmSelector {
             }
         }
 
-        outlier_count as f64 / n_points as f64
+        outlier_count as f64 / n_points_ as f64
     }
 
     /// Analyze cluster structure using graph neural network
@@ -832,14 +832,14 @@ impl AIAlgorithmSelector {
         // Simplified cluster structure analysis
         // In a full implementation, this would use the graph neural network
 
-        let (n_points_) = data.dim();
+        let (n_points_, _) = data.dim();
 
         // Estimate number of clusters using elbow method approximation
         let mut estimated_clusters = 1;
         let mut best_score = f64::INFINITY;
 
-        for k in 1..=10.min(n_points) {
-            let score = self.calculate_kmeans_score(data, k);
+        for k in 1..=10.min(n_points_) {
+            let score = AIAlgorithmSelector::calculate_kmeans_score(data, k);
             if score < best_score {
                 best_score = score;
                 estimated_clusters = k;
@@ -847,9 +847,11 @@ impl AIAlgorithmSelector {
         }
 
         // Calculate separation and compactness
-        let separation = self.calculate_cluster_separation(data, estimated_clusters);
-        let compactness = self.calculate_cluster_compactness(data, estimated_clusters);
-        let regularity = self.calculate_cluster_regularity(data);
+        let separation =
+            AIAlgorithmSelector::calculate_cluster_separation(data, estimated_clusters);
+        let compactness =
+            AIAlgorithmSelector::calculate_cluster_compactness(data, estimated_clusters);
+        let regularity = AIAlgorithmSelector::calculate_cluster_regularity(data);
 
         Ok(ClusterStructure {
             estimated_clusters,
@@ -862,16 +864,16 @@ impl AIAlgorithmSelector {
     /// Calculate K-means score for cluster estimation
     fn calculate_kmeans_score(_data: &ArrayView2<'_, f64>, k: usize) -> f64 {
         // Simplified K-means score calculation
-        let (n_points, n_dims) = _data.dim();
+        let (n_points_, n_dims) = _data.dim();
 
-        if k >= n_points {
+        if k >= n_points_ {
             return f64::INFINITY;
         }
 
         // Initialize centroids randomly
         let mut centroids = Array2::zeros((k, n_dims));
         for i in 0..k {
-            let point_idx = (i * n_points / k) % n_points;
+            let point_idx = (i * n_points_ / k) % n_points_;
             centroids.row_mut(i).assign(&_data.row(point_idx));
         }
 
@@ -905,8 +907,8 @@ impl AIAlgorithmSelector {
         }
 
         // Use average inter-cluster distance as proxy
-        let (n_points_) = _data.dim();
-        let points_per_cluster = n_points / k;
+        let (n_points_, _) = _data.dim();
+        let points_per_cluster = n_points_ / k;
 
         let mut total_separation = 0.0;
         let mut comparisons = 0;
@@ -914,9 +916,9 @@ impl AIAlgorithmSelector {
         for cluster1 in 0..k {
             for cluster2 in (cluster1 + 1)..k {
                 let start1 = cluster1 * points_per_cluster;
-                let end1 = ((cluster1 + 1) * points_per_cluster).min(n_points);
+                let end1 = ((cluster1 + 1) * points_per_cluster).min(n_points_);
                 let start2 = cluster2 * points_per_cluster;
-                let end2 = ((cluster2 + 1) * points_per_cluster).min(n_points);
+                let end2 = ((cluster2 + 1) * points_per_cluster).min(n_points_);
 
                 let mut cluster_distance = 0.0;
                 let mut count = 0;
@@ -953,14 +955,14 @@ impl AIAlgorithmSelector {
     /// Calculate cluster compactness
     fn calculate_cluster_compactness(_data: &ArrayView2<'_, f64>, k: usize) -> f64 {
         // Simplified compactness calculation
-        let (n_points_) = _data.dim();
-        let points_per_cluster = n_points / k;
+        let (n_points_, _) = _data.dim();
+        let points_per_cluster = n_points_ / k;
 
         let mut total_compactness = 0.0;
 
         for cluster in 0..k {
             let start = cluster * points_per_cluster;
-            let end = ((cluster + 1) * points_per_cluster).min(n_points);
+            let end = ((cluster + 1) * points_per_cluster).min(n_points_);
 
             if end > start {
                 let mut intra_distance = 0.0;
@@ -993,9 +995,9 @@ impl AIAlgorithmSelector {
     /// Calculate cluster regularity
     fn calculate_cluster_regularity(_data: &ArrayView2<'_, f64>) -> f64 {
         // Simplified regularity calculation based on point distribution
-        let (n_points_n_dims) = _data.dim();
+        let (n_points_, _) = _data.dim();
 
-        if n_points < 4 {
+        if n_points_ < 4 {
             return 1.0;
         }
 
@@ -1033,7 +1035,7 @@ impl AIAlgorithmSelector {
 
     /// Compute correlation matrix
     fn compute_correlation_matrix(_data: &ArrayView2<'_, f64>) -> Array2<f64> {
-        let (n_points, n_dims) = _data.dim();
+        let (n_points_, n_dims) = _data.dim();
         let mut correlations = Array2::zeros((n_dims, n_dims));
 
         // Calculate means
@@ -1049,7 +1051,7 @@ impl AIAlgorithmSelector {
                     let mut sum_sq_i = 0.0;
                     let mut sum_sq_j = 0.0;
 
-                    for k in 0..n_points {
+                    for k in 0..n_points_ {
                         let diff_i = _data[[k, i]] - means[i];
                         let diff_j = _data[[k, j]] - means[j];
 

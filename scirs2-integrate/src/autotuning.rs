@@ -29,9 +29,9 @@
 
 use crate::common::IntegrateFloat;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
-use std::f64::consts::PI;
 
 /// Hardware characteristics detected at runtime
 #[derive(Debug, Clone)]
@@ -94,7 +94,7 @@ impl HardwareDetector {
     }
 
     /// Perform actual hardware detection
-    fn detect_hardware(&self) -> HardwareInfo {
+    fn detect_hardware() -> HardwareInfo {
         let cpu_cores = Self::detect_cpu_cores();
         let cpu_threads = Self::detect_cpu_threads();
         let cpu_model = Self::detect_cpu_model();
@@ -119,7 +119,7 @@ impl HardwareDetector {
     }
 
     /// Detect number of physical CPU cores
-    fn detect_cpu_cores(&self) -> usize {
+    fn detect_cpu_cores() -> usize {
         // Try to get physical core count
         if let Some(cores) = std::thread::available_parallelism().ok().map(|n| n.get()) {
             // This gives logical cores, estimate physical cores
@@ -131,7 +131,7 @@ impl HardwareDetector {
     }
 
     /// Detect number of logical CPU threads
-    fn detect_cpu_threads(&self) -> usize {
+    fn detect_cpu_threads() -> usize {
         std::thread::available_parallelism()
             .ok()
             .map(|n| n.get())
@@ -139,12 +139,12 @@ impl HardwareDetector {
     }
 
     /// Detect CPU model
-    fn detect_cpu_model(&self) -> String {
+    fn detect_cpu_model() -> String {
         format!("{} CPU", std::env::consts::ARCH)
     }
 
     /// Detect cache sizes
-    fn detect_cache_sizes(&self) -> (usize, usize, usize) {
+    fn detect_cache_sizes() -> (usize, usize, usize) {
         // Use reasonable defaults based on architecture
         #[cfg(target_arch = "x86_64")]
         {
@@ -166,14 +166,14 @@ impl HardwareDetector {
     }
 
     /// Detect total memory size
-    fn detect_memory_size(&self) -> usize {
+    fn detect_memory_size() -> usize {
         // Simple heuristic based on available system memory
         // In practice, you'd use platform-specific APIs
         8 * 1024 * 1024 * 1024 // Default to 8GB
     }
 
     /// Detect available SIMD features
-    fn detect_simd_features(&self) -> Vec<SimdFeature> {
+    fn detect_simd_features() -> Vec<SimdFeature> {
         let mut features = Vec::new();
 
         #[cfg(target_arch = "x86_64")]
@@ -221,7 +221,7 @@ impl HardwareDetector {
     }
 
     /// Estimate memory bandwidth using a simple benchmark
-    fn estimate_memory_bandwidth(&self) -> Option<f64> {
+    fn estimate_memory_bandwidth() -> Option<f64> {
         // Simple bandwidth estimation
         let size = 10 * 1024 * 1024; // 10MB
         let data: Vec<u64> = vec![1; size / 8];
@@ -242,7 +242,7 @@ impl HardwareDetector {
     }
 
     /// Detect GPU information
-    fn detect_gpu(&self) -> Option<GpuInfo> {
+    fn detect_gpu() -> Option<GpuInfo> {
         // Use scirs2-core's GPU detection functionality
         let detection_result = scirs2_core::gpu::backends::detect_gpu_backends();
 
@@ -298,14 +298,14 @@ impl AutoTuner {
     /// Create new auto-tuner with detected hardware
     pub fn new(_hardware: HardwareInfo) -> Self {
         Self {
-            _hardware,
+            hardware: _hardware,
             cache: HashMap::new(),
         }
     }
 
     /// Create auto-tuner with automatic hardware detection
     pub fn auto(&self) -> Self {
-        Self::new(HardwareDetector::detect())
+        Self::new(HardwareDetector.detect())
     }
 
     /// Tune parameters for specific problem size
@@ -328,7 +328,7 @@ impl AutoTuner {
         let block_size = self.optimal_block_size(problem_size);
 
         // Determine chunk _size for parallel distribution
-        let chunk_size = self.optimal_chunk_size(problem_size, num_threads);
+        let chunk_size = Self::optimal_chunk_size(problem_size, num_threads);
 
         // Determine if SIMD should be used
         let use_simd = !self.hardware.simd_features.is_empty() && problem_size >= 64;
@@ -337,7 +337,7 @@ impl AutoTuner {
         let memory_pool_size = self.optimal_memory_pool_size(problem_size);
 
         // Determine tolerances based on problem _size
-        let (default_tolerance, max_iterations) = self.optimal_tolerances(problem_size);
+        let (default_tolerance, max_iterations) = Self::optimal_tolerances(problem_size);
 
         // Determine GPU usage
         let use_gpu = self.hardware.gpu_info.is_some() && problem_size >= 10000;
@@ -437,7 +437,7 @@ impl AutoTuner {
             if threads <= self.hardware.cpu_threads {
                 let mut profile = base_profile.clone();
                 profile.num_threads = threads;
-                profile.chunk_size = self.optimal_chunk_size(problem_size, threads);
+                profile.chunk_size = Self::optimal_chunk_size(problem_size, threads);
 
                 let time = benchmark_fn(&profile);
                 if time < best_time {
@@ -541,7 +541,8 @@ mod tests {
 
     #[test]
     fn test_hardware_detection() {
-        let hardware = HardwareDetector::detect();
+        let detector = HardwareDetector;
+        let hardware = detector.detect();
 
         assert!(hardware.cpu_cores > 0);
         assert!(hardware.cpu_threads >= hardware.cpu_cores);
@@ -553,7 +554,8 @@ mod tests {
 
     #[test]
     fn test_auto_tuner() {
-        let hardware = HardwareDetector::detect();
+        let detector = HardwareDetector;
+        let hardware = detector.detect();
         let tuner = AutoTuner::new(hardware);
 
         // Test small problem
@@ -569,7 +571,8 @@ mod tests {
 
     #[test]
     fn test_algorithm_specific_tuning() {
-        let hardware = HardwareDetector::detect();
+        let detector = HardwareDetector;
+        let hardware = detector.detect();
 
         // Test matrix operations tuning
         let matrix_profile = AlgorithmTuner::tune_matrix_operations(&hardware, 1000);

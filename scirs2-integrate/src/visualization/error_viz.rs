@@ -3,9 +3,9 @@
 //! This module provides tools for visualizing numerical errors, convergence behavior,
 //! and algorithm performance analysis for iterative methods and numerical solvers.
 
+use super::types::*;
 use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{s, Array1, Array2, Axis};
-use super::types::*;
 use std::collections::HashMap;
 
 /// Error visualization engine for numerical analysis
@@ -485,7 +485,8 @@ impl ConvergenceVisualizationEngine {
 
     /// Track metric over time
     pub fn track_metric(&mut self, metric_name: &str, value: f64, time: f64) {
-        self.performance_tracker.add_metric_value(metric_name, value, time);
+        self.performance_tracker
+            .add_metric_value(metric_name, value, time);
     }
 
     /// Create comprehensive convergence analysis
@@ -494,7 +495,8 @@ impl ConvergenceVisualizationEngine {
         residuals: &Array1<f64>,
         algorithm_name: &str,
     ) -> IntegrateResult<ConvergencePlot> {
-        self.convergence_visualizer.plot_residual_convergence(residuals, algorithm_name)
+        self.convergence_visualizer
+            .plot_residual_convergence(residuals, algorithm_name)
     }
 
     /// Create multi-metric analysis
@@ -502,7 +504,8 @@ impl ConvergenceVisualizationEngine {
         &self,
         metrics: &[(String, Array1<f64>)],
     ) -> IntegrateResult<MultiMetricConvergencePlot> {
-        self.convergence_visualizer.plot_multi_metric_convergence(metrics)
+        self.convergence_visualizer
+            .plot_multi_metric_convergence(metrics)
     }
 
     /// Analyze step size effects
@@ -512,7 +515,8 @@ impl ConvergenceVisualizationEngine {
         errors: &Array1<f64>,
         method_name: &str,
     ) -> IntegrateResult<StepSizeAnalysisPlot> {
-        self.convergence_visualizer.plot_step_size_analysis(step_sizes, errors, method_name)
+        self.convergence_visualizer
+            .plot_step_size_analysis(step_sizes, errors, method_name)
     }
 }
 

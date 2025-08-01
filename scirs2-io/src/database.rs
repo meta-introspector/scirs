@@ -290,24 +290,24 @@ impl QueryBuilder {
     pub fn build_mongo(&self) -> serde_json::Value {
         match self.query_type {
             QueryType::Select => {
-                let mut query = serde_json::_json!({});
+                let mut query = serde_json::json!({});
 
                 // Convert SQL-like conditions to MongoDB query
                 for condition in &self.conditions {
                     // Simple parsing - in real implementation would be more sophisticated
                     if let Some((field, value)) = condition.split_once(" = ") {
-                        query[field] = serde_json::_json!(value.trim_matches('\''));
+                        query[field] = serde_json::json!(value.trim_matches('\''));
                     }
                 }
 
-                serde_json::_json!({
+                serde_json::json!({
                     "collection": self.table,
                     "filter": query,
                     "limit": self.limit,
                     "skip": self.offset,
                 })
             }
-            _ => serde_json::_json!({}),
+            _ => serde_json::json!({}),
         }
     }
 }
@@ -652,7 +652,7 @@ impl DatabaseConnection for SQLiteConnection {
                 .map_err(|e| IoError::DatabaseError(format!("SQL execution failed: {}", e)))?;
 
             let mut result = ResultSet::new(vec!["rows_affected".to_string()]);
-            result.add_row(vec![serde_json::_json!(affected_rows)]);
+            result.add_row(vec![serde_json::json!(affected_rows)]);
             Ok(result)
         }
     }
@@ -908,7 +908,7 @@ pub mod bulk {
             Ok(())
         }
 
-        pub fn flush(&mut self_conn: &dyn DatabaseConnection) -> Result<usize> {
+        pub fn flush(&mut self, _conn: &dyn DatabaseConnection) -> Result<usize> {
             let total = self.buffer.len();
             // In real implementation, would batch insert
             self.buffer.clear();
@@ -1024,42 +1024,42 @@ impl DatabaseConnection for PostgreSQLConnection {
                     let value = match column.type_info().name() {
                         "INT4" | "INTEGER" => {
                             if let Ok(val) = row.try_get::<i32>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "INT8" | "BIGINT" => {
                             if let Ok(val) = row.try_get::<i64>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "FLOAT4" | "REAL" => {
                             if let Ok(val) = row.try_get::<f32>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "FLOAT8" | "DOUBLE PRECISION" => {
                             if let Ok(val) = row.try_get::<f64>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "VARCHAR" | "TEXT" | "CHAR" => {
                             if let Ok(val) = row.try_get::<String>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "BOOL" => {
                             if let Ok(val) = row.try_get::<bool>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
@@ -1067,7 +1067,7 @@ impl DatabaseConnection for PostgreSQLConnection {
                         _ => {
                             // Fallback to string conversion
                             if let Ok(val) = row.try_get::<String>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
@@ -1437,42 +1437,42 @@ impl DatabaseConnection for MySQLConnection {
                     let value = match column.type_info().name() {
                         "TINY" | "SHORT" | "LONG" => {
                             if let Ok(val) = row.try_get::<i32>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "LONGLONG" => {
                             if let Ok(val) = row.try_get::<i64>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "FLOAT" => {
                             if let Ok(val) = row.try_get::<f32>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "DOUBLE" => {
                             if let Ok(val) = row.try_get::<f64>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "VARCHAR" | "TEXT" | "CHAR" | "VAR_STRING" => {
                             if let Ok(val) = row.try_get::<String>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
                         }
                         "TINY" if column.type_info().name() == "BOOLEAN" => {
                             if let Ok(val) = row.try_get::<bool>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }
@@ -1480,7 +1480,7 @@ impl DatabaseConnection for MySQLConnection {
                         _ => {
                             // Fallback to string conversion
                             if let Ok(val) = row.try_get::<String>(i) {
-                                serde_json::_json!(val)
+                                serde_json::json!(val)
                             } else {
                                 serde_json::Value::Null
                             }

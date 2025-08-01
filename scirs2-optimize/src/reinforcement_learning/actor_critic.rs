@@ -506,7 +506,7 @@ impl AdvantageActorCriticOptimizer {
             3 => OptimizationAction::AdaptiveLearningRate {
                 factor: 0.5 + 0.5 * policy_output.get(3).unwrap_or(&0.0).tanh(),
             },
-            4 => OptimizationAction::ResetToBest_ =>, OptimizationAction::Terminate,
+            4 => OptimizationAction::ResetToBest, _ => OptimizationAction::Terminate,
         }
     }
 

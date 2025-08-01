@@ -134,17 +134,18 @@ where
         Self {
             _algorithm,
             config,
-            results: None_phantom: PhantomData,
+            results: None,
+            _phantom: PhantomData,
         }
     }
 
     /// Fit PCA to data
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&PCAResult<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
 
-        if n_samples == 0 || n_features == 0 {
+        if n_samples_ == 0 || n_features == 0 {
             return Err(StatsError::InvalidArgument(
                 "Data cannot be empty".to_string(),
             ));
@@ -154,13 +155,13 @@ where
         let n_components = self
             .config
             .n_components
-            .unwrap_or_else(|| n_features.min(n_samples));
+            .unwrap_or_else(|| n_features.min(n_samples_));
 
-        if n_components > n_features.min(n_samples) {
+        if n_components > n_features.min(n_samples_) {
             return Err(StatsError::InvalidArgument(format!(
-                "n_components ({}) cannot exceed min(n_samples, n_features) ({})",
+                "n_components ({}) cannot exceed min(n_samples_, n_features) ({})",
                 n_components,
-                n_features.min(n_samples)
+                n_features.min(n_samples_)
             )));
         }
 
@@ -235,7 +236,7 @@ where
         let scale = if self.config.scale {
             let mut std_dev = Array1::zeros(n_features);
 
-            for (j, mut col) in processed_data.columns_mut().into_iter().enumerate() {
+            for (j, mut col) in processed_data.columns_mut().into().iter().enumerate() {
                 let var = col.mapv(|x| x * x).mean().unwrap();
                 std_dev[j] = var.sqrt();
 
@@ -262,7 +263,7 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples_n_features) = data.dim();
+        let (n_samples_, _n_features) = data.dim();
 
         // Convert to f64 for numerical stability
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
@@ -276,8 +277,8 @@ where
         let _components = vt.slice(ndarray::s![..n_components, ..]).to_owned();
 
         // Compute explained variance
-        let total_variance_f64 = s.mapv(|x| x * x).sum() / (n_samples - 1) as f64;
-        let explained_variance_f64 = singular_values.mapv(|x| x * x / (n_samples - 1) as f64);
+        let total_variance_f64 = s.mapv(|x| x * x).sum() / (n_samples_ - 1) as f64;
+        let explained_variance_f64 = singular_values.mapv(|x| x * x / (n_samples_ - 1) as f64);
         let explained_variance_ratio_f64 = &explained_variance_f64 / total_variance_f64;
 
         // Compute cumulative variance ratio
@@ -319,11 +320,11 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples_) = data.dim();
+        let (n_samples_, _n_features) = data.dim();
 
         // Compute covariance matrix
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
-        let cov_matrix = data_f64.t().dot(&data_f64) / (n_samples - 1) as f64;
+        let cov_matrix = data_f64.t().dot(&data_f64) / (n_samples_ - 1) as f64;
 
         // Compute eigendecomposition
         let (eigenvalues, eigenvectors) =
@@ -343,7 +344,7 @@ where
         // Extract top n_components
         let selected_eigenvalues: Vec<f64> = eigen_pairs[..n_components]
             .iter()
-            .map(|(val_)| *val)
+            .map(|(val_, _)| *val_)
             .collect();
         let mut selected_eigenvectors = Array2::zeros((data.ncols(), n_components));
 
@@ -393,7 +394,7 @@ where
     fn fit_randomized(
         &self,
         data: &Array2<F>,
-        n_components: usize, _n_iter: usize_n, _oversamples: usize,
+        n_components: usize, _n_iter: usize, _oversamples: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -447,7 +448,7 @@ where
             StatsError::InvalidArgument("PCA must be fitted before transform".to_string())
         })?;
 
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         if data.ncols() != results.mean.len() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -471,7 +472,7 @@ where
 
         // Scale
         if let Some(ref scale) = results.scale {
-            for (j, mut col) in processed_data.columns_mut().into_iter().enumerate() {
+            for (j, mut col) in processed_data.columns_mut().into().iter().enumerate() {
                 if scale[j] > F::from(1e-12).unwrap() {
                     for x in col.iter_mut() {
                         *x = *x / scale[j];
@@ -498,7 +499,7 @@ where
             StatsError::InvalidArgument("PCA must be fitted before inverse_transform".to_string())
         })?;
 
-        check_array_finite(transformed_data, "transformed_data")?;
+        checkarray_finite(transformed_data, "transformed_data")?;
 
         if transformed_data.ncols() != results.n_components {
             return Err(StatsError::DimensionMismatch(format!(
@@ -513,7 +514,7 @@ where
 
         // Reverse scaling
         if let Some(ref scale) = results.scale {
-            for (j, mut col) in reconstructed.columns_mut().into_iter().enumerate() {
+            for (j, mut col) in reconstructed.columns_mut().into().iter().enumerate() {
                 if scale[j] > F::from(1e-12).unwrap() {
                     for x in col.iter_mut() {
                         *x = *x * scale[j];
@@ -635,15 +636,16 @@ where
         Ok(Self {
             _n_factors,
             config,
-            results: None_phantom: PhantomData,
+            results: None,
+            _phantom: PhantomData,
         })
     }
 
     /// Fit factor analysis to data
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&FactorAnalysisResult<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
-        let (_n_samples, n_features) = data.dim();
+        let (_n_samples_, n_features) = data.dim();
 
         if self.n_factors >= n_features {
             return Err(StatsError::InvalidArgument(format!(
@@ -680,14 +682,14 @@ where
         // Compute communalities
         let communalities = loadings
             .rows()
-            .into_iter()
+            .into().iter()
             .map(|row| row.mapv(|x| x * x).sum())
             .collect::<Array1<F>>();
 
         // Compute explained variance
         let explained_variance = loadings
             .columns()
-            .into_iter()
+            .into().iter()
             .map(|col| col.mapv(|x| x * x).sum())
             .collect::<Array1<F>>();
 

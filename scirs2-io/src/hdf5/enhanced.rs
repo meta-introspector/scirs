@@ -1104,7 +1104,7 @@ impl AccessPatternAnalyzer {
 
         // Find the most common access pattern
         if let Some((_, (_, most_common_region))) =
-            pattern_analysis.iter().max_by_key(|(_, (freq_))| *freq)
+            pattern_analysis.iter().max_by_key(|(_, (freq_, _))| *freq_)
         {
             // Generate recommendations based on access patterns
             if most_common_region.len() == 1 {

@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::coo__array::CooArray;
+use crate::coo_array::CooArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::{SparseArray, SparseSum};
 
@@ -66,7 +66,7 @@ where
     pub fn new(_shape: (usize, usize)) -> Self {
         Self {
             data: HashMap::new(),
-            _shape,
+            shape: _shape,
         }
     }
 
@@ -350,7 +350,7 @@ where
 
     fn dot(&self, other: &dyn SparseArray<T>) -> SparseResult<Box<dyn SparseArray<T>>> {
         let (_m, n) = self.shape();
-        let (p_q) = other.shape();
+        let (p, _q) = other.shape();
 
         if n != p {
             return Err(SparseError::DimensionMismatch {
@@ -468,10 +468,10 @@ where
             }
             Some(1) => {
                 // Sum along columns
-                let (rows_) = self.shape();
-                let mut result = DokArray::new((rows, 1));
+                let (rows_, _) = self.shape();
+                let mut result = DokArray::new((rows_, 1));
 
-                for (&(row_col), &value) in &self.data {
+                for (&(row, _col), &value) in &self.data {
                     let current = result.get(row, 0);
                     result.set(row, 0, current + value)?;
                 }

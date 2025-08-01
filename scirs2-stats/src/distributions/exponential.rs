@@ -3,13 +3,13 @@
 //! This module provides functionality for the Exponential distribution.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error__messages::{helpers, validation};
+use crate::error_messages::{helpers, validation};
 use crate::sampling::SampleableDistribution;
 use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution, Exp as RandExp};
+use rand_distr::{Distribution, Exp as RandExp};
 use std::fmt::Debug;
 use statrs::statistics::Statistics;
 
@@ -194,7 +194,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// ```
     #[inline]
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));

@@ -114,16 +114,16 @@ where
     F: Float + NumCast + SimdUnifiedOps + FromPrimitive + Clone,
     D: Data<Elem = F> + std::fmt::Display,
 {
-    let (n_samples, n_features) = _data.dim();
+    let (n_samples_, n_features) = _data.dim();
 
-    if n_samples < 2 {
+    if n_samples_ < 2 {
         return Err(StatsError::invalid_argument("Need at least 2 samples"));
     }
 
     // Center the _data
     let means = _data.mean_axis(Axis(0)).unwrap();
     let mut centered = _data.to_owned();
-    for i in 0..n_samples {
+    for i in 0..n_samples_ {
         for j in 0..n_features {
             centered[[i, j]] = centered[[i, j]] - means[j];
         }
@@ -137,7 +137,7 @@ where
             let col_i = centered.column(i);
             let col_j = centered.column(j);
 
-            let corr = if n_samples > 16 {
+            let corr = if n_samples_ > 16 {
                 // SIMD path
                 let dot_product = F::simd_mul(&col_i.view(), &col_j.view());
                 let dot_sum = F::simd_sum(&dot_product.view());

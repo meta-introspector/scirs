@@ -95,7 +95,7 @@ where
 
 // Helper function to compute the Shapiro-Wilk test statistic and p-value
 #[allow(dead_code)]
-fn compute_shapiro_wilk_statistic<F>(_sorted_data: &[F], n: usize) -> StatsResult<(F, F)>
+fn compute_shapiro_wilk_statistic<F>(sorted_data: &[F], n: usize) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
@@ -103,16 +103,16 @@ where
     let a = calculate_shapiro_wilk_coefficients(n)?;
 
     // Calculate the mean
-    let mean = _sorted_data.iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let mean = sorted_data.iter().cloned().sum::<F>() / F::from(n).unwrap();
 
     // Calculate S^2 (sum of squared deviations from the mean)
-    let s_squared = _sorted_data.iter().map(|&x| (x - mean).powi(2)).sum::<F>();
+    let s_squared = sorted_data.iter().map(|&x| (x - mean).powi(2)).sum::<F>();
 
     // Calculate the numerator of the W statistic
     let mut numerator = F::zero();
     for i in 0..n / 2 {
         let coef = F::from(a[i]).unwrap();
-        numerator = numerator + coef * (_sorted_data[n - 1 - i] - _sorted_data[i]);
+        numerator = numerator + coef * (sorted_data[n - 1 - i] - sorted_data[i]);
     }
 
     // Calculate the W statistic

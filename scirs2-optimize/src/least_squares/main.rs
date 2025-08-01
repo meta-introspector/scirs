@@ -1038,12 +1038,12 @@ mod tests {
     use super::*;
     use ndarray::array;
 
-    fn residual(x: &[f64]_: &[f64]) -> Array1<f64> {
+    fn residual(x: &[f64], _: &[f64]) -> Array1<f64> {
         let y = array![x[0] + 2.0 * x[1] - 2.0, x[0] + x[1] - 1.0];
         y
     }
 
-    fn jacobian(_x: &[f64]_: &[f64]) -> Array2<f64> {
+    fn jacobian(_x: &[f64], _: &[f64]) -> Array2<f64> {
         array![[1.0, 2.0], [1.0, 1.0]]
     }
 
@@ -1174,11 +1174,11 @@ mod tests {
     #[test]
     fn test_rosenbrock_least_squares() {
         // The Rosenbrock function as a least squares problem
-        fn rosenbrock_residual(x: &[f64]_: &[f64]) -> Array1<f64> {
+        fn rosenbrock_residual(x: &[f64], _: &[f64]) -> Array1<f64> {
             array![10.0 * (x[1] - x[0].powi(2)), 1.0 - x[0]]
         }
 
-        fn rosenbrock_jacobian(x: &[f64]_: &[f64]) -> Array2<f64> {
+        fn rosenbrock_jacobian(x: &[f64], _: &[f64]) -> Array2<f64> {
             array![[-20.0 * x[0], 10.0], [-1.0, 0.0]]
         }
 

@@ -6,7 +6,7 @@
 //! - Computation of moments of distributions on the sphere
 //! - Application to physics problems (electrostatic potential)
 
-use scirs2__integrate::lebedev::{lebedev_integrate, lebedev_rule, LebedevOrder};
+use scirs2_integrate::lebedev::{lebedev_integrate, lebedev_rule, LebedevOrder};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -52,7 +52,7 @@ fn main() {
 
     // Test with a function dependent on coordinates
     // Here we use f(x,y,z) = x^2, which should integrate to 4π/3
-    let x2_result: f64 = lebedev_integrate(|x__| x * x, LebedevOrder::Order14).unwrap();
+    let x2_result: f64 = lebedev_integrate(|x, _y, _z| x * x, LebedevOrder::Order14).unwrap();
     println!("\nIntegrating f(x,y,z) = x²:");
     println!("  Result: {x2_result:.10}");
     println!("  Expected: {:.10} (4π/3)", 4.0 * PI / 3.0);
@@ -87,7 +87,8 @@ fn main() {
     println!("  Expected: 0 (by orthogonality)");
 
     // Y₂₂ ∝ (x² - y²)
-    let y22_result: f64 = lebedev_integrate(|x, y_| x * x - y * y, LebedevOrder::Order14).unwrap();
+    let y22_result: f64 =
+        lebedev_integrate(|x, y, _z| x * x - y * y, LebedevOrder::Order14).unwrap();
     println!("\nIntegrating Y₂₂ ∝ (x² - y²):");
     println!("  Result: {y22_result:.10e}");
     println!("  Expected: 0 (by orthogonality)");

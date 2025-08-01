@@ -467,7 +467,7 @@ impl<A> SparseMatrixCOO<A> {
     /// Create a new sparse matrix in COO format
     pub fn new(_rows: usize, cols: usize) -> Self {
         Self {
-            _rows,
+            rows: _rows,
             cols,
             row_indices: Vec::new(),
             col_indices: Vec::new(),
@@ -636,7 +636,7 @@ impl<A: Clone> SparseMatrix<A> {
         Self {
             shape,
             format: SparseFormat::COO,
-            _coo_data: _coo,
+            coo_data: _coo,
             csr_data: None,
             csc_data: None,
             metadata: HashMap::new(),
@@ -884,7 +884,7 @@ impl<A: Clone> SparseMatrixCSR<A> {
     /// Create a new CSR sparse matrix
     pub fn new(_rows: usize, cols: usize) -> Self {
         Self {
-            _rows,
+            rows: _rows,
             cols,
             row_ptrs: vec![0; _rows + 1],
             col_indices: Vec::new(),
@@ -920,7 +920,7 @@ impl<A: Clone> SparseMatrixCSC<A> {
     /// Create a new CSC sparse matrix
     pub fn new(_rows: usize, cols: usize) -> Self {
         Self {
-            _rows,
+            rows: _rows,
             cols,
             col_ptrs: vec![0; cols + 1],
             row_indices: Vec::new(),

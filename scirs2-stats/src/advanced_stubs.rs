@@ -91,7 +91,7 @@ pub fn create_exhaustive_numerical_stability_tester() -> AdvancedNumericalStabil
 }
 
 impl AdvancedNumericalStabilityAnalyzer {
-    pub fn analyze_statistical_stability<F, D>(&self_data: &ndarray::ArrayBase<D, ndarray::Ix1>) -> ComprehensiveStabilityResult
+    pub fn analyze_statistical_stability<F, D>(&self, &ndarray::ArrayBase<D, ndarray::Ix1>) -> ComprehensiveStabilityResult
     where
         F: Float,
         D: ndarray::Data<Elem = F>

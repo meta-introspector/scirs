@@ -49,7 +49,7 @@ pub struct PCAResult {
     /// Standard deviation of the training data (if scaling was used)
     pub scale: Option<Array1<f64>>,
     /// Number of samples used for fitting
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Number of features
     pub n_features: usize,
 }
@@ -104,11 +104,11 @@ impl PCA {
 
     /// Fit the PCA model to the data
     pub fn fit(&self, data: ArrayView2<f64>) -> Result<PCAResult> {
-        check_array_finite(&data, "data")?;
-        let (n_samples, n_features) = data.dim();
-        if n_samples < 2 {
+        checkarray_finite(&data, "data")?;
+        let (n_samples_, n_features) = data.dim();
+        if n_samples_ < 2 {
             return Err(StatsError::InvalidArgument(
-                "n_samples must be at least 2".to_string(),
+                "n_samples_ must be at least 2".to_string(),
             ));
         }
         if n_features < 1 {
@@ -118,13 +118,13 @@ impl PCA {
         }
 
         // Determine number of components
-        let max_components = n_samples.min(n_features);
+        let max_components = n_samples_.min(n_features);
         let n_components = match self.n_components {
             Some(k) => {
                 check_positive(k, "n_components")?;
                 if k > max_components {
                     return Err(StatsError::InvalidArgument(format!(
-                        "n_components ({}) cannot be larger than min(n_samples, n_features) = {}",
+                        "n_components ({}) cannot be larger than min(n_samples_, n_features) = {}",
                         k, max_components
                     )));
                 }
@@ -153,7 +153,7 @@ impl PCA {
             // Avoid division by zero
             let std = std.mapv(|s| if s > 1e-10 { s } else { 1.0 });
 
-            for (mut col, &s) in centered_data.columns_mut().into_iter().zip(std.iter()) {
+            for (mut col, &s) in centered_data.columns_mut().into().iter().zip(std.iter()) {
                 col /= s;
             }
             Some(std)
@@ -164,7 +164,7 @@ impl PCA {
         // Choose solver
         let solver = match self.svd_solver {
             SvdSolver::Auto => {
-                if n_samples >= 500 && n_features >= 500 && n_components < max_components / 2 {
+                if n_samples_ >= 500 && n_features >= 500 && n_components < max_components / 2 {
                     SvdSolver::Randomized
                 } else {
                     SvdSolver::Full
@@ -175,9 +175,9 @@ impl PCA {
 
         // Perform PCA
         let result = match solver {
-            SvdSolver::Full => self.pca_svd(&centered_data, n_components, n_samples)?,
+            SvdSolver::Full => self.pca_svd(&centered_data, n_components, n_samples_)?,
             SvdSolver::Randomized => {
-                self.pca_randomized(&centered_data, n_components, n_samples)?
+                self.pca_randomized(&centered_data, n_components, n_samples_)?
             }
             _ => unreachable!(),
         };
@@ -189,7 +189,7 @@ impl PCA {
             singular_values: result.3,
             mean,
             scale,
-            n_samples,
+            n_samples_,
             n_features,
         })
     }
@@ -199,9 +199,9 @@ impl PCA {
         &self,
         data: &Array2<f64>,
         n_components: usize,
-        n_samples: usize,
+        n_samples_: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
-        use ndarray__linalg::SVD;
+        use ndarray_linalg::SVD;
 
         // Perform SVD: X = U * S * V^T
         let (_u, s, vt) = data
@@ -214,7 +214,7 @@ impl PCA {
 
         // Compute explained variance
         let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
-        let explained_variance = &singular_values * &singular_values / (n_samples - 1) as f64;
+        let explained_variance = &singular_values * &singular_values / (n_samples_ - 1) as f64;
 
         // Compute explained variance ratio
         let total_variance = explained_variance.sum();
@@ -233,11 +233,11 @@ impl PCA {
         &self,
         data: &Array2<f64>,
         n_components: usize,
-        n_samples: usize,
+        n_samples_: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
-        use ndarray__linalg::{QR, SVD};
+        use ndarray_linalg::{QR, SVD};
         use rand::{rngs::StdRng, SeedableRng};
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
 
         let n_features = data.ncols();
         let n_oversamples = 10.min((n_features - n_components) / 2);
@@ -269,21 +269,21 @@ impl PCA {
 
         for _ in 0..n_iter {
             // QR decomposition
-            let (_q_mat_r) = q.qr().map_err(|e| {
+            let (q_mat, _r) = q.qr().map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
-            q = _q_mat;
+            q = q_mat;
 
             // Project back
             let z = data.t().dot(&q);
-            let (_q_mat_r) = z.qr().map_err(|e| {
+            let (q_mat, _r) = z.qr().map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
-            q = data.dot(&_q_mat);
+            q = data.dot(&q_mat);
         }
 
         // Final QR decomposition
-        let (q_final_) = q.qr().map_err(|e| {
+        let (q_final, _r) = q.qr().map_err(|e| {
             StatsError::ComputationError(format!("Final QR decomposition failed: {}", e))
         })?;
 
@@ -302,7 +302,7 @@ impl PCA {
 
         // Compute explained variance
         let singular_values = s.slice(ndarray::s![..n_components]).to_owned();
-        let explained_variance = &singular_values * &singular_values / (n_samples - 1) as f64;
+        let explained_variance = &singular_values * &singular_values / (n_samples_ - 1) as f64;
 
         // Compute explained variance ratio
         let total_variance = explained_variance.sum();
@@ -318,7 +318,7 @@ impl PCA {
 
     /// Transform data using the fitted PCA model
     pub fn transform(&self, data: ArrayView2<f64>, result: &PCAResult) -> Result<Array2<f64>> {
-        check_array_finite(&data, "data")?;
+        checkarray_finite(&data, "data")?;
         if data.ncols() != result.n_features {
             return Err(StatsError::DimensionMismatch(format!(
                 "data has {} features, expected {}",
@@ -338,7 +338,7 @@ impl PCA {
 
         // Scale
         if let Some(ref scale) = result.scale {
-            for (mut col, &s) in transformed.columns_mut().into_iter().zip(scale.iter()) {
+            for (mut col, &s) in transformed.columns_mut().into().iter().zip(scale.iter()) {
                 col /= s;
             }
         }
@@ -353,7 +353,7 @@ impl PCA {
         data: ArrayView2<f64>,
         result: &PCAResult,
     ) -> Result<Array2<f64>> {
-        check_array_finite(&data, "data")?;
+        checkarray_finite(&data, "data")?;
         let n_components = result.components.nrows();
         if data.ncols() != n_components {
             return Err(StatsError::DimensionMismatch(format!(
@@ -368,7 +368,7 @@ impl PCA {
 
         // Inverse scale
         if let Some(ref scale) = result.scale {
-            for (mut col, &s) in reconstructed.columns_mut().into_iter().zip(scale.iter()) {
+            for (mut col, &s) in reconstructed.columns_mut().into().iter().zip(scale.iter()) {
                 col *= s;
             }
         }
@@ -394,14 +394,14 @@ impl PCA {
 /// Compute the optimal number of components using Minka's MLE
 #[allow(dead_code)]
 pub fn mle_components(_data: ArrayView2<f64>, max_components: Option<usize>) -> Result<usize> {
-    check_array_finite(&_data, "_data")?;
-    let (n_samples, n_features) = _data.dim();
+    checkarray_finite(&_data, "_data")?;
+    let (n_samples_, n_features) = _data.dim();
 
-    let pca = PCA::new().with_n_components(max_components.unwrap_or(n_features.min(n_samples)));
+    let pca = PCA::new().with_n_components(max_components.unwrap_or(n_features.min(n_samples_)));
     let result = pca.fit(_data)?;
 
     let eigenvalues = &result.explained_variance;
-    let n = n_samples as f64;
+    let n = n_samples_ as f64;
     let p = n_features as f64;
 
     // Minka's MLE for PCA
@@ -467,7 +467,8 @@ impl IncrementalPCA {
         Ok(Self {
             pca: PCA::new().with_n_components(_n_components),
             batch_size,
-            mean: None_components: None,
+            mean: None,
+            components: None,
             singular_values: None,
             n_samples_seen: 0,
             svd_u: None,
@@ -478,7 +479,7 @@ impl IncrementalPCA {
 
     /// Partial fit on a batch of data
     pub fn partial_fit(&mut self, batch: ArrayView2<f64>) -> Result<()> {
-        check_array_finite(&batch, "batch")?;
+        checkarray_finite(&batch, "batch")?;
         let (batch_size, n_features) = batch.dim();
 
         // Update mean incrementally
@@ -509,7 +510,7 @@ impl IncrementalPCA {
 
         if self.svd_u.is_none() {
             // First batch - initialize with standard SVD
-            use ndarray__linalg::SVD;
+            use ndarray_linalg::SVD;
             let (u, s, vt) = centered_batch
                 .svd(true, true)
                 .map_err(|e| StatsError::ComputationError(format!("Initial SVD failed: {}", e)))?;
@@ -535,7 +536,7 @@ impl IncrementalPCA {
             let residual = &centered_batch - &projection.dot(&v_old.t());
 
             // QR decomposition of residual
-            use ndarray__linalg::QR;
+            use ndarray_linalg::QR;
             let (q_res, r_res) = residual.qr().map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
@@ -561,7 +562,7 @@ impl IncrementalPCA {
             }
 
             // SVD of augmented matrix
-            use ndarray__linalg::SVD;
+            use ndarray_linalg::SVD;
             let (u_aug, s_aug, vt_aug) = augmented.svd(true, true).map_err(|e| {
                 StatsError::ComputationError(format!("Augmented SVD failed: {}", e))
             })?;

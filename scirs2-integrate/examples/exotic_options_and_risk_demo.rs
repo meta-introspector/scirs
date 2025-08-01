@@ -4,8 +4,8 @@
 //! modules in the scirs2-integrate finance specialized solver.
 
 use ndarray::{Array1, Array2};
-use scirs2__integrate::specialized::finance::OptionType;
-use scirs2__integrate::specialized::*;
+use scirs2_integrate::specialized::finance::OptionType;
+use scirs2_integrate::specialized::*;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -200,7 +200,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn generate_sample_returns(_annual_mean: f64, annual_vol: f64, n_periods: usize) -> Vec<f64> {
     use rand::prelude::*;
     use rand::rngs::StdRng;
-    use rand__distr::Normal;
+    use rand_distr::Normal;
 
     let mut rng = StdRng::seed_from_u64(42); // Fixed seed for reproducibility
     let daily_mean = _annual_mean / n_periods as f64;

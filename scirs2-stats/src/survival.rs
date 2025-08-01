@@ -41,7 +41,7 @@ impl KaplanMeierEstimator {
         event_observed: ArrayView1<bool>,
         confidence_level: Option<f64>,
     ) -> Result<Self> {
-        check_array_finite(&durations, "durations")?;
+        checkarray_finite(&durations, "durations")?;
 
         if durations.len() != event_observed.len() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -204,7 +204,7 @@ impl KaplanMeierEstimator {
 
     /// Predict survival probability at given times
     pub fn predict(&self, times: ArrayView1<f64>) -> Result<Array1<f64>> {
-        check_array_finite(&times, "times")?;
+        checkarray_finite(&times, "times")?;
 
         let mut predictions = Array1::zeros(times.len());
 
@@ -255,8 +255,8 @@ impl LogRankTest {
         durations2: ArrayView1<f64>,
         events2: ArrayView1<bool>,
     ) -> Result<(f64, f64)> {
-        check_array_finite(&durations1, "durations1")?;
-        check_array_finite(&durations2, "durations2")?;
+        checkarray_finite(&durations1, "durations1")?;
+        checkarray_finite(&durations2, "durations2")?;
 
         if durations1.len() != events1.len() || durations2.len() != events2.len() {
             return Err(StatsError::DimensionMismatch(
@@ -415,7 +415,7 @@ impl CoxPHModel {
     /// # Arguments
     /// * `durations` - Time to event or censoring
     /// * `events` - Whether event was observed
-    /// * `covariates` - Covariate matrix (n_samples x n_features)
+    /// * `covariates` - Covariate matrix (n_samples_ x n_features)
     /// * `max_iter` - Maximum number of iterations
     /// * `tol` - Convergence tolerance
     ///
@@ -428,14 +428,14 @@ impl CoxPHModel {
         max_iter: Option<usize>,
         tol: Option<f64>,
     ) -> Result<Self> {
-        check_array_finite(&durations, "durations")?;
-        check_array_finite(&covariates, "covariates")?;
+        checkarray_finite(&durations, "durations")?;
+        checkarray_finite(&covariates, "covariates")?;
 
-        let (n_samples, n_features) = covariates.dim();
+        let (n_samples_, n_features) = covariates.dim();
         let max_iter = max_iter.unwrap_or(100);
         let tol = tol.unwrap_or(1e-6);
 
-        if durations.len() != n_samples || events.len() != n_samples {
+        if durations.len() != n_samples_ || events.len() != n_samples_ {
             return Err(StatsError::DimensionMismatch(
                 "All input arrays must have the same number of samples".to_string(),
             ));
@@ -486,11 +486,11 @@ impl CoxPHModel {
         covariates: &ArrayView2<f64>,
         beta: &Array1<f64>,
     ) -> Result<(f64, Array1<f64>, Array2<f64>)> {
-        let n_samples = durations.len();
+        let n_samples_ = durations.len();
         let n_features = beta.len();
 
         // Sort by event time
-        let mut indices: Vec<usize> = (0..n_samples).collect();
+        let mut indices: Vec<usize> = (0..n_samples_).collect();
         indices.sort_by(|&i, &j| durations[i].partial_cmp(&durations[j]).unwrap());
 
         let mut log_likelihood = 0.0;
@@ -572,10 +572,10 @@ impl CoxPHModel {
         covariates: &ArrayView2<f64>,
         beta: &Array1<f64>,
     ) -> Result<(Array1<f64>, Array1<f64>)> {
-        let n_samples = durations.len();
+        let n_samples_ = durations.len();
 
         // Sort by event time
-        let mut indices: Vec<usize> = (0..n_samples).collect();
+        let mut indices: Vec<usize> = (0..n_samples_).collect();
         indices.sort_by(|&i, &j| durations[i].partial_cmp(&durations[j]).unwrap());
 
         let mut times = Vec::new();
@@ -610,7 +610,7 @@ impl CoxPHModel {
 
     /// Predict hazard ratios for new data
     pub fn predict_hazard_ratio(&self, covariates: ArrayView2<f64>) -> Result<Array1<f64>> {
-        check_array_finite(&covariates, "covariates")?;
+        checkarray_finite(&covariates, "covariates")?;
 
         if covariates.ncols() != self.coefficients.len() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -663,12 +663,12 @@ impl AFTModel {
         covariates: ArrayView2<f64>,
         distribution: AFTDistribution,
     ) -> Result<Self> {
-        check_array_finite(&durations, "durations")?;
-        check_array_finite(&covariates, "covariates")?;
+        checkarray_finite(&durations, "durations")?;
+        checkarray_finite(&covariates, "covariates")?;
 
-        let (n_samples, n_features) = covariates.dim();
+        let (n_samples_, n_features) = covariates.dim();
 
-        if durations.len() != n_samples || events.len() != n_samples {
+        if durations.len() != n_samples_ || events.len() != n_samples_ {
             return Err(StatsError::DimensionMismatch(
                 "All input arrays must have the same number of samples".to_string(),
             ));
@@ -677,10 +677,10 @@ impl AFTModel {
         // Simplified implementation: use log-linear regression on observed times
         // In practice, this would use maximum likelihood estimation
 
-        let mut y = Array1::zeros(n_samples);
-        let mut weights = Array1::zeros(n_samples);
+        let mut y = Array1::zeros(n_samples_);
+        let mut weights = Array1::zeros(n_samples_);
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             y[i] = durations[i].ln();
             weights[i] = if events[i] { 1.0 } else { 0.5 }; // Downweight censored observations
         }
@@ -689,7 +689,7 @@ impl AFTModel {
         let mut xtx = Array2::zeros((n_features, n_features));
         let mut xty = Array1::zeros(n_features);
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let x_i = covariates.row(i);
             let w = weights[i];
 
@@ -709,7 +709,7 @@ impl AFTModel {
         let mut residual_sum = 0.0;
         let mut count = 0;
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             if events[i] {
                 let x_i = covariates.row(i);
                 let predicted = x_i.dot(&coefficients);
@@ -734,7 +734,7 @@ impl AFTModel {
 
     /// Predict survival times
     pub fn predict(&self, covariates: ArrayView2<f64>) -> Result<Array1<f64>> {
-        check_array_finite(&covariates, "covariates")?;
+        checkarray_finite(&covariates, "covariates")?;
 
         if covariates.ncols() != self.coefficients.len() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -785,7 +785,7 @@ impl ExtendedCoxModel {
     /// # Arguments
     /// * `durations` - Time to event or censoring
     /// * `events` - Whether event was observed
-    /// * `covariates` - Covariate matrix (n_samples x n_features)
+    /// * `covariates` - Covariate matrix (n_samples_ x n_features)
     /// * `strata` - Optional stratification variable
     /// * `time_varying_indices` - Indices of time-varying covariates
     /// * `time_points` - Time points for time-varying covariates (if any)
@@ -799,14 +799,14 @@ impl ExtendedCoxModel {
         max_iter: Option<usize>,
         tol: Option<f64>,
     ) -> Result<Self> {
-        check_array_finite(&durations, "durations")?;
-        check_array_finite(&covariates, "covariates")?;
+        checkarray_finite(&durations, "durations")?;
+        checkarray_finite(&covariates, "covariates")?;
 
-        let (n_samples, n_features) = covariates.dim();
+        let (n_samples_, n_features) = covariates.dim();
         let max_iter = max_iter.unwrap_or(100);
         let tol = tol.unwrap_or(1e-6);
 
-        if durations.len() != n_samples || events.len() != n_samples {
+        if durations.len() != n_samples_ || events.len() != n_samples_ {
             return Err(StatsError::DimensionMismatch(
                 "All input arrays must have the same number of samples".to_string(),
             ));
@@ -814,12 +814,12 @@ impl ExtendedCoxModel {
 
         // Handle stratification
         let (strata_array, n_strata) = if let Some(strata_input) = strata {
-            if strata_input.len() != n_samples {
+            if strata_input.len() != n_samples_ {
                 return Err(StatsError::DimensionMismatch(
                     "Strata length must match number of samples".to_string(),
                 ));
             }
-            let max_stratum = strata_input._iter().cloned().max().unwrap_or(0);
+            let max_stratum = strata_input.iter().cloned().max().unwrap_or(0);
             (Some(strata_input.to_owned()), max_stratum + 1)
         } else {
             (None, 1)
@@ -889,7 +889,7 @@ impl ExtendedCoxModel {
         strata: &Option<Array1<usize>>,
         n_strata: usize,
     ) -> Result<(f64, Array1<f64>, Array2<f64>)> {
-        let n_samples = durations.len();
+        let n_samples_ = durations.len();
         let n_features = beta.len();
 
         let mut total_log_likelihood = 0.0;
@@ -899,12 +899,12 @@ impl ExtendedCoxModel {
         // Process each stratum separately
         for stratum in 0..n_strata {
             // Get indices for this stratum
-            let stratum_indices: Vec<usize> = if let Some(ref strata_array) = _strata {
-                (0..n_samples)
+            let stratum_indices: Vec<usize> = if let Some(ref strata_array) = strata {
+                (0..n_samples_)
                     .filter(|&i| strata_array[i] == stratum)
                     .collect()
             } else {
-                (0..n_samples).collect()
+                (0..n_samples_).collect()
             };
 
             if stratum_indices.is_empty() {
@@ -1016,17 +1016,17 @@ impl ExtendedCoxModel {
         strata: &Option<Array1<usize>>,
         n_strata: usize,
     ) -> Result<Vec<(Array1<f64>, Array1<f64>)>> {
-        let n_samples = durations.len();
+        let n_samples_ = durations.len();
         let mut baseline_hazards = Vec::new();
 
         for stratum in 0..n_strata {
             // Get indices for this stratum
-            let stratum_indices: Vec<usize> = if let Some(ref strata_array) = _strata {
-                (0..n_samples)
+            let stratum_indices: Vec<usize> = if let Some(ref strata_array) = strata {
+                (0..n_samples_)
                     .filter(|&i| strata_array[i] == stratum)
                     .collect()
             } else {
-                (0..n_samples).collect()
+                (0..n_samples_).collect()
             };
 
             if stratum_indices.is_empty() {
@@ -1084,7 +1084,7 @@ impl ExtendedCoxModel {
         covariates: ArrayView2<f64>,
         strata: Option<ArrayView1<usize>>,
     ) -> Result<Array1<f64>> {
-        check_array_finite(&covariates, "covariates")?;
+        checkarray_finite(&covariates, "covariates")?;
 
         if covariates.ncols() != self.coefficients.len() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -1169,15 +1169,15 @@ impl CompetingRisksModel {
         max_iter: Option<usize>,
         tol: Option<f64>,
     ) -> Result<Self> {
-        check_array_finite(&durations, "durations")?;
-        check_array_finite(&covariates, "covariates")?;
+        checkarray_finite(&durations, "durations")?;
+        checkarray_finite(&covariates, "covariates")?;
         check_positive(n_risks, "n_risks")?;
 
-        let (n_samples, n_features) = covariates.dim();
+        let (n_samples_, n_features) = covariates.dim();
         let max_iter = max_iter.unwrap_or(100);
         let tol = tol.unwrap_or(1e-6);
 
-        if durations.len() != n_samples || events.len() != n_samples {
+        if durations.len() != n_samples_ || events.len() != n_samples_ {
             return Err(StatsError::DimensionMismatch(
                 "All input arrays must have the same number of samples".to_string(),
             ));
@@ -1256,15 +1256,15 @@ impl CompetingRisksModel {
         events: &ArrayView1<usize>,
         target_risk: usize,
     ) -> Result<(Array1<f64>, Array1<bool>, Array1<f64>)> {
-        let n_samples = durations.len();
+        let n_samples_ = durations.len();
         let modified_durations = durations.to_owned();
-        let mut modified_events = Array1::from_elem(n_samples, false);
-        let mut weights = Array1::ones(n_samples);
+        let mut modified_events = Array1::from_elem(n_samples_, false);
+        let mut weights = Array1::ones(n_samples_);
 
         // Calculate Kaplan-Meier for censoring distribution
         let censoring_km = Self::kaplan_meier_censoring(&durations, &events)?;
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             if events[i] == target_risk {
                 // Event of interest occurred
                 modified_events[i] = true;
@@ -1367,11 +1367,11 @@ impl CompetingRisksModel {
         weights: &Array1<f64>,
         beta: &Array1<f64>,
     ) -> Result<(f64, Array1<f64>, Array2<f64>)> {
-        let n_samples = durations.len();
+        let n_samples_ = durations.len();
         let n_features = beta.len();
 
         // Sort by event time
-        let mut indices: Vec<usize> = (0..n_samples).collect();
+        let mut indices: Vec<usize> = (0..n_samples_).collect();
         indices.sort_by(|&i, &j| durations[i].partial_cmp(&durations[j]).unwrap());
 
         let mut log_likelihood = 0.0;
@@ -1437,10 +1437,10 @@ impl CompetingRisksModel {
         weights: &Array1<f64>,
         beta: &Array1<f64>,
     ) -> Result<(Array1<f64>, Array1<f64>)> {
-        let n_samples = durations.len();
+        let n_samples_ = durations.len();
 
         // Sort by event time
-        let mut indices: Vec<usize> = (0..n_samples).collect();
+        let mut indices: Vec<usize> = (0..n_samples_).collect();
         indices.sort_by(|&i, &j| durations[i].partial_cmp(&durations[j]).unwrap());
 
         let mut times = Vec::new();
@@ -1492,8 +1492,8 @@ impl CompetingRisksModel {
         target_risk: usize,
         times: ArrayView1<f64>,
     ) -> Result<Array2<f64>> {
-        check_array_finite(&covariates, "covariates")?;
-        check_array_finite(&times, "times")?;
+        checkarray_finite(&covariates, "covariates")?;
+        checkarray_finite(&times, "times")?;
 
         if target_risk == 0 || target_risk > self.n_risks {
             return Err(StatsError::InvalidArgument(
@@ -1502,14 +1502,14 @@ impl CompetingRisksModel {
         }
 
         let risk_idx = target_risk - 1;
-        let n_samples = covariates.nrows();
+        let n_samples_ = covariates.nrows();
         let n_times = times.len();
-        let mut predictions = Array2::zeros((n_samples, n_times));
+        let mut predictions = Array2::zeros((n_samples_, n_times));
 
         let beta = &self.coefficients[risk_idx];
         let (baseline_times, baseline_cif) = &self.baseline_cifs[risk_idx];
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let x_i = covariates.row(i);
             let hazard_ratio = x_i.dot(beta).exp();
 

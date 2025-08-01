@@ -579,7 +579,7 @@ impl WorkerState {
         }
 
         // Get the current statistics
-        let tasks_processed = self.tasks_processed.load(Ordering::Relaxed);
+        let _tasks_processed = self.tasks_processed.load(Ordering::Relaxed);
         let tasks_stolen = self.tasks_stolen.load(Ordering::Relaxed);
         let failed_steals = self.failed_steals.load(Ordering::Relaxed);
 

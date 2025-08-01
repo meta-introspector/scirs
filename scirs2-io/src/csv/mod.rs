@@ -1611,7 +1611,7 @@ pub fn read_csv_numeric_streaming<P: AsRef<Path>>(
     path: P,
     config: StreamingCsvConfig,
 ) -> Result<(Option<Vec<String>>, Vec<Array2<f64>>, StreamingStats)> {
-    let (chunks, stats) = process_csv_streaming(path, config, |chunk_headers| {
+    let (chunks, stats) = process_csv_streaming(path, config, |chunk, _headers| {
         // Convert chunk to numeric
         let shape = chunk.shape();
         let mut numeric_chunk = Array2::<f64>::zeros((shape[0], shape[1]));
@@ -1651,7 +1651,7 @@ pub fn aggregate_csv_statistics<P: AsRef<Path>>(
 ) -> Result<Vec<ColumnStats>> {
     let mut column_stats: Vec<Option<ColumnStats>> = Vec::new();
 
-    let (_results_stats) = process_csv_streaming(path, config, |chunk_headers| {
+    let (_results_stats) = process_csv_streaming(path, config, |chunk, _headers| {
         let shape = chunk.shape();
 
         // Initialize column stats if needed

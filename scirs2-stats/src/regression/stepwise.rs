@@ -5,7 +5,7 @@ use crate::regression::utils::*;
 use crate::regression::RegressionResults;
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
-use scirs2__linalg::lstsq;
+use scirs2_linalg::lstsq;
 use std::collections::HashSet;
 
 /// Direction for stepwise regression
@@ -204,7 +204,7 @@ where
 
     // Track selected variables
     let mut selected_indices = match direction {
-        StepwiseDirection::Forward =>, HashSet::new(),
+        StepwiseDirection::Forward => HashSet::new(),
         StepwiseDirection::Backward | StepwiseDirection::Both => {
             // Start with all variables
             let mut indices = HashSet::new();
@@ -318,7 +318,7 @@ where
             for &var_idx in &selected_indices {
                 // Create model without this variable
                 let mut test_indices = selected_indices.clone();
-                test_indices._remove(&var_idx);
+                test_indices.remove(&var_idx);
 
                 let test_x = create_model_matrix(x, &test_indices, include_intercept);
 
@@ -342,7 +342,7 @@ where
                     let p_value = model.p_values[var_pos];
 
                     if p_value > p_remove {
-                        selected_indices._remove(&var_idx);
+                        selected_indices.remove(&var_idx);
                         current_x = create_model_matrix(x, &selected_indices, include_intercept);
                         sequence.push((var_idx, false));
                         criteria_values.push(worst_criterion);
@@ -414,7 +414,7 @@ where
 
     for i in offset..current_x.ncols() {
         let col = current_x.slice(s![.., i]);
-        let x_col = _x.slice(s![.., var_idx]);
+        let x_col = x.slice(s![.., var_idx]);
 
         if col
             .iter()
@@ -458,7 +458,7 @@ where
                 .sum();
             let n_f = F::from(n).unwrap();
             let k_f = F::from(p).unwrap();
-            n_f * num_traits::Float::ln(rss / n_f) + k_f * num, _traits::Float::ln(n_f)
+            n_f * num_traits::Float::ln(rss / n_f) + k_f * num_traits::Float::ln(n_f)
         }
         StepwiseCriterion::AdjR2 => {
             -model.adj_r_squared // Negative because we want to maximize adj R^2

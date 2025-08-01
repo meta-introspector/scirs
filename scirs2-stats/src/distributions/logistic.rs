@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution, Uniform as RandUniform};
+use rand_distr::{Distribution, Uniform as RandUniform};
 use statrs::statistics::Statistics;
 
 /// Logistic distribution structure
@@ -140,7 +140,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// assert!((x - 1.0986123).abs() < 1e-6);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));

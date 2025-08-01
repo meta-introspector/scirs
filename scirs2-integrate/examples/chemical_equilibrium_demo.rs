@@ -5,7 +5,7 @@
 //! and activity coefficient models.
 
 use ndarray::arr1;
-use scirs2__integrate::ode::chemical_equilibrium::{systems, ActivityModel, ThermoData};
+use scirs2_integrate::ode::chemical_equilibrium::{systems, ActivityModel, ThermoData};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

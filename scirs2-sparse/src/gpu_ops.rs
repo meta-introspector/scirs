@@ -3,10 +3,10 @@
 //! This module provides GPU acceleration for sparse matrix operations
 //! using the scirs2-core GPU backend system.
 
-use crate::csr__array::CsrArray;
+use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
-use crate::sym__csr::SymCsrMatrix;
+use crate::sym_csr::SymCsrMatrix;
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
 use std::fmt::Debug;
@@ -15,7 +15,7 @@ use std::fmt::Debug;
 
 // Import GPU kernel execution functions
 #[cfg(feature = "gpu")]
-use crate::gpu_kernel__execution::{GpuKernelConfig, MemoryStrategy};
+use crate::gpu_kernel_execution::{GpuKernelConfig, MemoryStrategy};
 
 // Import and re-export GPU capabilities from scirs2-core (only when GPU feature is enabled)
 #[cfg(feature = "gpu")]
@@ -117,12 +117,12 @@ impl<T: Clone + Copy> GpuBuffer<T> {
     }
 
     pub fn copy_from_host(&mut self, host_data: &[T]) -> Result<(), GpuError> {
-        if host_data.len() != self._data.len() {
+        if host_data.len() != self.data.len() {
             return Err(GpuError::invalid_parameter(
-                "Host _data length does not match buffer length".to_string(),
+                "Host data length does not match buffer length".to_string(),
             ));
         }
-        self._data.copy_from_slice(host_data);
+        self.data.copy_from_slice(host_data);
         Ok(())
     }
 }
@@ -238,8 +238,8 @@ impl GpuDevice {
         Ok(())
     }
 
-    pub fn clear_buffer<T: GpuDataType>(&self_buffer: &GpuBuffer<T>) -> Result<(), GpuError> {
-        // Clear _buffer implementation for GPU
+    pub fn clear_buffer<T: GpuDataType>(&self, buffer: &GpuBuffer<T>) -> Result<(), GpuError> {
+        // Clear buffer implementation for GPU
         Ok(())
     }
 
@@ -258,9 +258,9 @@ impl GpuDevice {
     }
 
     pub fn dispatch_kernel(
-        &self_kernel: &GpuKernelHandle_global, _size: [u32; 3],
+        &self, kernel: &GpuKernelHandle, _global_size: [u32; 3],
     ) -> Result<(), GpuError> {
-        // Dispatch _kernel implementation for GPU
+        // Dispatch kernel implementation for GPU
         Ok(())
     }
 
@@ -308,7 +308,7 @@ impl GpuDevice {
     }
 
     pub fn compile_kernel(
-        &self_source: &str, _entry_point: &str,
+        &self, source: &str, _entry_point: &str,
     ) -> Result<GpuKernelHandle, GpuError> {
         Ok(GpuKernelHandle)
     }
@@ -319,7 +319,7 @@ impl GpuDevice {
     }
 
     pub fn execute_kernel_with_args(
-        &self_kernel: &GpuKernelHandle_global, _size: &[usize], _local_size: &[usize], _args: &[Box<dyn std::any::Any>],
+        &self, kernel: &GpuKernelHandle, _global_size: &[usize], _local_size: &[usize], _args: &[Box<dyn std::any::Any>],
     ) -> Result<(), GpuError> {
         // CPU fallback - just return success
         Ok(())
@@ -350,7 +350,7 @@ impl GpuDevice {
         Ok(())
     }
 
-    pub fn clear_buffer<T: GpuDataType>(&self_buffer: &GpuBuffer<T>) -> Result<(), GpuError> {
+    pub fn clear_buffer<T: GpuDataType>(&self, buffer: &GpuBuffer<T>) -> Result<(), GpuError> {
         // No-op for CPU fallback
         Ok(())
     }
@@ -370,9 +370,9 @@ impl GpuDevice {
     }
 
     pub fn dispatch_kernel(
-        &self_kernel: &GpuKernelHandle_global, _size: [u32; 3],
+        &self, kernel: &GpuKernelHandle, _global_size: [u32; 3],
     ) -> Result<(), GpuError> {
-        // Dispatch _kernel implementation for GPU
+        // Dispatch kernel implementation for GPU
         Ok(())
     }
 
@@ -421,13 +421,13 @@ impl SpMVKernel {
             GpuBackend::Cuda => {
                 // Compile CUDA SpMV kernel
                 let cuda_kernel_source = r#"
-                extern "C" __global__ void spmv_csr_kernel(
+                extern "C" _global_ void spmv_csr_kernel(
                     int rows,
-                    const int* __restrict__ indptr,
-                    const int* __restrict__ indices,
-                    const float* __restrict__ data,
-                    const float* __restrict__ x,
-                    float* __restrict__ y
+                    const int* _restrict_ indptr,
+                    const int* _restrict_ indices,
+                    const float* _restrict_ data,
+                    const float* _restrict_ x,
+                    float* _restrict_ y
                 ) {
                     int row = blockIdx.x * blockDim.x + threadIdx.x;
                     if (row >= rows) return;
@@ -444,13 +444,13 @@ impl SpMVKernel {
                     y[row] = sum;
                 }
                 
-                extern "C" __global__ void spmv_csr_vectorized_kernel(
+                extern "C" _global_ void spmv_csr_vectorized_kernel(
                     int rows,
-                    const int* __restrict__ indptr,
-                    const int* __restrict__ indices,
-                    const float* __restrict__ data,
-                    const float* __restrict__ x,
-                    float* __restrict__ y
+                    const int* _restrict_ indptr,
+                    const int* _restrict_ indices,
+                    const float* _restrict_ data,
+                    const float* _restrict_ x,
+                    float* _restrict_ y
                 ) {
                     int row = blockIdx.x * blockDim.x + threadIdx.x;
                     if (row >= rows) return;
@@ -460,17 +460,17 @@ impl SpMVKernel {
                     int end = indptr[row + 1];
                     
                     // Use shared memory for better performance
-                    extern __shared__ float sdata[];
+                    extern _shared_ float sdata[];
                     int tid = threadIdx.x;
                     
                     sdata[tid] = 0.0f;
-                    __syncthreads();
+                    _syncthreads();
                     
                     for (int j = start; j < end; j++) {
                         sdata[tid] += data[j] * x[indices[j]];
                     }
                     
-                    __syncthreads();
+                    _syncthreads();
                     y[row] = sdata[tid];
                 }
                 "#;
@@ -503,8 +503,8 @@ impl SpMVKernel {
             GpuBackend::OpenCL => {
                 // Compile OpenCL SpMV kernel
                 let opencl_kernel_source = r#"
-                __kernel void spmv_csr_kernel(
-                    const int rows__global const int* restrict indptr__global const int* restrict indices__global const float* restrict data__global const float* restrict x__global float* restrict y
+                _kernel void spmv_csr_kernel(
+                    const int rows_global const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y
                 ) {
                     int row = get_global_id(0);
                     if (row >= rows) return;
@@ -521,8 +521,8 @@ impl SpMVKernel {
                     y[row] = sum;
                 }
                 
-                __kernel void spmv_csr_local_kernel(
-                    const int rows__global const int* restrict indptr__global const int* restrict indices__global const float* restrict data__global const float* restrict x__global float* restrict y__local float* sdata
+                _kernel void spmv_csr_local_kernel(
+                    const int rows_global const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y_local float* sdata
                 ) {
                     int row = get_global_id(0);
                     int lid = get_local_id(0);
@@ -916,19 +916,19 @@ impl SpMSKernel {
             GpuBackend::Cuda => {
                 // Compile CUDA kernels for sparse matrix-matrix operations
                 let cuda_kernel_source = r#"
-                extern "C" __global__ void spmm_csr_kernel(
+                extern "C" _global_ void spmm_csr_kernel(
                     int a_rows,
                     int a_cols,
                     int b_cols,
-                    const int* __restrict__ a_indptr,
-                    const int* __restrict__ a_indices,
-                    const float* __restrict__ a_data,
-                    const int* __restrict__ b_indptr,
-                    const int* __restrict__ b_indices,
-                    const float* __restrict__ b_data,
-                    int* __restrict__ c_indptr,
-                    int* __restrict__ c_indices,
-                    float* __restrict__ c_data
+                    const int* _restrict_ a_indptr,
+                    const int* _restrict_ a_indices,
+                    const float* _restrict_ a_data,
+                    const int* _restrict_ b_indptr,
+                    const int* _restrict_ b_indices,
+                    const float* _restrict_ b_data,
+                    int* _restrict_ c_indptr,
+                    int* _restrict_ c_indices,
+                    float* _restrict_ c_data
                 ) {
                     int row = blockIdx.x * blockDim.x + threadIdx.x;
                     if (row >= a_rows) return;
@@ -964,13 +964,13 @@ impl SpMSKernel {
                     c_indptr[row + 1] = c_start + c_count;
                 }
                 
-                extern "C" __global__ void triangular_solve_kernel(
+                extern "C" _global_ void triangular_solve_kernel(
                     int n,
-                    const int* __restrict__ indptr,
-                    const int* __restrict__ indices,
-                    const float* __restrict__ data,
-                    const float* __restrict__ b,
-                    float* __restrict__ x
+                    const int* _restrict_ indptr,
+                    const int* _restrict_ indices,
+                    const float* _restrict_ data,
+                    const float* _restrict_ b,
+                    float* _restrict_ x
                 ) {
                     // Forward substitution for lower triangular matrix
                     for (int i = 0; i < n; i++) {
@@ -994,13 +994,13 @@ impl SpMSKernel {
                     }
                 }
                 
-                extern "C" __global__ void symmetric_matvec_kernel(
+                extern "C" _global_ void symmetric_matvec_kernel(
                     int rows,
-                    const int* __restrict__ indptr,
-                    const int* __restrict__ indices,
-                    const float* __restrict__ data,
-                    const float* __restrict__ x,
-                    float* __restrict__ y
+                    const int* _restrict_ indptr,
+                    const int* _restrict_ indices,
+                    const float* _restrict_ data,
+                    const float* _restrict_ x,
+                    float* _restrict_ y
                 ) {
                     int row = blockIdx.x * blockDim.x + threadIdx.x;
                     if (row >= rows) return;
@@ -1049,10 +1049,10 @@ impl SpMSKernel {
             GpuBackend::OpenCL => {
                 // Compile OpenCL kernels for sparse matrix operations
                 let opencl_kernel_source = r#"
-                __kernel void spmm_csr_kernel(
+                _kernel void spmm_csr_kernel(
                     const int a_rows,
                     const int a_cols,
-                    const int b_cols__global const int* restrict a_indptr__global const int* restrict a_indices__global const float* restrict a_data__global const int* restrict b_indptr__global const int* restrict b_indices__global const float* restrict b_data__global int* restrict c_indptr__global int* restrict c_indices__global float* restrict c_data
+                    const int b_cols_global const int* restrict a_indptr_global const int* restrict a_indices_global const float* restrict a_data_global const int* restrict b_indptr_global const int* restrict b_indices_global const float* restrict b_data_global int* restrict c_indptr_global int* restrict c_indices_global float* restrict c_data
                 ) {
                     int row = get_global_id(0);
                     if (row >= a_rows) return;
@@ -1085,8 +1085,8 @@ impl SpMSKernel {
                     c_indptr[row + 1] = c_start + c_count;
                 }
                 
-                __kernel void triangular_solve_kernel(
-                    const int n__global const int* restrict indptr__global const int* restrict indices__global const float* restrict data__global const float* restrict b__global float* restrict x
+                _kernel void triangular_solve_kernel(
+                    const int n_global const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict b_global float* restrict x
                 ) {
                     for (int i = 0; i < n; i++) {
                         float sum = b[i];
@@ -1109,8 +1109,8 @@ impl SpMSKernel {
                     }
                 }
                 
-                __kernel void symmetric_matvec_kernel(
-                    const int rows__global const int* restrict indptr__global const int* restrict indices__global const float* restrict data__global const float* restrict x__global float* restrict y
+                _kernel void symmetric_matvec_kernel(
+                    const int rows_global const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y
                 ) {
                     int row = get_global_id(0);
                     if (row >= rows) return;
@@ -2122,8 +2122,8 @@ impl Default for GpuOptions {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__sparse::csr_array::CsrArray;
-/// use scirs2__sparse::gpu_ops::{gpu_sparse_matvec, GpuOptions};
+/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2_sparse::gpu_ops::{gpu_sparse_matvec, GpuOptions};
 /// use ndarray::Array1;
 ///
 /// // Create a large sparse matrix
@@ -2478,7 +2478,7 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (rows_cols) = _matrix.shape();
+    let (rows, cols) = _matrix.shape();
     let mut result = Array1::zeros(rows);
     let (row_indices, col_indices, values) = _matrix.find();
 
@@ -2500,7 +2500,7 @@ impl GpuMemoryManager {
     /// Create a new GPU memory manager
     pub fn new(_backend: GpuBackend) -> Self {
         Self {
-            _backend,
+            backend: _backend,
             allocated_buffers: Vec::new(),
         }
     }
@@ -2544,7 +2544,7 @@ impl GpuProfiler {
     /// Create a new GPU profiler
     pub fn new(_backend: GpuBackend) -> Self {
         Self {
-            _backend,
+            backend: _backend,
             timing_data: Vec::new(),
         }
     }
@@ -2560,7 +2560,7 @@ impl GpuProfiler {
         if let Some(entry) = self
             .timing_data
             .iter_mut()
-            .find(|(name_)| name == operation)
+            .find(|(name, _)| name == operation)
         {
             entry.1 = duration_ms;
         }
@@ -2688,7 +2688,7 @@ impl AdvancedGpuOps {
         // Note: This implementation is O(nnz_a * nnz_b) which is not optimal
         // A proper implementation would convert B to CSC format first
 
-        let (a_rows_a_cols) = a.shape();
+        let (a_rows, a_cols) = a.shape();
         let (_, b_cols) = b.shape();
 
         let mut result_data = Vec::new();
@@ -2893,7 +2893,7 @@ impl GpuKernelScheduler {
         };
 
         Self {
-            _backend,
+            backend: _backend,
             available_memory,
             compute_units,
             warp_size,
@@ -3042,7 +3042,7 @@ impl OptimizedGpuOps {
     where
         T: Float + Debug + Copy + 'static + Send + Sync + Default + GpuDataType,
     {
-        let (n_) = matrix.shape();
+        let (n, _) = matrix.shape();
         if b.len() != n {
             return Err(SparseError::DimensionMismatch {
                 expected: n,
@@ -3086,7 +3086,7 @@ impl OptimizedGpuOps {
         // Simplified implementation - in reality this would be fully on GPU
         let mut r = b.to_owned();
         let mut p = r.clone();
-        let mut rsold = r._iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x);
+        let mut rsold = r.iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x);
 
         for _iter in 0..max_iter {
             // A * p (would be done on GPU)
@@ -3094,8 +3094,8 @@ impl OptimizedGpuOps {
 
             // alpha = rsold / (p^T * Ap)
             let pap = p
-                ._iter()
-                .zip(ap._iter())
+                .iter()
+                .zip(ap.iter())
                 .map(|(&pi, &api)| pi * api)
                 .fold(T::zero(), |acc, x| acc + x);
             let alpha = rsold / pap;
@@ -3110,7 +3110,7 @@ impl OptimizedGpuOps {
                 r[i] = r[i] - alpha * ap[i];
             }
 
-            let rsnew = r._iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x);
+            let rsnew = r.iter().map(|&x| x * x).fold(T::zero(), |acc, x| acc + x);
 
             if rsnew.sqrt() < T::from(tol).unwrap() {
                 break;
@@ -3159,8 +3159,8 @@ impl OptimizedGpuOps {
 
         for _iter in 0..max_iter {
             let rho_new = r
-                ._iter()
-                .zip(r_tilde._iter())
+                .iter()
+                .zip(r_tilde.iter())
                 .map(|(&ri, &rti)| ri * rti)
                 .fold(T::zero(), |acc, x| acc + x);
 
@@ -3179,8 +3179,8 @@ impl OptimizedGpuOps {
 
             alpha = rho_new
                 / r_tilde
-                    ._iter()
-                    .zip(v._iter())
+                    .iter()
+                    .zip(v.iter())
                     .map(|(&rti, &vi)| rti * vi)
                     .fold(T::zero(), |acc, x| acc + x);
 
@@ -3192,7 +3192,7 @@ impl OptimizedGpuOps {
 
             // Check for convergence
             let s_norm = s
-                ._iter()
+                .iter()
                 .map(|&x| x * x)
                 .fold(T::zero(), |acc, x| acc + x)
                 .sqrt();
@@ -3207,11 +3207,11 @@ impl OptimizedGpuOps {
             let t = self.optimized_spmv(matrix, &s.view())?;
 
             omega = t
-                ._iter()
-                .zip(s._iter())
+                .iter()
+                .zip(s.iter())
                 .map(|(&ti, &si)| ti * si)
                 .fold(T::zero(), |acc, x| acc + x)
-                / t._iter()
+                / t.iter()
                     .map(|&ti| ti * ti)
                     .fold(T::zero(), |acc, x| acc + x);
 
@@ -3226,7 +3226,7 @@ impl OptimizedGpuOps {
             }
 
             let r_norm = r
-                ._iter()
+                .iter()
                 .map(|&x| x * x)
                 .fold(T::zero(), |acc, x| acc + x)
                 .sqrt();
@@ -3265,7 +3265,7 @@ impl OptimizedGpuOps {
         if let Some(_restart_iter) = (0..(max_iter / restart)).next() {
             let r = b.to_owned(); // r = b - A*x (x starts as zero)
             let beta = r
-                ._iter()
+                .iter()
                 .map(|&x| x * x)
                 .fold(T::zero(), |acc, x| acc + x)
                 .sqrt();
@@ -3289,8 +3289,8 @@ impl OptimizedGpuOps {
                 // Modified Gram-Schmidt
                 for i in 0..=j {
                     h[i][j] = v[i]
-                        ._iter()
-                        .zip(w._iter())
+                        .iter()
+                        .zip(w.iter())
                         .map(|(&vi, &wi)| vi * wi)
                         .fold(T::zero(), |acc, x| acc + x);
                 }
@@ -3303,7 +3303,7 @@ impl OptimizedGpuOps {
                 }
 
                 h[j + 1][j] = w_orth
-                    ._iter()
+                    .iter()
                     .map(|&x| x * x)
                     .fold(T::zero(), |acc, x| acc + x)
                     .sqrt();
@@ -3359,7 +3359,7 @@ where
 #[cfg(all(test, not(feature = "gpu")))]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
     use approx::assert_relative_eq;
 
     #[test]
@@ -3521,7 +3521,7 @@ mod tests {
         assert_eq!(workgroup_small, [32, 8, 1]); // Should use balanced approach
 
         // Test memory estimation
-        let memory_usage = scheduler.estimate_memory__usage::<f64>(1000, 1000, 10000);
+        let memory_usage = scheduler.estimate_memory_usage::<f64>(1000, 1000, 10000);
         assert!(memory_usage > 0);
 
         // Test memory capacity check

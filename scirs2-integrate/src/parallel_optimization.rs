@@ -262,7 +262,7 @@ impl ParallelOptimizer {
     /// Create new parallel optimizer
     pub fn new(_num_threads: usize) -> Self {
         Self {
-            _num_threads,
+            num_threads: _num_threads,
             thread_pool: None,
             numa_info: NumaTopology::detect(),
             load_balancer: LoadBalancingStrategy::Adaptive,
@@ -516,7 +516,6 @@ impl ParallelOptimizer {
         input: &ArrayView2<F>,
         op: ReductionOp,
     ) -> IntegrateResult<Array2<F>> {
-
         let result_value = match op {
             ReductionOp::Sum => input.sum(),
             ReductionOp::Product => input.fold(F::one(), |acc, &x| acc * x),
@@ -536,7 +535,7 @@ impl ParallelOptimizer {
 
 impl NumaTopology {
     /// Detect NUMA topology
-    pub fn detect(&self) -> Self {
+    pub fn detect() -> Self {
         // Simplified NUMA detection - in practice would use hwloc or similar
         let num_cores = thread::available_parallelism()
             .map(|n| n.get())
@@ -575,7 +574,7 @@ impl Default for WorkStealingConfig {
 
 impl ThreadPool {
     /// Create new thread pool
-    pub fn new(_num_threads: usize, _config: &WorkStealingConfig) -> IntegrateResult<Self> {
+    pub fn new(num_threads: usize, _config: &WorkStealingConfig) -> IntegrateResult<Self> {
         let task_queue = Arc::new(Mutex::new(TaskQueue {
             global_tasks: Vec::new(),
             pending_tasks: 0,
@@ -715,7 +714,6 @@ impl ThreadPool {
 
     /// Shutdown the thread pool and wait for all threads to complete
     pub fn shutdown(&mut self) -> IntegrateResult<()> {
-
         // Signal all threads to shutdown
         self.shutdown.store(1, Ordering::Relaxed);
 
@@ -767,7 +765,6 @@ impl ThreadPool {
         global_queue: Arc<Mutex<TaskQueue>>,
         shutdown: Arc<AtomicUsize>,
     ) {
-
         loop {
             // Check for shutdown signal
             if shutdown.load(Ordering::Relaxed) == 1 {
@@ -809,7 +806,6 @@ impl ThreadPool {
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
-
         // Signal shutdown
         self.shutdown.store(1, Ordering::Relaxed);
 
@@ -826,17 +822,15 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
     fn execute(&self) -> ParallelResult {
         // Perform actual vectorized computation based on operation type
         let result: Array2<F> = match &self.operation {
-            VectorOperation::ElementWise(op) => {
-                match op {
-                    ArithmeticOp::Add(value) => self.input.mapv(|x| x + F::from(*value).unwrap()),
-                    ArithmeticOp::Multiply(value) => self.input.mapv(|x| x * F::from(*value).unwrap()),
-                    ArithmeticOp::Power(exp) => self.input.mapv(|x| x.powf(F::from(*exp).unwrap())),
-                    ArithmeticOp::Exp => self.input.mapv(|x| x.exp()),
-                    ArithmeticOp::Log => self.input.mapv(|x| x.ln()),
-                    ArithmeticOp::Sin => self.input.mapv(|x| x.sin()),
-                    ArithmeticOp::Cos => self.input.mapv(|x| x.cos()),
-                }
-            }
+            VectorOperation::ElementWise(op) => match op {
+                ArithmeticOp::Add(value) => self.input.mapv(|x| x + F::from(*value).unwrap()),
+                ArithmeticOp::Multiply(value) => self.input.mapv(|x| x * F::from(*value).unwrap()),
+                ArithmeticOp::Power(exp) => self.input.mapv(|x| x.powf(F::from(*exp).unwrap())),
+                ArithmeticOp::Exp => self.input.mapv(|x| x.exp()),
+                ArithmeticOp::Log => self.input.mapv(|x| x.ln()),
+                ArithmeticOp::Sin => self.input.mapv(|x| x.sin()),
+                ArithmeticOp::Cos => self.input.mapv(|x| x.cos()),
+            },
             VectorOperation::MatrixVector(vector) => {
                 if self.input.ncols() != vector.len() {
                     return Err(IntegrateError::DimensionMismatch(
@@ -908,16 +902,15 @@ impl<F: IntegrateFloat + Send + Sync> ParallelTask for VectorizedComputeTask<F> 
             }
         }
 
-        if subtasks.is_empty() {
-            vec![self]
-        } else {
-            subtasks
-        }
+        subtasks
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::parallel_optimization::ArithmeticOp;
+    use crate::{NumaTopology, ParallelOptimizer, VectorOperation, VectorizedComputeTask};
+    use ndarray::Array2;
 
     #[test]
     fn test_parallel_optimizer_creation() {

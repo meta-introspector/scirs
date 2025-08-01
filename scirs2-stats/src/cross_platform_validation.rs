@@ -610,7 +610,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test SIMD compatibility
-    fn test_simd_compatibility(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_simd_compatibility(&self, &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test SIMD mean calculation
@@ -759,7 +759,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test parallel processing compatibility
-    fn test_parallel_compatibility(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_parallel_compatibility(&self, &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test parallel mean calculation
@@ -907,7 +907,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test memory allocation patterns
-    fn test_memory_allocation(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_memory_allocation(&self, &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test large allocation handling
@@ -1015,7 +1015,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test architecture-specific optimizations
-    fn test_architecture_optimizations(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_architecture_optimizations(&self, &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test CPU cache optimization
@@ -1088,7 +1088,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test OS-specific behavior
-    fn test_os_specific_behavior(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_os_specific_behavior(&self, &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test OS-specific optimizations
@@ -1145,7 +1145,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test endianness handling
-    fn test_endianness_handling(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_endianness_handling(&self, &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test byte order consistency
@@ -1193,7 +1193,7 @@ impl CrossPlatformValidator {
     }
 
     /// Test threading models
-    fn test_threading_models(&self_issues: &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
+    fn test_threading_models(&self, &mut Vec<CompatibilityIssue>) -> StatsResult<Vec<TestResult>> {
         let mut results = Vec::new();
 
         // Test threading model compatibility

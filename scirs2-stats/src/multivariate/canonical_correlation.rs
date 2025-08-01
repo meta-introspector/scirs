@@ -4,7 +4,7 @@
 //! It's useful for understanding relationships between two multivariate datasets.
 
 use crate::error::{StatsError, StatsResult as Result};
-use crate::error_handling__v2::ErrorCode;
+use crate::error_handling_v2::ErrorCode;
 use crate::{unified_error_handling::global_error_handler, validate_or_error};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
 use statrs::statistics::Statistics;
@@ -129,14 +129,14 @@ impl CanonicalCorrelationAnalysis {
                 .error);
         }
 
-        let n_samples = n_samples_x;
-        if n_samples < 2 {
+        let n_samples_ = n_samples_x;
+        if n_samples_ < 2 {
             return Err(handler
                 .create_validation_error(
                     ErrorCode::E2003,
                     "CCA fit",
-                    "n_samples",
-                    n_samples,
+                    "n_samples_",
+                    n_samples_,
                     "CCA requires at least 2 samples",
                 )
                 .error);
@@ -155,7 +155,7 @@ impl CanonicalCorrelationAnalysis {
         }
 
         // Determine number of components
-        let max_components = n_features_x.min(n_features_y).min(n_samples - 1);
+        let max_components = n_features_x.min(n_features_y).min(n_samples_ - 1);
         let n_components = self
             .n_components
             .unwrap_or(max_components)
@@ -258,14 +258,14 @@ impl CanonicalCorrelationAnalysis {
         x: &Array2<f64>,
         y: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>, Array2<f64>)> {
-        let n_samples = x.nrows() as f64;
+        let n_samples_ = x.nrows() as f64;
 
         // Auto-covariance matrices
-        let cxx = x.t().dot(x) / (n_samples - 1.0);
-        let cyy = y.t().dot(y) / (n_samples - 1.0);
+        let cxx = x.t().dot(x) / (n_samples_ - 1.0);
+        let cyy = y.t().dot(y) / (n_samples_ - 1.0);
 
         // Cross-covariance matrix
-        let cxy = x.t().dot(y) / (n_samples - 1.0);
+        let cxy = x.t().dot(y) / (n_samples_ - 1.0);
 
         Ok((cxx, cyy, cxy))
     }
@@ -278,7 +278,7 @@ impl CanonicalCorrelationAnalysis {
         cxy: &Array2<f64>,
         n_components: usize,
     ) -> Result<(Array2<f64>, Array2<f64>, Array1<f64>)> {
-        use ndarray__linalg::SVD;
+        use ndarray_linalg::SVD;
 
         // Regularized versions of covariance matrices
         let cxx_reg = self.regularize_covariance(cxx)?;
@@ -327,7 +327,7 @@ impl CanonicalCorrelationAnalysis {
 
     /// Compute inverse square root of a symmetric positive definite matrix
     fn compute_inverse_sqrt(&self, matrix: &Array2<f64>) -> Result<Array2<f64>> {
-        use ndarray__linalg::Eigh;
+        use ndarray_linalg::Eigh;
 
         let (eigenvalues, eigenvectors) =
             matrix.eigh(ndarray_linalg::UPLO::Upper).map_err(|e| {
@@ -367,7 +367,7 @@ impl CanonicalCorrelationAnalysis {
         original: &Array2<f64>,
         canonical: &Array2<f64>,
     ) -> Result<Array2<f64>> {
-        let n_samples = original.nrows() as f64;
+        let n_samples_ = original.nrows() as f64;
         let n_original = original.ncols();
         let n_canonical = canonical.ncols();
 
@@ -375,14 +375,14 @@ impl CanonicalCorrelationAnalysis {
 
         for i in 0..n_original {
             let orig_var = original.column(i);
-            let orig_var_std = (orig_var.mapv(|x| x * x).sum() / (n_samples - 1.0)).sqrt();
+            let orig_var_std = (orig_var.mapv(|x| x * x).sum() / (n_samples_ - 1.0)).sqrt();
 
             for j in 0..n_canonical {
                 let canon_var = canonical.column(j);
-                let canon_var_std = (canon_var.mapv(|x| x * x).sum() / (n_samples - 1.0)).sqrt();
+                let canon_var_std = (canon_var.mapv(|x| x * x).sum() / (n_samples_ - 1.0)).sqrt();
 
                 if orig_var_std > 1e-10 && canon_var_std > 1e-10 {
-                    let covariance = orig_var.dot(&canon_var) / (n_samples - 1.0);
+                    let covariance = orig_var.dot(&canon_var) / (n_samples_ - 1.0);
                     let correlation = covariance / (orig_var_std * canon_var_std);
                     loadings[[i, j]] = correlation;
                 }
@@ -398,14 +398,14 @@ impl CanonicalCorrelationAnalysis {
         original: &Array2<f64>,
         canonical: &Array2<f64>,
     ) -> Result<Array1<f64>> {
-        let n_samples = original.nrows() as f64;
+        let n_samples_ = original.nrows() as f64;
         let n_canonical = canonical.ncols();
 
         // Total variance in original variables
         let total_variance = (0..original.ncols())
             .map(|i| {
                 let col = original.column(i);
-                col.mapv(|x| x * x).sum() / (n_samples - 1.0)
+                col.mapv(|x| x * x).sum() / (n_samples_ - 1.0)
             })
             .sum::<f64>();
 
@@ -417,7 +417,7 @@ impl CanonicalCorrelationAnalysis {
         let mut explained_variance = Array1::zeros(n_canonical);
         for j in 0..n_canonical {
             let canon_var = canonical.column(j);
-            let canon_variance = canon_var.mapv(|x| x * x).sum() / (n_samples - 1.0);
+            let canon_variance = canon_var.mapv(|x| x * x).sum() / (n_samples_ - 1.0);
             explained_variance[j] = canon_variance / total_variance;
         }
 
@@ -502,7 +502,7 @@ impl CanonicalCorrelationAnalysis {
         result: &CCAResult,
     ) -> Result<Array1<f64>> {
         let (x_canonical, y_canonical) = self.transform(x, y, result)?;
-        let n_samples = x_canonical.nrows() as f64;
+        let n_samples_ = x_canonical.nrows() as f64;
         let n_components = result.n_components;
 
         let mut correlations = Array1::zeros(n_components);
@@ -510,11 +510,11 @@ impl CanonicalCorrelationAnalysis {
             let x_comp = x_canonical.column(i);
             let y_comp = y_canonical.column(i);
 
-            let x_std = (x_comp.mapv(|x| x * x).sum() / (n_samples - 1.0)).sqrt();
-            let y_std = (y_comp.mapv(|x| x * x).sum() / (n_samples - 1.0)).sqrt();
+            let x_std = (x_comp.mapv(|x| x * x).sum() / (n_samples_ - 1.0)).sqrt();
+            let y_std = (y_comp.mapv(|x| x * x).sum() / (n_samples_ - 1.0)).sqrt();
 
             if x_std > 1e-10 && y_std > 1e-10 {
-                let covariance = x_comp.dot(&y_comp) / (n_samples - 1.0);
+                let covariance = x_comp.dot(&y_comp) / (n_samples_ - 1.0);
                 correlations[i] = covariance / (x_std * y_std);
             }
         }
@@ -591,16 +591,16 @@ impl PLSCanonical {
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "PLS fit");
         validate_or_error!(finite: y.as_slice().unwrap(), "y", "PLS fit");
 
-        let (n_samples, n_x_features) = x.dim();
+        let (n_samples_, n_x_features) = x.dim();
         let (n_samples_y, n_y_features) = y.dim();
 
-        if n_samples != n_samples_y {
+        if n_samples_ != n_samples_y {
             return Err(handler
                 .create_validation_error(
                     ErrorCode::E2001,
                     "PLS fit",
                     "sample_size_mismatch",
-                    format!("x: {}, y: {}", n_samples, n_samples_y),
+                    format!("x: {}, y: {}", n_samples_, n_samples_y),
                     "X and Y must have the same number of samples",
                 )
                 .error);
@@ -619,8 +619,8 @@ impl PLSCanonical {
         let mut y_weights = Array2::zeros((n_y_features, self.n_components));
         let mut x_loadings = Array2::zeros((n_x_features, self.n_components));
         let mut y_loadings = Array2::zeros((n_y_features, self.n_components));
-        let mut x_scores = Array2::zeros((n_samples, self.n_components));
-        let mut y_scores = Array2::zeros((n_samples, self.n_components));
+        let mut x_scores = Array2::zeros((n_samples_, self.n_components));
+        let mut y_scores = Array2::zeros((n_samples_, self.n_components));
 
         // NIPALS algorithm
         for comp in 0..self.n_components {

@@ -155,7 +155,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
     /// assert!((x - 1.0000001010066806) < 1e-7);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));

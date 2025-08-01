@@ -13,8 +13,8 @@
 //! 3. Detect when the pendulum reaches a specific angle (terminal condition)
 
 use ndarray::{array, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::ode::{
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::ode::{
     solve_ivp_with_events, terminal_event, EventAction, EventDirection, EventSpec, ODEMethod,
     ODEOptions, ODEOptionsWithEvents,
 };

@@ -28,8 +28,8 @@ use crate::error::SpatialResult;
 use ndarray::{Array2, ArrayView2};
 use num_traits::Float;
 use rand::prelude::*;
-use rand::{rngs::StdRng, SeedableRng};
 use rand::seq::SliceRandom;
+use rand::{rngs::StdRng, SeedableRng};
 
 /// Compute the directed Hausdorff distance from set1 to set2.
 ///
@@ -191,14 +191,14 @@ pub fn hausdorff_distance<T: Float + Send + Sync>(
     seed: Option<u64>,
 ) -> T {
     // Compute directed Hausdorff distances in both directions
-    let (dist_forward__) = directed_hausdorff(set1, set2, seed);
-    let (dist_backward__) = directed_hausdorff(set2, set1, seed);
+    let (dist_forward__, _, _) = directed_hausdorff(set1, set2, seed);
+    let (dist_backward__, _, _) = directed_hausdorff(set2, set1, seed);
 
     // Return the maximum of the two directed distances
-    if dist_forward > dist_backward {
-        dist_forward
+    if dist_forward__ > dist_backward__ {
+        dist_forward__
     } else {
-        dist_backward
+        dist_backward__
     }
 }
 

@@ -45,7 +45,7 @@ impl<F: IntegrateFloat> BoundaryConditionType<F> {
     }
 
     /// Get derivative of residual with respect to y[component]
-    pub fn derivative_y(_component: usize) -> F {
+    pub fn derivative_y(&self, _component: usize) -> F {
         match self {
             BoundaryConditionType::Dirichlet { .. } => F::one(),
             BoundaryConditionType::Neumann { .. } => F::zero(),
@@ -55,7 +55,7 @@ impl<F: IntegrateFloat> BoundaryConditionType<F> {
     }
 
     /// Get derivative of residual with respect to dydt[component]  
-    pub fn derivative_dydt(_component: usize) -> F {
+    pub fn derivative_dydt(&self, _component: usize) -> F {
         match self {
             BoundaryConditionType::Dirichlet { .. } => F::zero(),
             BoundaryConditionType::Neumann { .. } => F::one(),
@@ -348,7 +348,7 @@ impl<F: IntegrateFloat> MultipointBVP<F> {
     }
 
     /// Add interior point with conditions
-    pub fn add_interior_point(x: F, conditions: Vec<BoundaryConditionType<F>>) {
+    pub fn add_interior_point(&mut self, x: F, conditions: Vec<BoundaryConditionType<F>>) {
         self.interior_points.push(x);
         self.interior_conditions.push(conditions);
     }
@@ -501,7 +501,8 @@ where
 fn apply_initial_boundary_values<F: IntegrateFloat>(
     boundary_conditions: &ExtendedBoundaryConditions<F>,
     y_solution: &mut Array2<F>,
-    n_points: usize, _n_dim: usize,
+    n_points: usize,
+    _n_dim: usize,
 ) {
     // Apply Dirichlet _conditions at boundaries if available
     for (_dim, bc) in boundary_conditions.left.iter().enumerate() {

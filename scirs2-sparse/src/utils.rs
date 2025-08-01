@@ -201,7 +201,7 @@ pub fn random(_shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f6
         }
     }
 
-    CsrMatrix::new(data..row_indices, col_indices, _shape)
+    CsrMatrix::new(data, row_indices, col_indices, _shape)
 }
 
 /// Calculate the sparsity pattern of a matrix

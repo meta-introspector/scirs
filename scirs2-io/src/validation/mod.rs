@@ -885,7 +885,7 @@ where
             .len();
 
         manifest.push(ManifestEntry {
-            _path: relative_path.to_string_lossy().to_string(),
+            path: relative_path.to_string_lossy().to_string(),
             size,
             checksum,
         });
@@ -981,11 +981,11 @@ impl DirectoryManifest {
         let mut verified_files = Vec::new();
 
         for entry in &self.files {
-            let file_path = dir_path.join(&entry._path);
+            let file_path = dir_path.join(&entry.path);
 
             // Check if file exists
             if !file_path.exists() {
-                missing_files.push(entry._path.clone());
+                missing_files.push(entry.path.clone());
                 continue;
             }
 
@@ -995,19 +995,19 @@ impl DirectoryManifest {
                 .len();
 
             if file_size != entry.size {
-                modified_files.push(entry._path.clone());
+                modified_files.push(entry.path.clone());
                 continue;
             }
 
             // Check checksum
             let checksum = calculate_file_checksum(&file_path, algorithm)?;
             if !checksum.eq_ignore_ascii_case(&entry.checksum) {
-                modified_files.push(entry._path.clone());
+                modified_files.push(entry.path.clone());
                 continue;
             }
 
             // File verified
-            verified_files.push(entry._path.clone());
+            verified_files.push(entry.path.clone());
         }
 
         Ok(ManifestVerificationReport {
@@ -1188,7 +1188,7 @@ impl SchemaDefinition {
     /// Create a new schema definition
     pub fn new(_data_type: SchemaDataType) -> Self {
         Self {
-            _data_type,
+            data_type: _data_type,
             constraints: Vec::new(),
             description: None,
             default: None,
@@ -1266,7 +1266,7 @@ impl SchemaValidationResult {
         Self {
             valid: true,
             errors: Vec::new(),
-            _fields_validated,
+            fields_validated: _fields_validated,
             validation_time_ms,
         }
     }

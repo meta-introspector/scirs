@@ -178,7 +178,8 @@ impl RobustConvergenceState {
         function_value: f64,
         gradient_norm: f64,
         step_norm: f64,
-        iteration: usize_x: Option<&ArrayView1<f64>>,
+        iteration: usize,
+        x: Option<&ArrayView1<f64>>,
     ) -> Result<RobustConvergenceResult, OptimizeError> {
         // Update adaptive tolerance state
         self.adaptive_state
@@ -638,7 +639,8 @@ pub fn create_robust_options_for_problem(
             noise_window: 10,
             noise_confidence: 0.99,
             ..Default::default()
-        }_ => RobustConvergenceOptions {
+        },
+        _ => RobustConvergenceOptions {
             adaptive_tolerance,
             ..Default::default()
         },

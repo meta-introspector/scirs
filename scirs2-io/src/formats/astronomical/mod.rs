@@ -359,8 +359,8 @@ impl FitsFile {
     }
 
     /// Parse a single header card
-    fn parse_header_card(_card_str: &str) -> Option<HeaderCard> {
-        if _card_str.len() < 8 {
+    fn parse_header_card(card_str: &str) -> Option<HeaderCard> {
+        if card_str.len() < 8 {
             return None;
         }
 
@@ -413,9 +413,9 @@ impl FitsFile {
     }
 
     /// Parse a card value
-    fn parse_card_value(_value_str: &str) -> CardValue {
+    fn parse_card_value(value_str: &str) -> CardValue {
         // Boolean
-        if _value_str == "T" {
+        if value_str == "T" {
             return CardValue::Boolean(true);
         }
         if value_str == "F" {

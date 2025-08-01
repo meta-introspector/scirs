@@ -1338,7 +1338,7 @@ impl NSGAIII {
 
     /// Select the solution closest to a reference point (minimum perpendicular distance)
     fn select_closest_to_reference_point(
-        &self..candidate_indices: &[usize],
+        &self, candidate_indices: &[usize],
         ref_point_idx: usize,
         normalized_objectives: &Array2<f64>,
         start_idx: usize,) -> usize {

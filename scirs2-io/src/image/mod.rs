@@ -264,7 +264,7 @@ pub fn save_image<P: AsRef<Path>>(
     let (height, width_) = image_data._data.dim();
     let raw_data = image_data._data.iter().cloned().collect::<Vec<u8>>();
 
-    let img_buffer = image::RgbImage::from_raw(width as u32, height as u32, raw_data)
+    let img_buffer = image::RgbImage::from_raw(width_ as u32, height as u32, raw_data)
         .ok_or_else(|| IoError::FormatError("Invalid image dimensions".to_string()))?;
 
     let dynamic_img = image::DynamicImage::ImageRgb8(img_buffer);
@@ -330,7 +330,7 @@ pub fn resize_image(_image_data: &ImageData, new_width: u32, new_height: u32) ->
     let (_height, width_) = _image_data._data.dim();
     let raw_data = _image_data._data.iter().cloned().collect::<Vec<u8>>();
 
-    let img_buffer = image::RgbImage::from_raw(_width as u32, _height as u32, raw_data)
+    let img_buffer = image::RgbImage::from_raw(width_ as u32, _height as u32, raw_data)
         .ok_or_else(|| IoError::FormatError("Invalid image dimensions".to_string()))?;
 
     let dynamic_img = image::DynamicImage::ImageRgb8(img_buffer);

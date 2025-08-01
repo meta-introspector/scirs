@@ -3,7 +3,7 @@
 //! This module provides various matrix decomposition algorithms optimized
 //! for sparse matrices, including LU, QR, Cholesky, and incomplete variants.
 
-use crate::csr__array::CsrArray;
+use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, Array2};
@@ -171,8 +171,8 @@ impl Default for ICOptions {
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::lu_decomposition;
-/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::lu_decomposition;
+/// use scirs2_sparse::csr_array::CsrArray;
 ///
 /// // Create a sparse matrix
 /// let rows = vec![0, 0, 1, 2];
@@ -216,8 +216,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::{lu_decomposition_with_options, LUOptions, PivotingStrategy};
-/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::{lu_decomposition_with_options, LUOptions, PivotingStrategy};
+/// use scirs2_sparse::csr_array::CsrArray;
 ///
 /// // Create a sparse matrix
 /// let rows = vec![0, 0, 1, 2];
@@ -368,8 +368,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::qr_decomposition;
-/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::qr_decomposition;
+/// use scirs2_sparse::csr_array::CsrArray;
 ///
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 0, 1];
@@ -454,8 +454,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::cholesky_decomposition;
-/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::cholesky_decomposition;
+/// use scirs2_sparse::csr_array::CsrArray;
 ///
 /// // Create a simple SPD matrix
 /// let rows = vec![0, 1, 1, 2, 2, 2];
@@ -547,8 +547,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::pivoted_cholesky_decomposition;
-/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::pivoted_cholesky_decomposition;
+/// use scirs2_sparse::csr_array::CsrArray;
 ///
 /// // Create a symmetric indefinite matrix
 /// let rows = vec![0, 1, 1, 2, 2, 2];
@@ -698,8 +698,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::ldlt_decomposition;
-/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::ldlt_decomposition;
+/// use scirs2_sparse::csr_array::CsrArray;
 ///
 /// // Create a symmetric indefinite matrix
 /// let rows = vec![0, 1, 1, 2, 2, 2];
@@ -1164,7 +1164,7 @@ where
     let row_scales = vec![T::one(); matrix.n];
     let col_perm: Vec<usize> = (0..matrix.n).collect();
 
-    let (pivot_row_) = find_enhanced_pivot(matrix, k, p, &col_perm, &row_scales, &opts)?;
+    let (pivot_row, _pivot_col) = find_enhanced_pivot(matrix, k, p, &col_perm, &row_scales, &opts)?;
     Ok(pivot_row)
 }
 
@@ -1430,7 +1430,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
 
     fn create_test_matrix() -> CsrArray<f64> {
         // Create a simple test matrix

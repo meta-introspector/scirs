@@ -17,16 +17,16 @@ use std::collections::VecDeque;
 /// Multirate ODE system with fast and slow components
 pub trait MultirateSystem<F: IntegrateFloat> {
     /// Evaluate slow component: dy_slow/dt = f_slow(t, y_slow, y_fast)
-    fn slow_rhs(t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F>;
+    fn slow_rhs(&self, t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F>;
 
     /// Evaluate fast component: dy_fast/dt = f_fast(t, y_slow, y_fast)
-    fn fast_rhs(t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F>;
+    fn fast_rhs(&self, t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F>;
 
     /// Get dimension of slow variables
-    fn slow_dim() -> usize;
+    fn slow_dim(&self) -> usize;
 
     /// Get dimension of fast variables
-    fn fast_dim() -> usize;
+    fn fast_dim(&self) -> usize;
 }
 
 /// Multirate integration method types
@@ -111,7 +111,7 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
         };
 
         Self {
-            _options,
+            options: _options,
             history: VecDeque::new(),
             current_macro_step,
             current_micro_step,
@@ -185,8 +185,8 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
                     *micro_steps,
                 )?,
                 MultirateMethod::CompoundFastSlow {
-                    fast_method: _,
-                    slow_method: _,
+                    _fast_method: _,
+                    _slow_method: _,
                 } => self.compound_fast_slow_step(&system, t, dt, y_slow.view(), y_fast.view())?,
                 MultirateMethod::Extrapolated { base_ratio, levels } => self.extrapolated_step(
                     &system,
@@ -247,7 +247,8 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
         t: F,
         dt: F,
         y_slow: ArrayView1<F>,
-        y_fast: ArrayView1<F>, _macro_steps: usize,
+        y_fast: ArrayView1<F>,
+        _macro_steps: usize,
         micro_steps: usize,
     ) -> IntegrateResult<(Array1<F>, Array1<F>)>
     where
@@ -316,7 +317,8 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
         t: F,
         dt: F,
         y_slow: ArrayView1<F>,
-        y_fast: ArrayView1<F>, _macro_steps: usize,
+        y_fast: ArrayView1<F>,
+        _macro_steps: usize,
         micro_steps: usize,
     ) -> IntegrateResult<(Array1<F>, Array1<F>)>
     where
@@ -324,7 +326,7 @@ impl<F: IntegrateFloat> MultirateSolver<F> {
     {
         // For this implementation, use explicit treatment
         // In practice, IMEX would treat stiff _fast components implicitly
-        self.explicit_mrk_step(system, t, dt, y_slow, y_fast_macro_steps, micro_steps)
+        self.explicit_mrk_step(system, t, dt, y_slow, y_fast, _macro_steps, micro_steps)
     }
 
     /// Compound fast-slow method step
@@ -412,7 +414,7 @@ pub struct FastSlowOscillator<F: IntegrateFloat> {
 }
 
 impl<F: IntegrateFloat> MultirateSystem<F> for FastSlowOscillator<F> {
-    fn slow_rhs(&self_t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F> {
+    fn slow_rhs(&self, t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F> {
         let x_slow = y_slow[0];
         let v_slow = y_slow[1];
         let x_fast = y_fast[0];
@@ -424,7 +426,7 @@ impl<F: IntegrateFloat> MultirateSystem<F> for FastSlowOscillator<F> {
         Array1::from_vec(vec![dx_slow_dt, dv_slow_dt])
     }
 
-    fn fast_rhs(_t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F> {
+    fn fast_rhs(&self, t: F, y_slow: ArrayView1<F>, y_fast: ArrayView1<F>) -> Array1<F> {
         let x_slow = y_slow[0];
         let x_fast = y_fast[0];
         let v_fast = y_fast[1];
@@ -436,10 +438,10 @@ impl<F: IntegrateFloat> MultirateSystem<F> for FastSlowOscillator<F> {
         Array1::from_vec(vec![dx_fast_dt, dv_fast_dt])
     }
 
-    fn slow_dim() -> usize {
+    fn slow_dim(&self) -> usize {
         2
     }
-    fn fast_dim() -> usize {
+    fn fast_dim(&self) -> usize {
         2
     }
 }
@@ -535,8 +537,8 @@ mod tests {
 
         let options = MultirateOptions {
             method: MultirateMethod::CompoundFastSlow {
-                fast_method: ODEMethod::RK4,
-                slow_method: ODEMethod::RK4,
+                _fast_method: ODEMethod::RK4,
+                _slow_method: ODEMethod::RK4,
             },
             macro_step: 0.1,
             rtol: 1e-6,

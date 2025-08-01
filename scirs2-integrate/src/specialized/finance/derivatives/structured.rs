@@ -1,8 +1,8 @@
 //! Structured products pricing and risk management
-//! 
+//!
 //! This module implements pricing and analysis tools for structured products including
 //! equity-linked notes, principal-protected notes, and complex multi-asset derivatives.
-//! 
+//!
 //! # Features
 //! - Equity-linked notes (ELN)
 //! - Principal-protected notes (PPN)

@@ -121,7 +121,7 @@ impl From<ndarray::ShapeError> for InterpolateError {
 }
 
 impl From<scirs2_core::CoreError> for InterpolateError {
-    fn from(_err: scirs2_core: CoreError) -> Self {
+    fn from(_err: scirs2_core::CoreError) -> Self {
         InterpolateError::ComputationError(_err.to_string())
     }
 }

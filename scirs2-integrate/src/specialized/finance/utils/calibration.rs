@@ -1,8 +1,8 @@
 //! Model calibration utilities
-//! 
+//!
 //! This module provides tools for calibrating financial models to market data including
 //! optimization algorithms, objective functions, and regularization techniques.
-//! 
+//!
 //! # Features
 //! - Global and local optimization methods
 //! - Weighted least squares calibration

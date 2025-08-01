@@ -55,7 +55,7 @@ where
         event_observed: &ArrayView1<bool>,
         confidence_level: Option<F>,
     ) -> StatsResult<Self> {
-        check_array_finite(durations, "durations")?;
+        checkarray_finite(durations, "durations")?;
 
         if durations.len() != event_observed.len() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -335,8 +335,8 @@ where
         event_observed: &ArrayView1<bool>,
         covariates: &ArrayView2<F>,
     ) -> StatsResult<()> {
-        check_array_finite(durations, "durations")?;
-        check_array_finite(covariates, "covariates")?;
+        checkarray_finite(durations, "durations")?;
+        checkarray_finite(covariates, "covariates")?;
 
         let n = durations.len();
         let p = covariates.ncols();
@@ -491,7 +491,7 @@ where
             StatsError::InvalidArgument("Model must be fitted before prediction".to_string())
         })?;
 
-        check_array_finite(covariates, "covariates")?;
+        checkarray_finite(covariates, "covariates")?;
 
         if covariates.ncols() != coefficients.len() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -526,8 +526,8 @@ where
         + PartialOrd
         + std::fmt::Display,
 {
-    check_array_finite(durations1, "durations1")?;
-    check_array_finite(durations2, "durations2")?;
+    checkarray_finite(durations1, "durations1")?;
+    checkarray_finite(durations2, "durations2")?;
 
     // Combine data with group indicators
     let mut combined_data = Vec::new();

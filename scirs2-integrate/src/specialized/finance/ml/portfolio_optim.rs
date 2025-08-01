@@ -1,8 +1,8 @@
 //! ML-enhanced portfolio optimization
-//! 
+//!
 //! This module implements machine learning approaches to portfolio optimization including
 //! deep reinforcement learning, neural portfolio policies, and adaptive allocation strategies.
-//! 
+//!
 //! # Features
 //! - Deep reinforcement learning for portfolio management
 //! - Neural network-based allocation strategies

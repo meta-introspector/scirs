@@ -4,7 +4,7 @@
 //! with proper error handling, memory management, and multi-backend support.
 
 use crate::error::{SparseError, SparseResult};
-use crate::gpu__ops::{GpuBackend, GpuDataType, GpuDevice};
+use crate::gpu_ops::{GpuBackend, GpuDataType, GpuDevice};
 use num_traits::{Float, NumAssign};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
@@ -31,7 +31,7 @@ impl GpuSpMV {
             SparseError::ComputationError(format!("Failed to initialize GPU device: {e}"))
         })?;
 
-        Ok(Self { device, _backend })
+        Ok(Self { device, backend: _backend })
     }
 
     /// Initialize the best available GPU backend
@@ -166,7 +166,7 @@ impl GpuSpMV {
     {
         #[cfg(feature = "gpu")]
         {
-            use crate::gpu__ops::{GpuBufferExt, SpMVKernel};
+            use crate::gpu_ops::{GpuBufferExt, SpMVKernel};
 
             // Create GPU buffers
             let indptr_buffer = self.device.create_buffer(indptr)?;
@@ -223,7 +223,7 @@ impl GpuSpMV {
     {
         #[cfg(feature = "gpu")]
         {
-            use crate::gpu__ops::{GpuBufferExt, SpMVKernel};
+            use crate::gpu_ops::{GpuBufferExt, SpMVKernel};
 
             // Create GPU buffers for OpenCL
             let indptr_buffer = self.device.create_buffer(indptr)?;
@@ -281,7 +281,7 @@ impl GpuSpMV {
     {
         #[cfg(feature = "gpu")]
         {
-            use crate::gpu__ops::{GpuBufferExt, SpMVKernel};
+            use crate::gpu_ops::{GpuBufferExt, SpMVKernel};
 
             // Create GPU buffers for Metal
             let indptr_buffer = self.device.create_buffer(indptr)?;
@@ -333,7 +333,7 @@ impl GpuSpMV {
         // Use parallel processing for CPU implementation
         #[cfg(feature = "parallel")]
         {
-            use crate::parallel_vector__ops::parallel_sparse_matvec_csr;
+            use crate::parallel_vector_ops::parallel_sparse_matvec_csr;
             parallel_sparse_matvec_csr(&mut y, rows, indptr, indices, data, x, None);
         }
 
@@ -359,13 +359,13 @@ impl GpuSpMV {
     #[allow(dead_code)]
     fn get_cuda_spmv_kernel_source(&self) -> String {
         r#"
-        extern "C" __global__ void spmv_csr_kernel(
+        extern "C" _global_ void spmv_csr_kernel(
             int rows,
-            const int* __restrict__ indptr,
-            const int* __restrict__ indices,
-            const float* __restrict__ data,
-            const float* __restrict__ x,
-            float* __restrict__ y
+            const int* _restrict_ indptr,
+            const int* _restrict_ indices,
+            const float* _restrict_ data,
+            const float* _restrict_ x,
+            float* _restrict_ y
         ) {
             int row = blockIdx.x * blockDim.x + threadIdx.x;
             if (row >= rows) return;
@@ -389,8 +389,8 @@ impl GpuSpMV {
     #[allow(dead_code)]
     fn get_opencl_spmv_kernel_source(&self) -> String {
         r#"
-        __kernel void spmv_csr_kernel(
-            const int rows__global const int* restrict indptr__global const int* restrict indices__global const float* restrict data__global const float* restrict x__global float* restrict y
+        _kernel void spmv_csr_kernel(
+            const int rows_global const int* restrict indptr_global const int* restrict indices_global const float* restrict data_global const float* restrict x_global float* restrict y
         ) {
             int row = get_global_id(0);
             if (row >= rows) return;

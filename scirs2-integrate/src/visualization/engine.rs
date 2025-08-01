@@ -3,11 +3,11 @@
 //! This module provides the main VisualizationEngine struct and its implementation
 //! for creating various types of plots from numerical integration results.
 
+use super::types::*;
 use crate::analysis::{BasinAnalysis, BifurcationPoint};
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::ode::ODEResult;
 use ndarray::{Array1, Array2};
-use super::types::*;
 
 /// Main visualization engine for creating plots from numerical data
 #[derive(Debug, Clone)]
@@ -207,7 +207,10 @@ impl VisualizationEngine {
         }
 
         // Find _data bounds
-        let x_min = _data.iter().map(|(x_, _)| *x_).fold(f64::INFINITY, f64::min);
+        let x_min = _data
+            .iter()
+            .map(|(x_, _)| *x_)
+            .fold(f64::INFINITY, f64::min);
         let x_max = _data
             .iter()
             .map(|(x_, _)| *x_)

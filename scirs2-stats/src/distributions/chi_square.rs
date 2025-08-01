@@ -8,7 +8,7 @@ use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{ChiSquared as RandChiSquared, Distribution};
+use rand_distr::{ChiSquared as RandChiSquared, Distribution};
 use std::f64::consts::PI;
 use statrs::statistics::Statistics;
 
@@ -45,8 +45,8 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// // Chi-square distribution with 2 degrees of freedom
     /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
     /// ```
-    pub fn new(_df: F, loc: F, scale: F) -> StatsResult<Self> {
-        if _df <= F::zero() {
+    pub fn new(df: F, loc: F, scale: F) -> StatsResult<Self> {
+        if df <= F::zero() {
             return Err(StatsError::DomainError(
                 "Degrees of freedom must be positive".to_string(),
             ));
@@ -59,11 +59,11 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
         }
 
         // Convert to f64 for rand_distr
-        let df_f64 = <f64 as NumCast>::from(_df).unwrap();
+        let df_f64 = <f64 as NumCast>::from(df).unwrap();
 
         match RandChiSquared::new(df_f64) {
             Ok(rand_distr) => Ok(ChiSquare {
-                _df,
+                df,
                 loc,
                 scale,
                 rand_distr,
@@ -525,7 +525,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousD
     fn ppf(&self, p: F) -> StatsResult<F> {
         // Chi-square doesn't have a closed-form quantile function
         // Implement a basic numerical approximation for common cases
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));

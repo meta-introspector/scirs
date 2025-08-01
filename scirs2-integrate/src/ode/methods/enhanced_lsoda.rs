@@ -87,12 +87,12 @@ impl<F: IntegrateFloat> EnhancedLsodaState<F> {
     }
 
     /// Update tolerance scaling factors
-    fn update_tol_scale(_rtol: F, atol: F) {
+    fn update_tol_scale(&mut self, _rtol: F, atol: F) {
         self.tol_scale = calculate_error_weights(&self.y, atol, _rtol);
     }
 
     /// Add current state to history
-    fn add_to_history() {
+    fn add_to_history(&mut self) {
         self.t_history.push(self.t);
         self.y_history.push(self.y.clone());
         self.dy_history.push(self.dy.clone());
@@ -114,7 +114,7 @@ impl<F: IntegrateFloat> EnhancedLsodaState<F> {
     }
 
     /// Switch method type (between Adams and BDF)
-    fn switch_method(_new_method: AdaptiveMethodType) -> IntegrateResult<()> {
+    fn switch_method(&mut self, _new_method: AdaptiveMethodType) -> IntegrateResult<()> {
         // Let the adaptive state handle the switching logic
         self.adaptive_state.switch_method(_new_method, self.steps)?;
 

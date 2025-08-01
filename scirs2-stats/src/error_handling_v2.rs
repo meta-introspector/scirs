@@ -116,7 +116,7 @@ pub struct ErrorContext {
 impl ErrorContext {
     pub fn new(_operation: impl Into<String>) -> Self {
         Self {
-            _operation: _operation.into(),
+            operation: _operation.into(),
             parameters: Vec::new(),
             call_depth: 0,
             timestamp: std::time::SystemTime::now(),
@@ -166,7 +166,7 @@ pub struct ErrorBuilder {
 impl ErrorBuilder {
     pub fn new(_code: ErrorCode, operation: impl Into<String>) -> Self {
         Self {
-            _code,
+            code: _code,
             context: ErrorContext::new(operation),
             suggestions: Vec::new(),
             performance_impact: None,

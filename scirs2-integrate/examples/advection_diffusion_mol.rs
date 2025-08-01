@@ -1,4 +1,4 @@
-use scirs2__integrate::{
+use scirs2_integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, MOLOptions,
     MOLParabolicSolver1D, ODEMethod,
 };
@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let time_range = [t_start, t_end];
 
     // Diffusion coefficient (constant)
-    let diffusion_coeff = move |_x: f64_t: f64, _u: f64| -> f64 { alpha };
+    let diffusion_coeff = move |_x: f64, _t: f64, _u: f64| -> f64 { alpha };
 
     // Initial condition: step function
     let initial_condition = |x: f64| -> f64 {
@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         bcs,
         Some(options),
     )?
-    .with_advection(move |_x: f64_t: f64, _u: f64| -> f64 {
+    .with_advection(move |_x: f64, _t: f64, _u: f64| -> f64 {
         velocity // Advection velocity (positive = right to left)
     });
 

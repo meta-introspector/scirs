@@ -393,7 +393,7 @@ impl APIConsistencyValidator {
     /// Create new API consistency validator
     pub fn new(_config: ValidationConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             results: ValidationResults::new(),
             function_registry: FunctionRegistry::new(),
         }
@@ -1194,7 +1194,7 @@ pub struct ValidationReport {
 impl ValidationReport {
     pub fn new(_results: &ValidationResults) -> Self {
         Self {
-            _results: _results.clone(),
+            results: _results.clone(),
         }
     }
 

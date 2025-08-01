@@ -45,7 +45,6 @@ use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
-use std::path::PathBuf;
 use statrs::statistics::Statistics;
 
 /// Out-of-core array configuration
@@ -1051,7 +1050,7 @@ impl<T: ScientificNumber + Ord + Clone> OutOfCoreSorter<T> {
             .map_err(|e| IoError::FileError(format!("Failed to create temp _dir: {}", e)))?;
 
         Ok(Self {
-            temp_dir,
+            temp_dir: _temp_dir,
             chunk_size,
             chunk_files: Vec::new(), _phantom: std::marker::PhantomData,
         })

@@ -710,15 +710,15 @@ impl AdvancedCoordinator {
         if improvement_rate < 0.001 {
             // Switch to more exploratory strategy
             self.config.strategy = match self.config.strategy {
-                AdvancedStrategy::AdaptiveSelection =>, AdvancedStrategy::QuantumNeuralFusion,
+                AdvancedStrategy::AdaptiveSelection => AdvancedStrategy::QuantumNeuralFusion,
                 AdvancedStrategy::QuantumNeuralFusion => {
                     AdvancedStrategy::NeuromorphicQuantumHybrid
                 }
                 AdvancedStrategy::NeuromorphicQuantumHybrid => {
                     AdvancedStrategy::MetaLearningQuantum
                 }
-                AdvancedStrategy::MetaLearningQuantum =>, AdvancedStrategy::FullAdvanced,
-                AdvancedStrategy::FullAdvanced =>, AdvancedStrategy::AdaptiveSelection,
+                AdvancedStrategy::MetaLearningQuantum => AdvancedStrategy::FullAdvanced,
+                AdvancedStrategy::FullAdvanced => AdvancedStrategy::AdaptiveSelection,
             };
         }
 

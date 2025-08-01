@@ -32,7 +32,7 @@
 //! ### Matrix API (Legacy)
 //!
 //! ```
-//! use scirs2__sparse::csr::CsrMatrix;
+//! use scirs2_sparse::csr::CsrMatrix;
 //!
 //! // Create a sparse matrix in CSR format
 //! let rows = vec![0, 0, 1, 2, 2];
@@ -46,7 +46,7 @@
 //! ### Array API (Recommended)
 //!
 //! ```
-//! use scirs2__sparse::csr_array::CsrArray;
+//! use scirs2_sparse::csr_array::CsrArray;
 //!
 //! // Create a sparse array in CSR format
 //! let rows = vec![0, 0, 1, 2, 2];
@@ -71,41 +71,41 @@ pub use sparray::{is_sparse, SparseArray, SparseSum};
 
 // Trait for symmetric sparse arrays
 pub mod sym_sparray;
-pub use sym__sparray::SymSparseArray;
+pub use sym_sparray::SymSparseArray;
 
 // No spatial module in sparse
 
 // Array API (recommended)
 pub mod csr_array;
-pub use csr__array::CsrArray;
+pub use csr_array::CsrArray;
 
 pub mod csc_array;
-pub use csc__array::CscArray;
+pub use csc_array::CscArray;
 
 pub mod coo_array;
-pub use coo__array::CooArray;
+pub use coo_array::CooArray;
 
 pub mod dok_array;
-pub use dok__array::DokArray;
+pub use dok_array::DokArray;
 
 pub mod lil_array;
-pub use lil__array::LilArray;
+pub use lil_array::LilArray;
 
 pub mod dia_array;
-pub use dia__array::DiaArray;
+pub use dia_array::DiaArray;
 
 pub mod bsr_array;
-pub use bsr__array::BsrArray;
+pub use bsr_array::BsrArray;
 
 pub mod banded_array;
-pub use banded__array::BandedArray;
+pub use banded_array::BandedArray;
 
 // Symmetric array formats
 pub mod sym_csr;
-pub use sym__csr::{SymCsrArray, SymCsrMatrix};
+pub use sym_csr::{SymCsrArray, SymCsrMatrix};
 
 pub mod sym_coo;
-pub use sym__coo::{SymCooArray, SymCooMatrix};
+pub use sym_coo::{SymCooArray, SymCooMatrix};
 
 // Legacy matrix formats
 pub mod csr;
@@ -249,11 +249,11 @@ pub use combine::{block_diag, bmat, hstack, kron, kronsum, tril, triu, vstack};
 
 // Index dtype handling utilities
 pub mod index_dtype;
-pub use index__dtype::{can_cast_safely, get_index_dtype, safely_cast_index_arrays};
+pub use index_dtype::{can_cast_safely, get_index_dtype, safely_cast_index_arrays};
 
 // Optimized operations for symmetric sparse formats
 pub mod sym_ops;
-pub use sym__ops::{
+pub use sym_ops::{
     sym_coo_matvec, sym_csr_matvec, sym_csr_quadratic_form, sym_csr_rank1_update, sym_csr_trace,
 };
 
@@ -261,33 +261,33 @@ pub use sym__ops::{
 pub mod gpu_kernel_execution;
 pub mod gpu_ops;
 pub mod gpu_spmv_implementation;
-pub use gpu_kernel__execution::{
+pub use gpu_kernel_execution::{
     calculate_adaptive_workgroup_size, execute_spmv_kernel, execute_symmetric_spmv_kernel,
     execute_triangular_solve_kernel, GpuKernelConfig, GpuMemoryManager as GpuKernelMemoryManager,
     GpuPerformanceProfiler, MemoryStrategy,
 };
-pub use gpu__ops::{
+pub use gpu_ops::{
     gpu_sparse_matvec, gpu_sym_sparse_matvec, AdvancedGpuOps, GpuKernelScheduler, GpuMemoryManager,
     GpuOptions, GpuProfiler, OptimizedGpuOps,
 };
-pub use gpu_spmv__implementation::GpuSpMV;
+pub use gpu_spmv_implementation::GpuSpMV;
 
 // Memory-efficient algorithms and patterns
 pub mod memory_efficient;
-pub use memory__efficient::{
+pub use memory_efficient::{
     streaming_sparse_matvec, CacheAwareOps, MemoryPool, MemoryTracker, OutOfCoreProcessor,
 };
 
 // SIMD-accelerated operations
 pub mod simd_ops;
-pub use simd__ops::{
+pub use simd_ops::{
     simd_csr_matvec, simd_sparse_elementwise, simd_sparse_linear_combination, simd_sparse_matmul,
     simd_sparse_norm, simd_sparse_scale, simd_sparse_transpose, ElementwiseOp, SimdOptions,
 };
 
 // Parallel vector operations for iterative solvers
 pub mod parallel_vector_ops;
-pub use parallel_vector__ops::{
+pub use parallel_vector_ops::{
     advanced_sparse_matvec_csr, parallel_axpy, parallel_dot, parallel_linear_combination,
     parallel_norm2, parallel_sparse_matvec_csr, parallel_vector_add, parallel_vector_copy,
     parallel_vector_scale, parallel_vector_sub, ParallelVectorOptions,
@@ -295,32 +295,32 @@ pub use parallel_vector__ops::{
 
 // Quantum-inspired sparse matrix operations (Advanced mode)
 pub mod quantum_inspired_sparse;
-pub use quantum_inspired__sparse::{
+pub use quantum_inspired_sparse::{
     QuantumProcessorStats, QuantumSparseConfig, QuantumSparseProcessor, QuantumStrategy,
 };
 
 // Neural-adaptive sparse matrix operations (Advanced mode)
 pub mod neural_adaptive_sparse;
-pub use neural_adaptive__sparse::{
+pub use neural_adaptive_sparse::{
     NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor, NeuralProcessorStats, OptimizationStrategy,
 };
 
 // Quantum-Neural hybrid optimization (Advanced mode)
 pub mod quantum_neural_hybrid;
-pub use quantum_neural__hybrid::{
+pub use quantum_neural_hybrid::{
     HybridStrategy, QuantumNeuralConfig, QuantumNeuralHybridProcessor, QuantumNeuralHybridStats,
 };
 
 // Adaptive memory compression for advanced-large sparse matrices (Advanced mode)
 pub mod adaptive_memory_compression;
-pub use adaptive_memory__compression::{
+pub use adaptive_memory_compression::{
     AdaptiveCompressionConfig, AdaptiveMemoryCompressor, CompressedMatrix, CompressionAlgorithm,
     MemoryStats,
 };
 
 // Real-time performance monitoring and adaptation (Advanced mode)
 pub mod realtime_performance_monitor;
-pub use realtime_performance__monitor::{
+pub use realtime_performance_monitor::{
     Alert, AlertSeverity, Forecast, PerformanceMetrics, PerformanceMonitorConfig,
     PerformanceSample, ProcessorType, RealTimePerformanceMonitor,
 };

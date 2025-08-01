@@ -289,7 +289,7 @@ where
             l1_cache_size: 32 * 1024,
             l2_cache_size: 256 * 1024,
             l3_cache_size: 8 * 1024 * 1024,
-            num_cores: num, _cpus: get(),
+            num_cores: num_cpus::get(),
             memory_bandwidth: 50.0, // GB/s estimate
         })
     }
@@ -310,7 +310,8 @@ where
             InstructionSet::AVX2 => self.mean_avx2(&data)?,
             InstructionSet::AVX => self.mean_avx(&data)?,
             InstructionSet::SSE2 => self.mean_sse2(&data)?,
-            InstructionSet::NEON => self.mean_neon(&data)?_ => self.mean_scalar(&data)?,
+            InstructionSet::NEON => self.mean_neon(&data)?,
+            _ => self.mean_scalar(&data)?,
         };
 
         // Record performance metrics
@@ -622,7 +623,7 @@ where
             mixed_precision: true,
             ..AdvancedSimdConfig::default()
         },
-        TargetPlatform::Generic =>, AdvancedSimdConfig::default(),
+        TargetPlatform::Generic => AdvancedSimdConfig::default(),
     };
 
     AdvancedEnhancedSimdProcessor::new(config)
@@ -795,7 +796,8 @@ where
         // Calculate variance with adaptive prefetching
         let prefetch_distance = match data.len() {
             0..=1000 => 1,
-            1001..=10000 => 4_ => 8,
+            1001..=10000 => 4,
+            _ => 8,
         };
 
         let mut sum_sq_diff = F::zero();

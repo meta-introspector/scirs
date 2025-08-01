@@ -5,7 +5,7 @@ use crate::regression::utils::*;
 use crate::regression::{linregress, RegressionResults};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
-use scirs2__linalg::{inv, lstsq};
+use scirs2_linalg::{inv, lstsq};
 
 /// Results for Theil-Sen regression.
 pub struct TheilSlopesResult<F>
@@ -308,7 +308,7 @@ where
                 F::from(3.0).unwrap() * n_f * (n_f + F::one())
                     / (F::from(0.5).unwrap() * n_f * (n_f - F::one())),
             );
-            factor / (num_traits::Float::sqrt(n_f) * num, _traits::Float::sqrt(n_f - F::one()))
+            factor / (num_traits::Float::sqrt(n_f) * num_traits::Float::sqrt(n_f - F::one()))
         }
     };
 
@@ -362,7 +362,7 @@ where
 ///
 /// # Algorithm
 ///
-/// 1. Randomly select a subset of data points (min_samples)
+/// 1. Randomly select a subset of data points (min_samples_)
 /// 2. Fit a model to this subset
 /// 3. Determine which points are inliers (residual < threshold)
 /// 4. If the model has more inliers than the current best model, keep it
@@ -373,7 +373,7 @@ where
 ///
 /// * `x` - Independent variable data (can be 1D or multi-dimensional)
 /// * `y` - Dependent variable data (must be same length as x)
-/// * `min_samples` - Minimum number of samples required to fit the model (default: 2)
+/// * `min_samples_` - Minimum number of samples required to fit the model (default: 2)
 /// * `residual_threshold` - Maximum residual for a data point to be considered an inlier
 ///   (default: calculated from median absolute deviation of residuals)
 /// * `max_trials` - Maximum number of iterations/trials (default: 100)
@@ -450,7 +450,7 @@ where
 pub fn ransac<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
-    min_samples: Option<usize>,
+    min_samples_: Option<usize>,
     residual_threshold: Option<F>,
     max_trials: Option<usize>,
     stop_probability: Option<F>,
@@ -483,15 +483,15 @@ where
     let n = x.len();
 
     // Set default parameters
-    let min_samples = min_samples.unwrap_or(2);
+    let min_samples_ = min_samples_.unwrap_or(2);
     let max_trials = max_trials.unwrap_or(100);
     let stop_probability = stop_probability.unwrap_or_else(|| F::from(0.99).unwrap());
 
-    // We need at least min_samples data points
-    if n < min_samples {
+    // We need at least min_samples_ data points
+    if n < min_samples_ {
         return Err(StatsError::InvalidArgument(format!(
-            "Number of data points ({}) must be at least min_samples ({})",
-            n, min_samples
+            "Number of data points ({}) must be at least min_samples_ ({})",
+            n, min_samples_
         )));
     }
 
@@ -505,11 +505,11 @@ where
     } else {
         // Estimate _threshold from median absolute deviation of residuals from initial fit
         let x_vec = Array1::from_shape_fn(n, |i| x[[i, 0]]);
-        let (slope, intercept___) = linregress(&x_vec.view(), y)?;
+        let (slope, intercept___, _, _, _) = linregress(&x_vec.view(), y)?;
         let residuals = y
             .iter()
             .enumerate()
-            .map(|(i, &yi)| yi - (intercept + slope * x[[i, 0]]))
+            .map(|(i, &yi)| yi - (intercept___ + slope * x[[i, 0]]))
             .collect::<Vec<F>>();
 
         let residuals_array = Array1::from(residuals);
@@ -522,12 +522,12 @@ where
     // Initialize random number generator
     use scirs2_core::random::Random;
     let mut rng = if let Some(_seed) = random_seed {
-        Random::with_seed(_seed)
+        Random::seed(_seed)
     } else {
         // Use a random _seed
         use rand::Rng;
         let mut temp_rng = rand::rng();
-        Random::with_seed(temp_rng.random())
+        Random::seed(temp_rng.random())
     };
 
     // Keep track of best model
@@ -539,13 +539,13 @@ where
     let mut n_trials = max_trials;
 
     for trial in 0..max_trials {
-        // Randomly select min_samples data points
+        // Randomly select min_samples_ data points
         let mut indices: Vec<usize> = (0..n).collect();
         indices.shuffle(&mut rng);
-        let sample_indices = indices[0..min_samples].to_vec();
+        let sample_indices = indices[0..min_samples_].to_vec();
 
         // Fit model to the selected points
-        let sample_x = Array2::from_shape_fn((min_samples, 2), |(i, j)| {
+        let sample_x = Array2::from_shape_fn((min_samples_, 2), |(i, j)| {
             if j == 0 {
                 F::one()
             } else {
@@ -553,7 +553,7 @@ where
             }
         });
 
-        let sample_y = Array1::from_shape_fn(min_samples, |i| y[sample_indices[i]]);
+        let sample_y = Array1::from_shape_fn(min_samples_, |i| y[sample_indices[i]]);
 
         // Skip this iteration if the sample is degenerate
         // Use explicit computation to avoid Float trait method ambiguity
@@ -612,10 +612,10 @@ where
             best_inlier_mask = inlier_mask;
 
             // Update stopping criterion
-            if inlier_count > min_samples {
+            if inlier_count > min_samples_ {
                 let inlier_ratio = F::from(inlier_count).unwrap() / F::from(n).unwrap();
                 let power_term =
-                    crate::regression::utils::float_powi(inlier_ratio, min_samples as i32);
+                    crate::regression::utils::float_powi(inlier_ratio, min_samples_ as i32);
                 let denom = F::one() - power_term;
 
                 // Only update if new value is smaller (and valid)
@@ -1016,7 +1016,7 @@ where
         }
 
         // Check for convergence
-        if weight_sum / F::from(n).unwrap() >, F::one() - tol {
+        if weight_sum / F::from(n).unwrap() > F::one() - tol {
             break;
         }
 
@@ -1035,7 +1035,7 @@ where
         // Update scale estimate
         sigma = crate::regression::utils::float_sqrt(
             new_residuals
-                ._iter()
+                .iter()
                 .map(|&r| crate::regression::utils::float_powi(r, 2))
                 .sum::<F>()
                 / F::from(n).unwrap(),
@@ -1066,14 +1066,14 @@ where
     let df_residuals = n - p;
 
     // Calculate sum of squares
-    let y_mean = y._iter().cloned().sum::<F>() / F::from(n).unwrap();
+    let y_mean = y.iter().cloned().sum::<F>() / F::from(n).unwrap();
     let ss_total = y
-        ._iter()
+        .iter()
         .map(|&yi| num_traits::Float::powi(yi - y_mean, 2))
         .sum::<F>();
 
     let ss_residual = residuals
-        ._iter()
+        .iter()
         .map(|&ri| num_traits::Float::powi(ri, 2))
         .sum::<F>();
 
@@ -1178,7 +1178,7 @@ where
 fn calculate_huber_std_errors<F>(
     x: &ArrayView2<F>, _residuals: &ArrayView1<F>,
     weights: &ArrayView1<F>,
-    sigma: F_df: usize,
+    sigma: F, _df: usize,
 ) -> StatsResult<Array1<F>>
 where
     F: Float
@@ -1218,7 +1218,7 @@ where
     // The diagonal elements of (X'WX)^-1 * sigma^2 are the variances of the coefficients
     let std_errors = xtx_inv
         .diag()
-        .mapv(|v| num_traits::Float::sqrt(v * num, _traits::Float::powi(sigma, 2)));
+        .mapv(|v| num_traits::Float::sqrt(v * num_traits::Float::powi(sigma, 2)));
 
     Ok(std_errors)
 }

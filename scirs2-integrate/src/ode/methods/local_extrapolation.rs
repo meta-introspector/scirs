@@ -103,17 +103,17 @@ where
     let ext_options = ext_opts.unwrap_or_default();
 
     // Initialize step size
-    let mut h = _opts.h0.unwrap_or_else(|| {
+    let mut h = opts.h0.unwrap_or_else(|| {
         let _span = t_end - t_start;
         _span / F::from_usize(100).unwrap()
     });
 
-    let min_step = _opts.min_step.unwrap_or_else(|| {
+    let min_step = opts.min_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
         _span / F::from_usize(1_000_000).unwrap()
     });
 
-    let max_step = _opts.max_step.unwrap_or_else(|| {
+    let max_step = opts.max_step.unwrap_or_else(|| {
         let _span = t_end - t_start;
         _span / F::from_usize(10).unwrap()
     });
@@ -141,7 +141,7 @@ where
         // Check if step is accepted
         let error_estimate = result.error_estimate;
         let tolerance =
-            _opts.atol + _opts.rtol * y.iter().map(|&x| x.abs()).fold(F::zero(), |a, b| a.max(b));
+            opts.atol + opts.rtol * y.iter().map(|&x| x.abs()).fold(F::zero(), |a, b| a.max(b));
 
         if error_estimate <= tolerance {
             // Accept step

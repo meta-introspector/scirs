@@ -31,7 +31,7 @@ pub trait ConditionalDistribution: Send + Sync {
     fn dim(&self) -> usize;
 
     /// Optionally compute log density for monitoring
-    fn log_density(&self_x: &Array1<f64>) -> Option<f64> {
+    fn log_density(&self, x: &Array1<f64>) -> Option<f64> {
         None
     }
 }
@@ -43,7 +43,7 @@ pub struct GibbsSampler<C: ConditionalDistribution> {
     /// Current state
     pub current: Array1<f64>,
     /// Number of samples generated
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Variable update order (None for sequential, Some for custom order)
     pub update_order: Option<Vec<usize>>,
 }
@@ -51,7 +51,7 @@ pub struct GibbsSampler<C: ConditionalDistribution> {
 impl<C: ConditionalDistribution> GibbsSampler<C> {
     /// Create a new Gibbs sampler
     pub fn new(_conditionals: C, initial: Array1<f64>) -> Result<Self> {
-        check_array_finite(&initial, "initial")?;
+        checkarray_finite(&initial, "initial")?;
         if initial.len() != _conditionals.dim() {
             return Err(StatsError::DimensionMismatch(format!(
                 "initial dimension ({}) must match _conditionals dimension ({})",
@@ -63,7 +63,7 @@ impl<C: ConditionalDistribution> GibbsSampler<C> {
         Ok(Self {
             _conditionals,
             current: initial,
-            n_samples: 0,
+            n_samples_: 0,
             update_order: None,
         })
     }
@@ -109,20 +109,20 @@ impl<C: ConditionalDistribution> GibbsSampler<C> {
             self.current[var_idx] = new_value;
         }
 
-        self.n_samples += 1;
+        self.n_samples_ += 1;
         Ok(self.current.clone())
     }
 
     /// Sample multiple states
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.current.len();
-        let mut _samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples_, dim));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             _samples.row_mut(i).assign(&sample);
         }
@@ -133,7 +133,7 @@ impl<C: ConditionalDistribution> GibbsSampler<C> {
     /// Sample with burn-in period
     pub fn sample_with_burnin<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         burnin: usize,
         rng: &mut R,
     ) -> Result<Array2<f64>> {
@@ -145,22 +145,22 @@ impl<C: ConditionalDistribution> GibbsSampler<C> {
         }
 
         // Collect _samples
-        self.sample(n_samples, rng)
+        self.sample(n_samples_, rng)
     }
 
     /// Sample with thinning to reduce autocorrelation
     pub fn sample_thinned<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         thin: usize,
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         check_positive(thin, "thin")?;
 
         let dim = self.current.len();
-        let mut _samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples_, dim));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             // Take thin steps but only keep the last one
             for _ in 0..thin {
                 self.step(rng)?;
@@ -187,8 +187,8 @@ pub struct MultivariateNormalGibbs {
 impl MultivariateNormalGibbs {
     /// Create a new multivariate normal Gibbs sampler
     pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
-        check_array_finite(&_mean, "_mean")?;
-        check_array_finite(&covariance, "covariance")?;
+        checkarray_finite(&_mean, "_mean")?;
+        checkarray_finite(&covariance, "covariance")?;
 
         if covariance.nrows() != _mean.len() || covariance.ncols() != _mean.len() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -210,8 +210,8 @@ impl MultivariateNormalGibbs {
 
     /// Create from precision matrix directly
     pub fn from_precision(_mean: Array1<f64>, precision: Array2<f64>) -> Result<Self> {
-        check_array_finite(&_mean, "_mean")?;
-        check_array_finite(&precision, "precision")?;
+        checkarray_finite(&_mean, "_mean")?;
+        checkarray_finite(&precision, "precision")?;
 
         if precision.nrows() != _mean.len() || precision.ncols() != _mean.len() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -267,7 +267,7 @@ impl ConditionalDistribution for MultivariateNormalGibbs {
         let conditional_mean = self.mean[variable_index] - sum / precision_ii;
 
         // Sample from normal distribution
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
         let normal = Normal::new(conditional_mean, conditional_std).map_err(|e| {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
@@ -328,13 +328,13 @@ impl GaussianMixtureGibbs {
         prior_precision: Array2<f64>,
         prior_alpha: Array1<f64>,
     ) -> Result<Self> {
-        check_array_finite(&data, "data")?;
+        checkarray_finite(&data, "data")?;
         check_positive(n_components, "n_components")?;
-        check_array_finite(&prior_mean, "prior_mean")?;
-        check_array_finite(&prior_precision, "prior_precision")?;
-        check_array_finite(&prior_alpha, "prior_alpha")?;
+        checkarray_finite(&prior_mean, "prior_mean")?;
+        checkarray_finite(&prior_precision, "prior_precision")?;
+        checkarray_finite(&prior_alpha, "prior_alpha")?;
 
-        let (n_samples, dim) = data.dim();
+        let (n_samples_, dim) = data.dim();
 
         if prior_alpha.len() != n_components {
             return Err(StatsError::DimensionMismatch(format!(
@@ -348,7 +348,7 @@ impl GaussianMixtureGibbs {
         let means = Array2::zeros((n_components, dim));
         let precisions = vec![Array2::eye(dim); n_components];
         let weights = Array1::from_elem(n_components, 1.0 / n_components as f64);
-        let assignments = Array1::zeros(n_samples);
+        let assignments = Array1::zeros(n_samples_);
 
         Ok(Self {
             means,
@@ -457,7 +457,7 @@ impl GaussianMixtureGibbs {
     /// Sample parameters from prior when no data is assigned
     fn sample_from_prior<R: Rng + ?Sized>(&mut self, component: usize, rng: &mut R) -> Result<()> {
         // Sample mean from prior
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
 
         let dim = self.prior_mean.len();
         let mut new_mean = Array1::zeros(dim);
@@ -510,7 +510,7 @@ impl GaussianMixtureGibbs {
         };
 
         // Sample new mean
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
         let mut new_mean = Array1::zeros(dim);
 
         for i in 0..dim {
@@ -542,7 +542,7 @@ impl GaussianMixtureGibbs {
         let posterior_alpha = &self.prior_alpha + &counts;
 
         // Sample from Dirichlet (using Gamma sampling)
-        use rand__distr::{Distribution, Gamma};
+        use rand_distr::{Distribution, Gamma};
         let mut gamma_samples = Array1::zeros(self.n_components);
 
         for k in 0..self.n_components {
@@ -615,20 +615,20 @@ impl<C: ConditionalDistribution> BlockedGibbsSampler<C> {
             }
         }
 
-        self.sampler.n_samples += 1;
+        self.sampler.n_samples_ += 1;
         Ok(self.sampler.current.clone())
     }
 
     /// Sample multiple states
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.sampler.current.len();
-        let mut _samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples_, dim));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             _samples.row_mut(i).assign(&sample);
         }

@@ -86,7 +86,7 @@ where
             let mode_value = counts
                 .iter()
                 .filter(|(_, &count)| count == max_count)
-                .map(|(&value_)| value)
+                .map(|(&value_, _)| value_)
                 .min()
                 .ok_or_else(|| StatsError::InvalidArgument("Failed to compute mode".to_string()))?;
 
@@ -100,7 +100,7 @@ where
             let mut mode_values: Vec<T> = counts
                 .iter()
                 .filter(|(_, &count)| count == max_count)
-                .map(|(&value_)| value)
+                .map(|(&value_, _)| value_)
                 .collect();
 
             // Sort the mode values for consistent output
@@ -404,7 +404,7 @@ where
         + Sync
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
-    use crate::sampling::_bootstrap;
+    use crate::sampling::bootstrap;
     use crate::skew;
 
     if x.is_empty() {
@@ -432,7 +432,7 @@ where
     let estimate = skew(x, bias, None)?;
 
     // Generate _bootstrap samples
-    let samples = _bootstrap(x, n_boot, seed)?;
+    let samples = bootstrap(x, n_boot, seed)?;
 
     // Calculate skewness for each _bootstrap sample
     let mut bootstrap_skew = Vec::with_capacity(n_boot);
@@ -514,7 +514,7 @@ where
         + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     use crate::kurtosis;
-    use crate::sampling::_bootstrap;
+    use crate::sampling::bootstrap;
 
     if x.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -541,7 +541,7 @@ where
     let estimate = kurtosis(x, fisher, bias, None)?;
 
     // Generate _bootstrap samples
-    let samples = _bootstrap(x, n_boot, seed)?;
+    let samples = bootstrap(x, n_boot, seed)?;
 
     // Calculate kurtosis for each _bootstrap sample
     let mut bootstrap_kurt = Vec::with_capacity(n_boot);

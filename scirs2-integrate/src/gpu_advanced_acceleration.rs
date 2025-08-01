@@ -18,6 +18,7 @@
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{Array1, ArrayView1};
+use num_cpus;
 use scirs2_core::gpu::{self, DynamicKernelArg, GpuBackend, GpuDataType};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -114,6 +115,17 @@ pub struct MultiGpuConfiguration {
     communication_channels: Vec<gpu::GpuChannel>,
     /// Workload distribution ratios
     workload_ratios: Vec<f64>,
+}
+
+impl Default for MultiGpuConfiguration {
+    fn default() -> Self {
+        MultiGpuConfiguration {
+            devices: Vec::new(),
+            load_balancing: LoadBalancingStrategy::RoundRobin,
+            communication_channels: Vec::new(),
+            workload_ratios: Vec::new(),
+        }
+    }
 }
 
 /// GPU device information
@@ -214,7 +226,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
 
         let memory_pool = Arc::new(Mutex::new(AdvancedGPUMemoryPool::new()?));
         let kernel_cache = Arc::new(Mutex::new(HashMap::new()));
-        let multi_gpu_config = MultiGpuConfiguration::detect_and_configure()?;
+        let multi_gpu_config = MultiGpuConfiguration::default().detect_and_configure()?;
         let performance_monitor = Arc::new(Mutex::new(RealTimeGpuMonitor::new()));
 
         Ok(AdvancedGPUAccelerator {
@@ -231,7 +243,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         // Create a minimal GPU accelerator that works in CPU fallback mode
         let memory_pool = Arc::new(Mutex::new(AdvancedGPUMemoryPool::new_cpu_fallback()?));
         let kernel_cache = Arc::new(Mutex::new(HashMap::new()));
-        let multi_gpu_config = MultiGpuConfiguration::cpu_fallback_config()?;
+        let multi_gpu_config = MultiGpuConfiguration::default().cpu_fallback_config()?;
         let performance_monitor = Arc::new(Mutex::new(RealTimeGpuMonitor::new()));
 
         // Create a dummy context for CPU mode
@@ -597,8 +609,10 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
                 // Use cached configuration if recent
                 return Ok(KernelConfiguration {
                     block_size: perf_data.optimal_block_size,
-                    grid_size: self
-                        .calculate_grid_size(problem_size, perf_data.optimal_block_size.0),
+                    grid_size: Self::calculate_grid_size(
+                        problem_size,
+                        perf_data.optimal_block_size.0,
+                    ),
                 });
             }
         }
@@ -615,7 +629,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
     ) -> IntegrateResult<KernelConfiguration> {
         let mut best_config = KernelConfiguration {
             block_size: (256, 1, 1),
-            grid_size: self.calculate_grid_size(problem_size, 256),
+            grid_size: Self::calculate_grid_size(problem_size, 256),
         };
         let mut best_time = Duration::from_secs(u64::MAX);
 
@@ -629,7 +643,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
 
             let config = KernelConfiguration {
                 block_size: (block_size, 1, 1),
-                grid_size: self.calculate_grid_size(problem_size, block_size),
+                grid_size: Self::calculate_grid_size(problem_size, block_size),
             };
 
             // Benchmark this configuration
@@ -686,7 +700,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
         context
             .launch_kernel(
                 "error_estimate",
-                self.calculate_grid_size(y1.len(), 256),
+                Self::calculate_grid_size(y1.len(), 256),
                 (256, 1, 1),
                 &[
                     DynamicKernelArg::Buffer(y1_gpu.gpu_ptr.as_ptr()),
@@ -785,17 +799,17 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Allocate memory for solution vectors with optimization
-    pub fn allocate_solution_vector(_size: usize) -> IntegrateResult<MemoryBlock<F>> {
+    pub fn allocate_solution_vector(&mut self, _size: usize) -> IntegrateResult<MemoryBlock<F>> {
         self.allocate_block(_size, MemoryBlockType::Solution)
     }
 
     /// Allocate memory for derivative vectors with optimization
-    pub fn allocate_derivative_vector(_size: usize) -> IntegrateResult<MemoryBlock<F>> {
+    pub fn allocate_derivative_vector(&mut self, _size: usize) -> IntegrateResult<MemoryBlock<F>> {
         self.allocate_block(_size, MemoryBlockType::Derivative)
     }
 
     /// Allocate memory for temporary vectors
-    pub fn allocate_temporary_vector(_size: usize) -> IntegrateResult<MemoryBlock<F>> {
+    pub fn allocate_temporary_vector(&mut self, _size: usize) -> IntegrateResult<MemoryBlock<F>> {
         self.allocate_block(_size, MemoryBlockType::Temporary)
     }
 
@@ -846,10 +860,10 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Find a suitable available block for reuse
-    fn find_suitable_block(_required_size: usize) -> Option<usize> {
+    fn find_suitable_block(&self, _required_size: usize) -> Option<usize> {
         for (index, block) in self.available_blocks.iter().enumerate() {
             // Block should be within 25% of required _size for efficient reuse
-            if block._size >= _required_size && block._size <= _required_size * 5 / 4 {
+            if block.size >= _required_size && block.size <= _required_size * 5 / 4 {
                 return Some(index);
             }
         }
@@ -857,9 +871,9 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Deallocate a memory block back to the pool
-    pub fn deallocate(_block_id: usize) -> IntegrateResult<()> {
-        if let Some((size__)) = self.allocated_blocks.remove(&_block_id) {
-            self.used_memory -= size * std::mem::size_of::<F>();
+    pub fn deallocate(&mut self, block_id: usize) -> IntegrateResult<()> {
+        if let Some((size__, _mem_type, _timestamp)) = self.allocated_blocks.remove(&block_id) {
+            self.used_memory -= size__ * std::mem::size_of::<F>();
 
             // Note: In a real implementation, we would properly return the block to available_blocks
             // For now, we just track the deallocation without maintaining the available blocks
@@ -880,7 +894,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
     }
 
     /// Update fragmentation metrics
-    fn update_fragmentation_metrics() {
+    fn update_fragmentation_metrics(&mut self) {
         if self.total_memory == 0 {
             self.fragmentation_ratio = 0.0;
             return;
@@ -922,7 +936,7 @@ impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
 impl MultiGpuConfiguration {
     /// Detect and configure multi-GPU setup
     pub fn detect_and_configure(&self) -> IntegrateResult<Self> {
-        let devices = Self::detect_gpu_devices()?;
+        let devices = self.detect_gpu_devices()?;
         let load_balancing = LoadBalancingStrategy::Adaptive;
         let communication_channels = Vec::new(); // Would be initialized with actual GPU channels
         let workload_ratios = Self::calculate_initial_ratios(&devices);
@@ -942,7 +956,7 @@ impl MultiGpuConfiguration {
             name: "CPU Fallback Mode".to_string(),
             total_memory: 8 * 1024 * 1024 * 1024, // 8GB system RAM
             compute_capability: (1, 0),           // Minimal capability
-            multiprocessor_count: num, _cpus: get(),
+            multiprocessor_count: num_cpus::get(),
             max_threads_per_block: 1,
             current_load: 0.0,
         }];
@@ -1062,7 +1076,8 @@ mod tests {
 
     #[test]
     fn test_multi_gpu_configuration() {
-        let config = MultiGpuConfiguration::detect_and_configure();
+        let detector = MultiGpuConfiguration::default();
+        let config = detector.detect_and_configure();
         assert!(config.is_ok());
 
         if let Ok(cfg) = config {

@@ -10,6 +10,7 @@ use crate::error::{IoError, Result};
 use crate::metadata::{Metadata, MetadataValue};
 use chrono::{DateTime, Datelike, Duration, Utc};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -56,7 +57,7 @@ pub struct Task {
     pub id: String,
     pub name: String,
     pub task_type: TaskType,
-    pub config: serde_json: Value,
+    pub config: serde_json::Value,
     pub inputs: Vec<String>,
     pub outputs: Vec<String>,
     pub resources: ResourceRequirements,
@@ -169,7 +170,7 @@ impl WorkflowBuilder {
     pub fn new(_id: impl Into<String>, name: impl Into<String>) -> Self {
         Self {
             workflow: Workflow {
-                _id: _id.into(),
+                id: _id.into(),
                 name: name.into(),
                 description: None,
                 tasks: Vec::new(),
@@ -377,7 +378,7 @@ impl WorkflowExecutor {
     /// Create a new workflow executor
     pub fn new(_config: ExecutorConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             state: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -459,7 +460,7 @@ impl WorkflowExecutor {
     fn execute_tasks_in_order(&self, workflow: &Workflow, execution_id: &str) -> Result<()> {
         let mut executed_tasks = HashSet::new();
         let mut remaining_tasks: HashSet<String> =
-            workflow.tasks.iter().map(|t| t._id.clone()).collect();
+            workflow.tasks.iter().map(|t| t.id.clone()).collect();
 
         while !remaining_tasks.is_empty() {
             let mut tasks_to_execute = Vec::new();
@@ -468,7 +469,7 @@ impl WorkflowExecutor {
             for task_id in &remaining_tasks {
                 let can_execute = workflow
                     .dependencies
-                    .get(task_id)
+                    .get(task_id as &String)
                     .is_none_or(|deps| deps.iter().all(|dep| executed_tasks.contains(dep)));
 
                 if can_execute {
@@ -492,7 +493,7 @@ impl WorkflowExecutor {
                     let task = workflow
                         .tasks
                         .iter()
-                        .find(|t| &t._id == task_id)
+                        .find(|t| &t.id == task_id)
                         .ok_or_else(|| IoError::Other(format!("Task not found: {task_id}")))?;
 
                     self.execute_single_task(task, execution_id)?;
@@ -517,7 +518,7 @@ impl WorkflowExecutor {
             {
                 let mut states = self.state.lock().unwrap();
                 if let Some(state) = states.get_mut(execution_id) {
-                    if let Some(task_state) = state.task_states.get_mut(&task._id) {
+                    if let Some(task_state) = state.task_states.get_mut(&task.id) {
                         task_state.status = if attempt == 1 {
                             TaskStatus::Running
                         } else {
@@ -536,7 +537,7 @@ impl WorkflowExecutor {
             {
                 let mut states = self.state.lock().unwrap();
                 if let Some(state) = states.get_mut(execution_id) {
-                    if let Some(task_state) = state.task_states.get_mut(&task._id) {
+                    if let Some(task_state) = state.task_states.get_mut(&task.id) {
                         task_state.end_time = Some(Utc::now());
 
                         match result {
@@ -576,45 +577,45 @@ impl WorkflowExecutor {
         match task.task_type {
             TaskType::DataIngestion => {
                 // Simulate data ingestion
-                outputs.insert("status".to_string(), serde_json::_json!("completed"));
-                outputs.insert("records_processed".to_string(), serde_json::_json!(1000));
+                outputs.insert("status".to_string(), serde_json::json!("completed"));
+                outputs.insert("records_processed".to_string(), serde_json::json!(1000));
             }
             TaskType::Transform => {
                 // Simulate data transformation
-                outputs.insert("status".to_string(), serde_json::_json!("completed"));
-                outputs.insert("rows_transformed".to_string(), serde_json::_json!(1000));
+                outputs.insert("status".to_string(), serde_json::json!("completed"));
+                outputs.insert("rows_transformed".to_string(), serde_json::json!(1000));
             }
             TaskType::Validation => {
                 // Simulate data validation
-                outputs.insert("status".to_string(), serde_json::_json!("completed"));
-                outputs.insert("validation_errors".to_string(), serde_json::_json!(0));
+                outputs.insert("status".to_string(), serde_json::json!("completed"));
+                outputs.insert("validation_errors".to_string(), serde_json::json!(0));
             }
             TaskType::MLTraining => {
                 // Simulate ML training
-                outputs.insert("status".to_string(), serde_json::_json!("completed"));
-                outputs.insert("model_accuracy".to_string(), serde_json::_json!(0.95));
+                outputs.insert("status".to_string(), serde_json::json!("completed"));
+                outputs.insert("model_accuracy".to_string(), serde_json::json!(0.95));
             }
             TaskType::MLInference => {
                 // Simulate ML inference
-                outputs.insert("status".to_string(), serde_json::_json!("completed"));
-                outputs.insert("predictions_generated".to_string(), serde_json::_json!(500));
+                outputs.insert("status".to_string(), serde_json::json!("completed"));
+                outputs.insert("predictions_generated".to_string(), serde_json::json!(500));
             }
             TaskType::Export => {
                 // Simulate data export
-                outputs.insert("status".to_string(), serde_json::_json!("completed"));
-                outputs.insert("files_written".to_string(), serde_json::_json!(1));
+                outputs.insert("status".to_string(), serde_json::json!("completed"));
+                outputs.insert("files_written".to_string(), serde_json::json!(1));
             }
             TaskType::Script => {
                 // Simulate script execution
-                outputs.insert("status".to_string(), serde_json::_json!("completed"));
-                outputs.insert("exit_code".to_string(), serde_json::_json!(0));
+                outputs.insert("status".to_string(), serde_json::json!("completed"));
+                outputs.insert("exit_code".to_string(), serde_json::json!(0));
             }
             TaskType::SubWorkflow => {
                 // Simulate sub-workflow execution
-                outputs.insert("status".to_string(), serde_json::_json!("completed"));
+                outputs.insert("status".to_string(), serde_json::json!("completed"));
                 outputs.insert(
                     "sub_workflow_id".to_string(),
-                    serde_json::_json!(format!("sub-{}", task.id)),
+                    serde_json::json!(format!("sub-{}", task.id)),
                 );
             }
             TaskType::Conditional => {
@@ -622,22 +623,22 @@ impl WorkflowExecutor {
                 let condition_met = true; // Would evaluate actual condition
                 outputs.insert(
                     "condition_met".to_string(),
-                    serde_json::_json!(condition_met),
+                    serde_json::json!(condition_met),
                 );
-                outputs.insert("status".to_string(), serde_json::_json!("completed"));
+                outputs.insert("status".to_string(), serde_json::json!("completed"));
             }
             TaskType::Parallel => {
                 // Simulate parallel execution
-                outputs.insert("status".to_string(), serde_json::_json!("completed"));
-                outputs.insert("parallel_tasks_completed".to_string(), serde_json::_json!(4));
+                outputs.insert("status".to_string(), serde_json::json!("completed"));
+                outputs.insert("parallel_tasks_completed".to_string(), serde_json::json!(4));
             }
         }
 
         // Add execution metadata
-        outputs.insert("execution_time_ms".to_string(), serde_json::_json!(100)); // Simulated
+        outputs.insert("execution_time_ms".to_string(), serde_json::json!(100)); // Simulated
         outputs.insert(
             "execution_timestamp".to_string(),
-            serde_json::_json!(Utc::now().to_rfc3339()),
+            serde_json::json!(Utc::now().to_rfc3339()),
         );
 
         Ok(outputs)
@@ -696,10 +697,10 @@ pub mod tasks {
         pub fn new(_id: impl Into<String>, name: impl Into<String>, task_type: TaskType) -> Self {
             Self {
                 task: Task {
-                    _id: _id.into(),
+                    id: _id.into(),
                     name: name.into(),
                     task_type,
-                    config: serde_json: json!({}),
+                    config: json!({}),
                     inputs: Vec::new(),
                     outputs: Vec::new(),
                     resources: ResourceRequirements::default(),
@@ -707,7 +708,7 @@ pub mod tasks {
             }
         }
 
-        pub fn config(mut self, config: serde_json: Value) -> Self {
+        pub fn config(mut self, config: serde_json::Value) -> Self {
             self.task.config = config;
             self
         }
@@ -913,7 +914,7 @@ pub mod scheduling {
         pub fn new(_executor: Arc<WorkflowExecutor>) -> Self {
             Self {
                 schedules: HashMap::new(),
-                _executor,
+                executor: _executor,
                 running: Arc::new(Mutex::new(false)),
             }
         }
@@ -1099,7 +1100,7 @@ pub mod engines {
             Ok(dag_code)
         }
 
-        fn import_workflow(&self_definition: &str) -> Result<Workflow> {
+        fn import_workflow(_definition: &str) -> Result<Workflow> {
             // Parse Airflow DAG _definition
             Err(IoError::UnsupportedFormat(
                 "Airflow import not yet implemented".to_string(),
@@ -1192,13 +1193,13 @@ pub mod engines {
             Ok(flow_code)
         }
 
-        fn import_workflow(&self_definition: &str) -> Result<Workflow> {
+        fn import_workflow(_definition: &str) -> Result<Workflow> {
             Err(IoError::UnsupportedFormat(
                 "Prefect import not yet implemented".to_string(),
             ))
         }
 
-        fn submit(&self_workflow: &Workflow) -> Result<String> {
+        fn submit(self_workflow: &Workflow) -> Result<String> {
             let flow_run_id = uuid::Uuid::new_v4().to_string();
             Ok(flow_run_id)
         }
@@ -1251,13 +1252,13 @@ pub mod engines {
             Ok(job_code)
         }
 
-        fn import_workflow(&self_definition: &str) -> Result<Workflow> {
+        fn import_workflow(_definition: &str) -> Result<Workflow> {
             Err(IoError::UnsupportedFormat(
                 "Dagster import not yet implemented".to_string(),
             ))
         }
 
-        fn submit(&self_workflow: &Workflow) -> Result<String> {
+        fn submit(self_workflow: &Workflow) -> Result<String> {
             Ok(uuid::Uuid::new_v4().to_string())
         }
 
@@ -1352,10 +1353,10 @@ pub mod dynamic {
 
             // Validate parameters
             for param_def in &template.parameters {
-                if param_def.required && !params.contains_key(&param_def._name) {
+                if param_def.required && !params.contains_key(&param_def.name) {
                     return Err(IoError::ValidationError(format!(
                         "Required parameter '{}' not provided",
-                        param_def._name
+                        param_def.name
                     )));
                 }
             }
@@ -1474,7 +1475,7 @@ pub mod events {
         },
         ExternalTrigger {
             source: String,
-            payload: serde_json: Value,
+            payload: serde_json::Value,
         },
         WorkflowCompleted {
             workflow_id: String,
@@ -1482,7 +1483,7 @@ pub mod events {
         },
         Custom {
             event_type: String,
-            data: serde_json: Value,
+            data: serde_json::Value,
         },
     }
 
@@ -1533,7 +1534,7 @@ pub mod events {
                 event_rx: rx,
                 event_tx: tx,
                 rules: Vec::new(),
-                _executor,
+                executor: _executor,
             }
         }
 
@@ -1585,7 +1586,12 @@ pub mod events {
                 }
                 EventPattern::SourcePattern { source } => match event {
                     WorkflowEvent::DataAvailable { source: s, .. } => s == source,
-                    WorkflowEvent::ExternalTrigger { source: s, .. } => s == source_ => false,
+                    WorkflowEvent::ExternalTrigger { source: s, .. } => s == source,
+                    WorkflowEvent::FileCreated { .. } => false,
+                    WorkflowEvent::FileModified { .. } => false,
+                    WorkflowEvent::ScheduledTime { .. } => false,
+                    WorkflowEvent::WorkflowCompleted { .. } => false,
+                    WorkflowEvent::Custom { .. } => false,
                 },
                 EventPattern::EventTypePattern { event_type } => {
                     if let WorkflowEvent::Custom { event_type: t, .. } = event {
@@ -1719,8 +1725,8 @@ pub mod versioning {
         }
 
         fn find_modified_tasks(&self, tasks1: &[Task], tasks2: &[Task]) -> Vec<String> {
-            let map1: HashMap<__> = tasks1.iter().map(|t| (&t.id, t)).collect();
-            let map2: HashMap<__> = tasks2.iter().map(|t| (&t.id, t)).collect();
+            let map1: HashMap<&String, &Task> = tasks1.iter().map(|t| (&t.id, t)).collect();
+            let map2: HashMap<&String, &Task> = tasks2.iter().map(|t| (&t.id, t)).collect();
 
             let mut modified = Vec::new();
             for (id, task1) in map1 {

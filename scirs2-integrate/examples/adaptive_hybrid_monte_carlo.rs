@@ -1,8 +1,8 @@
 use ndarray::{Array1, ArrayView1};
 use rand::prelude::*;
-use rand__distr::{Distribution, Normal};
-use scirs2__integrate::monte_carlo::{importance_sampling, MonteCarloOptions};
-use scirs2__integrate::qmc::{qmc_quad, Halton, QRNGEngine, Sobol};
+use rand_distr::{Distribution, Normal};
+use scirs2_integrate::monte_carlo::{importance_sampling, MonteCarloOptions};
+use scirs2_integrate::qmc::{qmc_quad, Halton, QRNGEngine, Sobol};
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -212,7 +212,7 @@ where
                 // Otherwise use CV-based heuristic
                 match cv {
                     cv if cv > 10.0 => 0.05,
-                    cv if cv > 5.0 => 0.08_ => 0.10,
+                    cv if cv > 5.0 => 0.10,
                 }
             };
 
@@ -328,7 +328,7 @@ where
         let radius = match center_value.abs() {
             v if v > 100.0 * mean_value => 0.05 * radius_scale,
             v if v > 10.0 * mean_value => 0.1 * radius_scale,
-            v if v > 2.0 * mean_value => 0.15 * radius_scale_ => 0.2 * radius_scale,
+            v if v > 2.0 * mean_value => 0.2 * radius_scale,
         };
 
         println!(
@@ -479,7 +479,7 @@ where
             let radius = match center_value.abs() {
                 v if v > 100.0 * mean_value => 0.05 * radius_scale,
                 v if v > 10.0 * mean_value => 0.1 * radius_scale,
-                v if v > 2.0 * mean_value => 0.15 * radius_scale_ => 0.2 * radius_scale,
+                v if v > 2.0 * mean_value => 0.2 * radius_scale,
             };
 
             // Calculate volume of this region

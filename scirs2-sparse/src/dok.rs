@@ -37,7 +37,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::dok::DokMatrix;
+    /// use scirs2_sparse::dok::DokMatrix;
     ///
     /// // Create a 3x3 sparse matrix
     /// let mut matrix = DokMatrix::<f64>::new((3, 3));

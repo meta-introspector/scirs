@@ -701,7 +701,7 @@ impl AdvancedPropertyTester {
     }
 
     fn test_implementation_consistency<F>(
-        &self_implementations: &[Box<dyn Implementation<F>>],
+        &self, _metrics: &[Box<dyn Implementation<F>>],
         test_case: &TestCase<F>,
     ) -> StatsResult<ConsistencyResult>
     where
@@ -720,12 +720,12 @@ impl AdvancedPropertyTester {
 
     // Analysis and scoring methods
 
-    fn calculate_numerical_stability_score(&self_results: &[PropertyTestResult]) -> f64 {
+    fn calculate_numerical_stability_score(&self, _results: &[PropertyTestResult]) -> f64 {
         0.95 // Placeholder
     }
 
     fn analyze_convergence_properties(
-        &self_results: &[StatisticalPropertyResult],
+        &self, _metrics: &[StatisticalPropertyResult],
     ) -> ConvergenceAnalysis {
         ConvergenceAnalysis {
             convergence_rate: 0.95,
@@ -735,7 +735,7 @@ impl AdvancedPropertyTester {
     }
 
     fn analyze_distributional_robustness(
-        &self_results: &[StatisticalPropertyResult],
+        &self, _metrics: &[StatisticalPropertyResult],
     ) -> DistributionalRobustness {
         DistributionalRobustness {
             robustness_score: 0.90,
@@ -744,21 +744,21 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn calculate_overall_stability_score(&self_results: &[StabilityConditionResult]) -> f64 {
+    fn calculate_overall_stability_score(&self, _results: &[StabilityConditionResult]) -> f64 {
         0.85 // Placeholder
     }
 
     fn generate_stability_recommendations(
-        &self_results: &[StabilityConditionResult],
+        &self, _metrics: &[StabilityConditionResult],
     ) -> Vec<StabilityRecommendation> {
         vec![] // Placeholder
     }
 
-    fn identify_critical_failures(&self_results: &[EdgeCaseResult]) -> Vec<CriticalFailure> {
+    fn identify_critical_failures(&self, _results: &[EdgeCaseResult]) -> Vec<CriticalFailure> {
         vec![] // Placeholder
     }
 
-    fn analyze_boundary_behavior(&self_results: &[EdgeCaseResult]) -> BoundaryBehaviorAnalysis {
+    fn analyze_boundary_behavior(&self, _results: &[EdgeCaseResult]) -> BoundaryBehaviorAnalysis {
         BoundaryBehaviorAnalysis {
             boundary_smoothness: 0.90,
             discontinuities_detected: Vec::new(),
@@ -777,7 +777,7 @@ impl AdvancedPropertyTester {
     }
 
     fn execute_performance_property_test(
-        &self_test: &PerformancePropertyTest,
+        &self, &PerformancePropertyTest,
     ) -> StatsResult<PerformanceTestResult> {
         Ok(PerformanceTestResult {
             _test_name: "placeholder".to_string(),
@@ -788,7 +788,7 @@ impl AdvancedPropertyTester {
         })
     }
 
-    fn analyze_scalability(&self_results: &[PerformanceTestResult]) -> ScalabilityAnalysis {
+    fn analyze_scalability(&self, _results: &[PerformanceTestResult]) -> ScalabilityAnalysis {
         ScalabilityAnalysis {
             scalability_factor: 0.95,
             complexity_class: ComplexityClass::Linear,
@@ -797,7 +797,7 @@ impl AdvancedPropertyTester {
     }
 
     fn verify_computational_complexity(
-        &self_results: &[PerformanceTestResult],
+        &self, _metrics: &[PerformanceTestResult],
     ) -> ComplexityVerification {
         ComplexityVerification {
             theoretical_complexity: ComplexityClass::Linear,
@@ -808,7 +808,7 @@ impl AdvancedPropertyTester {
     }
 
     fn analyze_implementation_consensus(
-        &self_results: &[ConsistencyResult],
+        &self, _metrics: &[ConsistencyResult],
     ) -> ConsensusAnalysis {
         ConsensusAnalysis {
             consensus_strength: 0.95,
@@ -817,7 +817,7 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn detect_implementation_outliers(&self_results: &[ConsistencyResult]) -> OutlierDetection {
+    fn detect_implementation_outliers(&self, _results: &[ConsistencyResult]) -> OutlierDetection {
         OutlierDetection {
             outliers_detected: Vec::new(),
             outlier_criteria: OutlierCriteria::StatisticalDeviation,
@@ -825,18 +825,18 @@ impl AdvancedPropertyTester {
         }
     }
 
-    fn calculate_overall_score(&self_results: &ComprehensivePropertyTestResult) -> f64 {
+    fn calculate_overall_score(&self, &ComprehensivePropertyTestResult) -> f64 {
         0.90 // Placeholder
     }
 
     fn identify_critical_issues(
-        &self_results: &ComprehensivePropertyTestResult,
+        &self, &ComprehensivePropertyTestResult,
     ) -> Vec<CriticalIssue> {
         vec![] // Placeholder
     }
 
     fn generate_comprehensive_recommendations(
-        &self_results: &ComprehensivePropertyTestResult,
+        &self, &ComprehensivePropertyTestResult,
     ) -> Vec<TestingRecommendation> {
         vec![] // Placeholder
     }

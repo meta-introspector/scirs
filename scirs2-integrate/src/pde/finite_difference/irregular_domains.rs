@@ -222,7 +222,7 @@ impl IrregularGrid {
     }
 
     /// Generate ghost point values based on boundary conditions
-    pub fn update_ghost_points(_solution: &Array1<f64>) -> PDEResult<()> {
+    pub fn update_ghost_points(&mut self, _solution: &Array1<f64>) -> PDEResult<()> {
         for ((i, j), bc) in &self.boundary_conditions {
             let boundary_point = &self.points[[*j, *i]];
 
@@ -256,12 +256,12 @@ impl IrregularGrid {
     }
 
     /// Get ghost point value by grid indices
-    pub fn get_ghost_value(i: usize, j: usize) -> Option<f64> {
+    pub fn get_ghost_value(&self, i: usize, j: usize) -> Option<f64> {
         self.ghost_values.get(&(i, j)).copied()
     }
 
     /// Clear all stored ghost values
-    pub fn clear_ghost_values() {
+    pub fn clear_ghost_values(&mut self) {
         self.ghost_values.clear();
     }
 
@@ -271,7 +271,7 @@ impl IrregularGrid {
     }
 
     /// Set a specific ghost point value manually
-    pub fn set_ghost_value(i: usize, j: usize, value: f64) -> PDEResult<()> {
+    pub fn set_ghost_value(&mut self, i: usize, j: usize, value: f64) -> PDEResult<()> {
         if i >= self.nx || j >= self.ny {
             return Err(PDEError::FiniteDifferenceError(
                 "Grid indices out of bounds".to_string(),
@@ -477,7 +477,7 @@ impl IrregularGrid {
     }
 
     /// Extract solution values for interior and boundary points
-    pub fn extract_domain_solution(_full_solution: &Array1<f64>) -> Array2<f64> {
+    pub fn extract_domain_solution(&self, _full_solution: &Array1<f64>) -> Array2<f64> {
         let mut domain_solution = Array2::from_elem((self.ny, self.nx), f64::NAN);
 
         for j in 0..self.ny {
@@ -619,7 +619,7 @@ impl IrregularStencils {
         match derivative_order {
             1 => {
                 // First derivative: use forward/backward differences based on available neighbors
-                for (neighbor_distance) in neighbor_points.iter() {
+                for (neighbor, _distance) in neighbor_points.iter() {
                     let (nx, ny) = neighbor.coords;
                     let dx = nx - cx;
                     let dy = ny - cy;
@@ -645,7 +645,7 @@ impl IrregularStencils {
                 }
 
                 // Add center _point coefficient
-                let center_coeff = -stencil_coefficients.iter().map(|(__, c)| c).sum::<f64>();
+                let center_coeff = -stencil_coefficients.iter().map(|(_, _, c)| c).sum::<f64>();
                 stencil_coefficients.push((
                     center_point.grid_indices.0,
                     center_point.grid_indices.1,
@@ -718,7 +718,8 @@ impl IrregularStencils {
         let mut constraint_matrix = Array2::<f64>::zeros((n, n));
         let mut rhs = Array1::<f64>::zeros(n);
 
-        for (i, &(x, y)) in neighbors.iter().enumerate() {
+        for (i, &(pos, _value)) in neighbors.iter().enumerate() {
+            let (x, y) = pos;
             let dx = x - cx;
             let dy = y - cy;
 
@@ -1009,7 +1010,7 @@ impl ImmersedBoundary {
     }
 
     /// Find the closest point on the boundary curve to a given point
-    fn find_closest_boundary_point(_px: f64, py: f64) -> PDEResult<(f64, f64)> {
+    fn find_closest_boundary_point(&self, _px: f64, py: f64) -> PDEResult<(f64, f64)> {
         // Use a simple search along the parameterized boundary curve
         let mut min_distance = f64::INFINITY;
         let mut closest_point = (0.0, 0.0);

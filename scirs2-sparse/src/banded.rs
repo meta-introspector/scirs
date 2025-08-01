@@ -1,6 +1,6 @@
 //! Banded matrix format (legacy matrix API)
 
-use crate::banded__array::BandedArray;
+use crate::banded_array::BandedArray;
 use crate::error::SparseResult;
 use crate::sparray::SparseArray;
 use ndarray::Array2;

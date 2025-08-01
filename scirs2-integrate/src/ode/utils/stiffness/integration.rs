@@ -20,18 +20,19 @@ pub struct AdaptiveMethodState<F: IntegrateFloat> {
 impl<F: IntegrateFloat> AdaptiveMethodState<F> {
     /// Create with configuration
     pub fn with_config(_config: crate::ode::utils::stiffness::StiffnessDetectionConfig<F>) -> Self {
-        let detector = crate::ode::utils::stiffness::StiffnessDetector::with_config(_config.clone());
+        let detector =
+            crate::ode::utils::stiffness::StiffnessDetector::with_config(_config.clone());
         Self {
             method_type: AdaptiveMethodType::Adams,
             steps_since_switch: 0,
             order: 1, // Start with order 1
-            _config,
+            config: _config,
             detector,
         }
     }
 
     /// Record a step
-    pub fn record_step(_error_estimate: F) {
+    pub fn record_step(&mut self, _error_estimate: F) {
         self.steps_since_switch += 1;
     }
 
@@ -48,7 +49,8 @@ impl<F: IntegrateFloat> AdaptiveMethodState<F> {
     /// Switch to a new method
     pub fn switch_method(
         &mut self,
-        new_method: AdaptiveMethodType, _steps: usize,
+        new_method: AdaptiveMethodType,
+        _steps: usize,
     ) -> crate::error::IntegrateResult<()> {
         self.method_type = new_method;
         self.steps_since_switch = 0;
@@ -56,7 +58,7 @@ impl<F: IntegrateFloat> AdaptiveMethodState<F> {
     }
 
     /// Generate a diagnostic message about the current state
-    pub fn generate_diagnostic_message() -> String {
+    pub fn generate_diagnostic_message(&self) -> String {
         format!(
             "AdaptiveMethodState: method={:?}, steps_since_switch={}",
             self.method_type, self.steps_since_switch

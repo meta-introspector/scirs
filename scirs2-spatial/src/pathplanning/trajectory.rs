@@ -103,7 +103,7 @@ impl TrajectoryPoint {
     }
 
     /// Get the distance to another point
-    pub fn distance_to(_other: &TrajectoryPoint) -> f64 {
+    pub fn distance_to(&self, _other: &TrajectoryPoint) -> f64 {
         ((self.x - _other.x).powi(2) + (self.y - _other.y).powi(2)).sqrt()
     }
 }
@@ -225,7 +225,7 @@ impl Trajectory {
     /// # Returns
     ///
     /// * Interpolated trajectory point at time t
-    pub fn sample(t: f64) -> SpatialResult<TrajectoryPoint> {
+    pub fn sample(&self, t: f64) -> SpatialResult<TrajectoryPoint> {
         if self.points.is_empty() {
             return Err(SpatialError::ValueError("Empty trajectory".to_string()));
         }
@@ -273,12 +273,14 @@ impl Trajectory {
     }
 
     /// Check if the trajectory satisfies velocity constraints
-    pub fn satisfies_velocity_constraints(_max_velocity: f64) -> bool {
-        self.points.iter().all(|p| p.speed() <= _max_velocity + 1e-6)
+    pub fn satisfies_velocity_constraints(&self, _max_velocity: f64) -> bool {
+        self.points
+            .iter()
+            .all(|p| p.speed() <= _max_velocity + 1e-6)
     }
 
     /// Check if the trajectory satisfies acceleration constraints
-    pub fn satisfies_acceleration_constraints(_max_acceleration: f64) -> bool {
+    pub fn satisfies_acceleration_constraints(&self, _max_acceleration: f64) -> bool {
         self.points
             .iter()
             .all(|p| p.acceleration_magnitude() <= _max_acceleration + 1e-6)
@@ -475,8 +477,10 @@ impl TrajectoryOptimizer {
             + 5.0 * _coeffs[5] * t4;
 
         // Acceleration: p''(t) = 2*c2 + 6*c3*t + 12*c4*t^2 + 20*c5*t^3
-        let acceleration =
-            2.0 * _coeffs[2] + 6.0 * _coeffs[3] * t + 12.0 * _coeffs[4] * t2 + 20.0 * _coeffs[5] * t3;
+        let acceleration = 2.0 * _coeffs[2]
+            + 6.0 * _coeffs[3] * t
+            + 12.0 * _coeffs[4] * t2
+            + 20.0 * _coeffs[5] * t3;
 
         (position, velocity, acceleration)
     }

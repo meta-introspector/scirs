@@ -8,8 +8,8 @@ use num_traits::Float;
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::coo__array::CooArray;
-use crate::csr__array::CsrArray;
+use crate::coo_array::CooArray;
+use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::{SparseArray, SparseSum};
 
@@ -184,13 +184,13 @@ where
         }
 
         if !sorted {
-            all_data.sort_by_key(|&(_, col_)| col);
+            all_data.sort_by_key(|&(_, col_, _)| col_);
         }
 
         // Count elements per column
         let mut col_counts = vec![0; shape.1];
-        for &(_, col_) in &all_data {
-            col_counts[col] += 1;
+        for &(_, col_, _) in &all_data {
+            col_counts[col_] += 1;
         }
 
         // Create indptr
@@ -206,8 +206,8 @@ where
         let mut indices = Vec::with_capacity(nnz);
         let mut values = Vec::with_capacity(nnz);
 
-        for (row_, val) in all_data {
-            indices.push(row);
+        for (row_, _, val) in all_data {
+            indices.push(row_);
             values.push(val);
         }
 
@@ -533,7 +533,7 @@ where
             }
 
             // Sort by row index
-            col_data.sort_by_key(|&(row_)| row);
+            col_data.sort_by_key(|&(row_, _)| row_);
 
             // Put the sorted data back
             for (i, (row, val)) in col_data.into_iter().enumerate() {

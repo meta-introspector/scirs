@@ -4,8 +4,8 @@
 //! sequences, sophisticated stratified sampling methods, and enhanced integration techniques.
 
 use crate::error::{StatsError, StatsResult as Result};
-use crate::error_handling__v2::ErrorCode;
-use crate::unified_error__handling::global_error_handler;
+use crate::error_handling_v2::ErrorCode;
+use crate::unified_error_handling::global_error_handler;
 use ndarray::{Array1, Array2};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::validation::*;
@@ -226,7 +226,7 @@ impl AdvancedQMCGenerator {
             QMCSequenceType::Faure => {
                 QMCGeneratorState::Faure(Self::init_faure_state(dimension, seed)?)
             }
-            QMCSequenceType::GeneralizedHalton =>, QMCGeneratorState::GeneralizedHalton(
+            QMCSequenceType::GeneralizedHalton => QMCGeneratorState::GeneralizedHalton(
                 Self::init_generalized_halton_state(dimension, seed)?,
             ),
             QMCSequenceType::OptimalLHS => {
@@ -339,7 +339,7 @@ impl AdvancedQMCGenerator {
     }
 
     /// Initialize Niederreiter state
-    fn init_niederreiter_state(_dimension: usize_seed: Option<u64>) -> Result<NiederreiterState> {
+    fn init_niederreiter_state(_dimension: usize, _seed: Option<u64>) -> Result<NiederreiterState> {
         let generating_matrices = Self::generate_niederreiter_matrices(_dimension)?;
         let polynomial_coefficients = Self::get_primitive_polynomials(_dimension)?;
 
@@ -1012,16 +1012,16 @@ impl StratifiedSampler {
     }
 
     /// Generate stratified samples
-    pub fn generate(&mut self, n_samples: usize, seed: Option<u64>) -> Result<Array2<f64>> {
+    pub fn generate(&mut self, n_samples_: usize, seed: Option<u64>) -> Result<Array2<f64>> {
         let handler = global_error_handler();
 
-        if n_samples == 0 {
+        if n_samples_ == 0 {
             return Err(handler
                 .create_validation_error(
                     ErrorCode::E1001,
                     "StratifiedSampler::generate",
-                    "n_samples",
-                    n_samples,
+                    "n_samples_",
+                    n_samples_,
                     "Number of _samples must be positive",
                 )
                 .error);
@@ -1030,10 +1030,10 @@ impl StratifiedSampler {
         let total_strata = self.config.strata_per_dimension.pow(self.dimension as u32);
 
         // Determine _samples per stratum
-        let base_samples_per_stratum = n_samples / total_strata;
-        let remainder = n_samples % total_strata;
+        let base_samples_per_stratum = n_samples_ / total_strata;
+        let remainder = n_samples_ % total_strata;
 
-        let mut _samples = Array2::zeros((n_samples, self.dimension));
+        let mut _samples = Array2::zeros((n_samples_, self.dimension));
         let mut sample_idx = 0;
 
         let mut rng = match seed {
@@ -1059,18 +1059,18 @@ impl StratifiedSampler {
                 }
                 sample_idx += 1;
 
-                if sample_idx >= n_samples {
+                if sample_idx >= n_samples_ {
                     break;
                 }
             }
 
-            if sample_idx >= n_samples {
+            if sample_idx >= n_samples_ {
                 break;
             }
         }
 
         // Fill remaining _samples if needed
-        while sample_idx < n_samples {
+        while sample_idx < n_samples_ {
             let random_stratum_idx = rng.gen_range(0..total_strata);
             let stratum_indices = self.linear_to_multi_index(random_stratum_idx);
             let point = self.sample_within_stratum(&stratum_indices..&mut rng)?;

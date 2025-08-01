@@ -8,8 +8,8 @@
 //! pendulum's mass changes with time (like a pendulum with a leaking bob).
 
 use ndarray::{array, Array2, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::ode::{
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::ode::{
     solve_ivp_with_events, terminal_event, EventAction, EventDirection, EventSpec, MassMatrix,
     ODEMethod, ODEOptions, ODEOptionsWithEvents,
 };
@@ -71,7 +71,7 @@ fn main() -> IntegrateResult<()> {
         // Event 2: Maximum displacement (ω = 0)
         |_t: f64, y: ArrayView1<f64>| y[1],
         // Event 3: Mass reaches half of initial value
-        |t: f64_y: ArrayView1<f64>| {
+        |t: f64, _y: ArrayView1<f64>| {
             // Inline mass calculation to avoid closure capture
             let m0 = 5.0;
             let exp_t = (-0.1 * t).exp();

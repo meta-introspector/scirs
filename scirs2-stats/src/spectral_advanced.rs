@@ -14,7 +14,7 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2};
 use num_traits::{Float, FloatConst, NumCast, One, Zero};
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
-use scirs2__linalg::parallel_dispatch::ParallelConfig;
+use scirs2_linalg::parallel_dispatch::ParallelConfig;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -25,7 +25,8 @@ pub struct AdvancedSpectralAnalyzer<F> {
     /// Cached basis functions and transforms
     cache: SpectralCache<F>,
     /// Performance metrics
-    performance: SpectralPerformanceMetrics_phantom: PhantomData<F>,
+    performance: SpectralPerformanceMetrics,
+    _phantom: PhantomData<F>,
 }
 
 /// Configuration for advanced spectral analysis
@@ -443,7 +444,7 @@ where
         &mut self,
         signal: &ArrayView1<F>,
     ) -> StatsResult<AdvancedSpectralResults<F>> {
-        check_array_finite(signal, "signal")?;
+        checkarray_finite(signal, "signal")?;
         check_min_samples(signal, 2, "signal")?;
 
         let start_time = std::time::Instant::now();
@@ -499,8 +500,8 @@ where
         &mut self,
         signals: &ArrayView2<F>,
     ) -> StatsResult<CoherenceResults<F>> {
-        check_array_finite(signals, "signals")?;
-        let (_n_samples, n_channels) = signals.dim();
+        checkarray_finite(signals, "signals")?;
+        let (_n_samples_, n_channels) = signals.dim();
 
         if n_channels < 2 {
             return Err(StatsError::InvalidArgument(
@@ -542,16 +543,16 @@ where
 
     /// Time-frequency analysis using advanced methods
     pub fn time_frequency_analysis(&mut self, signal: &ArrayView1<F>) -> StatsResult<Array3<F>> {
-        check_array_finite(signal, "signal")?;
+        checkarray_finite(signal, "signal")?;
 
-        let n_samples = signal.len();
+        let n_samples_ = signal.len();
         let window_size = self.config.nonstationary_config.stft_window_size;
         let overlap = self.config.nonstationary_config.stft_overlap;
 
         let hop_size = ((F::one() - overlap) * F::from(window_size).unwrap())
             .to_usize()
             .unwrap();
-        let n_windows = (n_samples - window_size) / hop_size + 1;
+        let n_windows = (n_samples_ - window_size) / hop_size + 1;
         let n_freqs = window_size / 2 + 1;
 
         let mut spectrogram = Array3::zeros((n_freqs, n_windows, 1));
@@ -560,7 +561,7 @@ where
         let window = self.generate_window(WindowFunction::Hann, window_size)?;
 
         // Compute STFT
-        for (win_idx, window_start) in (0..n_samples - window_size + 1)
+        for (win_idx, window_start) in (0..n_samples_ - window_size + 1)
             .step_by(hop_size)
             .enumerate()
         {
@@ -591,8 +592,8 @@ where
         psd: &ArrayView1<F>,
         frequencies: &ArrayView1<F>,
     ) -> StatsResult<Vec<SpectralPeak<F>>> {
-        check_array_finite(psd, "psd")?;
-        check_array_finite(frequencies, "frequencies")?;
+        checkarray_finite(psd, "psd")?;
+        checkarray_finite(frequencies, "frequencies")?;
 
         if psd.len() != frequencies.len() {
             return Err(StatsError::InvalidArgument(
@@ -712,7 +713,8 @@ where
     }
 
     fn ml_spectral_enhancement(
-        &mut self_signal: &ArrayView1<F>,
+        &self,
+        _signal: &ArrayView1<F>,
         psd: &Array2<F>,
     ) -> StatsResult<MLSpectralResults<F>> {
         let mut results = MLSpectralResults {
@@ -822,7 +824,7 @@ where
         frequencies
     }
 
-    fn generate_slepian_tapers(&mut self, n: usize_nw: F, k: usize) -> StatsResult<Array2<F>> {
+    fn generate_slepian_tapers(&mut self, n: usize, nw: F, k: usize) -> StatsResult<Array2<F>> {
         // Simplified Slepian taper generation - would use proper DPSS implementation
         let mut tapers = Array2::zeros((n, k));
 
@@ -883,10 +885,10 @@ where
     }
 
     fn compute_cwt(&self, signal: &ArrayView1<F>) -> StatsResult<Array3<num_complex::Complex<F>>> {
-        let n_samples = signal.len();
+        let n_samples_ = signal.len();
         let n_scales = self.config.wavelet_config.scales;
         Ok(Array3::from_elem(
-            (n_scales, n_samples, 1),
+            (n_scales, n_samples_, 1),
             num_complex::Complex::new(F::zero(), F::zero()),
         ))
     }

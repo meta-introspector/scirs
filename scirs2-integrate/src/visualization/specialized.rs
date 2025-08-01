@@ -3,9 +3,9 @@
 //! This module provides visualization tools for specialized scientific domains
 //! including quantum mechanics, fluid dynamics, and financial analysis.
 
+use super::types::*;
 use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{Array1, Array2, Array3, Axis};
-use super::types::*;
 
 /// Quantum state visualization tools
 pub struct QuantumVisualizer;

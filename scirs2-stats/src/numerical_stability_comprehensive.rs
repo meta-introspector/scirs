@@ -11,7 +11,7 @@ use num_traits::{Float, NumCast, Zero, One};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use rand__distr::{Distribution, Normal, Uniform};
+use rand_distr::{Distribution, Normal, Uniform};
 
 /// Configuration for numerical stability testing
 #[derive(Debug, Clone)]
@@ -323,7 +323,7 @@ impl NumericalStabilityTester {
         // Test with sorted data (should be exact)
         let sorted_data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
         
-        self.run_test("quantile_sorted_data", "quantiles", &sorted_data, |data| {
+        self.run_test("quantilesorted_data", "quantiles", &sorted_data, |data| {
             let arr = Array1::from_vec(data.clone());
             crate::quantile::quantile(&arr.view(), 0.5, crate::quantile::QuantileInterpolation::Linear).map(|median| {
                 let expected = 499.5; // Midpoint of 0-999

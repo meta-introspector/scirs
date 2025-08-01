@@ -282,7 +282,8 @@ fn zoom_search<F, G, S>(
     mut f_lo: f64,
     mut f_hi: f64,
     mut derphi_lo: f64,
-    options: &StrongWolfeOptions_bounds: Option<&Bounds>,
+    options: &StrongWolfeOptions,
+    bounds: Option<&Bounds>,
 ) -> Result<ZoomSearchResult, OptimizeError>
 where
     F: FnMut(&ArrayView1<f64>) -> S,
@@ -433,7 +434,8 @@ pub fn create_strong_wolfe_options_for_method(_method: &str) -> StrongWolfeOptio
             tolerance: 1e-12,
             use_safeguarded_interpolation: true,
             use_extrapolation: false, // More conservative for Newton
-        }_ => StrongWolfeOptions::default(),
+        },
+        _ => StrongWolfeOptions::default(),
     }
 }
 

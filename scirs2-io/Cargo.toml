@@ -48,6 +48,7 @@ memmap2 = { workspace = true }
 bytemuck = { workspace = true }
 reqwest = { workspace = true, optional = true }
 num_cpus = { workspace = true }
+statrs = { workspace = true }
 indexmap = { workspace = true, features = ["serde"] }
 serde_yaml = { workspace = true }
 toml = { workspace = true }

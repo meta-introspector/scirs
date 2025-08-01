@@ -308,7 +308,7 @@ where
 
     /// Adaptive parallel mean computation
     pub fn adaptive_mean(&mut self, data: &ArrayView1<F>) -> StatsResult<F> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         if data.is_empty() {
             return Err(StatsError::InvalidArgument("Data cannot be empty".to_string()));
@@ -331,7 +331,7 @@ where
 
     /// Adaptive parallel variance computation
     pub fn adaptive_variance(&mut self, data: &ArrayView1<F>, ddof: usize) -> StatsResult<F> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         if data.len() <= ddof {
             return Err(StatsError::InvalidArgument(
@@ -413,7 +413,7 @@ where
             (sum, chunk.len())
         }).collect();
 
-        let (total_sum, total_count) = results.into_iter()
+        let (total_sum, total_count) = results.into().iter()
             .fold((F::zero(), 0), |(acc_sum, acc_count), (sum, count)| {
                 (acc_sum + sum, acc_count + count)
             });
@@ -429,7 +429,7 @@ where
             (sum, chunk.len())
         })?;
 
-        let (total_sum, total_count) = results.into_iter()
+        let (total_sum, total_count) = results.into().iter()
             .fold((F::zero(), 0), |(acc_sum, acc_count), (sum, count)| {
                 (acc_sum + sum, acc_count + count)
             });
@@ -442,13 +442,13 @@ where
         let numa_chunks = self.distribute_numa_aware(data)?;
         
         // Process each NUMA node's data locally
-        let results: Vec<_> = numa_chunks.into_iter().map(|(node_id, chunk)| {
+        let results: Vec<_> = numa_chunks.into().iter().map(|(node_id, chunk)| {
             // Ideally would pin thread to NUMA node here
             let sum: F = chunk.iter().copied().sum();
             (sum, chunk.len())
         }).collect();
 
-        let (total_sum, total_count) = results.into_iter()
+        let (total_sum, total_count) = results.into().iter()
             .fold((F::zero(), 0), |(acc_sum, acc_count), (sum, count)| {
                 (acc_sum + sum, acc_count + count)
             });
@@ -493,7 +493,7 @@ where
             (sum_squared_diffs, chunk.len())
         }).collect();
 
-        let (total_sum_sq_diffs, total_count) = results.into_iter()
+        let (total_sum_sq_diffs, total_count) = results.into().iter()
             .fold((F::zero(), 0), |(acc_sum, acc_count), (sum, count)| {
                 (acc_sum + sum, acc_count + count)
             });
@@ -512,7 +512,7 @@ where
             (sum_squared_diffs, chunk.len())
         })?;
 
-        let (total_sum_sq_diffs, total_count) = results.into_iter()
+        let (total_sum_sq_diffs, total_count) = results.into().iter()
             .fold((F::zero(), 0), |(acc_sum, acc_count), (sum, count)| {
                 (acc_sum + sum, acc_count + count)
             });
@@ -525,14 +525,14 @@ where
     fn compute_variance_numa_aware(&self, data: &ArrayView1<F>, mean: F, ddof: usize) -> StatsResult<F> {
         let numa_chunks = self.distribute_numa_aware(data)?;
         
-        let results: Vec<_> = numa_chunks.into_iter().map(|(node_id, chunk)| {
+        let results: Vec<_> = numa_chunks.into().iter().map(|(node_id, chunk)| {
             let sum_squared_diffs: F = chunk.iter()
                 .map(|&x| (x - mean) * (x - mean))
                 .sum();
             (sum_squared_diffs, chunk.len())
         }).collect();
 
-        let (total_sum_sq_diffs, total_count) = results.into_iter()
+        let (total_sum_sq_diffs, total_count) = results.into().iter()
             .fold((F::zero(), 0), |(acc_sum, acc_count), (sum, count)| {
                 (acc_sum + sum, acc_count + count)
             });
@@ -628,7 +628,7 @@ where
     {
         // Simplified work stealing implementation
         // In practice, this would use a sophisticated work stealing queue
-        let results: Vec<R> = work_units.into_iter()
+        let results: Vec<R> = work_units.into().iter()
             .map(|unit| work_fn(&unit.data))
             .collect();
         

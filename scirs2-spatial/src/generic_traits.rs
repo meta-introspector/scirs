@@ -33,10 +33,11 @@
 //! let point2 = array![4.0f32, 5.0f32, 6.0f32];
 //! ```
 
+use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::fmt::Debug;
 use std::f64::consts::PI;
+use std::fmt::Debug;
 
 /// Trait for scalar types that can be used in spatial computations
 ///
@@ -242,7 +243,7 @@ pub trait SpatialPoint<T: SpatialScalar> {
     fn from_coords(_coords: &[T]) -> Self;
 
     /// Calculate squared Euclidean distance to another point
-    fn squared_distance_to(_other: &Self) -> T {
+    fn squared_distance_to(&self, _other: &Self) -> T {
         if self.dimension() != _other.dimension() {
             return T::max_finite();
         }
@@ -266,12 +267,12 @@ pub trait SpatialPoint<T: SpatialScalar> {
     }
 
     /// Calculate Euclidean distance to another point
-    fn distance_to(_other: &Self) -> T {
-        SpatialScalar::sqrt(self.squared_distance_to(_other))
+    fn distance_to(&self, _other: &Self) -> T {
+        self.squared_distance_to(_other).sqrt()
     }
 
     /// Calculate Manhattan distance to another point
-    fn manhattan_distance_to(_other: &Self) -> T {
+    fn manhattan_distance_to(&self, _other: &Self) -> T {
         if self.dimension() != _other.dimension() {
             return T::max_finite();
         }
@@ -287,7 +288,7 @@ pub trait SpatialPoint<T: SpatialScalar> {
         let mut sum = T::zero();
         for i in 0..self.dimension() {
             if let (Some(a), Some(b)) = (self.coordinate(i), _other.coordinate(i)) {
-                sum = sum + SpatialScalar::abs(a - b);
+                sum = sum + (a - b).abs();
             }
         }
         sum
@@ -348,20 +349,20 @@ pub trait SpatialArray<T: SpatialScalar, P: SpatialPoint<T>> {
 /// Trait for distance metrics
 pub trait DistanceMetric<T: SpatialScalar, P: SpatialPoint<T>> {
     /// Calculate distance between two points
-    fn distance(_p1: &P, p2: &P) -> T;
+    fn distance(&self, _p1: &P, p2: &P) -> T;
 
     /// Calculate squared distance (if applicable, for efficiency)
-    fn squared_distance(_p1: &P_p2: &P) -> Option<T> {
+    fn squared_distance(&self, _p1: &P, _p2: &P) -> Option<T> {
         None
     }
 
     /// Check if this metric satisfies the triangle inequality
-    fn is_metric() -> bool {
+    fn is_metric(&self) -> bool {
         true
     }
 
     /// Get the name of this distance metric
-    fn name() -> &'static str;
+    fn name(&self) -> &'static str;
 }
 
 /// Euclidean distance metric
@@ -373,11 +374,11 @@ impl<T: SpatialScalar, P: SpatialPoint<T>> DistanceMetric<T, P> for EuclideanMet
         p1.distance_to(p2)
     }
 
-    fn squared_distance(_p1: &P, p2: &P) -> Option<T> {
+    fn squared_distance(&self, _p1: &P, p2: &P) -> Option<T> {
         Some(_p1.squared_distance_to(p2))
     }
 
-    fn name() -> &'static str {
+    fn name(&self) -> &'static str {
         "euclidean"
     }
 }
@@ -391,7 +392,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T>> DistanceMetric<T, P> for ManhattanMet
         p1.manhattan_distance_to(p2)
     }
 
-    fn name() -> &'static str {
+    fn name(&self) -> &'static str {
         "manhattan"
     }
 }
@@ -409,7 +410,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T>> DistanceMetric<T, P> for ChebyshevMet
         let mut max_diff = T::zero();
         for i in 0..p1.dimension() {
             if let (Some(a), Some(b)) = (p1.coordinate(i), p2.coordinate(i)) {
-                let diff = SpatialScalar::abs(a - b);
+                let diff = (a - b).abs();
                 if diff > max_diff {
                     max_diff = diff;
                 }
@@ -498,7 +499,7 @@ pub struct Point<T: SpatialScalar> {
 impl<T: SpatialScalar> Point<T> {
     /// Create a new point from coordinates
     pub fn new(_coords: Vec<T>) -> Self {
-        Self { _coords }
+        Self { coords: _coords }
     }
 
     /// Create a point with the given dimension filled with zeros
@@ -526,12 +527,12 @@ impl<T: SpatialScalar> Point<T> {
     }
 
     /// Get mutable access to coordinates
-    pub fn coords_mut(&self) -> &mut [T] {
+    pub fn coords_mut(&mut self) -> &mut [T] {
         &mut self.coords
     }
 
     /// Add another point (vector addition)
-    pub fn add(_other: &Point<T>) -> Option<Point<T>> {
+    pub fn add(&self, _other: &Point<T>) -> Option<Point<T>> {
         if self.dimension() != _other.dimension() {
             return None;
         }
@@ -547,7 +548,7 @@ impl<T: SpatialScalar> Point<T> {
     }
 
     /// Subtract another point (vector subtraction)
-    pub fn subtract(_other: &Point<T>) -> Option<Point<T>> {
+    pub fn subtract(&self, _other: &Point<T>) -> Option<Point<T>> {
         if self.dimension() != _other.dimension() {
             return None;
         }
@@ -563,13 +564,13 @@ impl<T: SpatialScalar> Point<T> {
     }
 
     /// Scale the point by a scalar
-    pub fn scale(_factor: T) -> Point<T> {
+    pub fn scale(&self, _factor: T) -> Point<T> {
         let coords: Vec<T> = self.coords.iter().map(|&c| c * _factor).collect();
         Point::new(coords)
     }
 
     /// Calculate the dot product with another point
-    pub fn dot(_other: &Point<T>) -> Option<T> {
+    pub fn dot(&self, _other: &Point<T>) -> Option<T> {
         if self.dimension() != _other.dimension() {
             return None;
         }
@@ -592,12 +593,11 @@ impl<T: SpatialScalar> Point<T> {
 
     /// Calculate the magnitude (length) of the point as a vector
     pub fn magnitude(&self) -> T {
-        SpatialScalar::sqrt(
-            self.coords
-                .iter()
-                .map(|&c| c * c)
-                .fold(T::zero(), |acc, x| acc + x),
-        )
+        self.coords
+            .iter()
+            .map(|&c| c * c)
+            .fold(T::zero(), |acc, x| acc + x)
+            .sqrt()
     }
 
     /// Normalize the point to unit length
@@ -722,7 +722,8 @@ pub mod utils {
 
 /// Integration with ndarray
 pub mod ndarray_integration {
-use ndarray::{ArrayView1, ArrayView2, Axis};
+    use ndarray::{Array1, ArrayView1, ArrayView2, Axis};
+    use super::{SpatialScalar, SpatialPoint, SpatialArray};
 
     /// Implementation of SpatialPoint for ndarray ArrayView1
     impl<T: SpatialScalar> SpatialPoint<T> for ArrayView1<'_, T> {
@@ -773,7 +774,7 @@ use ndarray::{ArrayView1, ArrayView2, Axis};
 
     impl<'a, T: SpatialScalar> NdArray2Wrapper<'a, T> {
         pub fn new(_array: ArrayView2<'a, T>) -> Self {
-            Self { _array }
+            Self { array: _array }
         }
     }
 

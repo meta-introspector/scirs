@@ -1105,7 +1105,7 @@ where
 #[allow(dead_code)]
 pub fn dwt2d_reconstruct(
     decomposition: &Dwt2dResult,
-    wavelet: Wavelet_mode: Option<&str>,
+    wavelet: Wavelet, mode: Option<&str>,
 ) -> SignalResult<Array2<f64>> {
     // Extract components
     let ll = &decomposition.approx;

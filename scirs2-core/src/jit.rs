@@ -79,14 +79,15 @@ impl From<JitError> for CoreError {
                 ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
-            JitError::BackendNotSupported { backend } =>, CoreError::NotImplementedError(
+            JitError::BackendNotSupported { backend } => CoreError::NotImplementedError(
                 ErrorContext::new(format!("{backend}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
-            JitError::RuntimeError(msg) =>, CoreError::ComputationError(
+            JitError::RuntimeError(msg) => CoreError::ComputationError(
                 ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
-            , _ => CoreError::ComputationError(
+            ),
+            _ => CoreError::ComputationError(
                 ErrorContext::new(format!("{err}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),

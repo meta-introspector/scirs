@@ -232,7 +232,7 @@ impl CloudProvider {
     }
 
     async fn s3_download<P: AsRef<Path>>(
-        &self_config: &S3Config_remote, _path: &str, _local_path: P,
+        &self, _config: &S3Config, _path: &str, _local_path: P,
     ) -> Result<()> {
         #[cfg(feature = "aws-sdk-s3")]
         {
@@ -316,7 +316,7 @@ impl CloudProvider {
     }
 
     async fn gcs_download<P: AsRef<Path>>(
-        &self_config: &GcsConfig_remote, _path: &str, _local_path: P,
+        &self, _config: &GcsConfig, _path: &str, _local_path: P,
     ) -> Result<()> {
         #[cfg(feature = "google-cloud-storage")]
         {
@@ -400,7 +400,7 @@ impl CloudProvider {
     }
 
     async fn azure_download<P: AsRef<Path>>(
-        &self_config: &AzureConfig_remote, _path: &str, _local_path: P,
+        &self, _config: &AzureConfig, _path: &str, _local_path: P,
     ) -> Result<()> {
         #[cfg(feature = "azure-storage-blobs")]
         {

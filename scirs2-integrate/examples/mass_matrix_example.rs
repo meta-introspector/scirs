@@ -8,8 +8,8 @@
 //! where M is a (possibly state-dependent) matrix.
 
 use ndarray::{array, Array2, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::ode::{solve_ivp, MassMatrix, ODEMethod, ODEOptions};
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::ode::{solve_ivp, MassMatrix, ODEMethod, ODEOptions};
 
 #[allow(dead_code)]
 fn main() -> IntegrateResult<()> {

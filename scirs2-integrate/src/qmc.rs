@@ -164,7 +164,7 @@ impl Sobol {
             }
 
             // Generate remaining direction numbers using recurrence relation
-            let degree = Sobol::bit_length(poly) - 1;
+            let degree = self.bit_length(poly) - 1;
             for i in degree..64 {
                 let mut value = self.direction_numbers[d][i - degree];
 
@@ -186,14 +186,14 @@ impl Sobol {
             self.direction_numbers[d] = (0..64)
                 .map(|i| {
                     let base = 2 + (d - primitive_polynomials.len()) as u64;
-                    Sobol::van_der_corput_direction_number(i, base)
+                    self.van_der_corput_direction_number(i, base)
                 })
                 .collect();
         }
     }
 
     /// Calculate bit length of a number
-    fn bit_length(mut n: u64) -> usize {
+    fn bit_length(&self, mut n: u64) -> usize {
         let mut length = 0;
         while n > 0 {
             length += 1;
@@ -203,7 +203,7 @@ impl Sobol {
     }
 
     /// Generate van der Corput direction number as fallback
-    fn van_der_corput_direction_number(i: usize, base: u64) -> u64 {
+    fn van_der_corput_direction_number(&self, i: usize, base: u64) -> u64 {
         if i == 0 {
             1u64 << 63
         } else {
@@ -372,7 +372,7 @@ impl Faure {
     /// The Faure sequence is based on a prime base p >= dim, where p is the smallest
     /// prime number greater than or equal to the dimension.
     fn generate_point(&mut self) -> Vec<f64> {
-        let base = Faure::find_prime_base(self.dim);
+        let base = self.find_prime_base(self.dim);
         let mut result = vec![0.0; self.dim];
 
         // Scrambling offset using seed
@@ -381,7 +381,7 @@ impl Faure {
 
         // Generate coordinates using Faure matrices
         for (d, result_elem) in result.iter_mut().enumerate().take(self.dim) {
-            *result_elem = Faure::faure_coordinate(scrambled_index, d, base);
+            *result_elem = self.faure_coordinate(scrambled_index, d, base);
         }
 
         self.curr_index += 1;
@@ -389,7 +389,7 @@ impl Faure {
     }
 
     /// Find the smallest prime >= n
-    fn find_prime_base(n: usize) -> usize {
+    fn find_prime_base(&self, n: usize) -> usize {
         if n <= 2 {
             return 2;
         }
@@ -402,7 +402,7 @@ impl Faure {
     }
 
     /// Simple primality test
-    fn is_prime(n: usize) -> bool {
+    fn is_prime(&self, n: usize) -> bool {
         if n < 2 {
             return false;
         }
@@ -423,7 +423,7 @@ impl Faure {
     }
 
     /// Generate d-th coordinate using Faure construction
-    fn faure_coordinate(_index: usize, dimension: usize, base: usize) -> f64 {
+    fn faure_coordinate(&self, _index: usize, dimension: usize, base: usize) -> f64 {
         if _index == 0 {
             return 0.0;
         }
@@ -444,7 +444,7 @@ impl Faure {
     }
 
     /// Convert integer to base-p digits (least significant first)
-    fn to_base_digits(mut n: usize, base: usize) -> Vec<usize> {
+    fn to_base_digits(&self, mut n: usize, base: usize) -> Vec<usize> {
         if n == 0 {
             return vec![0];
         }
@@ -459,7 +459,7 @@ impl Faure {
 
     /// Simplified Faure matrix element (for educational implementation)
     /// In practice, this would use precomputed Pascal triangle modulo p
-    fn faure_matrix_element(i: usize, dimension: usize, base: usize) -> usize {
+    fn faure_matrix_element(&self, i: usize, dimension: usize, base: usize) -> usize {
         // Simplified implementation using binomial coefficients mod p
         // For a proper implementation, use Lucas' theorem and Pascal's triangle
         if dimension == 0 {
@@ -1078,7 +1078,10 @@ fn compute_qmc_result(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::{qmc_quad, qmc_quad_parallel, Faure};
     use approx::assert_abs_diff_eq;
+    use ndarray::{s, Array1, ArrayView1};
 
     #[test]
     fn test_qmc_integral_1d() {

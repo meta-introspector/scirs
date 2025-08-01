@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
 use rand::rng;
-use rand__distr::{Distribution, Gamma as RandGamma};
+use rand_distr::{Distribution, Gamma as RandGamma};
 use std::fmt::Debug;
 
 /// Implementation of the natural logarithm of the gamma function
@@ -465,11 +465,11 @@ mod tests {
         let dirichlet = Dirichlet::new(alpha.clone()).unwrap();
 
         // Generate samples
-        let n_samples = 1000;
-        let samples = dirichlet.rvs(n_samples).unwrap();
+        let n_samples_ = 1000;
+        let samples = dirichlet.rvs(n_samples_).unwrap();
 
         // Check number of samples
-        assert_eq!(samples.len(), n_samples);
+        assert_eq!(samples.len(), n_samples_);
 
         // Check that all samples sum to 1 (within floating point error)
         for sample in &samples {
@@ -492,7 +492,7 @@ mod tests {
 
         let alpha_sum = alpha.sum();
         for i in 0..3 {
-            sample_mean[i] /= n_samples as f64;
+            sample_mean[i] /= n_samples_ as f64;
             let expected_mean = alpha[i] / alpha_sum;
             assert_relative_eq!(sample_mean[i], expected_mean, epsilon = 0.05);
         }

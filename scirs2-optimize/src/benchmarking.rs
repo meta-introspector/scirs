@@ -105,7 +105,8 @@ pub mod test_functions {
             "ackley" => vec![(-32.768, 32.768); dimensions],
             "griewank" => vec![(-600.0, 600.0); dimensions],
             "levy" => vec![(-10.0, 10.0); dimensions],
-            "schwefel" => vec![(-500.0, 500.0); dimensions]_ => vec![(-10.0, 10.0); dimensions],
+            "schwefel" => vec![(-500.0, 500.0); dimensions],
+            _ => vec![(-10.0, 10.0); dimensions],
         }
     }
 
@@ -118,7 +119,8 @@ pub mod test_functions {
             "ackley" => (Array1::zeros(dimensions), 0.0),
             "griewank" => (Array1::zeros(dimensions), 0.0),
             "levy" => (Array1::ones(dimensions), 0.0),
-            "schwefel" => (Array1::from_elem(dimensions, 420.9687), 0.0, _ => (Array1::zeros(dimensions), 0.0),
+            "schwefel" => (Array1::from_elem(dimensions, 420.9687), 0.0),
+            _ => (Array1::zeros(dimensions), 0.0),
         }
     }
 }
@@ -152,7 +154,8 @@ impl TestProblem {
             "ackley" => test_functions::ackley,
             "griewank" => test_functions::griewank,
             "levy" => test_functions::levy,
-            "schwefel" => test_functions::schwefel_ =>, test_functions::sphere,
+            "schwefel" => test_functions::schwefel,
+            _ => test_functions::sphere,
         };
 
         let bounds = test_functions::get_bounds(_name, dimensions);
@@ -250,7 +253,8 @@ impl ProblemCharacteristics {
                 separable: true,
                 convex: false,
                 difficulty: 5,
-            }_ => Self {
+            },
+            _ => Self {
                 multimodal: false,
                 separable: true,
                 convex: true,

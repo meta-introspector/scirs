@@ -417,7 +417,7 @@ where
 
 /// Convert linear index to (i, j) coordinates in upper triangle
 #[allow(dead_code)]
-fn index_to_upper_triangle(_idx: usize_n: usize) -> (usize, usize) {
+fn index_to_upper_triangle(_idx: usize, _n: usize) -> (usize, usize) {
     // Find row i such that i*(i+1)/2 <= _idx < (i+1)*(i+2)/2
     let mut i = 0;
     let mut cumsum = 0;

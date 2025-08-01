@@ -528,7 +528,7 @@ impl TestDataGenerator {
     /// Generate 1D test data
     pub fn generate_1d_data(&self, size: usize) -> StatsResult<Array1<f64>> {
         use rand::prelude::*;
-        use rand__distr::{Distribution, Normal, Uniform as UniformDist};
+        use rand_distr::{Distribution, Normal, Uniform as UniformDist};
 
         let mut rng = StdRng::seed_from_u64(self.config.seed);
         let mut data = Array1::zeros(size);
@@ -579,7 +579,7 @@ impl TestDataGenerator {
     /// Generate 2D test data
     pub fn generate_2d_data(&self, rows: usize, cols: usize) -> StatsResult<Array2<f64>> {
         use rand::prelude::*;
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
 
         let mut rng = StdRng::seed_from_u64(self.config.seed);
         let mut data = Array2::zeros((rows, cols));
@@ -641,12 +641,12 @@ impl BenchmarkReport {
         }
     }
 
-    fn average_accuracy_grade(&self_grades: &[AccuracyGrade]) -> AccuracyGrade {
+    fn average_accuracy_grade(&self, _grades: &[AccuracyGrade]) -> AccuracyGrade {
         // Simplified: just return most common grade
         AccuracyGrade::C // Placeholder
     }
 
-    fn average_performance_grade(&self_grades: &[PerformanceGrade]) -> PerformanceGrade {
+    fn average_performance_grade(&self, _grades: &[PerformanceGrade]) -> PerformanceGrade {
         // Simplified: just return most common grade
         PerformanceGrade::C // Placeholder
     }

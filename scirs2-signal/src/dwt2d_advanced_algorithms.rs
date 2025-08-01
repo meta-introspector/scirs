@@ -679,7 +679,7 @@ fn create_dual_tree_filters(_wavelet: Wavelet) -> SignalResult<(WaveletFilters, 
 
 #[allow(dead_code)]
 fn apply_tree_decomposition(
-    _data: &Array2<f64>, _filters: &WaveletFilters_levels: usize,
+    _data: &Array2<f64>, _filters: &WaveletFilters, _levels: usize,
 ) -> SignalResult<Array3<f64>> {
     // Stub implementation
     Ok(Array3::zeros((1, 1, 1)))

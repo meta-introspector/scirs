@@ -474,10 +474,10 @@ fn linear_to_condensed_indices(_linear_idx: usize, n: usize) -> (usize, usize) {
 
 /// Advanced-optimized SIMD-accelerated clustering algorithms
 pub mod advanced_simd_clustering {
-    use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-    use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
     use crate::error::{SpatialError, SpatialResult};
+    use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
     use rand::random;
+    use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 
     /// Advanced-optimized SIMD K-means implementation with vectorized operations
     pub struct AdvancedSimdKMeans {
@@ -623,7 +623,7 @@ pub mod advanced_simd_clustering {
                 let max_idx = min_distances
                     .indexed_iter()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .map(|(idx_)| idx)
+                    .map(|(idx_, _)| idx_)
                     .unwrap_or(k % n_points);
 
                 centroids.row_mut(k).assign(&points.row(max_idx));
@@ -669,7 +669,7 @@ pub mod advanced_simd_clustering {
                     let best_k = distances_row
                         .indexed_iter()
                         .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                        .map(|(idx_)| idx)
+                        .map(|(idx_, _)| idx_)
                         .unwrap_or(0);
 
                     assignments[point_idx] = best_k;
@@ -740,7 +740,7 @@ pub mod advanced_simd_clustering {
         }
 
         /// Compute maximum centroid movement using SIMD operations
-        fn compute_max_centroid_movement(_centroids: &ndarray::ArrayView2<f64>) -> f64 {
+        fn compute_max_centroid_movement(&self, _centroids: &ndarray::ArrayView2<f64>) -> f64 {
             // For simplicity, return a small value indicating convergence
             // In a full implementation, this would compare with previous _centroids
             self.tolerance * 0.5
@@ -836,9 +836,9 @@ pub mod advanced_simd_clustering {
 
 /// Hardware-specific SIMD optimizations for maximum performance
 pub mod hardware_specific_simd {
+    use crate::error::{SpatialError, SpatialResult};
     use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
     use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-    use crate::error::{SpatialError, SpatialResult};
 
     /// Advanced-optimized distance calculations with hardware-specific code paths
     pub struct HardwareOptimizedDistances {
@@ -1159,7 +1159,7 @@ pub mod hardware_specific_simd {
         }
 
         /// Report hardware-specific capabilities
-        pub fn report_capabilities() {
+        pub fn report_capabilities(&self) {
             println!("Hardware-Specific SIMD Capabilities:");
             println!("  AVX-512: {}", self.capabilities.avx512_available);
             println!("  AVX2: {}", self.capabilities.avx2_available);
@@ -1172,9 +1172,9 @@ pub mod hardware_specific_simd {
 
 /// Mixed-precision SIMD operations for enhanced performance
 pub mod mixed_precision_simd {
+    use crate::error::{SpatialError, SpatialResult};
     use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
     use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-    use crate::error::{SpatialError, SpatialResult};
 
     /// Mixed precision distance computation (f32 where precision allows)
     pub fn simd_euclidean_distance_f32(a: &[f32], b: &[f32]) -> SpatialResult<f32> {
@@ -1264,10 +1264,12 @@ pub mod mixed_precision_simd {
 
 /// Performance benchmarking utilities with advanced metrics
 pub mod bench {
-    use std::time::Instant;
+    use crate::error::{SpatialError, SpatialResult};
+    use crate::simd_euclidean_distance_batch;
+    use super::mixed_precision_simd::simd_euclidean_distance_batch_f32;
     use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
     use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-    use crate::error::{SpatialError, SpatialResult};
+    use std::time::Instant;
 
     /// Comprehensive SIMD performance benchmarking
     pub fn benchmark_distance_computation(
@@ -1302,11 +1304,9 @@ pub mod bench {
 
             let start = Instant::now();
             for _ in 0..iterations {
-                let _distances = mixed_precision_simd::simd_euclidean_distance_batch_f32(
-                    &points1_f32.view(),
-                    &points2_f32.view(),
-                )
-                .unwrap();
+                let _distances =
+                    simd_euclidean_distance_batch_f32(&points1_f32.view(), &points2_f32.view())
+                        .unwrap();
             }
             results.simd_f32_time = Some(start.elapsed().as_secs_f64());
         }
@@ -1339,7 +1339,7 @@ pub mod bench {
         }
 
         /// Print detailed benchmark report
-        pub fn report() {
+        pub fn report(&self) {
             println!("Advanced-SIMD Performance Benchmark Results:");
             println!("  Scalar time:      {:.6} seconds", self.scalar_time);
             println!(
@@ -1349,7 +1349,7 @@ pub mod bench {
 
             if let (Some(f32_time), Some(f32_speedup)) = (self.simd_f32_time, self.simd_f32_speedup)
             {
-                println!("  SIMD f32 time:    {f32_time: .6} seconds ({f32_speedup: .2}x speedup)");
+                println!("  SIMD f32 time:    {f32_time:.6} seconds ({f32_speedup:.2}x speedup)");
             }
         }
     }
@@ -1582,7 +1582,6 @@ mod tests {
 
     #[test]
     fn test_hardware_optimized_batch_matrix() {
-
         let points = array![
             [0.0, 0.0],
             [1.0, 0.0],
@@ -1616,7 +1615,6 @@ mod tests {
 
     #[test]
     fn test_hardware_optimized_knn() {
-
         let data_points = array![
             [0.0, 0.0],
             [1.0, 0.0],
@@ -1667,7 +1665,6 @@ mod tests {
 
     #[test]
     fn test_simd_capabilities_reporting() {
-
         let optimizer = HardwareOptimizedDistances::new();
 
         // This should not panic

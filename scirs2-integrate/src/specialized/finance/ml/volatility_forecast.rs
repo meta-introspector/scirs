@@ -1,8 +1,8 @@
 //! Machine learning models for volatility forecasting
-//! 
+//!
 //! This module implements various ML approaches for predicting volatility including
 //! GARCH extensions, neural networks, and ensemble methods.
-//! 
+//!
 //! # Features
 //! - LSTM/GRU networks for volatility prediction
 //! - HAR-RV models with ML enhancements

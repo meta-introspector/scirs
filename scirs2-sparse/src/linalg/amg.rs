@@ -4,7 +4,7 @@
 //! particularly effective for systems arising from discretizations of
 //! elliptic PDEs and other problems with nice geometric structure.
 
-use crate::csr__array::CsrArray;
+use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 use ndarray::{Array1, ArrayView1};
@@ -117,8 +117,8 @@ where
     /// # Example
     ///
     /// ```rust
-    /// use scirs2__sparse::csr_array::CsrArray;
-    /// use scirs2__sparse::linalg::amg::{AMGPreconditioner, AMGOptions};
+    /// use scirs2_sparse::csr_array::CsrArray;
+    /// use scirs2_sparse::linalg::amg::{AMGPreconditioner, AMGOptions};
     ///
     /// // Create a simple matrix
     /// let rows = vec![0, 0, 1, 1, 2, 2];
@@ -150,7 +150,7 @@ where
 
         while level < self.options.max_levels - 1 {
             let current_matrix = &self.operators[level];
-            let (rows_) = current_matrix.shape();
+            let (rows, _) = current_matrix.shape();
 
             // Stop if matrix is small enough
             if rows <= self.options.max_coarse_size {
@@ -161,7 +161,7 @@ where
             let (coarse_matrix, prolongation, restriction) = self.coarsen_level(current_matrix)?;
 
             // Check if coarsening was successful
-            let (coarse_rows_) = coarse_matrix.shape();
+            let (coarse_rows, _) = coarse_matrix.shape();
             if coarse_rows >= rows {
                 // Coarsening didn't reduce the problem size significantly
                 break;
@@ -182,13 +182,13 @@ where
         &self,
         matrix: &CsrArray<T>,
     ) -> SparseResult<(CsrArray<T>, CsrArray<T>, CsrArray<T>)> {
-        let (_n_) = matrix.shape();
+        let (n, _) = matrix.shape();
 
         // Step 1: Detect strong connections
         let strong_connections = self.detect_strong_connections(matrix)?;
 
         // Step 2: Perform C/F splitting using classical Ruge-Stuben algorithm
-        let (c_points_f_points) = self.classical_cf_splitting(matrix, &strong_connections)?;
+        let (c_points, f_points) = self.classical_cf_splitting(matrix, &strong_connections)?;
 
         // Step 3: Build coarse point mapping
         let mut fine_to_coarse = HashMap::new();
@@ -234,7 +234,7 @@ where
     /// Detect strong connections in the matrix
     /// A connection i -> j is strong if |a_ij| >= theta * max_k(|a_ik|) for k != i
     fn detect_strong_connections(&self, matrix: &CsrArray<T>) -> SparseResult<Vec<Vec<usize>>> {
-        let (n_) = matrix.shape();
+        let (n, _) = matrix.shape();
         let mut strong_connections = vec![Vec::new(); n];
 
         #[allow(clippy::needless_range_loop)]
@@ -276,7 +276,7 @@ where
         matrix: &CsrArray<T>,
         strong_connections: &[Vec<usize>],
     ) -> SparseResult<(Vec<usize>, Vec<usize>)> {
-        let (n_) = matrix.shape();
+        let (n, _) = matrix.shape();
 
         // Count strong _connections for each point (influence measure)
         let mut influence = vec![0; n];
@@ -355,7 +355,7 @@ where
         fine_to_coarse: &HashMap<usize, usize>,
         coarse_size: usize,
     ) -> SparseResult<CsrArray<T>> {
-        let (n_) = matrix.shape();
+        let (n, _) = matrix.shape();
         let mut prolongation_data = Vec::new();
         let mut prolongation_indices = Vec::new();
         let mut prolongation_indptr = vec![0];
@@ -492,7 +492,7 @@ where
     ///
     /// Approximate solution x
     pub fn apply(&self, b: &ArrayView1<T>) -> SparseResult<Array1<T>> {
-        let (n_) = self.operators[0].shape();
+        let (n, _) = self.operators[0].shape();
         if b.len() != n {
             return Err(SparseError::DimensionMismatch {
                 expected: n,
@@ -744,7 +744,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
 
     #[test]
     fn test_amg_preconditioner_creation() {

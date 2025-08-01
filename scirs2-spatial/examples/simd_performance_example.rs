@@ -403,7 +403,7 @@ fn generate_random_points(_n_points: usize, dim: usize) -> Array2<f64> {
 
 /// Demonstrate different optimization strategies
 #[allow(dead_code)]
-fn optimization_strategies_demo() -> Result<()..Box<dyn std::error::Error>> {
+fn optimization_strategies_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nOptimization strategies comparison:");
 
     let n_points = 1000;

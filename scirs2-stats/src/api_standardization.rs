@@ -357,7 +357,7 @@ where
 
         // Compute other statistics
         let (min, max) = self.compute_min_max(data);
-        let sorted_data = self.get_sorted_data(data);
+        let sorted_data = self.getsorted_data(data);
         let percentiles = self.compute_percentiles(&sorted_data)?;
 
         // Use existing functions for skewness and kurtosis
@@ -392,7 +392,7 @@ where
 
         // Compute other statistics
         let (min, max) = self.compute_min_max(data);
-        let sorted_data = self.get_sorted_data(data);
+        let sorted_data = self.getsorted_data(data);
         let percentiles = self.compute_percentiles(&sorted_data)?;
 
         // Use existing functions for skewness and kurtosis
@@ -424,7 +424,7 @@ where
         let std = variance.sqrt();
 
         let (min, max) = self.compute_min_max(data);
-        let sorted_data = self.get_sorted_data(data);
+        let sorted_data = self.getsorted_data(data);
         let percentiles = self.compute_percentiles(&sorted_data)?;
 
         let skewness = crate::descriptive::skew(&data.view(), false, None)?;
@@ -463,7 +463,7 @@ where
     }
 
     /// Get sorted copy of data for percentile calculations
-    fn get_sorted_data(&self, data: &Array1<F>) -> Vec<F> {
+    fn getsorted_data(&self, data: &Array1<F>) -> Vec<F> {
         let mut sorted = data.to_vec();
         sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         sorted
@@ -1624,7 +1624,7 @@ impl ValidationReport {
     /// Create new validation report
     pub fn new(_function_name: String) -> Self {
         Self {
-            _function_name,
+            function_name: _function_name,
             results: HashMap::new(),
             overall_status: ValidationStatus::Passed,
             summary: ValidationSummary {

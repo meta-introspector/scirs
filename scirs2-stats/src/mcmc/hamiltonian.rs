@@ -5,7 +5,7 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2};
-use rand__distr::{Distribution, Normal};
+use rand_distr::{Distribution, Normal};
 use scirs2_core::validation::*;
 use scirs2_core::Rng;
 use std::fmt::Debug;
@@ -52,7 +52,7 @@ pub struct HamiltonianMonteCarlo<T: DifferentiableTarget> {
 impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     /// Create a new HMC sampler
     pub fn new(_target: T, initial: Array1<f64>, step_size: f64, n_steps: usize) -> Result<Self> {
-        check_array_finite(&initial, "initial")?;
+        checkarray_finite(&initial, "initial")?;
         check_positive(step_size, "step_size")?;
         check_positive(n_steps, "n_steps")?;
 
@@ -84,7 +84,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
 
     /// Set custom mass matrix
     pub fn with_mass_matrix(mut self, mass_matrix: Array2<f64>) -> Result<Self> {
-        check_array_finite(&mass_matrix, "mass_matrix")?;
+        checkarray_finite(&mass_matrix, "mass_matrix")?;
 
         if mass_matrix.nrows() != self.position.len() || mass_matrix.ncols() != self.position.len()
         {
@@ -211,13 +211,13 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     /// Sample multiple states
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.position.len();
-        let mut _samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples_, dim));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             _samples.row_mut(i).assign(&sample);
         }
@@ -228,7 +228,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     /// Sample with burn-in
     pub fn sample_with_burnin<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         burnin: usize,
         rng: &mut R,
     ) -> Result<Array2<f64>> {
@@ -243,7 +243,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
         self.reset_counters();
 
         // Collect _samples
-        self.sample(n_samples, rng)
+        self.sample(n_samples_, rng)
     }
 
     /// Get acceptance rate
@@ -375,7 +375,8 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
         position: Array1<f64>,
         momentum: Array1<f64>,
         log_u: f64,
-        depth: usize_rng: &mut R,
+        depth: usize,
+        rng: &mut R,
     ) -> Result<(Array1<f64>, f64)> {
         if depth >= self.max_tree_depth {
             // Base case: return input position with low acceptance
@@ -405,7 +406,7 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
     /// Sample with adaptation
     pub fn sample_adaptive<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         n_adapt: usize,
         rng: &mut R,
     ) -> Result<Array2<f64>> {
@@ -419,9 +420,9 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
 
         // Sampling phase
         let dim = self.hmc.position.len();
-        let mut _samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples_, dim));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             _samples.row_mut(i).assign(&sample);
         }
@@ -446,8 +447,8 @@ pub struct MultivariateNormalHMC {
 impl MultivariateNormalHMC {
     /// Create new multivariate normal target
     pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
-        check_array_finite(&_mean, "_mean")?;
-        check_array_finite(&covariance, "covariance")?;
+        checkarray_finite(&_mean, "_mean")?;
+        checkarray_finite(&covariance, "covariance")?;
 
         if covariance.nrows() != _mean.len() || covariance.ncols() != _mean.len() {
             return Err(StatsError::DimensionMismatch(format!(

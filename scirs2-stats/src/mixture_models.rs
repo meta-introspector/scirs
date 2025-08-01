@@ -268,9 +268,9 @@ where
 
     /// Fit GMM to data using EM algorithm
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&GMMParameters<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
-        let (n_samples_n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         if n_samples < self.n_components {
             return Err(StatsError::InvalidArgument(format!(
@@ -365,7 +365,7 @@ where
 
     /// Initialize means using chosen method
     fn initialize_means(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
         let mut means = Array2::zeros((self.n_components, n_features));
 
         match self.config.init_method {
@@ -379,7 +379,7 @@ where
                 };
 
                 for i in 0..self.n_components {
-                    let idx = rng.gen_range(0..n_samples);
+                    let idx = rng.gen_range(0..n_samples_);
                     means.row_mut(i).assign(&data.row(idx));
                 }
             }
@@ -437,18 +437,18 @@ where
             None => Random::with_seed(init_rng.random()),
         };
 
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
         let mut means = Array2::zeros((self.n_components, n_features));
 
         // Choose first center randomly
-        let first_idx = rng.gen_range(0..n_samples);
+        let first_idx = rng.gen_range(0..n_samples_);
         means.row_mut(0).assign(&data.row(first_idx));
 
         // Choose remaining centers
         for i in 1..self.n_components {
-            let mut distances = Array1::zeros(n_samples);
+            let mut distances = Array1::zeros(n_samples_);
 
-            for j in 0..n_samples {
+            for j in 0..n_samples_ {
                 let mut min_dist = F::infinity();
                 for k in 0..i {
                     let dist = self.squared_distance(&data.row(j), &means.row(k));
@@ -462,7 +462,7 @@ where
             let mut cumsum = F::zero();
             let threshold: F = F::from(rng.random_f64()).unwrap() * total_dist;
 
-            for j in 0..n_samples {
+            for j in 0..n_samples_ {
                 cumsum = cumsum + distances[j];
                 if cumsum >= threshold {
                     means.row_mut(i).assign(&data.row(j));
@@ -524,9 +524,9 @@ where
         covariances: &[Array2<F>],
     ) -> StatsResult<Array2<F>> {
         let (n_samples_) = data.dim();
-        let mut responsibilities = Array2::zeros((n_samples, self.n_components));
+        let mut responsibilities = Array2::zeros((n_samples_, self.n_components));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let sample = data.row(i);
             let mut log_probs = Array1::zeros(self.n_components);
 
@@ -552,11 +552,11 @@ where
 
     /// M-step: update weights
     fn m_step_weights(&self, responsibilities: &Array2<F>) -> StatsResult<Array1<F>> {
-        let n_samples = responsibilities.nrows();
+        let n_samples_ = responsibilities.nrows();
         let mut weights = Array1::zeros(self.n_components);
 
         for k in 0..self.n_components {
-            weights[k] = responsibilities.column(k).sum() / F::from(n_samples).unwrap();
+            weights[k] = responsibilities.column(k).sum() / F::from(n_samples_).unwrap();
         }
 
         Ok(weights)
@@ -597,7 +597,7 @@ where
         responsibilities: &Array2<F>,
         means: &Array2<F>,
     ) -> StatsResult<Vec<Array2<F>>> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
         let mut covariances = Vec::with_capacity(self.n_components);
 
         for k in 0..self.n_components {
@@ -607,7 +607,7 @@ where
             let mut cov = Array2::zeros((n_features, n_features));
 
             if resp_sum > F::from(1e-10).unwrap() {
-                for i in 0..n_samples {
+                for i in 0..n_samples_ {
                     let diff = &data.row(i) - &mean_k;
                     let resp = responsibilities[[i, k]];
 
@@ -692,10 +692,10 @@ where
         means: &Array2<F>,
         covariances: &[Array2<F>],
     ) -> StatsResult<F> {
-        let n_samples = data.nrows();
+        let n_samples_ = data.nrows();
         let mut total_log_likelihood = F::zero();
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let sample = data.row(i);
             let mut log_probs = Array1::zeros(self.n_components);
 
@@ -869,7 +869,7 @@ where
 
     /// Fit KDE to data
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<()> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         if data.is_empty() {
             return Err(StatsError::InvalidArgument(
@@ -932,7 +932,7 @@ where
             StatsError::InvalidArgument("KDE must be fitted before evaluation".to_string())
         })?;
 
-        check_array_finite(points, "points")?;
+        checkarray_finite(points, "points")?;
 
         if points.ncols() != training_data.ncols() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -1131,7 +1131,8 @@ pub struct RobustGMM<F> {
     /// Outlier detection threshold
     pub outlier_threshold: F,
     /// Contamination rate (expected fraction of outliers)
-    pub contamination: F_phantom: PhantomData<F>,
+    pub contamination: F,
+    _phantom: PhantomData<F>,
 }
 
 impl<F> RobustGMM<F>
@@ -1174,7 +1175,7 @@ where
     }
 
     /// Detect outliers in data
-    pub fn detect_outliers(&self_data: &ArrayView2<F>) -> StatsResult<Array1<bool>> {
+    pub fn detect_outliers(&self, data: &ArrayView2<F>) -> StatsResult<Array1<bool>> {
         let params = self.gmm.parameters.as_ref().ok_or_else(|| {
             StatsError::InvalidArgument("Model must be fitted before outlier detection".to_string())
         })?;
@@ -1373,20 +1374,20 @@ where
         + ndarray::ScalarOperand,
 {
     let (n_samples_) = data.dim();
-    let fold_size = n_samples / n_folds;
+    let fold_size = n_samples_ / n_folds;
     let mut cv_scores = Vec::with_capacity(n_folds);
 
     for fold in 0..n_folds {
         let val_start = fold * fold_size;
         let val_end = if fold == n_folds - 1 {
-            n_samples
+            n_samples_
         } else {
             (fold + 1) * fold_size
         };
 
         // Create training and validation sets
         let mut train_indices = Vec::new();
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             if i < val_start || i >= val_end {
                 train_indices.push(i);
             }
@@ -1672,7 +1673,7 @@ where
 
     /// Fit Variational GMM to data
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<VariationalGMMResult<F>> {
-        let (_n_samples, n_features) = data.dim();
+        let (_n_samples_, n_features) = data.dim();
 
         // Initialize parameters
         let mut weight_concentration =
@@ -1782,7 +1783,7 @@ where
 
     /// Initialize means for variational GMM
     fn initialize_means(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
         let mut means = Array2::zeros((self.max_components, n_features));
 
         use scirs2_core::random::Random;
@@ -1793,7 +1794,7 @@ where
         };
 
         for i in 0..self.max_components {
-            let idx = rng.gen_range(0..n_samples);
+            let idx = rng.gen_range(0..n_samples_);
             means.row_mut(i).assign(&data.row(idx));
         }
 
@@ -1810,9 +1811,9 @@ where
         weight_concentration: &Array1<F>,
     ) -> StatsResult<Array2<F>> {
         let (n_samples_) = data.dim();
-        let mut responsibilities = Array2::zeros((n_samples, self.max_components));
+        let mut responsibilities = Array2::zeros((n_samples_, self.max_components));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let mut log_probs = Array1::zeros(self.max_components);
 
             for k in 0..self.max_components {
@@ -1843,7 +1844,7 @@ where
         data: &ArrayView2<F>,
         responsibilities: &Array2<F>,
     ) -> StatsResult<(Array1<F>, Array1<F>, Array2<F>, Array1<F>, Array3<F>)> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
 
         // Update weight concentration
         let mut weight_concentration =
@@ -1869,7 +1870,7 @@ where
                 // Update mean
                 for j in 0..n_features {
                     let mut weighted_sum = F::zero();
-                    for i in 0..n_samples {
+                    for i in 0..n_samples_ {
                         weighted_sum = weighted_sum + responsibilities[[i, k]] * data[[i, j]];
                     }
                     means[[k, j]] = weighted_sum / nk;
@@ -1907,7 +1908,7 @@ where
         let mut lower_bound = F::zero();
 
         // Expected log likelihood
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             for k in 0..self.max_components {
                 if responsibilities[[i, k]] > F::zero() {
                     let log_likelihood = self.compute_log_likelihood_component(

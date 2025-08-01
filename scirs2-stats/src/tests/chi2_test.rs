@@ -6,7 +6,7 @@
 use crate::distributions::chi2;
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, NumCast};
+use num_traits::{Float, NumCast, PrimInt};
 use std::fmt::Debug;
 
 /// Result of a chi-square test
@@ -73,7 +73,7 @@ where
         + std::marker::Sync
         + 'static
         + std::fmt::Display,
-    I: num_traits: PrimInt + NumCast + std::fmt::Display,
+    I: PrimInt + NumCast + std::fmt::Display,
 {
     // Check if observed is empty
     if observed.is_empty() {
@@ -186,7 +186,7 @@ where
         + std::marker::Sync
         + 'static
         + std::fmt::Display,
-    I: num_traits: PrimInt + NumCast + std::fmt::Display,
+    I: PrimInt + NumCast + std::fmt::Display,
 {
     // Check if _observed is empty
     if _observed.is_empty() {
@@ -303,7 +303,7 @@ where
         + std::marker::Sync
         + 'static
         + std::fmt::Display,
-    I: num_traits: PrimInt + NumCast + std::fmt::Display,
+    I: PrimInt + NumCast + std::fmt::Display,
 {
     // Check if _observed is a 2x2 table
     let rows = _observed.shape()[0];

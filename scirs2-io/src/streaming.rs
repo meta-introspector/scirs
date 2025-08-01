@@ -539,7 +539,7 @@ where
 
         match chunk_result {
             Ok(rows) => {
-                let _header = reader._header();
+                let _header = reader.header();
                 result = processor(&rows, chunk_id, _header)?;
 
                 let chunk_time = chunk_start.elapsed().as_secs_f64() * 1000.0;

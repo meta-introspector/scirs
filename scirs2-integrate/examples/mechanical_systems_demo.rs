@@ -5,9 +5,7 @@
 //! and various integration schemes optimized for mechanical systems.
 
 use ndarray::{Array1, Array2};
-use scirs2__integrate::ode::mechanical::{
-    systems, MechanicalIntegrator, PositionIntegrationMethod,
-};
+use scirs2_integrate::ode::mechanical::{systems, MechanicalIntegrator, PositionIntegrationMethod};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -306,7 +304,7 @@ fn demonstrate_energy_conservation() -> Result<(), Box<dyn std::error::Error>> {
             state = result.state;
         }
 
-        let (relative_drift, max_drift_) = integrator.energy_statistics();
+        let (relative_drift, max_drift, _) = integrator.energy_statistics();
         println!(
             "   {method_name}: relative drift = {relative_drift:.2e}, max drift = {max_drift:.2e}"
         );
@@ -362,7 +360,7 @@ fn demonstrate_integration_methods() -> Result<(), Box<dyn std::error::Error>> {
             total_constraint_time += result.stats.constraint_time;
         }
 
-        let (relative_drift_max_drift, final_energy) = integrator.energy_statistics();
+        let (relative_drift, max_drift, final_energy) = integrator.energy_statistics();
 
         println!("     Final position: {:.6} m", state.position[0]);
         println!("     Final energy: {final_energy:.6} J");

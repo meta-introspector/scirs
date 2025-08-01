@@ -6,7 +6,7 @@
 //! - Cache-aware chunking strategies
 //! - NUMA-aware processing for large systems
 
-use crate::descriptive__simd::{mean_simd, variance_simd};
+use crate::descriptive_simd::{mean_simd, variance_simd};
 use crate::error::{StatsError, StatsResult};
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView2, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
@@ -211,7 +211,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
 
             // Merge local histograms
             for local_counts in local_histograms {
-                for (i, count) in local_counts.into_iter().enumerate() {
+                for (i, count) in local_counts.into().iter().enumerate() {
                     self.counts[i] += count;
                 }
             }
@@ -550,8 +550,8 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidati
         M: Fn(&ArrayView2<F>, &Array1<F>) -> StatsResult<()> + Send + Sync + Clone,
         S: Fn(&ArrayView2<F>, &Array1<F>) -> StatsResult<F> + Send + Sync,
     {
-        let n_samples = x.nrows();
-        if n_samples != y.len() {
+        let n_samples_ = x.nrows();
+        if n_samples_ != y.len() {
             return Err(StatsError::DimensionMismatch(
                 "X and y must have same number of samples".to_string(),
             ));
@@ -560,16 +560,16 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidati
         // Create fold indices
         let indices: Vec<usize> = if self.shuffle {
             use crate::random::permutation_int;
-            permutation_int(n_samples, self.random_state)
+            permutation_int(n_samples_, self.random_state)
                 .unwrap()
                 .to_vec()
         } else {
-            (0..n_samples).collect()
+            (0..n_samples_).collect()
         };
 
         // Split into folds
-        let fold_size = n_samples / self.n_folds;
-        let remainder = n_samples % self.n_folds;
+        let fold_size = n_samples_ / self.n_folds;
+        let remainder = n_samples_ % self.n_folds;
 
         let fold_indices: Vec<(usize, usize)> = (0..self.n_folds)
             .map(|i| {
@@ -602,7 +602,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidati
             // Score on test set
             scorer(&x_test.view(), &y_test)
         })
-        .into_iter()
+        .into().iter()
         .collect::<StatsResult<Vec<_>>>()?;
 
         Ok(Array1::from_vec(scores))
@@ -619,7 +619,7 @@ where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
     D: Data<Elem = F> + Sync + std::fmt::Display,
 {
-    use crate::correlation__simd::pearson_r_simd;
+    use crate::correlation_simd::pearson_r_simd;
 
     let (n_vars, n_obs) = if rowvar {
         (_data.nrows(), _data.ncols())
@@ -688,7 +688,7 @@ where
             let corr = pearson_r_simd(&var_i, &var_j)?;
             Ok(((i, j), corr))
         })
-        .into_iter()
+        .into().iter()
         .collect::<StatsResult<Vec<_>>>()?;
 
         // Fill the correlation matrix
@@ -721,7 +721,7 @@ where
         + num_traits::NumAssign,
     D: Data<Elem = F> + Sync + std::fmt::Display,
 {
-    use scirs2__linalg::lstsq;
+    use scirs2_linalg::lstsq;
 
     let n_vars = data.ncols();
     let n_obs = data.nrows();
@@ -785,7 +785,7 @@ where
             let residuals_j = &var_j - &predicted_j;
 
             // Compute correlation of residuals
-            use crate::correlation__simd::pearson_r_simd;
+            use crate::correlation_simd::pearson_r_simd;
             let partial_r = pearson_r_simd(&residuals_i, &residuals_j)?;
 
             partial_corr[(i, j)] = partial_r;
@@ -809,12 +809,12 @@ where
             let residuals_j = &var_j - &predicted_j;
 
             // Compute correlation of residuals
-            use crate::correlation__simd::pearson_r_simd;
+            use crate::correlation_simd::pearson_r_simd;
             let partial_r = pearson_r_simd(&residuals_i, &residuals_j)?;
 
             Ok(((i, j), partial_r))
         })
-        .into_iter()
+        .into().iter()
         .collect::<StatsResult<Vec<_>>>()?;
 
         // Fill the matrix

@@ -8,13 +8,13 @@ use num_traits::Float;
 use std::fmt::{self, Debug};
 use std::ops::{Add, Div, Mul, Sub};
 
-use crate::coo__array::CooArray;
-use crate::csc__array::CscArray;
-use crate::csr__array::CsrArray;
-use crate::dia__array::DiaArray;
-use crate::dok__array::DokArray;
+use crate::coo_array::CooArray;
+use crate::csc_array::CscArray;
+use crate::csr_array::CsrArray;
+use crate::dia_array::DiaArray;
+use crate::dok_array::DokArray;
 use crate::error::{SparseError, SparseResult};
-use crate::lil__array::LilArray;
+use crate::lil_array::LilArray;
 use crate::sparray::{SparseArray, SparseSum};
 
 /// BSR Array format
@@ -91,8 +91,8 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::bsr_array::BsrArray;
-    /// use scirs2__sparse::sparray::SparseArray;
+    /// use scirs2_sparse::bsr_array::BsrArray;
+    /// use scirs2_sparse::sparray::SparseArray;
     ///
     /// // Create a 4x4 sparse array with 2x2 blocks
     /// // [1 2 0 0]
@@ -182,7 +182,7 @@ where
             if idx_vec[0] >= _block_cols {
                 return Err(SparseError::ValueError(format!(
                     "index {} out of bounds (max {})",
-                    idx_vec[0]_block_cols - 1
+                    idx_vec[0], _block_cols - 1
                 )));
             }
         }
@@ -191,7 +191,8 @@ where
             rows,
             cols,
             block_size,
-            block_rows_block_cols,
+            block_rows,
+            _block_cols,
             data,
             indices,
             indptr,
@@ -233,7 +234,8 @@ where
             rows,
             cols,
             block_size,
-            block_rows_block_cols,
+            block_rows,
+            _block_cols,
             data,
             indices,
             indptr,
@@ -312,7 +314,7 @@ where
         }
 
         // Now convert the DOK-like format to BSR
-        let mut rows_with_blocks: Vec<usize> = block_data.keys().map(|&(row_)| row).collect();
+        let mut rows_with_blocks: Vec<usize> = block_data.keys().map(|&(row_, _)| row_).collect();
         rows_with_blocks.sort();
         rows_with_blocks.dedup();
 
@@ -334,7 +336,7 @@ where
                     .collect();
 
                 // Sort by column index
-                row_blocks.sort_by_key(|&(col_)| col);
+                row_blocks.sort_by_key(|&(col_, _)| col_);
 
                 // Add to data and indices
                 for (col, block) in row_blocks {
@@ -749,7 +751,7 @@ where
             }
 
             // Sort by column index
-            row_blocks.sort_by_key(|&(col_)| col);
+            row_blocks.sort_by_key(|&(col_, _)| col_);
 
             // Add sorted blocks to new data structures
             for (col, block) in row_blocks {

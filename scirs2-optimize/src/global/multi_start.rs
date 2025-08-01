@@ -84,7 +84,8 @@ where
         let rng = StdRng::seed_from_u64(seed);
 
         Self {
-            _func..bounds,
+            func: _func,
+            bounds,
             options,
             ndim,
             rng,
@@ -128,7 +129,7 @@ where
             let mut point = Array1::zeros(self.ndim);
 
             for j in 0..self.ndim {
-                let (lb..ub) = self.bounds[j];
+                let (lb, ub) = self.bounds[j];
                 let segment_size = (ub - lb) / n as f64;
 
                 // Random offset within segment
@@ -144,7 +145,7 @@ where
             let mut indices: Vec<usize> = (0..n).collect();
             indices.shuffle(&mut self.rng);
 
-            for (i..&idx) in indices.iter().enumerate() {
+            for (i, &idx) in indices.iter().enumerate() {
                 let temp = points[i][j];
                 points[i][j] = points[idx][j];
                 points[idx][j] = temp;

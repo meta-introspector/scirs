@@ -37,15 +37,16 @@
 
 use crate::error::SpatialResult;
 use crate::memory_pool::DistancePool;
+use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
 use ndarray::{Array1, Array2, ArrayView2};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::VecDeque;
+use std::f64::consts::PI;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use std::f64::consts::PI;
 
 // Platform-specific imports for thread affinity
 #[cfg(any(target_os = "linux", target_os = "android"))]
@@ -220,7 +221,7 @@ impl NumaTopology {
     }
 
     /// Get optimal thread count for NUMA node
-    pub fn optimal_threads_per_node(_node: usize) -> usize {
+    pub fn optimal_threads_per_node(&self, _node: usize) -> usize {
         if _node < self.cores_per_node.len() {
             self.cores_per_node[_node]
         } else {
@@ -229,7 +230,7 @@ impl NumaTopology {
     }
 
     /// Get memory capacity for NUMA node
-    pub fn memory_capacity(_node: usize) -> usize {
+    pub fn memory_capacity(&self, _node: usize) -> usize {
         self.memory_per_node.get(_node).copied().unwrap_or(0)
     }
 }
@@ -542,16 +543,16 @@ impl WorkStealingPool {
     }
 
     /// Set thread affinity based on configuration
-    fn set_thread_affinity(_thread_id: usize, numa_node: usize, config: &WorkStealingConfig) {
+    fn set_thread_affinity(thread_id: usize, numa_node: usize, config: &WorkStealingConfig) {
         match config.thread_affinity {
             ThreadAffinityStrategy::Physical => {
                 // In a real implementation, this would use system APIs to set CPU affinity
                 // e.g., pthread_setaffinity_np on Linux, SetThreadAffinityMask on Windows
                 #[cfg(target_os = "linux")]
                 {
-                    if let Err(e) = Self::set_cpu_affinity_linux(_thread_id) {
+                    if let Err(e) = Self::set_cpu_affinity_linux(thread_id) {
                         eprintln!(
-                            "Warning: Failed to set CPU affinity for thread {_thread_id}: {e}"
+                            "Warning: Failed to set CPU affinity for thread {thread_id}: {e}"
                         );
                     }
                 }
@@ -570,7 +571,9 @@ impl WorkStealingPool {
                 #[cfg(target_os = "linux")]
                 {
                     if let Err(e) = Self::set_numa_affinity_linux(numa_node) {
-                        eprintln!("Warning: Failed to set NUMA affinity for _node {numa_node}: {e}");
+                        eprintln!(
+                            "Warning: Failed to set NUMA affinity for _node {numa_node}: {e}"
+                        );
                     }
                 }
                 #[cfg(target_os = "windows")]
@@ -706,7 +709,8 @@ impl WorkStealingPool {
     /// Get work item from local or global queue
     fn get_work_item(
         local_queue: &Arc<Mutex<VecDeque<WorkItem>>>,
-        global_queue: &Arc<Mutex<VecDeque<WorkItem>>>, _config: &WorkStealingConfig,
+        global_queue: &Arc<Mutex<VecDeque<WorkItem>>>,
+        _config: &WorkStealingConfig,
     ) -> Option<WorkItem> {
         // Try local _queue first
         if let Ok(mut _queue) = local_queue.try_lock() {
@@ -727,7 +731,10 @@ impl WorkStealingPool {
 
     /// Attempt to steal work from other workers
     fn attempt_work_stealing(
-        _thread_id: usize_local, _queue: &Arc<Mutex<VecDeque<WorkItem>>>, _global_queue: &Arc<Mutex<VecDeque<WorkItem>>>, _config: &WorkStealingConfig,
+        _thread_id: usize,
+        _queue: &Arc<Mutex<VecDeque<WorkItem>>>,
+        _global_queue: &Arc<Mutex<VecDeque<WorkItem>>>,
+        _config: &WorkStealingConfig,
     ) {
         // Work stealing implementation would go here
         // This would attempt to steal work from other workers' local queues
@@ -789,7 +796,6 @@ impl WorkStealingPool {
     /// Process K-means clustering iteration chunk
     fn process_kmeans_chunk(_start: usize, end: usize, context: &WorkContext) {
         if let Some(kmeans_context) = &context.kmeans_context {
-
             let optimizer = HardwareOptimizedDistances::new();
             let points = &kmeans_context.points;
             let centroids = &kmeans_context.centroids;
@@ -855,7 +861,6 @@ impl WorkStealingPool {
     /// Process nearest neighbor search chunk
     fn process_nn_chunk(_start: usize, end: usize, context: &WorkContext) {
         if let Some(nn_context) = &context.nn_context {
-
             let optimizer = HardwareOptimizedDistances::new();
             let query_points = &nn_context.query_points;
             let data_points = &nn_context.data_points;
@@ -966,7 +971,7 @@ impl WorkStealingPool {
     }
 
     /// Submit work to the pool
-    pub fn submit_work(_work_items: Vec<WorkItem>) -> SpatialResult<()> {
+    pub fn submit_work(&self, _work_items: Vec<WorkItem>) -> SpatialResult<()> {
         self.total_work.store(_work_items.len(), Ordering::Relaxed);
         self.completed_work.store(0, Ordering::Relaxed);
 
@@ -1049,7 +1054,7 @@ impl AdvancedParallelDistanceMatrix {
     }
 
     /// Compute distance matrix using advanced-parallel processing
-    pub fn compute_parallel(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+    pub fn compute_parallel(&self, _points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         let n_points = _points.nrows();
         let n_pairs = n_points * (n_points - 1) / 2;
         let mut result_matrix = Array2::zeros((n_points, n_points));

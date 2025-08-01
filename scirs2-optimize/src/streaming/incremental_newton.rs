@@ -159,7 +159,7 @@ impl<T: StreamingObjective> IncrementalNewton<T> {
     ) -> Self {
         let n_params = initial_parameters.len();
         let memory_size = match method {
-            IncrementalNewtonMethod::LBFGS(m) => m_ => 10, // Default memory size
+            IncrementalNewtonMethod::LBFGS(m) => m.unwrap_or(10), // Default memory size
         };
 
         Self {

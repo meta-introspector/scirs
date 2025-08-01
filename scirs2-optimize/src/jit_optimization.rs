@@ -267,7 +267,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for quadratic functions
-    fn create_quadratic_implementation<F>(&self, fun: F_n_vars: usize) -> JitCompilationResult
+    fn create_quadratic_implementation<F>(&self, fun: F, n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -283,7 +283,8 @@ impl JitCompiler {
     /// Create optimized implementation for sum of squares
     fn create_sum_of_squares_implementation<F>(
         &self,
-        fun: F_n_vars: usize,
+        fun: F,
+        n_vars: usize,
     ) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
@@ -331,7 +332,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for polynomial functions
-    fn create_polynomial_implementation<F>(&self, fun: F_n_vars: usize) -> JitCompilationResult
+    fn create_polynomial_implementation<F>(&self, fun: F, n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -403,7 +404,8 @@ impl JitCompiler {
             FunctionPattern::Quadratic => flags.push("quadratic-opt".to_string()),
             FunctionPattern::SumOfSquares => flags.push("sum-of-squares-opt".to_string()),
             FunctionPattern::Separable => flags.push("separable-opt".to_string()),
-            FunctionPattern::Polynomial(_) => flags.push("polynomial-opt".to_string(), _ => flags.push("general-opt".to_string()),
+            FunctionPattern::Polynomial(_) => flags.push("polynomial-opt".to_string()),
+            _ => flags.push("general-opt".to_string()),
         }
 
         flags
@@ -495,7 +497,7 @@ impl PatternDetector {
         Ok(())
     }
 
-    fn is_quadratic(&self.._values: &[f64], _n_vars: usize) -> bool {
+    fn is_quadratic(&self, _values: &[f64], _n_vars: usize) -> bool {
         // Check if function _values follow quadratic pattern
         // This is simplified - a real implementation would fit a quadratic model
         false // Conservative default

@@ -2,7 +2,7 @@
 //!
 //! A minimal test of the chemical equilibrium functionality to verify it works.
 
-use scirs2__integrate::ode::chemical_equilibrium::{systems, ActivityModel};
+use scirs2_integrate::ode::chemical_equilibrium::{systems, ActivityModel};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Test 1: Weak acid equilibrium setup
     println!("1. Testing weak acid equilibrium setup");
-    let ka = 1.8e-5; // Acetic acid
+    let ka: f64 = 1.8e-5; // Acetic acid
     let initial_acid = 0.1;
 
     let calculator = systems::weak_acid_equilibrium(ka, initial_acid, None);
@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Test 4: Solubility equilibrium setup
     println!("\n4. Testing solubility equilibrium setup");
-    let ksp = 1.8e-10;
+    let ksp: f64 = 1.8e-10;
     let solubility_calc = systems::solubility_equilibrium(ksp, 1.0, 1.0);
 
     println!("   ✅ Solubility calculator created");

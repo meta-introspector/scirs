@@ -11,10 +11,10 @@ use std::io::{BufReader, BufWriter, Read, Write};
 use std::ops::{Add, Div, Mul, Sub};
 use std::path::Path;
 
-use crate::coo__array::CooArray;
-use crate::csc__array::CscArray;
-use crate::csr__array::CsrArray;
-use crate::dok__array::DokArray;
+use crate::coo_array::CooArray;
+use crate::csc_array::CscArray;
+use crate::csr_array::CsrArray;
+use crate::dok_array::DokArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::SparseArray;
 
@@ -40,8 +40,8 @@ const DOK_FORMAT: &str = "dok_array";
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__sparse::construct::eye_array;
-/// use scirs2__sparse::io::save_npz;
+/// use scirs2_sparse::construct::eye_array;
+/// use scirs2_sparse::io::save_npz;
 ///
 /// let array = eye_array::<f64>(10, "csr").unwrap();
 /// save_npz(&*array, "identity.npz").unwrap();
@@ -181,7 +181,7 @@ where
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__sparse::io::load_npz;
+/// use scirs2_sparse::io::load_npz;
 ///
 /// let array = load_npz::<f64>("identity.npz").unwrap();
 /// assert_eq!(array.shape(), (10, 10));

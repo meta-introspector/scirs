@@ -204,7 +204,7 @@ where
         &self,
         data: &ArrayView1<F>,
     ) -> StatsResult<AdvancedStatsResult<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         if data.is_empty() {
             return Err(StatsError::InvalidArgument(

@@ -8,8 +8,8 @@ use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, NumCast, Zero};
 use rand::prelude::*;
 use rand::{rngs::StdRng, SeedableRng};
-use rand__distr::uniform::SampleUniform;
-use rand__distr::{Distribution, StandardNormal};
+use rand_distr::uniform::SampleUniform;
+use rand_distr::{Distribution, StandardNormal};
 
 /// Generate random samples from a specified random distribution
 ///
@@ -26,7 +26,7 @@ use rand__distr::{Distribution, StandardNormal};
 /// # Examples
 ///
 /// ```
-/// use rand__distr::{Uniform, Distribution};
+/// use rand_distr::{Uniform, Distribution};
 /// use scirs2__stats::random::random_sample;
 ///
 /// // Generate 10 random numbers from a uniform distribution [0, 1)
@@ -610,7 +610,7 @@ pub fn random_binary_matrix(
 /// # Arguments
 ///
 /// * `x` - Input array
-/// * `n_samples` - Number of bootstrap samples to generate
+/// * `n_samples_` - Number of bootstrap samples to generate
 /// * `seed` - Optional seed for reproducibility
 ///
 /// # Returns
@@ -635,7 +635,7 @@ pub fn random_binary_matrix(
 #[allow(dead_code)]
 pub fn bootstrap_sample<T>(
     x: &ArrayView1<T>,
-    n_samples: usize,
+    n_samples_: usize,
     seed: Option<u64>,
 ) -> StatsResult<Array2<T>>
 where
@@ -649,7 +649,7 @@ where
         ));
     }
 
-    if n_samples == 0 {
+    if n_samples_ == 0 {
         return Err(StatsError::InvalidArgument(
             "Number of _samples must be positive".to_string(),
         ));
@@ -667,9 +667,9 @@ where
 
     let uniform = rand_distr::Uniform::new(0, n).unwrap();
 
-    let mut result = Array2::zeros((n_samples, n));
+    let mut result = Array2::zeros((n_samples_, n));
 
-    for i in 0..n_samples {
+    for i in 0..n_samples_ {
         for j in 0..n {
             let idx = uniform.sample(&mut rng);
             result[[i, j]] = x[idx];
@@ -875,7 +875,7 @@ mod tests {
         // Generate bootstrap samples
         let samples = bootstrap_sample(&data.view(), 10, Some(42)).unwrap();
 
-        // Shape should be [n_samples, data_length]
+        // Shape should be [n_samples_, data_length]
         assert_eq!(samples.shape(), &[10, 5]);
 
         // Test error cases

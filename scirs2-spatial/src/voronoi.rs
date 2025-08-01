@@ -117,7 +117,7 @@ impl Voronoi {
             // Handle square manually (4 _points in 2D)
             if npoints == 4 {
                 // Check if it forms a square-like pattern
-                let [[x0, y0], [x1, y1], [x2, y2], [_x3_y3]] = [
+                let [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = [
                     [_points[[0, 0]], _points[[0, 1]]],
                     [_points[[1, 0]], _points[[1, 1]]],
                     [_points[[2, 0]], _points[[2, 1]]],
@@ -158,7 +158,7 @@ impl Voronoi {
                             }
 
                             match Delaunay::new(&perturbed_points) {
-                                Ok(delaunay) => Self::from_delaunay(delaunay..furthest_site),
+                                Ok(delaunay) => Self::from_delaunay(delaunay, furthest_site),
                                 Err(e) => Err(SpatialError::ComputationError(format!(
                                     "Voronoi computation failed: {e}"
                                 ))),
@@ -611,7 +611,7 @@ impl Voronoi {
     /// # Returns
     ///
     /// * true if this is a furthest-site Voronoi diagram, false otherwise
-    pub fn is_furthest_site() -> bool {
+    pub fn is_furthest_site(&self) -> bool {
         self.furthest_site
     }
 }

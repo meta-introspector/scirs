@@ -1,4 +1,4 @@
-use scirs2__integrate::tanhsinh::{nsum, tanhsinh, TanhSinhOptions};
+use scirs2_integrate::tanhsinh::{nsum, tanhsinh, TanhSinhOptions};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

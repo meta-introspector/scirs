@@ -299,50 +299,46 @@ pub use autodiff::{
 };
 // Export specialized domain-specific solvers
 pub use specialized::{
-    // Advanced-performance optimizations
-    AdaptiveAlgorithmSelector,
-    AdvancedGPUKernel,
-    AdvancedMonteCarloEngine,
-    AlertSeverity,
-    AlgorithmRecommendation,
+    // Fluid dynamics exports
+    DealiasingStrategy,
+    // Finance module exports
     FinanceMethod,
     FinancialOption,
     FluidBoundaryCondition,
     FluidState,
     FluidState3D,
-    GPUMemoryPool,
+    // Quantum mechanics exports
+    GPUMultiBodyQuantumSolver,
+    GPUQuantumSolver,
     Greeks,
     HarmonicOscillator,
     HydrogenAtom,
     JumpProcess,
     LESolver,
-    MultiBodyQuantumSolver,
     NavierStokesParams,
     NavierStokesSolver,
-    OptionPricingResult,
     OptionStyle,
     OptionType,
+    // MultiBodyQuantumSolver, - TODO: Add when implemented
     ParticleInBox,
-    ProblemCharacteristics,
     QuantumAnnealer,
-    QuantumInspiredRNG,
     QuantumPotential,
     QuantumState,
     RANSModel,
     RANSSolver,
     RANSState,
-    RealTimeRiskMonitor,
-    RiskAlert,
-    RiskAlertType,
-    RiskDashboard,
-    RiskSnapshot,
     SGSModel,
     SchrodingerMethod,
     SchrodingerSolver,
+    // VariationalQuantumEigensolver, - TODO: Add when implemented
+    // Quantum ML exports - TODO: Add when implemented
+    // EntanglementPattern,
+    // QuantumFeatureMap,
+    // QuantumKernelParams,
+    // QuantumSVMModel,
+    // QuantumSupportVectorMachine,
+    SpectralNavierStokesSolver,
     StochasticPDESolver,
-    StreamingComputeManager,
-    VarianceReductionSuite,
-    VariationalQuantumEigensolver,
     VolatilityModel,
 };
 // Export geometric integration methods
@@ -397,7 +393,7 @@ pub use geometric::{
     SO3,
 };
 // Export analysis tools
-pub use analysis::advanced_analysis::{
+pub use analysis::advanced::{
     BifurcationPointData, ContinuationAnalyzer, FixedPointData, MonodromyAnalyzer, MonodromyResult,
     PeriodicStabilityType,
 };
@@ -416,6 +412,8 @@ pub use analysis::{
 };
 // Export visualization utilities
 pub use visualization::{
+    // VisualizationEngine, // TODO: uncomment when implemented
+    AttractorStability,
     BifurcationDiagram,
     // BifurcationDiagramBuilder, // TODO: uncomment when implemented
     ColorScheme,
@@ -427,19 +425,17 @@ pub use visualization::{
     HeatMapPlot,
     // MultiMetricConvergencePlot, // TODO: uncomment when implemented
     OutputFormat,
+    ParameterExplorationPlot,
+    PhaseSpace3D,
     // PhaseDensityPlot, // TODO: uncomment when implemented
     PhaseSpacePlot,
     PlotMetadata,
     PlotStatistics,
+    RealTimeBifurcationPlot,
+    SensitivityPlot,
     // StepSizeAnalysisPlot, // TODO: uncomment when implemented
     SurfacePlot,
     VectorFieldPlot,
-    // VisualizationEngine, // TODO: uncomment when implemented
-    AttractorStability,
-    ParameterExplorationPlot,
-    PhaseSpace3D,
-    RealTimeBifurcationPlot,
-    SensitivityPlot,
 };
 // Export advanced modules
 pub use amr_advanced::{

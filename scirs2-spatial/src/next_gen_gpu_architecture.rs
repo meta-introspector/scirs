@@ -356,7 +356,7 @@ impl QuantumGpuProcessor {
     }
 
     /// Initialize quantum entanglements
-    async fn initialize_quantum_entanglements() -> SpatialResult<()> {
+    async fn initialize_quantum_entanglements(&mut self) -> SpatialResult<()> {
         // Create entanglement topology
         for i in 0..self.quantum_units.len() {
             for j in (i + 1)..self.quantum_units.len() {
@@ -376,7 +376,7 @@ impl QuantumGpuProcessor {
         &mut self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Array2<Complex64>> {
-        let (n_points_n_dims) = points.dim();
+        let (n_points, _n_dims) = points.dim();
         let mut quantum_distances = Array2::zeros((n_points, n_points));
 
         // Initialize quantum processing if not done
@@ -501,7 +501,7 @@ impl QuantumGpuProcessor {
         points: &ArrayView2<'_, f64>,
         num_clusters: usize,
     ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
-        let (n_points_n_dims) = points.dim();
+        let (n_points, _n_dims) = points.dim();
 
         // Initialize quantum system if needed
         if self.quantum_units.is_empty() {
@@ -586,7 +586,7 @@ impl QuantumGpuProcessor {
     }
 
     /// Quantum measurement simulation
-    fn quantum_measurement(_state: &Array1<Complex64>) -> usize {
+    fn quantum_measurement(&mut self, _state: &Array1<Complex64>) -> usize {
         let probabilities: Vec<f64> = _state.iter().map(|a| a.norm_sqr()).collect();
         let total_prob: f64 = probabilities.iter().sum();
 
@@ -613,7 +613,7 @@ impl QuantumGpuProcessor {
         points: &ArrayView2<'_, f64>,
         centroids: &Array2<f64>,
     ) -> SpatialResult<Array1<usize>> {
-        let (n_points_) = points.dim();
+        let (n_points, _) = points.dim();
         let mut assignments = Array1::zeros(n_points);
 
         for (i, point) in points.outer_iter().enumerate() {
@@ -711,7 +711,7 @@ impl QuantumGpuProcessor {
     }
 
     /// Apply quantum decoherence simulation
-    async fn apply_quantum_decoherence(_iteration: usize) -> SpatialResult<()> {
+    async fn apply_quantum_decoherence(&mut self, _iteration: usize) -> SpatialResult<()> {
         // Simulate quantum decoherence effects
         let decoherence_rate = 0.99; // 1% decoherence per _iteration
 
@@ -855,7 +855,7 @@ impl PhotonicAccelerator {
     }
 
     /// Initialize photonic processing system
-    async fn initialize_photonic_system(_num_units: usize) -> SpatialResult<()> {
+    async fn initialize_photonic_system(&mut self, _num_units: usize) -> SpatialResult<()> {
         self.photonic_units.clear();
 
         for i in 0.._num_units {
@@ -870,10 +870,10 @@ impl PhotonicAccelerator {
         }
 
         // Create optical interconnects
-        for i in 0..num_units {
-            for j in (i + 1)..num_units {
+        for i in 0.._num_units {
+            for j in (i + 1).._num_units {
                 let interconnect = OpticalInterconnect {
-                    interconnect_id: i * num_units + j,
+                    interconnect_id: i * _num_units + j,
                     source_unit: i,
                     target_unit: j,
                     transmission_efficiency: 0.99,
@@ -916,7 +916,7 @@ impl PhotonicAccelerator {
     /// Optical interference-based clustering
     #[allow(clippy::needless_range_loop)]
     async fn optical_interference_clustering(
-        &self,
+        &mut self,
         waveforms: &[Array1<Complex64>],
         num_clusters: usize,
     ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
@@ -979,7 +979,7 @@ impl PhotonicAccelerator {
     }
 
     /// Find peaks in interference pattern
-    fn find_interference_peaks(_pattern: &Array1<Complex64>) -> Vec<usize> {
+    fn find_interference_peaks(&mut self, _pattern: &Array1<Complex64>) -> Vec<usize> {
         let mut peaks = Vec::new();
         let intensities: Vec<f64> = _pattern.iter().map(|c| c.norm_sqr()).collect();
 
@@ -1000,14 +1000,14 @@ impl PhotonicAccelerator {
     }
 
     /// Calculate optical similarity between waveform and cluster
-    fn calculate_optical_similarity(_waveform: &Array1<Complex64>, cluster: usize) -> f64 {
+    fn calculate_optical_similarity(&mut self, _waveform: &Array1<Complex64>, cluster: usize) -> f64 {
         // Simplified optical correlation calculation
         if cluster < self.photonic_units.len() {
             // Use wavelength-based similarity
             let unit_wavelength = (self.photonic_units[cluster].wavelength_range.0
                 + self.photonic_units[cluster].wavelength_range.1)
                 / 2.0;
-            let _waveform_energy: f64 = _waveform.iter().map(|c| c.norm_sqr()).sum();
+            let waveform_energy: f64 = _waveform.iter().map(|c| c.norm_sqr()).sum();
 
             // Wavelength matching score
             let wavelength_score = 1.0 / (1.0 + (unit_wavelength - 725.0).abs() / 100.0);

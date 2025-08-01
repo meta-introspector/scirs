@@ -5,7 +5,7 @@
 //! techniques for maximum performance across all supported platforms.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 use ndarray::{s, Array2, ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::{
@@ -526,7 +526,7 @@ impl AdvancedSimdOptimizer {
         let signature = OperationSignature {
             operation_type: "mean".to_string(),
             size_bucket: Self::categorize_size(x.len()),
-            data_type: std::any::type, _name::<F>().to_string(),
+            data_type: std::any::type_name::<F>().to_string(),
             data_characteristics: characteristics,
         };
 
@@ -580,7 +580,7 @@ impl AdvancedSimdOptimizer {
         let signature = OperationSignature {
             operation_type: "variance".to_string(),
             size_bucket: Self::categorize_size(n),
-            data_type: std::any::type, _name::<F>().to_string(),
+            data_type: std::any::type_name::<F>().to_string(),
             data_characteristics: characteristics,
         };
 
@@ -634,7 +634,7 @@ impl AdvancedSimdOptimizer {
         let signature = OperationSignature {
             operation_type: "correlation".to_string(),
             size_bucket: Self::categorize_size(x.len()),
-            data_type: std::any::type, _name::<F>().to_string(),
+            data_type: std::any::type_name::<F>().to_string(),
             data_characteristics: characteristics,
         };
 
@@ -673,7 +673,7 @@ impl AdvancedSimdOptimizer {
         let signature = OperationSignature {
             operation_type: "matrix_multiply".to_string(),
             size_bucket: Self::categorize_matrix_size(a.nrows() * a.ncols()),
-            data_type: std::any::type, _name::<F>().to_string(),
+            data_type: std::any::type_name::<F>().to_string(),
             data_characteristics: characteristics,
         };
 
@@ -839,7 +839,7 @@ impl AdvancedSimdOptimizer {
         let numa_manager = NumaManager {
             node_topology: vec![NumaNode {
                 node_id: 0,
-                cpu_cores: (0..num, _cpus::get()).collect(),
+                cpu_cores: (0..num_cpus::get()).collect(),
                 memory_size_gb: 16.0,
                 memory_bandwidth_gbps: hardware.memory_subsystem.memory_bandwidth_gbps,
                 inter_node_latency_ns: HashMap::new(),
@@ -873,7 +873,8 @@ impl AdvancedSimdOptimizer {
         let sparsity_level = match sparsity_ratio {
             r if r < 0.05 => SparsityLevel::Dense,
             r if r < 0.5 => SparsityLevel::Moderate,
-            r if r < 0.95 => SparsityLevel::Sparse_ =>, SparsityLevel::VerySparse,
+            r if r < 0.95 => SparsityLevel::Sparse,
+            _ => SparsityLevel::VerySparse,
         };
 
         // Analyze numerical range
@@ -904,15 +905,15 @@ impl AdvancedSimdOptimizer {
 
     /// Analyze characteristics for bivariate operations
     fn analyze_bivariate_characteristics<F, D1, D2>(
-        &self_x: &ArrayBase<D1, Ix1>, _y: &ArrayBase<D2, Ix1>,
+        &self, x: &ArrayBase<D1, Ix1>, _y: &ArrayBase<D2, Ix1>,
     ) -> DataCharacteristics
     where
         F: Float + Copy + std::fmt::Display,
         D1: Data<Elem = F> + std::fmt::Display,
         D2: Data<Elem = F> + std::fmt::Display,
     {
-        // For simplicity, analyze _x and extend to bivariate
-        let x_chars = self.analyze_data_characteristics(_x);
+        // For simplicity, analyze x and extend to bivariate
+        let x_chars = self.analyze_data_characteristics(x);
 
         // In a real implementation, would analyze correlation structure,
         // joint sparsity patterns, etc.
@@ -921,7 +922,7 @@ impl AdvancedSimdOptimizer {
 
     /// Analyze matrix characteristics
     fn analyze_matrix_characteristics<F>(
-        &self_a: &Array2<F>, _b: &Array2<F>,
+        a: &Array2<F>, _b: &Array2<F>,
     ) -> DataCharacteristics
     where
         F: Float + Copy + std::fmt::Display,
@@ -941,7 +942,8 @@ impl AdvancedSimdOptimizer {
             s if s < 64 => SizeBucket::Tiny,
             s if s < 1024 => SizeBucket::Small,
             s if s < 65536 => SizeBucket::Medium,
-            s if s < 1048576 => SizeBucket::Large_ =>, SizeBucket::Huge,
+            s if s < 1048576 => SizeBucket::Large,
+            _ => SizeBucket::Huge,
         }
     }
 
@@ -989,7 +991,8 @@ impl AdvancedSimdOptimizer {
     /// Select optimal algorithm for mean calculation
     fn select_optimal_algorithm<F, D>(
         &self,
-        signature: &OperationSignature_x: &ArrayBase<D, Ix1>,
+        signature: &OperationSignature,
+        _x: &ArrayBase<D, Ix1>,
     ) -> StatsResult<AlgorithmChoice>
     where
         F: Float + Copy,
@@ -997,10 +1000,10 @@ impl AdvancedSimdOptimizer {
     {
         // Use decision tree to select algorithm
         let algorithm = match (&signature.size_bucket, &self.config.target_accuracy) {
-            (SizeBucket:: Tiny) =>, AlgorithmChoice::Scalar {
+            (SizeBucket::Tiny, _) => AlgorithmChoice::Scalar {
                 algorithm: ScalarAlgorithm::Standard,
             },
-            (SizeBucket::Small, AccuracyLevel::Precise) =>, AlgorithmChoice::Scalar {
+            (SizeBucket::Small, AccuracyLevel::Precise) => AlgorithmChoice::Scalar {
                 algorithm: ScalarAlgorithm::Kahan,
             },
             (SizeBucket::Medium | SizeBucket::Large, AccuracyLevel::Fast) => {
@@ -1010,15 +1013,16 @@ impl AdvancedSimdOptimizer {
                     vector_width: 4,
                 }
             }
-            (SizeBucket:: Huge) =>, AlgorithmChoice::ParallelSimd {
+            (SizeBucket::Huge, _) => AlgorithmChoice::ParallelSimd {
                 simd_choice: Box::new(AlgorithmChoice::Simd {
                     instruction_set: SimdInstructionSet::AVX2,
                     algorithm: SimdAlgorithm::Vectorized,
                     vector_width: 4,
                 }),
-                thread_count: num, _cpus: get(),
+                thread_count: num_cpus::get(),
                 work_stealing: true,
-            }_ => AlgorithmChoice::Simd {
+            },
+            _ => AlgorithmChoice::Simd {
                 instruction_set: SimdInstructionSet::AVX2,
                 algorithm: SimdAlgorithm::Vectorized,
                 vector_width: 4,
@@ -1031,7 +1035,9 @@ impl AdvancedSimdOptimizer {
     /// Select variance algorithm
     fn select_variance_algorithm<F, D>(
         &self,
-        signature: &OperationSignature_x: &ArrayBase<D, Ix1>, _ddof: usize,
+        signature: &OperationSignature,
+        _x: &ArrayBase<D, Ix1>,
+        _ddof: usize,
     ) -> StatsResult<AlgorithmChoice>
     where
         F: Float + Copy,
@@ -1039,22 +1045,22 @@ impl AdvancedSimdOptimizer {
     {
         // For variance, prioritize numerical stability
         let algorithm = match (&signature.size_bucket, &self.config.target_accuracy) {
-            (SizeBucket::Tiny | SizeBucket:: Small) =>, AlgorithmChoice::Scalar {
+            (SizeBucket::Tiny | SizeBucket::Small, _) => AlgorithmChoice::Scalar {
                 algorithm: ScalarAlgorithm::Welford,
             },
-            (_, AccuracyLevel::Precise | AccuracyLevel::Reference) =>, AlgorithmChoice::Scalar {
+            (_, AccuracyLevel::Precise | AccuracyLevel::Reference) => AlgorithmChoice::Scalar {
                 algorithm: ScalarAlgorithm::Welford,
             },
-            (SizeBucket::Medium | SizeBucket:: Large) =>, AlgorithmChoice::Simd {
+            (SizeBucket::Medium | SizeBucket::Large, _) => AlgorithmChoice::Simd {
                 instruction_set: SimdInstructionSet::AVX2,
                 algorithm: SimdAlgorithm::Vectorized,
                 vector_width: 4,
             },
-            (SizeBucket:: Huge) =>, AlgorithmChoice::ParallelSimd {
+            (SizeBucket::Huge, _) => AlgorithmChoice::ParallelSimd {
                 simd_choice: Box::new(AlgorithmChoice::Scalar {
                     algorithm: ScalarAlgorithm::Welford,
                 }),
-                thread_count: num, _cpus: get(),
+                thread_count: num_cpus::get(),
                 work_stealing: true,
             },
         };
@@ -1065,7 +1071,9 @@ impl AdvancedSimdOptimizer {
     /// Select correlation algorithm
     fn select_correlation_algorithm<F, D1, D2>(
         &self,
-        signature: &OperationSignature_x: &ArrayBase<D1, Ix1>, _y: &ArrayBase<D2, Ix1>,
+        signature: &OperationSignature,
+        _x: &ArrayBase<D1, Ix1>,
+        _y: &ArrayBase<D2, Ix1>,
     ) -> StatsResult<AlgorithmChoice>
     where
         F: Float + Copy,
@@ -1074,24 +1082,24 @@ impl AdvancedSimdOptimizer {
     {
         // Correlation benefits from SIMD for medium to large datasets
         let algorithm = match &signature.size_bucket {
-            SizeBucket::Tiny =>, AlgorithmChoice::Scalar {
+            SizeBucket::Tiny => AlgorithmChoice::Scalar {
                 algorithm: ScalarAlgorithm::Standard,
             },
-            SizeBucket::Small =>, AlgorithmChoice::Scalar {
+            SizeBucket::Small => AlgorithmChoice::Scalar {
                 algorithm: ScalarAlgorithm::Compensated,
             },
-            SizeBucket::Medium | SizeBucket::Large =>, AlgorithmChoice::Simd {
+            SizeBucket::Medium | SizeBucket::Large => AlgorithmChoice::Simd {
                 instruction_set: SimdInstructionSet::AVX2,
                 algorithm: SimdAlgorithm::FusedMultiplyAdd,
                 vector_width: 4,
             },
-            SizeBucket::Huge =>, AlgorithmChoice::ParallelSimd {
+            SizeBucket::Huge => AlgorithmChoice::ParallelSimd {
                 simd_choice: Box::new(AlgorithmChoice::Simd {
                     instruction_set: SimdInstructionSet::AVX2,
                     algorithm: SimdAlgorithm::FusedMultiplyAdd,
                     vector_width: 4,
                 }),
-                thread_count: num, _cpus: get(),
+                thread_count: num_cpus::get(),
                 work_stealing: false,
             },
         };
@@ -1101,7 +1109,7 @@ impl AdvancedSimdOptimizer {
 
     /// Select matrix multiplication algorithm
     fn select_matrix_algorithm<F>(
-        &self_signature: &OperationSignature,
+        signature: &OperationSignature,
         a: &Array2<F>,
         b: &Array2<F>,
     ) -> StatsResult<AlgorithmChoice>
@@ -1127,7 +1135,7 @@ impl AdvancedSimdOptimizer {
                     algorithm: SimdAlgorithm::Vectorized,
                     vector_width: 4,
                 }),
-                thread_count: num, _cpus: get(),
+                thread_count: num_cpus::get(),
                 work_stealing: true,
             }
         };
@@ -1322,7 +1330,7 @@ impl AdvancedSimdOptimizer {
         // Parallel computation using rayon
         let sum: F = x
             .axis_chunks_iter(ndarray::Axis(0), chunk_size)
-            .into_par_iter()
+            .into_par.iter()
             .map(|chunk| F::simd_sum(&chunk))
             .sum();
 

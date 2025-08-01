@@ -68,7 +68,7 @@ impl Pose2D {
     /// # Returns
     ///
     /// * Euclidean distance between positions
-    pub fn distance_to(_other: &Pose2D) -> f64 {
+    pub fn distance_to(&self, _other: &Pose2D) -> f64 {
         ((self.x - _other.x).powi(2) + (self.y - _other.y).powi(2)).sqrt()
     }
 
@@ -229,7 +229,7 @@ impl DubinsPath {
     /// # Returns
     ///
     /// * Pose at parameter t, or error if t is out of bounds
-    pub fn sample(t: f64) -> SpatialResult<Pose2D> {
+    pub fn sample(&self, t: f64) -> SpatialResult<Pose2D> {
         if !(0.0..=1.0).contains(&t) {
             return Err(SpatialError::ValueError(
                 "Parameter t must be in [0, 1]".to_string(),
@@ -322,7 +322,9 @@ impl DubinsPlanner {
     /// let planner = DubinsPlanner::new(1.0);
     /// ```
     pub fn new(_turning_radius: f64) -> Self {
-        Self { _turning_radius }
+        Self {
+            turning_radius: _turning_radius,
+        }
     }
 
     /// Plan a Dubins path between two poses
@@ -348,7 +350,7 @@ impl DubinsPlanner {
     /// let path = planner.plan(&start, &goal).unwrap();
     /// println!("Path length: {}", path.length());
     /// ```
-    pub fn plan(_start: &Pose2D, goal: &Pose2D) -> SpatialResult<DubinsPath> {
+    pub fn plan(&self, _start: &Pose2D, goal: &Pose2D) -> SpatialResult<DubinsPath> {
         if self.turning_radius <= 0.0 {
             return Err(SpatialError::ValueError(
                 "Turning radius must be positive".to_string(),
@@ -421,7 +423,7 @@ impl DubinsPlanner {
     }
 
     /// Compute LSL path segments
-    fn lsl(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn lsl(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let tmp0 = d + alpha.sin() - beta.sin();
         let p_squared =
             2.0 + d * d - 2.0 * (alpha - beta).cos() + 2.0 * d * (alpha.sin() - beta.sin());
@@ -454,7 +456,7 @@ impl DubinsPlanner {
     }
 
     /// Compute LSR path segments
-    fn lsr(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn lsr(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let p_squared =
             -2.0 + d * d + 2.0 * (alpha - beta).cos() + 2.0 * d * (alpha.sin() + beta.sin());
 
@@ -486,7 +488,7 @@ impl DubinsPlanner {
     }
 
     /// Compute RSL path segments
-    fn rsl(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn rsl(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let p_squared =
             d * d - 2.0 + 2.0 * (alpha - beta).cos() - 2.0 * d * (alpha.sin() + beta.sin());
 
@@ -518,7 +520,7 @@ impl DubinsPlanner {
     }
 
     /// Compute RSR path segments
-    fn rsr(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn rsr(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let tmp0 = d - alpha.sin() + beta.sin();
         let p_squared =
             2.0 + d * d - 2.0 * (alpha - beta).cos() - 2.0 * d * (alpha.sin() - beta.sin());
@@ -551,7 +553,7 @@ impl DubinsPlanner {
     }
 
     /// Compute LRL path segments
-    fn lrl(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn lrl(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let tmp0 =
             (6.0 - d * d + 2.0 * (alpha - beta).cos() + 2.0 * d * (alpha.sin() - beta.sin())) / 8.0;
 
@@ -584,7 +586,7 @@ impl DubinsPlanner {
     }
 
     /// Compute RLR path segments
-    fn rlr(d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
+    fn rlr(&self, d: f64, alpha: f64, beta: f64) -> SpatialResult<[DubinsSegment; 3]> {
         let tmp0 =
             (6.0 - d * d + 2.0 * (alpha - beta).cos() - 2.0 * d * (alpha.sin() - beta.sin())) / 8.0;
 

@@ -1,4 +1,4 @@
-use scirs2__integrate::{
+use scirs2_integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, ElementType, FEMOptions,
     FEMPoissonSolver, Point, Triangle, TriangularMesh,
 };
@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - {} boundary edges", mesh.boundary_edges.len());
 
     // Source term: 1.0 (simplified Poisson problem)
-    let source_term = |_x: f64_y: f64| -> f64 { 1.0 };
+    let source_term = |_x: f64, _y: f64| -> f64 { 1.0 };
 
     // Boundary conditions: u = 0 on all boundaries (Dirichlet)
     let bcs = vec![

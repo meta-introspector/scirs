@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Binomial as RandBinomial, Distribution};
+use rand_distr::{Binomial as RandBinomial, Distribution};
 use statrs::function::gamma::ln_gamma;
 use statrs::statistics::Statistics;
 
@@ -45,7 +45,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// ```
     pub fn new(n: usize, p: F) -> StatsResult<Self> {
         // Validate parameters
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Success probability must be between 0 and 1".to_string(),
             ));

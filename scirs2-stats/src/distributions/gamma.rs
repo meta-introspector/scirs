@@ -8,7 +8,7 @@ use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution, Gamma as RandGamma};
+use rand_distr::{Distribution, Gamma as RandGamma};
 use std::fmt::Debug;
 use statrs::statistics::Statistics;
 
@@ -190,7 +190,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// assert!((x - 1.678).abs() < 1e-3);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));

@@ -698,7 +698,7 @@ where
     EventFunc: Fn(F, ArrayView1<F>) -> F,
 {
     use crate::ode::methods::radau_mass::radau_method_with_mass;
-use crate::ode::utils::events::{EventAction, EventHandler};
+    use crate::ode::utils::events::{EventAction, EventHandler};
 
     // Create event handler
     let mut event_handler = EventHandler::new(options.event_specs.clone());
@@ -876,7 +876,6 @@ where
     F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>) -> Array1<F> + Clone,
 {
-
     // For state-dependent mass matrices M(t,y), we need to solve M(t,y)·y' = f(t,y)
     // at each time step within the BDF Newton iteration
 

@@ -569,10 +569,10 @@ fn compute_diagonal_element(_jac: &SparseMatrix, col: usize) -> f64 {
 /// Fallback to dense least squares for small or dense problems
 #[allow(dead_code)]
 fn solve_dense_least_squares<F, J>(
-    fun: &F_jac: &Option<J>,
+    fun: &F, _jac: &Option<J>,
     x0: &Array1<f64>,
     options: &SparseOptions,
-    nfev: &mut usize_njev: &mut usize,
+    nfev: &mut usize, _njev: &mut usize,
 ) -> Result<InternalResult, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> Array1<f64>,

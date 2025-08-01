@@ -35,7 +35,7 @@ pub use bernoulli::Bernoulli;
 pub use beta::Beta;
 pub use binomial::Binomial;
 pub use cauchy::Cauchy;
-pub use chi__square::ChiSquare;
+pub use chi_square::ChiSquare;
 // pub use circular::{VonMises, WrappedCauchy}; // Temporarily disabled
 pub use exponential::Exponential;
 pub use f::F;
@@ -49,11 +49,11 @@ pub use multivariate::{
     Dirichlet, InverseWishart, Multinomial, MultivariateLognormal, MultivariateNormal,
     MultivariateT, Wishart,
 };
-pub use negative__binomial::NegativeBinomial;
+pub use negative_binomial::NegativeBinomial;
 pub use normal::Normal;
 pub use pareto::Pareto;
 pub use poisson::Poisson;
-pub use student__t::StudentT;
+pub use student_t::StudentT;
 pub use uniform::Uniform;
 pub use weibull::Weibull;
 
@@ -83,7 +83,7 @@ pub use weibull::Weibull;
 #[allow(dead_code)]
 pub fn norm<F>(_loc: F, scale: F) -> StatsResult<Normal<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Normal::new(_loc, scale)
 }
@@ -114,7 +114,7 @@ where
 #[allow(dead_code)]
 pub fn uniform<F>(_low: F, high: F) -> StatsResult<Uniform<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Uniform::new(_low, high)
 }
@@ -146,7 +146,7 @@ where
 #[allow(dead_code)]
 pub fn t<F>(_df: F, loc: F, scale: F) -> StatsResult<StudentT<F>>
 where
-    F: num_traits: Float
+    F: num_traits::Float
         + num_traits::NumCast
         + std::marker::Send
         + std::marker::Sync
@@ -183,7 +183,7 @@ where
 #[allow(dead_code)]
 pub fn chi2<F>(_df: F, loc: F, scale: F) -> StatsResult<ChiSquare<F>>
 where
-    F: num_traits: Float
+    F: num_traits::Float
         + num_traits::NumCast
         + std::marker::Send
         + std::marker::Sync
@@ -221,7 +221,7 @@ where
 #[allow(dead_code)]
 pub fn f<T>(_dfn: T, dfd: T, loc: T, scale: T) -> StatsResult<F<T>>
 where
-    T: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    T: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     F::new(_dfn, dfd, loc, scale)
 }
@@ -252,7 +252,7 @@ where
 #[allow(dead_code)]
 pub fn poisson<F>(_mu: F, loc: F) -> StatsResult<Poisson<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Poisson::new(_mu, loc)
 }
@@ -284,7 +284,7 @@ where
 #[allow(dead_code)]
 pub fn gamma<F>(_shape: F, scale: F, loc: F) -> StatsResult<Gamma<F>>
 where
-    F: num_traits: Float
+    F: num_traits::Float
         + num_traits::NumCast
         + std::fmt::Debug
         + std::marker::Send
@@ -324,7 +324,7 @@ where
 #[allow(dead_code)]
 pub fn beta<F>(_alpha: F, beta: F, loc: F, scale: F) -> StatsResult<Beta<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Debug + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Debug + std::fmt::Display,
 {
     Beta::new(_alpha, beta, loc, scale)
 }
@@ -355,7 +355,7 @@ where
 #[allow(dead_code)]
 pub fn expon<F>(_rate: F, loc: F) -> StatsResult<Exponential<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Debug + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Debug + std::fmt::Display,
 {
     Exponential::new(_rate, loc)
 }
@@ -388,7 +388,7 @@ where
 #[allow(dead_code)]
 pub fn lognorm<F>(_mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Lognormal::new(_mu, sigma, loc)
 }
@@ -420,7 +420,7 @@ where
 #[allow(dead_code)]
 pub fn weibull<F>(_shape: F, scale: F, loc: F) -> StatsResult<Weibull<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Weibull::new(_shape, scale, loc)
 }
@@ -452,7 +452,7 @@ where
 #[allow(dead_code)]
 pub fn pareto<F>(_shape: F, scale: F, loc: F) -> StatsResult<Pareto<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Pareto::new(_shape, scale, loc)
 }
@@ -483,7 +483,7 @@ where
 #[allow(dead_code)]
 pub fn cauchy<F>(_loc: F, scale: F) -> StatsResult<Cauchy<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Cauchy::new(_loc, scale)
 }
@@ -514,7 +514,7 @@ where
 #[allow(dead_code)]
 pub fn laplace<F>(_loc: F, scale: F) -> StatsResult<Laplace<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Laplace::new(_loc, scale)
 }
@@ -545,7 +545,7 @@ where
 #[allow(dead_code)]
 pub fn logistic<F>(_loc: F, scale: F) -> StatsResult<Logistic<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Logistic::new(_loc, scale)
 }
@@ -575,7 +575,7 @@ where
 #[allow(dead_code)]
 pub fn bernoulli<F>(p: F) -> StatsResult<Bernoulli<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Bernoulli::new(p)
 }
@@ -606,7 +606,7 @@ where
 #[allow(dead_code)]
 pub fn binom<F>(n: usize, p: F) -> StatsResult<Binomial<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Binomial::new(n, p)
 }
@@ -636,7 +636,7 @@ where
 #[allow(dead_code)]
 pub fn geom<F>(p: F) -> StatsResult<Geometric<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     Geometric::new(p)
 }
@@ -667,7 +667,7 @@ where
 #[allow(dead_code)]
 pub fn nbinom<F>(r: F, p: F) -> StatsResult<NegativeBinomial<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
     NegativeBinomial::new(r, p)
 }
@@ -713,7 +713,7 @@ pub fn hypergeom<F>(
     loc: F,
 ) -> StatsResult<Hypergeometric<F>>
 where
-    F: num_traits: Float + num, _traits::NumCast + num_traits::FloatConst + std::fmt::Display,
+    F: num_traits::Float + num_traits::NumCast + num_traits::FloatConst + std::fmt::Display,
 {
     Hypergeometric::new(n_population, n_success, n_draws, loc)
 }

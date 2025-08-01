@@ -83,7 +83,7 @@ fn generate_test_data(_n_points: usize, dimensions: usize, seed: u64) -> Array2<
 }
 
 #[allow(dead_code)]
-fn benchmark_distance_calculations() -> Result<()..Box<dyn std::error::Error>> {
+fn benchmark_distance_calculations() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Comparing SIMD vs Scalar distance calculations:");
     println!(
         "  {:>8} {:>8} {:>12} {:>12} {:>10}",

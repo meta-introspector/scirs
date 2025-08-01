@@ -95,7 +95,7 @@ impl<F: IntegrateFloat> SeparableHamiltonian<F> {
     /// # Returns
     ///
     /// Self with gradients configured
-    pub fn with_gradients<KG, VG>(mut kinetic_gradient: KG, potential_gradient: VG) -> Self
+    pub fn with_gradients<KG, VG>(mut self, kinetic_gradient: KG, potential_gradient: VG) -> Self
     where
         KG: Fn(F, &Array1<F>) -> Array1<F> + 'static + Send + Sync,
         VG: Fn(F, &Array1<F>) -> Array1<F> + 'static + Send + Sync,
@@ -304,7 +304,7 @@ impl<F: IntegrateFloat> HamiltonianSystem<F> {
     /// # Returns
     ///
     /// Self with Hamiltonian function configured
-    pub fn with_hamiltonian<H>(mut hamiltonian_fn: H) -> Self
+    pub fn with_hamiltonian<H>(mut self, hamiltonian_fn: H) -> Self
     where
         H: Fn(F, &Array1<F>, &Array1<F>) -> F + 'static + Send + Sync,
     {
@@ -428,9 +428,9 @@ mod tests {
         // Create a generic Hamiltonian for a harmonic oscillator
         let system = HamiltonianSystem::new(
             // dq/dt = ∂H/∂p = p
-            |_t_q, p| p.clone(),
+            |_t, _q, p| p.clone(),
             // dp/dt = -∂H/∂q = -q
-            |_t, q_p| -q.clone(),
+            |_t, q, _p| -q.clone(),
         )
         .with_hamiltonian(
             // H(q, p) = p²/2 + q²/2

@@ -17,8 +17,8 @@
 //! ### Shortest Path
 //!
 //! ```
-//! use scirs2__sparse::csgraph::shortest_path;
-//! use scirs2__sparse::csr_array::CsrArray;
+//! use scirs2_sparse::csgraph::shortest_path;
+//! use scirs2_sparse::csr_array::CsrArray;
 //!
 //! // Create a graph as a sparse matrix
 //! let rows = vec![0, 0, 1, 2];
@@ -33,8 +33,8 @@
 //! ### Connected Components
 //!
 //! ```
-//! use scirs2__sparse::csgraph::connected_components;
-//! use scirs2__sparse::csr_array::CsrArray;
+//! use scirs2_sparse::csgraph::connected_components;
+//! use scirs2_sparse::csr_array::CsrArray;
 //!
 //! // Create a graph
 //! let rows = vec![0, 1, 2, 3];
@@ -58,10 +58,10 @@ pub mod minimum_spanning_tree;
 pub mod shortest_path;
 pub mod traversal;
 
-pub use connected__components::*;
+pub use connected_components::*;
 pub use laplacian::*;
-pub use minimum_spanning__tree::*;
-pub use shortest__path::*;
+pub use minimum_spanning_tree::*;
+pub use shortest_path::*;
 pub use traversal::*;
 
 /// Graph representation modes
@@ -186,8 +186,8 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (n_) = _matrix.shape();
-    let mut adj_list = vec![Vec::new(); n];
+    let (n_, _) = _matrix.shape();
+    let mut adj_list = vec![Vec::new(); n_];
 
     let (row_indices, col_indices, values) = _matrix.find();
 
@@ -238,11 +238,11 @@ where
         Ok(nnz)
     } else {
         // For undirected graphs, count diagonal elements once and off-diagonal elements half
-        let (row_indices, col_indices_) = _matrix.find();
+        let (row_indices, col_indices_, _) = _matrix.find();
         let mut diagonal_count = 0;
         let mut off_diagonal_count = 0;
 
-        for (&row, &col) in row_indices.iter().zip(col_indices.iter()) {
+        for (&row, &col) in row_indices.iter().zip(col_indices_.iter()) {
             if row == col {
                 diagonal_count += 1;
             } else {
@@ -258,7 +258,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
 
     fn create_test_graph() -> CsrArray<f64> {
         // Create a simple 4-vertex graph:

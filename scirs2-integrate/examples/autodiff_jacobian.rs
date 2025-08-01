@@ -8,9 +8,9 @@
 //! Build with: cargo run --example autodiff_jacobian --features autodiff
 
 use ndarray::{array, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::ode::utils::jacobian::{is_autodiff_available, JacobianStrategy};
-use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::ode::utils::jacobian::{is_autodiff_available, JacobianStrategy};
+use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
 use std::time::Instant;
 
 #[allow(dead_code)]

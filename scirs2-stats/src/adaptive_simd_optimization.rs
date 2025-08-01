@@ -334,7 +334,7 @@ impl AdaptiveSimdOptimizer {
         let hardware_capabilities = Self::detect_hardware_capabilities()?;
 
         Ok(Self {
-            _config,
+            config: _config,
             hardware_capabilities,
             strategy_cache: Arc::new(Mutex::new(HashMap::new())),
             performance_cache: Arc::new(Mutex::new(HashMap::new())),
@@ -820,7 +820,7 @@ impl AdaptiveSimdOptimizer {
     {
         // Create a conservative fallback _strategy
         let fallback_strategy = SimdStrategy {
-            _name: "fallback_conservative".to_string(),
+            name: "fallback_conservative".to_string(),
             instruction_set: SimdInstructionSet::SSE2, // Most widely supported
             vector_width: 128,
             memory_pattern: MemoryAccessPattern::Sequential,
@@ -843,11 +843,11 @@ impl AdaptiveSimdOptimizer {
 
                 Ok(SimdOptimizationResult {
                     result,
-                    _strategy_used: fallback_strategy,
+                    strategy_used: fallback_strategy,
                     metrics,
                     success: true,
                     fallback_info: Some(FallbackInfo {
-                        reason: format!("Primary _strategy '{}' failed", failed_strategy._name),
+                        reason: format!("Primary _strategy '{}' failed", failed_strategy.name),
                         fallback_strategy: "conservative_sse2".to_string(),
                         performance_impact: 0.5, // Estimated 50% slower
                     }),
@@ -870,7 +870,7 @@ impl AdaptiveSimdOptimizer {
     {
         // Similar to vector fallback but for matrices
         let fallback_strategy = SimdStrategy {
-            _name: "matrix_fallback_conservative".to_string(),
+            name: "matrix_fallback_conservative".to_string(),
             instruction_set: SimdInstructionSet::SSE2,
             vector_width: 128,
             memory_pattern: MemoryAccessPattern::Sequential,
@@ -893,13 +893,13 @@ impl AdaptiveSimdOptimizer {
 
                 Ok(SimdOptimizationResult {
                     result,
-                    _strategy_used: fallback_strategy,
+                    strategy_used: fallback_strategy,
                     metrics,
                     success: true,
                     fallback_info: Some(FallbackInfo {
                         reason: format!(
                             "Primary matrix _strategy '{}' failed",
-                            failed_strategy._name
+                            failed_strategy.name
                         ),
                         fallback_strategy: "conservative_matrix_sse2".to_string(),
                         performance_impact: 0.6,
@@ -921,7 +921,7 @@ impl AdaptiveSimdOptimizer {
             return;
         }
 
-        let cache_key = format!("{}_{}", operation_name, strategy._name);
+        let cache_key = format!("{}_{}", operation_name, strategy.name);
 
         if let Ok(mut cache) = self.performance_cache.lock() {
             cache.insert(cache_key.clone(), metrics.clone());

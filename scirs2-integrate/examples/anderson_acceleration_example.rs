@@ -4,7 +4,7 @@
 //! the convergence of fixed-point iterations and nonlinear solvers.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2__integrate::acceleration::{AcceleratorOptions, AitkenAccelerator, AndersonAccelerator};
+use scirs2_integrate::acceleration::{AcceleratorOptions, AitkenAccelerator, AndersonAccelerator};
 use std::time::Instant;
 
 #[allow(dead_code)]

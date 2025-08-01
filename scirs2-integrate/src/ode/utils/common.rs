@@ -115,7 +115,8 @@ pub fn finite_difference_jacobian<F, Func>(
     f: &Func,
     t: F,
     y: &Array1<F>,
-    f_eval: &Array1<F>, _perturbation_scale: F,
+    f_eval: &Array1<F>,
+    _perturbation_scale: F,
 ) -> Array2<F>
 where
     F: IntegrateFloat,

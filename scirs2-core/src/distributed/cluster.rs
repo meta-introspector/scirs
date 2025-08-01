@@ -325,22 +325,22 @@ impl ClusterManager {
         Ok(discovered_nodes)
     }
 
-    fn dns_discovery(service_name: &str) -> CoreResult<Vec<NodeInfo>> {
+    fn dns_discovery(_service_name: &str) -> CoreResult<Vec<NodeInfo>> {
         // DNS-SD discovery implementation
         // This would typically use DNS SRV records to discover services
-        use std::process::Command;
-        use std::str;
-
+        #[allow(unused_mut)]
         let mut discovered_nodes = Vec::new();
 
         #[cfg(target_os = "linux")]
         {
+            use std::process::Command;
+            use std::str;
             // Try to use avahi-browse for DNS-SD discovery on Linux
             match Command::new("avahi-browse")
                 .arg("-t")  // Terminate after cache is exhausted
                 .arg("-r")  // Resolve found services
                 .arg("-p")  // Parseable output
-                .arg(service_name)
+                .arg(_service_name)
                 .output()
             {
                 Ok(output) => {
@@ -389,7 +389,7 @@ impl ClusterManager {
                     // avahi-browse not available, try nslookup for basic SRV record resolution
                     match Command::new("nslookup")
                         .arg("-type=SRV")
-                        .arg(service_name)
+                        .arg(_service_name)
                         .output()
                     {
                         Ok(output) => {
@@ -452,7 +452,7 @@ impl ClusterManager {
             // On Windows, try to use dns-sd command if available
             match Command::new("dns-sd")
                 .arg("-B")  // Browse for services
-                .arg(service_name)
+                .arg(_service_name)
                 .output()
             {
                 Ok(output) => {
@@ -464,7 +464,7 @@ impl ClusterManager {
 
                     // Parse dns-sd output (simplified implementation)
                     for line in output_str.lines() {
-                        if line.contains(service_name) {
+                        if line.contains(_service_name) {
                             // Extract service information
                             // This is a simplified parser - real implementation would be more robust
                             let parts: Vec<&str> = line.split_whitespace().collect();
@@ -1334,12 +1334,12 @@ impl ResourceAllocator {
 
         // Calculate improvement
         let fragmentation_score_after = self.calculate_fragmentation_score();
-        let improvement = fragmentation_score_before - fragmentation_score_after;
+        let _improvement = fragmentation_score_before - fragmentation_score_after;
 
         if optimizations_made > 0 {
             #[cfg(feature = "logging")]
             log::info!(
-                "Best-fit optimization completed: {optimizations_made} optimizations, fragmentation improved by {improvement:.2}"
+                "Best-fit optimization completed: {optimizations_made} optimizations, fragmentation improved by {_improvement:.2}"
             );
         }
 

@@ -673,7 +673,7 @@ fn attention_based_denoise(
 
 #[allow(dead_code)]
 fn residual_learning_denoise(
-    signal: &Array1<f64>, _noise_analysis: &MultiScaleNoiseAnalysis_simd, _optimizer: &SimdOptimizer_config: &AdvancedAdvancedDenoisingConfig,
+    signal: &Array1<f64>, _noise_analysis: &MultiScaleNoiseAnalysis, _simd: &SimdOptimizer, _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Residual learning approach
     let denoised = signal.clone(); // Placeholder
@@ -690,7 +690,7 @@ fn residual_learning_denoise(
 
 #[allow(dead_code)]
 fn multiscale_dictionary_denoise(
-    signal: &Array1<f64>, _noise_analysis: &MultiScaleNoiseAnalysis_simd, _optimizer: &SimdOptimizer_config: &AdvancedAdvancedDenoisingConfig,
+    signal: &Array1<f64>, _noise_analysis: &MultiScaleNoiseAnalysis, _simd: &SimdOptimizer, _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Multi-scale dictionary learning
     let denoised = signal.clone(); // Placeholder

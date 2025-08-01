@@ -1,4 +1,4 @@
-use scirs2__integrate::{
+use scirs2_integrate::{
     legendre_points, BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain,
     LegendreSpectralSolver1D, SpectralBasis, SpectralOptions,
 };
@@ -131,31 +131,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Index  x          dx");
 
     // Get reference Legendre points in [-1, 1]
-    let (lg_points_) = legendre_points(65);
+    let lg_points_ = legendre_points(65);
 
     // Print first few points and differences
     for i in 0..5 {
         let dx = if i > 0 {
-            lg_points[i] - lg_points[i - 1]
+            lg_points_[i] - lg_points_[i - 1]
         } else {
             0.0
         };
-        println!("{:<6} {:<10.6} {:<10.6}", i, lg_points[i], dx);
+        println!("{:<6} {:<10.6} {:<10.6}", i, lg_points_[i], dx);
     }
 
     // Print middle points
-    let mid = lg_points.len() / 2;
+    let mid = lg_points_.len() / 2;
     println!("...");
     for i in mid - 2..mid + 3 {
-        let dx = lg_points[i] - lg_points[i - 1];
-        println!("{:<6} {:<10.6} {:<10.6}", i, lg_points[i], dx);
+        let dx = lg_points_[i] - lg_points_[i - 1];
+        println!("{:<6} {:<10.6} {:<10.6}", i, lg_points_[i], dx);
     }
 
     // Print last few points
     println!("...");
-    for i in lg_points.len() - 5..lg_points.len() {
-        let dx = lg_points[i] - lg_points[i - 1];
-        println!("{:<6} {:<10.6} {:<10.6}", i, lg_points[i], dx);
+    for i in lg_points_.len() - 5..lg_points_.len() {
+        let dx = lg_points_[i] - lg_points_[i - 1];
+        println!("{:<6} {:<10.6} {:<10.6}", i, lg_points_[i], dx);
     }
 
     // Print largest Legendre coefficients

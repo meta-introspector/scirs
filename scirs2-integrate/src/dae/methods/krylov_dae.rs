@@ -1049,7 +1049,7 @@ where
     };
 
     // Compute initial residual: r = P⁻¹(b - Ax)
-    let r0 = if x._iter().all(|&v| v == F::zero()) {
+    let r0 = if x.iter().all(|&v| v == F::zero()) {
         // If x is zero, r = P⁻¹b
         b_precond.clone()
     } else {
@@ -1062,7 +1062,7 @@ where
         }
     };
 
-    let r0_norm = r0._iter().fold(F::zero(), |acc, &v| acc + v * v).sqrt();
+    let r0_norm = r0.iter().fold(F::zero(), |acc, &v| acc + v * v).sqrt();
 
     // Initial check for convergence or zero RHS
     if r0_norm <= tol {
@@ -1176,7 +1176,7 @@ where
         }
 
         // Compute the _norm of the new vector
-        let w_norm = w._iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();
+        let w_norm = w.iter().fold(F::zero(), |acc, &val| acc + val * val).sqrt();
         h[[j + 1, j]] = w_norm;
 
         // Check for breakdown
@@ -1355,12 +1355,12 @@ where
     // For simplicity, we'll just use linear extrapolation here
     // In a full implementation, higher-order predictors would be used
 
-    let mut y_pred = y_history[history_len - 1].clone();
+    let mut y_pred = _y_history[history_len - 1].clone();
 
     // Simple linear extrapolation
     for i in 0..n {
-        y_pred[i] = y_history[history_len - 1][i]
-            + (y_history[history_len - 1][i] - y_history[history_len - 2][i]);
+        y_pred[i] = _y_history[history_len - 1][i]
+            + (_y_history[history_len - 1][i] - _y_history[history_len - 2][i]);
     }
 
     y_pred

@@ -48,7 +48,7 @@ pub type OptimizeResult<T> = Result<T, OptimizeError>;
 
 // Implement conversion from SparseError to OptimizeError
 impl From<scirs2_sparse::error::SparseError> for OptimizeError {
-    fn from(_error: scirs2_sparse: error::SparseError) -> Self {
+    fn from(_error: scirs2_sparse::error::SparseError) -> Self {
         match _error {
             scirs2_sparse::_error::SparseError::ComputationError(msg) => {
                 OptimizeError::ComputationError(msg)
@@ -80,7 +80,7 @@ impl From<scirs2_sparse::error::SparseError> for OptimizeError {
             scirs2_sparse::_error::SparseError::SingularMatrix(msg) => {
                 OptimizeError::ComputationError(format!("Singular matrix _error: {}", msg))
             }
-            scirs2_sparse::_error::SparseError::ValueError(msg) =>, OptimizeError::ValueError(msg),
+            scirs2_sparse::_error::SparseError::ValueError(msg) => OptimizeError::ValueError(msg),
             scirs2_sparse::_error::SparseError::ConversionError(msg) => {
                 OptimizeError::ValueError(format!("Conversion _error: {}", msg))
             }
@@ -129,7 +129,7 @@ impl From<scirs2_sparse::error::SparseError> for OptimizeError {
 
 // Implement conversion from GpuError to OptimizeError
 impl From<scirs2_core::GpuError> for OptimizeError {
-    fn from(_error: scirs2_core: GpuError) -> Self {
+    fn from(_error: scirs2_core::GpuError) -> Self {
         OptimizeError::ComputationError(_error.to_string())
     }
 }
@@ -138,35 +138,35 @@ impl From<scirs2_core::GpuError> for OptimizeError {
 impl From<OptimizeError> for CoreError {
     fn from(_error: OptimizeError) -> Self {
         match _error {
-            OptimizeError::ComputationError(msg) =>, CoreError::ComputationError(
+            OptimizeError::ComputationError(msg) => CoreError::ComputationError(
                 scirs2_core::_error::ErrorContext::new(msg)
                     .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
             ),
-            OptimizeError::ConvergenceError(msg) =>, CoreError::ConvergenceError(
+            OptimizeError::ConvergenceError(msg) => CoreError::ConvergenceError(
                 scirs2_core::_error::ErrorContext::new(msg)
                     .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
             ),
-            OptimizeError::ValueError(msg) =>, CoreError::ValueError(
+            OptimizeError::ValueError(msg) => CoreError::ValueError(
                 scirs2_core::_error::ErrorContext::new(msg)
                     .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
             ),
-            OptimizeError::NotImplementedError(msg) =>, CoreError::NotImplementedError(
+            OptimizeError::NotImplementedError(msg) => CoreError::NotImplementedError(
                 scirs2_core::_error::ErrorContext::new(msg)
                     .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
             ),
-            OptimizeError::InitializationError(msg) =>, CoreError::ComputationError(
+            OptimizeError::InitializationError(msg) => CoreError::ComputationError(
                 scirs2_core::_error::ErrorContext::new(format!("Initialization _error: {}", msg))
                     .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
             ),
-            OptimizeError::IOError(msg) =>, CoreError::IoError(
+            OptimizeError::IOError(msg) => CoreError::IoError(
                 scirs2_core::_error::ErrorContext::new(msg)
                     .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
             ),
-            OptimizeError::InvalidInput(msg) =>, CoreError::InvalidInput(
+            OptimizeError::InvalidInput(msg) => CoreError::InvalidInput(
                 scirs2_core::_error::ErrorContext::new(msg)
                     .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
             ),
-            OptimizeError::InvalidParameter(msg) =>, CoreError::InvalidArgument(
+            OptimizeError::InvalidParameter(msg) => CoreError::InvalidArgument(
                 scirs2_core::_error::ErrorContext::new(msg)
                     .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
             ),

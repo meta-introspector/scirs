@@ -38,14 +38,14 @@ pub enum SignalError {
 
 // Conversion from scirs2_core errors
 impl From<scirs2_core::CoreError> for SignalError {
-    fn from(_err: scirs2_core: CoreError) -> Self {
+    fn from(_err: scirs2_core::CoreError) -> Self {
         SignalError::ComputationError(format!("Core error: {_err}"))
     }
 }
 
 // Conversion from FFT errors
 impl From<scirs2_fft::FFTError> for SignalError {
-    fn from(_err: scirs2_fft: FFTError) -> Self {
+    fn from(_err: scirs2_fft::FFTError) -> Self {
         SignalError::ComputationError(format!("FFT error: {_err}"))
     }
 }

@@ -32,7 +32,10 @@ pub struct Path<N> {
 impl<N> Path<N> {
     /// Create a new path with the given nodes and cost
     pub fn new(_nodes: Vec<N>, cost: f64) -> Self {
-        Path { _nodes, cost }
+        Path {
+            nodes: _nodes,
+            cost,
+        }
     }
 
     /// Check if the path is empty
@@ -41,7 +44,7 @@ impl<N> Path<N> {
     }
 
     /// Get the length of the path (number of nodes)
-    pub fn len() -> usize {
+    pub fn len(&self) -> usize {
         self.nodes.len()
     }
 }
@@ -63,7 +66,7 @@ impl<N: Clone + Eq + Hash> Node<N> {
     /// Create a new node
     pub fn new(_state: N, parent: Option<Rc<Node<N>>>, g: f64, h: f64) -> Self {
         Node {
-            _state,
+            state: _state,
             parent,
             g,
             h,
@@ -89,7 +92,9 @@ impl<N: Clone + Eq + Hash> Ord for Node<N> {
     fn cmp(&self, other: &Self) -> Ordering {
         // We want to prioritize nodes with lower f-values
         // But BinaryHeap is a max-heap, so we invert the comparison
-        other.f().partial_cmp(&self.f()).unwrap_or(Ordering::Equal)
+        let self_f = self.g + self.h;
+        let other_f = other.g + other.h;
+        other_f.partial_cmp(&self_f).unwrap_or(Ordering::Equal)
     }
 }
 
@@ -135,7 +140,7 @@ impl HashableFloat2D {
     }
 
     /// Calculate Euclidean distance to another point
-    pub fn distance(_other: &HashableFloat2D) -> f64 {
+    pub fn distance(&self, _other: &HashableFloat2D) -> f64 {
         let dx = self.x - _other.x;
         let dy = self.y - _other.y;
         (dx * dx + dy * dy).sqrt()
@@ -188,13 +193,13 @@ impl AStarPlanner {
     }
 
     /// Set the maximum number of iterations
-    pub fn with_max_iterations(mut max_iterations: usize) -> Self {
+    pub fn with_max_iterations(mut self, max_iterations: usize) -> Self {
         self.max_iterations = Some(max_iterations);
         self
     }
 
     /// Set the heuristic weight (for weighted A*)
-    pub fn with_weight(mut weight: f64) -> Self {
+    pub fn with_weight(mut self, weight: f64) -> Self {
         if weight < 0.0 {
             self.weight = 0.0;
         } else {
@@ -241,7 +246,7 @@ impl AStarPlanner {
         while let Some(current) = open_set.pop() {
             // Check if we've reached the goal
             if current.state == goal {
-                return Ok(Some(self.reconstruct_path(current)));
+                return Ok(Some(AStarPlanner::reconstruct_path(current)));
             }
 
             // Check if we've exceeded the maximum number of iterations
@@ -368,7 +373,7 @@ impl GridAStarPlanner {
     /// * `diagonals_allowed` - Whether diagonal movements are allowed
     pub fn new(_grid: Vec<Vec<bool>>, diagonals_allowed: bool) -> Self {
         GridAStarPlanner {
-            _grid,
+            grid: _grid,
             diagonals_allowed,
         }
     }
@@ -388,7 +393,7 @@ impl GridAStarPlanner {
     }
 
     /// Check if a position is valid and not an obstacle
-    pub fn is_valid(_pos: &[i32; 2]) -> bool {
+    pub fn is_valid(&self, _pos: &[i32; 2]) -> bool {
         let (rows, cols) = (self.height() as i32, self.width() as i32);
 
         if _pos[0] < 0 || _pos[0] >= rows || _pos[1] < 0 || _pos[1] >= cols {
@@ -399,7 +404,7 @@ impl GridAStarPlanner {
     }
 
     /// Get valid neighbors for a given position
-    fn get_neighbors(_pos: &[i32; 2]) -> Vec<([i32; 2], f64)> {
+    fn get_neighbors(&self, _pos: &[i32; 2]) -> Vec<([i32; 2], f64)> {
         let mut neighbors = Vec::new();
         let directions = if self.diagonals_allowed {
             // Include diagonal directions
@@ -476,14 +481,14 @@ impl ContinuousAStarPlanner {
     /// Create a new continuous space A* planner
     pub fn new(_obstacles: Vec<Vec<[f64; 2]>>, step_size: f64, collision_threshold: f64) -> Self {
         ContinuousAStarPlanner {
-            _obstacles,
+            obstacles: _obstacles,
             step_size,
             collision_threshold,
         }
     }
 
     /// Check if a point is in collision with any obstacle
-    pub fn is_in_collision(_point: &[f64; 2]) -> bool {
+    pub fn is_in_collision(&self, _point: &[f64; 2]) -> bool {
         for obstacle in &self.obstacles {
             if Self::point_in_polygon(_point, obstacle) {
                 return true;
@@ -493,7 +498,7 @@ impl ContinuousAStarPlanner {
     }
 
     /// Check if a line segment intersects with any obstacle
-    pub fn line_in_collision(_start: &[f64; 2], end: &[f64; 2]) -> bool {
+    pub fn line_in_collision(&self, _start: &[f64; 2], end: &[f64; 2]) -> bool {
         // Discretize the line and check each point
         let dx = end[0] - _start[0];
         let dy = end[1] - _start[1];
@@ -545,7 +550,7 @@ impl ContinuousAStarPlanner {
     }
 
     /// Get valid neighbors for continuous space planning
-    fn get_neighbors(_pos: &[f64; 2], radius: f64) -> Vec<([f64; 2], f64)> {
+    fn get_neighbors(&self, _pos: &[f64; 2], radius: f64) -> Vec<([f64; 2], f64)> {
         let mut neighbors = Vec::new();
 
         // Generate neighbors in a circle around the current position

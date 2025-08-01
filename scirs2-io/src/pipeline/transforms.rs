@@ -502,7 +502,8 @@ pub struct PCATransform {
 impl PCATransform {
     pub fn new(_n_components: usize) -> Self {
         Self {
-            _n_components_components: None,
+            n_components: _n_components,
+            components: None,
             mean: None,
         }
     }
@@ -593,7 +594,7 @@ pub enum BinningStrategy {
 
 impl FeatureEngineeringTransform {
     pub fn new(_operations: Vec<FeatureOperation>) -> Self {
-        Self { _operations }
+        Self { operations: _operations }
     }
 }
 
@@ -701,7 +702,7 @@ pub enum TextOperation {
 
 impl TextProcessingTransform {
     pub fn new(_operations: Vec<TextOperation>) -> Self {
-        Self { _operations }
+        Self { operations: _operations }
     }
 }
 

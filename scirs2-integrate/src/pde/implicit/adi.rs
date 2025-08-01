@@ -269,7 +269,7 @@ impl ADI2D {
                 let rhs_x = b_x.dot(&u_row);
 
                 // 1.4 Solve the linear system for x-direction
-                let u_x_next = self.solve_tridiagonal(&a_x, &rhs_x)?;
+                let u_x_next = ADI2D::solve_tridiagonal(&a_x, &rhs_x)?;
                 num_linear_solves += 1;
 
                 // 1.5 Update intermediate solution row
@@ -305,7 +305,7 @@ impl ADI2D {
                 let rhs_y = b_y.dot(&u_col);
 
                 // 2.4 Solve the linear system for y-direction
-                let u_y_next = self.solve_tridiagonal(&a_y, &rhs_y)?;
+                let u_y_next = ADI2D::solve_tridiagonal(&a_y, &rhs_y)?;
                 num_linear_solves += 1;
 
                 // 2.5 Update solution column
@@ -778,7 +778,8 @@ impl ADI2D {
         &self,
         u: &mut Array2<f64>,
         x_grid: &Array1<f64>,
-        y_grid: &Array1<f64>, _t: f64,
+        y_grid: &Array1<f64>,
+        _t: f64,
     ) {
         let nx = x_grid.len();
         let ny = y_grid.len();

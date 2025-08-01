@@ -9,6 +9,7 @@ use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{Array1, ArrayView1};
 use std::collections::HashMap;
+use SymbolicExpression::{Add, Constant, Cos, Div, Exp, Ln, Mul, Neg, Pow, Sin, Sqrt, Sub, Var};
 
 /// Represents a higher-order ODE
 pub struct HigherOrderODE<F: IntegrateFloat> {
@@ -46,7 +47,7 @@ impl<F: IntegrateFloat> HigherOrderODE<F> {
     }
 
     /// Get the state variable names for the first-order system
-    pub fn state_variables() -> Vec<Variable> {
+    pub fn state_variables(&self) -> Vec<Variable> {
         (0..self.order)
             .map(|i| Variable::indexed(&self.dependent_var, i))
             .collect()
@@ -159,7 +160,6 @@ fn substitute_derivatives<F: IntegrateFloat>(
     expr: &SymbolicExpression<F>,
     variable_map: &HashMap<String, Variable>,
 ) -> SymbolicExpression<F> {
-
     match expr {
         Var(v) => {
             // Check if this variable should be substituted
@@ -205,7 +205,6 @@ pub fn example_damped_oscillator<F: IntegrateFloat>(
     omega: F,
     damping: F,
 ) -> IntegrateResult<FirstOrderSystem<F>> {
-
     // Second-order ODE: x'' + 2*damping*x' + omega^2*x = 0
     // Rearranged: x'' = -2*damping*x' - omega^2*x
 
@@ -298,7 +297,7 @@ impl<F: IntegrateFloat> SystemConverter<F> {
     }
 
     /// Add a higher-order ODE to the system
-    pub fn add_ode(mut ode: HigherOrderODE<F>) -> Self {
+    pub fn add_ode(&mut self, ode: HigherOrderODE<F>) -> &mut Self {
         self.total_states += ode.order;
         self.odes.push(ode);
         self
@@ -333,10 +332,15 @@ impl<F: IntegrateFloat> Default for SystemConverter<F> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::{
+        higher_order_to_first_order, HigherOrderODE, SymbolicExpression,
+        SymbolicExpression::{Neg, Var},
+        Variable,
+    };
 
     #[test]
     fn test_second_order_conversion() {
-
         // Test x'' = -x
         let x: SymbolicExpression<f64> = Var(Variable::new("x"));
         let expr = Neg(Box::new(x));

@@ -35,7 +35,7 @@ pub struct MultipleTryMetropolis<T: TargetDistribution, P: ProposalDistribution>
 impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P> {
     /// Create a new multiple-try Metropolis sampler
     pub fn new(_target: T, proposal: P, initial: Array1<f64>, n_tries: usize) -> Result<Self> {
-        check_array_finite(&initial, "initial")?;
+        checkarray_finite(&initial, "initial")?;
         check_positive(n_tries, "n_tries")?;
 
         if initial.len() != _target.dim() {
@@ -133,13 +133,13 @@ impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P>
     /// Sample multiple states
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.current.len();
-        let mut _samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples_, dim));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             _samples.row_mut(i).assign(&sample);
         }
@@ -219,7 +219,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
         // Compute initial log densities
         let mut log_densities = Vec::with_capacity(n_chains);
         for (i, state) in initial_states.iter().enumerate() {
-            check_array_finite(state, "initial_state")?;
+            checkarray_finite(state, "initial_state")?;
             let temp = temperatures[i];
             let log_density = base_target.log_density(state) / temp;
             log_densities.push(log_density);
@@ -305,13 +305,13 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
     /// Run the parallel tempering sampler
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.states[0].len();
-        let mut _samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples_, dim));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             self.step(rng)?;
 
             // Attempt exchanges periodically
@@ -325,7 +325,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
                 .iter()
                 .enumerate()
                 .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0);
 
             _samples.row_mut(i).assign(&self.states[coldest_idx]);
@@ -381,7 +381,7 @@ pub struct SliceSampler<T: TargetDistribution> {
 impl<T: TargetDistribution> SliceSampler<T> {
     /// Create a new slice sampler
     pub fn new(_target: T, initial: Array1<f64>, step_size: f64) -> Result<Self> {
-        check_array_finite(&initial, "initial")?;
+        checkarray_finite(&initial, "initial")?;
         check_positive(step_size, "step_size")?;
 
         if initial.len() != _target.dim() {
@@ -490,13 +490,13 @@ impl<T: TargetDistribution> SliceSampler<T> {
     /// Sample multiple states
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         rng: &mut R,
     ) -> Result<Array2<f64>> {
         let dim = self.current.len();
-        let mut _samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples_, dim));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             _samples.row_mut(i).assign(&sample);
         }
@@ -536,7 +536,7 @@ pub struct EnsembleSampler<T: TargetDistribution + Clone + Send + Sync> {
 impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
     /// Create a new ensemble sampler
     pub fn new(_target: T, initial_walkers: Array2<f64>, scale: Option<f64>) -> Result<Self> {
-        check_array_finite(&initial_walkers, "initial_walkers")?;
+        checkarray_finite(&initial_walkers, "initial_walkers")?;
         let (n_walkers, dim) = initial_walkers.dim();
         let scale = scale.unwrap_or(2.0);
 
@@ -592,7 +592,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
         comp_end: usize,
         rng: &mut R,
     ) -> Result<()> {
-        for i in _start.._end {
+        for i in start..end {
             // Select random walker from complementary ensemble
             let comp_size = comp_end - comp_start;
             let j = comp_start + rng.random_range(0..comp_size);
@@ -628,12 +628,13 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
 
     /// Sample multiple steps
     pub fn sample<R: Rng + ?Sized>(
-        &mut self..n_samples: usize,
+        &mut self,
+        n_samples_: usize,
         rng: &mut R,) -> Result<Array2<f64>> {
-        let total_samples = n_samples * self.n_walkers;
+        let total_samples = n_samples_ * self.n_walkers;
         let mut _samples = Array2::zeros((total_samples, self.dim));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             self.step(rng)?;
 
             // Store all walker positions
@@ -664,7 +665,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
 
     /// Compute chain statistics (mean, autocorrelation time, etc.)
     pub fn chain_statistics(&self, samples: &Array2<f64>) -> Result<ChainStatistics> {
-        let (n_samples, dim) = samples.dim();
+        let (n_samples_, dim) = samples.dim();
 
         // Compute means
         let means = samples.mean_axis(Axis(0)).unwrap();
@@ -688,7 +689,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
             means,
             variances,
             autocorr_times,
-            n_samples,
+            n_samples_,
             dim,
         })
     }
@@ -747,7 +748,7 @@ pub struct ChainStatistics {
     /// Autocorrelation times for each dimension
     pub autocorr_times: Array1<f64>,
     /// Number of samples
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Dimensionality
     pub dim: usize,
 }
@@ -757,9 +758,9 @@ impl ChainStatistics {
     pub fn effective_sample_sizes(&self) -> Array1<f64> {
         self.autocorr_times.mapv(|tau| {
             if tau > 0.0 {
-                self.n_samples as f64 / (2.0 * tau)
+                self.n_samples_ as f64 / (2.0 * tau)
             } else {
-                self.n_samples as f64
+                self.n_samples_ as f64
             }
         })
     }
@@ -768,7 +769,7 @@ impl ChainStatistics {
     pub fn is_converged(&self, threshold: f64) -> bool {
         // For ensemble methods, check if autocorrelation times are reasonable
         let max_autocorr = self.autocorr_times.iter().cloned().fold(0.0f64, f64::max);
-        let min_eff_samples = self.n_samples as f64 / (2.0 * max_autocorr);
+        let min_eff_samples = self.n_samples_ as f64 / (2.0 * max_autocorr);
 
         min_eff_samples > threshold
     }

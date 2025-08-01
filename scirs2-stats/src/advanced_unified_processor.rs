@@ -9,7 +9,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::error_handling__enhancements::{AdvancedContextBuilder, AdvancedErrorMessages};
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 use crate::advanced__stubs::{
     BatchOperation, BatchResults, AdvancedSimdConfig, AdvancedSimdOptimizer,
     create_exhaustive_numerical_stability_tester,
@@ -726,7 +726,7 @@ impl AdvancedUnifiedProcessor {
     }
 
     fn convert_parallel_ts_result<F>(
-        &self_result: crate::parallel_enhancements::AdvancedParallelTimeSeriesResult<F>,
+        &self, crate::parallel_enhancements::AdvancedParallelTimeSeriesResult<F>,
     ) -> StatsResult<MovingWindowResult<F>>
     where
         F: Float + NumCast + Copy
@@ -743,7 +743,7 @@ impl AdvancedUnifiedProcessor {
     }
 
     fn process_time_series_standard<F, D>(
-        &self_data: &ArrayBase<D, Ix1>, _window_size: usize, _operation: AdvancedTimeSeriesOperation,
+        &self, &ArrayBase<D, Ix1>, _window_size: usize, _operation: AdvancedTimeSeriesOperation,
     ) -> StatsResult<MovingWindowResult<F>>
     where
         F: Float + NumCast + Copy,
@@ -761,7 +761,7 @@ impl AdvancedUnifiedProcessor {
     }
 
     fn generate_recommendations(
-        &self_metrics: &ProcessingMetrics_stability, _report: &Option<StabilityAnalysisReport>,
+        &self, &ProcessingMetrics_stability, _report: &Option<StabilityAnalysisReport>,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
 

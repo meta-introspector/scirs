@@ -5,7 +5,7 @@
 use crate::error::{StatsError, StatsResult};
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution, StudentT as RandStudentT};
+use rand_distr::{Distribution, StudentT as RandStudentT};
 use std::fmt::Debug;
 
 /// Student's t distribution structure
@@ -184,7 +184,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// assert!((x - 2.228).abs() < 1e-3);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));
@@ -285,7 +285,7 @@ fn gamma_function<F: Float>(x: F) -> F {
     
     // For x = n + 0.5 where n is a non-negative integer
     let two = F::from(2.0).unwrap();
-    if (x * two).fract() < F::epsilon() && x >, F::zero() {
+    if (x * two).fract() < F::epsilon() && x > F::zero() {
         let n = (x - F::from(0.5).unwrap()).to_f64().unwrap() as i32;
         if n >= 0 {
             let sqrt_pi = F::from(std::f64::consts::PI).unwrap().sqrt();

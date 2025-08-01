@@ -573,7 +573,7 @@ impl CrossPlatformValidator {
     }
 
     /// Validate SIMD operation compatibility
-    pub fn validate_simd_operation(&mut self, operation: &str, data_size: usize, vector_size: usize,
+    pub fn validate_simd_operation(&mut self, operation: &str, _data_size: usize, vector_size: usize,
     ) -> ValidationResult {
         let mut result = ValidationResult {
             is_valid: true,

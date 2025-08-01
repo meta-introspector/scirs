@@ -1094,25 +1094,25 @@ pub fn ray_triangle3d_collision(
 /// The support function returns the farthest point in the given direction
 pub trait GJKShape {
     /// Returns the farthest point in the shape in the given direction
-    fn support(_direction: &[f64; 3]) -> [f64; 3];
+    fn support(&self, _direction: &[f64; 3]) -> [f64; 3];
 }
 
 /// Implementation of GJK support function for Sphere
 impl GJKShape for Sphere {
-    fn support(&self_direction: &[f64; 3]) -> [f64; 3] {
-        // Normalize the _direction vector
-        let length = (_direction[0] * _direction[0]
-            + _direction[1] * _direction[1]
-            + _direction[2] * _direction[2])
+    fn support(&self, direction: &[f64; 3]) -> [f64; 3] {
+        // Normalize the direction vector
+        let length = (direction[0] * direction[0]
+            + direction[1] * direction[1]
+            + direction[2] * direction[2])
             .sqrt();
         if length < 1e-10 {
             return self.center;
         }
 
         let normalized = [
-            _direction[0] / length,
-            _direction[1] / length,
-            _direction[2] / length,
+            direction[0] / length,
+            direction[1] / length,
+            direction[2] / length,
         ];
 
         [
@@ -1159,7 +1159,7 @@ impl GJKSimplex {
         }
     }
 
-    fn add_point(_point: [f64; 3]) {
+    fn add_point(&mut self, _point: [f64; 3]) {
         self.points.push(_point);
     }
 
@@ -1167,17 +1167,17 @@ impl GJKSimplex {
         self.points.len()
     }
 
-    fn get_point(_index: usize) -> Option<[f64; 3]> {
+    fn get_point(&self, _index: usize) -> Option<[f64; 3]> {
         self.points.get(_index).copied()
     }
 
     #[allow(dead_code)]
-    fn clear() {
+    fn clear(&mut self) {
         self.points.clear();
     }
 
-    fn set_points(_points: Vec<[f64; 3]>) {
-        self._points = _points;
+    fn set_points(&mut self, _points: Vec<[f64; 3]>) {
+        self.points = _points;
     }
 }
 

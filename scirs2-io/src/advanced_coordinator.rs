@@ -14,6 +14,7 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::error::{IoError, Result};
+use num_cpus;
 #[cfg(feature = "gpu")]
 use crate::gpu_io::GpuIoProcessor;
 use crate::neural_adaptive_io::{
@@ -602,7 +603,7 @@ impl AdvancedCoordinator {
     /// Assess resource availability
     fn assess_resource_availability(&self) -> ResourceAvailability {
         ResourceAvailability {
-            cpu_cores_available: num, _cpus: get(),
+            cpu_cores_available: num_cpus::get(),
             memory_available_gb: 8.0, // Would be detected in real implementation
             gpu_available: self.capabilities.gpu_available,
             simd_available: self.capabilities.simd_available,
@@ -1465,7 +1466,7 @@ impl ResourceOrchestrator {
     ) -> Result<ResourceAllocation> {
         Ok(ResourceAllocation {
             use_neural_processing: true,
-            neural_threads: num, _cpus: get().min(8),
+            neural_threads: num_cpus::get().min(8),
             neural_memory: 64 * 1024 * 1024, // 64MB
 
             use_quantum_processing: intelligence.data_entropy > 0.5,

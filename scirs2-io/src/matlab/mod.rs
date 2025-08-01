@@ -129,7 +129,7 @@ impl MatrixFlags {
 
         MatrixFlags {
             class_type,
-            is_complex_is_global,
+            is_complex,
             is_logical,
         }
     }
@@ -399,7 +399,7 @@ fn parse_matrix_data(_data: &[u8]) -> Result<(String, MatType)> {
             if flags.is_logical {
                 // Handle as logical _data
                 let _data_vec: Vec<bool> = real_data.iter().map(|&b| b != 0).collect();
-                let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+                let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), _data_vec)
                     .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
                 MatType::Logical(ndarray)
             } else {

@@ -221,7 +221,8 @@ pub struct CompressionEngine<F> {
     algorithm: CompressionAlgorithm,
     compression_ratio: f64,
     historical_data: VecDeque<CompressedDataPoint<F>>,
-    metadata: CompressionMetadata_phantom: PhantomData<F>,
+    metadata: CompressionMetadata,
+    _phantom: PhantomData<F>,
 }
 
 /// Compression algorithms for streaming data
@@ -445,7 +446,7 @@ where
 
     /// Process a batch of data points for higher throughput
     pub fn process_batch(&mut self, values: &ArrayView1<F>) -> StatsResult<()> {
-        check_array_finite(values, "values")?;
+        checkarray_finite(values, "values")?;
 
         let start_time = Instant::now();
 
@@ -524,7 +525,7 @@ where
             WindowingStrategy::TimeBased { duration } => {
                 let cutoff = Instant::now() - *duration;
                 while let Some((timestamp_)) = buffer.front() {
-                    if *timestamp < cutoff {
+                    if *timestamp_ < cutoff {
                         buffer.pop_front();
                     } else {
                         break;
@@ -629,7 +630,7 @@ where
     }
 
     /// Update incremental ML model
-    fn update_ml_model(&self_value: F) -> StatsResult<()> {
+    fn update_ml_model(&self, _data: F) -> StatsResult<()> {
         // Implementation would depend on the specific ML model type
         // This is a placeholder for the incremental learning logic
         Ok(())
@@ -880,7 +881,8 @@ where
                 compression_ratio: 1.0,
                 reconstruction_accuracy: 1.0,
                 algorithm_used: "PAA".to_string(),
-            }_phantom: PhantomData,
+            },
+            _phantom: PhantomData,
         }
     }
 

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use scirs2__integrate::{
+use scirs2_integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, FourierSpectralSolver1D,
     SpectralBasis, SpectralOptions,
 };

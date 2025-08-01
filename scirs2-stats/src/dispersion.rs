@@ -5,7 +5,7 @@
 //! interquartile range, and range.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 use crate::{mean, median};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
@@ -340,7 +340,7 @@ where
     }
 
     // Validate the percentile value
-    if q < F::zero() || q >, F::from(100.0).unwrap() {
+    if q < F::zero() || q > F::from(100.0).unwrap() {
         return Err(StatsError::InvalidArgument(
             "Percentile must be between 0 and 100".to_string(),
         ));

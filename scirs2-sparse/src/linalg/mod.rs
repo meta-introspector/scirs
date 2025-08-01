@@ -28,7 +28,7 @@ mod svd;
 mod tfqmr;
 
 pub use amg::{AMGOptions, AMGPreconditioner, CycleType, InterpolationType, SmootherType};
-// pub use banded__solvers::*; // Will be added separately
+// pub use banded_solvers::*; // Will be added separately
 pub use cgs::{cgs, CGSOptions, CGSResult};
 pub use decomposition::{
     cholesky_decomposition, incomplete_cholesky, incomplete_lu, ldlt_decomposition,
@@ -41,7 +41,7 @@ pub use eigen::{
     eigsh_shift_invert_enhanced, lanczos, power_iteration, ArpackOptions, EigenResult,
     EigenvalueMethod, EigenvalueMode, LanczosOptions, PowerIterationOptions,
 };
-pub use enhanced__operators::{
+pub use enhanced_operators::{
     convolution_operator, enhanced_add, enhanced_diagonal, enhanced_scale, enhanced_subtract,
     finite_difference_operator, BoundaryCondition, ConvolutionMode, ConvolutionOperator,
     EnhancedDiagonalOperator, EnhancedDifferenceOperator, EnhancedOperatorOptions,

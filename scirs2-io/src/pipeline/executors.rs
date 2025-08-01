@@ -5,7 +5,7 @@
 
 use super::*;
 use crate::error::Result;
-use crossbeam__channel::Receiver;
+use crossbeam_channel::Receiver;
 #[cfg(feature = "async")]
 use futures::stream::{self, StreamExt};
 use std::sync::atomic::{AtomicUsize, Ordering};

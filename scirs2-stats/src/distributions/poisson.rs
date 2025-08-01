@@ -8,7 +8,7 @@ use crate::traits::{DiscreteDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution as RandDistribution, Poisson as RandPoisson};
+use rand_distr::{Distribution as RandDistribution, Poisson as RandPoisson};
 use statrs::statistics::Statistics;
 
 /// Poisson distribution structure
@@ -238,7 +238,7 @@ impl<F: Float + NumCast + std::fmt::Display> DiscreteDistribution<F> for Poisson
         self.cdf(x)
     }
 
-    fn ppf(&self_p: F) -> StatsResult<F> {
+    fn ppf(&self, _p: F) -> StatsResult<F> {
         // Poisson does not have a simple inverse CDF formula,
         // so we'd typically need to implement a numerical solution.
         // For now, we'll return an error to indicate this isn't implemented.

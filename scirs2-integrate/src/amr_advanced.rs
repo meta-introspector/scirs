@@ -204,7 +204,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     /// Create new advanced AMR manager
     pub fn new(_initial_mesh: AdaptiveMeshLevel<F>, max_levels: usize, min_cell_size: F) -> Self {
         let mesh_hierarchy = MeshHierarchy {
-            _levels: vec![_initial_mesh],
+            levels: vec![_initial_mesh],
             hierarchy_map: HashMap::new(),
             ghost_cells: HashMap::new(),
         };
@@ -436,7 +436,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Refine flagged cells
-    fn refine_flagged_cells(&self) -> IntegrateResult<usize> {
+    fn refine_flagged_cells(&mut self) -> IntegrateResult<usize> {
         let mut cells_refined = 0;
 
         // Process each level separately to avoid borrowing issues
@@ -458,7 +458,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Refine a single cell
-    fn refine_cell(&self, cell_id: CellId) -> IntegrateResult<()> {
+    fn refine_cell(&mut self, cell_id: CellId) -> IntegrateResult<()> {
         let parent_cell = if let Some(level) = self.mesh_hierarchy.levels.get(cell_id.level) {
             level.cells.get(&cell_id).cloned()
         } else {
@@ -509,7 +509,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
             }
 
             let child_cell = AdaptiveCell {
-                _id: child_id,
+                id: child_id,
                 center: child_center,
                 size: child_size,
                 solution: parent_cell.solution.clone(), // Inherit parent solution
@@ -634,7 +634,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Update neighbor relationships after refinement
-    fn update_neighbor_relationships(&self, level: usize) -> IntegrateResult<()> {
+    fn update_neighbor_relationships(&mut self, level: usize) -> IntegrateResult<()> {
         // Collect neighbor relationships first to avoid borrowing conflicts
         let mut all_neighbor_relationships: Vec<(CellId, Vec<CellId>)> = Vec::new();
 
@@ -743,7 +743,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Check if two cells are geometric neighbors
-    fn are_cells_neighbors(_cell1: &AdaptiveCell<F>, cell2: &AdaptiveCell<F>) -> bool {
+    fn are_cells_neighbors(&self, _cell1: &AdaptiveCell<F>, cell2: &AdaptiveCell<F>) -> bool {
         if _cell1.center.len() != cell2.center.len() || _cell1.center.len() < 3 {
             return false;
         }
@@ -829,8 +829,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Update ghost cells for parallel processing
-    fn update_ghost_cells(&self) -> IntegrateResult<()> {
-
+    fn update_ghost_cells(&mut self) -> IntegrateResult<()> {
         // Clear existing ghost cells
         self.mesh_hierarchy.ghost_cells.clear();
 
@@ -876,7 +875,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
     }
 
     /// Calculate expected number of neighbors for a regular cell
-    fn calculate_expected_neighbors() -> usize {
+    fn calculate_expected_neighbors(&self) -> usize {
         // For a 3D structured grid, a regular internal cell should have 6 face neighbors
         // For 2D: 4 neighbors, for 1D: 2 neighbors
         // This is a simplification - actual count depends on mesh structure
@@ -938,7 +937,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         // Check if we need ghost _cells from coarser level
         if level > 0 {
             if let Some(current_level) = self.mesh_hierarchy.levels.get(level) {
-                for (cell_id, cell) in &current_level._cells {
+                for (cell_id, cell) in &current_level.cells {
                     // If this fine cell doesn't have a parent at the coarser level,
                     // it might need ghost cell communication
                     if cell.parent.is_none() {
@@ -955,7 +954,7 @@ impl<F: IntegrateFloat> AdvancedAMRManager<F> {
         // Check if we need ghost _cells from finer level
         if level + 1 < self.mesh_hierarchy.levels.len() {
             if let Some(current_level) = self.mesh_hierarchy.levels.get(level) {
-                for (cell_id, cell) in &current_level._cells {
+                for (cell_id, cell) in &current_level.cells {
                     // If this coarse cell has children at the finer level,
                     // it might need ghost cell communication
                     if !cell.children.is_empty() {

@@ -128,7 +128,7 @@ impl GammaPoisson {
     /// # Returns
     /// Updated GammaPoisson with posterior parameters
     pub fn update(&self, data: ArrayView1<f64>) -> Result<Self> {
-        check_array_finite(&data, "data")?;
+        checkarray_finite(&data, "data")?;
         let sum: f64 = data.sum();
         let n = data.len() as f64;
 
@@ -220,9 +220,9 @@ impl NormalKnownVariance {
     /// # Returns
     /// Updated NormalKnownVariance with posterior parameters
     pub fn update(&self, data: ArrayView1<f64>) -> Result<Self> {
-        check_array_finite(&data, "data")?;
+        checkarray_finite(&data, "data")?;
         let n = data.len() as f64;
-        let data_mean = data.mean().unwrap_or(0.0);
+        let data_mean = data.mean();
 
         if self.prior_variance.abs() < f64::EPSILON {
             return Err(StatsError::domain(
@@ -303,7 +303,7 @@ pub struct DirichletMultinomial {
 impl DirichletMultinomial {
     /// Create a new Dirichlet-Multinomial conjugate prior
     pub fn new(_alpha: Array1<f64>) -> Result<Self> {
-        check_array_finite(&_alpha, "_alpha")?;
+        checkarray_finite(&_alpha, "_alpha")?;
         for &a in _alpha.iter() {
             check_positive(a, "_alpha element")?;
         }
@@ -333,7 +333,7 @@ impl DirichletMultinomial {
                 self.alpha.len()
             )));
         }
-        check_array_finite(&counts, "counts")?;
+        checkarray_finite(&counts, "counts")?;
 
         Ok(Self {
             alpha: &self.alpha + &counts,
@@ -415,9 +415,9 @@ impl NormalInverseGamma {
 
     /// Update the prior with observed data
     pub fn update(&self, data: ArrayView1<f64>) -> Result<Self> {
-        check_array_finite(&data, "data")?;
+        checkarray_finite(&data, "data")?;
         let n = data.len() as f64;
-        let data_mean = data.mean().unwrap_or(0.0);
+        let data_mean = data.mean();
 
         // Compute sum of squares
         let ss = data.mapv(|x| (x - data_mean).powi(2)).sum();

@@ -51,7 +51,7 @@ pub struct EventSpec<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> EventSpec<F> {
     /// Check if the maximum count has been reached for this event
-    pub fn max_count_reached(&self_id: &str, current_count: Option<usize>) -> bool {
+    pub fn max_count_reached(&self, current_count: Option<usize>) -> bool {
         if let Some(max) = self.max_count {
             if let Some(_count) = current_count {
                 return _count >= max;
@@ -114,7 +114,7 @@ impl<F: IntegrateFloat> EventRecord<F> {
     }
 
     /// Add a detected event to the record
-    pub fn add_event(_event: Event<F>) {
+    pub fn add_event(&mut self, _event: Event<F>) {
         // Update count for this _event type
         *self.counts.entry(_event.id.clone()).or_insert(0) += 1;
 
@@ -123,17 +123,17 @@ impl<F: IntegrateFloat> EventRecord<F> {
     }
 
     /// Get the count of a specific event type
-    pub fn get_count(_id: &str) -> usize {
+    pub fn get_count(&self, _id: &str) -> usize {
         *self.counts.get(_id).unwrap_or(&0)
     }
 
     /// Get all events of a specific type
-    pub fn get_events(_id: &str) -> Vec<&Event<F>> {
-        self.events.iter().filter(|e| e._id == _id).collect()
+    pub fn get_events(&self, _id: &str) -> Vec<&Event<F>> {
+        self.events.iter().filter(|e| e.id == _id).collect()
     }
 
     /// Check if the maximum event count has been reached for a specific event type
-    pub fn max_count_reached(_id: &str, max_count: Option<usize>) -> bool {
+    pub fn max_count_reached(&self, _id: &str, max_count: Option<usize>) -> bool {
         if let Some(max) = max_count {
             self.get_count(_id) >= max
         } else {
@@ -161,7 +161,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
         let last_values = vec![None; _specs.len()];
 
         EventHandler {
-            _specs,
+            specs: _specs,
             record: EventRecord::new(),
             last_values,
             last_state: None,
@@ -221,7 +221,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
 
         for (i, (func, spec)) in event_funcs.iter().zip(self.specs.iter()).enumerate() {
             // Skip if we've already reached the maximum count for this event
-            if spec.max_count_reached(&spec.id, self.record.counts.get(&spec.id).cloned()) {
+            if spec.max_count_reached(self.record.counts.get(&spec.id).cloned()) {
                 continue;
             }
 
@@ -382,7 +382,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
 #[allow(dead_code)]
 pub fn terminal_event<F: IntegrateFloat>(_id: &str, direction: EventDirection) -> EventSpec<F> {
     EventSpec {
-        _id: _id.to_string(),
+        id: _id.to_string(),
         direction,
         action: EventAction::Stop,
         threshold: F::from_f64(1e-6).unwrap(),
@@ -443,7 +443,7 @@ impl<F: IntegrateFloat> ODEResultWithEvents<F> {
     }
 
     /// Get the solution at a specific time using dense output
-    pub fn at_time(t: F) -> IntegrateResult<Option<Array1<F>>> {
+    pub fn at_time(&self, t: F) -> IntegrateResult<Option<Array1<F>>> {
         if let Some(ref dense) = self.dense_output {
             Ok(Some(dense.evaluate(t)?))
         } else {
@@ -458,12 +458,12 @@ impl<F: IntegrateFloat> ODEResultWithEvents<F> {
     }
 
     /// Get events of a specific type
-    pub fn get_events(_id: &str) -> Vec<&Event<F>> {
+    pub fn get_events(&self, _id: &str) -> Vec<&Event<F>> {
         self.events.get_events(_id)
     }
 
     /// Get the first occurrence of a specific event
-    pub fn first_event(_id: &str) -> Option<&Event<F>> {
+    pub fn first_event(&self, _id: &str) -> Option<&Event<F>> {
         self.events.get_events(_id).first().copied()
     }
 }

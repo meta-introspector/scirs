@@ -6,7 +6,7 @@
 #![allow(dead_code)]
 
 #[allow(unused_imports)]
-use crate::gpu__ops::{
+use crate::gpu_ops::{
     GpuBackend, GpuBuffer, GpuBufferExt, GpuDataType, GpuDevice, GpuError, GpuKernelHandle,
 };
 use num_traits::Float;
@@ -1393,7 +1393,7 @@ pub struct GpuPerformanceProfiler {
 impl GpuPerformanceProfiler {
     pub fn new(_backend: GpuBackend) -> Self {
         Self {
-            _backend,
+            backend: _backend,
             timing_data: std::collections::HashMap::new(),
         }
     }

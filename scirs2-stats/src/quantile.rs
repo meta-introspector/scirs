@@ -112,7 +112,7 @@ where
     }
 
     // Validate the quantile value
-    if q < F::zero() || q >, F::one() {
+    if q < F::zero() || q > F::one() {
         return Err(StatsError::InvalidArgument(
             "Quantile must be between 0 and 1".to_string(),
         ));
@@ -158,7 +158,7 @@ where
         QuantileInterpolation::InvertedCdf => {
             let jg = q * n;
             let j = jg.floor().to_usize().unwrap();
-            let g = if jg % F::one() >, F::zero() {
+            let g = if jg % F::one() > F::zero() {
                 F::one()
             } else {
                 F::zero()
@@ -176,7 +176,7 @@ where
         QuantileInterpolation::AveragedInvertedCdf => {
             let jg = q * n;
             let j = jg.floor().to_usize().unwrap();
-            let g = if jg % F::one() >, F::zero() {
+            let g = if jg % F::one() > F::zero() {
                 F::from(0.5).unwrap()
             } else {
                 F::zero()
@@ -215,10 +215,10 @@ where
         _ => {
             // Get the m value based on method
             let m = match method {
-                QuantileInterpolation::InterpolatedInvertedCdf =>, F::zero(),
-                QuantileInterpolation::Hazen =>, F::from(0.5).unwrap(),
+                QuantileInterpolation::InterpolatedInvertedCdf => F::zero(),
+                QuantileInterpolation::Hazen => F::from(0.5).unwrap(),
                 QuantileInterpolation::Weibull => q,
-                QuantileInterpolation::Linear =>, F::one() - q,
+                QuantileInterpolation::Linear => F::one() - q,
                 QuantileInterpolation::MedianUnbiased => {
                     q / F::from(3.0).unwrap() + F::from(1.0 / 3.0).unwrap()
                 }
@@ -297,7 +297,7 @@ where
     }
 
     // Validate the percentile value
-    if p < F::zero() || p >, F::from(100.0).unwrap() {
+    if p < F::zero() || p > F::from(100.0).unwrap() {
         return Err(StatsError::InvalidArgument(
             "Percentile must be between 0 and 100".to_string(),
         ));
@@ -613,7 +613,7 @@ where
     }
 
     // Validate limits (must be between 0 and 0.5)
-    if limits < F::zero() || limits >, F::from(0.5).unwrap() {
+    if limits < F::zero() || limits > F::from(0.5).unwrap() {
         return Err(StatsError::InvalidArgument(
             "Limits must be between 0 and 0.5".to_string(),
         ));
@@ -692,7 +692,7 @@ where
     }
 
     // Validate limits (must be between 0 and 0.5)
-    if limits < F::zero() || limits >, F::from(0.5).unwrap() {
+    if limits < F::zero() || limits > F::from(0.5).unwrap() {
         return Err(StatsError::InvalidArgument(
             "Limits must be between 0 and 0.5".to_string(),
         ));

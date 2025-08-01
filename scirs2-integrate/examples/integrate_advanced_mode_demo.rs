@@ -4,8 +4,8 @@
 //! coordinator and its optimized integrators.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::mode_coordinator::{
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::mode_coordinator::{
     AdvancedModeConfig, AdvancedModeCoordinator, PerformanceTargets,
 };
 use std::time::Duration;

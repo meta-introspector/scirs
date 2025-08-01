@@ -34,8 +34,8 @@ impl<T: Clone> RTree<T> {
         self.clear();
 
         // Re-insert all data points (bulk loading would be more efficient)
-        for (point, data_index) in data_points {
-            self.insert(point, data)?;
+        for (point, _, data_index) in data_points {
+            self.insert(point, data_index)?;
         }
 
         // Verify integrity
@@ -49,7 +49,7 @@ impl<T: Clone> RTree<T> {
     /// # Returns
     ///
     /// A `SpatialResult` containing a vector of (point, data, index) tuples
-    fn collect_all_data_points() -> SpatialResult<Vec<(Array1<f64>, T, usize)>> {
+    fn collect_all_data_points(&self) -> SpatialResult<Vec<(Array1<f64>, T, usize)>> {
         let mut points = Vec::new();
         self.collect_data_points_recursive(&self.root, &mut points)?;
         Ok(points)
@@ -104,7 +104,7 @@ impl<T: Clone> RTree<T> {
         // Implement Sort-Tile-Recursive (STR) bulk loading algorithm
 
         // Validate all points have correct dimensions
-        for (i, (point_)) in points.iter().enumerate() {
+        for (i, (point, _)) in points.iter().enumerate() {
             if point.len() != ndim {
                 return Err(crate::error::SpatialError::DimensionError(format!(
                     "Point at index {} has dimension {} but tree dimension is {}",
@@ -129,7 +129,7 @@ impl<T: Clone> RTree<T> {
         // Build the tree recursively
         rtree.root = rtree.str_build_node(&mut _entries, 0)?;
         rtree.root.is_leaf =
-            rtree.root._entries.is_empty() || matches!(rtree.root._entries[0], Entry::Leaf { .. });
+            rtree.root.entries.is_empty() || matches!(rtree.root.entries[0], Entry::Leaf { .. });
 
         // Update tree height
         let height = rtree.calculate_height(&rtree.root);
@@ -141,7 +141,7 @@ impl<T: Clone> RTree<T> {
     }
 
     /// Build a node using the STR algorithm
-    fn str_build_node(_entries: &mut Vec<Entry<T>>, level: usize) -> SpatialResult<Node<T>> {
+    fn str_build_node(&self, _entries: &mut Vec<Entry<T>>, level: usize) -> SpatialResult<Node<T>> {
         let n = _entries.len();
 
         if n == 0 {
@@ -151,7 +151,7 @@ impl<T: Clone> RTree<T> {
         // If we can fit all _entries in one node, create it
         if n <= self.max_entries {
             let mut node = Node::new(level == 0, level);
-            node._entries = std::mem::take(_entries);
+            node.entries = std::mem::take(_entries);
             return Ok(node);
         }
 
@@ -192,7 +192,7 @@ impl<T: Clone> RTree<T> {
                 while !slice_entries.is_empty() {
                     let mut node = Node::new(true, 0);
                     let take_count = slice_entries.len().min(self.max_entries);
-                    node._entries = slice_entries.drain(..take_count).collect();
+                    node.entries = slice_entries.drain(..take_count).collect();
 
                     if let Ok(Some(mbr)) = node.mbr() {
                         children.push(Entry::NonLeaf {
@@ -221,14 +221,14 @@ impl<T: Clone> RTree<T> {
             self.str_build_node(&mut children, level + 1)
         } else {
             let mut node = Node::new(false, level + 1);
-            node._entries = children;
+            node.entries = children;
             Ok(node)
         }
     }
 
     /// Calculate the height of the tree
     #[allow(clippy::only_used_in_recursion)]
-    fn calculate_height(_node: &Node<T>) -> usize {
+    fn calculate_height(&self, _node: &Node<T>) -> usize {
         if _node.is_leaf {
             1
         } else if let Some(Entry::NonLeaf { child, .. }) = _node.entries.first() {
@@ -246,7 +246,7 @@ impl<T: Clone> RTree<T> {
     /// # Returns
     ///
     /// The total overlap area between all pairs of nodes at each level
-    pub fn calculate_total_overlap() -> SpatialResult<f64> {
+    pub fn calculate_total_overlap(&self) -> SpatialResult<f64> {
         let mut total_overlap = 0.0;
 
         // Calculate overlap at each level, starting from the root

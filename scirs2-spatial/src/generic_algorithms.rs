@@ -39,6 +39,7 @@ use crate::error::{SpatialError, SpatialResult};
 use crate::generic_traits::{DistanceMetric, Point, SpatialPoint, SpatialScalar};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::PlatformCapabilities;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::marker::PhantomData;
@@ -63,7 +64,8 @@ struct KDNode<T: SpatialScalar, P: SpatialPoint<T>> {
     point_index: usize,
     splitting_dimension: usize,
     left: Option<Box<KDNode<T, P>>>,
-    right: Option<Box<KDNode<T, P>>>, _phantom: PhantomData<(T, P)>,
+    right: Option<Box<KDNode<T, P>>>,
+    _phantom: PhantomData<(T, P)>,
 }
 
 impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
@@ -71,7 +73,8 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
     pub fn new(_points: &[P]) -> SpatialResult<Self> {
         if _points.is_empty() {
             return Ok(Self {
-                root: None_points: Vec::new(),
+                root: None,
+                points: Vec::new(),
                 dimension: 0,
                 leaf_size: 32,
             });
@@ -131,7 +134,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
 
         Ok(Self {
             root,
-            _points,
+            points: _points,
             dimension,
             leaf_size: 32, // Optimized leaf size for better cache performance
         })
@@ -158,7 +161,8 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
                 point_index,
                 splitting_dimension: depth % dimension,
                 left: None,
-                right: None_phantom: PhantomData,
+                right: None,
+                _phantom: PhantomData,
             }));
         }
 
@@ -188,7 +192,8 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
             point_index,
             splitting_dimension,
             left,
-            right_phantom: PhantomData,
+            right,
+            _phantom: PhantomData,
         }))
     }
 
@@ -305,7 +310,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
         }
 
         // Check if we need to search the other child
-        let dimension_distance = SpatialScalar::abs(query_coord - point_coord);
+        let dimension_distance = (query_coord - point_coord).abs();
         let should_search_other = heap.len() < k
             || heap
                 .peek()
@@ -362,7 +367,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
         let point_coord = point
             .coordinate(node.splitting_dimension)
             .unwrap_or(T::zero());
-        let _dimension_distance = SpatialScalar::abs(query_coord - point_coord);
+        let _dimension_distance = (query_coord - point_coord).abs();
 
         // Search left child
         if let Some(ref left) = node.left {
@@ -569,7 +574,7 @@ impl GenericDistanceMatrix {
                     let dx = xi - xk;
                     let dy = yi - yk;
                     let distance_sq = dx * dx + dy * dy;
-                    let distance = SpatialScalar::sqrt(distance_sq);
+                    let distance = distance_sq.sqrt();
 
                     matrix[i][k] = distance;
                     matrix[k][i] = distance;
@@ -591,7 +596,7 @@ impl GenericDistanceMatrix {
                     let dy = yi - yk;
                     let dz = zi - zk;
                     let distance_sq = dx * dx + dy * dy + dz * dz;
-                    let distance = SpatialScalar::sqrt(distance_sq);
+                    let distance = distance_sq.sqrt();
 
                     matrix[i][k] = distance;
                     matrix[k][i] = distance;
@@ -751,7 +756,7 @@ impl GenericDistanceMatrix {
 
                     let dx = xi - xj;
                     let dy = yi - yj;
-                    distances[j] = SpatialScalar::sqrt(dx * dx + dy * dy);
+                    distances[j] = (dx * dx + dy * dy).sqrt();
                 }
             }
             3 => {
@@ -767,7 +772,7 @@ impl GenericDistanceMatrix {
                     let dx = xi - xj;
                     let dy = yi - yj;
                     let dz = zi - zj;
-                    distances[j] = SpatialScalar::sqrt(dx * dx + dy * dy + dz * dz);
+                    distances[j] = (dx * dx + dy * dy + dz * dz).sqrt();
                 }
             }
             _ => {
@@ -817,7 +822,8 @@ pub struct GenericKMeans<T: SpatialScalar, P: SpatialPoint<T>> {
     k: usize,
     max_iterations: usize,
     tolerance: T,
-    parallel: bool_phantom: PhantomData<(T, P)>,
+    parallel: bool,
+    phantom: PhantomData<(T, P)>,
 }
 
 impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
@@ -827,30 +833,31 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
             k,
             max_iterations: 5, // Further reduced for faster testing
             tolerance: T::from_f64(1e-1).unwrap_or(<T as SpatialScalar>::epsilon()), // Much more relaxed tolerance
-            parallel: false_phantom: PhantomData,
+            parallel: false,
+            phantom: PhantomData,
         }
     }
 
     /// Enable parallel processing for large datasets
-    pub fn with_parallel(mut parallel: bool) -> Self {
+    pub fn with_parallel(mut self, parallel: bool) -> Self {
         self.parallel = parallel;
         self
     }
 
     /// Set the maximum number of iterations
-    pub fn with_max_iterations(mut max_iterations: usize) -> Self {
+    pub fn with_max_iterations(mut self, max_iterations: usize) -> Self {
         self.max_iterations = max_iterations;
         self
     }
 
     /// Set the convergence tolerance
-    pub fn with_tolerance(mut tolerance: T) -> Self {
+    pub fn with_tolerance(mut self, tolerance: T) -> Self {
         self.tolerance = tolerance;
         self
     }
 
     /// Perform K-means clustering with memory optimizations
-    pub fn fit(_points: &[P]) -> SpatialResult<KMeansResult<T, P>> {
+    pub fn fit(&self, _points: &[P]) -> SpatialResult<KMeansResult<T, P>> {
         if _points.is_empty() {
             return Err(SpatialError::ValueError(
                 "Cannot cluster empty point set".to_string(),
@@ -995,7 +1002,8 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
                     centroids,
                     assignments,
                     iterations: iteration + 1,
-                    converged: max_movement < self.tolerance_phantom: PhantomData,
+                    converged: max_movement < self.tolerance,
+                    phantom: PhantomData,
                 });
             }
         }
@@ -1004,19 +1012,21 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
             centroids,
             assignments,
             iterations: self.max_iterations,
-            converged: false_phantom: PhantomData,
+            converged: false,
+            phantom: PhantomData,
         })
     }
 
     /// Initialize centroids using k-means++
     fn initialize_centroids(
         &self,
-        points: &[P], _dimension: usize,
+        points: &[P],
+        _dimension: usize,
     ) -> SpatialResult<Vec<Point<T>>> {
         let mut centroids = Vec::with_capacity(self.k);
 
         // Choose first centroid randomly
-        centroids.push(self.point_to_generic(&points[0]));
+        centroids.push(GenericKMeans::<T, P>::point_to_generic(&points[0]));
 
         // Choose remaining centroids using k-means++ initialization
         for _ in 1..self.k {
@@ -1025,7 +1035,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
             for point in points {
                 let min_distance = centroids
                     .iter()
-                    .map(|centroid| self.point_to_generic(point).distance_to(centroid))
+                    .map(|centroid| GenericKMeans::<T, P>::point_to_generic(point).distance_to(centroid))
                     .fold(
                         T::max_finite(),
                         |acc, dist| if dist < acc { dist } else { acc },
@@ -1038,10 +1048,10 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(Ordering::Equal))
-                .map(|(idx_)| idx)
+                .map(|(idx_, _)| idx_)
                 .unwrap_or(0);
 
-            centroids.push(self.point_to_generic(&points[max_distance_idx]));
+            centroids.push(GenericKMeans::<T, P>::point_to_generic(&points[max_distance_idx]));
         }
 
         Ok(centroids)
@@ -1100,10 +1110,9 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
     }
 
     /// SIMD-optimized distance computation to all centroids
-    fn compute_distances_simd(_point: &P, centroids: &[Point<T>], distances: &mut [T]) {
-
+    fn compute_distances_simd(&self, _point: &P, centroids: &[Point<T>], distances: &mut [T]) {
         let _caps = PlatformCapabilities::detect();
-        let point_generic = self.point_to_generic(_point);
+        let point_generic = GenericKMeans::<T, P>::point_to_generic(_point);
 
         // Always use scalar computation for tests to avoid SIMD performance issues
         for (j, centroid) in centroids.iter().enumerate() {
@@ -1137,7 +1146,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
 
                             let dx = px - cx;
                             let dy = py - cy;
-                            distances[i + j] = SpatialScalar::sqrt(dx * dx + dy * dy);
+                            distances[i + j] = (dx * dx + dy * dy).sqrt();
                         }
                     }
                     i += 4;
@@ -1151,7 +1160,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
 
                     let dx = px - cx;
                     let dy = py - cy;
-                    distances[i] = SpatialScalar::sqrt(dx * dx + dy * dy);
+                    distances[i] = (dx * dx + dy * dy).sqrt();
                     i += 1;
                 }
             }
@@ -1169,7 +1178,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
                     let dx = px - cx;
                     let dy = py - cy;
                     let dz = pz - cz;
-                    distances[i] = SpatialScalar::sqrt(dx * dx + dy * dy + dz * dz);
+                    distances[i] = (dx * dx + dy * dy + dz * dz).sqrt();
                 }
             }
             _ => {
@@ -1192,7 +1201,8 @@ pub struct KMeansResult<T: SpatialScalar, P: SpatialPoint<T>> {
     /// Number of iterations performed
     pub iterations: usize,
     /// Whether the algorithm converged
-    pub converged: bool_phantom: PhantomData<P>,
+    pub converged: bool,
+    phantom: PhantomData<P>,
 }
 
 /// Generic convex hull computation using Graham scan
@@ -1237,7 +1247,7 @@ impl GenericConvexHull {
                     y_cmp
                 }
             })
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .unwrap();
 
         generic_points.swap(0, start_idx);
@@ -1283,7 +1293,7 @@ impl GenericConvexHull {
             point.coordinate(0).unwrap_or(T::zero()) - _start.coordinate(0).unwrap_or(T::zero());
         let dy =
             point.coordinate(1).unwrap_or(T::zero()) - _start.coordinate(1).unwrap_or(T::zero());
-        SpatialScalar::atan2(dy, dx)
+        dy.atan2(dx)
     }
 
     /// Calculate cross product for 2D points
@@ -1300,20 +1310,22 @@ impl GenericConvexHull {
 /// Generic DBSCAN clustering implementation
 pub struct GenericDBSCAN<T: SpatialScalar> {
     eps: T,
-    min_samples: usize, _phantom: PhantomData<T>,
+    min_samples: usize,
+    _phantom: PhantomData<T>,
 }
 
 impl<T: SpatialScalar> GenericDBSCAN<T> {
     /// Create a new DBSCAN clusterer
     pub fn new(_eps: T, min_samples: usize) -> Self {
         Self {
-            _eps,
-            min_samples_phantom: PhantomData,
+            eps: _eps,
+            min_samples,
+            _phantom: PhantomData,
         }
     }
 
     /// Perform DBSCAN clustering
-    pub fn fit<P, M>(_points: &[P], metric: &M) -> SpatialResult<DBSCANResult>
+    pub fn fit<P, M>(&self, _points: &[P], metric: &M) -> SpatialResult<DBSCANResult>
     where
         P: SpatialPoint<T>,
         M: DistanceMetric<T, P>,
@@ -1435,7 +1447,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
     }
 
     /// Find neighbors within eps distance with highly optimized search and memory pooling
-    fn find_neighbors<P, M>(_points: &[P], point_idx: usize, metric: &M) -> Vec<usize>
+    fn find_neighbors<P, M>(&self, _points: &[P], point_idx: usize, metric: &M) -> Vec<usize>
     where
         P: SpatialPoint<T>,
         M: DistanceMetric<T, P>,
@@ -1575,41 +1587,43 @@ pub struct GenericGMM<T: SpatialScalar> {
     n_components: usize,
     max_iterations: usize,
     tolerance: T,
-    reg_covar: T, _phantom: PhantomData<T>,
+    reg_covar: T,
+    _phantom: PhantomData<T>,
 }
 
 impl<T: SpatialScalar> GenericGMM<T> {
     /// Create a new GMM clusterer
     pub fn new(_n_components: usize) -> Self {
         Self {
-            _n_components,
+            n_components: _n_components,
             max_iterations: 3, // Further reduced for faster testing
             tolerance: T::from_f64(1e-1).unwrap_or(<T as SpatialScalar>::epsilon()), // Much more relaxed tolerance
-            reg_covar: T::from_f64(1e-6).unwrap_or(<T as SpatialScalar>::epsilon()), _phantom: PhantomData,
+            reg_covar: T::from_f64(1e-6).unwrap_or(<T as SpatialScalar>::epsilon()),
+            _phantom: PhantomData,
         }
     }
 
     /// Set maximum iterations
-    pub fn with_max_iterations(mut max_iterations: usize) -> Self {
+    pub fn with_max_iterations(mut self, max_iterations: usize) -> Self {
         self.max_iterations = max_iterations;
         self
     }
 
     /// Set convergence tolerance
-    pub fn with_tolerance(mut tolerance: T) -> Self {
+    pub fn with_tolerance(mut self, tolerance: T) -> Self {
         self.tolerance = tolerance;
         self
     }
 
     /// Set regularization parameter for covariance
-    pub fn with_reg_covar(mut reg_covar: T) -> Self {
+    pub fn with_reg_covar(mut self, reg_covar: T) -> Self {
         self.reg_covar = reg_covar;
         self
     }
 
     /// Fit the GMM to data (simplified implementation)
     #[allow(clippy::needless_range_loop)]
-    pub fn fit<P>(_points: &[P]) -> SpatialResult<GMMResult<T>>
+    pub fn fit<P>(&self, _points: &[P]) -> SpatialResult<GMMResult<T>>
     where
         P: SpatialPoint<T> + Clone,
     {
@@ -1640,7 +1654,13 @@ impl<T: SpatialScalar> GenericGMM<T> {
                 .assignments
                 .iter()
                 .enumerate()
-                .filter_map(|(i, &cluster)| if cluster == k { Some(&_points[i]) } else { None })
+                .filter_map(|(i, &cluster)| {
+                    if cluster == k {
+                        Some(&_points[i])
+                    } else {
+                        None
+                    }
+                })
                 .collect();
 
             if !cluster_points.is_empty() {
@@ -1697,7 +1717,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
 
                 // Compute log probabilities for numerical stability
                 for k in 0..self.n_components {
-                    let log_weight = SpatialScalar::ln(weights[k]);
+                    let log_weight = weights[k].ln();
                     let log_gaussian = self.compute_log_gaussian_probability(
                         &point,
                         &means[k],
@@ -1713,7 +1733,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
                 // Use log-sum-exp trick for numerical stability
                 let mut sum_exp = T::zero();
                 for k in 0..self.n_components {
-                    let exp_val = SpatialScalar::exp(log_likelihoods[k] - max_log_likelihood);
+                    let exp_val = (log_likelihoods[k] - max_log_likelihood).exp();
                     responsibilities[i][k] = exp_val;
                     sum_exp = sum_exp + exp_val;
                 }
@@ -1724,7 +1744,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
                         responsibilities[i][k] = responsibilities[i][k] / sum_exp;
                     }
                     new_log_likelihood =
-                        new_log_likelihood + max_log_likelihood + SpatialScalar::ln(sum_exp);
+                        new_log_likelihood + max_log_likelihood + sum_exp.ln();
                 }
             }
 
@@ -1807,7 +1827,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
 
             // Check for convergence using proper log-likelihood
             if iteration > 0
-                && SpatialScalar::abs(new_log_likelihood - log_likelihood) < self.tolerance
+                && (new_log_likelihood - log_likelihood).abs() < self.tolerance
             {
                 break;
             }
@@ -1886,8 +1906,8 @@ impl<T: SpatialScalar> GenericGMM<T> {
         // Compute log probability: -0.5 * (k*log(2π) + log|Σ| + (x-μ)ᵀΣ⁻¹(x-μ))
         let two_pi =
             T::from(std::f64::consts::TAU).unwrap_or(T::from(std::f64::consts::TAU).unwrap());
-        let log_2pi_k = T::from(n_features).unwrap() * SpatialScalar::ln(two_pi);
-        let log_det = SpatialScalar::ln(SpatialScalar::abs(det));
+        let log_2pi_k = T::from(n_features).unwrap() * two_pi.ln();
+        let log_det = det.abs().ln();
 
         let log_prob = -T::from(0.5).unwrap() * (log_2pi_k + log_det + quadratic_form);
 
@@ -1919,7 +1939,7 @@ pub struct GMMResult<T: SpatialScalar> {
 
 #[cfg(test)]
 mod tests {
-use crate::generic_traits::EuclideanMetric;
+    use crate::generic_traits::EuclideanMetric;
     use approx::assert_relative_eq;
 
     #[test]

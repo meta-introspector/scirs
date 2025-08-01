@@ -4,12 +4,12 @@
 //! It extends the base SparseArray trait with methods specific to symmetric
 //! matrices.
 
-use crate::coo__array::CooArray;
-use crate::csr__array::CsrArray;
+use crate::coo_array::CooArray;
+use crate::csr_array::CsrArray;
 use crate::error::{SparseError, SparseResult};
 use crate::sparray::{SparseArray, SparseSum};
-use crate::sym__coo::SymCooArray;
-use crate::sym__csr::SymCsrArray;
+use crate::sym_coo::SymCooArray;
+use crate::sym_csr::SymCsrArray;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
@@ -156,7 +156,7 @@ where
             }
         }
 
-        use crate::sym__coo::SymCooMatrix;
+        use crate::sym_coo::SymCooMatrix;
         let sym_coo = SymCooMatrix::new(data, rows, cols, csr_inner.shape)?;
 
         Ok(SymCooArray::new(sym_coo))
@@ -218,7 +218,7 @@ where
         let csr = crate::csr::CsrMatrix::new(data, rows, cols, shape)?;
 
         // Create a symmetric CSR matrix without checking symmetry (we know it's symmetric)
-        use crate::sym__csr::SymCsrMatrix;
+        use crate::sym_csr::SymCsrMatrix;
 
         // Extract the lower triangular part (already in the correct format)
         let mut sym_data = Vec::new();
@@ -452,7 +452,7 @@ where
                     CsrMatrix::new(data.to_vec(), rows.to_vec(), cols.to_vec(), result.shape())?;
 
                 // Convert to SymCsrMatrix
-                use crate::sym__csr::SymCsrMatrix;
+                use crate::sym_csr::SymCsrMatrix;
                 let sym_csr = SymCsrMatrix::from_csr(&csr_matrix)?;
 
                 // Create and return SymCsrArray
@@ -529,7 +529,7 @@ where
                     CsrMatrix::new(data.to_vec(), rows.to_vec(), cols.to_vec(), result.shape())?;
 
                 // Convert to SymCsrMatrix
-                use crate::sym__csr::SymCsrMatrix;
+                use crate::sym_csr::SymCsrMatrix;
                 let sym_csr = SymCsrMatrix::from_csr(&csr_matrix)?;
 
                 // Create and return SymCsrArray
@@ -851,7 +851,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sym__csr::{SymCsrArray, SymCsrMatrix};
+    use crate::sym_csr::{SymCsrArray, SymCsrMatrix};
 
     // Create a simple symmetric matrix for testing
     fn create_test_sym_csr() -> SymCsrArray<f64> {

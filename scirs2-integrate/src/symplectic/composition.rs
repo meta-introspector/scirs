@@ -38,7 +38,7 @@ impl<F: IntegrateFloat, S: SymplecticIntegrator<F>> CompositionMethod<F, S> {
     /// A new composition method
     pub fn new(_base_method: S, coefficients: Vec<F>) -> Self {
         CompositionMethod {
-            _base_method,
+            base_method: _base_method,
             coefficients,
         }
     }
@@ -66,7 +66,7 @@ impl<F: IntegrateFloat, S: SymplecticIntegrator<F>> CompositionMethod<F, S> {
         let coefficients = vec![w1, w0, w1];
 
         CompositionMethod {
-            _base_method,
+            base_method: _base_method,
             coefficients,
         }
     }
@@ -93,7 +93,7 @@ impl<F: IntegrateFloat, S: SymplecticIntegrator<F>> CompositionMethod<F, S> {
         let coefficients = vec![w1, w2, w3, w4, w3, w2, w1];
 
         CompositionMethod {
-            _base_method,
+            base_method: _base_method,
             coefficients,
         }
     }
@@ -133,7 +133,7 @@ impl<F: IntegrateFloat, S: SymplecticIntegrator<F>> CompositionMethod<F, S> {
         }
 
         CompositionMethod {
-            base_method,
+            base_method: _base_method,
             coefficients,
         }
     }

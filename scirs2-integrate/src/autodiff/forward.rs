@@ -20,7 +20,7 @@ impl<F: IntegrateFloat> ForwardAD<F> {
     /// Create a new forward AD engine
     pub fn new(_n_vars: usize) -> Self {
         ForwardAD {
-            _n_vars,
+            n_vars: _n_vars,
             tolerance: F::from(1e-12).unwrap(),
         }
     }
@@ -32,7 +32,7 @@ impl<F: IntegrateFloat> ForwardAD<F> {
     }
 
     /// Compute gradient using forward mode AD
-    pub fn gradient<Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array1<F>>
+    pub fn gradient<Func>(&self, f: Func, x: ArrayView1<F>) -> IntegrateResult<Array1<F>>
     where
         Func: Fn(&[Dual<F>]) -> Dual<F>,
     {
@@ -65,7 +65,7 @@ impl<F: IntegrateFloat> ForwardAD<F> {
     }
 
     /// Compute Jacobian using forward mode AD
-    pub fn jacobian<Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array2<F>>
+    pub fn jacobian<Func>(&self, f: Func, x: ArrayView1<F>) -> IntegrateResult<Array2<F>>
     where
         Func: Fn(&[Dual<F>]) -> Vec<Dual<F>>,
     {
@@ -187,13 +187,13 @@ impl<F: IntegrateFloat> ForwardODEJacobian<F> {
     /// Create a new ODE Jacobian computer
     pub fn new(_n_states: usize) -> Self {
         ForwardODEJacobian {
-            _n_states: _n_states,
+            _n_states,
             ad_engine: ForwardAD::new(_n_states),
         }
     }
 
     /// Compute Jacobian for ODE system dy/dt = f(t, y)
-    pub fn compute<Func>(f: Func, t: F, y: ArrayView1<F>) -> IntegrateResult<Array2<F>>
+    pub fn compute<Func>(&self, f: Func, t: F, y: ArrayView1<F>) -> IntegrateResult<Array2<F>>
     where
         Func: Fn(F, &[Dual<F>]) -> Vec<Dual<F>>,
     {
@@ -213,7 +213,7 @@ impl<F: IntegrateFloat> VectorizedForwardAD<F> {
     /// Create a new vectorized forward AD engine
     pub fn new(_n_vars: usize, n_directions: usize) -> Self {
         VectorizedForwardAD {
-            _n_vars,
+            n_vars: _n_vars,
             n_directions,
             tolerance: F::from(1e-12).unwrap(),
         }

@@ -42,7 +42,7 @@ impl Rectangle {
             }
         }
 
-        Ok(Rectangle { _min, max })
+        Ok(Rectangle { min: _min, max })
     }
 
     /// Create a rectangle from a point (zero-area rectangle)
@@ -93,7 +93,7 @@ impl Rectangle {
     /// # Returns
     ///
     /// `true` if the point is inside or on the boundary of the rectangle, `false` otherwise
-    pub fn contains_point(_point: &ArrayView1<f64>) -> SpatialResult<bool> {
+    pub fn contains_point(&self, _point: &ArrayView1<f64>) -> SpatialResult<bool> {
         if _point.len() != self.ndim() {
             return Err(SpatialError::DimensionError(format!(
                 "Point dimension {} does not match rectangle dimension {}",
@@ -120,7 +120,7 @@ impl Rectangle {
     /// # Returns
     ///
     /// `true` if the other rectangle is completely inside this rectangle, `false` otherwise
-    pub fn contains_rectangle(_other: &Rectangle) -> SpatialResult<bool> {
+    pub fn contains_rectangle(&self, _other: &Rectangle) -> SpatialResult<bool> {
         if _other.ndim() != self.ndim() {
             return Err(SpatialError::DimensionError(format!(
                 "Rectangle dimensions do not match: {} and {}",
@@ -147,7 +147,7 @@ impl Rectangle {
     /// # Returns
     ///
     /// `true` if the rectangles intersect, `false` otherwise
-    pub fn intersects(_other: &Rectangle) -> SpatialResult<bool> {
+    pub fn intersects(&self, _other: &Rectangle) -> SpatialResult<bool> {
         if _other.ndim() != self.ndim() {
             return Err(SpatialError::DimensionError(format!(
                 "Rectangle dimensions do not match: {} and {}",
@@ -175,7 +175,7 @@ impl Rectangle {
     ///
     /// A `SpatialResult` containing the intersection rectangle if it exists,
     /// or an error if the rectangles do not intersect or have different dimensions
-    pub fn intersection(_other: &Rectangle) -> SpatialResult<Rectangle> {
+    pub fn intersection(&self, _other: &Rectangle) -> SpatialResult<Rectangle> {
         if _other.ndim() != self.ndim() {
             return Err(SpatialError::DimensionError(format!(
                 "Rectangle dimensions do not match: {} and {}",
@@ -212,7 +212,7 @@ impl Rectangle {
     ///
     /// A `SpatialResult` containing the enlarged rectangle containing both rectangles,
     /// or an error if the rectangles have different dimensions
-    pub fn enlarge(_other: &Rectangle) -> SpatialResult<Rectangle> {
+    pub fn enlarge(&self, _other: &Rectangle) -> SpatialResult<Rectangle> {
         if _other.ndim() != self.ndim() {
             return Err(SpatialError::DimensionError(format!(
                 "Rectangle dimensions do not match: {} and {}",
@@ -242,7 +242,7 @@ impl Rectangle {
     ///
     /// The difference between the area of the enlarged rectangle and this rectangle,
     /// or an error if the rectangles have different dimensions
-    pub fn enlargement_area(_other: &Rectangle) -> SpatialResult<f64> {
+    pub fn enlargement_area(&self, _other: &Rectangle) -> SpatialResult<f64> {
         let enlarged = self.enlarge(_other)?;
         Ok(enlarged.area() - self.area())
     }
@@ -257,7 +257,7 @@ impl Rectangle {
     ///
     /// The minimum distance from the rectangle to the point,
     /// or an error if the point has a different dimension
-    pub fn min_distance_to_point(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn min_distance_to_point(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
         if _point.len() != self.ndim() {
             return Err(SpatialError::DimensionError(format!(
                 "Point dimension {} does not match rectangle dimension {}",
@@ -289,7 +289,7 @@ impl Rectangle {
     ///
     /// The minimum distance between the rectangles,
     /// or an error if they have different dimensions
-    pub fn min_distance_to_rectangle(_other: &Rectangle) -> SpatialResult<f64> {
+    pub fn min_distance_to_rectangle(&self, _other: &Rectangle) -> SpatialResult<f64> {
         if _other.ndim() != self.ndim() {
             return Err(SpatialError::DimensionError(format!(
                 "Rectangle dimensions do not match: {} and {}",
@@ -381,7 +381,7 @@ impl<T: Clone> Node<T> {
     pub fn new(_is_leaf: bool, level: usize) -> Self {
         Node {
             entries: Vec::new(),
-            _is_leaf,
+            is_leaf: _is_leaf,
             level,
         }
     }
@@ -536,7 +536,7 @@ impl<T: Clone> RTree<T> {
 
         Ok(RTree {
             root: Node::new(true, 0),
-            _ndim,
+            ndim: _ndim,
             min_entries,
             max_entries,
             size: 0,
@@ -550,7 +550,7 @@ impl<T: Clone> RTree<T> {
     }
 
     /// Get the number of data points in the R-tree
-    pub fn size(&mut self) -> usize {
+    pub fn size(&self) -> usize {
         self.size
     }
 
@@ -572,25 +572,25 @@ impl<T: Clone> RTree<T> {
     }
 
     /// Increment the size of the tree (internal use only)
-    pub(crate) fn increment_size() {
+    pub(crate) fn increment_size(&mut self) {
         self.size += 1;
     }
 
     /// Decrement the size of the tree (internal use only)
-    pub(crate) fn decrement_size() {
+    pub(crate) fn decrement_size(&mut self) {
         if self.size > 0 {
             self.size -= 1;
         }
     }
 
     /// Increment the height of the tree (internal use only)
-    pub(crate) fn increment_height() {
+    pub(crate) fn increment_height(&mut self) {
         self.height += 1;
     }
 
     /// Decrement the height of the tree (internal use only)
     #[allow(dead_code)]
-    pub(crate) fn decrement_height() {
+    pub(crate) fn decrement_height(&mut self) {
         if self.height > 0 {
             self.height -= 1;
         }

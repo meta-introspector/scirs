@@ -4,7 +4,7 @@
 //! for enhanced ODE solving performance.
 
 use ndarray::{array, Array1, ArrayView1};
-use scirs2__integrate::{
+use scirs2_integrate::{
     mode_coordinator::{AdvancedModeConfig, AdvancedModeCoordinator},
     IntegrateResult,
 };

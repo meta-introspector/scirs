@@ -3,7 +3,7 @@
 use crate::error::StatsResult;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
-use scirs2__linalg::inv;
+use scirs2_linalg::inv;
 
 /// Helper functions for working with Float trait to avoid method ambiguity
 /// Returns the absolute value of a Float
@@ -225,7 +225,7 @@ where
     } else {
         F::one() - p
     };
-    let t = num_traits::Float::sqrt(-F::from(2.0).unwrap() * num, _traits::Float::ln(p_adj));
+    let t = num_traits::Float::sqrt(-F::from(2.0).unwrap() * num_traits::Float::ln(p_adj));
 
     // Apply Abramowitz and Stegun approximation
     let v = t

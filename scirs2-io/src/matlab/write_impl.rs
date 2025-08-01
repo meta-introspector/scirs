@@ -112,7 +112,7 @@ pub fn write_variable<W: Write + Seek>(
         _ => {
             return Err(IoError::Other(format!(
                 "Data _type not yet supported in simplified writer: {:?}",
-                std::any::_type_name::<MatType>()
+                std::any::type_name::<MatType>()
             )));
         }
     }

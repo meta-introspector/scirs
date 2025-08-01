@@ -580,7 +580,8 @@ impl DocumentationEnhancer {
                 true,
                 vec!["Requires GPU to run".to_string()],
                 vec!["Add fallback for systems without GPU".to_string()],
-            , _ => (true, true, vec![], vec![]),
+            ),
+            _ => (true, true, vec![], vec![]),
         };
 
         let status = if !compiles {

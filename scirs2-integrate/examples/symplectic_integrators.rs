@@ -5,7 +5,7 @@
 //! properties and comparing the accuracy of different methods.
 
 use ndarray::{array, Array1};
-use scirs2__integrate::symplectic::{
+use scirs2_integrate::symplectic::{
     position_verlet, velocity_verlet, CompositionMethod, GaussLegendre4, GaussLegendre6,
     HamiltonianFn, SeparableHamiltonian, StormerVerlet, SymplecticIntegrator,
 };
@@ -448,7 +448,8 @@ fn integrate_with_composition(
     let method = match order {
         4 => CompositionMethod::fourth_order(base_method),
         6 => CompositionMethod::sixth_order(base_method),
-        8 => CompositionMethod::eighth_order(base_method, _ =>, CompositionMethod::fourth_order(base_method),
+        8 => CompositionMethod::eighth_order(base_method),
+        _ => CompositionMethod::fourth_order(base_method),
     };
 
     integrate_with_method(&method, system, t0, tf, dt, q0, p0)

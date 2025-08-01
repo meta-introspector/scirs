@@ -264,7 +264,8 @@ where
 #[allow(dead_code)]
 fn chunked_simd_sum_squared_deviations<F, D>(
     x: &ArrayBase<D, Ix1>,
-    mean: F_config: &SimdConfig,
+    mean: F,
+    config: &SimdConfig,
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,

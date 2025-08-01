@@ -5,7 +5,7 @@
 //! condition types.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2__integrate::{
+use scirs2_integrate::{
     bvp::BVPOptions,
     bvp_extended::{
         solve_bvp_extended, BoundaryConditionType, ExtendedBoundaryConditions, RobinBC,

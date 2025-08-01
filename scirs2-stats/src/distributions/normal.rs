@@ -3,13 +3,13 @@
 //! This module provides functionality for the Normal (Gaussian) distribution.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error__messages::{helpers, validation};
+use crate::error_messages::{helpers, validation};
 use crate::sampling::SampleableDistribution;
 use crate::traits::{ContinuousDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution as RandDistribution, Normal as RandNormal};
+use rand_distr::{Distribution as RandDistribution, Normal as RandNormal};
 
 /// Normal distribution structure
 pub struct Normal<F: Float> {
@@ -148,7 +148,7 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
     /// assert!((x - 1.96).abs() < 1e-2);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));

@@ -1,8 +1,8 @@
 use ndarray::{s, Array1};
-use scirs2__integrate::pde::implicit::{
+use scirs2_integrate::pde::implicit::{
     BackwardEuler1D, CrankNicolson1D, ImplicitMethod, ImplicitOptions, ImplicitResult,
 };
-use scirs2__integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
+use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     // Define the diffusion coefficient function: constant diffusion
-    let diffusion_coeff = |_x: f64_t: f64, _u: f64| 1.0;
+    let diffusion_coeff = |_x: f64, _t: f64, _u: f64| 1.0;
 
     // Define the initial condition: u(x, 0) = sin(π*x)
     let initial_condition = |x: f64| (PI * x).sin();

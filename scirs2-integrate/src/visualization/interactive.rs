@@ -3,11 +3,11 @@
 //! This module provides interactive tools for exploring parameter spaces
 //! and generating bifurcation diagrams for dynamical systems.
 
+use super::types::*;
 use crate::analysis::BifurcationPoint;
 use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::Array1;
 use rand::Rng;
-use super::types::*;
 
 /// Interactive parameter space explorer
 #[derive(Debug, Clone)]
@@ -488,7 +488,10 @@ impl InteractiveParameterExplorer {
         Ok(gradient)
     }
 
-    fn compute_exploration_metrics(&self, _responses: &[Array1<f64>]) -> IntegrateResult<ExplorationMetrics> {
+    fn compute_exploration_metrics(
+        &self,
+        _responses: &[Array1<f64>],
+    ) -> IntegrateResult<ExplorationMetrics> {
         if _responses.is_empty() {
             return Ok(ExplorationMetrics {
                 max_response_norm: 0.0,

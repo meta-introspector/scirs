@@ -3,7 +3,7 @@
 //! This module provides numerical integrators that preserve phase space volume,
 //! suitable for divergence-free flows and incompressible fluid dynamics.
 
-use crate::error::{IntegrateError, IntegrateResult as Result};
+use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use std::f64::consts::PI;
 #[allow(unused_imports)]
@@ -18,10 +18,10 @@ pub trait DivergenceFreeFlow {
     fn dim(&self) -> usize;
 
     /// Evaluate the vector field at a point
-    fn evaluate(x: &ArrayView1<f64>, t: f64) -> Array1<f64>;
+    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64>;
 
     /// Verify divergence-free condition (for debugging)
-    fn verify_divergence_free(x: &ArrayView1<f64>, t: f64, h: f64) -> f64 {
+    fn verify_divergence_free(&self, x: &ArrayView1<f64>, t: f64, h: f64) -> f64 {
         let n = self.dim();
         let mut div = 0.0;
 
@@ -70,9 +70,9 @@ pub enum VolumePreservingMethod {
 
 impl VolumePreservingIntegrator {
     /// Create a new volume-preserving integrator
-    pub fn new(_dt: f64, method: VolumePreservingMethod) -> Self {
+    pub fn new(dt: f64, method: VolumePreservingMethod) -> Self {
         Self {
-            _dt,
+            dt,
             method,
             tol: 1e-10,
             max_iter: 100,
@@ -86,7 +86,7 @@ impl VolumePreservingIntegrator {
     }
 
     /// Integrate one step
-    pub fn step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> IntegrateResult<Array1<f64>>
+    pub fn step<F>(&self, x: &ArrayView1<f64>, t: f64, flow: &F) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -131,7 +131,7 @@ impl VolumePreservingIntegrator {
 
         // Fixed-point iteration
         for _ in 0..self.max_iter {
-            let x_mid = (x + &x_new) / 2.0;
+            let x_mid = (&x.to_owned() + &x_new) / 2.0;
             let f_mid = flow.evaluate(&x_mid.view(), t_mid);
             let x_next = x + &f_mid * self.dt;
 
@@ -149,7 +149,12 @@ impl VolumePreservingIntegrator {
     }
 
     /// Splitting method for special structures
-    fn splitting_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> IntegrateResult<Array1<f64>>
+    fn splitting_step<F>(
+        &self,
+        x: &ArrayView1<f64>,
+        t: f64,
+        flow: &F,
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -158,7 +163,12 @@ impl VolumePreservingIntegrator {
     }
 
     /// Projection method (project back to divergence-free manifold)
-    fn projection_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> IntegrateResult<Array1<f64>>
+    fn projection_step<F>(
+        &self,
+        x: &ArrayView1<f64>,
+        t: f64,
+        flow: &F,
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -172,7 +182,12 @@ impl VolumePreservingIntegrator {
     }
 
     /// Fourth-order composition method
-    fn composition_step<F>(x: &ArrayView1<f64>, t: f64, flow: &F) -> IntegrateResult<Array1<f64>>
+    fn composition_step<F>(
+        &self,
+        x: &ArrayView1<f64>,
+        t: f64,
+        flow: &F,
+    ) -> IntegrateResult<Array1<f64>>
     where
         F: DivergenceFreeFlow,
     {
@@ -298,7 +313,7 @@ impl DivergenceFreeFlow for CircularFlow2D {
         2
     }
 
-    fn evaluate(x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
+    fn evaluate(&self, x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
         Array1::from_vec(vec![-self.omega * x[1], self.omega * x[0]])
     }
 }
@@ -315,7 +330,7 @@ impl DivergenceFreeFlow for ABCFlow {
         3
     }
 
-    fn evaluate(x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
+    fn evaluate(&self, x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
         Array1::from_vec(vec![
             self.a * x[1].sin() + self.c * x[2].cos(),
             self.b * x[2].sin() + self.a * x[0].cos(),
@@ -336,7 +351,7 @@ impl DivergenceFreeFlow for DoubleGyre {
         2
     }
 
-    fn evaluate(x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
+    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
         let a_t = self.epsilon * (self.omega * t).sin();
         let b_t = 1.0 - 2.0 * self.epsilon * (self.omega * t).sin();
 
@@ -388,7 +403,7 @@ impl DivergenceFreeFlow for StuartVortex {
         2
     }
 
-    fn evaluate(x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
+    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
         let (u, v) = self.velocity(x[0], x[1], t);
         Array1::from_vec(vec![u, v])
     }
@@ -412,7 +427,7 @@ impl DivergenceFreeFlow for TaylorGreenVortex {
         2
     }
 
-    fn evaluate(x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
+    fn evaluate(&self, x: &ArrayView1<f64>, t: f64) -> Array1<f64> {
         let (u, v) = self.velocity(x[0], x[1], t);
         Array1::from_vec(vec![u, v])
     }
@@ -437,7 +452,7 @@ where
         self.dim
     }
 
-    fn evaluate(x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
+    fn evaluate(&self, x: &ArrayView1<f64>, _t: f64) -> Array1<f64> {
         let n = self.dim / 2;
         let h = 1e-8;
         let mut dx = Array1::zeros(self.dim);
@@ -495,7 +510,7 @@ impl ModifiedMidpointIntegrator {
         let x_new = self.base.step(x, t, flow)?;
 
         // Compute divergence at midpoint
-        let x_mid = (x + &x_new) / 2.0;
+        let x_mid = (&x.to_owned() + &x_new) / 2.0;
         let div = flow.verify_divergence_free(&x_mid.view(), t + self.base.dt / 2.0, 1e-8);
 
         // Apply correction if needed
@@ -520,8 +535,8 @@ pub struct VariationalIntegrator {
 
 impl VariationalIntegrator {
     /// Create a new variational integrator
-    pub fn new(_dt: f64, n_quad: usize) -> Self {
-        Self { _dt, n_quad }
+    pub fn new(dt: f64, n_quad: usize) -> Self {
+        Self { dt, n_quad }
     }
 
     /// Discrete Lagrangian for volume-preserving flow
@@ -592,15 +607,15 @@ pub struct DiscreteGradientIntegrator {
 
 impl DiscreteGradientIntegrator {
     /// Create a new discrete gradient integrator
-    pub fn new(_dt: f64) -> Self {
+    pub fn new(dt: f64) -> Self {
         Self {
-            _dt,
+            dt,
             invariants: Vec::new(),
         }
     }
 
     /// Add an invariant function to preserve
-    pub fn add_invariant<I>(mut invariant: I) -> Self
+    pub fn add_invariant<I>(&mut self, invariant: I) -> &mut Self
     where
         I: Fn(&ArrayView1<f64>) -> f64 + 'static,
     {
@@ -637,7 +652,7 @@ impl DiscreteGradientIntegrator {
     }
 
     /// Standard gradient computation
-    fn gradient(x: &ArrayView1<f64>, invariant_idx: usize) -> Array1<f64> {
+    fn gradient(&self, x: &ArrayView1<f64>, invariant_idx: usize) -> Array1<f64> {
         let h = &self.invariants[invariant_idx];
         let eps = 1e-8;
         let n = x.len();

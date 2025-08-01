@@ -1,6 +1,6 @@
 use ndarray::{s, Array2};
-use scirs2__integrate::pde::implicit::{ImplicitOptions, ADI2D};
-use scirs2__integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
+use scirs2_integrate::pde::implicit::{ImplicitOptions, ADI2D};
+use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -46,8 +46,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     // Define constant diffusion coefficients for both directions
-    let diffusion_x = |_x: f64_y: f64, _t: f64_u: f64| 1.0;
-    let diffusion_y = |_x: f64_y: f64, _t: f64_u: f64| 1.0;
+    let diffusion_x = |_x: f64, _y: f64, _t: f64, _u: f64| 1.0;
+    let diffusion_y = |_x: f64, _y: f64, _t: f64, _u: f64| 1.0;
 
     // Define initial condition: u(x, y, 0) = sin(πx) * sin(πy)
     let initial_condition = |x: f64, y: f64| (PI * x).sin() * (PI * y).sin();

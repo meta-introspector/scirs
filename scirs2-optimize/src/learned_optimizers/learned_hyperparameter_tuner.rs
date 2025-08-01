@@ -383,7 +383,7 @@ impl LearnedHyperparameterTuner {
         let hidden_size = _config.hidden_size;
 
         Self {
-            _config,
+            config: _config,
             hyperparameter_space,
             performance_database,
             bayesian_optimizer,
@@ -524,7 +524,8 @@ impl LearnedHyperparameterTuner {
         match problem.problem_class.as_str() {
             "quadratic" => features[7] = 1.0,
             "neural_network" => features[8] = 1.0,
-            "sparse" => features[9] = 1.0_ => features[10] = 1.0,
+            "sparse" => features[9] = 1.0,
+            _ => features[10] = 1.0,
         }
 
         // Budget and accuracy requirements
@@ -566,7 +567,7 @@ impl LearnedHyperparameterTuner {
         });
 
         // Select top configurations
-        for (record_similarity) in similarities.into_iter().take(5) {
+        for (record, _similarity) in similarities.into_iter().take(5) {
             configs.push(record.config.clone());
         }
 
@@ -627,14 +628,14 @@ impl LearnedHyperparameterTuner {
         for param in &self.hyperparameter_space.discrete_params {
             let idx = rand::rng().gen_range(0..param.values.len());
             let value = param.values[idx];
-            parameters.insert(param.name.clone()..ParameterValue::Discrete(value));
+            parameters.insert(param.name.clone(), ParameterValue::Discrete(value));
         }
 
         // Sample categorical parameters
         for param in &self.hyperparameter_space.categorical_params {
             let idx = rand::rng().gen_range(0..param.categories.len());
             let value = param.categories[idx].clone();
-            parameters.insert(param.name.clone()..ParameterValue::Categorical(value));
+            parameters.insert(param.name.clone(), ParameterValue::Categorical(value));
         }
 
         Ok(HyperparameterConfig::new(parameters))
@@ -716,11 +717,13 @@ impl LearnedHyperparameterTuner {
     {
         // Extract optimization parameters from config
         let learning_rate = match config.parameters.get("learning_rate") {
-            Some(ParameterValue::Continuous(lr)) => *lr_ => 0.01,
+            Some(ParameterValue::Continuous(lr)) => *lr,
+            _ => 0.01,
         };
 
         let max_nit = match config.parameters.get("max_nit") {
-            Some(ParameterValue::Discrete(iters)) => (*iters as f64 * fidelity) as usize_ => (100.0 * fidelity) as usize,
+            Some(ParameterValue::Discrete(iters)) => (*iters as f64 * fidelity) as usize,
+            _ => (100.0 * fidelity) as usize,
         };
 
         // Simple optimization with extracted parameters
@@ -854,13 +857,13 @@ impl LearnedHyperparameterTuner {
         &self,
         num_candidates: usize,
     ) -> OptimizeResult<Vec<HyperparameterConfig>> {
-        let mut _candidates = Vec::new();
+        let mut candidates = Vec::new();
 
         for _ in 0..num_candidates {
-            _candidates.push(self.sample_random_configuration()?);
+            candidates.push(self.sample_random_configuration()?);
         }
 
-        Ok(_candidates)
+        Ok(candidates)
     }
 
     /// Evaluate acquisition function
@@ -885,7 +888,8 @@ impl LearnedHyperparameterTuner {
                     0.0
                 }
             }
-            AcquisitionFunction::UpperConfidenceBound { beta } => mean + beta * variance.sqrt(, _ => mean + variance.sqrt(), // Default UCB
+            AcquisitionFunction::UpperConfidenceBound { beta } => mean + beta * variance.sqrt(),
+            _ => mean + variance.sqrt(), // Default UCB
         };
 
         Ok(acquisition_value)
@@ -912,7 +916,8 @@ impl LearnedHyperparameterTuner {
 
     /// Select fidelity level for evaluation
     fn select_fidelity_level(
-        &self_config: &HyperparameterConfig,
+        &self,
+        _config: &HyperparameterConfig,
         remaining_budget: f64,
     ) -> OptimizeResult<f64> {
         match &self.multi_fidelity_evaluator.selection_strategy {
@@ -1030,7 +1035,7 @@ impl HyperparameterConfig {
         let embedding = Self::compute_embedding(&_parameters);
 
         Self {
-            _parameters,
+            parameters: _parameters,
             config_hash,
             embedding,
         }
@@ -1060,7 +1065,7 @@ impl HyperparameterConfig {
         match _value {
             ParameterValue::Continuous(v) => v.to_bits(),
             ParameterValue::Discrete(v) => *v as u64,
-            ParameterValue::Categorical(s) =>, Self::hash_string(s),
+            ParameterValue::Categorical(s) => Self::hash_string(s),
         }
     }
 

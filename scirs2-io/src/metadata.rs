@@ -736,7 +736,7 @@ impl MetadataIndex {
                 values
                     .iter()
                     .filter(|(_, v)| *v >= min && *v <= max)
-                    .map(|(id_)| id.clone())
+                    .map(|(id_, _)| id_.clone())
                     .collect()
             })
             .unwrap_or_default()
@@ -755,7 +755,7 @@ impl MetadataIndex {
                 values
                     .iter()
                     .filter(|(_, dt)| *dt >= start && *dt <= end)
-                    .map(|(id_)| id.clone())
+                    .map(|(id_, _)| id_.clone())
                     .collect()
             })
             .unwrap_or_default()
@@ -1113,7 +1113,7 @@ impl MetadataReferenceResolver {
         references
             .iter()
             .filter(|(_, refs)| refs.contains(id))
-            .map(|(referencing_id_)| referencing_id.clone())
+            .map(|(referencing_id_, _)| referencing_id_.clone())
             .collect()
     }
 }

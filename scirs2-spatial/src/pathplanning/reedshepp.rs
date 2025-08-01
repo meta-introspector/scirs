@@ -66,7 +66,7 @@ impl ReedsSheppSegment {
     /// Create a new Reeds-Shepp segment
     pub fn new(_motion: Motion, turn: Turn, length: f64) -> Self {
         Self {
-            _motion,
+            motion: _motion,
             turn,
             length,
         }
@@ -168,7 +168,7 @@ impl ReedsSheppPath {
     /// # Returns
     ///
     /// * Pose at parameter t, or error if t is out of bounds
-    pub fn sample(t: f64) -> SpatialResult<Pose2D> {
+    pub fn sample(&self, t: f64) -> SpatialResult<Pose2D> {
         if !(0.0..=1.0).contains(&t) {
             return Err(SpatialError::ValueError(
                 "Parameter t must be in [0, 1]".to_string(),
@@ -262,7 +262,7 @@ impl ReedsSheppPlanner {
     ///
     /// * A new ReedsSheppPlanner instance
     pub fn new(_turning_radius: f64) -> Self {
-        Self { _turning_radius }
+        Self { turning_radius: _turning_radius }
     }
 
     /// Plan a Reeds-Shepp path between two poses
@@ -275,7 +275,7 @@ impl ReedsSheppPlanner {
     /// # Returns
     ///
     /// * The shortest Reeds-Shepp path, or an error if planning fails
-    pub fn plan(_start: &Pose2D, goal: &Pose2D) -> SpatialResult<ReedsSheppPath> {
+    pub fn plan(&self, _start: &Pose2D, goal: &Pose2D) -> SpatialResult<ReedsSheppPath> {
         if self.turning_radius <= 0.0 {
             return Err(SpatialError::ValueError(
                 "Turning radius must be positive".to_string(),
@@ -354,7 +354,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute CSC (Curvature-Straight-Curvature) paths
-    fn csc_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn csc_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         // This is a simplified implementation of CSC paths
         // A complete implementation would consider all variants (LSL, LSR, RSL, RSR, etc.)
 
@@ -408,7 +408,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute CCC (Curvature-Curvature-Curvature) paths
-    fn ccc_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn ccc_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         // Simplified CCC path (LRL type)
         let xi = x - phi.sin();
         let eta = y - 1.0 + phi.cos();
@@ -448,7 +448,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute LRLR path
-    fn lrlr_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn lrlr_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x + phi.sin();
         let eta = y - 1.0 + phi.cos();
         let rho = 0.25 * (xi * xi + eta * eta);
@@ -493,7 +493,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute RLRL path
-    fn rlrl_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn rlrl_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x - phi.sin();
         let eta = y - 1.0 - phi.cos();
         let rho = 0.25 * (xi * xi + eta * eta);
@@ -538,7 +538,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute CCCC paths (Curvature-Curvature-Curvature-Curvature)
-    fn cccc_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn cccc_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         // CCCC paths are complex 4-segment paths
         // We implement the LRLR and RLRL path types
 
@@ -558,7 +558,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute LRSL path
-    fn lrsl_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn lrsl_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x - phi.sin();
         let eta = y - 1.0 + phi.cos();
         let rho_squared = xi * xi + eta * eta;
@@ -605,7 +605,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute LRSR path
-    fn lrsr_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn lrsr_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x + phi.sin();
         let eta = y - 1.0 - phi.cos();
         let rho_squared = xi * xi + eta * eta;
@@ -652,7 +652,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute RLSL path
-    fn rlsl_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn rlsl_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x + phi.sin();
         let eta = y - 1.0 - phi.cos();
         let rho_squared = xi * xi + eta * eta;
@@ -699,7 +699,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute RLSR path
-    fn rlsr_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn rlsr_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x - phi.sin();
         let eta = y - 1.0 + phi.cos();
         let rho_squared = xi * xi + eta * eta;
@@ -746,7 +746,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute CCSC paths (Curvature-Curvature-Straight-Curvature)
-    fn ccsc_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn ccsc_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         // CCSC paths have two curves, then a straight segment, then another curve
         // We implement LRSL, LRSR, RLSL, RLSR path types
 
@@ -776,7 +776,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute LRLSL path
-    fn lrlsl_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn lrlsl_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x + phi.sin();
         let eta = y - 1.0 + phi.cos();
         let rho = 0.25 * (xi * xi + eta * eta);
@@ -829,7 +829,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute RLRLR path
-    fn rlrlr_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn rlrlr_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         let xi = x - phi.sin();
         let eta = y - 1.0 - phi.cos();
         let rho = 0.25 * (xi * xi + eta * eta);
@@ -882,7 +882,7 @@ impl ReedsSheppPlanner {
     }
 
     /// Compute CCSCC paths (Curvature-Curvature-Straight-Curvature-Curvature)
-    fn ccscc_path(x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
+    fn ccscc_path(&self, x: f64, y: f64, phi: f64) -> SpatialResult<Vec<ReedsSheppSegment>> {
         // CCSCC paths are the most complex with 5 segments
         // We implement LRLSL and RLRLR path types
 

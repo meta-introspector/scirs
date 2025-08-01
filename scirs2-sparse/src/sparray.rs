@@ -235,7 +235,7 @@ where
 {
     /// Create a new SparseArrayBase from a dense ndarray.
     pub fn new(_data: Array2<T>) -> Self {
-        Self { _data }
+        Self { data: _data }
     }
 }
 
@@ -441,9 +441,9 @@ where
                 ))))
             }
             Some(1) => {
-                let (m_) = self.shape();
-                let mut result = Array2::zeros((m, 1));
-                for i in 0..m {
+                let (m_, _) = self.shape();
+                let mut result = Array2::zeros((m_, 1));
+                for i in 0..m_ {
                     let mut sum = T::zero();
                     for j in 0..self.data.shape()[1] {
                         sum = sum + self.data[[i, j]];

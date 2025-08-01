@@ -4,7 +4,7 @@
 
 use approx::assert_relative_eq;
 use ndarray::{array, ArrayView1};
-use scirs2__integrate::{bdf_implicit_dae, bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEType};
+use scirs2_integrate::{bdf_implicit_dae, bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEType};
 
 /// Test the BDF solver for a simple linear semi-explicit DAE
 ///

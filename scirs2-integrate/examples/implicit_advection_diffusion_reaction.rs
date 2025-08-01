@@ -1,8 +1,8 @@
-use scirs2__integrate::pde::implicit::{
+use scirs2_integrate::pde::implicit::{
     BackwardEuler1D, CrankNicolson1D, ImplicitMethod, ImplicitOptions,
 };
-use scirs2__integrate::pde::method_of_lines::{MOLOptions, MOLParabolicSolver1D};
-use scirs2__integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
+use scirs2_integrate::pde::method_of_lines::{MOLOptions, MOLParabolicSolver1D};
+use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -38,9 +38,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Define coefficients for the stiff advection-diffusion-reaction equation
     // ∂u/∂t = ε * ∂²u/∂x² - v * ∂u/∂x - k*u
-    let diffusion_coeff = move |_x: f64_t: f64, _u: f64| epsilon;
-    let advection_coeff = move |_x: f64_t: f64, _u: f64| velocity;
-    let reaction_term = move |_x: f64_t: f64, _u: f64| reaction;
+    let diffusion_coeff = move |_x: f64, _t: f64, _u: f64| epsilon;
+    let advection_coeff = move |_x: f64, _t: f64, _u: f64| velocity;
+    let reaction_term = move |_x: f64, _t: f64, _u: f64| reaction;
 
     // Define the initial condition: u(x, 0) = sin(π*x)
     let initial_condition = |x: f64| (PI * x).sin();

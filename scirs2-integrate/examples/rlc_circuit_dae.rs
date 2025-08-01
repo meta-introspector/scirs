@@ -1,6 +1,6 @@
 use ndarray::{array, Array1, ArrayView1};
-use scirs2__integrate::dae::{solve_semi_explicit_dae, DAEOptions};
-use scirs2__integrate::ode::ODEMethod;
+use scirs2_integrate::dae::{solve_semi_explicit_dae, DAEOptions};
+use scirs2_integrate::ode::ODEMethod;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

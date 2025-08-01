@@ -9,7 +9,7 @@
 use ndarray::{array, ArrayView1};
 use num_traits::Float;
 use plotters::prelude::*;
-use scirs2__integrate::{
+use scirs2_integrate::{
     bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEStructure, DAEType, ProjectionMethod,
 };
 

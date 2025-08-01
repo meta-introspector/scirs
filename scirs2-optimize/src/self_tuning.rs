@@ -455,7 +455,7 @@ impl ParameterValue {
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             ParameterValue::Float(f) => Some(*f),
-            ParameterValue::Integer(i) => Some(*i as f64, _ => None,
+            ParameterValue::Integer(i) => Some(*i as f64), _ => None,
         }
     }
 
@@ -463,14 +463,14 @@ impl ParameterValue {
     pub fn as_i64(&self) -> Option<i64> {
         match self {
             ParameterValue::Integer(i) => Some(*i),
-            ParameterValue::Float(f) => Some(*f as i64, _ => None,
+            ParameterValue::Float(f) => Some(*f as i64), _ => None,
         }
     }
 
     /// Extract as bool if possible
     pub fn as_bool(&self) -> Option<bool> {
         match self {
-            ParameterValue::Boolean(b) => Some(*b, _ => None,
+            ParameterValue::Boolean(b) => Some(*b), _ => None,
         }
     }
 }
@@ -702,7 +702,8 @@ impl AdaptationEngine {
     fn performance_based_adaptation(
         &self,
         parameter_manager: &mut ParameterManager,
-        metrics: &PerformanceMetrics_config: &SelfTuningConfig,
+        metrics: &PerformanceMetrics,
+        config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
         let mut changes = Vec::new();
         let mut parameters_changed = false;
@@ -769,7 +770,8 @@ impl AdaptationEngine {
         &mut self,
         agent: &mut ReinforcementLearningAgent,
         parameter_manager: &mut ParameterManager,
-        metrics: &PerformanceMetrics_config: &SelfTuningConfig,
+        metrics: &PerformanceMetrics,
+        config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
         let action = agent.select_action(metrics);
         let changes = agent.apply_action(action, parameter_manager)?;
@@ -784,7 +786,8 @@ impl AdaptationEngine {
     fn bayesian_adaptation(
         &mut self,
         parameter_manager: &mut ParameterManager,
-        metrics: &PerformanceMetrics_config: &SelfTuningConfig,
+        metrics: &PerformanceMetrics,
+        config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
         let suggestions = if let Some(ref mut optimizer) = self.bayesian_optimizer {
             optimizer.suggest_parameters(parameter_manager.current_values(), metrics)?

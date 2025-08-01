@@ -378,16 +378,16 @@ pub fn legendre_diff_matrix(n: usize) -> Array2<f64> {
     let mut d = Array2::zeros((n, n));
 
     // Compute Legendre-Gauss-Lobatto points and weights
-    let (x_) = legendre_points(n);
+    let (x_, _weights) = legendre_points(n);
 
     // Compute the differentiation matrix entries
     for i in 0..n {
         for j in 0..n {
             if i != j {
-                let p_i = legendre_polynomial(n - 1, x[i]);
-                let p_j = legendre_polynomial(n - 1, x[j]);
+                let p_i = legendre_polynomial(n - 1, x_[i]);
+                let p_j = legendre_polynomial(n - 1, x_[j]);
 
-                d[[i, j]] = p_i / (p_j * (x[i] - x[j]));
+                d[[i, j]] = p_i / (p_j * (x_[i] - x_[j]));
 
                 if j == 0 || j == n - 1 {
                     d[[i, j]] *= 2.0;
@@ -867,7 +867,7 @@ impl ChebyshevSpectralSolver1D {
         }
 
         // Solve the linear system
-        let u = self.solve_linear_system(&a_matrix, &rhs.view())?;
+        let u = ChebyshevSpectralSolver1D::solve_linear_system(&a_matrix, &rhs.view())?;
 
         // Compute Chebyshev coefficients (optional)
         let coefficients = chebyshev_transform(&u.view());
@@ -1060,12 +1060,12 @@ impl LegendreSpectralSolver1D {
         let n = self.options.num_modes;
 
         // Generate Legendre-Gauss-Lobatto grid in [-1, 1] and weights
-        let (lgb_grid_weights) = legendre_points(n);
+        let (lgb_grid_, _weights) = legendre_points(n);
 
         // Map Legendre grid to the domain [a, b]
         let mut grid = Array1::zeros(n);
         for j in 0..n {
-            grid[j] = a + (b - a) * (lgb_grid[j] + 1.0) / 2.0;
+            grid[j] = a + (b - a) * (lgb_grid_[j] + 1.0) / 2.0;
         }
 
         // Compute source term on the grid
@@ -1190,7 +1190,7 @@ impl LegendreSpectralSolver1D {
         }
 
         // Solve the linear system
-        let u = self.solve_linear_system(&a_matrix, &rhs.view())?;
+        let u = LegendreSpectralSolver1D::solve_linear_system(&a_matrix, &rhs.view())?;
 
         // Compute Legendre coefficients
         let coefficients = legendre_transform(&u.view());

@@ -23,7 +23,7 @@ use ndarray::Array2;
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__sparse::convert::dense_to_csr;
+/// use scirs2_sparse::convert::dense_to_csr;
 ///
 /// let dense = Array2::from_shape_vec((3, 3), vec![
 ///     1.0, 0.0, 2.0,

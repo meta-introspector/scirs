@@ -145,9 +145,14 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 JacobianStrategy::ModifiedNewton => 50,
                 JacobianStrategy::BroydenUpdate => 20,
                 JacobianStrategy::ParallelFiniteDifference => 1,
-                JacobianStrategy::ParallelSparseFiniteDifference => 1, // Other strategies don't reuse as much
+                JacobianStrategy::ParallelSparseFiniteDifference => 1,
+                JacobianStrategy::FiniteDifference => 1,
+                JacobianStrategy::SparseFiniteDifference => 1,
+                JacobianStrategy::ColoredFiniteDifference => 1,
+                JacobianStrategy::AutoDiff => 1,
+                JacobianStrategy::Adaptive => 1,
             },
-            _strategy,
+            strategy: _strategy,
             structure,
             condition_estimate: None,
             factorized: false,
@@ -181,7 +186,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
                 // Fall back to modified Newton for large systems without parallel
                 (JacobianStrategy::ModifiedNewton, JacobianStructure::Dense)
             }
-        } else if n_dim > 20 {
+        } else if _n_dim > 20 {
             // For medium-sized systems, use Broyden updates
             (JacobianStrategy::BroydenUpdate, JacobianStructure::Dense)
         } else {
@@ -199,7 +204,7 @@ impl<F: IntegrateFloat> JacobianManager<F> {
     }
 
     /// Check if the Jacobian needs to be recomputed
-    pub fn needs_update(t: F, y: &Array1<F>, force_age: Option<usize>) -> bool {
+    pub fn needs_update(&self, t: F, y: &Array1<F>, force_age: Option<usize>) -> bool {
         // Always recompute if we don't have a Jacobian yet
         if self.jacobian.is_none() {
             return true;
@@ -207,13 +212,13 @@ impl<F: IntegrateFloat> JacobianManager<F> {
 
         // Check _age against threshold (possibly overridden)
         let max_age = force_age.unwrap_or(self.max_age);
-        if self._age >= max_age {
+        if self.age >= max_age {
             return true;
         }
 
         // For certain strategies, we always recompute
         match self.strategy {
-            JacobianStrategy::FiniteDifference => self._age > 0,
+            JacobianStrategy::FiniteDifference => self.age > 0,
             _ => {
                 // For other strategies, check if state has changed significantly
                 if let Some((old_t, old_y)) = &self.state_point {
@@ -603,13 +608,13 @@ impl<F: IntegrateFloat> JacobianManager<F> {
     }
 
     /// Update the age threshold for recomputation
-    pub fn set_max_age(_max_age: usize) {
-        self._max_age = _max_age;
+    pub fn set_max_age(&mut self, _max_age: usize) {
+        self.max_age = _max_age;
     }
 
     /// Mark the Jacobian as factorized
-    pub fn mark_factorized(_factorized: bool) {
-        self._factorized = _factorized;
+    pub fn mark_factorized(&mut self, _factorized: bool) {
+        self.factorized = _factorized;
     }
 
     /// Check if the Jacobian is factorized

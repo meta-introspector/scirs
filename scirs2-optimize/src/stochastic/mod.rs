@@ -364,7 +364,8 @@ pub fn create_stochastic_options_for_problem(
             gradient_clip: Some(2.0),
             early_stopping_patience: Some(100),
             ..Default::default()
-        }_ => StochasticOptions::default(),
+        },
+        _ => StochasticOptions::default(),
     }
 }
 

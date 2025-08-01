@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use scirs2__integrate::{
+use scirs2_integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, MOLOptions,
     MOLParabolicSolver3D, PDESolution,
 };
@@ -28,9 +28,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let t_span = [0.0, 1.0];
 
     // Diffusion coefficients (constant for heat equation)
-    let diffusion_x = move |_x: f64_y: f64, _z: f64_t: f64, _u: f64| d;
-    let diffusion_y = move |_x: f64_y: f64, _z: f64_t: f64, _u: f64| d;
-    let diffusion_z = move |_x: f64_y: f64, _z: f64_t: f64, _u: f64| d;
+    let diffusion_x = move |_x: f64, _y: f64, _z: f64, _t: f64, _u: f64| d;
+    let diffusion_y = move |_x: f64, _y: f64, _z: f64, _t: f64, _u: f64| d;
+    let diffusion_z = move |_x: f64, _y: f64, _z: f64, _t: f64, _u: f64| d;
 
     // Initial condition: u(x,y,z,0) = sin(πx) * sin(πy) * sin(πz)
     let initial_condition =
@@ -87,7 +87,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Solver options
     let options = MOLOptions {
-        ode_method: scirs2, _integrate: ODEMethod::Bdf,
+        ode_method: scirs2,
+        _integrate: ODEMethod::Bdf,
         atol: 1e-6,
         rtol: 1e-3,
         max_steps: Some(5000),

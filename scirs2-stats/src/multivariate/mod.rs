@@ -13,10 +13,10 @@ mod enhanced_analysis;
 mod factor_analysis;
 mod pca;
 
-pub use canonical__correlation::*;
-pub use discriminant__analysis::*;
+pub use canonical_correlation::*;
+pub use discriminant_analysis::*;
 // Import enhanced analysis with aliases to avoid conflicts
-pub use enhanced__analysis::{
+pub use enhanced_analysis::{
     enhanced_factor_analysis, enhanced_pca, EnhancedFactorAnalysis, EnhancedPCA,
     FactorAnalysisConfig as EnhancedFactorAnalysisConfig,
     FactorAnalysisResult as EnhancedFactorAnalysisResult, PCAAlgorithm as EnhancedPCAAlgorithm,
@@ -24,7 +24,7 @@ pub use enhanced__analysis::{
     RotationMethod as EnhancedRotationMethod,
 };
 // Import standard analysis - this is the main API
-pub use factor__analysis::*;
+pub use factor_analysis::*;
 pub use pca::*;
 
 #[allow(unused_imports)]

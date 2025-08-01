@@ -6,7 +6,7 @@
 //! detection for ensuring consistent behavior across all supported platforms.
 
 use crate::error::{StatsError, StatsResult};
-use crate::error__standardization::ErrorMessages;
+use crate::error_standardization::ErrorMessages;
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, Zero, One};
 use serde::{Deserialize, Serialize};

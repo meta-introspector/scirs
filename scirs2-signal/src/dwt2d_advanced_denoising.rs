@@ -903,7 +903,8 @@ fn estimate_noise_variance_2d(
         NoiseEstimationMethod::RobustMAD => estimate_noise_robust_mad_2d(image),
         NoiseEstimationMethod::WaveletBased => estimate_noise_wavelet_based_2d(image),
         NoiseEstimationMethod::LocalVariance => estimate_noise_local_variance_2d(image),
-        NoiseEstimationMethod::QuantumInspired => estimate_noise_quantum_inspired_2d(image, _ => estimate_noise_robust_mad_2d(image),
+        NoiseEstimationMethod::QuantumInspired => estimate_noise_quantum_inspired_2d(image),
+        _ => estimate_noise_robust_mad_2d(image),
     }
 }
 

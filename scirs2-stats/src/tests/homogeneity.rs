@@ -199,12 +199,12 @@ where
 
 // Helper function to trim from both ends of a sorted array
 #[allow(dead_code)]
-fn trim_both<F>(_sorted_data: &[F], proportion: F) -> Vec<F>
+fn trim_both<F>(sorted_data: &[F], proportion: F) -> Vec<F>
 where
     F: Float + Copy + std::fmt::Display,
 {
     if proportion <= F::zero() || proportion >= F::from(0.5).unwrap() {
-        return _sorted_data.to_vec();
+        return sorted_data.to_vec();
     }
 
     let n = sorted_data.len();

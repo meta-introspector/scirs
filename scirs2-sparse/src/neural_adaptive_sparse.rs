@@ -342,7 +342,7 @@ impl NeuralAdaptiveSparseProcessor {
         let experience_buffer = ExperienceBuffer::new(_config.replay_buffer_size);
 
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             neural_network,
             pattern_memory,
             performance_history: VecDeque::new(),
@@ -472,7 +472,7 @@ impl NeuralAdaptiveSparseProcessor {
                 .iter()
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0);
             self.optimization_strategies[best_strategy_idx]
         };
@@ -499,8 +499,8 @@ impl NeuralAdaptiveSparseProcessor {
                 let best_action_idx = q_values
                     .iter()
                     .enumerate()
-                    .max_by(|a..b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-                    .map(|(idx_)| idx)
+                    .max_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                    .map(|(idx, _)| idx)
                     .unwrap_or(0);
                 self.optimization_strategies
                     [best_action_idx.min(self.optimization_strategies.len() - 1)]
@@ -868,7 +868,7 @@ impl NeuralAdaptiveSparseProcessor {
         T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
     {
         // Work-stealing parallel computation
-        use crate::parallel_vector__ops::parallel_sparse_matvec_csr;
+        use crate::parallel_vector_ops::parallel_sparse_matvec_csr;
         parallel_sparse_matvec_csr(y, rows, indptr, indices, data, x, None);
         Ok(())
     }
@@ -1230,6 +1230,12 @@ impl NeuralAdaptiveSparseProcessor {
             OptimizationStrategy::SIMDVectorized => 0.9,
             OptimizationStrategy::AdaptiveHybrid => 0.7,
             OptimizationStrategy::RowWiseCache => 0.5,
+            OptimizationStrategy::ColumnWiseLocality => 0.4,
+            OptimizationStrategy::BlockStructured => 0.6,
+            OptimizationStrategy::DiagonalOptimized => 0.8,
+            OptimizationStrategy::Hierarchical => 0.6,
+            OptimizationStrategy::StreamingCompute => 0.3,
+            OptimizationStrategy::ParallelWorkStealing => 0.7,
         }
     }
 
@@ -1238,6 +1244,12 @@ impl NeuralAdaptiveSparseProcessor {
             OptimizationStrategy::ParallelWorkStealing => 0.95,
             OptimizationStrategy::AdaptiveHybrid => 0.8,
             OptimizationStrategy::BlockStructured => 0.7,
+            OptimizationStrategy::RowWiseCache => 0.6,
+            OptimizationStrategy::ColumnWiseLocality => 0.5,
+            OptimizationStrategy::DiagonalOptimized => 0.8,
+            OptimizationStrategy::Hierarchical => 0.75,
+            OptimizationStrategy::StreamingCompute => 0.9,
+            OptimizationStrategy::SIMDVectorized => 0.85,
         };
 
         // Adjust for problem size
@@ -1375,7 +1387,7 @@ impl NeuralNetwork {
     }
 
     fn forward(&self, input: &[f64]) -> Vec<f64> {
-        let (output_) = self.forward_with_cache(input);
+        let (output, _) = self.forward_with_cache(input);
         output
     }
 
@@ -2088,7 +2100,7 @@ impl ExperienceBuffer {
     fn new(_capacity: usize) -> Self {
         Self {
             buffer: VecDeque::with_capacity(_capacity),
-            _capacity,
+            capacity: _capacity,
             priority_weights: Vec::new(),
         }
     }
@@ -2141,7 +2153,7 @@ impl TransformerModel {
         let max_seq_len = 1000;
         let mut positional_encoding = vec![vec![0.0; _config.model_dim]; max_seq_len];
 
-        for (pos..encoding_row) in positional_encoding.iter_mut().enumerate().take(max_seq_len) {
+        for (pos, encoding_row) in positional_encoding.iter_mut().enumerate().take(max_seq_len) {
             for (i, encoding_value) in encoding_row.iter_mut().enumerate().take(_config.model_dim) {
                 if i % 2 == 0 {
                     *encoding_value =
@@ -2329,7 +2341,7 @@ impl AttentionHead {
             key_weights: vec![vec![0.1; model_dim]; _head_dim],
             value_weights: vec![vec![0.1; model_dim]; _head_dim],
             output_weights: vec![vec![0.1; _head_dim]; _head_dim],
-            _head_dim,
+            head_dim: _head_dim,
         }
     }
 

@@ -173,7 +173,7 @@ impl QuantumState {
     }
 
     /// Get the probability of measuring a specific state
-    pub fn probability(_state: usize) -> f64 {
+    pub fn probability(&self, _state: usize) -> f64 {
         if _state >= self.amplitudes.len() {
             0.0
         } else {
@@ -182,7 +182,7 @@ impl QuantumState {
     }
 
     /// Apply Hadamard gate to specific qubit
-    pub fn hadamard(_qubit: usize) -> SpatialResult<()> {
+    pub fn hadamard(&mut self, _qubit: usize) -> SpatialResult<()> {
         if _qubit >= self.num_qubits {
             return Err(SpatialError::InvalidInput(format!(
                 "Qubit index {_qubit} out of range"
@@ -208,7 +208,7 @@ impl QuantumState {
     }
 
     /// Apply phase rotation gate
-    pub fn phase_rotation(_qubit: usize, angle: f64) -> SpatialResult<()> {
+    pub fn phase_rotation(&mut self, _qubit: usize, angle: f64) -> SpatialResult<()> {
         if _qubit >= self.num_qubits {
             return Err(SpatialError::InvalidInput(format!(
                 "Qubit index {_qubit} out of range"
@@ -299,19 +299,19 @@ impl QuantumClusterer {
     }
 
     /// Configure quantum circuit depth
-    pub fn with_quantum_depth(mut depth: usize) -> Self {
+    pub fn with_quantum_depth(mut self, depth: usize) -> Self {
         self.quantum_depth = depth;
         self
     }
 
     /// Configure superposition states
-    pub fn with_superposition_states(mut states: usize) -> Self {
+    pub fn with_superposition_states(mut self, states: usize) -> Self {
         self.superposition_states = states;
         self
     }
 
     /// Configure maximum iterations
-    pub fn with_max_iterations(mut max_iter: usize) -> Self {
+    pub fn with_max_iterations(mut self, max_iter: usize) -> Self {
         self.max_iterations = max_iter;
         self
     }
@@ -437,9 +437,9 @@ impl QuantumClusterer {
         quantum_state: &QuantumState,
     ) -> SpatialResult<Array1<usize>> {
         let (n_points_) = points.dim();
-        let mut assignments = Array1::zeros(n_points);
+        let mut assignments = Array1::zeros(n_points_);
 
-        for i in 0..n_points {
+        for i in 0..n_points_ {
             let point = points.row(i);
             let mut min_distance = f64::INFINITY;
             let mut best_cluster = 0;
@@ -542,7 +542,7 @@ impl QuantumClusterer {
         let (n_points_) = points.dim();
         let mut total_cost = 0.0;
 
-        for i in 0..n_points {
+        for i in 0..n_points_ {
             let point = points.row(i);
             let cluster = assignments[i];
             let centroid = centroids.row(cluster);
@@ -591,7 +591,7 @@ impl QuantumNearestNeighbor {
     }
 
     /// Enable quantum encoding of reference points
-    pub fn with_quantum_encoding(mut enabled: bool) -> Self {
+    pub fn with_quantum_encoding(mut self, enabled: bool) -> Self {
         self.quantum_encoding = enabled;
 
         if enabled {
@@ -605,13 +605,13 @@ impl QuantumNearestNeighbor {
     }
 
     /// Enable amplitude amplification (Grover-like algorithm)
-    pub fn with_amplitude_amplification(mut enabled: bool) -> Self {
+    pub fn with_amplitude_amplification(mut self, enabled: bool) -> Self {
         self.amplitude_amplification = enabled;
         self
     }
 
     /// Configure Grover iterations
-    pub fn with_grover_iterations(mut iterations: usize) -> Self {
+    pub fn with_grover_iterations(mut self, iterations: usize) -> Self {
         self.grover_iterations = iterations;
         self
     }
@@ -647,7 +647,11 @@ impl QuantumNearestNeighbor {
         let mut indexed_distances: Vec<(usize, f64)> = distances.into_iter().enumerate().collect();
         indexed_distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
-        let indices: Vec<usize> = indexed_distances.iter().take(k).map(|(i_)| *i).collect();
+        let indices: Vec<usize> = indexed_distances
+            .iter()
+            .take(k)
+            .map(|(i_, _)| *i_)
+            .collect();
         let dists: Vec<f64> = indexed_distances.iter().take(k).map(|(_, d)| *d).collect();
 
         Ok((indices, dists))
@@ -724,7 +728,7 @@ impl QuantumNearestNeighbor {
     }
 
     /// Calculate classical distances as fallback
-    fn classical_distance_computation(_query_point: &ArrayView1<f64>) -> Vec<f64> {
+    fn classical_distance_computation(&self, _query_point: &ArrayView1<f64>) -> Vec<f64> {
         let mut distances = Vec::new();
 
         for i in 0..self.classical_points.nrows() {
@@ -761,7 +765,7 @@ impl QuantumNearestNeighbor {
     }
 
     /// Apply amplitude amplification (Grover-like enhancement)
-    fn apply_amplitude_amplification(mut distances: Vec<f64>) -> SpatialResult<Vec<f64>> {
+    fn apply_amplitude_amplification(&self, mut distances: Vec<f64>) -> SpatialResult<Vec<f64>> {
         if distances.is_empty() {
             return Ok(distances);
         }
@@ -828,10 +832,10 @@ impl QuantumSpatialOptimizer {
     }
 
     /// Solve traveling salesman problem using QAOA
-    pub fn solve_tsp(_distance_matrix: &Array2<f64>) -> SpatialResult<Vec<usize>> {
-        let n_cities = _distance_matrix.nrows();
+    pub fn solve_tsp(&mut self, distance_matrix: &Array2<f64>) -> SpatialResult<Vec<usize>> {
+        let n_cities = distance_matrix.nrows();
 
-        if n_cities != _distance_matrix.ncols() {
+        if n_cities != distance_matrix.ncols() {
             return Err(SpatialError::InvalidInput(
                 "Distance _matrix must be square".to_string(),
             ));
@@ -959,7 +963,7 @@ impl QuantumSpatialOptimizer {
     }
 
     /// Update QAOA parameters
-    fn update_parameters(_expectation: f64, iteration: usize) {
+    fn update_parameters(&mut self, _expectation: f64, iteration: usize) {
         // Simplified parameter update using gradient descent
         let gradient_noise = 0.1 * ((iteration as f64) * 0.1).sin();
 
@@ -978,7 +982,7 @@ impl QuantumSpatialOptimizer {
     }
 
     /// Extract TSP solution from quantum state
-    fn extract_tsp_solution(_state: &QuantumState, n_cities: usize) -> Vec<usize> {
+    fn extract_tsp_solution(&self, _state: &QuantumState, n_cities: usize) -> Vec<usize> {
         // Perform multiple measurements and select best tour
         let mut best_tour = Vec::new();
         let _best_cost = f64::INFINITY;
@@ -1235,11 +1239,11 @@ pub enum ActivationFunction {
 
 impl VariationalQuantumEigensolver {
     /// Create new VQE instance
-    pub fn new(_num_qubits: usize) -> Self {
+    pub fn new(num_qubits: usize) -> Self {
         let circuit_layers = vec![VariationalLayer {
             layer_type: VariationalLayerType::RotationGates,
-            num_parameters: _num_qubits * 3,
-            parameter_indices: (0.._num_qubits * 3).collect(),
+            num_parameters: num_qubits * 3,
+            parameter_indices: (0..num_qubits * 3).collect(),
             entangling_pattern: EntanglingPattern::Linear,
         }];
 
@@ -1270,7 +1274,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Enable quantum error correction
-    pub fn with_error_correction(mut code_type: ErrorCorrectionCodeType) -> Self {
+    pub fn with_error_correction(mut self, code_type: ErrorCorrectionCodeType) -> Self {
         self.error_correction = true;
 
         let (physical_per_logical, syndrome_frequency) = match code_type {
@@ -1444,14 +1448,17 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Initialize variational parameters
-    fn initialize_parameters() {
+    fn initialize_parameters(&mut self) {
         for param in self.current_parameters.iter_mut() {
             *param = rand::random::<f64>() * 2.0 * PI - PI;
         }
     }
 
     /// Construct variational quantum state
-    fn construct_variational_state(_parameters: &Array1<f64>) -> SpatialResult<QuantumState> {
+    fn construct_variational_state(
+        &self,
+        _parameters: &Array1<f64>,
+    ) -> SpatialResult<QuantumState> {
         let mut state = QuantumState::zero_state(self.num_qubits);
 
         // Apply variational layers
@@ -1551,7 +1558,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Apply quantum error correction
-    async fn apply_error_correction(_state: &QuantumState) -> SpatialResult<QuantumState> {
+    async fn apply_error_correction(&self, _state: &QuantumState) -> SpatialResult<QuantumState> {
         if let Some(ref code) = self.error_correction_code {
             // Simulate error correction process
             let mut corrected_state = _state.clone();
@@ -1579,7 +1586,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Apply Steane code error correction
-    async fn apply_steane_code_correction(_state: &mut QuantumState) -> SpatialResult<()> {
+    async fn apply_steane_code_correction(&self, _state: &mut QuantumState) -> SpatialResult<()> {
         // Simplified Steane code implementation
         // In practice, this would involve syndrome measurement and correction
 
@@ -1600,7 +1607,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Measure Steane code syndromes
-    async fn measure_steane_syndromes(_state: &QuantumState) -> SpatialResult<Vec<bool>> {
+    async fn measure_steane_syndromes(&self, _state: &QuantumState) -> SpatialResult<Vec<bool>> {
         // Simplified syndrome measurement
         let mut syndromes = Vec::new();
 
@@ -1613,7 +1620,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Apply surface code error correction
-    async fn apply_surface_code_correction(_state: &mut QuantumState) -> SpatialResult<()> {
+    async fn apply_surface_code_correction(&self, _state: &mut QuantumState) -> SpatialResult<()> {
         // Simplified surface code implementation
         // Would involve 2D syndrome measurement and minimum-weight perfect matching
 
@@ -1688,7 +1695,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Apply basic error correction
-    async fn apply_basic_error_correction(_state: &mut QuantumState) -> SpatialResult<()> {
+    async fn apply_basic_error_correction(&self, _state: &mut QuantumState) -> SpatialResult<()> {
         // Simple bit-flip error correction
         for i in 0..self.num_qubits {
             if rand::random::<f64>() < 0.01 {
@@ -1740,7 +1747,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Evaluate Hamiltonian term for given measurement
-    fn evaluate_term_for_measurement(_term: &HamiltonianTerm, measurement: usize) -> f64 {
+    fn evaluate_term_for_measurement(&self, _term: &HamiltonianTerm, measurement: usize) -> f64 {
         let mut value = 1.0;
 
         for (i, &qubit) in _term.qubits.iter().enumerate() {
@@ -1842,7 +1849,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Update parameters using classical optimizer
-    fn update_parameters(_gradients: &Array1<f64>) -> SpatialResult<()> {
+    fn update_parameters(&mut self, _gradients: &Array1<f64>) -> SpatialResult<()> {
         match self.classical_optimizer.optimizer_type {
             OptimizerType::GradientDescent => {
                 for i in 0..self.current_parameters.len() {
@@ -2003,7 +2010,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Compute coherence for a cluster of qubits
-    fn compute_cluster_coherence(_state: &QuantumState, qubits: &[usize]) -> f64 {
+    fn compute_cluster_coherence(&self, _state: &QuantumState, qubits: &[usize]) -> f64 {
         // Simplified coherence measure
         let mut coherence = 0.0;
 
@@ -2040,7 +2047,10 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Compute various coherence measures
-    fn compute_coherence_measures(_state: &QuantumState) -> SpatialResult<CoherenceMeasures> {
+    fn compute_coherence_measures(
+        &self,
+        _state: &QuantumState,
+    ) -> SpatialResult<CoherenceMeasures> {
         let l1_coherence = self.compute_l1_coherence(_state)?;
         let relative_entropy_coherence = self.compute_relative_entropy_coherence(_state)?;
         let robustness_coherence = self.compute_robustness_coherence(_state)?;
@@ -2082,7 +2092,7 @@ impl VariationalQuantumEigensolver {
     }
 
     /// Compute robustness of coherence
-    fn compute_robustness_coherence(_state: &QuantumState) -> SpatialResult<f64> {
+    fn compute_robustness_coherence(&self, _state: &QuantumState) -> SpatialResult<f64> {
         // Simplified robustness measure
         let mut min_distance = f64::INFINITY;
 
@@ -2519,9 +2529,9 @@ pub struct QuantumHamiltonian {
 
 impl QuantumAdiabaticSpatialOptimizer {
     /// Create a new quantum adiabatic spatial optimizer
-    pub fn new(_num_qubits: usize) -> Self {
-        let quantum_state = QuantumState::uniform_superposition(_num_qubits);
-        let mixing_hamiltonian = Self::create_mixing_hamiltonian(_num_qubits);
+    pub fn new(num_qubits: usize) -> Self {
+        let quantum_state = QuantumState::uniform_superposition(num_qubits);
+        let mixing_hamiltonian = Self::create_mixing_hamiltonian(num_qubits);
 
         let evolution_params = AdiabaticEvolutionParams {
             total_time: 10.0,
@@ -2541,7 +2551,7 @@ impl QuantumAdiabaticSpatialOptimizer {
     }
 
     /// Configure adiabatic evolution parameters
-    pub fn with_evolution_params(mut params: AdiabaticEvolutionParams) -> Self {
+    pub fn with_evolution_params(mut self, params: AdiabaticEvolutionParams) -> Self {
         self.evolution_params = params;
         self
     }
@@ -2677,7 +2687,8 @@ impl QuantumAdiabaticSpatialOptimizer {
                 constraint_violations += (col_sum - 1_i32).pow(2) as f64;
             }
 
-            _matrix[[state, state]] += Complex64::new(penalty_strength * constraint_violations, 0.0);
+            _matrix[[state, state]] +=
+                Complex64::new(penalty_strength * constraint_violations, 0.0);
         }
 
         Ok(QuantumHamiltonian {
@@ -2758,7 +2769,7 @@ impl QuantumAdiabaticSpatialOptimizer {
         })
     }
 
-    fn evolve_adiabatically(_max_iterations: usize) -> SpatialResult<()> {
+    fn evolve_adiabatically(&mut self, _max_iterations: usize) -> SpatialResult<()> {
         let dt = self.evolution_params.total_time / self.evolution_params.time_steps as f64;
 
         for step in 0..self.evolution_params.time_steps.min(_max_iterations) {
@@ -2786,7 +2797,7 @@ impl QuantumAdiabaticSpatialOptimizer {
         Ok(())
     }
 
-    fn compute_schedule(t: f64, total_time: f64) -> f64 {
+    fn compute_schedule(&self, t: f64, total_time: f64) -> f64 {
         match &self.evolution_params.schedule_function {
             AdiabaticSchedule::Linear => t / total_time,
             AdiabaticSchedule::Polynomial(p) => (t / total_time).powf(*p),
@@ -2798,7 +2809,7 @@ impl QuantumAdiabaticSpatialOptimizer {
         }
     }
 
-    fn interpolate_hamiltonians(s: f64) -> SpatialResult<QuantumHamiltonian> {
+    fn interpolate_hamiltonians(&self, s: f64) -> SpatialResult<QuantumHamiltonian> {
         let problem_ham = self
             .problem_hamiltonian
             .as_ref()
@@ -2855,7 +2866,7 @@ impl QuantumAdiabaticSpatialOptimizer {
         Ok(())
     }
 
-    fn compute_energy(_hamiltonian: &QuantumHamiltonian) -> SpatialResult<f64> {
+    fn compute_energy(&self, _hamiltonian: &QuantumHamiltonian) -> SpatialResult<f64> {
         let dim = self.quantum_state.amplitudes.len();
         let mut energy = 0.0;
 
@@ -2872,7 +2883,7 @@ impl QuantumAdiabaticSpatialOptimizer {
     }
 
     #[allow(clippy::needless_range_loop)]
-    fn extract_assignment_solution(n: usize) -> SpatialResult<Vec<usize>> {
+    fn extract_assignment_solution(&self, n: usize) -> SpatialResult<Vec<usize>> {
         // Find the most probable state
         let mut max_prob = 0.0;
         let mut best_state = 0;
@@ -2900,7 +2911,7 @@ impl QuantumAdiabaticSpatialOptimizer {
         Ok(assignment)
     }
 
-    fn extract_tsp_solution(n: usize) -> SpatialResult<Vec<usize>> {
+    fn extract_tsp_solution(&self, n: usize) -> SpatialResult<Vec<usize>> {
         let mut max_prob = 0.0;
         let mut best_state = 0;
 
@@ -2916,7 +2927,7 @@ impl QuantumAdiabaticSpatialOptimizer {
     }
 
     #[allow(clippy::needless_range_loop)]
-    fn extract_maxcut_solution(n: usize) -> SpatialResult<Vec<bool>> {
+    fn extract_maxcut_solution(&self, n: usize) -> SpatialResult<Vec<bool>> {
         let mut max_prob = 0.0;
         let mut best_state = 0;
 
@@ -2936,7 +2947,7 @@ impl QuantumAdiabaticSpatialOptimizer {
         Ok(partition)
     }
 
-    fn state_to_tour(_state: usize, n: usize) -> Vec<usize> {
+    fn state_to_tour(&self, _state: usize, n: usize) -> Vec<usize> {
         let mut tour = Vec::new();
 
         // Simple encoding: each group of log₂(n) bits represents next city
@@ -3004,13 +3015,13 @@ impl QuantumSpatialPatternMatcher {
     }
 
     /// Set pattern matching threshold
-    pub fn with_threshold(mut threshold: f64) -> Self {
+    pub fn with_threshold(mut self, threshold: f64) -> Self {
         self.threshold = threshold;
         self
     }
 
     /// Enable/disable amplitude amplification
-    pub fn with_amplitude_amplification(mut enabled: bool) -> Self {
+    pub fn with_amplitude_amplification(mut self, enabled: bool) -> Self {
         self.use_amplitude_amplification = enabled;
         self
     }
@@ -3048,7 +3059,7 @@ impl QuantumSpatialPatternMatcher {
         Ok(matches)
     }
 
-    fn encode_pattern_quantum(_pattern: &ArrayView2<f64>) -> SpatialResult<QuantumState> {
+    fn encode_pattern_quantum(&self, _pattern: &ArrayView2<f64>) -> SpatialResult<QuantumState> {
         let flattened: Vec<f64> = _pattern.iter().cloned().collect();
         let normalized = self.normalize_pattern(&flattened);
 
@@ -3077,7 +3088,7 @@ impl QuantumSpatialPatternMatcher {
         }
     }
 
-    fn compute_quantum_similarity(_subregion: &ArrayView2<f64>) -> SpatialResult<f64> {
+    fn compute_quantum_similarity(&self, _subregion: &ArrayView2<f64>) -> SpatialResult<f64> {
         let pattern_template = self
             .pattern_template
             .as_ref()
@@ -3092,7 +3103,11 @@ impl QuantumSpatialPatternMatcher {
         Ok(fidelity)
     }
 
-    fn quantum_fidelity(_state1: &QuantumState, state2: &QuantumState) -> SpatialResult<f64> {
+    fn quantum_fidelity(
+        &self,
+        _state1: &QuantumState,
+        state2: &QuantumState,
+    ) -> SpatialResult<f64> {
         if _state1.amplitudes.len() != state2.amplitudes.len() {
             return Err(SpatialError::InvalidInput(
                 "Quantum states must have same dimension".to_string(),
@@ -3169,16 +3184,16 @@ pub struct QuantumTSPSolution {
 impl QuantumTSPSolver {
     /// Create a new quantum TSP solver
     pub fn new(_distance_matrix: Array2<f64>) -> SpatialResult<Self> {
-        let (n_cities_) = _distance_matrix.dim();
+        let n_cities_ = _distance_matrix.dim().0;
 
-        if n_cities < 3 {
+        if n_cities_ < 3 {
             return Err(SpatialError::InvalidInput(
                 "TSP requires at least 3 cities".to_string(),
             ));
         }
 
         // Calculate quantum register size (log2 of factorial search space)
-        let num_qubits = (n_cities as f64).log2().ceil() as usize * n_cities;
+        let num_qubits = (n_cities_ as f64).log2().ceil() as usize * n_cities_;
 
         // Create quantum annealing schedule (exponential cooling)
         let num_steps = 1000;
@@ -3190,8 +3205,8 @@ impl QuantumTSPSolver {
             .collect();
 
         Ok(Self {
-            num_cities: n_cities,
-            distance_matrix,
+            num_cities: n_cities_,
+            distance_matrix: _distance_matrix,
             annealing_schedule,
             num_trotter_slices: 100,
             qaoa_depth: 8,
@@ -3202,14 +3217,14 @@ impl QuantumTSPSolver {
     }
 
     /// Configure quantum annealing parameters
-    pub fn with_annealing_config(mut num_trotter_slices: usize, qaoa_depth: usize) -> Self {
+    pub fn with_annealing_config(mut self, num_trotter_slices: usize, qaoa_depth: usize) -> Self {
         self.num_trotter_slices = num_trotter_slices;
         self.qaoa_depth = qaoa_depth;
         self
     }
 
     /// Solve TSP using quantum-inspired optimization
-    pub async fn solve_quantum() -> SpatialResult<QuantumTSPSolution> {
+    pub async fn solve_quantum(&mut self) -> SpatialResult<QuantumTSPSolution> {
         // Initialize quantum state in equal superposition
         self.initialize_quantum_superposition()?;
 
@@ -3228,7 +3243,7 @@ impl QuantumTSPSolver {
     }
 
     /// Initialize quantum state in equal superposition over valid tours
-    fn initialize_quantum_superposition(&self) -> SpatialResult<()> {
+    fn initialize_quantum_superposition(&mut self) -> SpatialResult<()> {
         let state_size = 1 << self.num_qubits;
         let mut amplitudes = Array1::zeros(state_size);
 
@@ -3303,7 +3318,7 @@ impl QuantumTSPSolver {
     }
 
     /// Encode tour permutation to quantum state index
-    fn encode_tour_to_quantum_state(_tour: &[usize]) -> SpatialResult<usize> {
+    fn encode_tour_to_quantum_state(&self, _tour: &[usize]) -> SpatialResult<usize> {
         let mut encoded = 0;
         let mut base = 1;
 
@@ -3317,7 +3332,7 @@ impl QuantumTSPSolver {
     }
 
     /// Quantum annealing evolution using Trotter decomposition
-    async fn quantum_annealing_evolution() -> SpatialResult<QuantumTSPSolution> {
+    async fn quantum_annealing_evolution(&mut self) -> SpatialResult<QuantumTSPSolution> {
         let mut current_state = self.quantum_state.as_ref().unwrap().clone();
 
         for (step, &temperature) in self.annealing_schedule.iter().enumerate() {
@@ -3347,7 +3362,7 @@ impl QuantumTSPSolver {
         Ok(QuantumTSPSolution {
             tour: final_solution.tour,
             distance: final_solution.distance,
-            quantum_fidelity: self.compute_solution_fidelity(&current_state)?,
+            quantum_fidelity: QuantumTSPSolver::compute_solution_fidelity(&current_state)?,
             quantum_iterations: self.annealing_schedule.len(),
             classical_refinements: 0,
         })
@@ -3392,7 +3407,7 @@ impl QuantumTSPSolver {
     }
 
     /// Decode quantum state index to tour
-    fn decode_quantum_state_to_tour(_state_idx: usize) -> SpatialResult<Vec<usize>> {
+    fn decode_quantum_state_to_tour(&self, _state_idx: usize) -> SpatialResult<Vec<usize>> {
         // Decode from factorial number system
         let mut remaining = _state_idx;
         let mut tour = Vec::new();
@@ -3414,7 +3429,7 @@ impl QuantumTSPSolver {
     }
 
     /// Compute tour energy (total distance)
-    fn compute_tour_energy(_tour: &[usize]) -> f64 {
+    fn compute_tour_energy(&self, _tour: &[usize]) -> f64 {
         if _tour.len() != self.num_cities {
             return f64::INFINITY;
         }
@@ -3682,7 +3697,7 @@ impl QuantumKernelMachine {
 
         Self {
             feature_map_depth,
-            num_qubits,
+            num_qubits: _num_qubits,
             kernel_params,
             quantum_training_data: Vec::new(),
             training_labels: Array1::zeros(0),
@@ -3692,7 +3707,7 @@ impl QuantumKernelMachine {
     }
 
     /// Configure quantum kernel parameters
-    pub fn with_kernel_params(mut params: QuantumKernelParams) -> Self {
+    pub fn with_kernel_params(mut self, params: QuantumKernelParams) -> Self {
         self.kernel_params = params;
         self
     }
@@ -3703,9 +3718,9 @@ impl QuantumKernelMachine {
         points: &ArrayView2<f64>,
         labels: &ArrayView1<f64>,
     ) -> SpatialResult<()> {
-        let (n_samples_) = points.dim();
+        let n_samples_ = points.dim().0;
 
-        if n_samples != labels.len() {
+        if n_samples_ != labels.len() {
             return Err(SpatialError::InvalidInput(
                 "Number of samples must match number of labels".to_string(),
             ));
@@ -3713,7 +3728,7 @@ impl QuantumKernelMachine {
 
         // Encode training data into quantum feature space
         self.quantum_training_data = Vec::new();
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let point = points.row(i);
             let quantum_state = self.encode_classical_data(&point)?;
             self.quantum_training_data.push(quantum_state);
@@ -3738,7 +3753,7 @@ impl QuantumKernelMachine {
     }
 
     /// Encode classical data point into quantum feature space
-    fn encode_classical_data(_point: &ArrayView1<f64>) -> SpatialResult<QuantumState> {
+    fn encode_classical_data(&self, _point: &ArrayView1<f64>) -> SpatialResult<QuantumState> {
         let mut quantum_state = QuantumState::zero_state(self.num_qubits);
 
         // Apply feature map encoding
@@ -3918,7 +3933,7 @@ impl QuantumKernelMachine {
     }
 
     /// Add quantum noise to simulate realistic quantum devices
-    fn add_quantum_noise(_state: &mut QuantumState) -> SpatialResult<()> {
+    fn add_quantum_noise(&self, _state: &mut QuantumState) -> SpatialResult<()> {
         let mut rng = rand::rng();
 
         for qubit in 0..self.num_qubits {
@@ -4045,7 +4060,7 @@ impl QuantumKernelMachine {
     }
 
     /// Predict using trained quantum SVM
-    pub fn predict(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn predict(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
         if self.support_vectors.is_empty() {
             return Err(SpatialError::InvalidInput(
                 "Model must be trained before prediction".to_string(),
@@ -4124,7 +4139,7 @@ impl QuantumVariationalClassifier {
         };
 
         Self {
-            num_qubits,
+            num_qubits: _num_qubits,
             circuit_depth,
             parameters,
             optimizer,
@@ -4181,7 +4196,7 @@ impl QuantumVariationalClassifier {
     }
 
     /// Forward pass through variational quantum circuit
-    fn forward_pass(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    fn forward_pass(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
         let mut quantum_state = QuantumState::zero_state(self.num_qubits);
 
         // Data encoding layer
@@ -4279,7 +4294,7 @@ impl QuantumVariationalClassifier {
     }
 
     /// Predict using trained variational classifier
-    pub fn predict(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn predict(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
         let output = self.forward_pass(_point)?;
         Ok(if output > self.threshold { 1.0 } else { -1.0 })
     }

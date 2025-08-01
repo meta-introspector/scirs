@@ -4,6 +4,7 @@
 //! including rigid body dynamics, multibody systems with constraints, and deformable solids.
 //! These methods are optimized for the specific structure and properties of mechanical systems.
 
+use crate::error::{IntegrateError, IntegrateResult};
 use ndarray::{s, Array1, Array2};
 
 /// Type alias for external force functions
@@ -130,14 +131,14 @@ impl RigidBodyState {
     ) -> Self {
         Self {
             position,
-            _velocity,
+            velocity,
             orientation,
             angular_velocity,
         }
     }
 
     /// Get total kinetic energy
-    pub fn kinetic_energy(_mass: f64, inertia: &Array2<f64>) -> f64 {
+    pub fn kinetic_energy(&self, _mass: f64, inertia: &Array2<f64>) -> f64 {
         let translational = 0.5 * _mass * self.velocity.mapv(|v| v * v).sum();
         let rotational = 0.5
             * self
@@ -147,7 +148,7 @@ impl RigidBodyState {
     }
 
     /// Normalize quaternion orientation
-    pub fn normalize_quaternion() {
+    pub fn normalize_quaternion(&mut self) {
         let norm = self.orientation.mapv(|q| q * q).sum().sqrt();
         if norm > 1e-12 {
             self.orientation /= norm;
@@ -238,7 +239,7 @@ impl MechanicalIntegrator {
     /// Create a new mechanical integrator
     pub fn new(_config: MechanicalConfig, properties: MechanicalProperties) -> Self {
         Self {
-            _config,
+            config: _config,
             properties,
             previous_state: None,
             energy_history: Vec::new(),
@@ -250,7 +251,7 @@ impl MechanicalIntegrator {
         &mut self,
         t: f64,
         state: &RigidBodyState,
-    ) -> IntegrateResult<MechanicalIntegrationResult, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<MechanicalIntegrationResult> {
         let start_time = std::time::Instant::now();
 
         // Calculate forces and torques
@@ -274,8 +275,9 @@ impl MechanicalIntegrator {
         let constraint_start = std::time::Instant::now();
 
         // Enforce constraints
-        let (constraint_forces, constraint_violation, iterations, converged) =
-            self.enforce_constraints(&mut new_state)?;
+        let (constraint_forces, constraint_violation, iterations, converged) = self
+            .enforce_constraints(&mut new_state)
+            .map_err(|e| IntegrateError::ComputationError(e.to_string()))?;
 
         let constraint_time = constraint_start.elapsed().as_secs_f64();
 
@@ -310,14 +312,14 @@ impl MechanicalIntegrator {
         &self,
         t: f64,
         state: &RigidBodyState,
-    ) -> IntegrateResult<(Array1<f64>, Array1<f64>), Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<(Array1<f64>, Array1<f64>)> {
         let n_bodies = self.properties.mass.len();
         let mut forces = Array1::zeros(3 * n_bodies);
         let mut torques = Array1::zeros(3 * n_bodies);
 
         // External forces
         if let Some(ref external_force_fn) = self.properties.external_forces {
-            let combined_state = self.combine_position_velocity(state);
+            let combined_state = Self::combine_position_velocity(state);
             let external = external_force_fn(t, &combined_state, &state.velocity);
 
             for i in 0..n_bodies {
@@ -359,7 +361,7 @@ impl MechanicalIntegrator {
         state: &RigidBodyState,
         forces: &Array1<f64>,
         torques: &Array1<f64>,
-    ) -> IntegrateResult<RigidBodyState, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<RigidBodyState> {
         let dt = self.config.dt;
         let dt2 = dt * dt;
 
@@ -406,7 +408,7 @@ impl MechanicalIntegrator {
         state: &RigidBodyState,
         forces: &Array1<f64>,
         torques: &Array1<f64>,
-    ) -> IntegrateResult<RigidBodyState, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<RigidBodyState> {
         let dt = self.config.dt;
         let dt2 = dt * dt;
 
@@ -441,7 +443,7 @@ impl MechanicalIntegrator {
         torques: &Array1<f64>,
         beta: f64,
         gamma: f64,
-    ) -> IntegrateResult<RigidBodyState, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<RigidBodyState> {
         let dt = self.config.dt;
         let dt2 = dt * dt;
 
@@ -474,13 +476,13 @@ impl MechanicalIntegrator {
         state: &RigidBodyState,
         forces: &Array1<f64>,
         torques: &Array1<f64>,
-    ) -> IntegrateResult<RigidBodyState, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<RigidBodyState> {
         // Similar to Verlet but with different formulation
         self.verlet_step(state, forces, torques)
     }
 
     /// Calculate linear acceleration from forces
-    fn calculate_acceleration(_forces: &Array1<f64>) -> Array1<f64> {
+    fn calculate_acceleration(&self, _forces: &Array1<f64>) -> Array1<f64> {
         let n_bodies = self.properties.mass.len();
         let mut acceleration = Array1::zeros(_forces.len());
 
@@ -500,7 +502,8 @@ impl MechanicalIntegrator {
     /// Calculate angular acceleration from torques
     fn calculate_angular_acceleration(
         &self,
-        torques: &Array1<f64>, _state: &RigidBodyState,
+        torques: &Array1<f64>,
+        _state: &RigidBodyState,
     ) -> Array1<f64> {
         // For single rigid body, return 3D angular acceleration
         if self.properties.inertia.len() == 1 && torques.len() >= 3 {
@@ -573,7 +576,7 @@ impl MechanicalIntegrator {
         ]);
 
         // Quaternion multiplication: q_new = dq * q_old
-        self.quaternion_multiply(&dq, quaternion)
+        Self::quaternion_multiply(&dq, quaternion)
     }
 
     /// Multiply two quaternions
@@ -596,7 +599,7 @@ impl MechanicalIntegrator {
     }
 
     /// Enforce constraints using selected method
-    fn enforce_constraints(_state: &mut RigidBodyState) -> IntegrationResult {
+    fn enforce_constraints(&mut self, _state: &mut RigidBodyState) -> IntegrationResult {
         if self.properties.constraints.is_empty() {
             return Ok((Array1::zeros(0), 0.0, 0, true));
         }
@@ -616,7 +619,7 @@ impl MechanicalIntegrator {
     }
 
     /// Lagrange multiplier constraint enforcement
-    fn enforce_lagrange_constraints(_state: &mut RigidBodyState) -> IntegrationResult {
+    fn enforce_lagrange_constraints(&mut self, _state: &mut RigidBodyState) -> IntegrationResult {
         let max_iterations = 10;
         let tolerance = self.config.constraint_tolerance;
 
@@ -628,7 +631,7 @@ impl MechanicalIntegrator {
             iterations_used = iteration + 1;
 
             // Evaluate constraints
-            let combined_pos = self.combine_position_velocity(_state);
+            let combined_pos = Self::combine_position_velocity(_state);
             let mut constraint_values = Array1::zeros(self.properties.constraints.len());
 
             for (i, constraint) in self.properties.constraints.iter().enumerate() {
@@ -721,7 +724,7 @@ impl MechanicalIntegrator {
         }
 
         let final_violation = {
-            let combined_pos = self.combine_position_velocity(_state);
+            let combined_pos = Self::combine_position_velocity(_state);
             let mut total = 0.0;
             for constraint in &self.properties.constraints {
                 let c_val = constraint(&combined_pos);
@@ -750,7 +753,7 @@ impl MechanicalIntegrator {
         state: &mut RigidBodyState,
         stiffness: f64,
     ) -> IntegrationResult {
-        let combined_pos = self.combine_position_velocity(state);
+        let combined_pos = Self::combine_position_velocity(state);
         let mut constraint_forces = Array1::zeros(state.position.len());
         let mut total_violation = 0.0;
 
@@ -777,13 +780,13 @@ impl MechanicalIntegrator {
 
     /// Augmented Lagrangian constraint enforcement
     fn enforce_augmented_lagrangian_constraints(
-        &self,
+        &mut self,
         state: &mut RigidBodyState,
         penalty: f64,
     ) -> IntegrationResult {
         // Combine Lagrange multipliers with penalty method
         let (lambda, violation, iter1, conv1) = self.enforce_lagrange_constraints(state)?;
-        let (penalty_forces_violation2, iter2, conv2) =
+        let (penalty_forces, _violation2, iter2, conv2) =
             self.enforce_penalty_constraints(state, penalty)?;
 
         Ok((
@@ -805,7 +808,7 @@ impl MechanicalIntegrator {
         // This requires constraint velocity and acceleration
         // For simplicity, implement basic position correction
 
-        let combined_pos = self.combine_position_velocity(state);
+        let combined_pos = Self::combine_position_velocity(state);
         let mut total_violation = 0.0;
 
         for constraint in &self.properties.constraints {
@@ -826,16 +829,20 @@ impl MechanicalIntegrator {
         &self,
         matrix: &Array2<f64>,
         rhs: &Array1<f64>,
-    ) -> IntegrateResult<Array1<f64>, Box<dyn std::error::Error>> {
+    ) -> IntegrateResult<Array1<f64>> {
         let n = matrix.nrows();
         if n == 0 || n != matrix.ncols() || n != rhs.len() {
-            return Err("Invalid matrix dimensions".into());
+            return Err(IntegrateError::ValueError(
+                "Invalid matrix dimensions".to_string(),
+            ));
         }
 
         // Check for near-singular matrix
         let det_check = matrix.mapv(|x| x.abs()).sum() / (n * n) as f64;
         if det_check < 1e-14 {
-            return Err("Nearly singular constraint matrix".into());
+            return Err(IntegrateError::ValueError(
+                "Nearly singular constraint matrix".to_string(),
+            ));
         }
 
         // Simple Gauss elimination with partial pivoting
@@ -861,7 +868,9 @@ impl MechanicalIntegrator {
 
             // Check for near-zero pivot
             if aug_matrix[(max_row, i)].abs() < 1e-12 {
-                return Err("Singular matrix in constraint solving".into());
+                return Err(IntegrateError::ValueError(
+                    "Singular matrix in constraint solving".to_string(),
+                ));
             }
 
             // Swap rows if needed
@@ -893,7 +902,9 @@ impl MechanicalIntegrator {
 
             // Check for NaN or infinite solutions
             if !solution[i].is_finite() {
-                return Err("Non-finite solution in constraint solving".into());
+                return Err(IntegrateError::ValueError(
+                    "Non-finite solution in constraint solving".to_string(),
+                ));
             }
         }
 
@@ -901,10 +912,7 @@ impl MechanicalIntegrator {
     }
 
     /// Project system back to constraint manifold for severe violations
-    fn project_to_constraint_manifold(
-        &self,
-        state: &mut RigidBodyState,
-    ) -> IntegrateResult<(), Box<dyn std::error::Error>> {
+    fn project_to_constraint_manifold(&self, state: &mut RigidBodyState) -> IntegrateResult<()> {
         // For double pendulum, directly project to valid configuration
         if self.properties.constraints.len() == 2 && state.position.len() >= 6 {
             // Get parameters from the constraints (assuming they're for double pendulum)
@@ -970,7 +978,7 @@ impl MechanicalIntegrator {
     }
 
     /// Calculate total energy of the system
-    fn calculate_total_energy(_state: &RigidBodyState) -> f64 {
+    fn calculate_total_energy(&self, _state: &RigidBodyState) -> f64 {
         let n_bodies = self.properties.mass.len();
         let mut total_kinetic = 0.0;
 
@@ -1226,7 +1234,12 @@ pub mod systems {
 
 #[cfg(test)]
 mod tests {
+    use crate::ode::{
+        mechanical::systems, MechanicalConfig, MechanicalIntegrator, MechanicalProperties,
+        MechanicalSystemType, RigidBodyState,
+    };
     use approx::assert_abs_diff_eq;
+    use ndarray::{Array1, Array2};
 
     #[test]
     fn test_rigid_body_state_creation() {
@@ -1376,7 +1389,7 @@ mod tests {
             current_state = result.state;
         }
 
-        let (relative_drift_max_drift_current_energy) = integrator.energy_statistics();
+        let (relative_drift, _max_drift, _current_energy) = integrator.energy_statistics();
 
         // Energy should be reasonably conserved (within a few percent)
         assert!(

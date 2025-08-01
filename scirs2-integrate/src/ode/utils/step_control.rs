@@ -24,7 +24,7 @@ pub fn error_norm<F: IntegrateFloat>(_error: &Array1<F>, y: &Array1<F>, rtol: F,
     let scale = y
         .iter()
         .zip(_error.iter())
-        .map(|(y_i_)| rtol * y_i.abs() + atol)
+        .map(|(y_i_, _)| rtol * y_i_.abs() + atol)
         .collect::<Array1<F>>();
 
     // Calculate RMS of scaled _error

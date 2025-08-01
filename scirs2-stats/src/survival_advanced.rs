@@ -161,7 +161,7 @@ pub enum PriorType<F> {
 /// MCMC configuration for Bayesian models
 #[derive(Debug, Clone)]
 pub struct MCMCConfig {
-    pub n_samples: usize,
+    pub n_samples_: usize,
     pub n_burnin: usize,
     pub n_chains: usize,
     pub thin: usize,
@@ -633,7 +633,8 @@ where
                 time_roc_aucs: HashMap::new(),
                 calibration_slopes: HashMap::new(),
                 cross_validation_scores: HashMap::new(),
-            }_phantom: PhantomData,
+            },
+            _phantom: PhantomData,
         }
     }
 
@@ -644,8 +645,8 @@ where
         events: &ArrayView1<bool>,
         covariates: &ArrayView2<F>,
     ) -> StatsResult<AdvancedSurvivalResults<F>> {
-        check_array_finite(durations, "durations")?;
-        check_array_finite(covariates, "covariates")?;
+        checkarray_finite(durations, "durations")?;
+        checkarray_finite(covariates, "covariates")?;
 
         if durations.len() != events.len() || durations.len() != covariates.nrows() {
             return Err(StatsError::DimensionMismatch(
@@ -836,7 +837,7 @@ where
 
     /// Fit Random Survival Forest
     fn fit_random_forest(
-        &self_durations: &ArrayView1<F>, _events: &ArrayView1<bool>,
+        &self, _times: &ArrayView1<F>, _events: &ArrayView1<bool>,
         covariates: &ArrayView2<F>,
     ) -> StatsResult<SurvivalModel<F>> {
         let n_features = covariates.ncols();
@@ -906,7 +907,7 @@ where
             let score = match model {
                 SurvivalModel::Cox(cox) => cox.concordance_index,
                 SurvivalModel::RandomForest(rf) => rf.concordance_index,
-                SurvivalModel::DeepSurvival(deep) => deep.concordance_index_ =>, F::from(0.5).unwrap(),
+                SurvivalModel::DeepSurvival(deep) => deep.concordance_index.unwrap_or_else(|| F::from(0.5).unwrap()),
             };
             performance_scores.insert(model_name.clone(), score);
         }
@@ -1068,17 +1069,17 @@ where
         covariates: &ArrayView2<F>,
         time_points: &ArrayView1<F>,
     ) -> StatsResult<SurvivalPrediction<F>> {
-        let n_samples = covariates.nrows();
+        let n_samples_ = covariates.nrows();
         let n_times = time_points.len();
 
         // Simplified prediction (would use actual fitted model)
-        let risk_scores = Array1::from_elem(n_samples, F::from(0.5).unwrap());
-        let survival_functions = Array2::from_elem((n_samples, n_times), F::from(0.8).unwrap());
+        let risk_scores = Array1::from_elem(n_samples_, F::from(0.5).unwrap());
+        let survival_functions = Array2::from_elem((n_samples_, n_times), F::from(0.8).unwrap());
         let time_points = time_points.to_owned();
-        let hazard_ratios = Some(Array1::ones(n_samples));
-        let confidence_intervals = Some(Array3::zeros((n_samples, n_times, 2)));
-        let median_survival_times = Array1::from_elem(n_samples, F::from(5.0).unwrap());
-        let percentile_survival_times = Array2::from_elem((n_samples, 3), F::from(3.0).unwrap());
+        let hazard_ratios = Some(Array1::ones(n_samples_));
+        let confidence_intervals = Some(Array3::zeros((n_samples_, n_times, 2)));
+        let median_survival_times = Array1::from_elem(n_samples_, F::from(5.0).unwrap());
+        let percentile_survival_times = Array2::from_elem((n_samples_, 3), F::from(3.0).unwrap());
 
         Ok(SurvivalPrediction {
             risk_scores,

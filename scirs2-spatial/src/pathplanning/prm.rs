@@ -110,49 +110,49 @@ impl PRMConfig {
     }
 
     /// Set the number of random samples
-    pub fn with_num_samples(mut num_samples: usize) -> Self {
+    pub fn with_num_samples(mut self, num_samples: usize) -> Self {
         self.num_samples = num_samples;
         self
     }
 
     /// Set the maximum connection radius
-    pub fn with_connection_radius(mut radius: f64) -> Self {
+    pub fn with_connection_radius(mut self, radius: f64) -> Self {
         self.connection_radius = radius;
         self
     }
 
     /// Set the maximum number of connections per node
-    pub fn with_max_connections(mut max_connections: usize) -> Self {
+    pub fn with_max_connections(mut self, max_connections: usize) -> Self {
         self.max_connections = max_connections;
         self
     }
 
     /// Set the random seed
-    pub fn with_seed(mut seed: u64) -> Self {
+    pub fn with_seed(mut self, seed: u64) -> Self {
         self.seed = Some(seed);
         self
     }
 
     /// Set the goal bias
-    pub fn with_goal_bias(mut bias: f64) -> Self {
+    pub fn with_goal_bias(mut self, bias: f64) -> Self {
         self.goal_bias = bias.clamp(0.0, 1.0);
         self
     }
 
     /// Set the goal threshold
-    pub fn with_goal_threshold(mut threshold: f64) -> Self {
+    pub fn with_goal_threshold(mut self, threshold: f64) -> Self {
         self.goal_threshold = threshold;
         self
     }
 
     /// Enable bidirectional search
-    pub fn with_bidirectional(mut bidirectional: bool) -> Self {
+    pub fn with_bidirectional(mut self, bidirectional: bool) -> Self {
         self.bidirectional = bidirectional;
         self
     }
 
     /// Enable lazy evaluation for collision checking
-    pub fn with_lazy_evaluation(mut lazy_evaluation: bool) -> Self {
+    pub fn with_lazy_evaluation(mut self, lazy_evaluation: bool) -> Self {
         self.lazy_evaluation = lazy_evaluation;
         self
     }
@@ -168,7 +168,7 @@ impl Default for PRMConfig {
 #[derive(Debug, Clone)]
 struct PRMNode {
     /// Node ID
-    _id: usize,
+    id: usize,
     /// Configuration (position in state space)
     config: Array1<f64>,
     /// Neighboring nodes with edge costs
@@ -179,16 +179,16 @@ impl PRMNode {
     /// Create a new PRM node
     fn new(_id: usize, config: Array1<f64>) -> Self {
         PRMNode {
-            _id: _id,
+            id: _id,
             config,
             neighbors: Vec::new(),
         }
     }
 
     /// Add a neighbor with edge cost
-    fn add_neighbor(_neighbor_id: usize, cost: f64) {
+    fn add_neighbor(&mut self, _neighbor_id: usize, cost: f64) {
         // Check if this neighbor already exists
-        if !self.neighbors.iter().any(|(id_)| *_id == _neighbor_id) {
+        if !self.neighbors.iter().any(|(id_, _)| *id_ == _neighbor_id) {
             self.neighbors.push((_neighbor_id, cost));
         }
     }
@@ -287,7 +287,8 @@ impl PRMPlanner {
         let rng = StdRng::seed_from_u64(seed);
 
         Ok(PRMPlanner {
-            config_bounds: (lower_bounds, upper_bounds),
+            config,
+            bounds: (lower_bounds, upper_bounds),
             dimension,
             nodes: Vec::new(),
             kdtree: None,
@@ -298,7 +299,7 @@ impl PRMPlanner {
     }
 
     /// Set the collision checker function
-    pub fn set_collision_checker<F>(_checker: Box<F>)
+    pub fn set_collision_checker<F>(&mut self, _checker: Box<F>)
     where
         F: Fn(&Array1<f64>) -> bool + 'static,
     {
@@ -306,7 +307,7 @@ impl PRMPlanner {
     }
 
     /// Sample a random configuration in the configuration space
-    fn sample_config(&self) -> Array1<f64> {
+    fn sample_config(&mut self) -> Array1<f64> {
         let mut config = Array1::zeros(self.dimension);
 
         for i in 0..self.dimension {
@@ -320,7 +321,7 @@ impl PRMPlanner {
 
     /// Sample a random configuration near the given target
     #[allow(dead_code)]
-    fn sample_near(_target: &Array1<f64>, radius: f64) -> Array1<f64> {
+    fn sample_near(&mut self, _target: &Array1<f64>, radius: f64) -> Array1<f64> {
         let mut config = Array1::zeros(self.dimension);
 
         for i in 0..self.dimension {
@@ -333,7 +334,7 @@ impl PRMPlanner {
     }
 
     /// Check if a configuration is collision-free
-    fn is_collision_free(_config: &Array1<f64>) -> bool {
+    fn is_collision_free(&self, _config: &Array1<f64>) -> bool {
         match &self.collision_checker {
             Some(checker) => !checker(_config),
             None => true, // If no collision checker is set, assume all configurations are collision-free
@@ -341,7 +342,7 @@ impl PRMPlanner {
     }
 
     /// Check if a path between two configurations is collision-free
-    fn is_path_collision_free(_from: &Array1<f64>, to: &Array1<f64>) -> bool {
+    fn is_path_collision_free(&self, _from: &Array1<f64>, to: &Array1<f64>) -> bool {
         // Use a simple discretized check along the path
         // More sophisticated methods like continuous collision checking could be used here
         const NUM_CHECKS: usize = 10;
@@ -364,7 +365,7 @@ impl PRMPlanner {
     }
 
     /// Build the roadmap by sampling random configurations and connecting them
-    pub fn build_roadmap(&self) -> SpatialResult<()> {
+    pub fn build_roadmap(&mut self) -> SpatialResult<()> {
         if self.roadmap_built {
             return Ok(());
         }
@@ -534,7 +535,7 @@ impl PRMPlanner {
 
         // Remove temporary connections from the remaining nodes
         for node in &mut self.nodes {
-            node.neighbors.retain(|(id_)| *id < start_id);
+            node.neighbors.retain(|(id_, _)| *id_ < start_id);
         }
 
         // Convert the path to a sequence of configurations
@@ -558,7 +559,7 @@ impl PRMPlanner {
     }
 
     /// Find a path from start to goal using A* search
-    fn astar_search(_start_id: usize, goal_id: usize) -> Option<(Vec<usize>, f64)> {
+    fn astar_search(&self, _start_id: usize, goal_id: usize) -> Option<(Vec<usize>, f64)> {
         let mut open_set = BinaryHeap::new();
         let mut closed_set = HashSet::new();
         let mut came_from = HashMap::new();
@@ -575,17 +576,18 @@ impl PRMPlanner {
         .unwrap_or(f64::MAX);
 
         open_set.push(SearchNode {
-            _id: _start_id,
+            id: _start_id,
             g_cost: 0.0,
-            f_cost: h_score, _parent: None,
+            f_cost: h_score,
+            _parent: None,
         });
 
         while let Some(current) = open_set.pop() {
             // Check if we've reached the goal
-            if current._id == goal_id {
+            if current.id == goal_id {
                 // Reconstruct the path
                 let mut path = Vec::new();
-                let mut current_id = current._id;
+                let mut current_id = current.id;
 
                 path.push(current_id);
 
@@ -600,29 +602,29 @@ impl PRMPlanner {
             }
 
             // Skip if this node has already been processed
-            if closed_set.contains(&current._id) {
+            if closed_set.contains(&current.id) {
                 continue;
             }
 
             // Mark the current node as processed
-            closed_set.insert(current._id);
+            closed_set.insert(current.id);
 
             // Process neighbors
-            for &(neighbor_id, edge_cost) in &self.nodes[current._id].neighbors {
+            for &(neighbor_id, edge_cost) in &self.nodes[current.id].neighbors {
                 // Skip neighbors that have already been processed
                 if closed_set.contains(&neighbor_id) {
                     continue;
                 }
 
                 // Calculate tentative g-score
-                let tentative_g_score = g_scores[&current._id] + edge_cost;
+                let tentative_g_score = g_scores[&current.id] + edge_cost;
 
                 // Check if this path is better than any previous one
                 if !g_scores.contains_key(&neighbor_id)
                     || tentative_g_score < g_scores[&neighbor_id]
                 {
                     // Record this path
-                    came_from.insert(neighbor_id, current._id);
+                    came_from.insert(neighbor_id, current.id);
                     g_scores.insert(neighbor_id, tentative_g_score);
 
                     // Calculate the heuristic (Euclidean distance to goal)
@@ -636,9 +638,10 @@ impl PRMPlanner {
 
                     // Add to the open set
                     open_set.push(SearchNode {
-                        _id: neighbor_id,
+                        id: neighbor_id,
                         g_cost: tentative_g_score,
-                        f_cost: f_score, _parent: Some(current._id),
+                        f_cost: f_score,
+                        _parent: Some(current.id),
                     });
                 }
             }
@@ -704,7 +707,7 @@ impl PRM2DPlanner {
     }
 
     /// Build the roadmap
-    pub fn build_roadmap(&self) -> SpatialResult<()> {
+    pub fn build_roadmap(&mut self) -> SpatialResult<()> {
         self.planner.build_roadmap()
     }
 

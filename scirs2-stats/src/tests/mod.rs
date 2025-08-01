@@ -26,7 +26,7 @@ pub mod ttest;
 
 // Re-export test functions
 pub use anova::{one_way_anova, tukey_hsd};
-pub use chi2__test::{chi2_gof, chi2_independence, chi2_yates};
+pub use chi2_test::{chi2_gof, chi2_independence, chi2_yates};
 pub use homogeneity::{bartlett, brown_forsythe, levene};
 pub use nonparametric::{friedman, kruskal_wallis, mann_whitney, wilcoxon};
 pub use normality::{anderson_darling, dagostino_k2, ks_2samp, shapiro_wilk};
@@ -129,7 +129,9 @@ where
 pub fn ttest_ind<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
-    equal_var: bool, _alternative: Alternative_nan_policy: &str,
+    equal_var: bool,
+    _alternative: Alternative,
+    nan_policy: &str,
 ) -> StatsResult<TTestResult<F>>
 where
     F: Float
@@ -246,7 +248,9 @@ where
 #[allow(dead_code)]
 pub fn ttest_rel<F>(
     x: &ArrayView1<F>,
-    y: &ArrayView1<F>, _alternative: Alternative_nan_policy: &str,
+    y: &ArrayView1<F>,
+    _alternative: Alternative,
+    nan_policy: &str,
 ) -> StatsResult<TTestResult<F>>
 where
     F: Float

@@ -249,7 +249,7 @@ impl EnhancedImageProcessor {
         let (height, width_) = image.data.dim();
         let raw_data = image.data.iter().cloned().collect::<Vec<u8>>();
 
-        let img_buffer = image::RgbImage::from_raw(width as u32, height as u32, raw_data)
+        let img_buffer = image::RgbImage::from_raw(width_ as u32, height as u32, raw_data)
             .ok_or_else(|| IoError::FormatError("Invalid image dimensions".to_string()))?;
 
         let dynamic_img = image::DynamicImage::ImageRgb8(img_buffer);
@@ -276,7 +276,7 @@ impl EnhancedImageProcessor {
                 encoder
                     .encode(
                         dynamic_img.as_bytes(),
-                        width as u32,
+                        width_ as u32,
                         height as u32,
                         image::ColorType::Rgb8.into(),
                     )
@@ -430,7 +430,7 @@ impl EnhancedImageProcessor {
         let (height, width_) = image.data.dim();
         let raw_data = image.data.iter().cloned().collect::<Vec<u8>>();
 
-        let img_buffer = image::RgbImage::from_raw(width as u32, height as u32, raw_data)
+        let img_buffer = image::RgbImage::from_raw(width_ as u32, height as u32, raw_data)
             .ok_or_else(|| IoError::FormatError("Invalid image dimensions".to_string()))?;
 
         let dynamic_img = image::DynamicImage::ImageRgb8(img_buffer);
@@ -438,7 +438,7 @@ impl EnhancedImageProcessor {
         let rgb_blurred = blurred.to_rgb8();
         let blurred_raw = rgb_blurred.into_raw();
 
-        let blurred_data = Array3::from_shape_vec((height, width, 3), blurred_raw)
+        let blurred_data = Array3::from_shape_vec((height, width_, 3), blurred_raw)
             .map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(ImageData {
@@ -609,7 +609,7 @@ pub fn batch_convert_with_compression<P1: AsRef<Path>, P2: AsRef<Path>>(
         let file_stem = input_path
             .file_stem()
             .ok_or_else(|| IoError::FileError("Invalid file name".to_string()))?;
-        let output_filename = _format!(
+        let output_filename = format!(
             "{}.{}",
             file_stem.to_string_lossy(),
             target_format.extension()

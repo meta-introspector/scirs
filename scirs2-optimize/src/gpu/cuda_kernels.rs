@@ -100,7 +100,11 @@ impl GradientKernel {
     /// Note: This is a placeholder implementation that compiles correctly
     pub fn compute_gradients(
         &self,
-        points: &GpuBuffer<f64>, _function_values: &GpuBuffer<f64>, _function_type: i32, _h: f64_stream: Option<&GpuStream>,
+        points: &GpuBuffer<f64>,
+        _function_values: &GpuBuffer<f64>,
+        _function_type: i32,
+        _h: f64,
+        _stream: Option<&GpuStream>,
     ) -> ScirsResult<GpuBuffer<f64>> {
         // Placeholder implementation
         let n_points = points.len();
@@ -154,7 +158,13 @@ impl ParticleSwarmKernel {
     pub fn update_particles(
         &self,
         positions: &mut GpuBuffer<f64>,
-        velocities: &mut GpuBuffer<f64>, _personal_best: &GpuBuffer<f64>, _global_best: &GpuBuffer<f64>, _w: f64_c1: f64, _c2: f64_stream: Option<&GpuStream>,
+        velocities: &mut GpuBuffer<f64>,
+        _personal_best: &GpuBuffer<f64>,
+        _global_best: &GpuBuffer<f64>,
+        _w: f64,
+        _c1: f64,
+        _c2: f64,
+        _stream: Option<&GpuStream>,
     ) -> ScirsResult<()> {
         // Placeholder implementation
         let _ = (positions, velocities);
@@ -199,7 +209,10 @@ impl DifferentialEvolutionKernel {
     /// Note: This is a placeholder implementation that compiles correctly
     pub fn generate_mutants(
         &self,
-        population: &GpuBuffer<f64>, _indices: &GpuBuffer<i32>, _f: f64_stream: Option<&GpuStream>,
+        population: &GpuBuffer<f64>,
+        _indices: &GpuBuffer<i32>,
+        _f: f64,
+        _stream: Option<&GpuStream>,
     ) -> ScirsResult<GpuBuffer<f64>> {
         // Placeholder implementation
         let n_points = population.len();

@@ -1,6 +1,6 @@
 use ndarray::array;
 use ndarray::ArrayView1;
-use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::time::Instant;
 
 /// A helper function to time and report the result of an integration method

@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::Distribution;
+use rand_distr::Distribution;
 use scirs2_core::Rng;
 use statrs::function::gamma::ln_gamma;
 use statrs::statistics::Statistics;
@@ -53,7 +53,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
             ));
         }
 
-        if p <= F::zero() || p >, F::one() {
+        if p <= F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Success probability must be between 0 and 1, exclusive of 0".to_string(),
             ));

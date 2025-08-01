@@ -6,7 +6,7 @@
 //! the irregular domain finite difference method with ghost points.
 
 use ndarray::{Array1, Array2};
-use scirs2__integrate::pde::finite_difference::{BoundaryCondition, IrregularGrid, PointType};
+use scirs2_integrate::pde::finite_difference::{BoundaryCondition, IrregularGrid, PointType};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -142,7 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             match grid.points[[j, i]].point_type {
                 PointType::Interior => interior_count += 1,
                 PointType::Boundary => boundary_count += 1,
-                PointType::Ghost => ghost_count += 1_ => {}
+                PointType::Ghost => ghost_count += 1,
             }
         }
     }

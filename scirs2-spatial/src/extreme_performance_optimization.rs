@@ -562,37 +562,37 @@ impl ExtremeOptimizer {
     }
 
     /// Enable extreme SIMD vectorization
-    pub fn with_extreme_simd(mut enabled: bool) -> Self {
+    pub fn with_extreme_simd(mut self, enabled: bool) -> Self {
         self.extreme_simd = enabled;
         self
     }
 
     /// Enable cache-oblivious algorithms
-    pub fn with_cache_oblivious_algorithms(mut enabled: bool) -> Self {
+    pub fn with_cache_oblivious_algorithms(mut self, enabled: bool) -> Self {
         self.cache_oblivious = enabled;
         self
     }
 
     /// Enable branch-free execution
-    pub fn with_branch_free_execution(mut enabled: bool) -> Self {
+    pub fn with_branch_free_execution(mut self, enabled: bool) -> Self {
         self.branch_free = enabled;
         self
     }
 
     /// Enable lock-free data structures
-    pub fn with_lock_free_structures(mut enabled: bool) -> Self {
+    pub fn with_lock_free_structures(mut self, enabled: bool) -> Self {
         self.lock_free = enabled;
         self
     }
 
     /// Enable NUMA optimization
-    pub fn with_numa_optimization(mut enabled: bool) -> Self {
+    pub fn with_numa_optimization(mut self, enabled: bool) -> Self {
         self.numa_optimization = enabled;
         self
     }
 
     /// Enable JIT compilation
-    pub fn with_jit_compilation(mut enabled: bool) -> Self {
+    pub fn with_jit_compilation(mut self, enabled: bool) -> Self {
         self.jit_compilation = enabled;
         if enabled {
             self.jit_compiler = Some(JitCompiler::new());
@@ -601,19 +601,19 @@ impl ExtremeOptimizer {
     }
 
     /// Enable zero-copy operations
-    pub fn with_zero_copy_operations(mut enabled: bool) -> Self {
+    pub fn with_zero_copy_operations(mut self, enabled: bool) -> Self {
         self.zero_copy = enabled;
         self
     }
 
     /// Enable prefetch optimization
-    pub fn with_prefetch_optimization(mut enabled: bool) -> Self {
+    pub fn with_prefetch_optimization(mut self, enabled: bool) -> Self {
         self.prefetch_optimization = enabled;
         self
     }
 
     /// Enable instruction-level parallelism maximization
-    pub fn with_ilp_maximization(mut enabled: bool) -> Self {
+    pub fn with_ilp_maximization(mut self, enabled: bool) -> Self {
         self.ilp_maximization = enabled;
         self
     }
@@ -736,7 +736,7 @@ impl HardwarePerformanceCounters {
 
 impl NumaTopologyInfo {
     /// Detect NUMA topology
-    pub fn detect(&self) -> Self {
+    pub fn detect() -> Self {
         // Simulated NUMA detection - in real implementation would query system
         Self {
             num_nodes: 2,
@@ -751,7 +751,7 @@ impl NumaTopologyInfo {
 
 impl CacheHierarchyInfo {
     /// Detect cache hierarchy
-    pub fn detect(&self) -> Self {
+    pub fn detect() -> Self {
         // Simulated cache detection - in real implementation would query CPUID
         Self {
             l1_size_kb: 32,
@@ -925,7 +925,7 @@ impl AdvancedfastDistanceMatrix {
     /// Create new advancedfast distance matrix computer
     pub fn new(_optimizer: ExtremeOptimizer) -> Self {
         Self {
-            _optimizer,
+            optimizer: _optimizer,
             vectorized_kernels: VectorizedKernels {
                 avx512_kernels: HashMap::new(),
                 avx2_kernels: HashMap::new(),
@@ -988,8 +988,7 @@ impl AdvancedfastDistanceMatrix {
 
         // Use lock-free structures if enabled
         if self.optimizer.lock_free {
-            Self::apply_lock_free_optimization(&mut distance_matrix)
-                .await?;
+            self.apply_lock_free_optimization(&mut distance_matrix).await?;
         }
 
         // Simulate advanced-high performance computation
@@ -1269,8 +1268,8 @@ impl AdvancedfastDistanceMatrix {
     }
 
     /// Apply lock-free optimization
-    async fn apply_lock_free_optimization(_matrix: &mut Array2<f64>) -> SpatialResult<()> {
-use std::sync::atomic::AtomicU64;
+    async fn apply_lock_free_optimization(&self, _matrix: &mut Array2<f64>) -> SpatialResult<()> {
+        use std::sync::atomic::AtomicU64;
         use std::sync::Arc;
 
         let (rows, cols) = _matrix.dim();
@@ -1309,7 +1308,7 @@ use std::sync::atomic::AtomicU64;
                         let current_val = _matrix[[i, j]];
 
                         // Simulate compare-and-swap optimization
-                        let optimized_val = self.lock_free_optimize_value(current_val);
+                        let optimized_val = AdvancedfastDistanceMatrix::lock_free_optimize_value(current_val);
                         _matrix[[i, j]] = optimized_val;
                     }
                 }
@@ -1615,8 +1614,8 @@ pub async fn benchmark_extreme_optimizations(
     let elapsed = start_time.elapsed();
 
     // Calculate performance metrics
-    let (n_points_) = data.dim();
-    let operations = n_points * (n_points - 1) / 2; // Pairwise distances
+    let (n_points_, _) = data.dim();
+    let operations = n_points_ * (n_points_ - 1) / 2; // Pairwise distances
     let ops_per_second = operations as f64 / elapsed.as_secs_f64();
 
     Ok(ExtremePerformanceMetrics {

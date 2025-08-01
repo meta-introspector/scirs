@@ -69,7 +69,7 @@ impl Point2D {
     }
 
     /// Calculate Euclidean distance to another point
-    pub fn distance(_other: &Point2D) -> f64 {
+    pub fn distance(&self, _other: &Point2D) -> f64 {
         let dx = self.x - _other.x;
         let dy = self.y - _other.y;
         (dx * dx + dy * dy).sqrt()
@@ -116,11 +116,15 @@ impl Edge {
     /// Create a new edge between two points
     fn new(_start: Point2D, end: Point2D) -> Self {
         let weight = _start.distance(&end);
-        Edge { _start, end, weight }
+        Edge {
+            _start,
+            end,
+            weight,
+        }
     }
 
     /// Check if this edge intersects with a polygon edge
-    fn intersects_segment(_p1: &Point2D, p2: &Point2D) -> bool {
+    fn intersects_segment(&self, _p1: &Point2D, p2: &Point2D) -> bool {
         // Don't consider intersection if the segments share an endpoint
         const EPSILON: f64 = 1e-10;
 
@@ -172,7 +176,7 @@ impl VisibilityGraph {
     }
 
     /// Add a vertex to the graph
-    pub fn add_vertex(_vertex: Point2D) {
+    pub fn add_vertex(&mut self, _vertex: Point2D) {
         if !self.vertices.contains(&_vertex) {
             self.vertices.push(_vertex);
             self.adjacency_list.entry(_vertex).or_default();
@@ -180,7 +184,7 @@ impl VisibilityGraph {
     }
 
     /// Add an edge to the graph
-    pub fn add_edge(_from: Point2D, to: Point2D, weight: f64) {
+    pub fn add_edge(&mut self, _from: Point2D, to: Point2D, weight: f64) {
         // Make sure both vertices exist
         self.add_vertex(_from);
         self.add_vertex(to);
@@ -193,7 +197,7 @@ impl VisibilityGraph {
     }
 
     /// Get all neighbors of a vertex
-    pub fn get_neighbors(_vertex: &Point2D) -> Vec<(Point2D, f64)> {
+    pub fn get_neighbors(&self, _vertex: &Point2D) -> Vec<(Point2D, f64)> {
         match self.adjacency_list.get(_vertex) {
             Some(neighbors) => neighbors.clone(),
             None => Vec::new(),
@@ -201,7 +205,7 @@ impl VisibilityGraph {
     }
 
     /// Find the shortest path between two points using A* search
-    pub fn find_path(_start: Point2D, goal: Point2D) -> Option<Path<[f64; 2]>> {
+    pub fn find_path(&self, _start: Point2D, goal: Point2D) -> Option<Path<[f64; 2]>> {
         // Make sure _start and goal are in the graph
         if !self.adjacency_list.contains_key(&_start) || !self.adjacency_list.contains_key(&goal) {
             return None;
@@ -259,7 +263,7 @@ impl VisibilityGraph {
     }
 
     /// Check if two points are mutually visible
-    fn are_points_visible(_p1: &Point2D, p2: &Point2D, obstacles: &[Vec<Point2D>]) -> bool {
+    fn are_points_visible(&self, _p1: &Point2D, p2: &Point2D, obstacles: &[Vec<Point2D>]) -> bool {
         if _p1 == p2 {
             return true;
         }
@@ -369,7 +373,7 @@ impl VisibilityGraphPlanner {
     ///
     /// When enabled, the planner first checks if there's a direct path
     /// from start to goal before building the full visibility graph.
-    pub fn with_fast_path(mut use_fast_path: bool) -> Self {
+    pub fn with_fast_path(mut self, use_fast_path: bool) -> Self {
         self.use_fast_path = use_fast_path;
         self
     }
@@ -378,7 +382,7 @@ impl VisibilityGraphPlanner {
     ///
     /// This can be called explicitly to build the graph once and reuse it
     /// for multiple path queries.
-    pub fn build_graph(&self) -> SpatialResult<()> {
+    pub fn build_graph(&mut self) -> SpatialResult<()> {
         let mut graph = VisibilityGraph::new();
         let mut obstacle_vertices = Vec::new();
 

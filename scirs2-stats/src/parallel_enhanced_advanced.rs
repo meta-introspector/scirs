@@ -105,11 +105,11 @@ where
         + std::iter::Sum<F>,
 {
     /// Create a new advanced parallel processor
-    pub fn new(_config: AdvancedParallelConfig) -> Self {
+    pub fn new(config: AdvancedParallelConfig) -> Self {
         let capabilities = PlatformCapabilities::detect();
 
         Self {
-            _config,
+            config,
             capabilities,
             thread_pool: None,
             work_queue: Arc::new(Mutex::new(VecDeque::new())),
@@ -187,9 +187,9 @@ where
     where
         D: Data<Elem = F> + Sync + Send,
     {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
 
-        if n_samples == 0 {
+        if n_samples_ == 0 {
             return Err(ErrorMessages::empty_array("data"));
         }
         if n_features == 0 {
@@ -203,7 +203,7 @@ where
         let mut correlation_matrix = Array2::eye(n_features);
 
         // Parallel computation of upper triangle
-        if n_features > 4 && n_samples > self.config.parallel_threshold {
+        if n_features > 4 && n_samples_ > self.config.parallel_threshold {
             self.correlation_matrix_parallel_upper_triangle(data, &mut correlation_matrix)?;
         } else {
             self.correlation_matrix_sequential(data, &mut correlation_matrix)?;
@@ -253,7 +253,7 @@ where
     pub fn bootstrap_parallel<D>(
         &self,
         x: &ArrayBase<D, Ix1>,
-        n_samples: usize,
+        n_samples_: usize,
         statistic_fn: impl Fn(&ArrayView1<F>) -> F + Send + Sync + Clone,
         seed: Option<u64>,
     ) -> StatsResult<Array1<F>>
@@ -263,7 +263,7 @@ where
         if x.is_empty() {
             return Err(ErrorMessages::empty_array("x"));
         }
-        if n_samples == 0 {
+        if n_samples_ == 0 {
             return Err(ErrorMessages::insufficient_data("bootstrap", 1, 0));
         }
 
@@ -271,10 +271,10 @@ where
             .config
             .num_threads
             .unwrap_or_else(|| self.optimal_thread_count());
-        let samples_per_thread = (n_samples + num_threads - 1) / num_threads;
+        let samples_per_thread = (n_samples_ + num_threads - 1) / num_threads;
 
         // Parallel bootstrap computation with work stealing
-        self.bootstrap_work_stealing(x, n_samples, samples_per_thread, statistic_fn, seed)
+        self.bootstrap_work_stealing(x, n_samples_, samples_per_thread, statistic_fn, seed)
     }
 
     // Private helper methods
@@ -533,7 +533,7 @@ where
             .collect();
 
         // Combine results using parallel reduction
-        let (_final_mean, final_m2_final_count) = results.into_iter().fold(
+        let (_final_mean, final_m2, _final_count) = results.into().iter().fold(
             (F::zero(), F::zero(), 0),
             |(mean_a, m2_a, count_a), (mean_b, m2_b, count_b)| {
                 if count_b == 0 {
@@ -665,7 +665,7 @@ where
             .collect();
 
         // Combine results
-        let (total_mean, total_m2, total_m3, total_m4_total_count) = results.into_iter().fold(
+        let (total_mean, total_m2_, total_m3, total_m4, _total_count) = results.into().iter().fold(
             (F::zero(), F::zero(), F::zero(), F::zero(), 0),
             |(mean_acc, m2_acc, m3_acc, m4_acc, count_acc), (mean, m2, m3, m4, count)| {
                 if count == 0 {
@@ -694,7 +694,7 @@ where
             },
         );
 
-        let variance = total_m2 / F::from(n - ddof).unwrap();
+        let variance = total_m2_ / F::from(n - ddof).unwrap();
         let std = variance.sqrt();
 
         let skewness = if variance > F::epsilon() {
@@ -722,7 +722,7 @@ where
     fn bootstrap_work_stealing<D>(
         &self,
         x: &ArrayBase<D, Ix1>,
-        n_samples: usize,
+        n_samples_: usize,
         samples_per_thread: usize,
         statistic_fn: impl Fn(&ArrayView1<F>) -> F + Send + Sync + Clone,
         seed: Option<u64>,
@@ -737,7 +737,7 @@ where
             .config
             .num_threads
             .unwrap_or_else(|| self.optimal_thread_count());
-        let _results: Vec<F> = Vec::with_capacity(n_samples);
+        let _results: Vec<F> = Vec::with_capacity(n_samples_);
 
         let data_vec: Vec<F> = x.iter().cloned().collect();
         let data_arc = Arc::new(data_vec);
@@ -766,7 +766,7 @@ where
                             (0..n_data).map(|_| rng.gen_range(0..n_data)).collect();
 
                         let bootstrap_sample: Vec<F> =
-                            bootstrap_indices.into_iter().map(|i| data_arc[i]).collect();
+                            bootstrap_indices.into().iter().map(|i| data_arc[i]).collect();
 
                         let sample_array = Array1::from(bootstrap_sample);
                         let statistic = statistic_fn(&sample_array.view());
@@ -780,7 +780,7 @@ where
         .unwrap();
 
         let mut all_results = partial_results.lock().unwrap();
-        all_results.truncate(n_samples); // Ensure exact number of _samples
+        all_results.truncate(n_samples_); // Ensure exact number of _samples
 
         Ok(Array1::from(all_results.clone()))
     }

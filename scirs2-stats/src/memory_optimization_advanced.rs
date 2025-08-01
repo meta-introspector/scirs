@@ -247,9 +247,9 @@ where
     F: Float + NumCast + Zero + One + Send + Sync + std::fmt::Display,
 {
     /// Create a new streaming statistics calculator
-    pub fn new(_config: MemoryOptimizationConfig) -> Self {
+    pub fn new(config: MemoryOptimizationConfig) -> Self {
         Self {
-            _config,
+            config,
             count: 0,
             sum: F::zero(),
             sum_squares: F::zero(),
@@ -378,12 +378,12 @@ where
     F: Float + NumCast + Zero + One + Clone + 'static + std::fmt::Display,
 {
     /// Create a cache-optimized matrix with specified layout
-    pub fn new(_data: Array2<F>, layout: MatrixLayout, cache_line_size: usize) -> Self {
+    pub fn new(data: Array2<F>, layout: MatrixLayout, cache_line_size: usize) -> Self {
         let optimal_block_size =
-            Self::calculate_optimal_block_size(_data.nrows(), _data.ncols(), cache_line_size);
+            Self::calculate_optimal_block_size(data.nrows(), data.ncols(), cache_line_size);
 
         let mut matrix = Self {
-            _data,
+            data,
             block_size: optimal_block_size,
             memory_layout: layout,
             cache_line_size,
@@ -420,7 +420,7 @@ where
 
     /// Cache-optimized correlation computation
     pub fn correlation_matrix(&self) -> StatsResult<CacheOptimizedMatrix<F>> {
-        let (_n_samples, n_features) = self.data.dim();
+        let (_n_samples_, n_features) = self.data.dim();
 
         // Compute means using cache-friendly access patterns
         let means = self.compute_column_means_optimized()?;
@@ -490,7 +490,7 @@ where
     }
 
     /// Convert matrix to blocked layout
-    fn convert_to_blocked_layout(&self_row_major: bool) -> Array2<F> {
+    fn convert_to_blocked_layout(&self, row_major: bool) -> Array2<F> {
         // Simplified blocked layout conversion
         self.data.clone() // Placeholder implementation
     }
@@ -570,8 +570,8 @@ where
             return Ok(F::one());
         }
 
-        let n_samples = self.data.nrows();
-        let _n_samples_f = F::from(n_samples).unwrap();
+        let n_samples_ = self.data.nrows();
+        let _n_samples_f = F::from(n_samples_).unwrap();
 
         let mean_i = means[col_i];
         let mean_j = means[col_j];
@@ -581,7 +581,7 @@ where
         let mut sum_sq_j = F::zero();
 
         // Single pass through the data for cache efficiency
-        for row in 0..n_samples {
+        for row in 0..n_samples_ {
             let val_i = self.data[[row, col_i]] - mean_i;
             let val_j = self.data[[row, col_j]] - mean_j;
 
@@ -601,18 +601,18 @@ where
 
 impl AdaptiveStatsAllocator {
     /// Create a new adaptive allocator
-    pub fn new(_config: MemoryOptimizationConfig) -> Self {
+    pub fn new(config: MemoryOptimizationConfig) -> Self {
         let mut allocator = Self {
-            _config: _config.clone(),
+            config: config.clone(),
             memory_pools: HashMap::new(),
             allocation_patterns: Arc::new(RwLock::new(AllocationPatternAnalyzer::new())),
             global_stats: Arc::new(Mutex::new(MemoryProfile::new())),
         };
 
         // Initialize default memory pools
-        let _ = allocator.create_memory_pool("float_arrays", _config.memory_pool_size / 4);
-        let _ = allocator.create_memory_pool("matrix_operations", _config.memory_pool_size / 2);
-        let _ = allocator.create_memory_pool("temporary_buffers", _config.memory_pool_size / 4);
+        let _ = allocator.create_memory_pool("float_arrays", config.memory_pool_size / 4);
+        let _ = allocator.create_memory_pool("matrix_operations", config.memory_pool_size / 2);
+        let _ = allocator.create_memory_pool("temporary_buffers", config.memory_pool_size / 4);
 
         allocator
     }
@@ -738,7 +738,7 @@ impl AdaptiveStatsAllocator {
 
 impl MemoryPool {
     /// Create a new memory pool
-    fn new(_pool_id: &str, size: usize) -> StatsResult<Self> {
+    fn new(pool_id: &str, size: usize) -> StatsResult<Self> {
         let layout = Layout::from_size_align(size, 64) // 64-byte alignment for cache lines
             .map_err(|e| StatsError::ComputationError(format!("Invalid layout: {}", e)))?;
 
@@ -900,7 +900,7 @@ impl AllocationPatternAnalyzer {
         counts
             .into_iter()
             .max_by_key(|(_, count)| *count)
-            .map(|(value_)| value)
+            .map(|(_, value)| value)
             .unwrap_or(64) // Default alignment
     }
 
@@ -943,12 +943,12 @@ pub struct MemoryOptimizationSuite {
 
 impl MemoryOptimizationSuite {
     /// Create a new memory optimization suite
-    pub fn new(_config: MemoryOptimizationConfig) -> Self {
-        let allocator = AdaptiveStatsAllocator::new(_config.clone());
-        let cache_manager = CacheManager::new(_config.memory_pool_size / 8); // Use 1/8 of pool for cache
+    pub fn new(config: MemoryOptimizationConfig) -> Self {
+        let allocator = AdaptiveStatsAllocator::new(config.clone());
+        let cache_manager = CacheManager::new(config.memory_pool_size / 8); // Use 1/8 of pool for cache
 
         Self {
-            _config,
+            config,
             allocator,
             cache_manager,
         }
@@ -959,8 +959,8 @@ impl MemoryOptimizationSuite {
     where
         F: Float + NumCast + Zero + One + Clone + Send + Sync + 'static + std::fmt::Display,
     {
-        let (n_samples, n_features) = data.dim();
-        let data_size = n_samples * n_features * mem::size_of::<F>();
+        let (n_samples_, n_features) = data.dim();
+        let data_size = n_samples_ * n_features * mem::size_of::<F>();
 
         if data_size > self.config.memory_limit {
             // Use streaming algorithm for large datasets
@@ -983,7 +983,7 @@ impl MemoryOptimizationSuite {
     where
         F: Float + NumCast + Zero + One + Clone + 'static + std::fmt::Display,
     {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
         let chunk_size = self.config.streaming_chunk_size;
 
         // Initialize streaming calculators for each feature pair
@@ -991,8 +991,8 @@ impl MemoryOptimizationSuite {
         let _variances = vec![F::zero(); n_features];
 
         // First pass: compute means
-        for chunk_start in (0..n_samples).step_by(chunk_size) {
-            let chunk_end = (chunk_start + chunk_size).min(n_samples);
+        for chunk_start in (0..n_samples_).step_by(chunk_size) {
+            let chunk_end = (chunk_start + chunk_size).min(n_samples_);
             let chunk = data.slice(ndarray::s![chunk_start..chunk_end, ..]);
 
             for (feature_idx, column) in chunk.axis_iter(Axis(1)).enumerate() {
@@ -1002,7 +1002,7 @@ impl MemoryOptimizationSuite {
             }
         }
 
-        let n_samples_f = F::from(n_samples).unwrap();
+        let n_samples_f = F::from(n_samples_).unwrap();
         for mean in &mut means {
             *mean = *mean / n_samples_f;
         }
@@ -1042,10 +1042,10 @@ impl MemoryOptimizationSuite {
         let mut sum_sq_j = F::zero();
 
         let chunk_size = self.config.streaming_chunk_size;
-        let n_samples = data.nrows();
+        let n_samples_ = data.nrows();
 
-        for chunk_start in (0..n_samples).step_by(chunk_size) {
-            let chunk_end = (chunk_start + chunk_size).min(n_samples);
+        for chunk_start in (0..n_samples_).step_by(chunk_size) {
+            let chunk_end = (chunk_start + chunk_size).min(n_samples_);
 
             for row in chunk_start..chunk_end {
                 let val_i = data[[row, feature_i]] - mean_i;
@@ -1121,9 +1121,9 @@ impl MemoryOptimizationSuite {
 }
 
 impl CacheManager {
-    fn new(_cache_size: usize) -> Self {
+    fn new(cache_size: usize) -> Self {
         Self {
-            _cache_size,
+            cache_size,
             cache_entries: HashMap::new(),
             access_order: VecDeque::new(),
             hit_count: 0,

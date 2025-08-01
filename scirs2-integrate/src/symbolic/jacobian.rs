@@ -51,7 +51,7 @@ impl<F: IntegrateFloat> SymbolicJacobian<F> {
     }
 
     /// Evaluate the Jacobian at given state values
-    pub fn evaluate(t: F, y: ArrayView1<F>) -> IntegrateResult<Array2<F>> {
+    pub fn evaluate(&self, t: F, y: ArrayView1<F>) -> IntegrateResult<Array2<F>> {
         let n = self.state_vars.len();
         if y.len() != n {
             return Err(IntegrateError::DimensionMismatch(format!(
@@ -122,8 +122,8 @@ pub fn generate_jacobian<F: IntegrateFloat>(
 
     // Compute partial derivatives
     for (i, expr) in expressions.iter().enumerate() {
-        for (j_var) in state_vars.iter().enumerate() {
-            jacobian[[i, j]] = expr.differentiate(_var);
+        for (j, var) in state_vars.iter().enumerate() {
+            jacobian[[i, j]] = expr.differentiate(var);
         }
     }
 
@@ -164,20 +164,20 @@ impl<F: IntegrateFloat> SymbolicODEBuilder<F> {
     }
 
     /// Enable time dependence
-    pub fn with_time(&mut self) -> Self {
+    pub fn with_time(mut self) -> Self {
         self.time_var = Some(Variable::new("t"));
         self
     }
 
     /// Add an ODE expression
-    pub fn add_equation(mut expr: SymbolicExpression<F>) -> Self {
+    pub fn add_equation(&mut self, expr: SymbolicExpression<F>) -> &mut Self {
         self.expressions.push(expr);
         self
     }
 
     /// Build the symbolic Jacobian
-    pub fn build_jacobian() -> IntegrateResult<SymbolicJacobian<F>> {
-        generate_jacobian(&self.expressions, &self.state_vars, self.time_var)
+    pub fn build_jacobian(&self) -> IntegrateResult<SymbolicJacobian<F>> {
+        generate_jacobian(&self.expressions, &self.state_vars, self.time_var.clone())
     }
 }
 
@@ -257,7 +257,6 @@ pub fn example_stiff_chemical<F: IntegrateFloat>() -> IntegrateResult<SymbolicJa
 /// Example: Create a symbolic Jacobian for a predator-prey system with seasonal effects
 #[allow(dead_code)]
 pub fn example_seasonal_predator_prey<F: IntegrateFloat>() -> IntegrateResult<SymbolicJacobian<F>> {
-
     // Lotka-Volterra with seasonal variation
     // dx/dt = a*x*(1 + b*sin(2π*t)) - c*x*y
     // dy/dt = -d*y + e*x*y
@@ -274,16 +273,14 @@ pub fn example_seasonal_predator_prey<F: IntegrateFloat>() -> IntegrateResult<Sy
     let two_pi = constant(F::from(std::f64::consts::TAU).unwrap());
 
     // Seasonal growth term: 1 + b*sin(2π*t)
-    let seasonal = constant(F::one()) + b * Sin(Box::new(two_pi * t));
+    let seasonal = constant(F::one()) + b * SymbolicExpression::Sin(Box::new(two_pi * t));
 
     let expr1 = a * x.clone() * seasonal - c * x.clone() * y.clone();
     let expr2 = -d * y.clone() + e * x * y;
 
-    let builder = SymbolicODEBuilder::new()
-        .with_state_vars(2)
-        .with_time()
-        .add_equation(expr1)
-        .add_equation(expr2);
+    let mut builder = SymbolicODEBuilder::new().with_state_vars(2).with_time();
+    builder.add_equation(expr1);
+    builder.add_equation(expr2);
 
     builder.build_jacobian()
 }
@@ -314,10 +311,17 @@ impl<F: IntegrateFloat> Clone for SymbolicJacobian<F> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::{
+        generate_jacobian,
+        SymbolicExpression::{Neg, Var},
+        Variable,
+    };
+    use ndarray::ArrayView1;
+    use std::collections::HashMap;
 
     #[test]
     fn test_simple_jacobian() {
-
         // System: dy/dt = -y
         let y = Var(Variable::new("y"));
         let expr = Neg(Box::new(y));

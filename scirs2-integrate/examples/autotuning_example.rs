@@ -5,7 +5,7 @@
 //! performance on the current system.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2__integrate::{
+use scirs2_integrate::{
     autotuning::{AlgorithmTuner, AutoTuner, HardwareDetector, TuningProfile},
     memory::{CacheAwareAlgorithms, CacheFriendlyMatrix, MatrixLayout},
     monte_carlo::{monte_carlo, MonteCarloOptions},

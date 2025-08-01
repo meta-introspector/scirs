@@ -673,7 +673,7 @@ pub fn read_mat_enhanced<P: AsRef<Path>>(
 /// Create a complex number MatType
 #[allow(dead_code)]
 pub fn create_complex_array(_real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatType> {
-    use num__complex::Complex64;
+    use num_complex::Complex64;
 
     if _real.shape() != imag.shape() {
         return Err(IoError::FormatError(

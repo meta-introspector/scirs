@@ -582,7 +582,7 @@ where
             }
         }
 
-        (local_rows..local_cols, local_data)
+        (local_rows, local_cols, local_data)
     });
 
     // Combine results from all chunks
@@ -591,7 +591,7 @@ where
     let mut all_data = Vec::new();
 
     for (mut rows_chunk, mut cols_chunk, mut data_chunk) in results {
-        all_rows.append(&mut rows_chunk);
+        all_rows.extend(rows_chunk);
         all_cols.append(&mut cols_chunk);
         all_data.append(&mut data_chunk);
     }

@@ -184,7 +184,7 @@ impl QuantumSpikingClusterer {
     /// Create new quantum spiking clusterer
     pub fn new(_num_clusters: usize) -> Self {
         Self {
-            _num_clusters,
+            num_clusters: _num_clusters,
             quantum_superposition: false,
             stdp_enabled: false,
             quantum_entanglement: 0.0,
@@ -214,25 +214,25 @@ impl QuantumSpikingClusterer {
     }
 
     /// Enable quantum superposition
-    pub fn with_quantum_superposition(mut enabled: bool) -> Self {
+    pub fn with_quantum_superposition(mut self, enabled: bool) -> Self {
         self.quantum_superposition = enabled;
         self
     }
 
     /// Enable spike-timing dependent plasticity
-    pub fn with_spike_timing_plasticity(mut enabled: bool) -> Self {
+    pub fn with_spike_timing_plasticity(mut self, enabled: bool) -> Self {
         self.stdp_enabled = enabled;
         self
     }
 
     /// Set quantum entanglement strength
-    pub fn with_quantum_entanglement(mut strength: f64) -> Self {
+    pub fn with_quantum_entanglement(mut self, strength: f64) -> Self {
         self.quantum_entanglement = strength.clamp(0.0, 1.0);
         self
     }
 
     /// Enable bio-inspired adaptation
-    pub fn with_bio_inspired_adaptation(mut enabled: bool) -> Self {
+    pub fn with_bio_inspired_adaptation(mut self, enabled: bool) -> Self {
         self.bio_adaptation = enabled;
         self
     }
@@ -328,7 +328,7 @@ impl QuantumSpikingClusterer {
     }
 
     /// Create quantum entanglement between neurons
-    async fn create_quantum_entanglement() -> SpatialResult<()> {
+    async fn create_quantum_entanglement(&mut self) -> SpatialResult<()> {
         for i in 0..self.quantum_neurons.len() {
             for j in (i + 1)..self.quantum_neurons.len() {
                 if rand::random::<f64>() < self.quantum_entanglement {
@@ -382,7 +382,7 @@ impl QuantumSpikingClusterer {
     }
 
     /// Initialize quantum synapses
-    async fn initialize_quantum_synapses() -> SpatialResult<()> {
+    async fn initialize_quantum_synapses(&mut self) -> SpatialResult<()> {
         self.quantum_synapses.clear();
 
         for i in 0..self.quantum_neurons.len() {
@@ -453,7 +453,7 @@ impl QuantumSpikingClusterer {
     }
 
     /// Calculate coordinate range for a dimension
-    fn calculate_coordinate_range(_points: &ArrayView2<'_, f64>, dim: usize) -> (f64, f64) {
+    fn calculate_coordinate_range(&self, _points: &ArrayView2<'_, f64>, dim: usize) -> (f64, f64) {
         let mut min_coord = f64::INFINITY;
         let mut max_coord = f64::NEG_INFINITY;
 
@@ -601,7 +601,7 @@ impl QuantumSpikingClusterer {
     }
 
     /// Calculate entanglement strength for a neuron
-    fn calculate_entanglement_strength(_neuron_idx: usize) -> f64 {
+    fn calculate_entanglement_strength(&mut self, _neuron_idx: usize) -> f64 {
         if _neuron_idx < self.quantum_neurons.len() {
             let neuron = &self.quantum_neurons[_neuron_idx];
             let num_entangled = neuron.entangled_neurons.len();
@@ -687,21 +687,21 @@ impl QuantumSpikingClusterer {
     }
 
     /// Apply bio-quantum coupling for adaptation
-    async fn apply_bio_quantum_coupling(_neuron_idx: usize) -> SpatialResult<()> {
-        if _neuron_idx < self.quantum_neurons.len() {
-            let coupling_strength = self.quantum_neurons[_neuron_idx].bio_quantum_coupling;
+    async fn apply_bio_quantum_coupling(&mut self, neuron_idx: usize) -> SpatialResult<()> {
+        if neuron_idx < self.quantum_neurons.len() {
+            let coupling_strength = self.quantum_neurons[neuron_idx].bio_quantum_coupling;
 
             // Biological homeostasis affects quantum coherence
             if self.plasticity_params.homeostatic_scaling {
                 let target_activity = 0.5;
-                let current_activity = self.quantum_neurons[_neuron_idx].coherence;
+                let current_activity = self.quantum_neurons[neuron_idx].coherence;
                 let activity_error = target_activity - current_activity;
 
                 // Adjust quantum coherence towards homeostatic target
-                self.quantum_neurons[_neuron_idx].coherence +=
+                self.quantum_neurons[neuron_idx].coherence +=
                     coupling_strength * activity_error * 0.01;
-                self.quantum_neurons[_neuron_idx].coherence =
-                    self.quantum_neurons[_neuron_idx].coherence.clamp(0.1, 1.0);
+                self.quantum_neurons[neuron_idx].coherence =
+                    self.quantum_neurons[neuron_idx].coherence.clamp(0.1, 1.0);
             }
 
             // Metaplasticity affects quantum coupling
@@ -825,7 +825,7 @@ impl QuantumSpikingClusterer {
     }
 
     /// Apply quantum decoherence
-    async fn apply_quantum_decoherence() -> SpatialResult<()> {
+    async fn apply_quantum_decoherence(&mut self) -> SpatialResult<()> {
         for neuron in &mut self.quantum_neurons {
             // Decoherence affects quantum state
             let decoherence_factor = 1.0 / neuron.decoherence_time;
@@ -1028,7 +1028,7 @@ impl QuantumSpikingClusterer {
     }
 
     /// Calculate fusion performance metrics
-    fn calculate_fusion_metrics(_centroids: &Array2<f64>, points: &ArrayView2<'_, f64>) {
+    fn calculate_fusion_metrics(&mut self, _centroids: &Array2<f64>, points: &ArrayView2<'_, f64>) {
         // Calculate speedup factor
         let pure_classical_time = self.fusion_metrics.classical_time_ms * 3.0; // Estimated
         let fusion_time = self.fusion_metrics.total_time_ms;
@@ -1255,19 +1255,19 @@ impl NeuralQuantumOptimizer {
     }
 
     /// Configure neural adaptation rate
-    pub fn with_neural_adaptation_rate(mut rate: f64) -> Self {
+    pub fn with_neural_adaptation_rate(mut self, rate: f64) -> Self {
         self.neural_adaptation_rate = rate.clamp(0.001, 1.0);
         self
     }
 
     /// Configure quantum exploration depth
-    pub fn with_quantum_exploration_depth(mut depth: usize) -> Self {
+    pub fn with_quantum_exploration_depth(mut self, depth: usize) -> Self {
         self.quantum_exploration_depth = depth;
         self
     }
 
     /// Configure bio-quantum coupling
-    pub fn with_bio_quantum_coupling(mut coupling: f64) -> Self {
+    pub fn with_bio_quantum_coupling(mut self, coupling: f64) -> Self {
         self.bio_quantum_coupling = coupling.clamp(0.0, 1.0);
         self
     }
@@ -1340,7 +1340,7 @@ impl NeuralQuantumOptimizer {
     }
 
     /// Initialize neural-quantum optimization system
-    async fn initialize_neural_quantum_system(_param_dim: usize) -> SpatialResult<()> {
+    async fn initialize_neural_quantum_system(&mut self, _param_dim: usize) -> SpatialResult<()> {
         // Initialize neural network
         self.neural_network.clear();
         for _ in 0..5 {
@@ -1356,7 +1356,7 @@ impl NeuralQuantumOptimizer {
         }
 
         // Initialize quantum explorer
-        let num_qubits = param_dim.next_power_of_two().trailing_zeros() as usize;
+        let num_qubits = _param_dim.next_power_of_two().trailing_zeros() as usize;
         self.quantum_explorer = Some(QuantumState::uniform_superposition(num_qubits));
 
         Ok(())
@@ -1365,7 +1365,8 @@ impl NeuralQuantumOptimizer {
     /// Compute neural guidance for optimization direction
     async fn compute_neural_guidance(
         &mut self,
-        current_params: &Array1<f64>, _step: usize,
+        current_params: &Array1<f64>,
+        _step: usize,
     ) -> SpatialResult<Array1<f64>> {
         let mut guidance = Array1::zeros(current_params.len());
 
@@ -1465,7 +1466,8 @@ impl NeuralQuantumOptimizer {
     /// Adapt neural network based on optimization results
     async fn adapt_neural_network(
         &mut self,
-        objective_value: f64, _step: usize,
+        objective_value: f64,
+        _step: usize,
     ) -> SpatialResult<()> {
         // Calculate reward signal (lower objective _value = higher reward)
         let reward = 1.0 / (1.0 + objective_value.abs());

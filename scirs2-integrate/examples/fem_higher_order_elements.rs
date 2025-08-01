@@ -5,7 +5,7 @@
 //! on a unit square with different element types (linear, quadratic, cubic)
 //! to show convergence improvement with higher-order elements.
 
-use scirs2__integrate::pde::{
+use scirs2_integrate::pde::{
     finite_element::{ElementType, FEMOptions, FEMPoissonSolver, TriangularMesh},
     BoundaryCondition as GenericBoundaryCondition, BoundaryConditionType, BoundaryLocation,
 };

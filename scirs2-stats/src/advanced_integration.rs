@@ -71,9 +71,9 @@ impl BayesianAnalysisWorkflow {
     }
 
     /// Configure MCMC settings
-    pub fn with_mcmc(mut self, n_samples: usize, burnin: usize) -> Self {
+    pub fn with_mcmc(mut self, n_samples_: usize, burnin: usize) -> Self {
         self.use_mcmc = true;
-        self.n_mcmc_samples = n_samples;
+        self.n_mcmc_samples = n_samples_;
         self.mcmc_burnin = burnin;
         self
     }
@@ -96,15 +96,15 @@ impl BayesianAnalysisWorkflow {
         x: ArrayView2<f64>,
         y: ArrayView1<f64>,
     ) -> Result<BayesianAnalysisResult> {
-        check_array_finite(&x, "x")?;
-        check_array_finite(&y, "y")?;
+        checkarray_finite(&x, "x")?;
+        checkarray_finite(&y, "y")?;
 
-        let (n_samples, n_features) = x.dim();
-        if y.len() != n_samples {
+        let (n_samples_, n_features) = x.dim();
+        if y.len() != n_samples_ {
             return Err(StatsError::DimensionMismatch(format!(
                 "y length ({}) must match x rows ({})",
                 y.len(),
-                n_samples
+                n_samples_
             )));
         }
 
@@ -140,7 +140,8 @@ impl BayesianAnalysisWorkflow {
     /// Perform MCMC sampling from posterior
     fn perform_mcmc_sampling(
         &self,
-        regression: &BayesianRegressionResult_n_features: usize,
+        regression: &BayesianRegressionResult,
+        _n_features: usize,
     ) -> Result<Array2<f64>> {
         use rand::{rngs::StdRng, SeedableRng};
 
@@ -182,7 +183,7 @@ impl BayesianAnalysisWorkflow {
         x_test: ArrayView2<f64>,
     ) -> Result<Array2<f64>> {
         use rand::{rngs::StdRng, SeedableRng};
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
 
         let mut rng = match self.random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
@@ -236,7 +237,7 @@ impl BayesianAnalysisWorkflow {
         regression: &BayesianRegressionResult,
         x: ArrayView2<f64>, _y: ArrayView1<f64>,
     ) -> Result<BayesianModelMetrics> {
-        let n_samples = x.nrows() as f64;
+        let n_samples_ = x.nrows() as f64;
         let n_params = regression.posterior_mean.len() as f64;
 
         // Log marginal likelihood (already computed)
@@ -252,7 +253,7 @@ impl BayesianAnalysisWorkflow {
 
         // Simplified LOO-IC (Leave-One-Out Information Criterion)
         let loo_ic = -2.0 * log_marginal_likelihood
-            + 2.0 * effective_params * n_samples / (n_samples - n_params - 1.0);
+            + 2.0 * effective_params * n_samples_ / (n_samples_ - n_params - 1.0);
 
         Ok(BayesianModelMetrics {
             log_marginal_likelihood,
@@ -360,17 +361,17 @@ impl DimensionalityAnalysisWorkflow {
 
     /// Perform comprehensive dimensionality analysis
     pub fn analyze(&self, data: ArrayView2<f64>) -> Result<DimensionalityAnalysisResult> {
-        check_array_finite(&data, "data")?;
-        let (n_samples_n_features) = data.dim();
+        checkarray_finite(&data, "data")?;
+        let (n_samples_, _n_features) = data.dim();
 
-        if n_samples < 3 {
+        if n_samples_ < 3 {
             return Err(StatsError::InvalidArgument(
                 "Need at least 3 samples for analysis".to_string(),
             ));
         }
 
         // Perform PCA analysis
-        let pca = if self.use_incremental_pca && n_samples > self.pca_batch_size {
+        let pca = if self.use_incremental_pca && n_samples_ > self.pca_batch_size {
             Some(self.perform_incremental_pca(data)?)
         } else {
             Some(self.perform_standard_pca(data)?)
@@ -493,7 +494,7 @@ impl DimensionalityAnalysisWorkflow {
         let cov = centered.t().dot(&centered) / (data.nrows() - 1) as f64;
 
         // Compute eigenvalues
-        use ndarray__linalg::Eigh;
+        use ndarray_linalg::Eigh;
         let eigenvalues = cov
             .eigh(ndarray_linalg::UPLO::Upper)
             .map_err(|e| {
@@ -540,7 +541,7 @@ pub struct QMCWorkflow {
     /// Number of dimensions
     pub dimensions: usize,
     /// Number of samples
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Random seed
     pub random_seed: Option<u64>,
 }
@@ -584,7 +585,7 @@ impl Default for QMCWorkflow {
             sequence_type: QMCSequenceType::Sobol,
             scrambling: true,
             dimensions: 2,
-            n_samples: 1000,
+            n_samples_: 1000,
             random_seed: None,
         }
     }
@@ -592,10 +593,10 @@ impl Default for QMCWorkflow {
 
 impl QMCWorkflow {
     /// Create new QMC workflow
-    pub fn new(_dimensions: usize, n_samples: usize) -> Self {
+    pub fn new(dimensions: usize, n_samples_: usize) -> Self {
         Self {
-            _dimensions,
-            n_samples,
+            dimensions,
+            n_samples_,
             ..Default::default()
         }
     }
@@ -621,24 +622,24 @@ impl QMCWorkflow {
     /// Generate QMC samples with quality assessment
     pub fn generate(&self) -> Result<QMCResult> {
         check_positive(self.dimensions, "dimensions")?;
-        check_positive(self.n_samples, "n_samples")?;
+        check_positive(self.n_samples_, "n_samples_")?;
 
         // Generate samples based on sequence type
         let samples = match self.sequence_type {
             QMCSequenceType::Sobol => sobol(
-                self.n_samples,
+                self.n_samples_,
                 self.dimensions,
                 self.scrambling,
                 self.random_seed,
             )?,
             QMCSequenceType::Halton => halton(
-                self.n_samples,
+                self.n_samples_,
                 self.dimensions,
                 self.scrambling,
                 self.random_seed,
             )?,
             QMCSequenceType::LatinHypercube => {
-                latin_hypercube(self.n_samples, self.dimensions, self.random_seed)?
+                latin_hypercube(self.n_samples_, self.dimensions, self.random_seed)?
             }
         };
 
@@ -681,13 +682,13 @@ impl QMCWorkflow {
 
     /// Compute uniformity measure
     fn compute_uniformity(&self, samples: &Array2<f64>) -> Result<f64> {
-        let n_samples = samples.nrows();
-        let mut min_distances = Array1::zeros(n_samples);
+        let n_samples_ = samples.nrows();
+        let mut min_distances = Array1::zeros(n_samples_);
 
         // Compute minimum distance to other points for each sample
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let mut min_dist = f64::INFINITY;
-            for j in 0..n_samples {
+            for j in 0..n_samples_ {
                 if i != j {
                     let mut dist = 0.0;
                     for k in 0..self.dimensions {
@@ -704,7 +705,7 @@ impl QMCWorkflow {
         }
 
         // Coefficient of variation of minimum distances
-        let mean_dist = min_distances.mean().unwrap();
+        let mean_dist = min_distances.mean();
         let var_dist = min_distances.var(1.0);
         let uniformity = 1.0 / (var_dist.sqrt() / mean_dist); // Inverse CV
 
@@ -714,7 +715,7 @@ impl QMCWorkflow {
     /// Compute coverage efficiency
     fn compute_coverage_efficiency(&self, samples: &Array2<f64>) -> Result<f64> {
         // Simple approximation: ratio of actual coverage to expected coverage
-        let n_bins = (self.n_samples as f64)
+        let n_bins = (self.n_samples_ as f64)
             .powf(1.0 / self.dimensions as f64)
             .ceil() as usize;
         let mut occupied_bins = std::collections::HashSet::new();
@@ -818,7 +819,7 @@ impl SurvivalAnalysisWorkflow {
         events: ArrayView1<bool>,
         covariates: Option<ArrayView2<f64>>,
     ) -> Result<SurvivalAnalysisResult> {
-        check_array_finite(&durations, "durations")?;
+        checkarray_finite(&durations, "durations")?;
 
         if durations.len() != events.len() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -861,7 +862,8 @@ impl SurvivalAnalysisWorkflow {
 
     /// Compute survival summary statistics
     fn compute_summary_stats(
-        &self_durations: &ArrayView1<f64>,
+        &self,
+        _durations: &ArrayView1<f64>,
         events: &ArrayView1<bool>,
         km: &KaplanMeierEstimator,
     ) -> Result<SurvivalSummaryStats> {
@@ -898,6 +900,6 @@ impl SurvivalAnalysisWorkflow {
                 return Ok(Some(km.event_times[i]));
             }
         }
-        Ok(None) // Target _survival not reached
+        Ok(None) // Target survival not reached
     }
 }

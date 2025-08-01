@@ -610,7 +610,7 @@ impl CrankNicolson1D {
     }
 
     /// Solve the linear system Ax = b
-    fn solve_linear_system(a: &Array2<f64>, b: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
+    fn solve_linear_system(&self, a: &Array2<f64>, b: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
         let n = b.len();
 
         // Simple tridiagonal solver for Crank-Nicolson matrices
@@ -1046,7 +1046,7 @@ impl BackwardEuler1D {
                         }
                         BoundaryConditionType::Robin => {
                             // a*u + b*du/dx = c
-                            if let Some([a_val, b_val_c_val]) = bc.coefficients {
+                            if let Some([a_val, b_val, c_val]) = bc.coefficients {
                                 // Use second-order one-sided difference for the derivative:
                                 // (-3u_0 + 4u_1 - u_2)/(2dx)
 
@@ -1102,7 +1102,7 @@ impl BackwardEuler1D {
                         }
                         BoundaryConditionType::Robin => {
                             // a*u + b*du/dx = c
-                            if let Some([a_val, b_val_c_val]) = bc.coefficients {
+                            if let Some([a_val, b_val, c_val]) = bc.coefficients {
                                 // Use second-order one-sided difference for the derivative:
                                 // (3u_{nx-1} - 4u_{nx-2} + u_{nx-3})/(2dx)
 
@@ -1192,7 +1192,7 @@ impl BackwardEuler1D {
     }
 
     /// Solve the linear system Ax = b
-    fn solve_linear_system(a: &Array2<f64>, b: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
+    fn solve_linear_system(&self, a: &Array2<f64>, b: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
         let n = b.len();
 
         // Simple tridiagonal solver for Backward Euler matrices

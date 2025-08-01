@@ -13,13 +13,13 @@
 //! - Automated regression detection
 
 use crate::error::{StatsError, StatsResult};
-use crate::numerical_stability__analyzer::{
+use crate::numerical_stability_analyzer::{
     NumericalStabilityAnalyzer, StabilityAnalysisResult, StabilityConfig,
 };
-use crate::property_based__validation::{
+use crate::property_based_validation::{
     ComprehensivePropertyTestSuite, PropertyTestConfig, PropertyTestResult,
 };
-use crate::scipy_benchmark__framework::{BenchmarkConfig, BenchmarkResult, ScipyBenchmarkFramework};
+use crate::scipy_benchmark_framework::{BenchmarkConfig, BenchmarkResult, ScipyBenchmarkFramework};
 use ndarray::{Array1, ArrayView1};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -413,7 +413,7 @@ impl ComprehensiveValidationSuite {
     /// Generate test data for validation
     fn generate_test_data(&self, size: usize) -> StatsResult<Array1<f64>> {
         use rand::prelude::*;
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
 
         let mut rng = StdRng::seed_from_u64(self.config.property_config.seed);
         let normal = Normal::new(0.0, 1.0)

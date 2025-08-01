@@ -5,7 +5,7 @@
 //! optimization recommendations. It provides comprehensive performance profiling
 //! with machine learning-based insights for maximum statistical computing efficiency.
 
-use crate::benchmark__suite::{BenchmarkConfig, BenchmarkMetrics};
+use crate::benchmark_suite::{BenchmarkConfig, BenchmarkMetrics};
 use crate::error::StatsResult;
 // Array1 import removed - not used in this module
 use serde::{Deserialize, Serialize};
@@ -586,11 +586,11 @@ pub struct EnhancedBenchmarkSuite {
 
 impl EnhancedBenchmarkSuite {
     /// Create new enhanced benchmark suite
-    pub fn new(_config: EnhancedBenchmarkConfig) -> Self {
+    pub fn new(config: EnhancedBenchmarkConfig) -> Self {
         Self {
             performance_database: Arc::new(Mutex::new(PerformanceDatabase::new())),
             ml_model: Arc::new(Mutex::new(None)),
-            _config,
+            config,
         }
     }
 
@@ -676,7 +676,7 @@ impl EnhancedBenchmarkSuite {
 
     /// Perform AI-driven performance analysis
     fn perform_ai_analysis(
-        &self_metrics: &[BenchmarkMetrics],
+        &self, _metrics: &[BenchmarkMetrics],
     ) -> StatsResult<AIPerformanceAnalysis> {
         // Placeholder implementation - would use actual ML models
         Ok(AIPerformanceAnalysis {
@@ -774,7 +774,7 @@ impl EnhancedBenchmarkSuite {
 
     /// Perform regression analysis
     fn perform_regression_analysis(
-        &self_metrics: &[BenchmarkMetrics],
+        &self, _metrics: &[BenchmarkMetrics],
     ) -> StatsResult<RegressionAnalysis> {
         // Placeholder implementation
         Ok(RegressionAnalysis {
@@ -800,7 +800,7 @@ impl EnhancedBenchmarkSuite {
     /// Generate intelligent optimization recommendations
     #[allow(clippy::too_many_arguments)]
     fn generate_intelligent_recommendations(
-        &self_metrics: &[BenchmarkMetrics], _ai_analysis: &Option<AIPerformanceAnalysis>, _cross_platform: &Option<CrossPlatformAnalysis>, _regression: &Option<RegressionAnalysis>,
+        &self, _metrics: &[BenchmarkMetrics], _ai_analysis: &Option<AIPerformanceAnalysis>, _cross_platform: &Option<CrossPlatformAnalysis>, _regression: &Option<RegressionAnalysis>,
     ) -> StatsResult<Vec<IntelligentRecommendation>> {
         Ok(vec![
             IntelligentRecommendation {
@@ -877,9 +877,9 @@ struct PerformanceMLModel {
 
 impl PerformanceMLModel {
     #[allow(dead_code)]
-    fn new(_model_type: MLModelType) -> Self {
+    fn new(model_type: MLModelType) -> Self {
         Self {
-            _model_type,
+            model_type,
             trained: false,
         }
     }

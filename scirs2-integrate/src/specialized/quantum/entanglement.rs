@@ -118,10 +118,10 @@ impl MultiParticleEntanglement {
     pub fn calculate_entanglement_entropy(&self, subsystem_qubits: &[usize]) -> Result<f64> {
         // Calculate reduced density matrix for the subsystem
         let rho_sub = self.reduced_density_matrix(subsystem_qubits)?;
-        
+
         // Calculate eigenvalues of reduced density matrix
         let eigenvalues = self.compute_eigenvalues(&rho_sub)?;
-        
+
         // Calculate von Neumann entropy: S = -Tr(ρ log ρ)
         let mut entropy = 0.0;
         for &lambda in &eigenvalues {
@@ -143,20 +143,20 @@ impl MultiParticleEntanglement {
         for i in 0..subsystem_dim {
             for j in 0..subsystem_dim {
                 let mut sum = Complex64::new(0.0, 0.0);
-                
+
                 // Sum over all environment configurations
                 let env_size = self.n_particles - subsystem_size;
                 let env_dim = 1 << env_size;
-                
+
                 for env_config in 0..env_dim {
                     let full_i = self.combine_subsystem_env(i, env_config, subsystem_qubits);
                     let full_j = self.combine_subsystem_env(j, env_config, subsystem_qubits);
-                    
+
                     if full_i < self.hilbert_dim && full_j < self.hilbert_dim {
                         sum += self.state[full_i].conj() * self.state[full_j];
                     }
                 }
-                
+
                 rho_sub[[i, j]] = sum;
             }
         }
@@ -165,10 +165,15 @@ impl MultiParticleEntanglement {
     }
 
     /// Combine subsystem and environment configurations
-    fn combine_subsystem_env(&self, sub_config: usize, env_config: usize, subsystem_qubits: &[usize]) -> usize {
+    fn combine_subsystem_env(
+        &self,
+        sub_config: usize,
+        env_config: usize,
+        subsystem_qubits: &[usize],
+    ) -> usize {
         let mut full_config = 0;
         let mut env_bit = 0;
-        
+
         for qubit in 0..self.n_particles {
             if subsystem_qubits.contains(&qubit) {
                 // This qubit is in the subsystem
@@ -184,7 +189,7 @@ impl MultiParticleEntanglement {
                 env_bit += 1;
             }
         }
-        
+
         full_config
     }
 
@@ -192,13 +197,13 @@ impl MultiParticleEntanglement {
     fn compute_eigenvalues(&self, rho: &Array2<Complex64>) -> Result<Vec<f64>> {
         let n = rho.nrows();
         let mut eigenvalues = Vec::new();
-        
+
         // For simplicity, just extract diagonal elements as approximate eigenvalues
         // In a real implementation, this would use proper eigenvalue decomposition
         for i in 0..n {
             eigenvalues.push(rho[[i, i]].re);
         }
-        
+
         Ok(eigenvalues)
     }
 
@@ -221,16 +226,16 @@ impl MultiParticleEntanglement {
         // Calculate concurrence using Wootters' formula
         // C = max{0, λ₁ - λ₂ - λ₃ - λ₄}
         // where λᵢ are the eigenvalues of ρ(σy ⊗ σy)ρ*(σy ⊗ σy) in decreasing order
-        
+
         // Simplified calculation - for a pure state |ψ⟩ = a|00⟩ + b|01⟩ + c|10⟩ + d|11⟩
         // C = 2|ad - bc|
         let a = self.state[0];
         let b = self.state[1];
         let c = self.state[2];
         let d = self.state[3];
-        
+
         let concurrence = 2.0 * (a * d - b * c).norm();
-        
+
         Ok(concurrence)
     }
 
@@ -243,21 +248,21 @@ impl MultiParticleEntanglement {
         }
 
         let mut new_state = Array1::zeros(self.hilbert_dim);
-        
+
         for i in 0..self.hilbert_dim {
             let control_bit = (i >> (self.n_particles - 1 - control)) & 1;
             let target_bit = (i >> (self.n_particles - 1 - target)) & 1;
-            
+
             let new_i = if control_bit == 1 {
                 // Flip target bit
                 i ^ (1 << (self.n_particles - 1 - target))
             } else {
                 i
             };
-            
+
             new_state[new_i] = self.state[i];
         }
-        
+
         self.state = new_state;
         Ok(())
     }
@@ -272,11 +277,11 @@ impl MultiParticleEntanglement {
 
         let mut new_state = Array1::zeros(self.hilbert_dim);
         let inv_sqrt2 = Complex64::new(1.0 / (2.0_f64).sqrt(), 0.0);
-        
+
         for i in 0..self.hilbert_dim {
             let bit = (i >> (self.n_particles - 1 - qubit)) & 1;
             let flipped_i = i ^ (1 << (self.n_particles - 1 - qubit));
-            
+
             if bit == 0 {
                 // |0⟩ → (|0⟩ + |1⟩)/√2
                 new_state[i] += inv_sqrt2 * self.state[i];
@@ -287,14 +292,19 @@ impl MultiParticleEntanglement {
                 new_state[i] -= inv_sqrt2 * self.state[i];
             }
         }
-        
+
         self.state = new_state;
         Ok(())
     }
 
     /// Measure entanglement witness
-    pub fn measure_entanglement_witness(&self, witness_operator: &Array2<Complex64>) -> Result<f64> {
-        if witness_operator.nrows() != self.hilbert_dim || witness_operator.ncols() != self.hilbert_dim {
+    pub fn measure_entanglement_witness(
+        &self,
+        witness_operator: &Array2<Complex64>,
+    ) -> Result<f64> {
+        if witness_operator.nrows() != self.hilbert_dim
+            || witness_operator.ncols() != self.hilbert_dim
+        {
             return Err(IntegrateError::InvalidInput(
                 "Witness operator dimension mismatch".to_string(),
             ));
@@ -302,7 +312,7 @@ impl MultiParticleEntanglement {
 
         // Calculate expectation value ⟨ψ|W|ψ⟩
         let mut expectation = Complex64::new(0.0, 0.0);
-        
+
         for i in 0..self.hilbert_dim {
             for j in 0..self.hilbert_dim {
                 expectation += self.state[i].conj() * witness_operator[[i, j]] * self.state[j];
@@ -314,10 +324,8 @@ impl MultiParticleEntanglement {
 
     /// Normalize the quantum state
     pub fn normalize(&mut self) {
-        let norm_squared: f64 = self.state.iter()
-            .map(|&c| (c.conj() * c).re)
-            .sum();
-        
+        let norm_squared: f64 = self.state.iter().map(|&c| (c.conj() * c).re).sum();
+
         let norm = norm_squared.sqrt();
         if norm > 1e-12 {
             self.state.mapv_inplace(|c| c / norm);
@@ -365,11 +373,11 @@ mod tests {
     fn test_bell_state_creation() {
         let masses = Array1::from_vec(vec![1.0, 1.0]);
         let mut system = MultiParticleEntanglement::new(2, masses);
-        
+
         // Test Φ⁺ state
         system.create_bell_state(BellState::PhiPlus).unwrap();
         let state = system.get_state();
-        
+
         let inv_sqrt2 = 1.0 / (2.0_f64).sqrt();
         assert_relative_eq!(state[0].re, inv_sqrt2, epsilon = 1e-10);
         assert_relative_eq!(state[3].re, inv_sqrt2, epsilon = 1e-10);
@@ -381,14 +389,14 @@ mod tests {
     fn test_ghz_state() {
         let masses = Array1::from_vec(vec![1.0, 1.0, 1.0]);
         let mut system = MultiParticleEntanglement::new(3, masses);
-        
+
         system.create_ghz_state().unwrap();
         let state = system.get_state();
-        
+
         let inv_sqrt2 = 1.0 / (2.0_f64).sqrt();
         assert_relative_eq!(state[0].re, inv_sqrt2, epsilon = 1e-10);
         assert_relative_eq!(state[7].re, inv_sqrt2, epsilon = 1e-10);
-        
+
         // Other states should be zero
         for i in 1..7 {
             assert_relative_eq!(state[i].norm(), 0.0, epsilon = 1e-10);
@@ -399,15 +407,15 @@ mod tests {
     fn test_w_state() {
         let masses = Array1::from_vec(vec![1.0, 1.0, 1.0]);
         let mut system = MultiParticleEntanglement::new(3, masses);
-        
+
         system.create_w_state().unwrap();
         let state = system.get_state();
-        
+
         let inv_sqrt3 = 1.0 / 3.0_f64.sqrt();
         assert_relative_eq!(state[1].re, inv_sqrt3, epsilon = 1e-10); // |001⟩
         assert_relative_eq!(state[2].re, inv_sqrt3, epsilon = 1e-10); // |010⟩
         assert_relative_eq!(state[4].re, inv_sqrt3, epsilon = 1e-10); // |100⟩
-        
+
         // Other states should be zero
         assert_relative_eq!(state[0].norm(), 0.0, epsilon = 1e-10);
         assert_relative_eq!(state[3].norm(), 0.0, epsilon = 1e-10);
@@ -420,12 +428,12 @@ mod tests {
     fn test_concurrence() {
         let masses = Array1::from_vec(vec![1.0, 1.0]);
         let mut system = MultiParticleEntanglement::new(2, masses);
-        
+
         // Test maximally entangled Bell state
         system.create_bell_state(BellState::PhiPlus).unwrap();
         let concurrence = system.calculate_concurrence().unwrap();
         assert_relative_eq!(concurrence, 1.0, epsilon = 1e-10);
-        
+
         // Test separable state |00⟩
         let separable_state = Array1::from_vec(vec![
             Complex64::new(1.0, 0.0),
@@ -442,7 +450,7 @@ mod tests {
     fn test_quantum_gates() {
         let masses = Array1::from_vec(vec![1.0, 1.0]);
         let mut system = MultiParticleEntanglement::new(2, masses);
-        
+
         // Start with |00⟩
         let initial_state = Array1::from_vec(vec![
             Complex64::new(1.0, 0.0),
@@ -451,19 +459,19 @@ mod tests {
             Complex64::new(0.0, 0.0),
         ]);
         system.set_state(initial_state).unwrap();
-        
+
         // Apply Hadamard to first qubit: |00⟩ → (|00⟩ + |10⟩)/√2
         system.apply_hadamard(0).unwrap();
         let state = system.get_state();
-        
+
         let inv_sqrt2 = 1.0 / (2.0_f64).sqrt();
         assert_relative_eq!(state[0].re, inv_sqrt2, epsilon = 1e-10); // |00⟩
         assert_relative_eq!(state[2].re, inv_sqrt2, epsilon = 1e-10); // |10⟩
-        
+
         // Apply CNOT: (|00⟩ + |10⟩)/√2 → (|00⟩ + |11⟩)/√2
         system.apply_cnot(0, 1).unwrap();
         let state = system.get_state();
-        
+
         assert_relative_eq!(state[0].re, inv_sqrt2, epsilon = 1e-10); // |00⟩
         assert_relative_eq!(state[3].re, inv_sqrt2, epsilon = 1e-10); // |11⟩
         assert_relative_eq!(state[1].norm(), 0.0, epsilon = 1e-10);

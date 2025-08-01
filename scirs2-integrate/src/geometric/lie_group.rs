@@ -3,7 +3,7 @@
 //! This module provides numerical integrators for differential equations on Lie groups,
 //! preserving the group structure throughout the integration.
 
-use crate::error::IntegrateResult as Result;
+use crate::error::{IntegrateResult, IntegrateResult as Result};
 use ndarray::{Array1, Array2, ArrayView1};
 
 /// Trait for Lie algebra operations
@@ -74,13 +74,14 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
     /// Create a new Lie group integrator
     pub fn new(_dt: f64, method: LieGroupMethod) -> Self {
         Self {
-            _dt,
-            method_phantom: std::marker::PhantomData,
+            dt: _dt,
+            method,
+            _phantom: std::marker::PhantomData,
         }
     }
 
     /// Integrate one step
-    pub fn step<F>(g: &G, f: F) -> IntegrateResult<G>
+    pub fn step<F>(&self, g: &G, f: F) -> IntegrateResult<G>
     where
         F: Fn(&G) -> G::Algebra,
     {
@@ -94,7 +95,7 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
     }
 
     /// Lie-Euler method: g_{n+1} = g_n * exp(dt * f(g_n))
-    fn lie_euler_step<F>(g: &G, f: F) -> IntegrateResult<G>
+    fn lie_euler_step<F>(&self, g: &G, f: F) -> IntegrateResult<G>
     where
         F: Fn(&G) -> G::Algebra,
     {
@@ -106,7 +107,7 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
     }
 
     /// Lie-Midpoint method
-    fn lie_midpoint_step<F>(g: &G, f: F) -> IntegrateResult<G>
+    fn lie_midpoint_step<F>(&self, g: &G, f: F) -> IntegrateResult<G>
     where
         F: Fn(&G) -> G::Algebra,
     {
@@ -124,7 +125,7 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
     }
 
     /// Lie-Trapezoidal method
-    fn lie_trapezoidal_step<F>(g: &G, f: F) -> IntegrateResult<G>
+    fn lie_trapezoidal_step<F>(&self, g: &G, f: F) -> IntegrateResult<G>
     where
         F: Fn(&G) -> G::Algebra,
     {
@@ -142,7 +143,7 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
     }
 
     /// Runge-Kutta-Munthe-Kaas 4th order method
-    fn rkmk4_step<F>(g: &G, f: F) -> IntegrateResult<G>
+    fn rkmk4_step<F>(&self, g: &G, f: F) -> IntegrateResult<G>
     where
         F: Fn(&G) -> G::Algebra,
     {
@@ -181,7 +182,7 @@ impl<G: ExponentialMap> LieGroupIntegrator<G> {
     }
 
     /// Crouch-Grossman method
-    fn crouch_grossman_step<F>(g: &G, f: F) -> IntegrateResult<G>
+    fn crouch_grossman_step<F>(&self, g: &G, f: F) -> IntegrateResult<G>
     where
         F: Fn(&G) -> G::Algebra,
     {
@@ -364,12 +365,12 @@ impl SO3Integrator {
         let mut current_orientation = orientation.clone();
         let mut current_omega = angular_velocity.clone();
 
-        let inertia_inv = self.invert_inertia(inertia_tensor)?;
+        let inertia_inv = SO3Integrator::invert_inertia(inertia_tensor)?;
 
         for _ in 0..n_steps {
             // Compute angular acceleration
             let omega_cross_i_omega =
-                self.cross_product(&current_omega, &inertia_tensor.dot(&current_omega));
+                SO3Integrator::cross_product(&current_omega, &inertia_tensor.dot(&current_omega));
             let angular_accel = inertia_inv.dot(&(external_torque - &omega_cross_i_omega));
 
             // Update angular _velocity
@@ -415,15 +416,24 @@ impl SO3Integrator {
         }
 
         let mut inv = Array2::zeros((3, 3));
-        inv[[0, 0]] = (_inertia[[1, 1]] * _inertia[[2, 2]] - _inertia[[1, 2]] * _inertia[[2, 1]]) / det;
-        inv[[0, 1]] = (_inertia[[0, 2]] * _inertia[[2, 1]] - _inertia[[0, 1]] * _inertia[[2, 2]]) / det;
-        inv[[0, 2]] = (_inertia[[0, 1]] * _inertia[[1, 2]] - _inertia[[0, 2]] * _inertia[[1, 1]]) / det;
-        inv[[1, 0]] = (_inertia[[1, 2]] * _inertia[[2, 0]] - _inertia[[1, 0]] * _inertia[[2, 2]]) / det;
-        inv[[1, 1]] = (_inertia[[0, 0]] * _inertia[[2, 2]] - _inertia[[0, 2]] * _inertia[[2, 0]]) / det;
-        inv[[1, 2]] = (_inertia[[0, 2]] * _inertia[[1, 0]] - _inertia[[0, 0]] * _inertia[[1, 2]]) / det;
-        inv[[2, 0]] = (_inertia[[1, 0]] * _inertia[[2, 1]] - _inertia[[1, 1]] * _inertia[[2, 0]]) / det;
-        inv[[2, 1]] = (_inertia[[0, 1]] * _inertia[[2, 0]] - _inertia[[0, 0]] * _inertia[[2, 1]]) / det;
-        inv[[2, 2]] = (_inertia[[0, 0]] * _inertia[[1, 1]] - _inertia[[0, 1]] * _inertia[[1, 0]]) / det;
+        inv[[0, 0]] =
+            (_inertia[[1, 1]] * _inertia[[2, 2]] - _inertia[[1, 2]] * _inertia[[2, 1]]) / det;
+        inv[[0, 1]] =
+            (_inertia[[0, 2]] * _inertia[[2, 1]] - _inertia[[0, 1]] * _inertia[[2, 2]]) / det;
+        inv[[0, 2]] =
+            (_inertia[[0, 1]] * _inertia[[1, 2]] - _inertia[[0, 2]] * _inertia[[1, 1]]) / det;
+        inv[[1, 0]] =
+            (_inertia[[1, 2]] * _inertia[[2, 0]] - _inertia[[1, 0]] * _inertia[[2, 2]]) / det;
+        inv[[1, 1]] =
+            (_inertia[[0, 0]] * _inertia[[2, 2]] - _inertia[[0, 2]] * _inertia[[2, 0]]) / det;
+        inv[[1, 2]] =
+            (_inertia[[0, 2]] * _inertia[[1, 0]] - _inertia[[0, 0]] * _inertia[[1, 2]]) / det;
+        inv[[2, 0]] =
+            (_inertia[[1, 0]] * _inertia[[2, 1]] - _inertia[[1, 1]] * _inertia[[2, 0]]) / det;
+        inv[[2, 1]] =
+            (_inertia[[0, 1]] * _inertia[[2, 0]] - _inertia[[0, 0]] * _inertia[[2, 1]]) / det;
+        inv[[2, 2]] =
+            (_inertia[[0, 0]] * _inertia[[1, 1]] - _inertia[[0, 1]] * _inertia[[1, 0]]) / det;
 
         Ok(inv)
     }
@@ -452,7 +462,8 @@ impl LieAlgebra for Se3 {
             omega: _other.omega.clone(),
         });
 
-        let v_bracket = self.cross_3d(&self.omega, &_other.v) - self.cross_3d(&_other.omega, &self.v);
+        let v_bracket =
+            self.cross_3d(&self.omega, &_other.v) - self.cross_3d(&_other.omega, &self.v);
 
         Se3 {
             v: v_bracket,
@@ -579,7 +590,9 @@ impl ExponentialMap for SE3 {
 
     fn identity(&self) -> Self {
         SE3 {
-            rotation: SO3::identity(),
+            rotation: SO3 {
+                matrix: Array2::eye(3),
+            },
             translation: Array1::zeros(3),
         }
     }
@@ -650,8 +663,7 @@ impl SE3Integrator {
             omega[0] * i_omega[1] - omega[1] * i_omega[0],
         ]);
 
-        let inertia_inv =
-            SO3Integrator::new(self.base.dt, LieGroupMethod::LieEuler).invert_inertia(inertia)?;
+        let inertia_inv = SO3Integrator::invert_inertia(inertia)?;
 
         Ok(inertia_inv.dot(&(torque - &omega_cross_i_omega)))
     }
@@ -1319,7 +1331,9 @@ mod tests {
         let integrator = SO3Integrator::new(dt, LieGroupMethod::RKMK4);
 
         // Initial conditions
-        let orientation = SO3::identity();
+        let orientation = SO3 {
+            matrix: Array2::eye(3),
+        };
         let angular_velocity = Array1::from_vec(vec![0.1, 0.5, 0.3]);
         let inertia =
             Array2::from_shape_vec((3, 3), vec![2.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 4.0])

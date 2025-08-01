@@ -42,13 +42,15 @@ fn generate_points(_n_points: usize, dimensions: usize, seed: u64) -> Array2<f64
 /// Generate two sets of random points for cross-distance benchmarks
 #[allow(dead_code)]
 fn generate_point_pairs(
-    n1: usize..n2: usize,
+    n1: usize,
+    n2: usize,
     dimensions: usize,
-    seed: u64,) -> (Array2<f64>, Array2<f64>) {
+    seed: u64,
+) -> (Array2<f64>, Array2<f64>) {
     let mut rng = StdRng::seed_from_u64(seed);
     let points1 = Array2::from_shape_fn((n1, dimensions), |_| rng.gen_range(-10.0..10.0));
-    let points2 = Array2::from_shape_fn((n2..dimensions), |_| rng.gen_range(-10.0..10.0));
-    (points1..points2)
+    let points2 = Array2::from_shape_fn((n2, dimensions), |_| rng.gen_range(-10.0..10.0));
+    (points1, points2)
 }
 
 /// Benchmark SIMD vs scalar distance calculations for different data sizes
@@ -148,11 +150,9 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
 
         group.throughput(Throughput::Elements(size as u64));
 
-        group.bench_with_input(
-            BenchmarkId::new("kdtree_construction", size),
-            &size,
-            |b_| b.iter(|| black_box(KDTree::new(&points).unwrap())),
-        );
+        group.bench_with_input(BenchmarkId::new("kdtree_construction", size), &size, |b_| {
+            b.iter(|| black_box(KDTree::new(&points).unwrap()))
+        });
     }
 
     group.finish();
@@ -239,7 +239,8 @@ fn bench_distance_metrics_comparison(c: &mut Criterion) {
             metric,
             |b, metric| match metric {
                 "euclidean" => b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).unwrap())),
-                "manhattan" => b.iter(|| black_box(simd_manhattan_distance(&p1, &p2).unwrap()), _ => unreachable!(),
+                "manhattan" => b.iter(|| black_box(simd_manhattan_distance(&p1, &p2).unwrap())),
+                _ => unreachable!(),
             },
         );
     }
@@ -311,11 +312,9 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
         let query_points = generate_points(100, 3, BENCHMARK_SEED + 1);
 
         // KDTree construction
-        group.bench_with_input(
-            BenchmarkId::new("kdtree_construction", size),
-            &size,
-            |b_| b.iter(|| black_box(KDTree::new(&points).unwrap())),
-        );
+        group.bench_with_input(BenchmarkId::new("kdtree_construction", size), &size, |b_| {
+            b.iter(|| black_box(KDTree::new(&points).unwrap()))
+        });
 
         // BallTree construction
         group.bench_with_input(

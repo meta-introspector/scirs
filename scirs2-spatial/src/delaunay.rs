@@ -99,7 +99,8 @@ impl Clone for Delaunay {
             ndim: self.ndim,
             npoints: self.npoints,
             simplices: self.simplices.clone(),
-            neighbors: self.neighbors.clone(), _qh: None, // We don't clone the Qhull handle
+            neighbors: self.neighbors.clone(),
+            _qh: None, // We don't clone the Qhull handle
             constraints: self.constraints.clone(),
         }
     }
@@ -152,11 +153,12 @@ impl Delaunay {
             let neighbors = vec![vec![-1, -1, -1]]; // No neighbors
 
             return Ok(Delaunay {
-                _points: _points.clone(),
+                points: _points.clone(),
                 ndim,
                 npoints,
                 simplices,
-                neighbors_qh: None,
+                neighbors,
+                _qh: None,
                 constraints: Vec::new(),
             });
         }
@@ -165,7 +167,7 @@ impl Delaunay {
         let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| _points.row(i).to_vec()).collect();
 
         // Try with standard approach first
-        let qh_result = Qh::new_delaunay(points_vec.clone());
+        let qh_result = Qh::new_delaunay(_points_vec.clone());
 
         let qh = match qh_result {
             Ok(qh) => qh,
@@ -179,11 +181,12 @@ impl Delaunay {
                     let neighbors = vec![vec![-1, 1, -1], vec![-1, -1, 0]];
 
                     return Ok(Delaunay {
-                        _points: _points.clone(),
+                        points: _points.clone(),
                         ndim,
                         npoints,
                         simplices,
-                        neighbors_qh: None,
+                        neighbors,
+                _qh: None,
                         constraints: Vec::new(),
                     });
                 }
@@ -220,11 +223,12 @@ impl Delaunay {
         let neighbors = Self::calculate_neighbors(&simplices, ndim + 1);
 
         Ok(Delaunay {
-            _points: _points.clone(),
+            points: _points.clone(),
             ndim,
             npoints,
             simplices,
-            neighbors_qh: Some(qh),
+            neighbors,
+            _qh: Some(qh),
             constraints: Vec::new(),
         })
     }
@@ -612,7 +616,7 @@ impl Delaunay {
     }
 
     /// Extract all unique vertices from the affected triangles
-    fn extract_cavity_vertices(_affected_triangles: &[usize]) -> Vec<usize> {
+    fn extract_cavity_vertices(&self, _affected_triangles: &[usize]) -> Vec<usize> {
         let mut vertices = HashSet::new();
 
         for &triangle_idx in _affected_triangles {
@@ -751,7 +755,7 @@ impl Delaunay {
     }
 
     /// Check if three points form a valid triangle (not collinear)
-    fn points_form_valid_triangle(_v1: usize, v2: usize, v3: usize) -> bool {
+    fn points_form_valid_triangle(&self, _v1: usize, v2: usize, v3: usize) -> bool {
         if _v1 >= self.npoints || v2 >= self.npoints || v3 >= self.npoints {
             return false;
         }
@@ -783,7 +787,7 @@ impl Delaunay {
     }
 
     /// Recompute neighbors for all simplices
-    fn compute_neighbors() {
+    fn compute_neighbors(&mut self) {
         self.neighbors = Self::calculate_neighbors(&self.simplices, self.ndim + 1);
     }
 
@@ -852,7 +856,7 @@ impl Delaunay {
                 let mut face: Vec<usize> = simplex
                     .iter()
                     .enumerate()
-                    .filter(|&(k_)| k != j)
+                    .filter(|&(k_, _)| k_ != j)
                     .map(|(_, &v)| v)
                     .collect();
 

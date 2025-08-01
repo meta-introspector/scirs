@@ -4,11 +4,11 @@
 //! data visualization, dimension reduction techniques, clustering algorithms, and animated
 //! visualizations for time-series and dynamic systems.
 
+use super::types::*;
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::ode::ODEResult;
 use ndarray::{Array1, Array2, Axis};
 use rand::Rng;
-use super::types::*;
 use std::collections::HashMap;
 
 /// Multi-dimensional data visualization engine
@@ -111,8 +111,7 @@ impl MultiDimensionalVisualizer {
 
         // Sort by eigenvalue magnitude (descending)
         let mut eigenvalue_indices: Vec<usize> = (0..eigenvalues.len()).collect();
-        eigenvalue_indices
-            .sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
+        eigenvalue_indices.sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
 
         // Project data onto principal components
         let n_components = self.target_dimensions.min(n_features);
@@ -185,8 +184,8 @@ impl MultiDimensionalVisualizer {
         let mut b_matrix = Array2::zeros((n_samples, n_samples));
         for i in 0..n_samples {
             for j in 0..n_samples {
-                b_matrix[[i, j]] = -0.5
-                    * (squared_distances[[i, j]] - row_means[i] - col_means[j] + grand_mean);
+                b_matrix[[i, j]] =
+                    -0.5 * (squared_distances[[i, j]] - row_means[i] - col_means[j] + grand_mean);
             }
         }
 
@@ -195,8 +194,7 @@ impl MultiDimensionalVisualizer {
 
         // Sort eigenvalues in descending order
         let mut eigenvalue_indices: Vec<usize> = (0..eigenvalues.len()).collect();
-        eigenvalue_indices
-            .sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
+        eigenvalue_indices.sort_by(|&i, &j| eigenvalues[j].partial_cmp(&eigenvalues[i]).unwrap());
 
         // Construct embedding
         let n_components = self.target_dimensions.min(n_samples);
@@ -462,7 +460,9 @@ impl MultiDimensionalVisualizer {
 
         for i in 0..n.min(self.target_dimensions) {
             full_eigenvalues[i] = eigenvalues[i];
-            full_eigenvectors.column_mut(i).assign(&eigenvectors.column(i));
+            full_eigenvectors
+                .column_mut(i)
+                .assign(&eigenvectors.column(i));
         }
 
         // Fill remaining with identity
@@ -597,7 +597,8 @@ impl AnimatedVisualizer {
 
         // Create frames with progressive trajectory buildup
         self.frames.clear();
-        let frame_step = (n_points as f64 / (frames_per_time_unit * n_points) as f64).max(1.0) as usize;
+        let frame_step =
+            (n_points as f64 / (frames_per_time_unit * n_points) as f64).max(1.0) as usize;
 
         for frame_end in (frame_step..=n_points).step_by(frame_step) {
             let x: Vec<f64> = (0..frame_end)

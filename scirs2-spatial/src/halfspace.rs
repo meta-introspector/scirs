@@ -78,7 +78,10 @@ impl Halfspace {
     /// let hs = Halfspace::new(array![1.0, 1.0], 1.0);
     /// ```
     pub fn new(_normal: Array1<f64>, offset: f64) -> Self {
-        Self { _normal, offset }
+        Self {
+            normal: _normal,
+            offset,
+        }
     }
 
     /// Get the normal vector
@@ -128,7 +131,7 @@ impl Halfspace {
     /// # Returns
     ///
     /// * Signed distance (negative if inside halfspace, positive if outside)
-    pub fn distance(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn distance(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
         if _point.len() != self.normal.len() {
             return Err(SpatialError::ValueError(
                 "Point dimension must match halfspace dimension".to_string(),
@@ -790,7 +793,10 @@ impl HalfspaceIntersection {
     }
 
     /// Check if a polytope is bounded by examining vertices
-    fn check_boundedness(_vertices: &Array2<f64>, _halfspaces: &[Halfspace]) -> SpatialResult<bool> {
+    fn check_boundedness(
+        _vertices: &Array2<f64>,
+        _halfspaces: &[Halfspace],
+    ) -> SpatialResult<bool> {
         if _vertices.nrows() == 0 {
             return Ok(false);
         }
@@ -890,8 +896,8 @@ impl HalfspaceIntersection {
         }
 
         // Order vertices counter-clockwise
-        let center_x = vertices.column(0).mean().unwrap();
-        let center_y = vertices.column(1).mean().unwrap();
+        let center_x = vertices.column(0).to_owned().mean();
+        let center_y = vertices.column(1).to_owned().mean();
 
         let mut vertex_angles: Vec<(usize, f64)> = (0..n)
             .map(|i| {
@@ -972,7 +978,6 @@ impl HalfspaceIntersection {
 
     /// Compute volume for high-dimensional halfspace intersection
     fn compute_high_dim_volume(&self) -> SpatialResult<f64> {
-
         // For high-dimensional halfspace intersections, we can compute the volume
         // by treating the vertices as a convex polytope and using convex hull algorithms
 

@@ -40,7 +40,7 @@ pub trait LinearOperator<F: Float> {
 
     /// Apply the adjoint of the operator to a vector: y = A^H * x
     /// Default implementation returns an error
-    fn rmatvec(&self_x: &[F]) -> SparseResult<Vec<F>> {
+    fn rmatvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
         Err(crate::error::SparseError::OperationNotSupported(
             "adjoint not implemented for this operator".to_string(),
         ))
@@ -73,7 +73,8 @@ impl<F> IdentityOperator<F> {
     /// Create a new identity operator of given size
     pub fn new(_size: usize) -> Self {
         Self {
-            _size_phantom: PhantomData,
+            size: _size,
+            phantom: PhantomData,
         }
     }
 }
@@ -112,7 +113,7 @@ pub struct ScaledIdentityOperator<F> {
 impl<F: Float> ScaledIdentityOperator<F> {
     /// Create a new scaled identity operator
     pub fn new(_size: usize, scale: F) -> Self {
-        Self { _size, scale }
+        Self { size: _size, scale }
     }
 }
 
@@ -150,7 +151,7 @@ pub struct DiagonalOperator<F> {
 impl<F: Float> DiagonalOperator<F> {
     /// Create a new diagonal operator from diagonal values
     pub fn new(_diagonal: Vec<F>) -> Self {
-        Self { _diagonal }
+        Self { diagonal: _diagonal }
     }
 
     /// Get the diagonal values
@@ -250,7 +251,8 @@ impl<F, M> MatrixLinearOperator<F, M> {
     /// Create a new matrix linear operator
     pub fn new(_matrix: M) -> Self {
         Self {
-            _matrix_phantom: PhantomData,
+            matrix: _matrix,
+            phantom: PhantomData,
         }
     }
 }
@@ -301,7 +303,7 @@ impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
 }
 
 // Implementation of LinearOperator for CsrArray
-use crate::csr__array::CsrArray;
+use crate::csr_array::CsrArray;
 
 impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
     for MatrixLinearOperator<F, CsrArray<F>>
@@ -439,7 +441,7 @@ impl<F: Float + NumAssign> ProductOperator<F> {
     #[allow(dead_code)]
     pub fn new(a: Box<dyn LinearOperator<F>>, b: Box<dyn LinearOperator<F>>) -> SparseResult<Self> {
         let (_a_rows, a_cols) = a.shape();
-        let (b_rows_b_cols) = b.shape();
+        let (b_rows, b_cols) = b.shape();
         if a_cols != b_rows {
             return Err(crate::error::SparseError::DimensionMismatch {
                 expected: a_cols,
@@ -452,7 +454,7 @@ impl<F: Float + NumAssign> ProductOperator<F> {
 
 impl<F: Float + NumAssign> LinearOperator<F> for ProductOperator<F> {
     fn shape(&self) -> (usize, usize) {
-        let (a_rows_) = self.a.shape();
+        let (a_rows, _) = self.a.shape();
         let (_, b_cols) = self.b.shape();
         (a_rows, b_cols)
     }
@@ -494,7 +496,7 @@ impl<F: Float + 'static> FunctionOperator<F> {
         RMV: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
     {
         Self {
-            _shape,
+            shape: _shape,
             matvec_fn: Box::new(matvec_fn),
             rmatvec_fn: rmatvec_fn
                 .map(|f| Box::new(f) as Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>),
@@ -507,7 +509,7 @@ impl<F: Float + 'static> FunctionOperator<F> {
     where
         FMv: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
     {
-        Self::new(_shape, matvec_fn, None::<_fn(&[F]) -> SparseResult<Vec<F>>>)
+        Self::new(_shape, matvec_fn, None::<fn(&[F]) -> SparseResult<Vec<F>>>)
     }
 }
 
@@ -556,7 +558,7 @@ impl<F: Float> InverseOperator<F> {
         }
 
         Ok(Self {
-            _original,
+            original: _original,
             solver_fn: Box::new(solver_fn),
         })
     }
@@ -601,7 +603,7 @@ pub struct TransposeOperator<F> {
 impl<F: Float + NumAssign> TransposeOperator<F> {
     /// Create a new transpose operator
     pub fn new(_original: Box<dyn LinearOperator<F>>) -> Self {
-        Self { _original }
+        Self { original: _original }
     }
 }
 
@@ -639,7 +641,7 @@ impl<F: Float + NumAssign> AdjointOperator<F> {
                 "Original operator does not support adjoint operations".to_string(),
             ));
         }
-        Ok(Self { _original })
+        Ok(Self { original: _original })
     }
 }
 
@@ -725,7 +727,7 @@ pub struct ScaledOperator<F> {
 impl<F: Float + NumAssign> ScaledOperator<F> {
     /// Create a new scaled operator
     pub fn new(_alpha: F, operator: Box<dyn LinearOperator<F>>) -> Self {
-        Self { _alpha, operator }
+        Self { alpha: _alpha, operator }
     }
 }
 
@@ -775,7 +777,7 @@ impl<F: Float + NumAssign> ChainOperator<F> {
         #[allow(clippy::needless_range_loop)]
         for i in 0.._operators.len() - 1 {
             let (_, a_cols) = _operators[i].shape();
-            let (b_rows_) = _operators[i + 1].shape();
+            let (b_rows, _) = _operators[i + 1].shape();
             if a_cols != b_rows {
                 return Err(SparseError::DimensionMismatch {
                     expected: a_cols,
@@ -784,12 +786,12 @@ impl<F: Float + NumAssign> ChainOperator<F> {
             }
         }
 
-        let (first_rows_) = _operators[0].shape();
+        let (first_rows, _) = _operators[0].shape();
         let (_, last_cols) = _operators.last().unwrap().shape();
         let total_shape = (first_rows, last_cols);
 
         Ok(Self {
-            _operators,
+            operators: _operators,
             total_shape,
         })
     }
@@ -852,7 +854,7 @@ impl<F: Float + NumAssign> PowerOperator<F> {
                 "Power must be positive".to_string(),
             ));
         }
-        Ok(Self { _operator, power })
+        Ok(Self { operator: _operator, power })
     }
 }
 

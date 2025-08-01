@@ -945,7 +945,7 @@ where
     if _x_a.ncols() != x_b.ncols() {
         return Err(SpatialError::DimensionError(format!(
             "Dimension mismatch: _x_a has {} columns, x_b has {} columns",
-            x_a.ncols(),
+            _x_a.ncols(),
             x_b.ncols()
         )));
     }
@@ -953,7 +953,7 @@ where
     let mut result = Array2::zeros((n_a, n_b));
 
     for i in 0..n_a {
-        let row_i = x_a.row(i).to_vec();
+        let row_i = _x_a.row(i).to_vec();
 
         for j in 0..n_b {
             let row_j = x_b.row(j).to_vec();

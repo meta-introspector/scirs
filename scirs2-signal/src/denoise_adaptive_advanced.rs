@@ -689,13 +689,14 @@ fn apply_single_algorithm_denoising(
 fn apply_single_denoising_algorithm(
     signal: &Array1<f64>,
     algorithm: DenoisingAlgorithm,
-    strategy: &DenoisingStrategy_config: &AdaptiveDenoisingConfig,
+    strategy: &DenoisingStrategy, config: &AdaptiveDenoisingConfig,
 ) -> SignalResult<Array1<f64>> {
     match algorithm {
         DenoisingAlgorithm::WaveletAdaptive => apply_adaptive_wavelet_denoising(signal, strategy),
         DenoisingAlgorithm::NonLocalMeans => apply_nlm_denoising(signal, strategy),
         DenoisingAlgorithm::TotalVariation => apply_tv_denoising(signal, strategy),
-        DenoisingAlgorithm::WienerFilter => apply_wiener_denoising(signal, strategy, _ => {
+        DenoisingAlgorithm::WienerFilter => apply_wiener_denoising(signal, strategy),
+        _ => {
             // Fallback to simple wavelet denoising
             apply_adaptive_wavelet_denoising(signal, strategy)
         }

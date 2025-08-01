@@ -351,14 +351,14 @@ impl MPSDataType {
     /// Convert to Metal Performance Shaders data type
     pub fn to_mps_data_type(&self) -> objc2_metal_performance_shaders::MPSDataType {
         match self {
-            MPSDataType::Float16 =>, objc2_metal_performance_shaders::MPSDataType::Float16,
-            MPSDataType::Float32 =>, objc2_metal_performance_shaders::MPSDataType::Float32,
-            MPSDataType::Int8 =>, objc2_metal_performance_shaders::MPSDataType::Int8,
-            MPSDataType::UInt8 =>, objc2_metal_performance_shaders::MPSDataType::UInt8,
-            MPSDataType::Int16 =>, objc2_metal_performance_shaders::MPSDataType::Int16,
-            MPSDataType::UInt16 =>, objc2_metal_performance_shaders::MPSDataType::UInt16,
-            MPSDataType::Int32 =>, objc2_metal_performance_shaders::MPSDataType::Int32,
-            MPSDataType::UInt32 =>, objc2_metal_performance_shaders::MPSDataType::UInt32,
+            MPSDataType::Float16 => objc2_metal_performance_shaders::MPSDataType::Float16,
+            MPSDataType::Float32 => objc2_metal_performance_shaders::MPSDataType::Float32,
+            MPSDataType::Int8 => objc2_metal_performance_shaders::MPSDataType::Int8,
+            MPSDataType::UInt8 => objc2_metal_performance_shaders::MPSDataType::UInt8,
+            MPSDataType::Int16 => objc2_metal_performance_shaders::MPSDataType::Int16,
+            MPSDataType::UInt16 => objc2_metal_performance_shaders::MPSDataType::UInt16,
+            MPSDataType::Int32 => objc2_metal_performance_shaders::MPSDataType::Int32,
+            MPSDataType::UInt32 => objc2_metal_performance_shaders::MPSDataType::UInt32,
         }
     }
 }
@@ -648,7 +648,7 @@ impl MPSOperations {
     }
 
     /// High-level interface for vector operations
-    pub fn data_2( &[f32]) -> Result<Vec<f32>, GpuError> {
+    pub fn vector_add(a_data: &[f32], b_data: &[f32]) -> Result<Vec<f32>, GpuError> {
         use crate::gpu::backends::metal::{MetalBufferOptions, MetalContext};
 
         if a_data.len() != b_data.len() {

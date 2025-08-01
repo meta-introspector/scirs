@@ -1,9 +1,9 @@
 //! Main stochastic PDE solver for financial derivatives
 
 use crate::error::IntegrateResult;
-use crate::specialized::finance::types::{FinancialOption, FinanceMethod, OptionType};
-use crate::specialized::finance::models::{VolatilityModel, JumpProcess, StochasticProcess};
-use ndarray::{Array2};
+use crate::specialized::finance::models::{JumpProcess, StochasticProcess, VolatilityModel};
+use crate::specialized::finance::types::{FinanceMethod, FinancialOption, OptionType};
+use ndarray::Array2;
 
 /// Solver for stochastic PDEs in finance
 pub struct StochasticPDESolver {
@@ -90,7 +90,12 @@ impl StochasticPDESolver {
         finite_difference::price_finite_difference(self, option)
     }
 
-    fn price_monte_carlo(&self, option: &FinancialOption, n_paths: usize, antithetic: bool) -> IntegrateResult<f64> {
+    fn price_monte_carlo(
+        &self,
+        option: &FinancialOption,
+        n_paths: usize,
+        antithetic: bool,
+    ) -> IntegrateResult<f64> {
         use crate::specialized::finance::pricing::monte_carlo;
         monte_carlo::price_monte_carlo(self, option, n_paths, antithetic)
     }

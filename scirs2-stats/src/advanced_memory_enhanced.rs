@@ -715,7 +715,7 @@ impl AdvancedMemoryManager {
     // Placeholder operation execution methods
 
     fn execute_sequential_optimized<F, D, R>(
-        &self_data: &ArrayBase<D, Ix1>, _operation: CacheOptimizedOp<F, R>,
+        &self, &ArrayBase<D, Ix1>, _operation: CacheOptimizedOp<F, R>,
     ) -> StatsResult<R>
     where
         F: Float + NumCast + Copy + Send + Sync,
@@ -729,7 +729,7 @@ impl AdvancedMemoryManager {
     }
 
     fn execute_blocked_optimized<F, D, R>(
-        &self_data: &ArrayBase<D, Ix1>, _operation: CacheOptimizedOp<F, R>, _characteristics: &ArrayCharacteristics,
+        &self, &ArrayBase<D, Ix1>, _operation: CacheOptimizedOp<F, R>, _characteristics: &ArrayCharacteristics,
     ) -> StatsResult<R>
     where
         F: Float + NumCast + Copy + Send + Sync,
@@ -743,7 +743,7 @@ impl AdvancedMemoryManager {
     }
 
     fn execute_prefetched_optimized<F, D, R>(
-        &self_data: &ArrayBase<D, Ix1>, _operation: CacheOptimizedOp<F, R>,
+        &self, &ArrayBase<D, Ix1>, _operation: CacheOptimizedOp<F, R>,
     ) -> StatsResult<R>
     where
         F: Float + NumCast + Copy + Send + Sync,
@@ -757,7 +757,7 @@ impl AdvancedMemoryManager {
     }
 
     fn execute_hierarchical_optimized<F, D, R>(
-        &self_data: &ArrayBase<D, Ix1>, _operation: CacheOptimizedOp<F, R>, _characteristics: &ArrayCharacteristics,
+        &self, &ArrayBase<D, Ix1>, _operation: CacheOptimizedOp<F, R>, _characteristics: &ArrayCharacteristics,
     ) -> StatsResult<R>
     where
         F: Float + NumCast + Copy + Send + Sync,
@@ -771,7 +771,7 @@ impl AdvancedMemoryManager {
     }
 
     fn execute_numa_optimized_matrix_operation<F>(
-        &self_matrices: &[Array2<F>], _operation: NumaMatrixOp<F>, _numa_layout: &NumaLayout,
+        &self, _metrics: &[Array2<F>], _operation: NumaMatrixOp<F>, _numa_layout: &NumaLayout,
     ) -> StatsResult<Array2<F>>
     where
         F: Float + NumCast + Copy + Send + Sync
@@ -783,7 +783,7 @@ impl AdvancedMemoryManager {
     }
 
     fn optimize_streaming_memory_config<F, D, R>(
-        &self_window_size: usize, _operation: &StreamingMemoryOp<F, R>,
+        &self, usize, _operation: &StreamingMemoryOp<F, R>,
     ) -> StatsResult<StreamingMemoryConfig>
     where
         F: Float + NumCast + Copy + Send + Sync,
@@ -800,7 +800,7 @@ impl AdvancedMemoryManager {
     }
 
     fn create_optimized_streaming_buffer<F, D>(
-        &self_config: &StreamingMemoryConfig,
+        &self, &StreamingMemoryConfig,
     ) -> StatsResult<OptimizedStreamingBuffer<F, D>>
     where
         F: Float + NumCast + Copy + Send + Sync,
@@ -825,7 +825,7 @@ impl AdvancedMemoryManager {
     }
 
     fn optimize_batch_memory_layout<F>(
-        &self_characteristics: &BatchMemoryCharacteristics,
+        &self, &BatchMemoryCharacteristics,
     ) -> StatsResult<BatchMemoryLayout>
     where
         F: Float + NumCast + Copy + Send + Sync
@@ -840,7 +840,7 @@ impl AdvancedMemoryManager {
     }
 
     fn execute_batch_memory_optimized<F, D>(
-        &self_batches: &[ArrayBase<D, Ix1>], _operation: BatchMemoryOp<F>, _layout: &BatchMemoryLayout,
+        &self, _metrics: &[ArrayBase<D, Ix1>], _operation: BatchMemoryOp<F>, _layout: &BatchMemoryLayout,
     ) -> StatsResult<BatchMemoryResult<F>>
     where
         F: Float + NumCast + Copy + Send + Sync,
@@ -869,7 +869,7 @@ impl AdvancedMemoryManager {
     }
 
     fn generate_memory_optimization_recommendations(
-        &self_metrics: &ComprehensiveMemoryMetrics, _patterns: &MemoryUsagePatterns,
+        &self, &ComprehensiveMemoryMetrics, _patterns: &MemoryUsagePatterns,
     ) -> StatsResult<Vec<MemoryOptimizationRecommendation>> {
         Ok(vec![MemoryOptimizationRecommendation {
             recommendation: "Enable memory pooling for small allocations".to_string(),
@@ -880,7 +880,7 @@ impl AdvancedMemoryManager {
     }
 
     fn apply_automatic_optimizations(
-        &self_recommendations: &[MemoryOptimizationRecommendation],
+        &self, _metrics: &[MemoryOptimizationRecommendation],
     ) -> StatsResult<Vec<AppliedOptimization>> {
         Ok(vec![])
     }
@@ -1247,7 +1247,7 @@ impl AdvancedMemoryProfiler {
     }
 
     pub fn analyze_usage_patterns(
-        &self_metrics: &ComprehensiveMemoryMetrics,
+        &self, &ComprehensiveMemoryMetrics,
     ) -> StatsResult<MemoryUsagePatterns> {
         Ok(MemoryUsagePatterns {
             allocation_patterns: vec![],
@@ -1323,7 +1323,7 @@ impl CacheOptimizer {
     }
 
     pub fn select_optimal_strategy(
-        &self_characteristics: &ArrayCharacteristics,
+        &self, &ArrayCharacteristics,
     ) -> StatsResult<CacheStrategy> {
         Ok(CacheStrategy::Sequential) // Placeholder
     }
@@ -1360,7 +1360,7 @@ impl NumaMemoryManager {
     }
 
     pub fn optimize_matrix_placement(
-        &self_characteristics: &MatrixMemoryCharacteristics,
+        &self, &MatrixMemoryCharacteristics,
     ) -> StatsResult<NumaLayout> {
         Ok(NumaLayout {
             node_assignments: HashMap::new(),

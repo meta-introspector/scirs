@@ -487,14 +487,15 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             numa_placement: self.design_numa_placement(&requirements)?,
             prefetch_schedule: self.design_prefetch_schedule(&requirements, expected_iterations)?,
             buffer_reuse_plan: self.design_buffer_reuse(&requirements)?,
-            optimization_applied: vec!["Comprehensive optimization".to_string()], _phantom: PhantomData,
+            optimization_applied: vec!["Comprehensive optimization".to_string()],
+            _phantom: PhantomData,
         })
     }
 
     /// Apply cache optimizations based on plan
-    fn apply_cache_optimizations(_plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
+    fn apply_cache_optimizations(&self, _plan: &OptimizationPlan<F>) -> IntegrateResult<()> {
         let cache_optimizer = self.cache_optimizer.lock().unwrap();
-        cache_optimizer.apply_optimizations(_plan)
+        CacheOptimizer::apply_optimizations(_plan)
     }
 
     /// Allocate L1 cache-optimized memory
@@ -532,7 +533,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             optimization_applied: vec![
                 "L1CacheOptimized".to_string(),
                 "CacheLineAligned".to_string(),
-            ], _phantom: PhantomData,
+            ],
+            _phantom: PhantomData,
         })
     }
 
@@ -570,7 +572,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             optimization_applied: vec![
                 "L2CacheOptimized".to_string(),
                 "PrefetchOptimized".to_string(),
-            ], _phantom: PhantomData,
+            ],
+            _phantom: PhantomData,
         })
     }
 
@@ -608,7 +611,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             optimization_applied: vec![
                 "L3CacheOptimized".to_string(),
                 "SharedMemoryOptimized".to_string(),
-            ], _phantom: PhantomData,
+            ],
+            _phantom: PhantomData,
         })
     }
 
@@ -619,7 +623,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
         strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         let numa_manager = self.numa_manager.read().unwrap();
-        let optimal_node = numa_manager.select_optimal_node(size)?;
+        let optimal_node = NumaTopologyManager::select_optimal_node(size)?;
         drop(numa_manager);
 
         let mut hierarchy = self.hierarchy_manager.write().unwrap();
@@ -659,7 +663,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
                     "StandardPages"
                 }
                 .to_string(),
-            ], _phantom: PhantomData,
+            ],
+            _phantom: PhantomData,
         })
     }
 
@@ -681,7 +686,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             ),
             device_id: 0, // Default to first GPU
             _phantom: PhantomData,
-            memory_type: self.select_optimal_gpu_memory_type(size)?,
+            memory_type: AdvancedMemoryOptimizer::<F>::select_optimal_gpu_memory_type(size)?,
             size,
             coherency_state: CoherencyState::Coherent,
         };
@@ -695,7 +700,8 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
             memory_tier: MemoryTier::GpuMemory,
             size,
             alignment: 256, // GPU memory alignment
-            optimization_applied: vec!["GpuOptimized".to_string(), "CoherencyManaged".to_string()], _phantom: PhantomData,
+            optimization_applied: vec!["GpuOptimized".to_string(), "CoherencyManaged".to_string()],
+            _phantom: PhantomData,
         })
     }
 
@@ -714,7 +720,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Infer access pattern from method type
-    fn infer_access_pattern(_method_type: &str) -> IntegrateResult<AccessPattern> {
+    fn infer_access_pattern(&self, _method_type: &str) -> IntegrateResult<AccessPattern> {
         match _method_type.to_lowercase().as_str() {
             "rk4" | "rk45" | "rk23" => Ok(AccessPattern::Sequential),
             "bdf" | "lsoda" => Ok(AccessPattern::Random), // Due to Jacobian operations
@@ -724,7 +730,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Estimate computational intensity
-    fn estimate_computational_intensity(_method_type: &str) -> IntegrateResult<f64> {
+    fn estimate_computational_intensity(&self, _method_type: &str) -> IntegrateResult<f64> {
         match _method_type.to_lowercase().as_str() {
             "rk4" => Ok(4.0),   // 4 function evaluations per step
             "rk45" => Ok(6.0),  // 6 function evaluations per step
@@ -735,9 +741,9 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Analyze data locality characteristics
-    fn analyze_data_locality(_problem_size: usize) -> IntegrateResult<f64> {
-        // Simple heuristic based on problem _size
-        if _problem_size < 1000 {
+    fn analyze_data_locality(&self, problem_size: usize) -> IntegrateResult<f64> {
+        // Simple heuristic based on problem size
+        if problem_size < 1000 {
             Ok(0.9) // High locality for small problems
         } else if problem_size < 100000 {
             Ok(0.6) // Medium locality
@@ -747,7 +753,7 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
     }
 
     /// Assess parallelism potential
-    fn assess_parallelism(_method_type: &str) -> IntegrateResult<f64> {
+    fn assess_parallelism(&self, _method_type: &str) -> IntegrateResult<f64> {
         match _method_type.to_lowercase().as_str() {
             "rk4" | "rk45" | "rk23" => Ok(0.8), // High parallelism in explicit methods
             "bdf" => Ok(0.4),                   // Limited by linear solves
@@ -758,30 +764,36 @@ impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
 
     // Helper method implementations (simplified for brevity)
     fn design_optimal_layout(
+        &self,
         self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<MemoryLayout> {
         Ok(MemoryLayout::SoA) // Structure of Arrays for better vectorization
     }
 
     fn design_cache_strategy(
+        &self,
         self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<CacheStrategy> {
         Ok(CacheStrategy::Adaptive)
     }
 
     fn design_numa_placement(
+        &self,
         self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<NumaPlacement> {
         Ok(NumaPlacement::LocalFirst)
     }
 
     fn design_prefetch_schedule(
-        self_requirements: &MemoryRequirements<F>, _iterations: usize,
+        &self,
+        self_requirements: &MemoryRequirements<F>,
+        _iterations: usize,
     ) -> IntegrateResult<PrefetchSchedule> {
         Ok(PrefetchSchedule::Adaptive)
     }
 
     fn design_buffer_reuse(
+        &self,
         self_requirements: &MemoryRequirements<F>,
     ) -> IntegrateResult<BufferReuseStrategy> {
         Ok(BufferReuseStrategy::LRU)
@@ -913,7 +925,8 @@ impl<F: IntegrateFloat> AllocationPredictor<F> {
 
     fn predict_optimal_allocation(
         &self,
-        size: usize, _memory_type: MemoryType,
+        size: usize,
+        _memory_type: MemoryType,
     ) -> IntegrateResult<AllocationStrategy> {
         // Simplified prediction logic
         let memory_tier = if size < 1024 {
@@ -942,7 +955,8 @@ impl<F: IntegrateFloat> AllocationPredictor<F> {
             total_size: characteristics.estimated_memory_footprint,
             working_set_size: characteristics.estimated_memory_footprint / 2,
             peak_usage: characteristics.estimated_memory_footprint * 3 / 2,
-            temporal_pattern: TemporalAccessPattern::Uniform, _phantom: std::marker::PhantomData,
+            temporal_pattern: TemporalAccessPattern::Uniform,
+            phantom: std::marker::PhantomData,
         })
     }
 }
@@ -1029,7 +1043,7 @@ impl CacheHierarchyInfo {
         Default::default()
     }
 
-    pub fn detect(&self) -> IntegrateResult<Self> {
+    pub fn detect() -> IntegrateResult<Self> {
         Ok(Self {
             l1_size: 32 * 1024,       // 32KB L1 cache
             l2_size: 256 * 1024,      // 256KB L2 cache
@@ -1147,14 +1161,16 @@ pub struct CacheAwareAlgorithmSelector {
 #[derive(Debug, Clone)]
 pub struct DataLayoutOptimizer<F: IntegrateFloat> {
     layout_performance: HashMap<String, f64>,
-    optimization_history: Vec<MemoryLayout>, _phantom: std::marker::PhantomData<F>,
+    optimization_history: Vec<MemoryLayout>,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: IntegrateFloat> Default for DataLayoutOptimizer<F> {
     fn default() -> Self {
         Self {
             layout_performance: HashMap::new(),
-            optimization_history: Vec::new(), _phantom: std::marker::PhantomData,
+            optimization_history: Vec::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1307,7 +1323,7 @@ impl NumaTopology {
         Default::default()
     }
 
-    pub fn detect(&self) -> IntegrateResult<Self> {
+    pub fn detect() -> IntegrateResult<Self> {
         Ok(Self {
             num_nodes: 1,
             node_distances: vec![vec![0]],

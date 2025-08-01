@@ -525,7 +525,10 @@ pub fn distance_weights_matrix<T: Float>(
 /// println!("Clark-Evans index: {:.3}", ce_index);
 /// ```
 #[allow(dead_code)]
-pub fn clark_evans_index<T: Float>(_coordinates: &ArrayView2<T>, study_area: T) -> SpatialResult<T> {
+pub fn clark_evans_index<T: Float>(
+    _coordinates: &ArrayView2<T>,
+    study_area: T,
+) -> SpatialResult<T> {
     let n = _coordinates.shape()[0];
 
     if _coordinates.shape()[1] != 2 {

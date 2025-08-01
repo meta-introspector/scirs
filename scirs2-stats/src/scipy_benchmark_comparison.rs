@@ -595,7 +595,7 @@ impl ScipyBenchmarkComparison {
 
         Ok(Self {
             temp_dir: _config.temp_dir.clone(),
-            _config,
+            config: _config,
         })
     }
 
@@ -725,7 +725,7 @@ print(json.dumps(info))
         }
 
         let output_str = String::from_utf8_lossy(&output.stdout);
-        let info: serde_json: Value = serde, _json::from_str(&output_str).map_err(|e| {
+        let info: serde_json::Value = serde_json::from_str(&output_str).map_err(|e| {
             StatsError::ComputationError(format!("Failed to parse environment info: {}", e))
         })?;
 
@@ -808,7 +808,7 @@ print(json.dumps(info))
 
     /// Generate test data for benchmarking
     fn generate_test_data(&self, size: usize) -> StatsResult<TestData> {
-        use rand__distr::{Distribution, Normal};
+        use rand_distr::{Distribution, Normal};
         use scirs2_core::rng;
 
         let mut rng = rand::rng();
@@ -931,7 +931,7 @@ print(json.dumps(info))
         }
 
         let output_str = String::from_utf8_lossy(&output.stdout);
-        let result: serde_json: Value = serde, _json::from_str(&output_str).map_err(|e| {
+        let result: serde_json::Value = serde_json::from_str(&output_str).map_err(|e| {
             StatsError::ComputationError(format!("Failed to parse SciPy result: {}", e))
         })?;
 
@@ -957,8 +957,8 @@ print(json.dumps(info))
         function_name: &str,
         test_data: &TestData,
     ) -> StatsResult<String> {
-        let _data_primary: Vec<String> = test_data.primary.iter().map(|x| x.to_string()).collect();
-        let _data_secondary: Vec<String> =
+        let data_primary: Vec<String> = test_data.primary.iter().map(|x| x.to_string()).collect();
+        let data_secondary: Vec<String> =
             test_data.secondary.iter().map(|x| x.to_string()).collect();
 
         let script = match function_name {
@@ -1321,7 +1321,7 @@ print(json.dumps(output))
             },
             unstable_functions: problematic_functions
                 .iter()
-                .map(|(name_)| name.clone())
+                .map(|(name, _)| name.clone())
                 .collect(),
             condition_number_analysis: ConditionNumberAnalysis {
                 sensitive_functions: Vec::new(),
@@ -1333,7 +1333,7 @@ print(json.dumps(output))
                 max_loss: max_relative_diff,
                 problematic_functions: problematic_functions
                     .iter()
-                    .map(|(name_)| name.clone())
+                    .map(|(name, _)| name.clone())
                     .collect(),
             },
         };
@@ -1362,7 +1362,7 @@ print(json.dumps(output))
                 priority: RecommendationPriority::High,
                 category: RecommendationCategory::Performance,
                 description: "Overall performance is significantly slower than SciPy. Consider SIMD optimizations and algorithm improvements.".to_string(),
-                affected_functions: performance_analysis.slower_functions.iter().map(|(name_)| name.clone()).collect(),
+                affected_functions: performance_analysis.slower_functions.iter().map(|(name, _)| name.clone()).collect(),
                 complexity: ImplementationComplexity::Moderate,
                 expected_impact: ExpectedImpact {
                     performance_improvement: Some(2.0),
@@ -1379,7 +1379,7 @@ print(json.dumps(output))
                 priority: RecommendationPriority::Critical,
                 category: RecommendationCategory::Accuracy,
                 description: "Some functions have significant accuracy differences compared to SciPy. Review numerical algorithms.".to_string(),
-                affected_functions: accuracy_analysis.problematic_functions.iter().map(|(name_)| name.clone()).collect(),
+                affected_functions: accuracy_analysis.problematic_functions.iter().map(|(name, _)| name.clone()).collect(),
                 complexity: ImplementationComplexity::Complex,
                 expected_impact: ExpectedImpact {
                     performance_improvement: None,

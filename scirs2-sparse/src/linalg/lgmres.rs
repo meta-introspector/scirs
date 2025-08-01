@@ -126,7 +126,7 @@ where
 
     for _ in 0..options.max_iter {
         // Perform inner GMRES iterations
-        let (y_new_r_norm, v_list) = inner_gmres(
+        let (y, new_r_norm, v_list) = inner_gmres(
             a,
             &r,
             options.inner_m,

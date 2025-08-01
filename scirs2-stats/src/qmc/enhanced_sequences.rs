@@ -22,7 +22,8 @@ pub struct EnhancedQMCGenerator<F> {
     /// Configuration
     pub config: EnhancedQMCConfig,
     /// Generator state
-    pub state: QMCGeneratorState_phantom: PhantomData<F>,
+    pub state: QMCGeneratorState,
+    _phantom: PhantomData<F>,
 }
 
 /// Enhanced sequence types with advanced algorithms
@@ -393,7 +394,9 @@ where
     /// Compute enhanced Niederreiter sequence point
     fn compute_niederreiter_enhanced(
         &self,
-        index: usize_base_strategy: &BaseSelectionStrategy_matrix, _optimization: bool,
+        index: usize,
+        _base_strategy: &BaseSelectionStrategy,
+        _matrix_optimization: bool,
     ) -> StatsResult<Array1<F>> {
         // Simplified implementation
         let mut point = Array1::zeros(self.dimension);
@@ -426,7 +429,9 @@ where
     /// Compute digital net point
     fn compute_digital_net(
         &self,
-        index: usize_net_params: &DigitalNetParams_construction, _method: &NetConstructionMethod,
+        index: usize,
+        _net_params: &DigitalNetParams,
+        _construction_method: &NetConstructionMethod,
     ) -> StatsResult<Array1<F>> {
         // Simplified implementation - use Sobol-like computation
         self.compute_sobol_advanced(index, false, false, false)
@@ -435,7 +440,10 @@ where
     /// Compute hybrid sequence point
     fn compute_hybrid_sequence(
         &self,
-        index: usize_primary: &EnhancedSequenceType, _secondary: &EnhancedSequenceType_combination: &HybridCombinationStrategy,
+        index: usize,
+        _primary: &EnhancedSequenceType,
+        _secondary: &EnhancedSequenceType,
+        _combination: &HybridCombinationStrategy,
     ) -> StatsResult<Array1<F>> {
         // Simplified implementation - use _primary sequence
         self.compute_sobol_advanced(index, true, true, false)
@@ -475,14 +483,16 @@ where
         match &self.sequence_type {
             EnhancedSequenceType::SobolAdvanced {
                 owen_scrambling, ..
-            } => *owen_scrambling_ => false,
+            } => *owen_scrambling,
+            _ => false,
         }
     }
 
     /// Check if sequence type needs digital shift
     fn needs_digital_shift(&self) -> bool {
         match &self.sequence_type {
-            EnhancedSequenceType::SobolAdvanced { digital_shift, .. } => *digital_shift_ => false,
+            EnhancedSequenceType::SobolAdvanced { digital_shift, .. } => *digital_shift,
+            _ => false,
         }
     }
 

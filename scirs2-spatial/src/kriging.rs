@@ -84,7 +84,7 @@ impl VariogramModel {
     /// * `nugget` - Nugget parameter (variance at zero distance)
     pub fn spherical(_range: f64, sill: f64, nugget: f64) -> Self {
         Self::Spherical {
-            _range,
+            range: _range,
             sill,
             nugget,
         }
@@ -93,7 +93,7 @@ impl VariogramModel {
     /// Create an exponential variogram model
     pub fn exponential(_range: f64, sill: f64, nugget: f64) -> Self {
         Self::Exponential {
-            _range,
+            range: _range,
             sill,
             nugget,
         }
@@ -102,7 +102,7 @@ impl VariogramModel {
     /// Create a Gaussian variogram model
     pub fn gaussian(_range: f64, sill: f64, nugget: f64) -> Self {
         Self::Gaussian {
-            _range,
+            range: _range,
             sill,
             nugget,
         }
@@ -110,13 +110,13 @@ impl VariogramModel {
 
     /// Create a linear variogram model
     pub fn linear(_slope: f64, nugget: f64) -> Self {
-        Self::Linear { _slope, nugget }
+        Self::Linear { slope: _slope, nugget }
     }
 
     /// Create a power variogram model
     pub fn power(_coefficient: f64, exponent: f64, nugget: f64) -> Self {
         Self::Power {
-            _coefficient,
+            coefficient: _coefficient,
             exponent,
             nugget,
         }
@@ -125,7 +125,7 @@ impl VariogramModel {
     /// Create a Matérn variogram model
     pub fn matern(_range: f64, sill: f64, nugget: f64, nu: f64) -> Self {
         Self::Matern {
-            _range,
+            range: _range,
             sill,
             nugget,
             nu,
@@ -139,7 +139,7 @@ impl VariogramModel {
     ///
     /// # Returns
     /// * Variogram value
-    pub fn evaluate(h: f64) -> f64 {
+    pub fn evaluate(&self, h: f64) -> f64 {
         if h < 0.0 {
             return 0.0;
         }
@@ -222,7 +222,7 @@ impl VariogramModel {
             Self::Exponential { range, .. } => 3.0 * range, // Practical range
             Self::Gaussian { range, .. } => 3.0_f64.sqrt() * range, // Practical range
             Self::Linear { .. } => f64::INFINITY,
-            Self::Power { .. } =>, f64::INFINITY,
+            Self::Power { .. } => f64::INFINITY,
             Self::Matern { range, .. } => 3.0 * range,
         }
     }
@@ -345,9 +345,9 @@ impl OrdinaryKriging {
     ///
     /// This step is optional but recommended for multiple predictions
     /// as it avoids recomputing the matrix inverse each time.
-    pub fn fit(&self) -> SpatialResult<()> {
+    pub fn fit(&mut self) -> SpatialResult<()> {
         let cov_matrix = self.build_covariance_matrix()?;
-        let inv_matrix = self.invert_matrix(&cov_matrix)?;
+        let inv_matrix = OrdinaryKriging::invert_matrix(&cov_matrix)?;
         self.cov_matrix_inv = Some(inv_matrix);
         Ok(())
     }
@@ -376,7 +376,7 @@ impl OrdinaryKriging {
     /// let prediction = kriging.predict(&[0.5, 0.5]).unwrap();
     /// println!("Predicted: {:.3} ± {:.3}", prediction.value, prediction.variance.sqrt());
     /// ```
-    pub fn predict(_location: &[f64]) -> SpatialResult<KrigingPrediction> {
+    pub fn predict(&self, _location: &[f64]) -> SpatialResult<KrigingPrediction> {
         if _location.len() != self.ndim {
             return Err(SpatialError::ValueError(
                 "Location dimension must match data dimension".to_string(),
@@ -388,13 +388,13 @@ impl OrdinaryKriging {
             inv.clone()
         } else {
             let cov_matrix = self.build_covariance_matrix()?;
-            self.invert_matrix(&cov_matrix)?
+            OrdinaryKriging::invert_matrix(&cov_matrix)?
         };
 
         // Build covariance vector between new _location and data points
         let mut cov_vector = Array1::zeros(self.n_points + 1);
         for i in 0..self.n_points {
-            let dist = self.distance(_location, &self.points.row(i).to_vec());
+            let dist = OrdinaryKriging::distance(_location, &self.points.row(i).to_vec());
             cov_vector[i] = self.variogram.sill() - self.variogram.evaluate(dist);
         }
         cov_vector[self.n_points] = 1.0; // Lagrange multiplier for unbiasedness constraint
@@ -438,7 +438,7 @@ impl OrdinaryKriging {
             inv.clone()
         } else {
             let cov_matrix = self.build_covariance_matrix()?;
-            self.invert_matrix(&cov_matrix)?
+            OrdinaryKriging::invert_matrix(&cov_matrix)?
         };
 
         let mut predictions = Vec::with_capacity(locations.nrows());
@@ -449,7 +449,7 @@ impl OrdinaryKriging {
             // Build covariance vector
             let mut cov_vector = Array1::zeros(self.n_points + 1);
             for i in 0..self.n_points {
-                let dist = self.distance(&location, &self.points.row(i).to_vec());
+                let dist = OrdinaryKriging::distance(&location, &self.points.row(i).to_vec());
                 cov_vector[i] = self.variogram.sill() - self.variogram.evaluate(dist);
             }
             cov_vector[self.n_points] = 1.0;
@@ -483,7 +483,7 @@ impl OrdinaryKriging {
                 let dist = if i == j {
                     0.0
                 } else {
-                    self.distance(&self.points.row(i).to_vec(), &self.points.row(j).to_vec())
+                    OrdinaryKriging::distance(&self.points.row(i).to_vec(), &self.points.row(j).to_vec())
                 };
                 // Covariance = Sill - Variogram
                 matrix[[i, j]] = self.variogram.sill() - self.variogram.evaluate(dist);
@@ -711,7 +711,7 @@ impl SimpleKriging {
     ///
     /// # Returns
     /// * KrigingPrediction with value, variance, and weights
-    pub fn predict(_location: &[f64]) -> SpatialResult<KrigingPrediction> {
+    pub fn predict(&self, _location: &[f64]) -> SpatialResult<KrigingPrediction> {
         if _location.len() != self.ndim {
             return Err(SpatialError::ValueError(
                 "Location dimension must match data dimension".to_string(),
@@ -725,7 +725,7 @@ impl SimpleKriging {
                 let dist = if i == j {
                     0.0
                 } else {
-                    self.distance(&self.points.row(i).to_vec(), &self.points.row(j).to_vec())
+                    OrdinaryKriging::distance(&self.points.row(i).to_vec(), &self.points.row(j).to_vec())
                 };
                 cov_matrix[[i, j]] = self.variogram.sill() - self.variogram.evaluate(dist);
             }
@@ -734,12 +734,12 @@ impl SimpleKriging {
         // Build covariance vector
         let mut cov_vector = Array1::zeros(self.n_points);
         for i in 0..self.n_points {
-            let dist = self.distance(_location, &self.points.row(i).to_vec());
+            let dist = OrdinaryKriging::distance(_location, &self.points.row(i).to_vec());
             cov_vector[i] = self.variogram.sill() - self.variogram.evaluate(dist);
         }
 
         // Solve for weights
-        let weights = self.solve_linear_system(&cov_matrix, &cov_vector)?;
+        let weights = SimpleKriging::solve_linear_system(&cov_matrix, &cov_vector)?;
 
         // Calculate prediction (residuals from mean)
         let residuals: Array1<f64> = &self.values - self.mean;

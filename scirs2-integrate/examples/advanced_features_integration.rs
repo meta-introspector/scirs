@@ -10,7 +10,7 @@
 //! while monitoring performance and using advanced error estimation.
 
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2__integrate::{
+use scirs2_integrate::{
     // Advanced modules
     amr_advanced::{
         AdaptiveCell, AdaptiveMeshLevel, AdvancedAMRManager, CellId, GradientRefinementCriterion,

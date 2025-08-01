@@ -12,8 +12,8 @@
 //! by a coefficient of restitution to simulate energy loss.
 
 use ndarray::{array, ArrayView1};
-use scirs2__integrate::error::{IntegrateError, IntegrateResult};
-use scirs2__integrate::ode::{
+use scirs2_integrate::error::{IntegrateError, IntegrateResult};
+use scirs2_integrate::ode::{
     solve_ivp_with_events, EventAction, EventDirection, EventSpec, ODEMethod, ODEOptions,
     ODEOptionsWithEvents, ODEResultWithEvents,
 };

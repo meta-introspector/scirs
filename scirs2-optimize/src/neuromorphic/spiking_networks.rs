@@ -210,7 +210,7 @@ impl Synapse {
 
 impl SpikingNeuralNetwork {
     /// Create a new spiking neural network
-    pub fn new(_config: NeuromorphicConfig_num_parameters: usize) -> Self {
+    pub fn new(_config: NeuromorphicConfig, _num_parameters: usize) -> Self {
         let mut neurons = Vec::with_capacity(_config.num_neurons);
         for _ in 0.._config.num_neurons {
             neurons.push(SpikingNeuron::new(&_config));

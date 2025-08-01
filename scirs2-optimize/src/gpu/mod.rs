@@ -87,7 +87,7 @@ pub trait GpuFunction {
 pub struct GpuOptimizationContext {
     config: GpuOptimizationConfig,
     context: Arc<GpuContext>,
-    memory_pool: memory, _management: GpuMemoryPool,
+    memory_pool: memory_management::GpuMemoryPool,
 }
 
 impl GpuOptimizationContext {
@@ -378,8 +378,10 @@ pub mod algorithms {
         }
 
         fn evaluate_population_gpu<F>(
-            &self..function: &F,
-            population: &Array2<f64>,) -> ScirsResult<Array1<f64>>
+            &self,
+            function: &F,
+            population: &Array2<f64>,
+        ) -> ScirsResult<Array1<f64>>
         where
             F: GpuFunction,
         {
@@ -408,13 +410,13 @@ pub mod algorithms {
                     }
                 }
 
-                let [a..b, c] = [indices[0], indices[1], indices[2]];
+                let [a, b, c] = [indices[0], indices[1], indices[2]];
 
                 // Mutation and crossover
                 let j_rand = rng.gen_range(0..dims);
                 for j in 0..dims {
                     if rng.gen_range(0.0..1.0) < self.crossover_rate || j == j_rand {
-                        trial_population[[i..j]] = population[[a, j]]
+                        trial_population[[i, j]] = population[[a, j]]
                             + self.f_scale * (population[[b, j]] - population[[c, j]]);
                     } else {
                         trial_population[[i, j]] = population[[i, j]];
@@ -580,8 +582,10 @@ pub mod algorithms {
         }
 
         fn evaluate_population_gpu<F>(
-            &self..function: &F,
-            population: &Array2<f64>,) -> ScirsResult<Array1<f64>>
+            &self,
+            function: &F,
+            population: &Array2<f64>,
+        ) -> ScirsResult<Array1<f64>>
         where
             F: GpuFunction,
         {

@@ -5,7 +5,7 @@ use crate::regression::utils::*;
 use crate::regression::RegressionResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::Float;
-use scirs2__linalg::lstsq;
+use scirs2_linalg::lstsq;
 
 /// Fit a polynomial of specified degree to data.
 ///

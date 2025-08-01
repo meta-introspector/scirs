@@ -1,7 +1,7 @@
-use scirs2__integrate::pde::implicit::{
+use scirs2_integrate::pde::implicit::{
     BackwardEuler1D, CrankNicolson1D, ImplicitMethod, ImplicitOptions, ImplicitResult,
 };
-use scirs2__integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
+use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
 
 /// Example of using implicit methods to solve a nonlinear reaction-diffusion equation
 ///
@@ -42,12 +42,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Define coefficients for the Fisher-KPP equation
     // ∂u/∂t = D * ∂²u/∂x² + r * u * (1 - u)
-    let diffusion_coeff = move |_x: f64_t: f64, _u: f64| diffusion;
+    let diffusion_coeff = move |_x: f64, _t: f64, _u: f64| diffusion;
 
     // For nonlinear reaction terms, we need to be careful with the implementation
     // Here, we linearize the nonlinear term r*u*(1-u) using the previous time step value
     // For full nonlinear treatment, Newton iterations would be needed
-    let reaction_term = move |_x: f64_t: f64, u: f64| {
+    let reaction_term = move |_x: f64, _t: f64, u: f64| {
         // Return the effective reaction rate k for linearization around u
         // From r*u*(1-u) = ku + c, where k = r*(1-2u) and c = r*u²
         growth_rate * (1.0 - 2.0 * u)
@@ -226,7 +226,8 @@ fn analyze_wave_propagation(
 #[allow(dead_code)]
 fn compare_solutions(
     cn_result: &ImplicitResult,
-    be_result: &ImplicitResult, _domain: &Domain,
+    be_result: &ImplicitResult,
+    _domain: &Domain,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Get final solutions
     let cn_final = cn_result.u.last().unwrap();

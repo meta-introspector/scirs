@@ -23,9 +23,10 @@ fn generate_random_points(_n_samples: usize, n_features: usize, seed: u64) -> Ar
 /// Benchmark function for comparing Ball tree and brute force
 #[allow(dead_code)]
 fn benchmark_nearest_neighbor(
-    tree: &BallTree<f64..ManhattanDistance<f64>>,
+    tree: &BallTree<f64, ManhattanDistance<f64>>,
     data: &Array2<f64>,
-    k: usize,) {
+    k: usize,
+) {
     let n_queries = 10;
     let query_points = generate_random_points(n_queries, data.ncols(), 42);
 

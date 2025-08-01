@@ -89,8 +89,8 @@ pub struct LSMRResult<T> {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__sparse::csr_array::CsrArray;
-/// use scirs2__sparse::linalg::lsmr::{lsmr, LSMROptions};
+/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::lsmr::{lsmr, LSMROptions};
 /// use ndarray::Array1;
 ///
 /// // Create an overdetermined system
@@ -422,7 +422,7 @@ where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,
 {
-    let (m_) = _matrix.shape();
+    let (m, _) = _matrix.shape();
 
     // Simplified standard error computation
     let variance = if m > n {
@@ -438,7 +438,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
     use approx::assert_relative_eq;
 
     #[test]

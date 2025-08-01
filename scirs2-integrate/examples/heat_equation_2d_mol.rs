@@ -1,4 +1,4 @@
-use scirs2__integrate::{
+use scirs2_integrate::{
     BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain, MOLOptions,
     MOLParabolicSolver2D, ODEMethod,
 };
@@ -31,9 +31,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let time_range = [t_start, t_end];
 
     // Diffusion coefficients (constant in both directions)
-    let diffusion_x = move |_x: f64_y: f64, _t: f64_u: f64| -> f64 { alpha };
+    let diffusion_x = move |_x: f64, _y: f64, _t: f64, _u: f64| -> f64 { alpha };
 
-    let diffusion_y = move |_x: f64_y: f64, _t: f64_u: f64| -> f64 { alpha };
+    let diffusion_y = move |_x: f64, _y: f64, _t: f64, _u: f64| -> f64 { alpha };
 
     // Initial condition: sin(πx) * sin(πy)
     let initial_condition = |x: f64, y: f64| -> f64 { (PI * x).sin() * (PI * y).sin() };

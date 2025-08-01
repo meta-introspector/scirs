@@ -254,7 +254,8 @@ pub struct MMSPDEProblem<F: IntegrateFloat, S: ExactSolution<F>> {
     domain_y: [F; 2],
     domain_z: Option<[F; 2]>,
     pde_type: PDEType,
-    parameters: PDEParameters<F>, _phantom: std::marker::PhantomData<F>,
+    parameters: PDEParameters<F>,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 /// Parameters for different PDE types
@@ -959,8 +960,8 @@ impl<F: IntegrateFloat> SystemVerification<F> {
     }
 
     /// Create with custom component names
-    pub fn with_names(_component_names: Vec<String>) -> Self {
-        let system_size = _component_names.len();
+    pub fn with_names(component_names: Vec<String>) -> Self {
+        let system_size = component_names.len();
         Self {
             system_size,
             component_names,
@@ -1127,6 +1128,7 @@ mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
     use ndarray::Array1;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_polynomial_solution() {
@@ -1148,8 +1150,6 @@ mod tests {
 
     #[test]
     fn test_trigonometric_solution_2d() {
-        use std::f64::consts::PI;
-
         // Test sin(x) * cos(y)
         let trig = trigonometric_solution_2d(1.0, 1.0);
 
@@ -1255,7 +1255,6 @@ mod tests {
 
     #[test]
     fn test_trigonometric_solution_3d() {
-
         // Test sin(x) * cos(y) * sin(z)
         let trig3d = trigonometric_solution_3d(1.0, 1.0, 1.0);
 
@@ -1288,7 +1287,6 @@ mod tests {
 
     #[test]
     fn test_3d_poisson_problem() {
-
         // Test 3D Poisson problem with trigonometric solution
         let exact = trigonometric_solution_3d(PI, PI, PI);
         let problem = MMSPDEProblem::new_poisson_3d(exact, [0.0, 1.0], [0.0, 1.0], [0.0, 1.0]);
@@ -1316,7 +1314,6 @@ mod tests {
 
     #[test]
     fn test_helmholtz_problem() {
-
         // Test 2D Helmholtz problem: ∇²u + k²u = f
         let exact = trigonometric_solution_2d(PI, PI);
         let k = 2.0;

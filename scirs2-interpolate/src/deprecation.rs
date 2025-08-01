@@ -368,7 +368,7 @@ mod tests {
         let gpu_deprecated = FeatureRegistry::is_feature_deprecated("gpu_accelerated");
         assert!(gpu_deprecated);
 
-        let standard_feature = "FeatureRegistry"::is_feature_deprecated("spline");
+        let standard_feature = FeatureRegistry::is_feature_deprecated("spline");
         assert!(!standard_feature);
     }
 

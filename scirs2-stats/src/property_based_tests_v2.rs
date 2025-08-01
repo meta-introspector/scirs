@@ -266,7 +266,7 @@ where
         results.extend(self.test_parallel_vs_sequential_correlation()?);
         
         // Test parallel bootstrap vs sequential bootstrap
-        results.extend(self.test_parallel_vs_sequential_bootstrap()?);
+        results.extend(self.test_parallel_vs_sequentialbootstrap()?);
 
         Ok(self.compile_test_results(results, start_time.elapsed()))
     }
@@ -885,7 +885,7 @@ where
         Ok(vec![]) // Placeholder
     }
 
-    fn test_parallel_vs_sequential_bootstrap(&mut self) -> StatsResult<Vec<PropertyTestResult>> {
+    fn test_parallel_vs_sequentialbootstrap(&mut self) -> StatsResult<Vec<PropertyTestResult>> {
         Ok(vec![]) // Placeholder
     }
 

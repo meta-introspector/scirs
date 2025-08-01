@@ -40,7 +40,7 @@ pub trait KDTreeOptimized<T: Float + Send + Sync + 'static, D> {
     /// # Returns
     ///
     /// * The Hausdorff distance between the two point sets
-    fn hausdorff_distance(_points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T>;
+    fn hausdorff_distance(&self, _points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T>;
 
     /// Compute the approximate nearest neighbor for each point in a set
     ///
@@ -118,7 +118,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
 
     fn hausdorff_distance(&self, _points: &ArrayView2<T>, seed: Option<u64>) -> SpatialResult<T> {
         // First get the forward directed Hausdorff distance
-        let (dist_forward__) = self.directed_hausdorff_distance(_points, seed)?;
+        let (dist_forward__, _, _) = self.directed_hausdorff_distance(_points, seed)?;
 
         // For the backward direction, we need to create a new KDTree on the _points
         let points_owned = _points.to_owned();
@@ -126,14 +126,14 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
 
         // Get the backward directed Hausdorff distance using the points_tree
         // We perform the backward direction by simply reversing the query
-        let (dist_backward__) =
-            points_tree.directed_hausdorff_distance(&points_owned.view(), seed)?;
+        let (dist_backward__, _, _) =
+            points_tree.directed_hausdorff_distance(_points, seed)?;
 
         // Return the maximum of the two directed distances
-        Ok(if dist_forward > dist_backward {
-            dist_forward
+        Ok(if dist_forward__ > dist_backward__ {
+            dist_forward__
         } else {
-            dist_backward
+            dist_backward__
         })
     }
 
@@ -199,6 +199,8 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::kdtree::KDTree;
     use ndarray::array;
 
     #[test]

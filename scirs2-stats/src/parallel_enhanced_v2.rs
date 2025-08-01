@@ -159,9 +159,9 @@ where
 
     // Each chunk computes local mean and M2
     let chunk_stats: Vec<(F, F, usize)> = (0..n_chunks)
-        .into_iter()
+        .into().iter()
         .collect::<Vec<_>>()
-        .into_par_iter()
+        .into_par.iter()
         .map(|chunk_idx| {
             let start = chunk_idx * chunk_size;
             let end = (start + chunk_size).min(n);
@@ -184,9 +184,9 @@ where
         .collect();
 
     // Combine chunk statistics
-    let (_total_mean, total_m2_) = combine_welford_stats(&chunk_stats);
+    let (_total_mean, total_m2__) = combine_welford_stats(&chunk_stats);
 
-    Ok(total_m2 / F::from(n - ddof).unwrap())
+    Ok(total_m2__ / F::from(n - ddof).unwrap())
 }
 
 /// Parallel correlation matrix computation
@@ -201,9 +201,9 @@ where
     F: Float + NumCast + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
     D: Data<Elem = F> + Sync,
 {
-    let (n_samples, n_features) = data.dim();
+    let (n_samples_, n_features) = data.dim();
 
-    if n_samples == 0 || n_features == 0 {
+    if n_samples_ == 0 || n_features == 0 {
         return Err(StatsError::invalid_argument("Empty data matrix"));
     }
 
@@ -211,9 +211,9 @@ where
 
     // Compute means for each feature in parallel
     let means: Vec<F> = (0..n_features)
-        .into_iter()
+        .into().iter()
         .collect::<Vec<_>>()
-        .into_par_iter()
+        .into_par.iter()
         .map(|j| {
             let col = data.column(j);
             mean_parallel_enhanced(&col, Some(config.clone())).unwrap_or(F::zero())
@@ -229,7 +229,7 @@ where
         .collect();
 
     let correlations: Vec<((usize, usize), F)> = indices
-        .into_par_iter()
+        .into_par.iter()
         .map(|(i, j)| {
             let corr = if i == j {
                 F::one() // Diagonal is always 1
@@ -257,7 +257,7 @@ where
 #[allow(dead_code)]
 pub fn bootstrap_parallel_enhanced<F, D>(
     data: &ArrayBase<D, Ix1>,
-    n_samples: usize,
+    n_samples_: usize,
     statistic_fn: impl Fn(&ArrayView1<F>) -> F + Send + Sync,
     config: Option<ParallelConfig>,
 ) -> StatsResult<Array1<F>>
@@ -274,10 +274,10 @@ where
     let n = data.len();
 
     // Generate bootstrap statistics in parallel
-    let stats: Vec<F> = (0..n_samples)
-        .into_iter()
+    let stats: Vec<F> = (0..n_samples_)
+        .into().iter()
         .collect::<Vec<_>>()
-        .into_par_iter()
+        .into_par.iter()
         .map(|sample_idx| {
             use rand::rngs::StdRng;
             use rand::{Rng, SeedableRng};
@@ -301,7 +301,7 @@ where
 
 /// Helper function for parallel sum on slices
 #[allow(dead_code)]
-fn parallel_sum_slice<F>(_slice: &[F]..config: &ParallelConfig) -> F
+fn parallel_sum_slice<F>(_slice: &[F], config: &ParallelConfig) -> F
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Display,
 {
@@ -324,9 +324,9 @@ where
     let n_chunks = (n + chunk_size - 1) / chunk_size;
 
     (0..n_chunks)
-        .into_iter()
+        .into().iter()
         .collect::<Vec<_>>()
-        .into_par_iter()
+        .into_par.iter()
         .map(|chunk_idx| {
             let start = chunk_idx * chunk_size;
             let end = (start + chunk_size).min(n);
@@ -387,20 +387,20 @@ fn compute_correlation_pair<F>(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, 
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    let n = _x.len();
+    let n = x.len();
     let mut cov = F::zero();
     let mut var_x = F::zero();
     let mut var_y = F::zero();
 
     for i in 0..n {
-        let dx = _x[i] - mean_x;
-        let dy = _y[i] - mean_y;
+        let dx = x[i] - mean_x;
+        let dy = y[i] - mean_y;
         cov = cov + dx * dy;
         var_x = var_x + dx * dx;
         var_y = var_y + dy * dy;
     }
 
-    if var_x > F::epsilon() && var_y >, F::epsilon() {
+    if var_x > F::epsilon() && var_y > F::epsilon() {
         cov / (var_x * var_y).sqrt()
     } else {
         F::zero()

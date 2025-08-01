@@ -12,7 +12,7 @@ use std::fmt::Debug;
 #[allow(unused_imports)]
 // Temporary replacement for par_iter_with_setup
 fn par_iter_with_setup<I, IT, S, F, R, RF, E>(
-    items: I_setup: S,
+    items: I, setup: S,
     map_fn: F_reduce, _fn: RF,
 ) -> Result<Vec<R>, E>
 where
@@ -296,7 +296,8 @@ pub fn parallel_convolve2d_ndarray(
     let (out_rows, out_cols) = match mode {
         "full" => (img_rows + ker_rows - 1, img_cols + ker_cols - 1),
         "same" => (img_rows, img_cols),
-        "valid" => (img_rows - ker_rows + 1, img_cols - ker_cols + 1, _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
+        "valid" => (img_rows - ker_rows + 1, img_cols - ker_cols + 1),
+        _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
     };
 
     // Parallel processing over output rows
@@ -310,7 +311,8 @@ pub fn parallel_convolve2d_ndarray(
             let (i_start, i_offset) = match mode {
                 "full" => (0, out_i as isize),
                 "same" => (0, out_i as isize - (ker_rows / 2) as isize),
-                "valid" => (out_i, 0, _ => (0, 0),
+                "valid" => (out_i, 0),
+                _ => (0, 0),
             };
 
             for out_j in 0..out_cols {
@@ -318,7 +320,8 @@ pub fn parallel_convolve2d_ndarray(
                 let (j_start, j_offset) = match mode {
                     "full" => (0, out_j as isize),
                     "same" => (0, out_j as isize - (ker_cols / 2) as isize),
-                    "valid" => (out_j, 0, _ => (0, 0),
+                    "valid" => (out_j, 0),
+                    _ => (0, 0),
                 };
 
                 let mut sum = 0.0;

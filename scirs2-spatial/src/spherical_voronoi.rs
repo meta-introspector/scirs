@@ -221,7 +221,7 @@ impl SphericalVoronoi {
 
     /// Sorts the vertices of each Voronoi region in a counterclockwise order.
     /// This is useful for visualization purposes.
-    pub fn sort_vertices_of_regions(&self) -> SpatialResult<()> {
+    pub fn sort_vertices_of_regions(&mut self) -> SpatialResult<()> {
         for region_idx in 0..self.regions.len() {
             // Skip regions with less than 3 vertices (they're already "sorted")
             if self.regions[region_idx].len() < 3 {
@@ -242,7 +242,7 @@ impl SphericalVoronoi {
     /// Calculates the areas of the Voronoi regions.
     ///
     /// For 3D point sets, the sum of all areas will be 4π * radius².
-    pub fn calculate_areas(&self) -> SpatialResult<&[f64]> {
+    pub fn calculate_areas(&mut self) -> SpatialResult<&[f64]> {
         // If areas are already calculated, return them
         if let Some(ref areas) = self.areas {
             return Ok(areas);
@@ -323,7 +323,7 @@ impl SphericalVoronoi {
     }
 
     /// Returns pre-calculated areas of Voronoi regions, or calculates them if not already available.
-    pub fn areas(&self) -> SpatialResult<&[f64]> {
+    pub fn areas(&mut self) -> SpatialResult<&[f64]> {
         self.calculate_areas()
     }
 
@@ -481,7 +481,7 @@ impl SphericalVoronoi {
     /// # Returns
     ///
     /// The index of the nearest generator point and its geodesic distance
-    pub fn nearest_generator(_point: &ArrayView1<f64>) -> SpatialResult<(usize, f64)> {
+    pub fn nearest_generator(&self, _point: &ArrayView1<f64>) -> SpatialResult<(usize, f64)> {
         let distances = self.geodesic_distances_to_generators(_point)?;
 
         // Find the minimum distance
@@ -926,8 +926,8 @@ impl SphericalVoronoi {
         vertex_angles.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Update the region with sorted vertices
-        for (i, (vert_idx_)) in vertex_angles.into_iter().enumerate() {
-            region[i] = vert_idx;
+        for (i, (vert_idx_, _)) in vertex_angles.into_iter().enumerate() {
+            region[i] = vert_idx_;
         }
 
         Ok(())

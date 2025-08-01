@@ -138,7 +138,7 @@ impl<T: Clone> RTree<T> {
                         results.truncate(k);
 
                         // Update max_distance
-                        if let Some((__, dist)) = results.last() {
+                        if let Some((_, _, dist)) = results.last() {
                             max_distance = *dist;
                         }
                     }
@@ -181,7 +181,7 @@ impl<T: Clone> RTree<T> {
     ///
     /// A `SpatialResult` containing a vector of pairs of data from both trees that satisfy the predicate,
     /// or an error if the R-trees have different dimensions
-    pub fn spatial_join<U, P>(_other: &RTree<U>, predicate: P) -> SpatialResult<Vec<(T, U)>>
+    pub fn spatial_join<U, P>(&self, _other: &RTree<U>, predicate: P) -> SpatialResult<Vec<(T, U)>>
     where
         U: Clone,
         P: Fn(&Rectangle, &Rectangle) -> SpatialResult<bool>,

@@ -1,10 +1,10 @@
 #![allow(dead_code)]
 
 use ndarray::{array, Array1, ArrayView1};
-use scirs2__integrate::dae::{
+use scirs2_integrate::dae::{
     solve_higher_index_dae, DAEIndex, DAEOptions, DAEStructure, ProjectionMethod,
 };
-use scirs2__integrate::ode::ODEMethod;
+use scirs2_integrate::ode::ODEMethod;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // vx' = -λx (λ is implicitly determined)
     // vy' = -λy - g
     let f = |_t: f64, x: ArrayView1<f64>, _y: ArrayView1<f64>| -> Array1<f64> {
-        let (_px_py, vx, vy) = (x[0], x[1], x[2], x[3]);
+        let (px, py, vx, vy) = (x[0], x[1], x[2], x[3]);
 
         // For the acceleration, we need the Lagrange multiplier λ
         // Instead of explicitly computing it, we'll let the constraint solver handle it

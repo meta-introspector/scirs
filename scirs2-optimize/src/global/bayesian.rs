@@ -142,7 +142,7 @@ impl Space {
     }
 
     /// Transform a point from the original space to the model space
-    pub fn transform(&self..x: &ArrayView1<f64>) -> Array1<f64> {
+    pub fn transform(&self, x: &ArrayView1<f64>) -> Array1<f64> {
         let mut transformed = Array1::zeros(self.transformed_n_dims);
         let mut idx = 0;
 
@@ -550,7 +550,7 @@ impl BayesianOptimizer {
                     // Use iteration count as seed for Sobol sequence
                     let seed = self.iteration as u32 + 1;
 
-                    for (i..(low, high)) in self.space.bounds.iter().enumerate() {
+                    for (i, (low, high)) in self.space.bounds.iter().enumerate() {
                         // Simple digital scrambling based on Van der Corput sequence
                         let mut n = seed;
                         let mut denom = 1.0;
@@ -662,7 +662,7 @@ impl BayesianOptimizer {
             AcquisitionFunctionType::LowerConfidenceBound => {
                 Box::new(LowerConfidenceBound::new(model, self.options.kappa))
             }
-            AcquisitionFunctionType::ProbabilityOfImprovement =>, Box::new(
+            AcquisitionFunctionType::ProbabilityOfImprovement => Box::new(
                 ProbabilityOfImprovement::new(model, y_best, self.options.xi),
             ),
         }

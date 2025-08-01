@@ -5,7 +5,7 @@
 //! financial modeling with advanced analysis capabilities.
 
 use ndarray::Array1;
-use scirs2__integrate::{
+use scirs2_integrate::{
     // Analysis tools
     BifurcationAnalyzer,
     BifurcationPoint,
@@ -571,7 +571,7 @@ pub struct FluidResults {
 pub struct FinancialResults {
     pub option_price: f64,
     pub monte_carlo_price: f64,
-    pub greeks: scirs2_integrate: Greeks,
+    pub greeks: scirs2_integrate::Greeks,
     pub volatility_sensitivity: (Vec<f64>, Vec<f64>), // (volatilities, prices)
 }
 

@@ -1,8 +1,8 @@
 //! Neural network-based derivative pricing
-//! 
+//!
 //! This module implements deep learning approaches for pricing complex derivatives,
 //! calibrating models, and solving high-dimensional pricing problems.
-//! 
+//!
 //! # Features
 //! - Deep neural networks for option pricing
 //! - Physics-informed neural networks (PINNs)

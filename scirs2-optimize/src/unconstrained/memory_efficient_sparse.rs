@@ -171,7 +171,7 @@ impl AdvancedScaleState {
                     OptimizeError::ComputationError(format!("Failed to read from temp file: {}", e))
                 })?;
 
-                let values: Result<Vec<f64>_> = bytes
+                let values: Result<Vec<f64>, _> = bytes
                     .chunks_exact(8)
                     .map(|chunk| {
                         let array: [u8; 8] = chunk.try_into().unwrap();
@@ -564,7 +564,7 @@ pub fn create_advanced_scale_optimizer(
     };
 
     AdvancedScaleOptions {
-        memory_options: super::memory, _efficient::create_memory_efficient_optimizer(
+        memory_options: super::memory_efficient::create_memory_efficient_optimizer(
             max_vars_in_memory,
             available_memory_mb / 2,
         ),

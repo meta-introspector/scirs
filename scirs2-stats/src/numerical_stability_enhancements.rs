@@ -6,7 +6,7 @@
 //! robust statistical computing operations across all numerical conditions.
 
 use crate::error::StatsResult;
-use crate::property_based__validation::ValidationReport;
+use crate::property_based_validation::ValidationReport;
 use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1};
 use num_traits::{Float, NumCast};
 use rand::Rng;
@@ -984,7 +984,7 @@ impl InvariantValidator {
     }
 
     fn validate_statistical_properties<F, D, R>(
-        &self, _function_name: &str, _test_function: &F_test, _data: &ArrayBase<D, Ix1>, _result: &mut InvariantValidationResult,
+        &self, _function_name: &str, _test_function: &F, _data: &ArrayBase<D, Ix1>, _result: &mut InvariantValidationResult,
     ) -> StatsResult<()>
     where
         F: Fn(&ArrayView1<R>) -> StatsResult<R> + Clone + Send + Sync + 'static,
@@ -1618,7 +1618,7 @@ impl EdgeCaseStabilityResult {
         }
     }
 
-    pub fn add_test_result<R>(&mut self_edge_case: EdgeCase<R>, result: EdgeCaseTestResult) {
+    pub fn add_test_result<R>(&mut self, edge_case: EdgeCase<R>, result: EdgeCaseTestResult) {
         self.total_cases += 1;
         match result.result_status {
             EdgeCaseResultStatus::Success => self.passed_cases += 1,
@@ -2191,7 +2191,7 @@ where
 
 /// Generate test data for numerical stability testing
 #[allow(dead_code)]
-fn generate_stability_test_data(_min_val: f64, max_val: f64, size: usize) -> Array1<f64> {
+fn generate_stability_test_data(min_val: f64, max_val: f64, size: usize) -> Array1<f64> {
     use rand::{rngs::StdRng, Rng, SeedableRng};
 
     let mut rng = StdRng::seed_from_u64(42);
@@ -2200,11 +2200,11 @@ fn generate_stability_test_data(_min_val: f64, max_val: f64, size: usize) -> Arr
     for i in 0..size {
         // Mix of different value types for comprehensive testing
         match i % 5 {
-            0 => data[i] = rng.gen_range(min_val..max_val)..// Random in range
+            0 => data[i] = rng.gen_range(min_val..max_val), // Random in range
             1 => data[i] = min_val,                            // Minimum value
             2 => data[i] = max_val,                            // Maximum value
             3 => data[i] = (min_val + max_val) / 2.0,          // Midpoint
-            4 => data[i] = rng.gen_range(min_val..max_val) * 1e-10..// Very small values
+            4 => data[i] = rng.gen_range(min_val..max_val) * 1e-10, // Very small values
             _ => unreachable!(),
         }
     }
@@ -2251,7 +2251,7 @@ pub fn test_variance_stability() -> StatsResult<ComprehensiveStabilityResult> {
 /// Test numerical stability of correlation function specifically
 #[allow(dead_code)]
 pub fn test_correlation_stability() -> StatsResult<ValidationReport> {
-    use crate::property_based__validation::{
+    use crate::property_based_validation::{
         CorrelationBounds, PropertyBasedValidator, PropertyTestConfig,
     };
 

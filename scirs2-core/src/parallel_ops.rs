@@ -348,7 +348,7 @@ pub use sequential__fallbacks::join as par_join;
 /// The final reduced result
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn parallel_map_reduce<D, T, M, Red>(data: D, mapper: M, reducer: Red) -> T
+pub fn parallel_map_reduce<D, T, M, Red>(data: D, mapper: M, _reducer: Red) -> T
 where
     D: Send + Sync,
     T: Send + Clone,

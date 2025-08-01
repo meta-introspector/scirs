@@ -23,7 +23,7 @@ impl EnhancedError {
     /// Create a new enhanced error
     pub fn new(_error: StatsError, context: impl Into<String>) -> Self {
         Self {
-            _error,
+            error: _error,
             context: context.into(),
             suggestions: Vec::new(),
             see_also: Vec::new(),

@@ -33,9 +33,9 @@
 use ndarray::{Array2, ArrayViewMut1, ArrayViewMut2};
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::collections::VecDeque;
+use std::f64::consts::PI;
 use std::ptr::NonNull;
 use std::sync::Mutex;
-use std::f64::consts::PI;
 
 // Platform-specific NUMA imports
 #[cfg(any(target_os = "linux", target_os = "android"))]
@@ -183,7 +183,7 @@ impl DistancePool {
     }
 
     /// Get a buffer for large objects with special handling
-    fn get_large_buffer(_size: usize) -> Box<[f64]> {
+    fn get_large_buffer(&self, _size: usize) -> Box<[f64]> {
         let mut buffers = self.large_buffers.lock().unwrap();
 
         // For large buffers, be more strict about _size matching
@@ -246,7 +246,7 @@ impl DistancePool {
     }
 
     /// Create cache-aligned buffer for optimal SIMD performance
-    fn create_aligned_buffer(_size: usize) -> Box<[f64]> {
+    fn create_aligned_buffer(&self, _size: usize) -> Box<[f64]> {
         let layout = Layout::from_size_align(
             _size * std::mem::size_of::<f64>(),
             self.config.cache_line_size,
@@ -265,12 +265,12 @@ impl DistancePool {
             }
 
             // Convert to boxed slice
-            Box::from_raw(std::slice::from_raw_parts_mut(ptr_size))
+            Box::from_raw(std::slice::from_raw_parts_mut(ptr, _size))
         }
     }
 
     /// Create NUMA-aware aligned buffer with proper node binding
-    fn create_numa_aligned_buffer(_size: usize) -> Box<[f64]> {
+    fn create_numa_aligned_buffer(&self, _size: usize) -> Box<[f64]> {
         let numa_node = self.numa_node.load(Ordering::Relaxed);
 
         #[cfg(target_os = "linux")]
@@ -566,7 +566,8 @@ impl DistancePool {
                     .unwrap_or(8 * 1024 * 1024 * 1024), // 8GB default
                 available_memory_bytes: Self::get_available_system_memory()
                     .unwrap_or(4 * 1024 * 1024 * 1024), // 4GB default
-                cpu_count: num, _cpus: get() as u32,
+                cpu_count: num,
+                _cpus: get() as u32,
             });
         }
 
@@ -645,7 +646,7 @@ impl DistancePool {
     }
 
     /// Clean up excess memory when approaching limits
-    fn cleanup_excess_memory() {
+    fn cleanup_excess_memory(&self) {
         // Remove some older buffers to free memory
         let cleanup_ratio = 0.25; // Clean up 25% of buffers
 
@@ -675,7 +676,7 @@ impl DistancePool {
     }
 
     /// Return a distance buffer to the pool
-    fn return_distance_buffer(_buffer: Box<[f64]>) {
+    fn return_distance_buffer(&self, _buffer: Box<[f64]>) {
         let buffer_size_bytes = _buffer.len() * std::mem::size_of::<f64>();
         let is_large = buffer_size_bytes > self.config.large_object_threshold;
 
@@ -699,7 +700,7 @@ impl DistancePool {
     }
 
     /// Return an index buffer to the pool
-    fn return_index_buffer(_buffer: Box<[usize]>) {
+    fn return_index_buffer(&self, _buffer: Box<[usize]>) {
         let mut buffers = self.index_buffers.lock().unwrap();
         if buffers.len() < self.config.max_pool_size {
             buffers.push_back(_buffer);
@@ -707,7 +708,7 @@ impl DistancePool {
     }
 
     /// Return a matrix buffer to the pool
-    fn return_matrix_buffer(_matrix: Array2<f64>) {
+    fn return_matrix_buffer(&self, _matrix: Array2<f64>) {
         let mut buffers = self.matrix_buffers.lock().unwrap();
         if buffers.len() < self.config.max_pool_size / 4 {
             // Keep fewer matrices
@@ -749,7 +750,7 @@ impl DistancePool {
     }
 
     /// Clear all pools and free memory
-    pub fn clear() {
+    pub fn clear(&self) {
         self.distance_buffers.lock().unwrap().clear();
         self.index_buffers.lock().unwrap().clear();
         self.matrix_buffers.lock().unwrap().clear();
@@ -879,7 +880,7 @@ impl<'a> MatrixBuffer<'a> {
     }
 
     /// Fill the matrix with a value
-    pub fn fill(_value: f64) {
+    pub fn fill(&mut self, _value: f64) {
         self.matrix.as_mut().unwrap().fill(_value);
     }
 }
@@ -917,7 +918,7 @@ impl ClusteringArena {
     }
 
     /// Allocate a temporary vector in the arena
-    pub fn alloc_temp_vec<T: Default + Clone>(_size: usize) -> ArenaVec<T> {
+    pub fn alloc_temp_vec<T: Default + Clone>(&self, _size: usize) -> ArenaVec<T> {
         let layout = Layout::array::<T>(_size).unwrap();
         let ptr = self.allocate_raw(layout);
 
@@ -932,7 +933,7 @@ impl ClusteringArena {
     }
 
     /// Allocate raw memory with proper alignment
-    fn allocate_raw(_layout: Layout) -> NonNull<u8> {
+    fn allocate_raw(&self, _layout: Layout) -> NonNull<u8> {
         let mut current = self.current_block.lock().unwrap();
 
         if current.is_none() || !current.as_ref().unwrap().can_allocate(_layout) {
@@ -947,7 +948,7 @@ impl ClusteringArena {
     }
 
     /// Reset the arena, keeping allocated blocks for reuse
-    pub fn reset() {
+    pub fn reset(&self) {
         let mut current = self.current_block.lock().unwrap();
         let mut full_blocks = self.full_blocks.lock().unwrap();
 
@@ -1004,12 +1005,12 @@ impl ArenaBlock {
         }
     }
 
-    fn can_allocate(_layout: Layout) -> bool {
+    fn can_allocate(&self, _layout: Layout) -> bool {
         let aligned_offset = (self.offset + _layout.align() - 1) & !(_layout.align() - 1);
         aligned_offset + _layout.size() <= self.size
     }
 
-    fn allocate(_layout: Layout) -> NonNull<u8> {
+    fn allocate(&mut self, _layout: Layout) -> NonNull<u8> {
         assert!(self.can_allocate(_layout));
 
         // Align the offset
@@ -1021,7 +1022,7 @@ impl ArenaBlock {
         ptr
     }
 
-    fn reset() {
+    fn reset(&mut self) {
         self.offset = 0;
     }
 }
@@ -1109,18 +1110,18 @@ impl PoolStatistics {
         }
     }
 
-    fn record_hit() {
+    fn record_hit(&self) {
         self.hits.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     }
 
-    fn record_miss() {
+    fn record_miss(&self) {
         self.misses
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         self.total_allocations
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     }
 
-    fn reset() {
+    fn reset(&self) {
         self.hits.store(0, std::sync::atomic::Ordering::Relaxed);
         self.misses.store(0, std::sync::atomic::Ordering::Relaxed);
         self.total_allocations
@@ -1185,7 +1186,7 @@ impl ArenaStatistics {
         }
     }
 
-    fn reset() {
+    fn reset(&self) {
         self.blocks_allocated
             .store(0, std::sync::atomic::Ordering::Relaxed);
         self.total_memory
@@ -1257,7 +1258,7 @@ impl Default for NumaTopology {
                 id: 0,
                 total_memory_bytes: 8 * 1024 * 1024 * 1024, // 8GB default
                 available_memory_bytes: 4 * 1024 * 1024 * 1024, // 4GB default
-                cpu_count: num, _cpus: get() as u32,
+                cpu_count: 4,                               // Default 4 cores
             }],
         }
     }

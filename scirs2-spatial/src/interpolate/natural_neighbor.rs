@@ -17,8 +17,8 @@ use crate::error::{SpatialError, SpatialResult};
 use crate::voronoi::Voronoi;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::HashMap;
-use std::fmt;
 use std::f64::consts::PI;
+use std::fmt;
 
 /// Natural Neighbor interpolator for scattered data
 ///
@@ -145,7 +145,7 @@ impl NaturalNeighborInterpolator {
         let voronoi = Voronoi::new(_points, false)?;
 
         Ok(Self {
-            _points: _points.to_owned(),
+            points: _points.to_owned(),
             values: values.to_owned(),
             delaunay,
             voronoi,
@@ -168,7 +168,7 @@ impl NaturalNeighborInterpolator {
     ///
     /// * If the point dimensions don't match the interpolator
     /// * If the point is outside the convex hull of the input points
-    pub fn interpolate(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn interpolate(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
         // Check dimension
         if _point.len() != self.dim {
             return Err(SpatialError::DimensionError(format!(
@@ -212,7 +212,7 @@ impl NaturalNeighborInterpolator {
     /// # Errors
     ///
     /// * If the points dimensions don't match the interpolator
-    pub fn interpolate_many(_points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
+    pub fn interpolate_many(&self, _points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
         // Check dimensions
         if _points.ncols() != self.dim {
             return Err(SpatialError::DimensionError(format!(
@@ -602,8 +602,8 @@ impl NaturalNeighborInterpolator {
 
         // Add the closest candidates, but limit the total number for performance
         let max_additional = (self.n_points / 4).clamp(10, 20);
-        for (idx_) in candidates.into_iter().take(max_additional) {
-            neighbors.push(idx);
+        for (idx_, _) in candidates.into_iter().take(max_additional) {
+            neighbors.push(idx_);
         }
 
         // Ensure we have at least 3 neighbors for proper interpolation
@@ -620,8 +620,8 @@ impl NaturalNeighborInterpolator {
             all_distances
                 .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-            for (idx_) in all_distances.into_iter().take(3 - neighbors.len()) {
-                neighbors.push(idx);
+            for (idx_, _) in all_distances.into_iter().take(3 - neighbors.len()) {
+                neighbors.push(idx_);
             }
         }
 

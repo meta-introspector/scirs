@@ -4,7 +4,7 @@
 //! fluent API patterns, method chaining, async support, streaming operations, and
 //! intelligent auto-configuration for optimal user experience and performance.
 
-use crate::api__standardization::{NullHandling, ResultMetadata, StandardizedConfig};
+use crate::api_standardization::{NullHandling, ResultMetadata, StandardizedConfig};
 use crate::error::StatsResult;
 // Array1 import removed - not used in this module
 use num_traits::{Float, NumCast};
@@ -88,7 +88,8 @@ where
     config: FluentStatsConfig,
     operation_chain: Vec<StatisticalOperation>,
     result_cache: Arc<std::sync::RwLock<HashMap<String, CachedResult<F>>>>,
-    performance_monitor: Option<PerformanceMonitor>, _phantom: PhantomData<F>,
+    performance_monitor: Option<PerformanceMonitor>,
+    _phantom: PhantomData<F>,
 }
 
 impl<F> FluentStats<F>
@@ -109,10 +110,11 @@ where
         };
 
         Self {
-            _config,
+            config: _config,
             operation_chain: Vec::new(),
             result_cache: Arc::new(std::sync::RwLock::new(HashMap::new())),
-            performance_monitor_phantom: PhantomData,
+            performance_monitor,
+            _phantom: PhantomData,
         }
     }
 
@@ -284,7 +286,8 @@ where
 
     /// Execute mean operation (placeholder)
     fn execute_mean_operation(
-        &self_operation: &StatisticalOperation,
+        &self,
+        _operation: &StatisticalOperation,
     ) -> StatsResult<OperationResult<F>> {
         // Placeholder implementation
         Ok(OperationResult {
@@ -299,13 +302,14 @@ where
                 optimized: true,
                 extra: HashMap::new(),
             },
-            _operation_type: OperationType::Mean,
+            operation_type: OperationType::Mean,
         })
     }
 
     /// Execute variance operation (placeholder)
     fn execute_variance_operation(
-        &self_operation: &StatisticalOperation,
+        &self,
+        _operation: &StatisticalOperation,
     ) -> StatsResult<OperationResult<F>> {
         // Placeholder implementation
         Ok(OperationResult {
@@ -320,13 +324,14 @@ where
                 optimized: true,
                 extra: HashMap::new(),
             },
-            _operation_type: OperationType::Variance,
+            operation_type: OperationType::Variance,
         })
     }
 
     /// Execute correlation operation (placeholder)
     fn execute_correlation_operation(
-        &self_operation: &StatisticalOperation,
+        &self,
+        _operation: &StatisticalOperation,
     ) -> StatsResult<OperationResult<F>> {
         // Placeholder implementation
         Ok(OperationResult {
@@ -341,13 +346,14 @@ where
                 optimized: true,
                 extra: HashMap::new(),
             },
-            _operation_type: OperationType::Correlation,
+            operation_type: OperationType::Correlation,
         })
     }
 
     /// Execute t-test operation (placeholder)
     fn execute_ttest_operation(
-        &self_operation: &StatisticalOperation,
+        &self,
+        _operation: &StatisticalOperation,
     ) -> StatsResult<OperationResult<F>> {
         // Placeholder implementation
         Ok(OperationResult {
@@ -362,13 +368,14 @@ where
                 optimized: true,
                 extra: HashMap::new(),
             },
-            _operation_type: OperationType::TTest,
+            operation_type: OperationType::TTest,
         })
     }
 
     /// Execute regression operation (placeholder)
     fn execute_regression_operation(
-        &self_operation: &StatisticalOperation,
+        &self,
+        _operation: &StatisticalOperation,
     ) -> StatsResult<OperationResult<F>> {
         // Placeholder implementation
         Ok(OperationResult {
@@ -383,7 +390,7 @@ where
                 optimized: true,
                 extra: HashMap::new(),
             },
-            _operation_type: OperationType::Regression,
+            operation_type: OperationType::Regression,
         })
     }
 }
@@ -401,9 +408,9 @@ impl<F> FluentDescriptive<F>
 where
     F: Float + NumCast + Send + Sync + 'static + std::fmt::Display,
 {
-    fn new(_parent: FluentStats<F>) -> Self {
+    fn new(parent: FluentStats<F>) -> Self {
         Self {
-            _parent,
+            parent,
             operations: Vec::new(),
         }
     }
@@ -480,9 +487,9 @@ impl<F> FluentCorrelation<F>
 where
     F: Float + NumCast + Send + Sync + 'static + std::fmt::Display,
 {
-    fn new(_parent: FluentStats<F>) -> Self {
+    fn new(parent: FluentStats<F>) -> Self {
         Self {
-            _parent,
+            parent,
             correlation_type: CorrelationType::Pairwise,
             method: CorrelationMethod::Pearson,
         }
@@ -547,9 +554,9 @@ impl<F> FluentTesting<F>
 where
     F: Float + NumCast + Send + Sync + 'static + std::fmt::Display,
 {
-    fn new(_parent: FluentStats<F>) -> Self {
+    fn new(parent: FluentStats<F>) -> Self {
         Self {
-            _parent,
+            parent,
             test_type: TestType::TTest,
         }
     }
@@ -598,9 +605,9 @@ impl<F> FluentRegression<F>
 where
     F: Float + NumCast + Send + Sync + 'static + std::fmt::Display,
 {
-    fn new(_parent: FluentStats<F>) -> Self {
+    fn new(parent: FluentStats<F>) -> Self {
         Self {
-            _parent,
+            parent,
             regression_type: RegressionType::Linear,
         }
     }
@@ -692,9 +699,9 @@ impl OperationType {
         match _desc_op {
             DescriptiveOperation::Mean => OperationType::Mean,
             DescriptiveOperation::Variance(_) => OperationType::Variance,
-            DescriptiveOperation::StdDev(_) =>, OperationType::Variance,
-            DescriptiveOperation::Skewness =>, OperationType::Mean, // Simplified
-            DescriptiveOperation::Kurtosis =>, OperationType::Mean, // Simplified
+            DescriptiveOperation::StdDev(_) => OperationType::Variance,
+            DescriptiveOperation::Skewness => OperationType::Mean, // Simplified
+            DescriptiveOperation::Kurtosis => OperationType::Mean, // Simplified
         }
     }
 }
@@ -831,7 +838,7 @@ struct CachedResult<F> {
 impl<F> CachedResult<F> {
     fn new(_result: OperationResult<F>) -> Self {
         Self {
-            _result,
+            result: _result,
             created_at: Instant::now(),
             ttl: Duration::from_secs(300), // 5 minutes default TTL
         }

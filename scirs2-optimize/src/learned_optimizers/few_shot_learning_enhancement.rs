@@ -396,7 +396,7 @@ impl FewShotLearningOptimizer {
         let experience_memory = ExperienceMemory::new(1000);
 
         Self {
-            _config,
+            config: _config,
             meta_learner,
             fast_adapter,
             similarity_matcher,
@@ -489,7 +489,7 @@ impl FewShotLearningOptimizer {
 
         // Sort by similarity and return top matches
         similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-        Ok(similarities.into_iter().take(5).map(|(id_)| id).collect())
+        Ok(similarities.into_iter().take(5).map(|(id, _)| id).collect())
     }
 
     /// Encode problem for similarity matching
@@ -508,7 +508,10 @@ impl FewShotLearningOptimizer {
         match problem.problem_class.as_str() {
             "quadratic" => encoding[3] = 1.0,
             "neural_network" => encoding[4] = 1.0,
-            "sparse" => encoding[5] = 1.0_ => encoding[6] = 1.0,
+            "sparse" => {
+                encoding[5] = 1.0;
+                encoding[6] = 1.0;
+            }
         }
 
         Ok(encoding)
@@ -855,7 +858,7 @@ impl FeatureExtractor {
                 DenseLayer::new(_feature_dim * 2, _feature_dim, ActivationType::ReLU),
             ],
             attention_mechanism: FeatureAttention::new(_feature_dim),
-            _feature_dim,
+            feature_dim: _feature_dim,
         }
     }
 
@@ -913,13 +916,13 @@ impl FeatureAttention {
             query_weights: Array2::from_shape_fn((_feature_dim, _feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            key_weights: Array2::from_shape_fn((feature_dim, feature_dim), |_| {
+            key_weights: Array2::from_shape_fn((_feature_dim, _feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            value_weights: Array2::from_shape_fn((feature_dim, feature_dim), |_| {
+            value_weights: Array2::from_shape_fn((_feature_dim, _feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            attention_scores: Array1::zeros(feature_dim),
+            attention_scores: Array1::zeros(_feature_dim),
         }
     }
 
@@ -951,10 +954,10 @@ impl ContextEncoder {
             embedding_layer: Array2::from_shape_fn((_context_dim, 100), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            aggregation_network: Array2::from_shape_fn((context_dim, context_dim), |_| {
+            aggregation_network: Array2::from_shape_fn((_context_dim, _context_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            context_dim,
+            context_dim: _context_dim,
         }
     }
 }
@@ -966,17 +969,17 @@ impl LSTMCell {
             w_i: Array2::from_shape_fn((_hidden_size, _hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            w_f: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
+            w_f: Array2::from_shape_fn((_hidden_size, _hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            w_c: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
+            w_c: Array2::from_shape_fn((_hidden_size, _hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            w_o: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
+            w_o: Array2::from_shape_fn((_hidden_size, _hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            hidden_state: Array1::zeros(hidden_size),
-            cell_state: Array1::zeros(hidden_size),
+            hidden_state: Array1::zeros(_hidden_size),
+            cell_state: Array1::zeros(_hidden_size),
         }
     }
 }
@@ -988,13 +991,13 @@ impl ParameterGenerator {
             generator_network: Array2::from_shape_fn((_param_dim, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            conditioning_network: Array2::from_shape_fn((param_dim, param_dim), |_| {
+            conditioning_network: Array2::from_shape_fn((_param_dim, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            output_projection: Array2::from_shape_fn((param_dim, param_dim), |_| {
+            output_projection: Array2::from_shape_fn((_param_dim, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            param_dim,
+            param_dim: _param_dim,
         }
     }
 
@@ -1021,10 +1024,10 @@ impl UpdateNetwork {
             update_network: Array2::from_shape_fn((_param_dim, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            meta_gradient_network: Array2::from_shape_fn((param_dim, param_dim), |_| {
+            meta_gradient_network: Array2::from_shape_fn((_param_dim, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            lr_network: Array2::from_shape_fn((1, param_dim), |_| {
+            lr_network: Array2::from_shape_fn((1, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             update_history: VecDeque::with_capacity(100),
@@ -1040,7 +1043,7 @@ impl MemoryNetwork {
             memory_keys: Array2::zeros((memory_size, _feature_dim)),
             memory_values: Array2::zeros((memory_size, _feature_dim)),
             access_patterns: Vec::new(),
-            memory_size,
+            memory_size: memory_size,
         }
     }
 }
@@ -1062,7 +1065,7 @@ impl GradientBasedAdapter {
     pub fn new(_inner_lr: f64) -> Self {
         Self {
             meta_lr: 0.001,
-            _inner_lr,
+            inner_lr: _inner_lr,
             adaptation_steps: 5,
             gradient_accumulator: Array1::zeros(100),
         }
@@ -1153,7 +1156,7 @@ impl ExperienceMemory {
         Self {
             support_set: Vec::new(),
             query_set: Vec::new(),
-            _capacity,
+            capacity: _capacity,
             episodic_memory: VecDeque::with_capacity(_capacity),
         }
     }

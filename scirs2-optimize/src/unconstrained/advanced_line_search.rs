@@ -681,7 +681,8 @@ where
             InterpolationStrategy::Cubic => {
                 interpolate_cubic(alpha, alpha_max, phi, f0, dphi, dphi0)
             }
-            InterpolationStrategy::Quadratic => interpolate_quadratic(alpha, phi, f0, dphi, dphi0, _ => 2.0 * alpha,
+            InterpolationStrategy::Quadratic => interpolate_quadratic(alpha, phi, f0, dphi, dphi0),
+            _ => 2.0 * alpha,
         };
 
         alpha = alpha.min(alpha_max);
@@ -858,7 +859,8 @@ where
             grad0,
             &adaptive_options,
             bounds,
-        , _ => {
+        ),
+        _ => {
             // Fallback to Hager-Zhang
             hager_zhang_line_search(
                 _fun,
@@ -897,7 +899,7 @@ fn interpolate_cubic(
 }
 
 #[allow(dead_code)]
-fn interpolate_quadratic(_alpha: f64, phi: f64, phi0: f64_dphi: f64, dphi0: f64) -> f64 {
+fn interpolate_quadratic(_alpha: f64, phi: f64, phi0: f64, dphi: f64, dphi0: f64) -> f64 {
     let alpha_q = -dphi0 * _alpha * _alpha / (2.0 * (phi - phi0 - dphi0 * _alpha));
     alpha_q.max(1.1 * _alpha)
 }

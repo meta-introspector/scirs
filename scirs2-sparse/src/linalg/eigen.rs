@@ -10,8 +10,8 @@
 use crate::error::{SparseError, SparseResult};
 use crate::linalg::decomposition::CholeskyResult;
 use crate::sparray::SparseArray;
-use crate::sym__csr::SymCsrMatrix;
-use crate::sym__ops::sym_csr_matvec;
+use crate::sym_csr::SymCsrMatrix;
+use crate::sym_ops::sym_csr_matvec;
 use ndarray::{s, Array1, Array2, ArrayView1};
 use num_traits::Float;
 use rand::Rng;
@@ -109,7 +109,7 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__sparse::{
+/// use scirs2_sparse::{
 ///     sym_csr::SymCsrMatrix,
 ///     linalg::eigen::{power_iteration, PowerIterationOptions},
 /// };
@@ -156,7 +156,7 @@ where
         + Sync
         + 'static,
 {
-    let (n_) = matrix.shape();
+    let (n, _) = matrix.shape();
 
     // Initialize eigenvector
     let mut x = match initial_guess {
@@ -290,7 +290,7 @@ where
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__sparse::{
+/// use scirs2_sparse::{
 ///     sym_csr::SymCsrMatrix,
 ///     linalg::eigen::{lanczos, LanczosOptions},
 /// };
@@ -340,7 +340,7 @@ where
         + Sync
         + 'static,
 {
-    let (n_) = matrix.shape();
+    let (n, _) = matrix.shape();
 
     // Ensure the subspace size is valid
     let subspace_size = options.max_subspace_size.min(n);
@@ -455,7 +455,7 @@ where
         // Check for convergence using the largest eigenvalue approx
         if alpha.len() >= num_eigenvalues {
             // Build and solve the tridiagonal system
-            let (eigvals_) = solve_tridiagonal_eigenproblem(&alpha, &beta, num_eigenvalues)?;
+            let (eigvals, _) = solve_tridiagonal_eigenproblem(&alpha, &beta, num_eigenvalues)?;
 
             // Check if the largest eigvals have converged (using beta as an error estimate)
             if beta_j_next < T::from(options.tol).unwrap() * eigvals[0].abs() {
@@ -1131,8 +1131,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::eigs;
-/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::eigs;
+/// use scirs2_sparse::csr_array::CsrArray;
 ///
 /// // Create a general sparse matrix
 /// let rows = vec![0, 0, 1, 2];
@@ -1200,8 +1200,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::eigsh;
-/// use scirs2__sparse::sym_csr::SymCsrMatrix;
+/// use scirs2_sparse::linalg::eigsh;
+/// use scirs2_sparse::sym_csr::SymCsrMatrix;
 ///
 /// // Create a symmetric sparse matrix
 /// let data = vec![2.0, 1.0, 2.0, 1.0];
@@ -1270,8 +1270,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::eigsh_shift_invert;
-/// use scirs2__sparse::sym_csr::SymCsrMatrix;
+/// use scirs2_sparse::linalg::eigsh_shift_invert;
+/// use scirs2_sparse::sym_csr::SymCsrMatrix;
 ///
 /// let data = vec![4.0, 2.0, 3.0, 5.0];
 /// let indices = vec![0, 0, 1, 1];
@@ -1330,7 +1330,7 @@ fn create_shifted_matrix<T>(_matrix: &SymCsrMatrix<T>, sigma: T) -> SparseResult
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T>,
 {
-    let (n_) = _matrix.shape();
+    let (n, _) = _matrix.shape();
     let mut data = _matrix.data.to_vec();
     let mut indices = _matrix.indices.to_vec();
     let mut indptr = _matrix.indptr.to_vec();
@@ -1390,7 +1390,7 @@ where
         + Sync
         + 'static,
 {
-    let (n_) = shifted_matrix.shape();
+    let (n, _) = shifted_matrix.shape();
     let max_iter = options.max_iter;
     let tol = T::from(options.tol).unwrap();
     let ncv = (2 * k + 1).min(n).min(20);
@@ -1454,7 +1454,7 @@ where
     // Solve tridiagonal eigenvalue problem
     let alpha_vec: Vec<T> = alpha.slice(s![..j]).to_vec();
     let beta_vec: Vec<T> = beta.slice(s![1..j]).to_vec();
-    let (mut eigenvalues_) = solve_tridiagonal_eigenproblem(&alpha_vec, &beta_vec, k)?;
+    let (mut eigenvalues, _eigenvectors) = solve_tridiagonal_eigenproblem(&alpha_vec, &beta_vec, k)?;
 
     // Transform eigenvalues back: lambda = sigma + 1/mu
     for eval in eigenvalues.iter_mut() {
@@ -1577,8 +1577,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::eigsh_shift_invert_enhanced;
-/// use scirs2__sparse::sym_csr::SymCsrMatrix;
+/// use scirs2_sparse::linalg::eigsh_shift_invert_enhanced;
+/// use scirs2_sparse::sym_csr::SymCsrMatrix;
 ///
 /// let data = vec![4.0, 2.0, 3.0, 5.0];
 /// let indices = vec![0, 0, 1, 1];
@@ -1702,7 +1702,7 @@ where
         if let Ok(chol_result) = crate::linalg::decomposition::cholesky_decomposition(&csr_matrix) {
             if chol_result.success {
                 return Ok(Self {
-                    _matrix: _matrix.clone(),
+                    matrix: _matrix.clone(),
                     factorization: Some(FactorizationData::Cholesky(chol_result)),
                     solver_type: SolverType::Cholesky,
                 });
@@ -1717,7 +1717,7 @@ where
         ) {
             if ldlt_result.success {
                 return Ok(Self {
-                    _matrix: _matrix.clone(),
+                    matrix: _matrix.clone(),
                     factorization: Some(FactorizationData::Ldlt(ldlt_result)),
                     solver_type: SolverType::Ldlt,
                 });
@@ -1731,7 +1731,7 @@ where
     /// Create solver that only uses iterative methods
     pub fn iterative_only(_matrix: &SymCsrMatrix<T>) -> Self {
         Self {
-            _matrix: _matrix.clone(),
+            matrix: _matrix.clone(),
             factorization: None,
             solver_type: SolverType::Iterative,
         }
@@ -1851,7 +1851,7 @@ where
 
     /// Create diagonal preconditioner
     fn create_diagonal_preconditioner(&self) -> Array1<T> {
-        let (n_) = self.matrix.shape();
+        let (n, _) = self.matrix.shape();
         let mut diag = Array1::ones(n);
 
         for i in 0..n {
@@ -1874,7 +1874,7 @@ where
 
     /// Matrix-vector product with the shifted matrix
     fn matrix_vector_product(&self, x: &Array1<T>) -> SparseResult<Array1<T>> {
-        let (n_) = self.matrix.shape();
+        let (n, _) = self.matrix.shape();
         let mut result = Array1::zeros(n);
 
         for i in 0..n {
@@ -1982,7 +1982,7 @@ where
         + Sync
         + 'static,
 {
-    let (n_) = solver.matrix.shape();
+    let (n, _) = solver.matrix.shape();
     let max_iter = options.max_iter;
     let tol = T::from(options.tol).unwrap();
     let ncv = (3 * k).min(n).min(50); // Larger subspace for better convergence
@@ -2056,7 +2056,7 @@ where
             let alpha_slice: Vec<T> = alpha.slice(ndarray::s![..j]).to_vec();
             let beta_slice: Vec<T> = beta.slice(ndarray::s![1..j]).to_vec();
 
-            if let Ok((eigenvals_)) = solve_tridiagonal_eigenproblem(&alpha_slice, &beta_slice, k)
+            if let Ok((eigenvals, _)) = solve_tridiagonal_eigenproblem(&alpha_slice, &beta_slice, k)
             {
                 // Check convergence using improved criterion
                 if eigenvals.len() >= k {
@@ -2149,7 +2149,7 @@ where
     let mut cols = Vec::new();
     let mut data = Vec::new();
 
-    let (n_) = _matrix.shape();
+    let (n, _) = _matrix.shape();
 
     for i in 0..n {
         let start = _matrix.indptr[i];
@@ -2197,8 +2197,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::eigsh_generalized;
-/// use scirs2__sparse::sym_csr::SymCsrMatrix;
+/// use scirs2_sparse::linalg::eigsh_generalized;
+/// use scirs2_sparse::sym_csr::SymCsrMatrix;
 ///
 /// let a_data = vec![4.0, 2.0, 3.0, 5.0];
 /// let a_indices = vec![0, 0, 1, 1];
@@ -2281,7 +2281,7 @@ where
         + Div<Output = T>
         + 'static,
 {
-    let (n_) = a_matrix.shape();
+    let (n, _) = a_matrix.shape();
 
     // Compute Cholesky decomposition of B: B = L*L^T
     let chol_result = cholesky_decompose_symmetric(b_matrix)?;
@@ -2324,7 +2324,7 @@ where
     let mut cols = Vec::new();
     let mut data = Vec::new();
 
-    let (n_) = _matrix.shape();
+    let (n, _) = _matrix.shape();
 
     for i in 0..n {
         let start = _matrix.indptr[i];
@@ -2360,7 +2360,7 @@ fn compute_similarity_transform<T>(
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
 {
-    let (n_) = a_matrix.shape();
+    let (n, _) = a_matrix.shape();
 
     // For simplicity, use a dense intermediate representation
     // In practice, this should use sparse _matrix operations
@@ -2427,7 +2427,7 @@ where
         for j in 0..i {
             sum = sum + _l_matrix[[i, j]] * x[j];
         }
-        x[i] = (b[i] - sum) / l_matrix[[i, i]];
+        x[i] = (b[i] - sum) / _l_matrix[[i, i]];
     }
 
     Ok(x)
@@ -2439,7 +2439,7 @@ fn convert_dense_to_symmetric_sparse<T>(_dense_matrix: &Array2<T>) -> SparseResu
 where
     T: Float + Debug + Copy,
 {
-    let (n_) = _dense_matrix.dim();
+    let (n, _) = _dense_matrix.dim();
     let mut data = Vec::new();
     let mut indices = Vec::new();
     let mut indptr = vec![0];
@@ -2695,7 +2695,7 @@ where
 
             // For simplicity, we'll use power iteration on the Hessenberg matrix
             // In a full implementation, we'd use QR algorithm
-            if let Ok((ritz_vals_)) = solve_hessenberg_eigenproblem(&h_sub, k) {
+            if let Ok((ritz_vals, _)) = solve_hessenberg_eigenproblem(&h_sub, k) {
                 // Check convergence based on residual estimate
                 if ritz_vals.len() >= k {
                     let residual_norm = h_norm * T::from(1e-10).unwrap(); // Simplified estimate
@@ -2878,8 +2878,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::eigsh_generalized_enhanced;
-/// use scirs2__sparse::sym_csr::SymCsrMatrix;
+/// use scirs2_sparse::linalg::eigsh_generalized_enhanced;
+/// use scirs2_sparse::sym_csr::SymCsrMatrix;
 ///
 /// let a_data = vec![4.0, 2.0, 3.0, 5.0];
 /// let a_indices = vec![0, 0, 1, 1];
@@ -3185,7 +3185,7 @@ where
     }
 
     fn matrix_vector_product_b(&self, x: &Array1<T>) -> SparseResult<Array1<T>> {
-        let (n_) = self.b_matrix.shape();
+        let (n, _) = self.b_matrix.shape();
         let mut result = Array1::zeros(n);
 
         for i in 0..n {
@@ -3257,7 +3257,7 @@ where
     }
 
     fn matrix_vector_product_a(&self, x: &Array1<T>) -> SparseResult<Array1<T>> {
-        let (n_) = self.a_matrix.shape();
+        let (n, _) = self.a_matrix.shape();
         let mut result = Array1::zeros(n);
 
         for i in 0..n {
@@ -3332,7 +3332,7 @@ where
     }
 
     fn matrix_vector_product_plus(&self, x: &Array1<T>) -> SparseResult<Array1<T>> {
-        let (n_) = self.shifted_plus.shape();
+        let (n, _) = self.shifted_plus.shape();
         let mut result = Array1::zeros(n);
 
         for i in 0..n {
@@ -3367,7 +3367,7 @@ fn create_matrix_combination<T>(
 where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T>,
 {
-    let (n_) = a_matrix.shape();
+    let (n, _) = a_matrix.shape();
     let mut data = Vec::new();
     let mut indices = Vec::new();
     let mut indptr = vec![0];
@@ -3398,7 +3398,7 @@ where
 
         // Sort and add non-zero entries
         let mut row_entries: Vec<_> = row_data.iter().collect();
-        row_entries.sort_by_key(|&(j_)| j);
+        row_entries.sort_by_key(|&(j_, _)| j_);
 
         for (&j, &val) in row_entries {
             if val.abs() > T::from(1e-14).unwrap() {
@@ -3436,7 +3436,7 @@ where
         + Sync
         + 'static,
 {
-    let (n_) = solver.b_matrix.shape();
+    let (n, _) = solver.b_matrix.shape();
     let max_subspace_size = options.max_subspace_size.min(n);
     let num_eigenvalues = k.min(max_subspace_size);
     let tol = T::from(options.tol).unwrap();
@@ -3511,7 +3511,7 @@ where
             let alpha_slice: Vec<T> = alpha.slice(ndarray::s![..j + 1]).to_vec();
             let beta_slice: Vec<T> = beta.slice(ndarray::s![1..j + 1]).to_vec();
 
-            if let Ok((ritz_vals_)) =
+            if let Ok((ritz_vals, _)) =
                 solve_tridiagonal_eigenproblem(&alpha_slice, &beta_slice, num_eigenvalues)
             {
                 if ritz_vals.len() >= num_eigenvalues {
@@ -3616,7 +3616,7 @@ where
         + Sync
         + 'static,
 {
-    let (n_) = solver.a_matrix.shape();
+    let (n, _) = solver.a_matrix.shape();
     let max_subspace_size = options.max_subspace_size.min(n);
     let num_eigenvalues = k.min(max_subspace_size);
     let tol = T::from(options.tol).unwrap();
@@ -3691,7 +3691,7 @@ where
             let alpha_slice: Vec<T> = alpha.slice(ndarray::s![..j + 1]).to_vec();
             let beta_slice: Vec<T> = beta.slice(ndarray::s![1..j + 1]).to_vec();
 
-            if let Ok((ritz_vals_)) =
+            if let Ok((ritz_vals, _)) =
                 solve_tridiagonal_eigenproblem(&alpha_slice, &beta_slice, num_eigenvalues)
             {
                 if ritz_vals.len() >= num_eigenvalues {
@@ -3797,7 +3797,7 @@ where
         + Sync
         + 'static,
 {
-    let (n_) = solver.shifted_plus.shape();
+    let (n, _) = solver.shifted_plus.shape();
     let max_subspace_size = options.max_subspace_size.min(n);
     let num_eigenvalues = k.min(max_subspace_size);
     let tol = T::from(options.tol).unwrap();
@@ -3872,7 +3872,7 @@ where
             let alpha_slice: Vec<T> = alpha.slice(ndarray::s![..j + 1]).to_vec();
             let beta_slice: Vec<T> = beta.slice(ndarray::s![1..j + 1]).to_vec();
 
-            if let Ok((ritz_vals_)) =
+            if let Ok((ritz_vals, _)) =
                 solve_tridiagonal_eigenproblem(&alpha_slice, &beta_slice, num_eigenvalues)
             {
                 if ritz_vals.len() >= num_eigenvalues {
@@ -3983,7 +3983,7 @@ where
     // For LDLT decomposition, we solve the generalized eigenvalue problem
     // by transforming to standard form using the factorization B = P * L * D * L^T * P^T
 
-    let (n_) = a_matrix.shape();
+    let (n, _) = a_matrix.shape();
 
     // Create a transformed operator that represents L^(-1) * A * L^(-T)
     // This is more complex with LDLT due to the permutation and diagonal scaling

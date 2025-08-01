@@ -6,7 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Axis, Data, Ix1, Ix2};
 use rand::rng;
-use rand__distr::{ChiSquared, Distribution, Normal as RandNormal};
+use rand_distr::{ChiSquared, Distribution, Normal as RandNormal};
 use std::fmt::Debug;
 
 // Import the helper functions used by MultivariateNormal
@@ -535,9 +535,9 @@ mod tests {
         let mvt = MultivariateT::new(mean, scale, 10.0).unwrap();
 
         // Generate samples and check dimensions
-        let n_samples = 1000;
-        let samples = mvt.rvs(n_samples).unwrap();
-        assert_eq!(samples.shape(), &[n_samples, 2]);
+        let n_samples_ = 1000;
+        let samples = mvt.rvs(n_samples_).unwrap();
+        assert_eq!(samples.shape(), &[n_samples_, 2]);
 
         // Check statistics (rough check as it's random and t-distribution has heavier tails)
         let sample_mean = samples.mean_axis(Axis(0)).unwrap();

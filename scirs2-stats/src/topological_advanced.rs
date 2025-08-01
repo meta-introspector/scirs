@@ -14,7 +14,7 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
-use scirs2__linalg::parallel_dispatch::ParallelConfig;
+use scirs2_linalg::parallel_dispatch::ParallelConfig;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -25,7 +25,8 @@ pub struct AdvancedTopologicalAnalyzer<F> {
     /// Cached simplicial complexes
     cache: TopologicalCache<F>,
     /// Performance metrics
-    performance: TopologicalPerformanceMetrics_phantom: PhantomData<F>,
+    performance: TopologicalPerformanceMetrics,
+    _phantom: PhantomData<F>,
 }
 
 /// Configuration for topological data analysis
@@ -625,8 +626,8 @@ where
         &mut self,
         points: &ArrayView2<F>,
     ) -> StatsResult<TopologicalResults<F>> {
-        check_array_finite(points, "points")?;
-        let (n_points_dimension) = points.dim();
+        checkarray_finite(points, "points")?;
+        let (n_points, _dimension) = points.dim();
 
         if n_points < 2 {
             return Err(StatsError::InvalidArgument(
@@ -704,7 +705,8 @@ where
         match self.config.filtration_config.filtration_type {
             FiltrationType::VietorisRips => self.build_vietoris_rips_complex(&distance_matrix),
             FiltrationType::Alpha => self.build_alpha_complex(points),
-            FiltrationType::Cech => self.build_cech_complex(points, _ => {
+            FiltrationType::Cech => self.build_cech_complex(points),
+            _ => {
                 // Default to Vietoris-Rips
                 self.build_vietoris_rips_complex(&distance_matrix)
             }
@@ -713,7 +715,7 @@ where
 
     /// Compute distance matrix between points
     fn compute_distance_matrix(&self, points: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_points_) = points.dim();
+        let (n_points, _) = points.dim();
         let mut distance_matrix = Array2::zeros((n_points, n_points));
 
         for i in 0..n_points {
@@ -1114,7 +1116,8 @@ where
 
     /// Topological statistical inference
     fn topological_inference(
-        &self_points: &ArrayView2<F>,
+        &self,
+        points: &ArrayView2<F>,
         persistence_diagrams: &HashMap<usize, PersistenceDiagram<F>>,
     ) -> StatsResult<TopologicalInferenceResults<F>> {
         let mut test_statistics = HashMap::new();
@@ -1158,7 +1161,7 @@ where
         &self,
         data: &ArrayView2<F>,
     ) -> StatsResult<TopologicalFeatures<F>> {
-        let (_n_samples, n_features) = data.dim();
+        let (_n_samples_, n_features) = data.dim();
 
         // Persistent homology features
         let persistence_features = self.extract_persistence_features(data)?;
@@ -1413,7 +1416,7 @@ where
         &self,
         data: &ArrayView2<F>,
     ) -> StatsResult<TopologicalFeatures<F>> {
-        let (_n_samples, n_features) = data.dim();
+        let (_n_samples_, n_features) = data.dim();
 
         // Persistent homology features
         let persistence_features = self.extract_persistence_features(data)?;
@@ -2001,15 +2004,15 @@ where
 
     /// Compute topological kernel matrix
     fn compute_topological_kernel_matrix(&self, features: &Array2<F>) -> StatsResult<Array2<F>> {
-        let (n_samples, n_features) = features.dim();
-        let mut kernel_matrix = Array2::zeros((n_samples, n_samples));
+        let (n_samples_, n_features) = features.dim();
+        let mut kernel_matrix = Array2::zeros((n_samples_, n_samples_));
 
         // Gaussian RBF kernel with topological distance
         let sigma = F::from(1.0).unwrap();
         let sigma_sq = sigma * sigma;
 
-        for i in 0..n_samples {
-            for j in 0..n_samples {
+        for i in 0..n_samples_ {
+            for j in 0..n_samples_ {
                 let mut dist_sq = F::zero();
 
                 for k in 0..n_features {
@@ -2034,15 +2037,15 @@ where
         let (n_samples_) = features.dim();
 
         // Simplified topological SVM using kernel _matrix
-        let mut predictions = Array1::zeros(n_samples);
-        let mut confidence_scores = Array1::zeros(n_samples);
+        let mut predictions = Array1::zeros(n_samples_);
+        let mut confidence_scores = Array1::zeros(n_samples_);
 
         // Simple nearest neighbor classification using topological kernel
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let mut best_similarity = F::zero();
             let mut predicted_label = labels[0];
 
-            for j in 0..n_samples {
+            for j in 0..n_samples_ {
                 if i != j && kernel_matrix[[i, j]] > best_similarity {
                     best_similarity = kernel_matrix[[i, j]];
                     predicted_label = labels[j];
@@ -2066,7 +2069,7 @@ where
             })
             .sum();
 
-        let accuracy = F::from(correct_predictions as f64 / n_samples as f64).unwrap();
+        let accuracy = F::from(correct_predictions as f64 / n_samples_ as f64).unwrap();
 
         Ok(TopologicalPredictionResult {
             predictions,
@@ -2085,7 +2088,7 @@ where
         let num_clusters = 3; // Simplified to 3 clusters
 
         // Simple k-means clustering on topological features
-        let mut cluster_labels = Array1::zeros(n_samples);
+        let mut cluster_labels = Array1::zeros(n_samples_);
         let mut cluster_centers = Array2::zeros((num_clusters, features.ncols()));
 
         // Initialize centers randomly
@@ -2096,7 +2099,7 @@ where
         }
 
         // Simple assignment based on distance to centers
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let mut best_distance = F::infinity();
             let mut best_cluster = 0;
 

@@ -126,7 +126,7 @@ where
             .zip(data)
             .map(|((r, c), v)| (r, c, v))
             .collect();
-        triplets.sort_by_key(|&(r, c_)| (r, c));
+        triplets.sort_by_key(|&(r, c_, _)| (r, c_));
 
         // Create indptr, _indices, and data arrays
         let nnz = triplets.len();
@@ -135,8 +135,8 @@ where
         let mut data_out = Vec::with_capacity(nnz);
 
         // Count elements per row to build indptr
-        for &(r__) in &triplets {
-            indptr[r + 1] += 1;
+        for &(r_, _, _) in &triplets {
+            indptr[r_ + 1] += 1;
         }
 
         // Compute cumulative sum for indptr
@@ -154,7 +154,7 @@ where
             rows,
             cols,
             indptr,
-            _indices,
+            indices: _indices,
             data: data_out,
         })
     }
@@ -371,12 +371,12 @@ impl<
             let mut self_entries: Vec<(usize, &T)> = (self_start..self_end)
                 .map(|j| (self.indices[j], &self.data[j]))
                 .collect();
-            self_entries.sort_by_key(|(col_)| *col);
+            self_entries.sort_by_key(|(col_, _)| *col_);
 
             let mut trans_entries: Vec<(usize, &T)> = (trans_start..trans_end)
                 .map(|j| (transposed.indices[j], &transposed.data[j]))
                 .collect();
-            trans_entries.sort_by_key(|(col_)| *col);
+            trans_entries.sort_by_key(|(col_, _)| *col_);
 
             // Compare columns and values
             for i in 0..self_entries.len() {

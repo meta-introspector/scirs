@@ -67,7 +67,7 @@ impl BoundingBox2D {
         }
 
         Ok(BoundingBox2D {
-            _min: _min.to_owned(),
+            min: _min.to_owned(),
             max: max.to_owned(),
         })
     }
@@ -130,7 +130,7 @@ impl BoundingBox2D {
     /// # Errors
     ///
     /// Returns an error if the point doesn't have exactly 2 elements
-    pub fn contains(_point: &ArrayView1<f64>) -> SpatialResult<bool> {
+    pub fn contains(&self, _point: &ArrayView1<f64>) -> SpatialResult<bool> {
         if _point.len() != 2 {
             return Err(SpatialError::DimensionError(format!(
                 "Point must have 2 elements, got {}",
@@ -182,7 +182,7 @@ impl BoundingBox2D {
     /// # Returns
     ///
     /// True if the boxes overlap, false otherwise
-    pub fn overlaps(_other: &BoundingBox2D) -> bool {
+    pub fn overlaps(&self, _other: &BoundingBox2D) -> bool {
         for d in 0..2 {
             if self.max[d] < _other.min[d] || self.min[d] > _other.max[d] {
                 return false;
@@ -204,7 +204,7 @@ impl BoundingBox2D {
     /// # Errors
     ///
     /// Returns an error if the point doesn't have exactly 2 elements
-    pub fn squared_distance_to_point(_point: &ArrayView1<f64>) -> SpatialResult<f64> {
+    pub fn squared_distance_to_point(&self, _point: &ArrayView1<f64>) -> SpatialResult<f64> {
         if _point.len() != 2 {
             return Err(SpatialError::DimensionError(format!(
                 "Point must have 2 elements, got {}",
@@ -397,7 +397,8 @@ impl Quadtree {
 
         Ok(Quadtree {
             root,
-            size_points: points_owned,
+            size,
+            points: points_owned,
         })
     }
 
@@ -694,7 +695,7 @@ impl Quadtree {
     /// # Returns
     ///
     /// True if any points are in the region, false otherwise
-    pub fn points_in_region(_region: &BoundingBox2D) -> bool {
+    pub fn points_in_region(&self, _region: &BoundingBox2D) -> bool {
         if self.root.is_none() {
             return false;
         }
@@ -754,7 +755,7 @@ impl Quadtree {
     /// # Returns
     ///
     /// Indices of points that lie inside the region
-    pub fn get_points_in_region(_region: &BoundingBox2D) -> Vec<usize> {
+    pub fn get_points_in_region(&self, _region: &BoundingBox2D) -> Vec<usize> {
         if self.root.is_none() {
             return Vec::new();
         }
@@ -816,7 +817,7 @@ impl Quadtree {
     /// # Returns
     ///
     /// The point coordinates, or None if the index is invalid
-    pub fn get_point(_index: usize) -> Option<Array1<f64>> {
+    pub fn get_point(&self, _index: usize) -> Option<Array1<f64>> {
         if _index < self.size {
             Some(self.points.row(_index).to_owned())
         } else {
@@ -852,7 +853,7 @@ impl Quadtree {
     ///
     /// The maximum depth of the tree
     pub fn max_depth(&self) -> usize {
-        self.compute_max_depth(self.root.as_ref())
+        Quadtree::compute_max_depth(self.root.as_ref())
     }
 
     /// Helper method to compute the maximum depth
@@ -864,7 +865,7 @@ impl Quadtree {
             Some(QuadtreeNode::Internal { children, .. }) => {
                 let mut max_child_depth = 0;
                 for child in children.iter().flatten() {
-                    let child_depth = self.compute_max_depth(Some(child));
+                    let child_depth = Self::compute_max_depth(Some(child));
                     max_child_depth = max_child_depth.max(child_depth);
                 }
                 1 + max_child_depth

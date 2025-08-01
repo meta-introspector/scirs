@@ -8,8 +8,8 @@
 //! where the effective mass matrix depends on the bead's position.
 
 use ndarray::{array, Array2, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::ode::{
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::ode::{
     solve_ivp_with_events, terminal_event, EventAction, EventDirection, EventSpec, MassMatrix,
     ODEMethod, ODEOptions, ODEOptionsWithEvents,
 };

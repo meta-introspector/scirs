@@ -132,7 +132,7 @@ impl MemoryBenchmark {
     }
 
     /// Analyze memory usage for different data sizes
-    fn analyze_memory_scaling(&self..sizes: &[usize], dimensions: usize) {
+    fn analyze_memory_scaling(&self, sizes: &[usize], dimensions: usize) {
         println!("=== Memory Scaling Analysis ===");
         println!(
             "{:>8} {:>12} {:>15} {:>15} {:>15}",

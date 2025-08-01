@@ -9,7 +9,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, NumAssign};
-use rand__distr::{Distribution, Normal};
+use rand_distr::{Distribution, Normal};
 use scirs2_core::Rng;
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use std::fmt::Display;
@@ -36,12 +36,12 @@ where
     }
 
     /// Compute Hessian matrix (optional, for Riemannian HMC)
-    fn hessian(&self_x: &Array1<F>) -> Option<Array2<F>> {
+    fn hessian(x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 
     /// Compute Fisher information metric (optional, for Riemannian HMC)
-    fn fisher_information(&self_x: &Array1<F>) -> Option<Array2<F>> {
+    fn fisher_information(x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 }
@@ -130,7 +130,8 @@ pub struct EnhancedHamiltonianMonteCarlo<T, F> {
     /// Adaptation state
     pub adaptation_state: AdaptationState<F>,
     /// Statistics
-    pub stats: HMCStatistics_phantom: PhantomData<F>,
+    pub stats: HMCStatistics,
+    _phantom: PhantomData<F>,
 }
 
 /// Adaptation state for HMC
@@ -173,7 +174,7 @@ pub struct MassAdaptationState<F> {
     /// Running covariance
     pub running_cov: Array2<F>,
     /// Number of samples seen
-    pub n_samples: usize,
+    pub n_samples_: usize,
 }
 
 /// HMC sampling statistics
@@ -207,7 +208,7 @@ where
 {
     /// Create new enhanced HMC sampler
     pub fn new(_target: T, initial: Array1<F>, config: EnhancedHMCConfig) -> StatsResult<Self> {
-        check_array_finite(&initial, "initial")?;
+        checkarray_finite(&initial, "initial")?;
 
         if initial.len() != _target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
@@ -236,7 +237,7 @@ where
             mass_state: MassAdaptationState {
                 running_mean: Array1::zeros(dim),
                 running_cov: Array2::zeros((dim, dim)),
-                n_samples: 0,
+                n_samples_: 0,
             },
             sample_buffer: Vec::new(),
             buffer_size: 100,
@@ -418,7 +419,7 @@ where
 
         // Sample from standard normal
         let z: Vec<f64> = (0..dim).map(|_| normal.sample(rng)).collect();
-        let z_array = Array1::from_vec(z.into_iter().map(|x| F::from(x).unwrap()).collect());
+        let z_array = Array1::from_vec(z.into().iter().map(|x| F::from(x).unwrap()).collect());
 
         // Transform using Cholesky decomposition of mass matrix
         // For simplicity, assume diagonal mass matrix
@@ -483,8 +484,8 @@ where
         }
 
         // Update running statistics
-        state.n_samples += 1;
-        let n = state.n_samples as f64;
+        state.n_samples_ += 1;
+        let n = state.n_samples_ as f64;
 
         // Update running mean
         let delta = &self.position - &state.running_mean;
@@ -605,13 +606,13 @@ where
     /// Sample multiple states with adaptation
     pub fn sample_adaptive<R: Rng + ?Sized>(
         &mut self,
-        n_samples: usize,
+        n_samples_: usize,
         rng: &mut R,
     ) -> StatsResult<Array2<F>> {
         let dim = self.position.len();
-        let mut _samples = Array2::zeros((n_samples, dim));
+        let mut _samples = Array2::zeros((n_samples_, dim));
 
-        for i in 0..n_samples {
+        for i in 0..n_samples_ {
             let sample = self.step(rng)?;
             _samples.row_mut(i).assign(&sample);
         }
@@ -625,7 +626,7 @@ where
 pub fn enhanced_hmc_sample<T, F, R>(
     target: T,
     initial: Array1<F>,
-    n_samples: usize,
+    n_samples_: usize,
     config: Option<EnhancedHMCConfig>,
     rng: &mut R,
 ) -> StatsResult<Array2<F>>
@@ -645,5 +646,5 @@ where
 {
     let config = config.unwrap_or_default();
     let mut sampler = EnhancedHamiltonianMonteCarlo::new(target, initial, config)?;
-    sampler.sample_adaptive(n_samples, rng)
+    sampler.sample_adaptive(n_samples_, rng)
 }

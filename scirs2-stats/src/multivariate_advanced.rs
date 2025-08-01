@@ -23,7 +23,8 @@ pub struct AdvancedMultivariateAnalysis<F> {
     /// Fitted models
     models: HashMap<String, MultivariateModel<F>>,
     /// Performance metrics
-    performance: PerformanceMetrics_phantom: PhantomData<F>,
+    performance: PerformanceMetrics,
+    _phantom: PhantomData<F>,
 }
 
 /// Configuration for advanced multivariate analysis
@@ -208,7 +209,7 @@ pub struct ClusteringConfig<F> {
 #[derive(Debug, Clone)]
 pub enum ClusteringAlgorithm<F> {
     /// Density-based clustering with automatic parameter selection
-    AdaptiveDBSCAN { min_samples: usize, xi: F },
+    AdaptiveDBSCAN { min_samples_: usize, xi: F },
     /// Hierarchical clustering with advanced linkage
     EnhancedHierarchical {
         linkage: LinkageCriterion,
@@ -557,13 +558,14 @@ where
                 memory_usage: 0,
                 convergence_rate: 0.0,
                 stability_score: 0.0,
-            }_phantom: PhantomData,
+            },
+            _phantom: PhantomData,
         }
     }
 
     /// Fit all configured methods to the data
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<AdvancedMultivariateResults<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         let start_time = std::time::Instant::now();
         let mut method_results = HashMap::new();
@@ -629,7 +631,8 @@ where
             } => self.advanced_pca(data, *algorithm, *n_components),
             DimensionalityReductionMethod::ICA {
                 _algorithm,
-                n_components_max_iter,
+                n_components,
+                _max_iter,
                 tolerance,
             } => self.independent_component_analysis(
                 data,
@@ -648,10 +651,11 @@ where
                 n_neighbors,
                 min_dist,
                 spread,
-            } => self.umap_analysis(data, *n_components, *n_neighbors, *min_dist, *spread, _ => {
+            } => self.umap_analysis(data, *n_components, *n_neighbors, *min_dist, *spread),
+            _ => {
                 // Simplified fallback for other methods
                 self.advanced_pca(data, PCAVariant::Standard, 2)
-            }
+            },
         }
     }
 
@@ -661,8 +665,8 @@ where
         data: &ArrayView2<F>, _variant: PCAVariant,
         n_components: usize,
     ) -> StatsResult<MultivariateModel<F>> {
-        let (n_samples, n_features) = data.dim();
-        let actual_components = n_components.min(n_features.min(n_samples));
+        let (n_samples_, n_features) = data.dim();
+        let actual_components = n_components.min(n_features.min(n_samples_));
 
         // Center the data - compute column-wise means
         let mut mean = Array1::zeros(n_features);
@@ -705,7 +709,7 @@ where
     /// Center data using SIMD operations
     fn center_data(&self, data: &ArrayView2<F>, mean: &Array1<F>) -> StatsResult<Array2<F>> {
         let mut centered = data.to_owned();
-        for (i, row) in data.rows().into_iter().enumerate() {
+        for (i, row) in data.rows().into().iter().enumerate() {
             let centered_row = F::simd_sub(&row, &mean.view());
             centered.row_mut(i).assign(&centered_row);
         }
@@ -714,15 +718,15 @@ where
 
     /// Compute covariance matrix using SIMD
     fn compute_covariance_simd(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_samples, n_features) = data.dim();
-        let n_f = F::from(n_samples - 1).unwrap();
+        let (n_samples_, n_features) = data.dim();
+        let n_f = F::from(n_samples_ - 1).unwrap();
 
         // Compute data.T @ data using SIMD operations
         let data_t = F::simd_transpose(data);
         let mut covariance = Array2::zeros((n_features, n_features));
         F::simd_gemm(F::one(), &data_t.view(), data, F::zero(), &mut covariance);
 
-        // Scale by (n_samples - 1)
+        // Scale by (n_samples_ - 1)
         covariance.mapv_inplace(|x| x / n_f);
         Ok(covariance)
     }
@@ -747,12 +751,12 @@ where
         tolerance: F,
     ) -> StatsResult<MultivariateModel<F>> {
         // Simplified ICA implementation
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
         let actual_components = n_components.min(n_features);
 
         let _components = Array2::eye(actual_components);
         let mixing_matrix = Array2::eye(actual_components);
-        let sources = Array2::zeros((n_samples, actual_components));
+        let sources = Array2::zeros((n_samples_, actual_components));
         // Compute column-wise means
         let mut mean = Array1::zeros(n_features);
         for j in 0..n_features {
@@ -788,7 +792,7 @@ where
         let (n_samples_) = data.dim();
 
         // Simplified t-SNE - would implement actual algorithm
-        let embedding = Array2::zeros((n_samples, n_components));
+        let embedding = Array2::zeros((n_samples_, n_components));
         let kl_divergence = F::from(10.0).unwrap();
         let iterations = 1000;
 
@@ -814,11 +818,11 @@ where
         let (n_samples_) = data.dim();
 
         // Simplified UMAP - would implement actual algorithm
-        let embedding = Array2::zeros((n_samples, n_components));
+        let embedding = Array2::zeros((n_samples_, n_components));
         let graph = SparseGraph {
-            indices: Array2::zeros((n_samples, n_neighbors)),
-            weights: Array1::ones(n_samples * n_neighbors),
-            n_vertices: n_samples,
+            indices: Array2::zeros((n_samples_, n_neighbors)),
+            weights: Array1::ones(n_samples_ * n_neighbors),
+            n_vertices: n_samples_,
         };
         let params = UMAPParams {
             n_neighbors,
@@ -837,7 +841,7 @@ where
     }
 
     /// Tensor analysis
-    fn tensor_analysis(&self_data: &ArrayView2<F>) -> StatsResult<MultivariateModel<F>> {
+    fn tensor_analysis(&self, _data: &ArrayView2<F>) -> StatsResult<MultivariateModel<F>> {
         // Simplified tensor analysis
         let tensor_model = TensorModel {
             decomposition_type: "CP".to_string(),
@@ -855,7 +859,7 @@ where
         let (n_samples_) = data.dim();
 
         // Simplified clustering
-        let labels = Array1::zeros(n_samples);
+        let labels = Array1::zeros(n_samples_);
         let mut validation_scores = HashMap::new();
         validation_scores.insert(
             ClusterValidationMetric::SilhouetteScore,
@@ -879,8 +883,8 @@ where
         let (n_samples_) = views[0].dim();
 
         // Simplified multi-view analysis
-        let view_embeddings = vec![Array2::zeros((n_samples, 2)); n_views];
-        let shared_embedding = Array2::zeros((n_samples, 2));
+        let view_embeddings = vec![Array2::zeros((n_samples_, 2)); n_views];
+        let shared_embedding = Array2::zeros((n_samples_, 2));
         let view_weights = Array1::ones(n_views) / F::from(n_views).unwrap();
         let correlation_scores = Array1::from_elem(n_views, F::from(0.9).unwrap());
 
@@ -902,7 +906,7 @@ where
         let mut scores = HashMap::new();
         let mut trade_offs = HashMap::new();
 
-        for (method_name_result) in results {
+        for (method_name, _result) in results {
             scores.insert(method_name.clone(), F::from(0.8).unwrap());
             trade_offs.insert(
                 method_name.clone(),

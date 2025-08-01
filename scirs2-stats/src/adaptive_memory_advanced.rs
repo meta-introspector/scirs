@@ -1836,7 +1836,7 @@ where
     }
 
     /// Calculate allocation urgency
-    fn calculate_urgency(&self_size: usize, pressure: f64) -> AllocationUrgency {
+    fn calculate_urgency(&self, _size: usize, pressure: f64) -> AllocationUrgency {
         if pressure > 0.95 {
             AllocationUrgency::Critical
         } else if pressure > 0.85 {
@@ -1992,7 +1992,7 @@ where
     }
 
     /// Infer deallocation strategy from pointer
-    fn infer_deallocation_strategy(&self_ptr: *mut u8, _size: usize) -> AllocationStrategy {
+    fn infer_deallocation_strategy(&self, ptr: *mut u8, _size: usize) -> AllocationStrategy {
         // Simplified - would use metadata to track allocation strategy
         self.config.allocation_strategy
     }
@@ -2209,7 +2209,7 @@ impl CacheManager {
         }
     }
 
-    fn optimize_layout<T>(&self_data: &mut ArrayView2<T>) -> StatsResult<()>
+    fn optimize_layout<T>(&self, _data: &mut ArrayView2<T>) -> StatsResult<()>
     where
         T: Clone + Send + Sync,
     {
@@ -2291,12 +2291,12 @@ impl NumaManager {
         }
     }
 
-    fn get_optimal_node(&self_thread_id: usize) -> Option<usize> {
+    fn get_optimal_node(&self, _size: usize) -> Option<usize> {
         // Stub implementation
         Some(0)
     }
 
-    fn allocate_on_node(&self, size: usize_node: usize) -> StatsResult<*mut u8> {
+    fn allocate_on_node(&self, size: usize, _node: usize) -> StatsResult<*mut u8> {
         // Fallback to system allocation for now
         use std::alloc::{alloc, Layout};
 
@@ -2393,7 +2393,7 @@ impl PredictiveEngine {
         Ok(size as f64 * 1.2) // Assume 20% overhead
     }
 
-    fn predict_allocation_strategy(&self_features: &[f64]) -> StatsResult<AllocationStrategy> {
+    fn predict_allocation_strategy(&self, _data: &[f64]) -> StatsResult<AllocationStrategy> {
         // Stub implementation
         Ok(AllocationStrategy::Pool)
     }

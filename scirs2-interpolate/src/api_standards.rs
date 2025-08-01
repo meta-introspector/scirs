@@ -106,7 +106,7 @@ pub mod builder_pattern {
     /// Example builder structure
     #[derive(Debug, Clone)]
     pub struct StandardInterpolatorBuilder<T: InterpolationFloat> {
-        config: factory_pattern: StandardConfig<T>,
+        config_factory_pattern: StandardConfig<T>,
     }
 
     impl<T: InterpolationFloat> StandardInterpolatorBuilder<T> {

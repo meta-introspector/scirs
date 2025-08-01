@@ -117,8 +117,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::linalg::svds;
-/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::svds;
+/// use scirs2_sparse::csr_array::CsrArray;
 ///
 /// // Create a sparse matrix
 /// let rows = vec![0, 0, 1, 2, 2];
@@ -697,7 +697,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
     use approx::assert_relative_eq;
 
     fn create_test_matrix() -> CsrArray<f64> {

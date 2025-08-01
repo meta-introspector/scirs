@@ -232,7 +232,7 @@ where
     // Calculate the odds ratio
     let odds_ratio = if b * c > F::zero() {
         (a * d) / (b * c)
-    } else if a > F::zero() && d >, F::zero() {
+    } else if a > F::zero() && d > F::zero() {
         F::infinity()
     } else {
         F::zero()
@@ -382,7 +382,7 @@ where
             // r is the number of rows, and c is the number of columns
 
             // Calculate chi-square statistic
-            let (chi2___) = chi2_contingency(_table, false, None)?;
+            let (chi2, _, _, _) = chi2_contingency(_table, false, None)?;
 
             // Calculate total sample size
             let total: F = _table.iter().copied().sum();

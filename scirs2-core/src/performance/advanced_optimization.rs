@@ -201,9 +201,10 @@ impl CacheInfo {
     #[cfg(target_arch = "aarch64")]
     fn detect_aarch64() -> Self {
         // ARM cache detection through system registers
-        let mut l1_cache_size = 64 * 1024; // Default 64KB for ARM
+        let l1_cache_size = 64 * 1024; // Default 64KB for ARM
+        #[allow(unused_mut)]
         let mut l2_cache_size = 512 * 1024; // Default 512KB
-        let mut l3_cache_size = 4 * 1024 * 1024; // Default 4MB
+        let l3_cache_size = 4 * 1024 * 1024; // Default 4MB
 
         // Try to read cache size information from /proc/cpuinfo on Linux
         #[cfg(target_os = "linux")]

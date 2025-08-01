@@ -250,8 +250,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::csr::CsrMatrix;
-/// use scirs2__sparse::linalg::matfuncs::twonormest;
+/// use scirs2_sparse::csr::CsrMatrix;
+/// use scirs2_sparse::linalg::matfuncs::twonormest;
 ///
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 1, 2];
@@ -379,8 +379,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::csr::CsrMatrix;
-/// use scirs2__sparse::linalg::matfuncs::condest;
+/// use scirs2_sparse::csr::CsrMatrix;
+/// use scirs2_sparse::linalg::matfuncs::condest;
 ///
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 1, 2];
@@ -1017,8 +1017,8 @@ fn solve_matrix_equation<F: Float + NumAssign>(
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::csr_array::CsrArray;
-/// use scirs2__sparse::linalg::matfuncs::twonormest_enhanced;
+/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::matfuncs::twonormest_enhanced;
 ///
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 1, 2];
@@ -1157,8 +1157,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::csr_array::CsrArray;
-/// use scirs2__sparse::linalg::matfuncs::condest_enhanced;
+/// use scirs2_sparse::csr_array::CsrArray;
+/// use scirs2_sparse::linalg::matfuncs::condest_enhanced;
 ///
 /// let rows = vec![0, 1, 2];
 /// let cols = vec![0, 1, 2];
@@ -1592,7 +1592,7 @@ where
 
     if min_dim == 1 {
         // For 1D case, compute the norm of all entries
-        let (__, values) = a.find();
+        let (_, _, values) = a.find();
         let max_val =
             values
                 .iter()

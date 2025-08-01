@@ -37,7 +37,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use scirs2__sparse::lil::LilMatrix;
+    /// use scirs2_sparse::lil::LilMatrix;
     ///
     /// // Create a 3x3 sparse matrix
     /// let mut matrix = LilMatrix::<f64>::new((3, 3));

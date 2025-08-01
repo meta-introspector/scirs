@@ -1,6 +1,6 @@
 use ndarray::{array, Array1, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
 use std::time::Instant;
 
 // Type of test problem to use
@@ -18,10 +18,10 @@ type OdeFunction = Box<dyn Fn(f64, ArrayView1<f64>) -> Array1<f64>>;
 #[allow(dead_code)]
 fn create_test_problem(_problem: TestProblem) -> OdeFunction {
     match _problem {
-        TestProblem::VanDerPol(mu) =>, Box::new(move |_t: f64, y: ArrayView1<f64>| {
+        TestProblem::VanDerPol(mu) => Box::new(move |_t: f64, y: ArrayView1<f64>| {
             array![y[1], mu * (1.0 - y[0].powi(2)) * y[1] - y[0]]
         }),
-        TestProblem::Robertson =>, Box::new(|_t: f64, y: ArrayView1<f64>| {
+        TestProblem::Robertson => Box::new(|_t: f64, y: ArrayView1<f64>| {
             array![
                 -0.04 * y[0] + 1.0e4 * y[1] * y[2],
                 0.04 * y[0] - 1.0e4 * y[1] * y[2] - 3.0e7 * y[1].powi(2),
@@ -217,8 +217,8 @@ fn compare_methods(_problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResu
     // If at least one method succeeded, use it as reference
     if !succeeded.is_empty() {
         // Use first successful method as reference
-        let (_, ref_result_) = &succeeded[0];
-        let ref_y = ref_result.y.last().unwrap();
+        let (_, ref_result_, _) = &succeeded[0];
+        let ref_y = ref_result_.y.last().unwrap();
 
         println!("\nFinal values:");
         for i in 0..ref_y.len() {
@@ -228,8 +228,8 @@ fn compare_methods(_problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResu
         // Compare all methods with reference
         if succeeded.len() > 1 {
             println!("\nAccuracy comparison:");
-            for (method, result_) in &succeeded {
-                let y = result.y.last().unwrap();
+            for (method, result_, _) in &succeeded {
+                let y = result_.y.last().unwrap();
                 let mut max_diff: f64 = 0.0;
                 for i in 0..y.len() {
                     let diff = (y[i] - ref_y[i]).abs();
@@ -256,12 +256,13 @@ fn compare_methods(_problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResu
         let mut lsoda_time = 0.0;
         let mut enhanced_lsoda_time = 0.0;
 
-        for (method_, time) in &succeeded {
-            match method {
+        for (method_, _, time) in &succeeded {
+            match method_ {
                 ODEMethod::Bdf => bdf_time = *time,
                 ODEMethod::EnhancedBDF => enhanced_bdf_time = *time,
                 ODEMethod::LSODA => lsoda_time = *time,
-                ODEMethod::EnhancedLSODA => enhanced_lsoda_time = *time_ => {}
+                ODEMethod::EnhancedLSODA => enhanced_lsoda_time = *time,
+                _ => {}
             }
         }
 

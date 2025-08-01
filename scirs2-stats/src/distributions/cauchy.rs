@@ -8,7 +8,7 @@ use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
-use rand__distr::{Distribution, Uniform as RandUniform};
+use rand_distr::{Distribution, Uniform as RandUniform};
 
 /// Cauchy distribution structure
 ///
@@ -43,7 +43,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// ```
-    pub fn new(_loc: F, scale: F) -> StatsResult<Self> {
+    pub fn new(loc: F, scale: F) -> StatsResult<Self> {
         // Validate parameters
         if scale <= F::zero() {
             return Err(StatsError::DomainError(
@@ -62,7 +62,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
         };
 
         Ok(Cauchy {
-            _loc,
+            loc,
             scale,
             rand_distr,
         })
@@ -144,7 +144,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// assert!((x - 1.0).abs() < 1e-7);
     /// ```
     pub fn ppf(&self, p: F) -> StatsResult<F> {
-        if p < F::zero() || p >, F::one() {
+        if p < F::zero() || p > F::one() {
             return Err(StatsError::DomainError(
                 "Probability must be between 0 and 1".to_string(),
             ));

@@ -7,6 +7,7 @@ use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::ode::{solve_ivp, ODEOptions};
 use ndarray::{Array1, Array2, ArrayView1};
+use rand::Rng;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
@@ -104,7 +105,8 @@ pub fn compute_sensitivities<F, SysFunc, ParamFunc>(
     param_names: Vec<String>,
     nominal_params: ArrayView1<F>,
     y0: ArrayView1<F>,
-    t_span: (F, F), _t_eval: Option<ArrayView1<F>>,
+    t_span: (F, F),
+    _t_eval: Option<ArrayView1<F>>,
     options: Option<ODEOptions<F>>,
 ) -> IntegrateResult<SensitivityAnalysis<F>>
 where
@@ -283,16 +285,16 @@ pub struct SobolAnalysis<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> SobolAnalysis<F> {
     /// Create a new Sobol analysis
-    pub fn new(_n_samples: usize, param_bounds: Vec<(F, F)>) -> Self {
+    pub fn new(n_samples: usize, param_bounds: Vec<(F, F)>) -> Self {
         SobolAnalysis {
-            _n_samples,
+            n_samples,
             param_bounds,
             seed: None,
         }
     }
 
     /// Set random seed for reproducibility
-    pub fn with_seed(mut seed: u64) -> Self {
+    pub fn with_seed(&mut self, seed: u64) -> &mut Self {
         self.seed = Some(seed);
         self
     }
@@ -318,11 +320,11 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
         let sample_matrix_b = self.generate_sample_matrix();
 
         // Evaluate model at base samples
-        let y_a = self.evaluate_model(&model, &sample_matrix_a)?;
-        let y_b = self.evaluate_model(&model, &sample_matrix_b)?;
+        let y_a = SobolAnalysis::<F>::evaluate_model(&model, &sample_matrix_a)?;
+        let y_b = SobolAnalysis::<F>::evaluate_model(&model, &sample_matrix_b)?;
 
         // Compute variance
-        let var_y = self.compute_variance(&y_a, &y_b);
+        let var_y = SobolAnalysis::<F>::compute_variance(&y_a, &y_b, self.n_samples);
 
         let mut first_order = HashMap::new();
         let mut total = HashMap::new();
@@ -331,14 +333,20 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
         for (i, name) in param_names.iter().enumerate() {
             // Create matrix C_i where column i comes from B, rest from A
             let sample_matrix_ci = self.create_mixed_matrix(&sample_matrix_a, &sample_matrix_b, i);
-            let y_ci = self.evaluate_model(&model, &sample_matrix_ci)?;
+            let y_ci = SobolAnalysis::<F>::evaluate_model(&model, &sample_matrix_ci)?;
 
             // First-order index: S_i = V(E(Y|X_i)) / V(Y)
-            let s_i = self.compute_first_order_index(&y_a, &y_b, &y_ci, var_y);
+            let s_i = SobolAnalysis::<F>::compute_first_order_index(
+                &y_a,
+                &y_b,
+                &y_ci,
+                var_y,
+                self.n_samples,
+            );
             first_order.insert(name.clone(), s_i);
 
             // Total index: S_Ti = 1 - V(E(Y|X_~i)) / V(Y)
-            let s_ti = self.compute_total_index(&y_a, &y_ci, var_y);
+            let s_ti = SobolAnalysis::<F>::compute_total_index(&y_a, &y_ci, var_y, self.n_samples);
             total.insert(name.clone(), s_ti);
         }
 
@@ -400,12 +408,12 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
     }
 
     /// Compute variance of model outputs
-    fn compute_variance(_y_a: &[F], y_b: &[F]) -> F {
-        let n = F::from(self.n_samples).unwrap();
+    fn compute_variance(_y_a: &[F], y_b: &[F], n_samples: usize) -> F {
+        let n = F::from(n_samples).unwrap();
         let mut sum = F::zero();
         let mut sum_sq = F::zero();
 
-        for i in 0..self.n_samples {
+        for i in 0..n_samples {
             let y = (_y_a[i] + y_b[i]) / F::from(2.0).unwrap();
             sum += y;
             sum_sq += y * y;
@@ -416,11 +424,17 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
     }
 
     /// Compute first-order Sobol index
-    fn compute_first_order_index(_y_a: &[F], y_b: &[F], y_ci: &[F], var_y: F) -> F {
-        let n = F::from(self.n_samples).unwrap();
+    fn compute_first_order_index(
+        _y_a: &[F],
+        y_b: &[F],
+        y_ci: &[F],
+        var_y: F,
+        n_samples: usize,
+    ) -> F {
+        let n = F::from(n_samples).unwrap();
         let mut sum = F::zero();
 
-        for i in 0..self.n_samples {
+        for i in 0..n_samples {
             sum += y_b[i] * (y_ci[i] - _y_a[i]);
         }
 
@@ -429,11 +443,11 @@ impl<F: IntegrateFloat> SobolAnalysis<F> {
     }
 
     /// Compute total Sobol index
-    fn compute_total_index(_y_a: &[F], y_ci: &[F], var_y: F) -> F {
-        let n = F::from(self.n_samples).unwrap();
+    fn compute_total_index(_y_a: &[F], y_ci: &[F], var_y: F, n_samples: usize) -> F {
+        let n = F::from(n_samples).unwrap();
         let mut sum = F::zero();
 
-        for i in 0..self.n_samples {
+        for i in 0..n_samples {
             let diff = _y_a[i] - y_ci[i];
             sum += diff * diff;
         }
@@ -455,16 +469,16 @@ pub struct EFAST<F: IntegrateFloat> {
 
 impl<F: IntegrateFloat> EFAST<F> {
     /// Create a new eFAST analysis
-    pub fn new(_n_samples: usize, param_bounds: Vec<(F, F)>) -> Self {
+    pub fn new(n_samples: usize, param_bounds: Vec<(F, F)>) -> Self {
         EFAST {
-            _n_samples,
+            n_samples,
             param_bounds,
             interference_factor: 4,
         }
     }
 
     /// Set interference factor
-    pub fn with_interference_factor(mut factor: usize) -> Self {
+    pub fn with_interference_factor(&mut self, factor: usize) -> &mut Self {
         self.interference_factor = factor;
         self
     }
@@ -508,7 +522,7 @@ impl<F: IntegrateFloat> EFAST<F> {
     }
 
     /// Generate parameter samples using search curve
-    fn generate_samples(_param_index: usize, omega: usize) -> Vec<Array1<F>> {
+    fn generate_samples(&self, _param_index: usize, omega: usize) -> Vec<Array1<F>> {
         let n_params = self.param_bounds.len();
         let mut samples = Vec::with_capacity(self.n_samples);
 
@@ -526,7 +540,7 @@ impl<F: IntegrateFloat> EFAST<F> {
                     sample[j] = low + (high - low) * x;
                 } else {
                     // Use lower frequencies for other parameters
-                    let omega_j = if j < param_index { j + 1 } else { j };
+                    let omega_j = if j < _param_index { j + 1 } else { j };
                     let angle = F::from(2.0 * std::f64::consts::PI * omega_j as f64).unwrap() * s;
                     let x = (F::one() + angle.sin()) / F::from(2.0).unwrap();
                     sample[j] = low + (high - low) * x;
@@ -540,7 +554,7 @@ impl<F: IntegrateFloat> EFAST<F> {
     }
 
     /// Compute Fourier-based sensitivity
-    fn compute_fourier_sensitivity(_y_values: &[F], omega: usize) -> F {
+    fn compute_fourier_sensitivity(&self, _y_values: &[F], omega: usize) -> F {
         let n = self.n_samples;
         let mut a_omega = F::zero();
         let mut b_omega = F::zero();
@@ -630,21 +644,21 @@ impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
         SobolSensitivity {
             n_params: _param_bounds.len(),
             n_samples,
-            _param_bounds,
+            param_bounds: _param_bounds,
         }
     }
 
     /// Generate Sobol sample matrices
     pub fn generate_samples(&self) -> (Array2<F>, Array2<F>) {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         // Generate base sample matrix A
         let mut a_matrix = Array2::zeros((self.n_samples, self.n_params));
         for i in 0..self.n_samples {
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
-                let u: f64 = rng.random();
+                let u: f64 = rng.gen();
                 a_matrix[[i, j]] = lower + (upper - lower) * F::from(u).unwrap();
             }
         }
@@ -654,7 +668,7 @@ impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
         for i in 0..self.n_samples {
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
-                let u: f64 = rng.random();
+                let u: f64 = rng.gen();
                 b_matrix[[i, j]] = lower + (upper - lower) * F::from(u).unwrap();
             }
         }
@@ -810,7 +824,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
             n_params: _param_bounds.len(),
             n_trajectories,
             delta,
-            _param_bounds,
+            param_bounds: _param_bounds,
             grid_levels: 4,
         }
     }
@@ -819,7 +833,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
     pub fn new_simple(_n_trajectories: usize, param_bounds: Vec<(F, F)>) -> Self {
         MorrisScreening {
             n_params: param_bounds.len(),
-            _n_trajectories,
+            n_trajectories: _n_trajectories,
             delta: F::from(0.1).unwrap(),
             param_bounds,
             grid_levels: 4,
@@ -827,7 +841,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
     }
 
     /// Set number of grid levels
-    pub fn with_grid_levels(mut levels: usize) -> Self {
+    pub fn with_grid_levels(mut self, levels: usize) -> Self {
         self.grid_levels = levels;
         self
     }
@@ -835,7 +849,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
     /// Generate Morris trajectories
     pub fn generate_trajectories(&self) -> Vec<Array2<F>> {
         use rand::seq::SliceRandom;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut trajectories = Vec::new();
 
@@ -845,7 +859,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
             // Generate base point
             for j in 0..self.n_params {
                 let (lower, upper) = self.param_bounds[j];
-                let u: f64 = rng.random();
+                let u: f64 = rng.gen();
                 trajectory[[0, j]] = lower + (upper - lower) * F::from(u).unwrap();
             }
 
@@ -862,7 +876,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
                 // Change one parameter
                 let (lower, upper) = self.param_bounds[param_idx];
                 let range = upper - lower;
-                let direction = if rng.random::<bool>() {
+                let direction = if rng.gen::<bool>() {
                     F::one()
                 } else {
                     -F::one()
@@ -1003,13 +1017,13 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
     }
 
     /// Generate a Morris trajectory (legacy compatibility)
-    fn generate_trajectory_legacy(_n_params: usize) -> Vec<Array1<F>> {
+    fn generate_trajectory_legacy(&self, n_params: usize) -> Vec<Array1<F>> {
         // Simplified trajectory generation
         let mut trajectory = Vec::new();
-        let mut current = Array1::zeros(_n_params);
+        let mut current = Array1::zeros(n_params);
 
         // Random starting point
-        for i in 0.._n_params {
+        for i in 0..n_params {
             let (low, high) = self.param_bounds[i];
             current[i] = low + (high - low) * F::from(0.5).unwrap();
         }
@@ -1018,7 +1032,7 @@ impl<F: IntegrateFloat> MorrisScreening<F> {
         // Change one parameter at a time
         for i in 0..n_params {
             let (low, high) = self.param_bounds[i];
-            let delta = (high - low) / F::from(self.grid_levels - 1).unwrap();
+            let delta = (high - low) / F::from((self.grid_levels - 1) as f64).unwrap();
             current[i] += delta;
             trajectory.push(current.clone());
         }

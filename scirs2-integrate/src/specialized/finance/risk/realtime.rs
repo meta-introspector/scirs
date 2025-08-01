@@ -1,8 +1,8 @@
 //! Real-time risk monitoring and alerting
-//! 
+//!
 //! This module provides real-time risk calculation, monitoring, and alerting capabilities
 //! for trading systems and portfolio management applications.
-//! 
+//!
 //! # Features
 //! - Streaming risk calculations
 //! - Real-time Greeks updates

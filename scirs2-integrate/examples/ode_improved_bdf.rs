@@ -1,6 +1,6 @@
 use ndarray::{array, Array1, ArrayView1};
-use scirs2__integrate::error::IntegrateResult;
-use scirs2__integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
+use scirs2_integrate::error::IntegrateResult;
+use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::time::Instant;
 
 // Van der Pol oscillator - stiff when mu is large

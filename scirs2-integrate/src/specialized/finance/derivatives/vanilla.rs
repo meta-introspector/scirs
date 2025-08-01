@@ -1,8 +1,8 @@
 //! Vanilla derivatives pricing and analysis
-//! 
+//!
 //! This module implements pricing models and analytical tools for standard vanilla derivatives
 //! including European/American options, forwards, and futures contracts.
-//! 
+//!
 //! # Features
 //! - European option pricing (calls and puts)
 //! - American option pricing with early exercise

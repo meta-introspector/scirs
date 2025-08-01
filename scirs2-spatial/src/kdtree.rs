@@ -116,7 +116,7 @@ impl<T: Float> Rectangle<T> {
             );
         }
 
-        Rectangle { _mins, maxes }
+        Rectangle { mins: _mins, maxes }
     }
 
     /// Get the minimum coordinates of the rectangle
@@ -349,7 +349,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         let bounds = Rectangle::new(mins, maxes);
 
         let mut tree = KDTree {
-            _points: _points.clone(),
+            points: _points.clone(),
             nodes: Vec::with_capacity(n),
             ndim,
             root: None,
@@ -547,7 +547,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         max_dist: &mut T,
     ) {
         let node = &self.nodes[node_idx];
-        let _idx = node._idx;
+        let _idx = node.idx;
         let axis = node.axis;
 
         // Calculate distance to current point
@@ -668,7 +668,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
                         .unwrap_or(std::cmp::Ordering::Equal)
                 });
 
-                indices = idx_dist.iter().map(|(idx_)| *idx).collect();
+                indices = idx_dist.iter().map(|(idx_, _)| *idx_).collect();
                 distances = idx_dist.iter().map(|(_, dist)| *dist).collect();
             }
         }
@@ -686,7 +686,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         distances: &mut Vec<T>,
     ) {
         let node = &self.nodes[node_idx];
-        let _idx = node._idx;
+        let _idx = node.idx;
         let axis = node.axis;
 
         // Calculate distance to current point
@@ -787,7 +787,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
         count: &mut usize,
     ) {
         let node = &self.nodes[node_idx];
-        let _idx = node._idx;
+        let _idx = node.idx;
         let axis = node.axis;
 
         // Calculate distance to current point
@@ -869,7 +869,7 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
 
 #[cfg(test)]
 mod tests {
-use crate::distance::{ChebyshevDistance, ManhattanDistance, MinkowskiDistance};
+    use crate::distance::{ChebyshevDistance, ManhattanDistance, MinkowskiDistance};
     use approx::assert_relative_eq;
     use ndarray::arr2;
 

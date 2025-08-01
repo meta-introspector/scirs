@@ -1,5 +1,5 @@
 use ndarray::{Array1, Array2};
-use scirs2__integrate::dae::{create_block_ilu_preconditioner, create_block_jacobi_preconditioner};
+use scirs2_integrate::dae::{create_block_ilu_preconditioner, create_block_jacobi_preconditioner};
 use std::time::Instant;
 
 // Test helper: Create a test matrix with block structure

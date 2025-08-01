@@ -30,7 +30,7 @@ impl Default for EnhancedParallelConfig {
         Self {
             num_threads: None,
             min_chunk_size: 1000,
-            max_chunks: num, _cpus: get() * 4,
+            max_chunks: num_cpus::get() * 4,
             numa_aware: true,
             work_stealing: true,
         }
@@ -39,7 +39,8 @@ impl Default for EnhancedParallelConfig {
 
 /// Enhanced parallel statistics processor
 pub struct EnhancedParallelProcessor<F> {
-    config: EnhancedParallelConfig_phantom: std::marker::PhantomData<F>,
+    config: EnhancedParallelConfig,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F> EnhancedParallelProcessor<F>
@@ -73,7 +74,7 @@ where
 
     /// Parallel mean computation with optimal chunking
     pub fn mean_parallel_enhanced(&self, data: &ArrayView1<F>) -> StatsResult<F> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         if data.is_empty() {
             return Err(StatsError::InvalidArgument(
@@ -111,7 +112,7 @@ where
 
     /// Parallel variance computation with Welford's algorithm
     pub fn variance_parallel_enhanced(&self, data: &ArrayView1<F>, ddof: usize) -> StatsResult<F> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         if data.is_empty() {
             return Err(StatsError::InvalidArgument(
@@ -162,9 +163,9 @@ where
 
     /// Parallel correlation matrix computation
     pub fn correlation_matrix_parallel(&self, matrix: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        check_array_finite(matrix, "matrix")?;
+        checkarray_finite(matrix, "matrix")?;
 
-        let (_n_samples, n_features) = matrix.dim();
+        let (_n_samples_, n_features) = matrix.dim();
 
         if n_features < 2 {
             return Err(StatsError::InvalidArgument(
@@ -216,7 +217,7 @@ where
         statistic_fn: impl Fn(&ArrayView1<F>) -> F + Send + Sync,
         seed: Option<u64>,
     ) -> StatsResult<Array1<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
         check_positive(n_bootstrap, "n_bootstrap")?;
 
         let statistic_fn = Arc::new(statistic_fn);
@@ -249,7 +250,7 @@ where
         &self,
         matrix: &ArrayView2<F>,
     ) -> StatsResult<MatrixParallelResult<F>> {
-        check_array_finite(matrix, "matrix")?;
+        checkarray_finite(matrix, "matrix")?;
 
         let (rows, cols) = matrix.dim();
 
@@ -297,7 +298,7 @@ where
         data: &ArrayView1<F>,
         quantiles: &[F],
     ) -> StatsResult<Array1<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         if data.is_empty() {
             return Err(StatsError::InvalidArgument(
@@ -306,7 +307,7 @@ where
         }
 
         for &q in quantiles {
-            if q < F::zero() || q >, F::one() {
+            if q < F::zero() || q > F::one() {
                 return Err(StatsError::InvalidArgument(
                     "Quantiles must be in [0, 1]".to_string(),
                 ));
@@ -366,13 +367,13 @@ where
         mean_x: F,
         mean_y: F,
     ) -> StatsResult<F> {
-        if _x.len() != _y.len() {
+        if x.len() != y.len() {
             return Err(StatsError::DimensionMismatch(
                 "Arrays must have the same length".to_string(),
             ));
         }
 
-        let n = _x.len();
+        let n = x.len();
         if n < 2 {
             return Ok(F::zero());
         }
@@ -387,8 +388,8 @@ where
                 let mut sum_y2 = F::zero();
 
                 for &i in indices {
-                    let dx = _x[i] - mean_x;
-                    let dy = _y[i] - mean_y;
+                    let dx = x[i] - mean_x;
+                    let dy = y[i] - mean_y;
                     sum_xy = sum_xy + dx * dy;
                     sum_x2 = sum_x2 + dx * dx;
                     sum_y2 = sum_y2 + dy * dy;

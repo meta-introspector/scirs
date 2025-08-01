@@ -211,9 +211,11 @@ pub fn resolve_sphere_sphere_penetration(
 pub fn sphere_box_impulse(
     _sphere_pos: &[f64; 3],
     sphere_vel: &[f64; 3],
-    sphere_mass: f64, _box_pos: &[f64; 3],
+    sphere_mass: f64,
+    _box_pos: &[f64; 3],
     box_vel: &[f64; 3],
-    box_mass: f64, _box_dims: &[f64; 3],
+    box_mass: f64,
+    _box_dims: &[f64; 3],
     collision_info: &CollisionInfo,
     restitution: f64,
 ) -> ([f64; 3], [f64; 3]) {

@@ -1,8 +1,8 @@
 //! Mathematical utilities for quantitative finance
-//! 
+//!
 //! This module provides specialized mathematical functions commonly used in financial
 //! calculations including interpolation, root finding, and numerical integration.
-//! 
+//!
 //! # Features
 //! - Smile interpolation methods (SABR, SVI)
 //! - Arbitrage-free volatility surfaces

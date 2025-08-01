@@ -78,8 +78,8 @@ where
         "wilcox" => {
             // Remove zero differences
             differences
-                .into_iter()
-                .filter(|(diff_)| !diff.is_zero())
+                .into().iter()
+                .filter(|(diff_)| !diff_.is_zero())
                 .collect::<Vec<_>>()
         }
         "pratt" => {
@@ -110,7 +110,7 @@ where
 
     // Sort differences by absolute value for ranking
     let mut ranked_diffs = differences;
-    ranked_diffs.sort_by(|(a_), (b_)| a.abs().partial_cmp(&b.abs()).unwrap_or(Ordering::Equal));
+    ranked_diffs.sort_by(|(a_), (b_)| a_.abs().partial_cmp(&b_.abs()).unwrap_or(Ordering::Equal));
 
     // Assign ranks, handling ties appropriately
     let mut ranks = vec![F::zero(); ranked_diffs.len()];
@@ -141,7 +141,7 @@ where
     let mut w_minus = F::zero();
 
     for (i, (diff_)) in ranked_diffs.iter().enumerate() {
-        if diff.is_sign_positive() {
+        if diff_.is_sign_positive() {
             w_plus = w_plus + ranks[i];
         } else {
             w_minus = w_minus + ranks[i];
@@ -260,7 +260,7 @@ where
     }
 
     // Sort the values
-    all_values.sort_by(|(a_), (b_)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    all_values.sort_by(|(a_), (b_)| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
 
     // Assign ranks, handling ties
     let n = all_values.len();
@@ -370,7 +370,8 @@ where
     // Calculate p-value based on the alternative hypothesis
     let p_value = match alternative {
         "less" => normal_cdf(z),
-        "greater" => F::one() - normal_cdf(z, _ =>, F::from(2.0).unwrap() * normal_cdf(-z.abs()),
+        "greater" => F::one() - normal_cdf(z),
+        _ => F::from(2.0).unwrap() * normal_cdf(-z.abs()),
     };
 
     Ok((u, p_value))
@@ -443,7 +444,7 @@ where
     }
 
     // Sort all values
-    all_values.sort_by(|(a_), (b_)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    all_values.sort_by(|(a_), (b_)| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
 
     // Assign ranks, handling ties
     let n = all_values.len();
@@ -591,7 +592,7 @@ where
         }
 
         // Sort by value
-        row_data.sort_by(|(a_), (b_)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        row_data.sort_by(|(a_), (b_)| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
 
         // Assign ranks, handling ties
         let mut rank_idx = 0;

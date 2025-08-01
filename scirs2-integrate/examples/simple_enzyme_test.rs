@@ -3,7 +3,7 @@
 //! A minimal test of the enzyme kinetics functionality to verify it works.
 
 use ndarray::Array1;
-use scirs2__integrate::ode::enzyme_kinetics::{pathways, EnzymeParameters};
+use scirs2_integrate::ode::enzyme_kinetics::{pathways, EnzymeParameters};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

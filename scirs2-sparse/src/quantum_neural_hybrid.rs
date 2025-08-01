@@ -4,8 +4,8 @@
 //! to create a hybrid optimization approach that leverages the best of both paradigms.
 
 use crate::error::SparseResult;
-use crate::neural_adaptive__sparse::{NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor};
-use crate::quantum_inspired__sparse::{QuantumSparseConfig, QuantumSparseProcessor};
+use crate::neural_adaptive_sparse::{NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor};
+use crate::quantum_inspired_sparse::{QuantumSparseConfig, QuantumSparseProcessor};
 use num_traits::{Float, NumAssign};
 use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -268,9 +268,9 @@ impl QuantumNeuralHybridProcessor {
         indptr: &[usize],
         indices: &[usize],
     ) -> HybridProcessingMode {
-        match self.config.hybrid_strategy {
+        match self._config.hybrid_strategy {
             HybridStrategy::Sequential => {
-                if self.hybrid_state.quantum_coherence > self.config.coherence_threshold {
+                if self.hybrid_state.quantum_coherence > self._config.coherence_threshold {
                     HybridProcessingMode::PureQuantum
                 } else {
                     HybridProcessingMode::PureNeural
@@ -332,7 +332,7 @@ impl QuantumNeuralHybridProcessor {
             .quantum_spmv(rows, indptr, indices, data, x, &mut quantum_result)?;
 
         // Neural guidance for post-processing
-        if self.config.neural_guidance {
+        if self._config.neural_guidance {
             let mut neural_result = vec![T::zero(); rows];
             self.neural_processor.adaptive_spmv(
                 rows,
@@ -381,7 +381,7 @@ impl QuantumNeuralHybridProcessor {
             .adaptive_spmv(rows, cols, indptr, indices, data, x, y)?;
 
         // Quantum enhancement for specific patterns
-        if self.config.quantum_feedback && self.hybrid_state.quantum_coherence > 0.5 {
+        if self._config.quantum_feedback && self.hybrid_state.quantum_coherence > 0.5 {
             let mut quantum_enhancement = vec![T::zero(); rows];
             self.quantum_processor.quantum_spmv(
                 rows,
@@ -532,7 +532,7 @@ impl QuantumNeuralHybridProcessor {
         (1.0 / (1.0 + variance.sqrt())).min(1.0)
     }
 
-    fn calculate_pattern_familiarity(&self_indptr: &[usize], _indices: &[usize]) -> f64 {
+    fn calculate_pattern_familiarity(&self, _indptr: &[usize], _indices: &[usize]) -> f64 {
         // Simplified pattern familiarity based on memory
         let memory_size = self.hybrid_memory.neural_patterns.len();
         let max_memory = self.hybrid_memory.memory_capacity;
@@ -541,7 +541,7 @@ impl QuantumNeuralHybridProcessor {
     }
 
     fn update_quantum_neural_coupling(&mut self) {
-        let coupling_strength = self.config.coupling_strength;
+        let coupling_strength = self._config.coupling_strength;
         let synchronization = self.hybrid_state.hybrid_synchronization;
 
         for coupling in &mut self.hybrid_state.quantum_neural_coupling {
@@ -638,8 +638,8 @@ impl QuantumNeuralHybridProcessor {
 
     fn update_hybrid_learning(&mut self, mode: HybridProcessingMode, execution_time: f64) {
         let decision = HybridDecision {
-            timestamp: std::_time::SystemTime::now()
-                .duration_since(std::_time::UNIX_EPOCH)
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_secs(),
             strategy_used: mode,

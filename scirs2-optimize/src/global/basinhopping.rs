@@ -168,7 +168,7 @@ where
         // Default accept _test is Metropolis criterion
         let accept_test = accept_test.unwrap_or_else(|| {
             let temp = options.temperature;
-            Box::new(move |f_new: f64..f, _old: f64_: f64| {
+            Box::new(move |f_new: f64, f_old: f64| {
                 if f_new < f_old {
                     true
                 } else {

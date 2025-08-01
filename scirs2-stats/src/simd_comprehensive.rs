@@ -74,7 +74,8 @@ impl Default for AdvancedComprehensiveSimdConfig {
 
 /// Advanced-comprehensive SIMD processor
 pub struct AdvancedComprehensiveSimdProcessor<F> {
-    config: AdvancedComprehensiveSimdConfig_phantom: PhantomData<F>,
+    config: AdvancedComprehensiveSimdConfig,
+    _phantom: PhantomData<F>,
 }
 
 /// Comprehensive statistical result with all metrics
@@ -167,7 +168,7 @@ where
         &self,
         data: &ArrayView1<F>,
     ) -> StatsResult<ComprehensiveStatsResult<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
         check_min_samples(data, 1, "data")?;
 
         let n = data.len();
@@ -582,7 +583,7 @@ where
 
         // Process chunks in parallel, then combine using SIMD
         let partial_results: Vec<_> = (0..num_threads)
-            .into_par_iter()
+            .into_par.iter()
             .map(|thread_id| {
                 let start = thread_id * chunk_size;
                 let end = if thread_id == num_threads - 1 {
@@ -594,7 +595,7 @@ where
                 let chunk = data.slice(ndarray::s![start..end]);
                 self.compute_comprehensive_stats_simd(&chunk)
             })
-            .collect::<Result<Vec<_>_>>()?;
+            .collect::<Result<Vec<_>, _>>()?;
 
         // Combine partial results using SIMD operations
         self.combine_comprehensive_results(&partial_results)
@@ -627,7 +628,7 @@ where
 
     /// Compute advanced-optimized matrix statistics
     pub fn compute_matrix_stats(&self, data: &ArrayView2<F>) -> StatsResult<MatrixStatsResult<F>> {
-        check_array_finite(data, "data")?;
+        checkarray_finite(data, "data")?;
 
         let (n_rows, n_cols) = data.dim();
         if n_rows == 0 || n_cols == 0 {
@@ -676,7 +677,7 @@ where
 
     /// SIMD-optimized row means computation
     fn simd_row_means(&self, data: &ArrayView2<F>) -> StatsResult<Array1<F>> {
-        let (n_rows_n_cols) = data.dim();
+        let (n_rows, _n_cols) = data.dim();
         let mut row_means = Array1::zeros(n_rows);
 
         for i in 0..n_rows {
@@ -702,7 +703,7 @@ where
 
     /// SIMD-optimized row standard deviations
     fn simd_row_stds(&self, data: &ArrayView2<F>, row_means: &Array1<F>) -> StatsResult<Array1<F>> {
-        let (n_rows_) = data.dim();
+        let (n_rows, _) = data.dim();
         let mut row_stds = Array1::zeros(n_rows);
 
         for i in 0..n_rows {
@@ -742,7 +743,7 @@ where
 
     /// SIMD-optimized correlation matrix
     fn simd_correlation_matrix(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
         let mut correlation_matrix = Array2::eye(n_features);
 
         // Compute means
@@ -759,8 +760,8 @@ where
                 let col_j = data.column(j);
 
                 // Compute correlation coefficient
-                let mean_i_array = Array1::from_elem(n_samples, means[i]);
-                let mean_j_array = Array1::from_elem(n_samples, means[j]);
+                let mean_i_array = Array1::from_elem(n_samples_, means[i]);
+                let mean_j_array = Array1::from_elem(n_samples_, means[j]);
 
                 let diff_i = F::simd_sub(&col_i, &mean_i_array.view());
                 let diff_j = F::simd_sub(&col_j, &mean_j_array.view());
@@ -780,7 +781,7 @@ where
 
     /// SIMD-optimized covariance matrix
     fn simd_covariance_matrix(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples_, n_features) = data.dim();
         let mut covariance_matrix = Array2::zeros((n_features, n_features));
 
         // Compute means
@@ -797,14 +798,14 @@ where
                 let col_j = data.column(j);
 
                 // Compute covariance coefficient
-                let mean_i_array = Array1::from_elem(n_samples, means[i]);
-                let mean_j_array = Array1::from_elem(n_samples, means[j]);
+                let mean_i_array = Array1::from_elem(n_samples_, means[i]);
+                let mean_j_array = Array1::from_elem(n_samples_, means[j]);
 
                 let diff_i = F::simd_sub(&col_i, &mean_i_array.view());
                 let diff_j = F::simd_sub(&col_j, &mean_j_array.view());
 
                 let covariance =
-                    F::simd_dot(&diff_i.view(), &diff_j.view()) / F::from(n_samples - 1).unwrap();
+                    F::simd_dot(&diff_i.view(), &diff_j.view()) / F::from(n_samples_ - 1).unwrap();
                 covariance_matrix[[i, j]] = covariance;
                 if i != j {
                     covariance_matrix[[j, i]] = covariance;
@@ -967,7 +968,7 @@ where
     fn simd_frobenius_norm(&self, matrix: &ArrayView2<F>) -> StatsResult<F> {
         let mut sum_squares = F::zero();
 
-        for row in matrix.outer_iter() {
+        for row in matrix.outer.iter() {
             sum_squares = sum_squares + F::simd_sum_squares(&row);
         }
 

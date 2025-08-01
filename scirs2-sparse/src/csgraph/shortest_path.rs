@@ -31,7 +31,8 @@ impl ShortestPathMethod {
             "dijkstra" | "dij" => Ok(Self::Dijkstra),
             "bellman-ford" | "bellman_ford" | "bf" => Ok(Self::BellmanFord),
             "floyd-warshall" | "floyd_warshall" | "fw" => Ok(Self::FloydWarshall),
-            "auto" => Ok(Self::Auto, _ => Err(SparseError::ValueError(format!(
+            "auto" => Ok(Self::Auto),
+            _ => Err(SparseError::ValueError(format!(
                 "Unknown shortest path method: {s}"
             ))),
         }
@@ -58,8 +59,8 @@ impl ShortestPathMethod {
 /// # Examples
 ///
 /// ```
-/// use scirs2__sparse::csgraph::shortest_path;
-/// use scirs2__sparse::csr_array::CsrArray;
+/// use scirs2_sparse::csgraph::shortest_path;
+/// use scirs2_sparse::csr_array::CsrArray;
 ///
 /// // Create a simple graph
 /// let rows = vec![0, 0, 1, 2];
@@ -97,7 +98,7 @@ where
         }
         (Some(source), None) => {
             // Single source shortest paths
-            let (distances_predecessors) =
+            let (distances_, _predecessors) =
                 single_source_shortest_path(graph, source, method, directed, return_predecessors)?;
 
             // Convert to matrix format
@@ -109,7 +110,7 @@ where
             };
 
             for i in 0..n {
-                dist_matrix[[source, i]] = distances[i];
+                dist_matrix[[source, i]] = distances_[i];
                 if let Some(ref preds) = _predecessors {
                     if let Some(ref mut pred_mat) = pred_matrix {
                         pred_mat[[source, i]] = preds[i];
@@ -121,10 +122,10 @@ where
         }
         (Some(source), Some(target)) => {
             // Single pair shortest path
-            let (distances_predecessors) =
+            let (distances_, _predecessors) =
                 single_source_shortest_path(graph, source, method, directed, return_predecessors)?;
 
-            let dist_matrix = Array2::from_elem((1, 1), distances[target]);
+            let dist_matrix = Array2::from_elem((1, 1), distances_[target]);
             let pred_matrix = if return_predecessors {
                 let mut pred_mat = Array2::from_elem((1, 1), -1isize);
                 if let Some(ref preds) = _predecessors {
@@ -167,7 +168,7 @@ where
     let actual_method = match method {
         ShortestPathMethod::Auto => {
             // Check if graph has negative weights
-            let (__, values) = graph.find();
+            let (_, _, values) = graph.find();
             if values.iter().any(|&w| w < T::zero()) {
                 ShortestPathMethod::BellmanFord
             } else {
@@ -500,7 +501,7 @@ pub fn reconstruct_path(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::csr__array::CsrArray;
+    use crate::csr_array::CsrArray;
     use approx::assert_relative_eq;
 
     fn create_test_graph() -> CsrArray<f64> {

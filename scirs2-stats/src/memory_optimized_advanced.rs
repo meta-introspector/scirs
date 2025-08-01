@@ -157,7 +157,7 @@ where
 {
     let start_time = std::time::Instant::now();
 
-    check_array_finite_2d(data, "data")?;
+    checkarray_finite_2d(data, "data")?;
 
     let (n_obs, n_vars) = data.dim();
     let element_size = std::mem::size_of::<F>();
@@ -426,7 +426,7 @@ where
     let start_time = std::time::Instant::now();
 
     // First pass: compute mean and covariance incrementally
-    let mut n_samples = 0;
+    let mut n_samples_ = 0;
     let mut n_features = 0;
     let mut running_mean = Array1::<F>::zeros(0);
     let mut running_cov = Array2::<F>::zeros((0, 0));
@@ -448,22 +448,22 @@ where
 
         // Update running statistics using Welford's method
         for i in 0..chunk_samples {
-            n_samples += 1;
+            n_samples_ += 1;
             let row = chunk.row(i);
 
             // Update mean
-            let n_f = F::from(n_samples).unwrap();
+            let n_f = F::from(n_samples_).unwrap();
             for j in 0..n_features {
                 let delta = row[j] - running_mean[j];
                 running_mean[j] = running_mean[j] + delta / n_f;
             }
 
             // Update covariance (simplified incremental update)
-            if n_samples > 1 {
+            if n_samples_ > 1 {
                 for j in 0..n_features {
                     for k in j..n_features {
                         let prod = (row[j] - running_mean[j]) * (row[k] - running_mean[k]);
-                        running_cov[[j, k]] = running_cov[[j, k]] * F::from(n_samples - 1).unwrap()
+                        running_cov[[j, k]] = running_cov[[j, k]] * F::from(n_samples_ - 1).unwrap()
                             / n_f
                             + prod / n_f;
                         if j != k {
@@ -475,7 +475,7 @@ where
         }
     }
 
-    if n_samples == 0 {
+    if n_samples_ == 0 {
         return Err(StatsError::InvalidArgument("No data provided".to_string()));
     }
 
@@ -549,7 +549,7 @@ where
     }
 
     // Adaptive bin count using Freedman-Diaconis rule
-    values.sort_by(|a..b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
     let q75_idx = (values.len() as f64 * 0.75) as usize;
     let q25_idx = (values.len() as f64 * 0.25) as usize;
     let iqr = values[q75_idx] - values[q25_idx];
@@ -802,7 +802,7 @@ where
 
     let mut xtx = Array2::<F>::zeros((0, 0));
     let mut xty = Array1::<F>::zeros(0);
-    let mut n_samples = 0;
+    let mut n_samples_ = 0;
     let mut n_features = 0;
     let mut initialized = false;
 
@@ -827,7 +827,7 @@ where
             ));
         }
 
-        n_samples += chunk_samples;
+        n_samples_ += chunk_samples;
 
         // Update X'X
         for i in 0..n_features {
@@ -853,7 +853,7 @@ where
         }
     }
 
-    if n_samples == 0 {
+    if n_samples_ == 0 {
         return Err(StatsError::InvalidArgument("No data provided".to_string()));
     }
 
@@ -1018,7 +1018,8 @@ where
                     let corr = match method {
                         "pearson" => crate::pearson_r(&col_i, &col_j)?,
                         "spearman" => crate::spearman_r(&col_i, &col_j)?,
-                        "kendall" => crate::kendall_tau(&col_i, &col_j, "b")?_ => {
+                        "kendall" => crate::kendall_tau(&col_i, &col_j, "b")?,
+                        _ => {
                             return Err(StatsError::InvalidArgument(format!(
                                 "Unknown method: {}",
                                 method
@@ -1291,7 +1292,7 @@ where
 }
 
 #[allow(dead_code)]
-fn check_array_finite_2d<F, D>(_arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
+fn checkarray_finite_2d<F, D>(_arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,
     D: Data<Elem = F>,

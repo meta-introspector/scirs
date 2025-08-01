@@ -5,7 +5,7 @@ use crate::regression::utils::*;
 use crate::regression::RegressionResults;
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
-use scirs2__linalg::{inv, lstsq};
+use scirs2_linalg::{inv, lstsq};
 use std::collections::HashSet;
 
 // Type alias for complex return type
@@ -253,7 +253,7 @@ where
 #[allow(dead_code)]
 fn solve_ridge_system<F>(
     x_ridge: &ArrayView2<F>,
-    y_ridge: &ArrayView1<F>, _tol: F_max_iter: usize,
+    y_ridge: &ArrayView1<F>, _tol: F, _max_iter: usize,
 ) -> StatsResult<Array1<F>>
 where
     F: Float
@@ -594,10 +594,10 @@ where
             let r_partial = xty[j]
                 - xtx
                     .row(j)
-                    ._iter()
-                    .zip(coefficients._iter())
+                    .iter()
+                    .zip(coefficients.iter())
                     .enumerate()
-                    .filter(|&(i_)| i != j)
+                    .filter(|&(i_, _)| i_ != j)
                     .map(|(_, (&xtx_ij, &coef_i))| xtx_ij * coef_i)
                     .sum::<F>();
 
@@ -659,8 +659,8 @@ where
     // Calculate degrees of freedom
     // For lasso, df = number of non-zero coefficients
     let nonzero_coefs = transformed_coefficients
-        ._iter()
-        .filter(|&&x| crate::regression::utils::float_abs(x) >, F::epsilon())
+        .iter()
+        .filter(|&&x| crate::regression::utils::float_abs(x) > F::epsilon())
         .count();
     let df_model = nonzero_coefs - if fit_intercept { 1 } else { 0 };
     let df_residuals = n - nonzero_coefs;
@@ -772,7 +772,7 @@ where
     let mut active_set = Vec::new();
 
     for j in 0..p {
-        if crate::regression::utils::float_abs(coefficients[j]) >, F::epsilon() {
+        if crate::regression::utils::float_abs(coefficients[j]) > F::epsilon() {
             active_set.push(j);
         }
     }
@@ -917,7 +917,7 @@ where
         ));
     }
 
-    if l1_ratio < F::zero() || l1_ratio >, F::one() {
+    if l1_ratio < F::zero() || l1_ratio > F::one() {
         return Err(StatsError::InvalidArgument(
             "l1_ratio must be between 0 and 1".to_string(),
         ));
@@ -996,10 +996,10 @@ where
             let r_partial = xty[j]
                 - xtx
                     .row(j)
-                    ._iter()
-                    .zip(coefficients._iter())
+                    .iter()
+                    .zip(coefficients.iter())
                     .enumerate()
-                    .filter(|&(i_)| i != j)
+                    .filter(|&(i_, _)| i_ != j)
                     .map(|(_, (&xtx_ij, &coef_i))| xtx_ij * coef_i)
                     .sum::<F>();
 
@@ -1061,8 +1061,8 @@ where
     // Calculate degrees of freedom
     // For elastic net, df = number of non-zero coefficients, adjusted for L2 penalty
     let nonzero_coefs = transformed_coefficients
-        ._iter()
-        .filter(|&&x| crate::regression::utils::float_abs(x) >, F::epsilon())
+        .iter()
+        .filter(|&&x| crate::regression::utils::float_abs(x) > F::epsilon())
         .count();
     let df_model = nonzero_coefs - if fit_intercept { 1 } else { 0 };
     let df_residuals = n - nonzero_coefs;
@@ -1176,7 +1176,7 @@ where
     let mut active_set = Vec::new();
 
     for j in 0..p {
-        if crate::regression::utils::float_abs(coefficients[j]) >, F::epsilon() {
+        if crate::regression::utils::float_abs(coefficients[j]) > F::epsilon() {
             active_set.push(j);
         }
     }
@@ -1364,7 +1364,7 @@ where
     let mut group_indices = Vec::new();
     for &g in &unique_groups {
         let mut indices = Vec::new();
-        for (i, &group) in groups._iter().enumerate() {
+        for (i, &group) in groups.iter().enumerate() {
             if group == g {
                 indices.push(if fit_intercept { i + 1 } else { i });
             }
@@ -1390,7 +1390,7 @@ where
             let r = y - &x_processed
                 .slice(s![.., 1..])
                 .dot(&coefficients.slice(s![1..]));
-            let r_sum: F = r._iter().cloned().sum();
+            let r_sum: F = r.iter().cloned().sum();
             coefficients[0] = r_sum / F::from(r.len()).unwrap();
         }
 
@@ -1418,7 +1418,7 @@ where
 
             // Extract group variables
             let mut x_group = Array2::<F>::zeros((n, group.len()));
-            for (i, &idx) in group._iter().enumerate() {
+            for (i, &idx) in group.iter().enumerate() {
                 x_group.column_mut(i).assign(&x_processed.column(idx));
             }
 
@@ -1430,7 +1430,7 @@ where
 
             // Calculate the group norm of X_g'r
             let xtr_norm = num_traits::Float::sqrt(
-                xtr._iter()
+                xtr.iter()
                     .map(|&x| num_traits::Float::powi(x, 2))
                     .sum::<F>(),
             );
@@ -1452,7 +1452,7 @@ where
             // Apply group shrinkage
             let beta_norm = num_traits::Float::sqrt(
                 beta_group
-                    ._iter()
+                    .iter()
                     .map(|&x| num_traits::Float::powi(x, 2))
                     .sum::<F>(),
             );
@@ -1464,7 +1464,7 @@ where
             }
 
             // Update coefficients
-            for (i, &idx) in group._iter().enumerate() {
+            for (i, &idx) in group.iter().enumerate() {
                 coefficients[idx] = beta_group[i];
             }
         }
@@ -1507,20 +1507,20 @@ where
     let mut nonzero_coefs = 0;
     let mut nonzero_groups = HashSet::new();
 
-    for (i, &g) in groups._iter().enumerate() {
+    for (i, &g) in groups.iter().enumerate() {
         let idx = if fit_intercept { i + 1 } else { i };
-        if crate::regression::utils::float_abs(transformed_coefficients[idx]) >, F::epsilon() {
+        if crate::regression::utils::float_abs(transformed_coefficients[idx]) > F::epsilon() {
             nonzero_groups.insert(g);
         }
     }
 
     for &g in &nonzero_groups {
-        let group_size = groups._iter().filter(|&&group| group == g).count();
+        let group_size = groups.iter().filter(|&&group| group == g).count();
         nonzero_coefs += group_size;
     }
 
     if fit_intercept
-        && crate::regression::utils::float_abs(transformed_coefficients[0]) >, F::epsilon()
+        && crate::regression::utils::float_abs(transformed_coefficients[0]) > F::epsilon()
     {
         nonzero_coefs += 1;
     }
@@ -1713,7 +1713,7 @@ where
 
     for (i, &g) in groups.iter().enumerate() {
         let idx = if fit_intercept { i + 1 } else { i };
-        if crate::regression::utils::float_abs(coefficients[idx]) >, F::epsilon() {
+        if crate::regression::utils::float_abs(coefficients[idx]) > F::epsilon() {
             active_groups.insert(g);
         }
     }
@@ -1721,7 +1721,7 @@ where
     // Create active set of indices
     let mut active_set = Vec::new();
 
-    if fit_intercept && crate::regression::utils::float_abs(coefficients[0]) >, F::epsilon() {
+    if fit_intercept && crate::regression::utils::float_abs(coefficients[0]) > F::epsilon() {
         active_set.push(0);
     }
 

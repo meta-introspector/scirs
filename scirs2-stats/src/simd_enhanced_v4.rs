@@ -25,7 +25,7 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    check_array_finite(_data, "_data")?;
+    checkarray_finite(_data, "_data")?;
 
     if _data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -153,7 +153,7 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    check_array_finite(data, "data")?;
+    checkarray_finite(data, "data")?;
     check_positive(window_size, "window_size")?;
 
     if window_size > data.len() {
@@ -246,19 +246,19 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    check_array_finite(_data, "_data")?;
+    checkarray_finite(_data, "_data")?;
 
-    let (n_samples, n_features) = _data.dim();
+    let (n_samples_, n_features) = _data.dim();
 
-    if n_samples < 2 {
+    if n_samples_ < 2 {
         return Err(StatsError::InvalidArgument(
             "At least 2 samples required for covariance".to_string(),
         ));
     }
 
     // Compute means for each feature using SIMD
-    let means = if n_samples > 32 {
-        let n_samples_f = F::from(n_samples).unwrap();
+    let means = if n_samples_ > 32 {
+        let n_samples_f = F::from(n_samples_).unwrap();
         let mut feature_means = Array1::zeros(n_features);
 
         for j in 0..n_features {
@@ -272,16 +272,16 @@ where
     };
 
     // Center the _data
-    let mut centered_data = Array2::zeros((n_samples, n_features));
+    let mut centered_data = Array2::zeros((n_samples_, n_features));
     for j in 0..n_features {
         let column = _data.column(j);
-        let mean_vec = Array1::from_elem(n_samples, means[j]);
+        let mean_vec = Array1::from_elem(n_samples_, means[j]);
 
-        if n_samples > 32 {
+        if n_samples_ > 32 {
             let centered_column = F::simd_sub(&column, &mean_vec.view());
             centered_data.column_mut(j).assign(&centered_column);
         } else {
-            for i in 0..n_samples {
+            for i in 0..n_samples_ {
                 centered_data[(i, j)] = column[i] - means[j];
             }
         }
@@ -289,14 +289,14 @@ where
 
     // Compute covariance matrix using SIMD matrix multiplication
     let mut cov_matrix = Array2::zeros((n_features, n_features));
-    let n_minus_1 = F::from(n_samples - 1).unwrap();
+    let n_minus_1 = F::from(n_samples_ - 1).unwrap();
 
     for i in 0..n_features {
         for j in i..n_features {
             let col_i = centered_data.column(i);
             let col_j = centered_data.column(j);
 
-            let covariance = if n_samples > 32 {
+            let covariance = if n_samples_ > 32 {
                 let products = F::simd_mul(&col_i, &col_j);
                 F::simd_sum(&products.view()) / n_minus_1
             } else {
@@ -326,7 +326,7 @@ pub fn quantiles_batch_simd<F>(_data: &ArrayView1<F>, quantiles: &[f64]) -> Stat
 where
     F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
 {
-    check_array_finite(_data, "_data")?;
+    checkarray_finite(_data, "_data")?;
 
     if _data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -390,7 +390,7 @@ where
         + std::iter::Sum<F>
         + num_traits::FromPrimitive,
 {
-    check_array_finite(_data, "_data")?;
+    checkarray_finite(_data, "_data")?;
 
     if _data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -398,7 +398,7 @@ where
         ));
     }
 
-    if alpha <= F::zero() || alpha >, F::one() {
+    if alpha <= F::zero() || alpha > F::one() {
         return Err(StatsError::InvalidArgument(
             "Alpha must be between 0 and 1".to_string(),
         ));
@@ -441,11 +441,11 @@ where
         + std::fmt::Display
         + num_traits::FromPrimitive,
 {
-    check_array_finite(_data, "_data")?;
+    checkarray_finite(_data, "_data")?;
 
-    let (n_samples, n_features) = _data.dim();
+    let (n_samples_, n_features) = _data.dim();
 
-    if n_samples == 0 || n_features == 0 {
+    if n_samples_ == 0 || n_features == 0 {
         return Err(StatsError::InvalidArgument(
             "Data matrix cannot be empty".to_string(),
         ));
@@ -459,15 +459,15 @@ where
             for j in 0..n_features {
                 let column = _data.column(j);
 
-                let (mean, std_dev) = if n_samples > 32 {
+                let (mean, std_dev) = if n_samples_ > 32 {
                     // SIMD path
                     let sum = F::simd_sum(&column);
-                    let mean = sum / F::from(n_samples).unwrap();
+                    let mean = sum / F::from(n_samples_).unwrap();
 
-                    let mean_vec = Array1::from_elem(n_samples, mean);
+                    let mean_vec = Array1::from_elem(n_samples_, mean);
                     let centered = F::simd_sub(&column, &mean_vec.view());
                     let squared = F::simd_mul(&centered.view(), &centered.view());
-                    let variance = F::simd_sum(&squared.view()) / F::from(n_samples - 1).unwrap();
+                    let variance = F::simd_sum(&squared.view()) / F::from(n_samples_ - 1).unwrap();
                     let std_dev = variance.sqrt();
 
                     (mean, std_dev)
@@ -481,7 +481,7 @@ where
 
                 // Normalize column
                 if std_dev > F::zero() {
-                    for i in 0..n_samples {
+                    for i in 0..n_samples_ {
                         normalized[(i, j)] = (_data[(i, j)] - mean) / std_dev;
                     }
                 }
@@ -489,7 +489,7 @@ where
         }
         Some(1) => {
             // Normalize along features (row-wise)
-            for i in 0..n_samples {
+            for i in 0..n_samples_ {
                 let row = _data.row(i);
 
                 let (mean, std_dev) = if n_features > 32 {
@@ -591,7 +591,7 @@ pub fn robust_statistics_simd<F>(_data: &ArrayView1<F>) -> StatsResult<RobustSta
 where
     F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy + std::fmt::Display,
 {
-    check_array_finite(_data, "_data")?;
+    checkarray_finite(_data, "_data")?;
 
     if _data.is_empty() {
         return Err(StatsError::InvalidArgument(

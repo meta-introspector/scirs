@@ -5,7 +5,7 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use rand__distr::{Distribution, Gamma, Normal};
+use rand_distr::{Distribution, Gamma, Normal};
 use scirs2_core::validation::*;
 use scirs2_core::Rng;
 use statrs::statistics::Statistics;
@@ -78,9 +78,9 @@ impl HierarchicalLinearModel {
         burnin: usize,
         rng: &mut R,
     ) -> Result<HierarchicalModelResults> {
-        check_array_finite(&y, "y")?;
-        check_array_finite(&x_level1, "x_level1")?;
-        check_array_finite(&x_level2, "x_level2")?;
+        checkarray_finite(&y, "y")?;
+        checkarray_finite(&x_level1, "x_level1")?;
+        checkarray_finite(&x_level2, "x_level2")?;
         check_positive(n_iter, "n_iter")?;
 
         let n_obs = y.len();
@@ -191,7 +191,7 @@ impl HierarchicalLinearModel {
     }
 
     /// Update random effects for each group using Gibbs sampling
-    fn update_random_effects<R: scirs2_core: Rng + ?Sized>(
+    fn update_random_effects<R: rand::Rng + ?Sized>(
         &self,
         y: &ArrayView1<f64>,
         x_level1: &ArrayView2<f64>,
@@ -369,7 +369,7 @@ impl HierarchicalLinearModel {
     }
 
     /// Update random effects covariance matrix using inverse Wishart
-    fn update_random_effects_covariance<R: scirs2_core: Rng + ?Sized>(
+    fn update_random_effects_covariance<R: rand::Rng + ?Sized>(
         &mut self,
         random_effects: &Array2<f64>,
         rng: &mut R,
@@ -434,8 +434,8 @@ impl HierarchicalLinearModel {
         x_level2: ArrayView2<f64>,
         groups: ArrayView1<usize>,
     ) -> Result<Array1<f64>> {
-        check_array_finite(&x_level1, "x_level1")?;
-        check_array_finite(&x_level2, "x_level2")?;
+        checkarray_finite(&x_level1, "x_level1")?;
+        checkarray_finite(&x_level2, "x_level2")?;
 
         let n_obs = x_level1.nrows();
         let mut predictions = Array1::zeros(n_obs);
@@ -505,7 +505,7 @@ impl HierarchicalModelResults {
 
         for param in 0..n_params {
             let samples = self.fixed_effects_samples.column(param);
-            let mean = samples.mean().unwrap_or(0.0);
+            let mean = samples.mean();
             let std = samples.variance().sqrt();
 
             let mut sorted_samples = samples.to_vec();
@@ -532,7 +532,7 @@ impl HierarchicalModelResults {
 
         for param in 0..n_params {
             let samples = self.tau_samples.column(param);
-            let mean = samples.mean().unwrap_or(0.0);
+            let mean = samples.mean();
             let std = samples.variance().sqrt();
 
             let mut sorted_samples = samples.to_vec();
@@ -594,7 +594,7 @@ impl HierarchicalANOVA {
         burnin: usize,
         rng: &mut R,
     ) -> Result<HierarchicalANOVAResults> {
-        check_array_finite(&y, "y")?;
+        checkarray_finite(&y, "y")?;
         check_positive(n_iter, "n_iter")?;
 
         if y.len() != groups.len() {
@@ -609,7 +609,7 @@ impl HierarchicalANOVA {
 
         // Initialize storage
         let mut group_means_samples = Array2::zeros((n_iter - burnin, self.n_groups));
-        let mut overall_mean_samples = Array1::zeros(n_iter - burnin);
+        let mut overall_mean_samples_ = Array1::zeros(n_iter - burnin);
         let mut between_var_samples = Array1::zeros(n_iter - burnin);
         let mut within_var_samples = Array1::zeros(n_iter - burnin);
 
@@ -617,7 +617,7 @@ impl HierarchicalANOVA {
         let mut group_counts = vec![0; self.n_groups];
         let mut group_sums = vec![0.0; self.n_groups];
 
-        for (&obs_group, &obs_y) in groups._iter().zip(y._iter()) {
+        for (&obs_group, &obs_y) in groups.iter().zip(y.iter()) {
             if obs_group >= self.n_groups {
                 return Err(StatsError::InvalidArgument(format!(
                     "Group {} exceeds n_groups {}",
@@ -661,7 +661,7 @@ impl HierarchicalANOVA {
             }
 
             // 2. Update overall mean
-            let group_mean_avg = self.group_means.mean().unwrap_or(0.0);
+            let group_mean_avg = self.group_means.mean();
             let prior_variance = 10.0; // Weak prior
             let likelihood_variance = self.between_variance / self.n_groups as f64;
             let posterior_variance = 1.0 / (1.0 / prior_variance + 1.0 / likelihood_variance);
@@ -676,7 +676,7 @@ impl HierarchicalANOVA {
             // 3. Update between-group variance
             let sum_sq_deviations: f64 = self
                 .group_means
-                ._iter()
+                .iter()
                 .map(|&mean| (mean - self.overall_mean).powi(2))
                 .sum();
 
@@ -695,7 +695,7 @@ impl HierarchicalANOVA {
             let mut within_sum_sq = 0.0;
             let mut total_obs = 0;
 
-            for (&obs_group, &obs_y) in groups._iter().zip(y._iter()) {
+            for (&obs_group, &obs_y) in groups.iter().zip(y.iter()) {
                 let residual = obs_y - self.group_means[obs_group];
                 within_sum_sq += residual * residual;
                 total_obs += 1;
@@ -716,7 +716,7 @@ impl HierarchicalANOVA {
                 group_means_samples
                     .row_mut(sample_idx)
                     .assign(&self.group_means);
-                overall_mean_samples[sample_idx] = self.overall_mean;
+                overall_mean_samples_[sample_idx] = self.overall_mean;
                 between_var_samples[sample_idx] = self.between_variance;
                 within_var_samples[sample_idx] = self.within_variance;
             }
@@ -724,7 +724,7 @@ impl HierarchicalANOVA {
 
         Ok(HierarchicalANOVAResults {
             group_means_samples,
-            overall_mean_samples,
+            overall_mean_samples_,
             between_variance_samples: between_var_samples,
             within_variance_samples: within_var_samples,
             n_groups: self.n_groups,
@@ -739,7 +739,7 @@ pub struct HierarchicalANOVAResults {
     /// MCMC samples of group means
     pub group_means_samples: Array2<f64>,
     /// MCMC samples of overall mean
-    pub overall_mean_samples: Array1<f64>,
+    pub overall_mean_samples_: Array1<f64>,
     /// MCMC samples of between-group variance
     pub between_variance_samples: Array1<f64>,
     /// MCMC samples of within-group variance

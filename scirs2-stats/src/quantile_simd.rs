@@ -166,7 +166,7 @@ where
         ));
     }
 
-    if q < F::zero() || q >, F::one() {
+    if q < F::zero() || q > F::one() {
         return Err(StatsError::invalid_argument(
             "Quantile must be between 0 and 1",
         ));
@@ -252,7 +252,7 @@ where
 
     // Validate quantiles
     for &q in quantiles.iter() {
-        if q < F::zero() || q >, F::one() {
+        if q < F::zero() || q > F::one() {
             return Err(StatsError::invalid_argument(
                 "All quantiles must be between 0 and 1",
             ));
@@ -399,14 +399,14 @@ fn heapify<F: Float>(_data: &mut [F], n: usize, i: usize) {
 
 /// Compute quantile from sorted array
 #[allow(dead_code)]
-fn compute_quantile_from_sorted<F>(_sorted_data: &[F], q: F, method: &str) -> StatsResult<F>
+fn compute_quantile_from_sorted<F>(sorted_data: &[F], q: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    let n = _sorted_data.len();
+    let n = sorted_data.len();
 
     if q == F::zero() {
-        return Ok(_sorted_data[0]);
+        return Ok(sorted_data[0]);
     }
     if q == F::one() {
         return Ok(sorted_data[n - 1]);
@@ -464,7 +464,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
     D: DataMut<Elem = F>,
 {
-    if p < F::zero() || p >, F::from(100.0).unwrap() {
+    if p < F::zero() || p > F::from(100.0).unwrap() {
         return Err(StatsError::invalid_argument(
             "Percentile must be between 0 and 100",
         ));

@@ -731,21 +731,21 @@ pub fn convex_hull_graham<T: Float + std::fmt::Debug>(_points: &ArrayView2<T>) -
     // Add first three _points
     hull_indices.push(lowest);
 
-    for &(index_) in &indexed_points {
+    for &(index_, _) in &indexed_points {
         // Skip pivot point
-        if index == lowest {
+        if index_ == lowest {
             continue;
         }
 
         while hull_indices.len() >= 2 {
             let top = hull_indices.len() - 1;
-            if ccw(hull_indices[top - 1], hull_indices[top], index) {
+            if ccw(hull_indices[top - 1], hull_indices[top], index_) {
                 break;
             }
             hull_indices.pop();
         }
 
-        hull_indices.push(index);
+        hull_indices.push(index_);
     }
 
     // Create the hull array
@@ -956,7 +956,7 @@ pub fn visvalingam_whyatt_simplify<T: Float + std::fmt::Debug>(
     let removal_candidates: Vec<usize> = vertices
         .iter()
         .filter(|(_, _area)| *_area < min_area)
-        .map(|(idx_)| *idx)
+        .map(|(idx_, _)| *idx_)
         .collect();
 
     for vertex_idx in removal_candidates {

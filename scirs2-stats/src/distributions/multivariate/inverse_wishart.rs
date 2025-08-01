@@ -141,7 +141,7 @@ impl InverseWishart {
     }
 
     /// Calculate the log PDF with precomputed Cholesky decomposition of x
-    fn logpdf_with_cholesky<D>(&self_x: &ArrayBase<D, Ix2>, x_chol: &Array2<f64>) -> f64
+    fn logpdf_with_cholesky<D>(&self, x: &ArrayBase<D, Ix2>, x_chol: &Array2<f64>) -> f64
     where
         D: Data<Elem = f64>,
     {
@@ -521,11 +521,11 @@ mod tests {
         let inv_wishart = InverseWishart::new(scale.clone(), df).unwrap();
 
         // Generate samples
-        let n_samples = 100;
-        let samples = inv_wishart.rvs(n_samples).unwrap();
+        let n_samples_ = 100;
+        let samples = inv_wishart.rvs(n_samples_).unwrap();
 
         // Check number of samples
-        assert_eq!(samples.len(), n_samples);
+        assert_eq!(samples.len(), n_samples_);
 
         // Check dimensions of each sample
         for sample in &samples {
@@ -537,7 +537,7 @@ mod tests {
         for sample in &samples {
             sample_mean += sample;
         }
-        sample_mean /= n_samples as f64;
+        sample_mean /= n_samples_ as f64;
 
         // Expected mean is Ψ/(ν-p-1) where p=2
         let expected_mean = scale.clone() / (df - 3.0);

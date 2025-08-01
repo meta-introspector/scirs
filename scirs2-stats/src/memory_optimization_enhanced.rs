@@ -368,9 +368,9 @@ struct SelectionEvent {
 
 impl EnhancedMemoryOptimizer {
     /// Create a new enhanced memory optimizer
-    pub fn new(_config: MemoryOptimizationConfig) -> Self {
+    pub fn new(config: MemoryOptimizationConfig) -> Self {
         let monitor = Arc::new(RwLock::new(MemoryMonitor::new()));
-        let cache_manager = Arc::new(RwLock::new(SmartCacheManager::new(&_config)));
+        let cache_manager = Arc::new(RwLock::new(SmartCacheManager::new(&config)));
         let pool_allocator = Arc::new(Mutex::new(PoolAllocator::new()));
         let algorithm_selector = Arc::new(RwLock::new(MemoryAwareSelector::new()));
 
@@ -379,7 +379,7 @@ impl EnhancedMemoryOptimizer {
             cache_manager,
             pool_allocator,
             algorithm_selector,
-            _config,
+            config,
         }
     }
 
@@ -583,7 +583,7 @@ impl EnhancedMemoryOptimizer {
         }
     }
 
-    fn predict_performance(&self_data_size: usize, _operation: &str) -> PerformanceScore {
+    fn predict_performance(&self, _size: usize, _operation: &str) -> PerformanceScore {
         // Implement performance prediction based on historical data
         PerformanceScore {
             time_score: 85.0,
@@ -740,13 +740,13 @@ impl MemoryMonitor {
 }
 
 impl SmartCacheManager {
-    fn new(_config: &MemoryOptimizationConfig) -> Self {
+    fn new(config: &MemoryOptimizationConfig) -> Self {
         Self {
             cache: BTreeMap::new(),
             access_analyzer: AccessPatternAnalyzer::new(),
             prefetch_predictor: PrefetchPredictor::new(),
             stats: CacheStatistics::new(),
-            _config: _config.clone(),
+            config: config.clone(),
         }
     }
 

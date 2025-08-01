@@ -13,8 +13,8 @@
 #![allow(dead_code)]
 
 use ndarray::{array, ArrayView1};
-use scirs2__integrate::error::{IntegrateError, IntegrateResult};
-use scirs2__integrate::ode::{
+use scirs2_integrate::error::{IntegrateError, IntegrateResult};
+use scirs2_integrate::ode::{
     solve_ivp_with_events, terminal_event, EventAction, EventDirection, EventSpec, ODEMethod,
     ODEOptions, ODEOptionsWithEvents,
 };
@@ -118,7 +118,7 @@ fn main() -> IntegrateResult<()> {
                     // Event 1: Temperature drops below heater-on threshold
                     Box::new(|_t: f64, y: ArrayView1<f64>| y[0] - HEATER_ON_THRESHOLD),
                     // Event 2: End of simulation
-                    Box::new(move |t: f64_y: ArrayView1<f64>| t - t_end),
+                    Box::new(move |t: f64, _y: ArrayView1<f64>| t - t_end),
                 ];
 
                 let event_specs = vec![
@@ -143,7 +143,7 @@ fn main() -> IntegrateResult<()> {
                     // Event 1: Temperature rises above heater-off threshold
                     Box::new(|_t: f64, y: ArrayView1<f64>| y[0] - HEATER_OFF_THRESHOLD),
                     // Event 2: End of simulation
-                    Box::new(move |t: f64_y: ArrayView1<f64>| t - t_end),
+                    Box::new(move |t: f64, _y: ArrayView1<f64>| t - t_end),
                 ];
 
                 let event_specs = vec![

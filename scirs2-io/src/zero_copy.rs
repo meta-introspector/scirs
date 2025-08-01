@@ -51,8 +51,9 @@ where
         }
 
         Ok(Self {
-            _mmap,
-            shape_phantom: PhantomData,
+            mmap: _mmap,
+            shape: _shape,
+            _phantom: PhantomData,
         })
     }
 
@@ -104,8 +105,9 @@ where
         }
 
         Ok(Self {
-            _mmap,
-            shape_phantom: PhantomData,
+            mmap: _mmap,
+            shape: _shape,
+            _phantom: PhantomData,
         })
     }
 
@@ -250,7 +252,7 @@ pub struct ZeroCopyCsvReader<'a> {
 impl<'a> ZeroCopyCsvReader<'a> {
     /// Create a new zero-copy CSV reader
     pub fn new(_data: &'a [u8], delimiter: u8) -> Self {
-        Self { _data, delimiter }
+        Self { data: _data, delimiter }
     }
 
     /// Iterate over lines without allocating
@@ -325,7 +327,7 @@ pub struct ZeroCopyBinaryReader<'a> {
 impl<'a> ZeroCopyBinaryReader<'a> {
     /// Create a new zero-copy binary reader
     pub fn new(_data: &'a [u8]) -> Self {
-        Self { _data, pos: 0 }
+        Self { data: _data, pos: 0 }
     }
 
     /// Read a value without copying
@@ -897,7 +899,8 @@ impl<T: Copy + 'static> ZeroCopyStreamProcessor<T> {
         let reader = ZeroCopyReader::new(_path)?;
         Ok(Self {
             reader,
-            chunk_size_phantom: PhantomData,
+            chunk_size,
+            _phantom: PhantomData,
         })
     }
 

@@ -372,7 +372,7 @@ impl AdvancedParallelConfig {
                                             (1, "Data") => l1_data = size,
                                             (1, "Instruction") => l1_instruction = size,
                                             (2, "Unified") => l2_unified = size,
-                                            (3, "Unified") => l3_shared = size_ => {}
+                                            (3, "Unified") => l3_shared = size,
                                         }
                                     }
                                 }
@@ -711,13 +711,13 @@ where
         T: Fn(&ArrayView2<F>) -> StatsResult<R> + Send + Sync + Clone + 'static,
         R: Send + Sync + 'static,
     {
-        let (rows_cols) = data.dim();
+        let (rows, _cols) = data.dim();
         let num_threads = self.config.hardware.cpu_cores;
         let chunk_size = (rows + num_threads - 1) / num_threads;
 
         // Process in parallel chunks
         let results: Vec<_> = (0..num_threads)
-            .into_par_iter()
+            .into_par.iter()
             .map(|thread_id| {
                 let start_row = thread_id * chunk_size;
                 let end_row = ((thread_id + 1) * chunk_size).min(rows);
@@ -735,7 +735,7 @@ where
 
         // For simplicity, return first successful result
         // In practice, would combine results appropriately
-        results.into_iter().next().ok_or_else(|| {
+        results.into().iter().next().ok_or_else(|| {
             StatsError::ComputationError("No successful parallel results".to_string())
         })
     }

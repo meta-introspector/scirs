@@ -61,7 +61,8 @@ impl AdvancedParallelConfig {
 /// Provides efficient parallel processing of statistical operations over
 /// multiple datasets or large single datasets.
 pub struct ParallelBatchProcessor<F> {
-    config: AdvancedParallelConfig_phantom: std::marker::PhantomData<F>,
+    config: AdvancedParallelConfig,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F> ParallelBatchProcessor<F>
@@ -92,7 +93,7 @@ where
             .map(|dataset| self.compute_single_dataset_stats(dataset))
             .collect();
 
-        results.into_iter().collect()
+        results.into().iter().collect()
     }
 
     fn compute_single_dataset_stats<D>(&self, data: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F)>
@@ -164,15 +165,15 @@ where
         // Combine results
         let total_sum = results
             .iter()
-            .map(|(sum____)| *sum)
+            .map(|(sum__, _, _, _, _)| *sum__)
             .fold(F::zero(), |acc, x| acc + x);
-        let total_len = results.iter().map(|(____, len)| *len).sum::<usize>();
+        let total_len = results.iter().map(|(_, _, _, _, len)| *len).sum::<usize>();
         let global_mean = total_sum / F::from(total_len).unwrap();
 
         let global_min =
             results
                 .iter()
-                .map(|(__, min__)| *min)
+                .map(|(_, _, min__, _, _)| *min__)
                 .fold(
                     results[0].2,
                     |min_val, x| if x < min_val { x } else { min_val },
@@ -180,7 +181,7 @@ where
         let global_max =
             results
                 .iter()
-                .map(|(___, max_)| *max)
+                .map(|(_, _, _, max_, _)| *max_)
                 .fold(
                     results[0].3,
                     |max_val, x| if x > max_val { x } else { max_val },
@@ -210,7 +211,8 @@ where
 /// for statistical model evaluation.
 pub struct ParallelCrossValidator<F> {
     k_folds: usize,
-    config: AdvancedParallelConfig_phantom: std::marker::PhantomData<F>,
+    config: AdvancedParallelConfig,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F> ParallelCrossValidator<F>
@@ -254,7 +256,7 @@ where
 
         // Parallel computation of correlations for each fold
         let correlations: Vec<F> = (0..self.k_folds)
-            .into_iter()
+            .into().iter()
             .map(|fold| {
                 let start = fold * fold_size;
                 let end = if fold == self.k_folds - 1 {
@@ -330,7 +332,8 @@ where
 /// Provides efficient parallel Monte Carlo simulations for statistical analysis.
 pub struct ParallelMonteCarlo<F> {
     n_simulations: usize,
-    config: AdvancedParallelConfig_phantom: std::marker::PhantomData<F>,
+    config: AdvancedParallelConfig,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F> ParallelMonteCarlo<F>
@@ -372,7 +375,7 @@ where
 
         // Parallel bootstrap sampling
         let bootstrap_stats: Vec<F> = (0..self.n_simulations)
-            .into_iter()
+            .into().iter()
             .map(|seed| {
                 use rand::rngs::StdRng;
                 use rand::SeedableRng;
@@ -392,7 +395,7 @@ where
 
         // Sort bootstrap statistics for percentile calculation
         let mut sorted_stats = bootstrap_stats;
-        sorted_stats.sort_by(|a..b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        sorted_stats.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         // Calculate confidence interval
         let alpha = F::one() - confidence_level;
@@ -446,7 +449,7 @@ where
         let combined_arc = Arc::new(combined);
         let count_extreme = Arc::new(Mutex::new(0usize));
 
-        (0..self.n_simulations).into_iter().for_each(|seed| {
+        (0..self.n_simulations).into().iter().for_each(|seed| {
             use rand::rngs::StdRng;
             use rand::{seq::SliceRandom, SeedableRng};
 

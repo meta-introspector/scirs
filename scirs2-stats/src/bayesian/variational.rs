@@ -67,8 +67,8 @@ impl VariationalBayesianRegression {
         prior_shape_tau: f64,
         prior_rate_tau: f64,
     ) -> Result<Self> {
-        check_array_finite(&prior_mean_beta, "prior_mean_beta")?;
-        check_array_finite(&prior_cov_beta, "prior_cov_beta")?;
+        checkarray_finite(&prior_mean_beta, "prior_mean_beta")?;
+        checkarray_finite(&prior_cov_beta, "prior_cov_beta")?;
         check_positive(prior_shape_tau, "prior_shape_tau")?;
         check_positive(prior_rate_tau, "prior_rate_tau")?;
 
@@ -92,17 +92,17 @@ impl VariationalBayesianRegression {
         max_iter: usize,
         tol: f64,
     ) -> Result<VariationalRegressionResult> {
-        check_array_finite(&x, "x")?;
-        check_array_finite(&y, "y")?;
+        checkarray_finite(&x, "x")?;
+        checkarray_finite(&y, "y")?;
         check_positive(max_iter, "max_iter")?;
         check_positive(tol, "tol")?;
 
-        let (n_samples, n_features) = x.dim();
-        if y.len() != n_samples {
+        let (n_samples_, n_features) = x.dim();
+        if y.len() != n_samples_ {
             return Err(StatsError::DimensionMismatch(format!(
                 "y length ({}) must match x rows ({})",
                 y.len(),
-                n_samples
+                n_samples_
             )));
         }
 
@@ -116,7 +116,7 @@ impl VariationalBayesianRegression {
         // Center data if fitting intercept
         let (x_centered, y_centered, x_mean, y_mean) = if self.fit_intercept {
             let x_mean = x.mean_axis(Axis(0)).unwrap();
-            let y_mean = y.mean().unwrap();
+            let y_mean = y.mean();
 
             let mut x_centered = x.to_owned();
             for mut row in x_centered.rows_mut() {
@@ -148,10 +148,10 @@ impl VariationalBayesianRegression {
             self.update_beta_variational(&xtx, &xty, &prior_precision)?;
 
             // Update q(τ)
-            self.update_tau_variational(n_samples as f64, &xtx, yty)?;
+            self.update_tau_variational(n_samples_ as f64, &xtx, yty)?;
 
             // Compute ELBO
-            let elbo = self.compute_elbo(n_samples as f64, &xtx, &xty, yty, &prior_precision)?;
+            let elbo = self.compute_elbo(n_samples_ as f64, &xtx, &xty, yty, &prior_precision)?;
             elbo_history.push(elbo);
 
             // Check convergence
@@ -169,7 +169,7 @@ impl VariationalBayesianRegression {
             rate_tau: self.rate_tau,
             elbo: prev_elbo,
             elbo_history: elbo_history.clone(),
-            n_samples,
+            n_samples_,
             n_features: self.n_features,
             x_mean,
             y_mean,
@@ -206,12 +206,12 @@ impl VariationalBayesianRegression {
     /// Update variational distribution for τ
     fn update_tau_variational(
         &mut self,
-        n_samples: f64,
+        n_samples_: f64,
         xtx: &Array2<f64>,
         yty: f64,
     ) -> Result<()> {
         // Shape parameter
-        self.shape_tau = self.prior_shape_tau + n_samples / 2.0;
+        self.shape_tau = self.prior_shape_tau + n_samples_ / 2.0;
 
         // Rate parameter
         let expected_beta_outer = &self.cov_beta + outer_product(&self.mean_beta);
@@ -226,7 +226,7 @@ impl VariationalBayesianRegression {
     /// Compute Evidence Lower BOund (ELBO)
     fn compute_elbo(
         &self,
-        n_samples: f64,
+        n_samples_: f64,
         xtx: &Array2<f64>,
         xty: &Array1<f64>,
         yty: f64,
@@ -239,8 +239,8 @@ impl VariationalBayesianRegression {
         let diff =
             yty - 2.0 * self.mean_beta.dot(xty) + self.mean_beta.dot(&xtx.dot(&self.mean_beta));
         let trace_term = (xtx * &self.cov_beta).sum();
-        let likelihood_term = 0.5 * n_samples * expected_log_tau
-            - 0.5 * n_samples * (2.0 * PI).ln()
+        let likelihood_term = 0.5 * n_samples_ * expected_log_tau
+            - 0.5 * n_samples_ * (2.0 * PI).ln()
             - 0.5 * expected_tau * (diff + trace_term);
 
         // E[log p(β)]
@@ -283,7 +283,7 @@ impl VariationalBayesianRegression {
         x: ArrayView2<f64>,
         result: &VariationalRegressionResult,
     ) -> Result<VariationalPredictionResult> {
-        check_array_finite(&x, "x")?;
+        checkarray_finite(&x, "x")?;
         let (n_test, n_features) = x.dim();
 
         if n_features != result.n_features {
@@ -347,7 +347,7 @@ pub struct VariationalRegressionResult {
     /// ELBO history during optimization
     pub elbo_history: Vec<f64>,
     /// Number of training samples
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Number of features
     pub n_features: usize,
     /// Training data mean (for centering)
@@ -494,24 +494,24 @@ impl VariationalARD {
         max_iter: usize,
         tol: f64,
     ) -> Result<VariationalARDResult> {
-        check_array_finite(&x, "x")?;
-        check_array_finite(&y, "y")?;
+        checkarray_finite(&x, "x")?;
+        checkarray_finite(&y, "y")?;
         check_positive(max_iter, "max_iter")?;
         check_positive(tol, "tol")?;
 
-        let (n_samples_n_features) = x.dim();
-        if y.len() != n_samples {
+        let (n_samples_, _n_features) = x.dim();
+        if y.len() != n_samples_ {
             return Err(StatsError::DimensionMismatch(format!(
                 "y length ({}) must match x rows ({})",
                 y.len(),
-                n_samples
+                n_samples_
             )));
         }
 
         // Center data if fitting intercept
         let (x_centered, y_centered, x_mean, y_mean) = if self.fit_intercept {
             let x_mean = x.mean_axis(Axis(0)).unwrap();
-            let y_mean = y.mean().unwrap();
+            let y_mean = y.mean();
 
             let mut x_centered = x.to_owned();
             for mut row in x_centered.rows_mut() {
@@ -540,10 +540,10 @@ impl VariationalARD {
             self.update_alpha_ard()?;
 
             // Update q(τ)
-            self.update_tau_ard(n_samples as f64, &xtx, yty)?;
+            self.update_tau_ard(n_samples_ as f64, &xtx, yty)?;
 
             // Compute ELBO
-            let elbo = self.compute_elbo_ard(n_samples as f64, &xtx, &xty, yty)?;
+            let elbo = self.compute_elbo_ard(n_samples_ as f64, &xtx, &xty, yty)?;
             elbo_history.push(elbo);
 
             // Check convergence
@@ -568,7 +568,7 @@ impl VariationalARD {
             rate_tau: self.rate_tau,
             elbo: prev_elbo,
             elbo_history: elbo_history.clone(),
-            n_samples,
+            n_samples_,
             n_features: self.n_features,
             x_mean,
             y_mean,
@@ -612,8 +612,8 @@ impl VariationalARD {
     }
 
     /// Update variational distribution for τ (noise precision)
-    fn update_tau_ard(&mut self, n_samples: f64, xtx: &Array2<f64>, yty: f64) -> Result<()> {
-        self.shape_tau = self.prior_shape_tau + n_samples / 2.0;
+    fn update_tau_ard(&mut self, n_samples_: f64, xtx: &Array2<f64>, yty: f64) -> Result<()> {
+        self.shape_tau = self.prior_shape_tau + n_samples_ / 2.0;
 
         let mut quadratic_term = 0.0;
         for i in 0..self.n_features {
@@ -635,7 +635,7 @@ impl VariationalARD {
     /// Compute ELBO for ARD model
     fn compute_elbo_ard(
         &self,
-        n_samples: f64,
+        n_samples_: f64,
         xtx: &Array2<f64>,
         xty: &Array1<f64>,
         yty: f64,
@@ -655,8 +655,8 @@ impl VariationalARD {
             }
         }
 
-        let likelihood_term = 0.5 * n_samples * expected_log_tau
-            - 0.5 * n_samples * (2.0 * PI).ln()
+        let likelihood_term = 0.5 * n_samples_ * expected_log_tau
+            - 0.5 * n_samples_ * (2.0 * PI).ln()
             - 0.5 * expected_tau * quadratic_form;
 
         // Prior terms
@@ -723,7 +723,7 @@ pub struct VariationalARDResult {
     /// ELBO history
     pub elbo_history: Vec<f64>,
     /// Number of training samples
-    pub n_samples: usize,
+    pub n_samples_: usize,
     /// Number of features
     pub n_features: usize,
     /// Training data mean
@@ -742,7 +742,7 @@ impl VariationalARDResult {
             .iter()
             .enumerate()
             .filter(|(_, &alpha)| alpha < threshold) // Low precision = high relevance
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .collect()
     }
 

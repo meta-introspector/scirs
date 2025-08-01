@@ -3,6 +3,8 @@
 //! This module provides solver implementations for various types of DAEs.
 
 use crate::common::IntegrateFloat;
+use crate::dae::index_reduction::{DAEStructure, PantelidesReducer};
+use crate::dae::methods::bdf_dae::bdf_semi_explicit_dae;
 use crate::dae::types::{DAEIndex, DAEOptions, DAEResult, DAEType};
 use crate::error::{IntegrateError, IntegrateResult};
 use crate::ode::utils::jacobian::JacobianStrategy;
@@ -358,7 +360,8 @@ where
 
     // Function to evaluate the implicit BDF formula for a given step size and order
     let eval_bdf_formula = |y_new: ArrayView1<F>,
-                            y_history: &[Array1<F>], _y_prime_new: ArrayView1<F>,
+                            y_history: &[Array1<F>],
+                            _y_prime_new: ArrayView1<F>,
                             t_new: F,
                             k: usize,
                             step_size: F|
@@ -855,7 +858,7 @@ where
             }
 
             // Apply Pantelides index reduction algorithm
-use crate::dae::index_reduction::{DAEStructure, PantelidesReducer};
+            use crate::dae::index_reduction::{DAEStructure, PantelidesReducer};
 
             // Create DAE structure
             let mut structure = DAEStructure::default();
@@ -1090,7 +1093,8 @@ fn solve_index1_dae_with_reduced_structure<F, FFunc, GFunc>(
     t_span: [F; 2],
     x0: Array1<F>,
     y0: Array1<F>,
-    options: DAEOptions<F>, _structure: crate::dae::index_reduction::DAEStructure<F>,
+    options: DAEOptions<F>,
+    _structure: crate::dae::index_reduction::DAEStructure<F>,
 ) -> IntegrateResult<DAEResult<F>>
 where
     F: IntegrateFloat + std::default::Default,
