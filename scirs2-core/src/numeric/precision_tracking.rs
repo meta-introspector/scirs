@@ -87,7 +87,7 @@ impl Default for PrecisionContext {
 impl PrecisionContext {
     pub fn new() -> Self {
         Self {
-            precision: 1e-15,  // Default to f64 precision
+            precision: 1e-15, // Default to f64 precision
             error_bounds: 0.0,
             significant_digits: 15,
             precision_loss_sources: Vec::new(),
@@ -290,7 +290,7 @@ impl PrecisionContext {
 
         suggestions
     }
-    
+
     /// Check if precision falls below a minimum threshold and return a warning
     pub fn check_precision_warning(&self, min_precision: f64) -> Option<PrecisionWarning> {
         if self.precision < min_precision {

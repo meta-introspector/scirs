@@ -1,8 +1,8 @@
-//! Time series feature extraction
-//!
-//! This module provides functions for extracting statistical and
-//! spectral features from time series data. These features can be
-//! used for signal characterization, classification, and similarity analysis.
+// Time series feature extraction
+//
+// This module provides functions for extracting statistical and
+// spectral features from time series data. These features can be
+// used for signal characterization, classification, and similarity analysis.
 
 // Re-export modules
 #[allow(unused_imports)]
@@ -33,4 +33,4 @@ pub use statistical::extract_statistical_features;
 pub use statistical::{calculate_kurtosis, calculate_quantile, calculate_skewness, calculate_std};
 pub use trend::extract_trend_features;
 pub use trend::{linear_regression, quadratic_regression};
-pub use zero__crossing::extract_zero_crossing_features;
+pub use zero_crossing::extract_zero_crossing_features;

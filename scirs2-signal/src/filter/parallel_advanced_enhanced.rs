@@ -1,20 +1,20 @@
-//! Advanced Enhanced Parallel Filtering Operations
-//!
-//! This module provides next-generation parallel filtering operations that push the boundaries
-//! of performance and capability. It focuses on real-time streaming, advanced multi-rate systems,
-//! sparse filtering, and advanced-high-performance parallel spectral processing.
+// Advanced Enhanced Parallel Filtering Operations
+//
+// This module provides next-generation parallel filtering operations that push the boundaries
+// of performance and capability. It focuses on real-time streaming, advanced multi-rate systems,
+// sparse filtering, and advanced-high-performance parallel spectral processing.
 
 use crate::error::{SignalError, SignalResult};
 use crate::filter::parallel::ParallelFilterConfig;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::Float;
-use rustfft::{FftPlanner, num_complex::Complex};
+use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_core::parallel_ops::*;
-use std::thread;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex, RwLock};
+use std::thread;
 use std::time::{Duration, Instant};
 
 #[allow(unused_imports)]
@@ -259,7 +259,7 @@ impl SparseParallelFilter {
         }
 
         let sparsity_ratio = 1.0 - (sparse_coeffs.len() as f64 / _coeffs.len() as f64);
-        let compression_ratio = _coeffs.len() as f64 / sparse_coeffs.len()  as f64;
+        let compression_ratio = _coeffs.len() as f64 / sparse_coeffs.len() as f64;
 
         Self {
             sparse_coeffs,
@@ -565,7 +565,7 @@ impl ParallelSpectralFilter {
                 // Apply window and extract real part
                 let mut windowed_frame = vec![0.0; self.fft_size];
                 for i in 0..self.fft_size {
-                    windowed_frame[i] = frame[i].re * self.window[i] / self.fft_size  as f64;
+                    windowed_frame[i] = frame[i].re * self.window[i] / self.fft_size as f64;
                 }
 
                 Ok::<(usize, Vec<f64>), SignalError>((start, windowed_frame))
@@ -597,7 +597,8 @@ impl ParallelSpectralFilter {
 fn parallel_convolve_decimated(
     signal: &[f64],
     filter: &[f64],
-    decimation_factor: usize, _config: &ParallelFilterConfig,
+    decimation_factor: usize,
+    _config: &ParallelFilterConfig,
 ) -> SignalResult<Vec<f64>> {
     if decimation_factor == 0 {
         return Err(SignalError::ValueError(
@@ -737,7 +738,8 @@ pub fn benchmark_parallel_filtering_operations(
                     cpu_utilization: 0.0,       // Would measure actual CPU usage
                     cache_hit_ratio: 0.0,       // Would measure cache performance
                     simd_utilization: 0.0,      // Would measure SIMD usage
-                    threads_used: num, _cpus: get(),
+                    threads_used: num,
+                    _cpus: get(),
                     lock_contention_us: None,
                 });
             }
@@ -779,7 +781,7 @@ pub fn validate_parallel_filtering_accuracy(
             }
         }
 
-        let avg_error = total_error / total_samples  as f64;
+        let avg_error = total_error / total_samples as f64;
         accuracy_results.insert(test_name.clone(), avg_error);
 
         if avg_error > tolerance {

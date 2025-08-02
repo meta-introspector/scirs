@@ -11,7 +11,7 @@ fn main() {
     println!("=== Cross-Validation Demonstration ===\n");
 
     // Create sample dataset
-    let data = Array2::from_shape_vec((20, 3), (0..60).map(|x| x as f64 / 10.0).collect()).unwrap();
+    let data = Array2::fromshape_vec((20, 3), (0..60).map(|x| x as f64 / 10.0).collect()).unwrap();
     let target = Array1::from(
         (0..20)
             .map(|i| if i % 2 == 0 { 0.0 } else { 1.0 })

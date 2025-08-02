@@ -41,19 +41,19 @@ where
         local_matrix: Array2<T>,
         config: super::DistributedConfig,
     ) -> LinalgResult<Self> {
-        let global_shape = local_matrix.dim();
+        let globalshape = local_matrix.dim();
         
         // Create distribution
         let distribution = match config.distribution {
             DistributionStrategy::RowWise => {
-                DataDistribution::row_wise(global_shape, config.num_nodes, config.node_rank)?
+                DataDistribution::row_wise(globalshape, config.num_nodes, config.node_rank)?
             }
             DistributionStrategy::ColumnWise => {
-                DataDistribution::column_wise(global_shape, config.num_nodes, config.node_rank)?
+                DataDistribution::column_wise(globalshape, config.num_nodes, config.node_rank)?
             }
             DistributionStrategy::BlockCyclic => {
                 DataDistribution::block_cyclic(
-                    global_shape,
+                    globalshape,
                     config.num_nodes,
                     config.node_rank,
                     (config.block_size, config.block_size),
@@ -89,7 +89,7 @@ where
         config: super::DistributedConfig,
     ) -> LinalgResult<Self> {
         // Create zero matrix with local shape
-        let local_data = Array2::zeros(distribution.local_shape);
+        let local_data = Array2::zeros(distribution.localshape);
         
         let communicator = Arc::new(DistributedCommunicator::new(&config)?);
         let coordinator = Arc::new(DistributedCoordinator::new(&config)?);
@@ -105,12 +105,12 @@ where
     }
     
     /// Get global shape of the distributed matrix
-    pub fn global_shape(&self) -> (usize, usize) {
-        self.distribution.global_shape
+    pub fn globalshape(&self) -> (usize, usize) {
+        self.distribution.globalshape
     }
     
     /// Get local shape of this node's partition
-    pub fn local_shape(&self) -> (usize, usize) {
+    pub fn localshape(&self) -> (usize, usize) {
         self.local_data.dim()
     }
     
@@ -126,8 +126,8 @@ where
     
     /// Distributed matrix multiplication: C = self * other
     pub fn multiply(&self, other: &DistributedMatrix<T>) -> LinalgResult<DistributedMatrix<T>> {
-        let (m, k) = self.global_shape();
-        let (k2, n) = other.global_shape();
+        let (m, k) = self.globalshape();
+        let (k2, n) = other.globalshape();
         
         if k != k2 {
             return Err(LinalgError::DimensionError(format!(
@@ -154,7 +154,7 @@ where
     
     /// Distributed matrix addition: C = self + other
     pub fn add(&self, other: &DistributedMatrix<T>) -> LinalgResult<DistributedMatrix<T>> {
-        if self.global_shape() != other.global_shape() {
+        if self.globalshape() != other.globalshape() {
             return Err(LinalgError::DimensionError(
                 "Matrix dimensions must match for addition".to_string()
             ));
@@ -274,8 +274,8 @@ where
         // A is row-distributed, B is column-distributed
         // Result C will be row-distributed (same as A)
         
-        let (_, k) = self.global_shape();
-        let (_, n) = other.global_shape();
+        let (_, k) = self.globalshape();
+        let (_, n) = other.globalshape();
         
         // Each node computes its piece of the result
         let mut local_result = Array2::zeros((self.local_data.nrows(), n));
@@ -302,7 +302,7 @@ where
         
         // Create result distribution (row-wise like A)
         let result_distribution = DataDistribution::row_wise(
-            (self.distribution.global_shape.0, n),
+            (self.distribution.globalshape.0, n),
             self.config.num_nodes,
             self.node_rank,
         )?;
@@ -335,7 +335,7 @@ where
     
     fn transpose_row_to_col(&self) -> LinalgResult<DistributedMatrix<T>> {
         // Convert from row-distributed to column-distributed
-        let (m, n) = self.global_shape();
+        let (m, n) = self.globalshape();
         
         // Create column-wise distribution for result
         let result_distribution = DataDistribution::column_wise(
@@ -368,7 +368,7 @@ where
     
     fn transpose_col_to_row(&self) -> LinalgResult<DistributedMatrix<T>> {
         // Convert from column-distributed to row-distributed
-        let (m, n) = self.global_shape();
+        let (m, n) = self.globalshape();
         
         // Create row-wise distribution for result
         let result_distribution = DataDistribution::row_wise(
@@ -603,7 +603,7 @@ mod tests {
     
     #[test]
     fn test_distributed_matrix_creation() {
-        let matrix = Array2::from_shape_fn((6, 4), |(i, j)| (i * 4 + j) as f64);
+        let matrix = Array2::fromshape_fn((6, 4), |(i, j)| (i * 4 + j) as f64);
         let config = DistributedConfig::default()
             .with_num_nodes(2)
             .with_node_rank(0)
@@ -611,14 +611,14 @@ mod tests {
         
         let dist_matrix = DistributedMatrix::from_local(matrix.clone(), config).unwrap();
         
-        assert_eq!(dist_matrix.global_shape(), (6, 4));
-        assert_eq!(dist_matrix.local_shape().0, 3); // Half the rows
-        assert_eq!(dist_matrix.local_shape().1, 4); // All columns
+        assert_eq!(dist_matrix.globalshape(), (6, 4));
+        assert_eq!(dist_matrix.localshape().0, 3); // Half the rows
+        assert_eq!(dist_matrix.localshape().1, 4); // All columns
     }
     
     #[test]
     fn test_distributed_vector_creation() {
-        let vector = Array1::from_shape_fn(10, |i| i as f64);
+        let vector = Array1::fromshape_fn(10, |i| i as f64);
         let config = DistributedConfig::default()
             .with_num_nodes(2)
             .with_node_rank(0);
@@ -641,8 +641,8 @@ mod tests {
     
     #[test]
     fn test_matrix_local_operations() {
-        let matrix1 = Array2::from_shape_fn((4, 4), |(i, j)| (i + j) as f64);
-        let matrix2 = Array2::from_shape_fn((4, 4), |(i, j)| (i * j) as f64);
+        let matrix1 = Array2::fromshape_fn((4, 4), |(i, j)| (i + j) as f64);
+        let matrix2 = Array2::fromshape_fn((4, 4), |(i, j)| (i * j) as f64);
         
         let config = DistributedConfig::default();
         
@@ -651,6 +651,6 @@ mod tests {
         
         // Test addition (local operation)
         let result = dist1.add(&dist2).unwrap();
-        assert_eq!(result.global_shape(), (4, 4));
+        assert_eq!(result.globalshape(), (4, 4));
     }
 }

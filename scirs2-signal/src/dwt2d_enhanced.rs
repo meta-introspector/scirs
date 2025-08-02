@@ -1,30 +1,31 @@
-//! Advanced-optimized 2D DWT with advanced production features
-//!
-//! This implementation provides industry-grade 2D discrete wavelet transforms with:
-//! - Multiple high-performance processing modes (SIMD, parallel, memory-optimized)
-//! - 11 sophisticated boundary handling modes including adaptive content-aware padding
-//! - Comprehensive quality metrics and energy preservation analysis
-//! - Advanced adaptive decomposition with entropy-based stopping criteria
-//! - Production-ready error handling and validation systems
-//! - Robust denoising algorithms (SURE, BayesShrink, BiShrink, Non-local means)
-//! - Memory-efficient block processing for large images
-//! - Cross-platform optimized SIMD operations
-//! - Comprehensive test coverage and numerical validation
-//!
-//! Key enhancements over standard implementations:
-//! 1. **Performance**: Up to 8x speedup through advanced SIMD and parallel processing
-//! 2. **Memory efficiency**: Block-based processing enables handling of arbitrarily large images
-//! 3. **Robustness**: Comprehensive validation and error recovery mechanisms
-//! 4. **Adaptivity**: Intelligent boundary mode selection and decomposition depth control
-//! 5. **Quality**: Advanced metrics for compression, sparsity, and edge preservation analysis
+use ndarray::s;
+// Advanced-optimized 2D DWT with advanced production features
+//
+// This implementation provides industry-grade 2D discrete wavelet transforms with:
+// - Multiple high-performance processing modes (SIMD, parallel, memory-optimized)
+// - 11 sophisticated boundary handling modes including adaptive content-aware padding
+// - Comprehensive quality metrics and energy preservation analysis
+// - Advanced adaptive decomposition with entropy-based stopping criteria
+// - Production-ready error handling and validation systems
+// - Robust denoising algorithms (SURE, BayesShrink, BiShrink, Non-local means)
+// - Memory-efficient block processing for large images
+// - Cross-platform optimized SIMD operations
+// - Comprehensive test coverage and numerical validation
+//
+// Key enhancements over standard implementations:
+// 1. **Performance**: Up to 8x speedup through advanced SIMD and parallel processing
+// 2. **Memory efficiency**: Block-based processing enables handling of arbitrarily large images
+// 3. **Robustness**: Comprehensive validation and error recovery mechanisms
+// 4. **Adaptivity**: Intelligent boundary mode selection and decomposition depth control
+// 5. **Quality**: Advanced metrics for compression, sparsity, and edge preservation analysis
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, ArrayView1, ArrayView2, s};
+use ndarray::{ Array2, ArrayView1, ArrayView2};
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_array_finite, check_positive};
+use scirs2_core::validation::{checkarray_finite, check_positive};
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 use std::sync::Arc;
@@ -42,7 +43,7 @@ pub struct EnhancedDwt2dResult {
     /// Diagonal detail coefficients (HH)
     pub detail_d: Array2<f64>,
     /// Original shape for perfect reconstruction
-    pub original_shape: (usize, usize),
+    pub originalshape: (usize, usize),
     /// Boundary mode used
     pub boundary_mode: BoundaryMode,
     /// Quality metrics (if computed)
@@ -145,7 +146,7 @@ pub fn enhanced_dwt2d_decompose(
     config: &Dwt2dConfig,
 ) -> SignalResult<EnhancedDwt2dResult> {
     // Enhanced input validation
-    check_array_finite(data, "data")?;
+    checkarray_finite(data, "data")?;
 
     let (rows, cols) = data.dim();
 
@@ -338,7 +339,7 @@ fn parallel_dwt2d_decompose(
         detail_h,
         detail_v,
         detail_d,
-        original_shape: (rows, cols),
+        originalshape: (rows, cols),
         boundary_mode: config.boundary_mode,
         metrics: None,
     })
@@ -432,7 +433,7 @@ fn simd_dwt2d_decompose(
         detail_h,
         detail_v,
         detail_d,
-        original_shape: (rows, cols),
+        originalshape: (rows, cols),
         boundary_mode: config.boundary_mode,
         metrics: None,
     })
@@ -720,7 +721,7 @@ pub struct MultilevelDwt2d {
     /// Detail coefficients at each level
     pub details: Vec<(Array2<f64>, Array2<f64>, Array2<f64>)>,
     /// Original shape
-    pub original_shape: (usize, usize),
+    pub originalshape: (usize, usize),
     /// Wavelet used
     pub wavelet: Wavelet,
     /// Configuration
@@ -764,7 +765,7 @@ pub fn wavedec2_enhanced(
     Ok(MultilevelDwt2d {
         approx: current,
         details,
-        original_shape: data.dim(),
+        originalshape: data.dim(),
         wavelet,
         config: config.clone(),
     })
@@ -833,10 +834,10 @@ fn memory_optimized_dwt2d_decompose(
 
             // Vectorized copy when possible
             if copy_rows > 0 && copy_cols > 0 {
-                let approx_src = block_result.approx.slice(s![0..copy_rows, 0..copy_cols]);
-                let detail_h_src = block_result.detail_h.slice(s![0..copy_rows, 0..copy_cols]);
-                let detail_v_src = block_result.detail_v.slice(s![0..copy_rows, 0..copy_cols]);
-                let detail_d_src = block_result.detail_d.slice(s![0..copy_rows, 0..copy_cols]);
+                let approxsrc = block_result.approx.slice(s![0..copy_rows, 0..copy_cols]);
+                let detail_hsrc = block_result.detail_h.slice(s![0..copy_rows, 0..copy_cols]);
+                let detail_vsrc = block_result.detail_v.slice(s![0..copy_rows, 0..copy_cols]);
+                let detail_dsrc = block_result.detail_d.slice(s![0..copy_rows, 0..copy_cols]);
 
                 let mut approx_dst = approx.slice_mut(s![
                     out_row_start..out_row_start + copy_rows,
@@ -855,10 +856,10 @@ fn memory_optimized_dwt2d_decompose(
                     out_col_start..out_col_start + copy_cols
                 ]);
 
-                approx_dst.assign(&approx_src);
-                detail_h_dst.assign(&detail_h_src);
-                detail_v_dst.assign(&detail_v_src);
-                detail_d_dst.assign(&detail_d_src);
+                approx_dst.assign(&approxsrc);
+                detail_h_dst.assign(&detail_hsrc);
+                detail_v_dst.assign(&detail_vsrc);
+                detail_d_dst.assign(&detail_dsrc);
             }
         }
     }
@@ -868,7 +869,7 @@ fn memory_optimized_dwt2d_decompose(
         detail_h,
         detail_v,
         detail_d,
-        original_shape: (rows, cols),
+        originalshape: (rows, cols),
         boundary_mode: config.boundary_mode,
         metrics: None,
     })
@@ -956,7 +957,7 @@ fn compute_dwt2d_quality_metrics(
         .filter(|&&x| x.abs() < threshold)
         .count();
 
-    let sparsity = sparse_coeffs as f64 / total_coeffs  as f64;
+    let sparsity = sparse_coeffs as f64 / total_coeffs as f64;
 
     // Compression ratio estimate (based on sparsity)
     let compression_ratio = if sparsity > 0.1 {
@@ -1036,7 +1037,7 @@ pub fn enhanced_dwt2d_reconstruct(
     config: &Dwt2dConfig,
 ) -> SignalResult<Array2<f64>> {
     let filters = wavelet.filters()?;
-    let (orig_rows, orig_cols) = result.original_shape;
+    let (orig_rows, orig_cols) = result.originalshape;
 
     // Get dimensions of subbands
     let (sub_rows, sub_cols) = result.approx.dim();
@@ -1057,7 +1058,7 @@ fn enhanced_parallel_dwt2d_reconstruct(
     config: &Dwt2dConfig,
 ) -> SignalResult<Array2<f64>> {
     let (sub_rows, sub_cols) = result.approx.dim();
-    let (orig_rows, orig_cols) = result.original_shape;
+    let (orig_rows, orig_cols) = result.originalshape;
 
     // Upsample and reconstruct columns in parallel
     let temp_rows = sub_rows * 2;
@@ -1168,7 +1169,7 @@ fn enhanced_simd_dwt2d_reconstruct(
     config: &Dwt2dConfig,
 ) -> SignalResult<Array2<f64>> {
     let (sub_rows, sub_cols) = result.approx.dim();
-    let (orig_rows, orig_cols) = result.original_shape;
+    let (orig_rows, orig_cols) = result.originalshape;
 
     // Reconstruct columns first
     let temp_rows = sub_rows * 2;
@@ -1253,7 +1254,6 @@ fn enhanced_simd_dwt2d_reconstruct(
 /// Enhanced 1D reconstruction with advanced SIMD optimization
 #[allow(dead_code)]
 fn reconstruct_1d_simd(_lo: &[f64], hi: &[f64], lo_filter: &[f64], hi_filter: &[f64]) -> Vec<f64> {
-
     let n = _lo.len() + hi.len();
     let filter_len = lo_filter.len().max(hi_filter.len());
     let mut result = vec![0.0; n + filter_len - 1];
@@ -1455,7 +1455,7 @@ pub fn waverec2_enhanced(_decomp: &MultilevelDwt2d) -> SignalResult<Array2<f64>>
             detail_h: detail_h.clone(),
             detail_v: detail_v.clone(),
             detail_d: detail_d.clone(),
-            original_shape: (detail_h.nrows() * 2, detail_h.ncols() * 2),
+            originalshape: (detail_h.nrows() * 2, detail_h.ncols() * 2),
             boundary_mode: _decomp.config.boundary_mode,
             metrics: None,
         };
@@ -1465,7 +1465,7 @@ pub fn waverec2_enhanced(_decomp: &MultilevelDwt2d) -> SignalResult<Array2<f64>>
     }
 
     // Crop to original size if needed
-    let (target_rows, target_cols) = _decomp.original_shape;
+    let (target_rows, target_cols) = _decomp.originalshape;
     let (current_rows, current_cols) = current.dim();
 
     if current_rows > target_rows || current_cols > target_cols {
@@ -1497,7 +1497,7 @@ pub fn enhanced_dwt2d_adaptive(
     config: &Dwt2dConfig,
     energy_threshold: f64,
 ) -> SignalResult<MultilevelDwt2d> {
-    check_array_finite(data, "data")?;
+    checkarray_finite(data, "data")?;
 
     if energy_threshold <= 0.0 || energy_threshold >= 1.0 {
         return Err(SignalError::ValueError(
@@ -1625,7 +1625,7 @@ pub fn enhanced_dwt2d_adaptive(
     Ok(MultilevelDwt2d {
         approx: current,
         details,
-        original_shape: data.dim(),
+        originalshape: data.dim(),
         wavelet,
         config: config.clone(),
     })
@@ -1633,8 +1633,8 @@ pub fn enhanced_dwt2d_adaptive(
 
 /// Calculate maximum reasonable decomposition levels based on image size
 #[allow(dead_code)]
-fn calculate_max_decomposition_levels(_shape: (usize, usize)) -> usize {
-    let (rows, cols) = _shape;
+fn calculate_max_decomposition_levels(shape: (usize, usize)) -> usize {
+    let (rows, cols) = shape;
     let min_dim = rows.min(cols);
 
     // Allow decomposition until minimum dimension is 4
@@ -1894,12 +1894,12 @@ fn resize_to_match(_source: &Array2<f64>, target_dim: (usize, usize)) -> SignalR
 /// Compute correlation between edge maps
 #[allow(dead_code)]
 fn compute_edge_correlation(_edges1: &Array2<f64>, edges2: &Array2<f64>) -> SignalResult<f64> {
-    let edges1_flat = _edges1.view().into_shape_with_order(_edges1.len()).unwrap();
-    let edges2_flat = edges2.view().into_shape_with_order(edges2.len()).unwrap();
+    let edges1_flat = _edges1.view().intoshape_with_order(_edges1.len()).unwrap();
+    let edges2_flat = edges2.view().intoshape_with_order(edges2.len()).unwrap();
 
     // Compute means
-    let mean1 = edges1_flat.sum() / edges1_flat.len()  as f64;
-    let mean2 = edges2_flat.sum() / edges2_flat.len()  as f64;
+    let mean1 = edges1_flat.sum() / edges1_flat.len() as f64;
+    let mean2 = edges2_flat.sum() / edges2_flat.len() as f64;
 
     // Center the data
     let mut centered1 = edges1_flat.to_owned();
@@ -2015,7 +2015,7 @@ fn estimate_noise_std_from_subbands(
     coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let median = coeffs[coeffs.len() / 2];
-    let mad: f64 = coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / coeffs.len()  as f64;
+    let mad: f64 = coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / coeffs.len() as f64;
 
     // Convert MAD to standard deviation estimate using robust scaling factor
     Ok(mad / 0.6745)
@@ -2081,7 +2081,7 @@ fn hard_threshold(_coeffs: &mut Array2<f64>, threshold: f64) {
 /// SURE threshold estimation
 #[allow(dead_code)]
 fn sure_threshold(_coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
-    let n = _coeffs.len()  as f64;
+    let n = _coeffs.len() as f64;
     let mut sorted_coeffs: Vec<f64> = _coeffs.iter().map(|x| x.abs()).collect();
     sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -2103,7 +2103,7 @@ fn sure_threshold(_coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
 /// Compute SURE risk for given threshold
 #[allow(dead_code)]
 fn compute_sure_risk(_sorted_coeffs: &[f64], threshold: f64, sigma: f64, n: f64, k: usize) -> f64 {
-    let retained = n - k  as f64;
+    let retained = n - k as f64;
     let sum_sqr: f64 = _sorted_coeffs.iter().skip(k).map(|&x| x * x).sum();
 
     // SURE risk estimate
@@ -2114,7 +2114,7 @@ fn compute_sure_risk(_sorted_coeffs: &[f64], threshold: f64, sigma: f64, n: f64,
 #[allow(dead_code)]
 fn bayes_shrink_threshold(_coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
     // Estimate signal variance
-    let signal_var = _coeffs.iter().map(|&x| x * x).sum::<f64>() / _coeffs.len()  as f64;
+    let signal_var = _coeffs.iter().map(|&x| x * x).sum::<f64>() / _coeffs.len() as f64;
     let noise_var = sigma * sigma;
 
     // Clip signal variance to avoid negative values
@@ -2168,7 +2168,7 @@ fn get_neighborhood(_coeffs: &Array2<f64>, i: usize, j: usize) -> Vec<f64> {
 fn bishrink_neighborhood(_neighborhood: &[f64], sigma: f64) -> f64 {
     let x = _neighborhood[0]; // Center coefficient
     let energy: f64 = _neighborhood.iter().map(|&val| val * val).sum();
-    let k = _neighborhood.len()  as f64;
+    let k = _neighborhood.len() as f64;
 
     let variance_x = (energy / k - sigma * sigma).max(0.0);
 
@@ -2295,7 +2295,7 @@ fn content_aware_padding(_data: &[f64], pad_length: usize) -> SignalResult<Vec<f
     if n >= 3 {
         let trend = estimate_trend(&_data[0..3.min(n)]);
         for i in 0..pad_length {
-            let distance = (pad_length - i)  as f64;
+            let distance = (pad_length - i) as f64;
             result[i] = _data[0] - trend * distance;
         }
     } else {
@@ -2310,7 +2310,7 @@ fn content_aware_padding(_data: &[f64], pad_length: usize) -> SignalResult<Vec<f
         let start_idx = (n - 3).max(0);
         let trend = estimate_trend(&_data[start_idx..n]);
         for i in 0..pad_length {
-            let distance = (i + 1)  as f64;
+            let distance = (i + 1) as f64;
             result[pad_length + n + i] = _data[n - 1] + trend * distance;
         }
     } else {
@@ -2345,7 +2345,7 @@ fn estimate_trend(_data: &[f64]) -> f64 {
         sorted[n / 2]
     };
 
-    let mad: f64 = _data.iter().map(|&x| (x - median).abs()).sum::<f64>() / n  as f64;
+    let mad: f64 = _data.iter().map(|&x| (x - median).abs()).sum::<f64>() / n as f64;
 
     if mad > 1e-10 {
         for (i, &val) in _data.iter().enumerate() {
@@ -2402,12 +2402,12 @@ fn mirror_correct_padding(_data: &[f64], pad_length: usize) -> SignalResult<Vec<
 
         // Left edge correction
         let original = result[pad_length - i - 1];
-        let corrected = _data[0] + (_data[0] - _data[i + 1]) * (i + 1)  as f64;
+        let corrected = _data[0] + (_data[0] - _data[i + 1]) * (i + 1) as f64;
         result[pad_length - i - 1] = original * (1.0 - weight) + corrected * weight;
 
         // Right edge correction
         let original = result[pad_length + n + i];
-        let corrected = _data[n - 1] + (_data[n - 1] - _data[n - i - 2]) * (i + 1)  as f64;
+        let corrected = _data[n - 1] + (_data[n - 1] - _data[n - i - 2]) * (i + 1) as f64;
         result[pad_length + n + i] = original * (1.0 - weight) + corrected * weight;
     }
 
@@ -2438,13 +2438,13 @@ fn extrapolate_padding(_data: &[f64], pad_length: usize) -> SignalResult<Vec<f64
 
     // Left extrapolation
     for i in 0..pad_length {
-        let distance = (pad_length - i)  as f64;
+        let distance = (pad_length - i) as f64;
         result[i] = _data[0] - left_gradient * distance;
     }
 
     // Right extrapolation
     for i in 0..pad_length {
-        let distance = (i + 1)  as f64;
+        let distance = (i + 1) as f64;
         result[pad_length + n + i] = _data[n - 1] + right_gradient * distance;
     }
 
@@ -2516,10 +2516,10 @@ fn apply_enhanced_boundary_padding(
 #[allow(dead_code)]
 fn validate_dwt2d_result(
     result: &EnhancedDwt2dResult,
-    original_shape: (usize, usize),
+    originalshape: (usize, usize),
     config: &Dwt2dConfig,
 ) -> SignalResult<()> {
-    let (orig_rows, orig_cols) = original_shape;
+    let (orig_rows, orig_cols) = originalshape;
     let expected_rows = (orig_rows + 1) / 2;
     let expected_cols = (orig_cols + 1) / 2;
 
@@ -2701,7 +2701,7 @@ fn calculate_smoothness(_data: &Array2<f64>) -> f64 {
         }
     }
 
-    let avg_laplacian = total_laplacian / count  as f64;
+    let avg_laplacian = total_laplacian / count as f64;
     let data_range = _data.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
         - _data.iter().cloned().fold(f64::INFINITY, f64::min);
 
@@ -2754,11 +2754,11 @@ fn estimate_periodicity(_data: &Array2<f64>) -> f64 {
 #[allow(dead_code)]
 fn validate_dwt2d_result_enhanced(
     result: &EnhancedDwt2dResult,
-    original_shape: (usize, usize),
+    originalshape: (usize, usize),
     config: &Dwt2dConfig,
 ) -> SignalResult<()> {
     // Check dimensions consistency
-    let (orig_rows, orig_cols) = original_shape;
+    let (orig_rows, orig_cols) = originalshape;
     let approx_rows = result.approx.nrows();
     let approx_cols = result.approx.ncols();
 
@@ -2811,9 +2811,9 @@ fn validate_dwt2d_result_enhanced(
         for (subband, name) in subbands {
             let max_val = subband.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
             let min_val = subband.iter().cloned().fold(f64::INFINITY, f64::min);
-            let mean_val = subband.iter().sum::<f64>() / subband.len()  as f64;
+            let mean_val = subband.iter().sum::<f64>() / subband.len() as f64;
             let variance =
-                subband.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / subband.len()  as f64;
+                subband.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / subband.len() as f64;
 
             stats.update(name, max_val, min_val, mean_val, variance);
 
@@ -2840,7 +2840,7 @@ fn validate_dwt2d_result_enhanced(
 
     // Energy conservation check
     if config.compute_metrics {
-        validate_energy_conservation(result, original_shape)?;
+        validate_energy_conservation(result, originalshape)?;
     }
 
     Ok(())
@@ -2870,7 +2870,9 @@ impl WaveletCoefficientStats {
     fn update(
         &mut self,
         subband_name: &str,
-        max_val: f64, _min_val: f64, _mean: f64,
+        max_val: f64,
+        _min_val: f64,
+        _mean: f64,
         variance: f64,
     ) {
         let energy = variance;
@@ -2935,7 +2937,7 @@ fn validate_cross_subband_properties(
 #[allow(dead_code)]
 fn validate_energy_conservation(
     result: &EnhancedDwt2dResult,
-    original_shape: (usize, usize),
+    originalshape: (usize, usize),
 ) -> SignalResult<()> {
     let approx_energy: f64 = result.approx.iter().map(|&x| x * x).sum();
     let detail_h_energy: f64 = result.detail_h.iter().map(|&x| x * x).sum();
@@ -2969,7 +2971,7 @@ mod tests {
 
     #[test]
     fn test_enhanced_dwt2d_basic() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (4, 4),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,
@@ -3022,7 +3024,7 @@ mod tests {
     fn test_perfect_reconstruction() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
-        let data = Array2::from_shape_fn((8, 8), |(i, j)| (i * j) as f64);
+        let data = Array2::fromshape_fn((8, 8), |(i, j)| (i * j) as f64);
         let config = Dwt2dConfig::default();
 
         // Test with different wavelets
@@ -3047,7 +3049,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_decomposition() {
-        let data = Array2::from_shape_fn((16, 16), |(i, j)| {
+        let data = Array2::fromshape_fn((16, 16), |(i, j)| {
             (2.0 * std::f64::consts::PI * i as f64 / 8.0).sin()
                 + (2.0 * std::f64::consts::PI * j as f64 / 8.0).cos()
         });
@@ -3067,7 +3069,7 @@ mod tests {
 
     #[test]
     fn test_memory_optimized_processing() {
-        let data = Array2::from_shape_fn((64, 64), |(i, j)| (i + j) as f64);
+        let data = Array2::fromshape_fn((64, 64), |(i, j)| (i + j) as f64);
         let config = Dwt2dConfig {
             memory_optimized: true,
             block_size: 16,
@@ -3082,7 +3084,7 @@ mod tests {
 
     #[test]
     fn test_quality_metrics() {
-        let data = Array2::from_shape_fn((16, 16), |(i, j)| (i * j) as f64);
+        let data = Array2::fromshape_fn((16, 16), |(i, j)| (i * j) as f64);
         let config = Dwt2dConfig {
             compute_metrics: true,
             ..Default::default()
@@ -3107,7 +3109,7 @@ mod tests {
     fn test_denoising() {
         // Create noisy image
         let mut rng = rand::rng();
-        let clean_data = Array2::from_shape_fn((32, 32), |(i, j)| {
+        let clean_data = Array2::fromshape_fn((32, 32), |(i, j)| {
             (2.0 * std::f64::consts::PI * i as f64 / 16.0).sin()
                 * (2.0 * std::f64::consts::PI * j as f64 / 16.0).cos()
         });

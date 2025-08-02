@@ -43,7 +43,7 @@ impl ActivationFunction {
             ActivationFunction::Tanh => {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
-            ActivationFunction::Linear =>, Array2::ones(x.dim()),
+            ActivationFunction::Linear => Array2::ones(x.dim()),
     /// Get a string representation of the activation function
     fn to_string(&self) -> &str {
             ActivationFunction::ReLU => "ReLU",
@@ -76,7 +76,7 @@ impl LossFunction {
                 (predictions - targets) * (2.0 / n)
                 // d(BCE)/dŷ = ((1-y)/(1-ŷ) - y/ŷ)/n
                 let epsilon = 1e-15;
-                Array2::from_shape_fn(predictions.dim(), |(i, j)| {
+                Array2::fromshape_fn(predictions.dim(), |(i, j)| {
                     let y_pred = predictions[(i, j)].max(epsilon).min(1.0 - epsilon);
                     let y_true = targets[(i, j)];
                     ((1.0 - y_true) / (1.0 - y_pred) - y_true / y_pred) / n
@@ -114,7 +114,7 @@ impl Dropout {
             // During inference or if dropout is disabled, just pass through
             return x.clone();
         // Generate binary mask (1 = keep, 0 = drop)
-        let mask = Array2::from_shape_fn(x.dim(), |_| {
+        let mask = Array2::fromshape_fn(x.dim(), |_| {
             if rng.random::<f32>() > self._drop_prob {
                 1.0
             } else {
@@ -204,7 +204,7 @@ impl Dense {
         let dbiases = delta.sum_axis(Axis(0));
         // Add regularization gradients
         let reg_grad = match self.regularization {
-            RegularizationType::None =>, Array2::zeros(self.weights.dim()),
+            RegularizationType::None => Array2::zeros(self.weights.dim()),
                 // Sign of weights (L1 gradient)
                 let sign = self.weights.mapv(|w| {
                     if w > 0.0 {

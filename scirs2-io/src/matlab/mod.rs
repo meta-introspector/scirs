@@ -188,16 +188,16 @@ struct _MatrixArray {
 /// # Example
 ///
 /// ```no_run
-/// use scirs2__io::matlab::read_mat;
+/// use scirs2_io::matlab::read_mat;
 /// use std::path::Path;
 ///
 /// let vars = read_mat(Path::new("data.mat")).unwrap();
-/// for (name_) in vars.iter() {
-///     println!("Variable: {}", name);
+/// for (name_, _value) in vars.iter() {
+///     println!("Variable: {}", name_);
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn read_mat<P: AsRef<Path>>(_path: P) -> Result<HashMap<String, MatType>> {
+pub fn read_mat<P: AsRef<Path>>(path: P) -> Result<HashMap<String, MatType>> {
     let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut reader = BufReader::new(file);
 
@@ -377,19 +377,19 @@ fn parse_matrix_data(_data: &[u8]) -> Result<(String, MatType)> {
     let mat_type = match flags.class_type {
         MX_DOUBLE_CLASS => {
             let data_vec = bytes_to_f64_vec(real_data);
-            let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+            let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), data_vec)
                 .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
             MatType::Double(ndarray)
         }
         MX_SINGLE_CLASS => {
             let data_vec = bytes_to_f32_vec(real_data);
-            let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+            let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), data_vec)
                 .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
             MatType::Single(ndarray)
         }
         MX_INT8_CLASS => {
             let data_vec = real_data.to_vec();
-            let ndarray = Array::from_shape_vec(
+            let ndarray = Array::fromshape_vec(
                 IxDyn(&convert_dims(&dims)),
                 data_vec.into_iter().map(|b| b as i8).collect(),
             )
@@ -400,50 +400,50 @@ fn parse_matrix_data(_data: &[u8]) -> Result<(String, MatType)> {
             if flags.is_logical {
                 // Handle as logical _data
                 let _data_vec: Vec<bool> = real_data.iter().map(|&b| b != 0).collect();
-                let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), _data_vec)
+                let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), _data_vec)
                     .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
                 MatType::Logical(ndarray)
             } else {
                 // Handle as regular uint8 _data
                 let data_vec = real_data.to_vec();
-                let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+                let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), data_vec)
                     .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
                 MatType::UInt8(ndarray)
             }
         }
         MX_INT16_CLASS => {
             let data_vec = bytes_to_i16_vec(real_data);
-            let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+            let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), data_vec)
                 .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
             MatType::Int16(ndarray)
         }
         MX_UINT16_CLASS => {
             let data_vec = bytes_to_u16_vec(real_data);
-            let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+            let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), data_vec)
                 .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
             MatType::UInt16(ndarray)
         }
         MX_INT32_CLASS => {
             let data_vec = bytes_to_i32_vec(real_data);
-            let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+            let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), data_vec)
                 .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
             MatType::Int32(ndarray)
         }
         MX_UINT32_CLASS => {
             let data_vec = bytes_to_u32_vec(real_data);
-            let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+            let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), data_vec)
                 .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
             MatType::UInt32(ndarray)
         }
         MX_INT64_CLASS => {
             let data_vec = bytes_to_i64_vec(real_data);
-            let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+            let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), data_vec)
                 .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
             MatType::Int64(ndarray)
         }
         MX_UINT64_CLASS => {
             let data_vec = bytes_to_u64_vec(real_data);
-            let ndarray = Array::from_shape_vec(IxDyn(&convert_dims(&dims)), data_vec)
+            let ndarray = Array::fromshape_vec(IxDyn(&convert_dims(&dims)), data_vec)
                 .map_err(|e| IoError::FormatError(format!("Failed to create array: {e}")))?;
             MatType::UInt64(ndarray)
         }
@@ -476,7 +476,7 @@ fn convert_dims(_dims: &[i32]) -> Vec<usize> {
 
 /// Read an i32 from the reader
 #[allow(dead_code)]
-fn read_i32<R: Read>(_reader: &mut R) -> Result<i32> {
+fn read_i32<R: Read>(reader: &mut R) -> Result<i32> {
     let mut buffer = [0u8; 4];
     match _reader.read_exact(&mut buffer) {
         Ok(_) => Ok(LittleEndian::read_i32(&buffer)),
@@ -590,7 +590,7 @@ fn bytes_to_u64_vec(_bytes: &[u8]) -> Vec<u64> {
 /// # Example
 ///
 /// ```no_run
-/// use scirs2__io::matlab::{write_mat, MatType};
+/// use scirs2_io::matlab::{write_mat, MatType};
 /// use ndarray::Array;
 /// use std::collections::HashMap;
 /// use std::path::Path;
@@ -602,7 +602,7 @@ fn bytes_to_u64_vec(_bytes: &[u8]) -> Vec<u64> {
 /// write_mat(Path::new("output.mat"), &vars).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn write_mat<P: AsRef<Path>>(_path: P, vars: &HashMap<String, MatType>) -> Result<()> {
+pub fn write_mat<P: AsRef<Path>>(path: P, vars: &HashMap<String, MatType>) -> Result<()> {
     let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 

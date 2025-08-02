@@ -798,9 +798,9 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCompressor<A, D> {
     }
 
     /// Initialize error state for error feedback compression
-    pub fn initialize_error_state(&mut self, gradient_shapes: &[Array<A, D>]) {
+    pub fn initialize_error_state(&mut self, gradientshapes: &[Array<A, D>]) {
         self.error_state = Some(
-            gradient_shapes
+            gradientshapes
                 .iter()
                 .map(|g| Array::zeros(g.raw_dim()))
                 .collect(),
@@ -1171,7 +1171,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCompressor<A, D> {
             }
 
             // Create a dynamic array first, then convert to the target dimension type
-            let dynamic_array = Array::from_shape_vec(shape.as_slice(), values).map_err(|_| {
+            let dynamic_array = Array::fromshape_vec(shape.as_slice(), values).map_err(|_| {
                 OptimError::InvalidConfig("Invalid shape for reconstruction".to_string())
             })?;
             let array = dynamic_array.into_dimensionality::<D>().map_err(|_| {
@@ -1337,7 +1337,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientCompressor<A, D> {
                 .map(|q| min_val + A::from(q).unwrap() * scale)
                 .collect();
 
-            let dynamic_array = Array::from_shape_vec(shape.as_slice(), dequantized_values)
+            let dynamic_array = Array::fromshape_vec(shape.as_slice(), dequantized_values)
                 .map_err(|_| {
                     OptimError::InvalidConfig(
                         "Invalid shape for quantized reconstruction".to_string(),

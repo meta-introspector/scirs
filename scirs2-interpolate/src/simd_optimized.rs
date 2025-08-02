@@ -33,8 +33,8 @@
 //! };
 //!
 //! // Evaluate RBF at multiple points simultaneously
-//! let centers = Array2::from_shape_vec((100, 3), vec![0.0; 300]).unwrap();
-//! let queries = Array2::from_shape_vec((50, 3), vec![0.5; 150]).unwrap();
+//! let centers = Array2::fromshape_vec((100, 3), vec![0.0; 300]).unwrap();
+//! let queries = Array2::fromshape_vec((50, 3), vec![0.5; 150]).unwrap();
 //! let coefficients = vec![1.0; 100];
 //!
 //! let results = simd_rbf_evaluate(
@@ -313,7 +313,7 @@ where
                     exp_arg.exp()
                 }
                 RBFKernel::Multiquadric => (dist_sq + epsilon * epsilon).sqrt(),
-                RBFKernel::InverseMultiquadric =>, F::one() / (dist_sq + epsilon * epsilon).sqrt(),
+                RBFKernel::InverseMultiquadric => F::one() / (dist_sq + epsilon * epsilon).sqrt(),
                 RBFKernel::Linear => dist,
                 RBFKernel::Cubic => dist * dist * dist,
             };

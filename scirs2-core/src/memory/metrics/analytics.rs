@@ -566,7 +566,8 @@ impl MemoryAnalytics {
 
         for i in 1..values.len() {
             let diff_ratio = if values[i.saturating_sub(1)] > 0 {
-                (values[i] as f64 - values[i.saturating_sub(1)] as f64).abs() / values[i.saturating_sub(1)] as f64
+                (values[i] as f64 - values[i.saturating_sub(1)] as f64).abs()
+                    / values[i.saturating_sub(1)] as f64
             } else {
                 0.0
             };

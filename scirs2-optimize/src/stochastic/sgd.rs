@@ -528,7 +528,7 @@ mod tests {
             max_iter: 100,
             batch_size: Some(10),
             tol: 1e-6,
-            lr_schedule: LearningRateSchedule::ExponentialDecay { decay_rate: 0.99 },
+            lr_schedule: LearningRateSchedule::ExponentialDecay { decay, rate: 0.99 },
             ..Default::default()
         };
 

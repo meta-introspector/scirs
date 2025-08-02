@@ -484,7 +484,7 @@ pub struct DebtItem {
 #[derive(Debug, Clone)]
 pub struct AccessibilityAnalysis {
     /// Alt text coverage for images
-    pub alt_text_coverage: f64,
+    pub alttext_coverage: f64,
     /// Color contrast compliance
     pub color_contrast_compliance: f64,
     /// Screen reader compatibility
@@ -1415,7 +1415,7 @@ impl DocumentationAnalyzer {
     /// Analyze accessibility compliance
     fn analyze_accessibility_compliance(&self) -> Result<AccessibilityAnalysis> {
         Ok(AccessibilityAnalysis {
-            alt_text_coverage: 0.7,
+            alttext_coverage: 0.7,
             color_contrast_compliance: 0.9,
             screen_reader_compatibility: 0.8,
             keyboard_navigation_support: 0.9,
@@ -1927,7 +1927,7 @@ impl Default for DocumentationDebt {
 impl Default for AccessibilityAnalysis {
     fn default() -> Self {
         Self {
-            alt_text_coverage: 1.0,
+            alttext_coverage: 1.0,
             color_contrast_compliance: 1.0,
             screen_reader_compatibility: 1.0,
             keyboard_navigation_support: 1.0,

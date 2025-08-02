@@ -261,7 +261,8 @@ fn bench_rbf_2d_comparison(c: &mut Criterion) {
                     let scipy_kernel = match kernel_name {
                         &"gaussian" => "gaussian",
                         &"multiquadric" => "multiquadric",
-                        &"thin_plate" => "thin_plate_spline"_ => "gaussian",
+                        &"thin_plate" => "thin_plate_spline",
+                        _ => "gaussian",
                     };
 
                     group.bench_with_input(
@@ -330,21 +331,13 @@ fn bench_simd_effectiveness(c: &mut Criterion) {
         let queries = generate_query_points_1d(query_size);
 
         group.throughput(Throughput::Elements(query_size as u64));
-        group.bench_with_input(
-            BenchmarkId::new("linear", query_size),
-            &query_size,
-            |b_| {
-                b.iter(|| black_box(linear_interpolate(&x.view(), &y.view(), &queries.view())));
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("linear", query_size), &query_size, |b_| {
+            b.iter(|| black_box(linear_interpolate(&x.view(), &y.view(), &queries.view())));
+        });
 
-        group.bench_with_input(
-            BenchmarkId::new("cubic", query_size),
-            &query_size,
-            |b_| {
-                b.iter(|| black_box(cubic_interpolate(&x.view(), &y.view(), &queries.view())));
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("cubic", query_size), &query_size, |b_| {
+            b.iter(|| black_box(cubic_interpolate(&x.view(), &y.view(), &queries.view())));
+        });
     }
 
     group.finish();

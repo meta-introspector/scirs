@@ -11,18 +11,18 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LinearSolveOp {
         let a = ctx.input(0);
         let b = ctx.input(1);
 
-        let a_shape = a.shape();
-        let b_shape = b.shape();
+        let ashape = a.shape();
+        let bshape = b.shape();
 
-        println!("Solving linear system: A({a_shape:?}) * x = b({b_shape:?})");
+        println!("Solving linear system: A({ashape:?}) * x = b({bshape:?})");
 
-        if a_shape.len() != 2 || a_shape[0] != a_shape[1] {
+        if ashape.len() != 2 || ashape[0] != ashape[1] {
             return Err(OpError::IncompatibleShape(
                 "Linear solve requires square matrix A".into(),
             ));
         }
 
-        if b_shape[0] != a_shape[0] {
+        if bshape[0] != ashape[0] {
             return Err(OpError::IncompatibleShape(
                 "Dimension mismatch in Ax = b".into(),
             ));
@@ -33,7 +33,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LinearSolveOp {
             .into_dimensionality::<Ix2>()
             .map_err(|_| OpError::IncompatibleShape("Failed to convert A to 2D".into()))?;
 
-        let x = if b_shape.len() == 1 {
+        let x = if bshape.len() == 1 {
             let b_1d = b
                 .view()
                 .into_dimensionality::<Ix1>()
@@ -746,12 +746,12 @@ pub fn solve<'g, F: Float + ndarray::ScalarOperand>(
     let g = a.graph();
 
     // Use the shape of b for the result shape - the solution x should match b's shape
-    let b_shape = crate::tensor_ops::shape(b);
+    let bshape = crate::tensor_ops::shape(b);
 
     Tensor::builder(g)
         .append_input(a, false)
         .append_input(b, false)
-        .set_shape(&b_shape)  // Preserve shape information
+        .setshape(&bshape)  // Preserve shape information
         .build(LinearSolveOp)
 }
 
@@ -763,11 +763,11 @@ pub fn lstsq<'g, F: Float + ndarray::ScalarOperand>(
     let g = a.graph();
 
     // Use the shape of b for the result shape - the solution x should match b's shape
-    let b_shape = crate::tensor_ops::shape(b);
+    let bshape = crate::tensor_ops::shape(b);
 
     Tensor::builder(g)
         .append_input(a, false)
         .append_input(b, false)
-        .set_shape(&b_shape)  // Preserve shape information
+        .setshape(&bshape)  // Preserve shape information
         .build(LeastSquaresSolveOp)
 }

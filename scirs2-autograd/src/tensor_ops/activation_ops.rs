@@ -67,14 +67,14 @@ pub fn softmax_impl<T: Float>(x: &NdArrayView<T>, axis: isize) -> NdArray<T> {
 
     let mut a = x.shape().to_vec();
     a[axis] = 1;
-    let reduced_shape = a.as_slice();
+    let reducedshape = a.as_slice();
     let max_fn = T::max;
     // unwrap is safe
     let max = &x
         .fold_axis(ndarray::Axis(axis), T::min_value(), move |&a, &b| {
             max_fn(a, b)
         })
-        .into_shape_with_order(ndarray::IxDyn(reduced_shape))
+        .intoshape_with_order(ndarray::IxDyn(reducedshape))
         .unwrap();
     // subtract `max` to prevent overflow
     let mut tmp = x - max;
@@ -82,7 +82,7 @@ pub fn softmax_impl<T: Float>(x: &NdArrayView<T>, axis: isize) -> NdArray<T> {
     // unwrap is safe
     let sum = tmp
         .sum_axis(ndarray::Axis(axis))
-        .into_shape_with_order(ndarray::IxDyn(reduced_shape))
+        .intoshape_with_order(ndarray::IxDyn(reducedshape))
         .unwrap();
     tmp /= &sum;
     tmp
@@ -183,7 +183,7 @@ impl<T: Float> op::Op<T> for Elu<T> {
         let gx = Tensor::builder(ctx.graph())
             .append_input(ctx.input(0), false)
             .append_input(gy, false)
-            .set_shape(&shape(gy))
+            .setshape(&shape(gy))
             .build(EluGrad { alpha: self.alpha });
         ctx.append_input_grad(0, Some(gx))
     }
@@ -382,7 +382,7 @@ impl<T: Float> op::Op<T> for PReLU<T> {
         let grad_x = Tensor::builder(g)
             .append_input(x, false)
             .append_input(gy, false)
-            .set_shape(&shape(gy))
+            .setshape(&shape(gy))
             .build(PReLUGrad { alpha: self.alpha });
 
         ctx.append_input_grad(0, Some(grad_x));
@@ -444,7 +444,7 @@ impl<T: Float> op::Op<T> for LearnableELU<T> {
         let grad_x = Tensor::builder(g)
             .append_input(x, false)
             .append_input(gy, false)
-            .set_shape(&shape(gy))
+            .setshape(&shape(gy))
             .build(LearnableELUGrad { alpha: self.alpha });
 
         ctx.append_input_grad(0, Some(grad_x));
@@ -507,7 +507,7 @@ impl<T: Float> op::Op<T> for LearnableSwish<T> {
         let grad_x = Tensor::builder(g)
             .append_input(x, false)
             .append_input(gy, false)
-            .set_shape(&shape(gy))
+            .setshape(&shape(gy))
             .build(LearnableSwishGrad { beta: self.beta });
 
         ctx.append_input_grad(0, Some(grad_x));
@@ -584,7 +584,7 @@ impl<T: Float> op::Op<T> for AdaptiveActivation<T> {
         let grad_x = Tensor::builder(g)
             .append_input(x, false)
             .append_input(gy, false)
-            .set_shape(&shape(gy))
+            .setshape(&shape(gy))
             .build(AdaptiveActivationGrad {
                 a: self.a,
                 b: self.b,

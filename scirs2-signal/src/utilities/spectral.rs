@@ -1,8 +1,8 @@
-//! Utilities for spectral analysis
-//!
-//! This module provides utility functions for spectral analysis,
-//! including spectral descriptors, normalized spectral representations,
-//! and advanced spectral processing techniques for signal characterization.
+// Utilities for spectral analysis
+//
+// This module provides utility functions for spectral analysis,
+// including spectral descriptors, normalized spectral representations,
+// and advanced spectral processing techniques for signal characterization.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
@@ -27,8 +27,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::energy_spectral_density;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::energy_spectral_density;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -83,8 +83,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::normalized_psd;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::normalized_psd;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -147,8 +147,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_centroid;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_centroid;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -236,8 +236,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_spread;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_spread;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -333,8 +333,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_skewness;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_skewness;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -444,8 +444,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_kurtosis;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_kurtosis;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -557,8 +557,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_flatness;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_flatness;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -634,8 +634,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_flux;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_flux;
 ///
 /// let signal1 = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let signal2 = vec![0.0, 1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
@@ -735,8 +735,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_rolloff;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_rolloff;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -832,8 +832,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_crest;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_crest;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -898,8 +898,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_decrease;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_decrease;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -988,8 +988,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_slope;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_slope;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -1081,8 +1081,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_contrast;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_contrast;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -1218,8 +1218,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::spectral_bandwidth;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::spectral_bandwidth;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -1324,8 +1324,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::dominant_frequency;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::dominant_frequency;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -1402,8 +1402,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spectral::periodogram;
-/// use scirs2__signal::utilities::spectral::dominant_frequencies;
+/// use scirs2_signal::spectral::periodogram;
+/// use scirs2_signal::utilities::spectral::dominant_frequencies;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 0.0];
 /// let fs = 8.0; // Sample rate in Hz
@@ -1526,10 +1526,10 @@ where
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
-use crate::utilities::spectral::spectral_flux;
-use crate::utilities::spectral::spectral_centroid;
-use crate::utilities::spectral::spectral_rolloff;
+    use crate::utilities::spectral::spectral_centroid;
+    use crate::utilities::spectral::spectral_flux;
+    use crate::utilities::spectral::spectral_rolloff;
+    use approx::assert_relative_eq;
     #[test]
     fn test_energy_spectral_density() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

@@ -1,8 +1,8 @@
-//! Image feature extraction
-//!
-//! This module provides functions for extracting features from images,
-//! including color histograms, texture features, edge features, and more.
-//! These features can be used for image analysis, classification, and retrieval.
+// Image feature extraction
+//
+// This module provides functions for extracting features from images,
+// including color histograms, texture features, edge features, and more.
+// These features can be used for image analysis, classification, and retrieval.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
@@ -30,7 +30,7 @@ pub use histogram::extract_histogram_features;
 pub use lbp::extract_lbp_features;
 pub use moments::extract_moment_features;
 pub use statistical::extract_intensity_features;
-pub use texture::extract_texture_features;
+pub use texture::extracttexture_features;
 pub use types::ImageFeatureOptions;
 
 // Common imports for internal use
@@ -49,7 +49,7 @@ pub use types::ImageFeatureOptions;
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::image_features::{extract_image_features, ImageFeatureOptions};
+/// use scirs2_signal::image_features::{extract_image_features, ImageFeatureOptions};
 ///
 /// // Create a simple test image (8x8)
 /// let mut image = Array2::zeros((8, 8));
@@ -104,7 +104,7 @@ where
 
     // Extract texture features
     if options.texture {
-        extract_texture_features(&image_f64, options, &mut features)?;
+        extracttexture_features(&image_f64, options, &mut features)?;
     }
 
     // Extract Haralick features
@@ -135,7 +135,7 @@ where
 ///
 /// ```
 /// use ndarray::{Array3, Dim};
-/// use scirs2__signal::image_features::{extract_color_image_features, ImageFeatureOptions};
+/// use scirs2_signal::image_features::{extract_color_image_features, ImageFeatureOptions};
 ///
 /// // Create a simple test RGB image (8x8x3)
 /// let mut image = Array3::zeros((8, 8, 3));
@@ -186,12 +186,12 @@ where
     let width = shape[1];
 
     // Create views for each channel
-    let r_channel = Array2::from_shape_fn((height, width), |(i, j)| image[[i, j, 0]].into());
-    let g_channel = Array2::from_shape_fn((height, width), |(i, j)| image[[i, j, 1]].into());
-    let b_channel = Array2::from_shape_fn((height, width), |(i, j)| image[[i, j, 2]].into());
+    let r_channel = Array2::fromshape_fn((height, width), |(i, j)| image[[i, j, 0]].into());
+    let g_channel = Array2::fromshape_fn((height, width), |(i, j)| image[[i, j, 1]].into());
+    let b_channel = Array2::fromshape_fn((height, width), |(i, j)| image[[i, j, 2]].into());
 
     // Convert to grayscale for some features
-    let gray_image = Array2::from_shape_fn((height, width), |(i, j)| {
+    let gray_image = Array2::fromshape_fn((height, width), |(i, j)| {
         // Standard RGB to grayscale conversion
         0.299 * image[[i, j, 0]].into()
             + 0.587 * image[[i, j, 1]].into()

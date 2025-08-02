@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn test_from_dense() {
         let dense =
-            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 0.0, 3.0, 4.0, 5.0, 0.0, 6.0, 7.0])
+            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 0.0, 3.0, 4.0, 5.0, 0.0, 6.0, 7.0])
                 .unwrap();
 
         let banded = BandedMatrix::from_dense(&dense, 1, 1).unwrap();

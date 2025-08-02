@@ -271,7 +271,9 @@ impl OpenCLContext {
     }
 
     #[cfg(not(feature = "opencl"))]
-    fn create_command_queue(context: CLContext, device: CLDeviceId
+    fn create_command_queue(
+        context: CLContext,
+        device: CLDeviceId,
     ) -> Result<CLCommandQueue, GpuError> {
         // Stub implementation
         Ok(0x3 as CLCommandQueue)
@@ -407,8 +409,7 @@ impl GpuCompilerImpl for OpenCLCompiler {
         }))
     }
 
-    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId
-    ) -> Arc<dyn GpuKernelImpl> {
+    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
         Arc::new(OpenCLKernelHandle {
             kernel_name: name.to_string(),
             compiled_kernels: Arc::clone(&self.context.compiled_kernels),

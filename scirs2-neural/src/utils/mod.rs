@@ -188,16 +188,16 @@ pub fn train_test_split<F: Float + Debug, R: Rng>(
     let train_indices = &indices[..n_train];
     let test_indices = &indices[n_train..];
     // Create output arrays
-    let mut x_shape = x.shape().to_vec();
-    let mut y_shape = y.shape().to_vec();
-    x_shape[0] = n_train;
-    let mut x_train = ndarray::Array::zeros(x_shape.clone());
-    x_shape[0] = n_test;
-    let mut x_test = ndarray::Array::zeros(x_shape);
-    y_shape[0] = n_train;
-    let mut y_train = ndarray::Array::zeros(y_shape.clone());
-    y_shape[0] = n_test;
-    let mut y_test = ndarray::Array::zeros(y_shape);
+    let mut xshape = x.shape().to_vec();
+    let mut yshape = y.shape().to_vec();
+    xshape[0] = n_train;
+    let mut x_train = ndarray::Array::zeros(xshape.clone());
+    xshape[0] = n_test;
+    let mut x_test = ndarray::Array::zeros(xshape);
+    yshape[0] = n_train;
+    let mut y_train = ndarray::Array::zeros(yshape.clone());
+    yshape[0] = n_test;
+    let mut y_test = ndarray::Array::zeros(yshape);
     // Copy training data
     for (new_idx, &orig_idx) in train_indices.iter().enumerate() {
         // Copy x data

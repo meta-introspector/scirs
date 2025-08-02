@@ -87,8 +87,8 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Seque
         inputs: &Array<F, ndarray::IxDyn>,
         batch_size: usize,
     ) -> Result<Array<F, ndarray::IxDyn>> {
-        let input_shape = inputs.shape();
-        let num_samples = input_shape[0];
+        let inputshape = inputs.shape();
+        let num_samples = inputshape[0];
         let mut outputs = Vec::new();
         for i in (0..num_samples).step_by(batch_size) {
             let end_idx = std::cmp::min(i + batch_size, num_samples);

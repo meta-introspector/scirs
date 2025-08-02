@@ -210,7 +210,7 @@ pub mod ml_framework;
 /// use ndarray::Array2;
 ///
 /// // Create a large array file
-/// let data = Array2::from_shape_fn((1000, 1000), |(i, j)| (i + j) as f64);
+/// let data = Array2::fromshape_fn((1000, 1000), |(i, j)| (i + j) as f64);
 /// let file_path = "large_array.bin";
 ///
 /// // Write array to file
@@ -341,7 +341,7 @@ pub mod simd_io;
 /// use ndarray::Array2;
 ///
 /// // Create a sparse matrix from a dense array
-/// let dense = Array2::from_shape_vec((3, 3), vec![
+/// let dense = Array2::fromshape_vec((3, 3), vec![
 ///     1.0_f64, 0.0_f64, 2.0_f64,
 ///     0.0_f64, 3.0_f64, 0.0_f64,
 ///     4.0_f64, 0.0_f64, 5.0_f64

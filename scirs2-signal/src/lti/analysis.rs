@@ -1,18 +1,18 @@
-//! System analysis functions for LTI systems
-//!
-//! This module provides comprehensive analysis capabilities for Linear Time-Invariant systems:
-//! - Frequency response analysis (Bode plots)
-//! - Controllability and observability analysis
-//! - Lyapunov Gramians computation
-//! - Kalman decomposition for minimal realizations
-//! - System equivalence checking
-//! - Matrix utilities for system analysis
+// System analysis functions for LTI systems
+//
+// This module provides comprehensive analysis capabilities for Linear Time-Invariant systems:
+// - Frequency response analysis (Bode plots)
+// - Controllability and observability analysis
+// - Lyapunov Gramians computation
+// - Kalman decomposition for minimal realizations
+// - System equivalence checking
+// - Matrix utilities for system analysis
 
-use crate::error::{SignalError, SignalResult};
-use crate::lti::TransferFunction;
-use crate::lti::systems::StateSpace;
-use std::f64::consts::PI;
 use super::systems::LtiSystem;
+use crate::error::{SignalError, SignalResult};
+use crate::lti::systems::StateSpace;
+use crate::lti::TransferFunction;
+use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Calculate the Bode plot data (magnitude and phase) for an LTI system
@@ -33,7 +33,7 @@ use super::systems::LtiSystem;
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::{systems::TransferFunction, analysis::bode};
+/// use scirs2_signal::lti::{systems::TransferFunction, analysis::bode};
 ///
 /// let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
 /// let freqs = vec![0.1, 1.0, 10.0];
@@ -197,7 +197,7 @@ pub struct KalmanDecomposition {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::{systems::StateSpace, analysis::analyze_controllability};
+/// use scirs2_signal::lti::{systems::StateSpace, analysis::analyze_controllability};
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
@@ -275,7 +275,7 @@ pub fn analyze_controllability(_ss: &StateSpace) -> SignalResult<Controllability
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::{systems::StateSpace, analysis::analyze_observability};
+/// use scirs2_signal::lti::{systems::StateSpace, analysis::analyze_observability};
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
@@ -351,7 +351,7 @@ pub fn analyze_observability(_ss: &StateSpace) -> SignalResult<ObservabilityAnal
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::{systems::StateSpace, analysis::analyze_control_observability};
+/// use scirs2_signal::lti::{systems::StateSpace, analysis::analyze_control_observability};
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
@@ -419,7 +419,7 @@ pub type GramianPair = (Vec<Vec<f64>>, Vec<Vec<f64>>);
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::{systems::StateSpace, analysis::compute_lyapunov_gramians};
+/// use scirs2_signal::lti::{systems::StateSpace, analysis::compute_lyapunov_gramians};
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0], vec![1.0], vec![1.0], vec![0.0], None
@@ -539,7 +539,7 @@ pub fn compute_lyapunov_gramians(_ss: &StateSpace) -> SignalResult<GramianPair> 
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::lti::{systems::StateSpace, analysis::complete_kalman_decomposition};
+/// use scirs2_signal::lti::{systems::StateSpace, analysis::complete_kalman_decomposition};
 ///
 /// let ss = StateSpace::new(
 ///     vec![-1.0, 0.0, 1.0, -2.0], vec![1.0, 0.0],
@@ -671,7 +671,7 @@ pub fn complete_kalman_decomposition(_ss: &StateSpace) -> SignalResult<KalmanDec
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::{systems::TransferFunction, analysis::systems_equivalent};
+/// use scirs2_signal::lti::{systems::TransferFunction, analysis::systems_equivalent};
 ///
 /// let tf1 = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
 /// let tf2 = TransferFunction::new(vec![2.0], vec![2.0, 2.0], None).unwrap();
@@ -1049,8 +1049,8 @@ fn vector_norm(_vec: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
-use crate::lti::design::tf;
+    use crate::lti::design::tf;
+    use approx::assert_relative_eq;
     #[test]
     fn test_bode_plot() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

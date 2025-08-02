@@ -40,7 +40,7 @@ fn generate_dataset() -> (Array2<f64>, Array1<i32>) {
         true_labels.push(2);
     }
 
-    let data_array = Array2::from_shape_vec((150, 2), data).unwrap();
+    let data_array = Array2::fromshape_vec((150, 2), data).unwrap();
     let labels_array = Array1::from(true_labels);
 
     (data_array, labels_array)

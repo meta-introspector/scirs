@@ -68,8 +68,8 @@ impl<F: Float> MomentumSGD<F> {
                     .get_array_by_id(vid)
                     .expect("variable array not found")
                     .borrow();
-                let var_shape = target_var.shape();
-                crate::ndarray_ext::zeros(var_shape)
+                let varshape = target_var.shape();
+                crate::ndarray_ext::zeros(varshape)
             };
             let mut ns = env.namespace_mut(momentum_sgd_namespace_id);
             ns.slot().name(v_name).set(v);

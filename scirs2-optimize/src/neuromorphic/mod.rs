@@ -199,7 +199,7 @@ impl NeuromorphicNetwork {
             current_time: 0.0,
             spike_queue: Vec::new(),
             objective_history: Vec::new(),
-            _parameters: Array1::zeros(num_parameters),
+            parameters: Array1::zeros(num_parameters),
         }
     }
 

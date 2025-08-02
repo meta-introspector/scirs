@@ -758,9 +758,9 @@ mod tests {
 
         // Create factor matrices for the CP decomposition
         let factors = vec![
-            Array2::from_shape_fn((2, 1), |(i_)| a[i]),
-            Array2::from_shape_fn((3, 1), |(j_)| b[j]),
-            Array2::from_shape_fn((2, 1), |(k_)| c[k]),
+            Array2::fromshape_fn((2, 1), |(i_)| a[i]),
+            Array2::fromshape_fn((3, 1), |(j_)| b[j]),
+            Array2::fromshape_fn((2, 1), |(k_)| c[k]),
         ];
 
         // Create CP decomposition

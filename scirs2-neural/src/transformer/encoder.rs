@@ -89,7 +89,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     /// * `rng` - Random number generator for weight initialization
     /// # Returns
     /// * A new feed-forward network
-    pub fn new<R: Rng>(_d_model: usize, d_ff: usize, dropout: f64, rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(_d, model: usize, d_ff: usize, dropout: f64, rng: &mut R) -> Result<Self> {
         // Initialize weights with Xavier/Glorot initialization
         let scale1 = F::from(1.0 / (_d_model as f64).sqrt()).ok_or_else(|| {
             NeuralError::InvalidArchitecture("Failed to convert scale factor".to_string())
@@ -155,16 +155,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
             return Err(NeuralError::InferenceError(
                 "Input must have at least 2 dimensions [batch, ..., features]".to_string(),
             ));
-        let input_shape = input.shape();
+        let inputshape = input.shape();
         let ndim = input.ndim();
-        let feat_dim = input_shape[ndim - 1];
+        let feat_dim = inputshape[ndim - 1];
         if feat_dim != self.d_model {
             return Err(NeuralError::InferenceError(format!(
                 "Last dimension of input ({}) must match d_model ({})",
                 feat_dim, self.d_model
             )));
         // Compute the batch size (all dimensions except the last one)
-        let batch_dims: Vec<usize> = input_shape[..ndim - 1].to_vec();
+        let batch_dims: Vec<usize> = inputshape[..ndim - 1].to_vec();
         let batch_size: usize = batch_dims.iter().product();
         // Reshape input to 2D: [batch_size, d_model]
         let reshaped_input = input
@@ -205,10 +205,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                     sum = sum + hidden[[i, k]] * self.w2[[k, j]];
                 output[[i, j]] = sum + self.b2[[j]];
         // Reshape output to match input shape
-        let mut output_shape = input_shape.to_vec();
-        output_shape[ndim - 1] = self.d_model;
+        let mut outputshape = inputshape.to_vec();
+        outputshape[ndim - 1] = self.d_model;
         let output_reshaped = output
-            .into_shape_with_order(output_shape)
+            .into_shape_with_order(outputshape)
             .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape output: {}", e)))?;
         Ok(output_reshaped)
     fn backward(
@@ -274,7 +274,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         // The gradients (grad_w1, grad_b1, grad_w2, grad_b2) are computed but not stored
         // Reshape grad_input back to original shape
         let grad_input = grad_input_2d
-            .into_shape_with_order(input_shape)
+            .into_shape_with_order(inputshape)
                 NeuralError::InferenceError(format!("Failed to reshape grad_input: {}", e))
         Ok(grad_input)
     fn update(&mut self, learning_rate: F) -> Result<()> {
@@ -362,7 +362,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
             norm1_output_cache: Arc::new(RwLock::new(None)),
         if input.ndim() < 3 {
                 "Input must have at least 3 dimensions [batch, seq_len, features]".to_string(),
-        let feat_dim = input_shape[input.ndim() - 1];
+        let feat_dim = inputshape[input.ndim() - 1];
         // 1. Self-attention with residual connection
         let attn_output = self.self_attn.forward(input)?;
         *self.attn_output_cache.write().unwrap() = Some(attn_output.clone());
@@ -435,7 +435,7 @@ mod tests {
     use rand::rngs::SmallRng;
     use rand::SeedableRng;
     #[test]
-    fn test_feed_forward_shape() {
+    fn test_feed_forwardshape() {
         // Set up feed-forward network
         let mut rng = rand::rng();
         let d_model = 64;
@@ -449,7 +449,7 @@ mod tests {
         let output = ff.forward(&input).unwrap();
         // Check output shape
         assert_eq!(output.shape(), input.shape());
-    fn test_encoder_layer_shape() {
+    fn test_encoder_layershape() {
         // Set up encoder layer
         let n_heads = 4;
         let dropout = 0.1;
@@ -458,7 +458,7 @@ mod tests {
             TransformerEncoderLayer::<f64>::new(d_model, n_heads, d_ff, dropout, epsilon, &mut rng)
                 .unwrap();
         let output = enc_layer.forward(&input).unwrap();
-    fn test_encoder_stack_shape() {
+    fn test_encoder_stackshape() {
         // Set up encoder
         let n_layers = 2;
         let encoder = TransformerEncoder::<f64>::new(

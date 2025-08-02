@@ -234,12 +234,12 @@ where
             }
 
             let axis_size = input.len_of(ndarray::Axis(ax));
-            let other_shape = input.shape().iter().enumerate()
+            let othershape = input.shape().iter().enumerate()
                 .filter_map(|(i, &s)| if i != ax { Some(s) } else { None })
                 .collect::<Vec<_>>();
 
             // Check that the output shape matches the expected shape
-            if output.shape() != other_shape.as_slice() {
+            if output.shape() != othershape.as_slice() {
                 return Err("Output shape does not match the expected shape for reduction");
             }
 

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod dwt_boundary_tests {
-    use scirs2__signal::dwt::extend_signal;
+    use scirs2_signal::dwt::extend_signal;
 
     #[test]
     fn test_symmetric_extension() {

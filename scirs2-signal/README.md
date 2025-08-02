@@ -6,6 +6,18 @@
 
 Production-ready signal processing module for the SciRS2 scientific computing library. This module provides core signal processing tools including filtering, convolution, spectral analysis, and wavelet transforms.
 
+## 🚨 Current Status: SIMD Optimization Disabling (Active Development)
+
+**Notice**: This module is currently undergoing SIMD optimization disabling to achieve full compilation. 
+
+- **Current State**: ~1000 compilation errors due to missing SIMD implementations
+- **Active Fix**: Implementing scalar fallbacks for all SIMD functions
+- **Estimated Completion**: 5-7 hours
+- **Performance Impact**: Temporary 2-5x slowdown for compute-intensive operations
+- **Future**: SIMD optimizations will be re-enabled once implementations are complete
+
+**For Developers**: See `TODO.md` and `PROGRESS.md` for detailed status and `TODO.md` for current tasks.
+
 ## Core Features (Production-Ready)
 
 - **Signal Generation**: Essential waveform generation functions

@@ -107,39 +107,39 @@ impl<T: Float> op::Op<T> for Assign {
 
 impl<T: Float> op::Op<T> for InferBinOpShape {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
-        let a_shape_float = ctx.input(0);
-        let b_shape_float = ctx.input(1);
-        let a_shape: Vec<usize> = a_shape_float
+        let ashape_float = ctx.input(0);
+        let bshape_float = ctx.input(1);
+        let ashape: Vec<usize> = ashape_float
             .map(|x| x.to_usize().unwrap())
             .iter()
             .cloned()
             .collect();
-        let b_shape: Vec<usize> = b_shape_float
+        let bshape: Vec<usize> = bshape_float
             .map(|x| x.to_usize().unwrap())
             .iter()
             .cloned()
             .collect();
-        let a_is_scalar = ndarray_ext::is_scalar_shape(a_shape.as_slice());
-        let b_is_scalar = ndarray_ext::is_scalar_shape(b_shape.as_slice());
+        let a_is_scalar = ndarray_ext::is_scalarshape(ashape.as_slice());
+        let b_is_scalar = ndarray_ext::is_scalarshape(bshape.as_slice());
 
         if !a_is_scalar && !b_is_scalar {
-            let a_rank = a_shape.len();
-            let b_rank = b_shape.len();
+            let a_rank = ashape.len();
+            let b_rank = bshape.len();
             if a_rank != b_rank {
                 return Err(op::OpError::IncompatibleShape(
                     "InferBinOpShape: rank of lhs and rhs must match.".to_string(),
                 ));
             }
-            let max = a_shape
+            let max = ashape
                 .iter()
-                .zip(b_shape)
+                .zip(bshape)
                 .map(|(a, b)| T::from((*a).max(b)).unwrap())
                 .collect::<Vec<T>>();
-            ctx.append_output(NdArray::from_shape_vec(ndarray::IxDyn(&[a_rank]), max).unwrap())
+            ctx.append_output(NdArray::fromshape_vec(ndarray::IxDyn(&[a_rank]), max).unwrap())
         } else if !a_is_scalar {
-            ctx.append_output(a_shape_float.to_owned());
+            ctx.append_output(ashape_float.to_owned());
         } else {
-            ctx.append_output(b_shape_float.to_owned());
+            ctx.append_output(bshape_float.to_owned());
         }
         Ok(())
     }
@@ -155,7 +155,7 @@ impl<T: Float> op::Op<T> for Shape {
         let x = &ctx.input(0);
         let shape_vec = ndarray_ext::shape_of_view(x);
         let shape_t: Vec<T> = shape_vec.iter().map(|&s| T::from(s).unwrap()).collect();
-        let ret = NdArray::from_shape_vec(ndarray::IxDyn(&[shape_vec.len()]), shape_t).unwrap();
+        let ret = NdArray::fromshape_vec(ndarray::IxDyn(&[shape_vec.len()]), shape_t).unwrap();
         ctx.append_output(ret);
         Ok(())
     }
@@ -191,7 +191,7 @@ impl<T: Float> op::Op<T> for Size {
     }
 }
 
-impl<T: Float>, op::Op<T> for Reshape {
+impl<T: Float> op::Op<T> for Reshape {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = &ctx.input(0);
         let shape_arr = &ctx.input(1);
@@ -211,12 +211,12 @@ impl<T: Float>, op::Op<T> for Reshape {
         if x.is_standard_layout() {
             if let Ok(a) = x
                 .clone()
-                .into_shape_with_order(ndarray::IxDyn(target.as_slice()))
+                .intoshape_with_order(ndarray::IxDyn(target.as_slice()))
             {
                 ctx.append_output(a.to_owned());
             } else {
                 let copy = ndarray_ext::deep_copy(x);
-                if let Ok(a) = copy.into_shape_with_order(ndarray::IxDyn(target.as_slice())) {
+                if let Ok(a) = copy.intoshape_with_order(ndarray::IxDyn(target.as_slice())) {
                     ctx.append_output(a);
                 } else {
                     return Err(op::OpError::IncompatibleShape(format!(
@@ -227,7 +227,7 @@ impl<T: Float>, op::Op<T> for Reshape {
                 }
             }
         } else if let Ok(a) =
-            ndarray_ext::deep_copy(x).into_shape_with_order(ndarray::IxDyn(target.as_slice()))
+            ndarray_ext::deep_copy(x).intoshape_with_order(ndarray::IxDyn(target.as_slice()))
         {
             ctx.append_output(a)
         } else {
@@ -252,7 +252,7 @@ impl<T: Float>, op::Op<T> for Reshape {
     }
 }
 
-impl<T: Float>, op::Op<T> for SetDiff1D {
+impl<T: Float> op::Op<T> for SetDiff1D {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x0 = ctx.input(0);
         let x1 = &ctx.input(1);
@@ -281,7 +281,7 @@ impl<T: Float>, op::Op<T> for SetDiff1D {
             .collect::<Vec<T>>();
         let len = vec.len();
         // safe unwrap
-        let ret = NdArray::from_shape_vec(ndarray::IxDyn(&[len]), vec).unwrap();
+        let ret = NdArray::fromshape_vec(ndarray::IxDyn(&[len]), vec).unwrap();
         ctx.append_output(ret);
         Ok(())
     }
@@ -292,7 +292,7 @@ impl<T: Float>, op::Op<T> for SetDiff1D {
     }
 }
 
-impl<T: Float>, op::Op<T> for IndexOp {
+impl<T: Float> op::Op<T> for IndexOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let i = if self.index < 0 {
@@ -301,7 +301,7 @@ impl<T: Float>, op::Op<T> for IndexOp {
             self.index as usize
         };
         // unwrap is safe
-        let flat_x = x.view().into_shape_with_order(x.len()).unwrap();
+        let flat_x = x.view().intoshape_with_order(x.len()).unwrap();
         if let Some(ret) = flat_x.get(i) {
             ctx.append_output(ndarray::arr0(*ret).into_dyn());
             Ok(())
@@ -320,7 +320,7 @@ impl<T: Float>, op::Op<T> for IndexOp {
         let x = ctx.input(0);
         let gy = ctx.output_grad();
         let gx = Tensor::builder(ctx.graph())
-            .set_shape(&shape(x))
+            .setshape(&shape(x))
             .append_input(x, false)
             .append_input(gy, false)
             .build(op);
@@ -328,7 +328,7 @@ impl<T: Float>, op::Op<T> for IndexOp {
     }
 }
 
-impl<T: Float>, op::Op<T> for IndexOpGrad {
+impl<T: Float> op::Op<T> for IndexOpGrad {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let gy = &ctx.input(1);
@@ -342,7 +342,7 @@ impl<T: Float>, op::Op<T> for IndexOpGrad {
         let len = result.len();
         if let Some(a) = result
             .view_mut()
-            .into_shape_with_order(len)
+            .intoshape_with_order(len)
             .unwrap() // safe unwrap
             .get_mut(i)
         {
@@ -364,28 +364,28 @@ impl<T: Float>, op::Op<T> for IndexOpGrad {
     }
 }
 
-impl<T: Float>, op::Op<T> for Gather {
+impl<T: Float> op::Op<T> for Gather {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let param = &ctx.input(1);
         let indices = &ctx.input(0);
-        let indices_shape = indices.shape();
-        let param_shape = param.shape();
+        let indicesshape = indices.shape();
+        let paramshape = param.shape();
         let axis = ndarray_ext::normalize_negative_axis(self.axis, param.ndim());
 
-        let output_shape: Vec<usize> = {
-            let former: &[usize] = &param_shape[..axis];
-            let latter: &[usize] = &param_shape[axis + 1..];
+        let outputshape: Vec<usize> = {
+            let former: &[usize] = &paramshape[..axis];
+            let latter: &[usize] = &paramshape[axis + 1..];
             // doing former + indices.shape() + latter
             former
                 .iter()
-                .chain(indices_shape)
+                .chain(indicesshape)
                 .chain(latter)
                 .cloned()
                 .collect()
         };
 
         let flat_indices = if self.should_normalize_negative_indices {
-            ndarray_ext::normalize_negative_axes(indices, param_shape[axis])
+            ndarray_ext::normalize_negative_axes(indices, paramshape[axis])
         } else {
             indices
                 .map(|a| a.to_usize().expect("Invalid index value"))
@@ -395,7 +395,7 @@ impl<T: Float>, op::Op<T> for Gather {
         };
         let selected = ndarray_ext::select(param, ndarray::Axis(axis), flat_indices.as_slice());
         let ret = selected
-            .into_shape_with_order(output_shape.as_slice())
+            .intoshape_with_order(outputshape.as_slice())
             .unwrap();
         ctx.append_output(ret);
         Ok(())
@@ -409,18 +409,18 @@ impl<T: Float>, op::Op<T> for Gather {
             .append_input(x, false)
             .append_input(x1, false)
             .append_input(gy, false)
-            .set_shape(&shape(x))
+            .setshape(&shape(x))
             .build(GatherGrad { axis: self.axis });
         ctx.append_input_grad(0, None);
         ctx.append_input_grad(1, Some(gx));
     }
 }
 
-impl<T: Float>, op::Op<T> for GatherGrad {
+impl<T: Float> op::Op<T> for GatherGrad {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let indices = ctx.input(0);
         let param = &ctx.input(1);
-        let param_shape = param.shape();
+        let paramshape = param.shape();
         let gy = &ctx.input(2);
         let axis = if self.axis == -1 {
             param.ndim()
@@ -430,15 +430,15 @@ impl<T: Float>, op::Op<T> for GatherGrad {
 
         // get read-only view of gy and reshape it
         let gy = {
-            let former = &param_shape[..axis];
-            let latter = &param_shape[axis + 1..];
+            let former = &paramshape[..axis];
+            let latter = &paramshape[axis + 1..];
             let shape: Vec<usize> = former
                 .iter()
                 .chain(&[indices.len()])
                 .chain(latter)
                 .cloned()
                 .collect();
-            gy.view().into_shape_with_order(shape).unwrap()
+            gy.view().intoshape_with_order(shape).unwrap()
         };
 
         let mut gx = NdArray::zeros(param.shape());
@@ -517,7 +517,7 @@ pub(crate) fn inplace_add_impl<F: Float>(mut a: NdArrayViewMut<F>, b: &NdArrayVi
     }
 }
 
-impl<T: Float>, op::Op<T> for AddN {
+impl<T: Float> op::Op<T> for AddN {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let inputs_len = ctx.inputs().len();
         if 0 == inputs_len {
@@ -546,7 +546,7 @@ impl<T: Float>, op::Op<T> for AddN {
     }
 }
 
-impl<T: Float>, op::Op<T> for Clip<T> {
+impl<T: Float> op::Op<T> for Clip<T> {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(move |a| a.min(self.max).max(self.min));
         ctx.append_output(ret);
@@ -557,7 +557,7 @@ impl<T: Float>, op::Op<T> for Clip<T> {
         let gy = ctx.output_grad();
         let x0 = ctx.input(0);
         let gx = Tensor::builder(ctx.graph())
-            .set_shape(&shape(gy))
+            .setshape(&shape(gy))
             .append_input(x0, false)
             .append_input(gy, false)
             .build(ClipGrad {
@@ -568,7 +568,7 @@ impl<T: Float>, op::Op<T> for Clip<T> {
     }
 }
 
-impl<T: Float>, op::Op<T> for ClipGrad<T> {
+impl<T: Float> op::Op<T> for ClipGrad<T> {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let mut ret = ctx.input(0).mapv(move |x| {
             // x > min && x < max
@@ -585,7 +585,7 @@ impl<T: Float>, op::Op<T> for ClipGrad<T> {
     }
 }
 
-impl<T: Float>, op::Op<T> for Concat {
+impl<T: Float> op::Op<T> for Concat {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let mut views = Vec::with_capacity(ctx.inputs().len());
         for i in 0..ctx.inputs().len() {
@@ -612,14 +612,14 @@ impl<T: Float>, op::Op<T> for Concat {
         let num_inputs = ctx.inputs().len();
         let output_grad = ctx.output_grad();
         let graph = ctx.graph();
-        let input0_shape = shape(ctx.input(0));
+        let input0shape = shape(ctx.input(0));
 
         // Clone all inputs to avoid borrow issues
         let inputs: Vec<&Tensor<T>> = (0..num_inputs).map(|i| ctx.input(i)).collect();
 
         for i in 0..num_inputs {
             let mut builder = Tensor::builder(graph)
-                .set_shape(&input0_shape)
+                .setshape(&input0shape)
                 .append_input(output_grad, false);
 
             for input in &inputs {
@@ -635,7 +635,7 @@ impl<T: Float>, op::Op<T> for Concat {
     }
 }
 
-impl<T: Float>, op::Op<T> for ConcatGrad {
+impl<T: Float> op::Op<T> for ConcatGrad {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let gy = ctx.input(0);
 
@@ -693,7 +693,7 @@ impl<T: Float>, op::Op<T> for ConcatGrad {
     }
 }
 
-impl<T: Float>, op::Op<T> for Tile {
+impl<T: Float> op::Op<T> for Tile {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let axis = ndarray_ext::normalize_negative_axis(self.axis, x.ndim());
@@ -712,7 +712,7 @@ impl<T: Float>, op::Op<T> for Tile {
     }
 }
 
-impl<T: Float>, op::Op<T> for Split {
+impl<T: Float> op::Op<T> for Split {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = &ctx.input(0);
         let axis = ndarray_ext::normalize_negative_axis(self.axis, x.ndim());
@@ -734,13 +734,13 @@ impl<T: Float>, op::Op<T> for Split {
         let gx = Tensor::builder(ctx.graph())
             .append_input(x, false)
             .append_input(gy, false)
-            .set_shape(&shape(x))
+            .setshape(&shape(x))
             .build(op);
         ctx.append_input_grad(0, Some(gx));
     }
 }
 
-impl<T: Float>, op::Op<T> for SplitGrad {
+impl<T: Float> op::Op<T> for SplitGrad {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let mut gx = NdArray::zeros(x.shape());
@@ -795,7 +795,7 @@ fn make_indices_for_split<T: Float>(
         .collect::<Vec<_>>()
 }
 
-impl<T: Float>, op::Op<T> for Slice {
+impl<T: Float> op::Op<T> for Slice {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let mut y = ctx.input(0);
         y.slice_collapse(self.indices.as_slice());
@@ -812,13 +812,13 @@ impl<T: Float>, op::Op<T> for Slice {
         let gx = Tensor::builder(ctx.graph())
             .append_input(x, false)
             .append_input(gy, false)
-            .set_shape(&shape(x))
+            .setshape(&shape(x))
             .build(op);
         ctx.append_input_grad(0, Some(gx));
     }
 }
 
-impl<T: Float>, op::Op<T> for SliceGrad {
+impl<T: Float> op::Op<T> for SliceGrad {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let mut gx = NdArray::zeros(x.shape());
@@ -843,7 +843,7 @@ impl<T: Float>, op::Op<T> for SliceGrad {
         ctx.append_input_grad(1, None);
     }
 }
-impl<T: Float>, op::Op<T> for Squeeze {
+impl<T: Float> op::Op<T> for Squeeze {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let mut x = ctx.input(0).clone();
         let mut axes = ctx
@@ -873,7 +873,7 @@ impl<T: Float>, op::Op<T> for Squeeze {
     }
 }
 
-impl<T: Float>, op::Op<T> for ExpandDims {
+impl<T: Float> op::Op<T> for ExpandDims {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0);
         let mut axes = ctx
@@ -882,16 +882,16 @@ impl<T: Float>, op::Op<T> for ExpandDims {
             .map(|a| a.to_isize().unwrap())
             .collect::<Vec<_>>();
         axes.sort();
-        let mut output_shape = ret.shape().to_vec();
+        let mut outputshape = ret.shape().to_vec();
         for &i in axes.iter() {
             let axis = if i < 0 {
                 (ret.ndim() as isize + i) as usize
             } else {
                 i as usize
             };
-            output_shape.insert(axis, 1);
+            outputshape.insert(axis, 1);
         }
-        ctx.append_output(ret.into_shape_with_order(output_shape).unwrap().to_owned());
+        ctx.append_output(ret.intoshape_with_order(outputshape).unwrap().to_owned());
         Ok(())
     }
 

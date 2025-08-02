@@ -28,9 +28,9 @@ pub struct LassoOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> LassoOptimizer<F> {
     /// Create a new Lasso optimizer
-    pub fn new(_lambda: F, learning_rate: F) -> Self {
+    pub fn new(lambda: F, learning_rate: F) -> Self {
         Self {
-            _lambda,
+            lambda,
             learning_rate,
             max_iter: 1000,
             tol: F::from(1e-6).unwrap(),
@@ -39,9 +39,9 @@ impl<F: Float + ScalarOperand> LassoOptimizer<F> {
     }
 
     /// Create a new accelerated Lasso optimizer (FISTA)
-    pub fn fista(_lambda: F, learning_rate: F) -> Self {
+    pub fn fista(lambda: F, learning_rate: F) -> Self {
         Self {
-            _lambda,
+            lambda,
             learning_rate,
             max_iter: 1000,
             tol: F::from(1e-6).unwrap(),
@@ -151,9 +151,9 @@ pub struct GroupLassoOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> GroupLassoOptimizer<F> {
     /// Create a new Group Lasso optimizer
-    pub fn new(_lambda: F, learning_rate: F, groups: Vec<usize>) -> Self {
+    pub fn new(lambda: F, learning_rate: F, groups: Vec<usize>) -> Self {
         Self {
-            _lambda,
+            lambda,
             learning_rate,
             max_iter: 1000,
             tol: F::from(1e-6).unwrap(),
@@ -261,9 +261,9 @@ pub struct ElasticNetOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> ElasticNetOptimizer<F> {
     /// Create a new Elastic Net optimizer
-    pub fn new(_lambda1: F, lambda2: F, learning_rate: F) -> Self {
+    pub fn new(lambda1: F, lambda2: F, learning_rate: F) -> Self {
         Self {
-            _lambda1,
+            lambda1,
             lambda2,
             learning_rate,
             max_iter: 1000,
@@ -350,9 +350,9 @@ pub struct ADMMOptimizer<F: Float> {
 
 impl<F: Float + ScalarOperand> ADMMOptimizer<F> {
     /// Create a new ADMM optimizer
-    pub fn new(_rho: F) -> Self {
+    pub fn new(rho: F) -> Self {
         Self {
-            _rho,
+            rho,
             eps_pri: F::from(1e-3).unwrap(),
             eps_dual: F::from(1e-3).unwrap(),
             max_iter: 1000,

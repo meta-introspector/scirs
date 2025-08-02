@@ -129,7 +129,7 @@ fn main() {
     print_section("Complete Example: Gradient Magnitude");
 
     // Create a sample 2D function (like an image)
-    let img: Array<f64_> = Array::from_shape_fn((5, 5), |(i, j)| {
+    let img: Array<f64_> = Array::fromshape_fn((5, 5), |(i, j)| {
         if i > 1 && i < 4 && j > 1 && j < 4 {
             10.0 // Higher value in the center
         } else {

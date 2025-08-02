@@ -1210,7 +1210,7 @@ fn analyze_reliability(_data: &LongRunTestData) -> ReliabilityAnalysis {
 
 #[allow(dead_code)]
 fn calculate_reliability_score(
-    availability: &AvailabilityAnalysis_mtbf: &MtbfAnalysis,
+    availability: &AvailabilityAnalysis, mtbf: &MtbfAnalysis,
     fault_tolerance: &FaultToleranceAssessment,
 ) -> f64 {
     let availability_score = availability.overall_availability_percent / 100.0;

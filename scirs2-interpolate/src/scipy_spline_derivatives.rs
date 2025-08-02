@@ -92,8 +92,8 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
         axis: i32,
     ) -> InterpolateResult<Self> {
         let inner = match &bc_type {
-            SciPyBoundaryType::Natural =>, CubicSpline::new(x, y)?,
-            SciPyBoundaryType::NotAKnot =>, CubicSpline::new_not_a_knot(x, y)?,
+            SciPyBoundaryType::Natural => CubicSpline::new(x, y)?,
+            SciPyBoundaryType::NotAKnot => CubicSpline::new_not_a_knot(x, y)?,
             SciPyBoundaryType::Clamped((left, right)) => {
                 let left_deriv = T::from_f64(*left).ok_or_else(|| {
                     InterpolateError::ComputationError(
@@ -107,7 +107,7 @@ impl<T: InterpolationFloat + Debug + Display + std::ops::AddAssign + FromPrimiti
                 })?;
                 CubicSpline::new_clamped(x, y, left_deriv, right_deriv)?
             }
-            SciPyBoundaryType::Periodic =>, CubicSpline::new_periodic(x, y)?,
+            SciPyBoundaryType::Periodic => CubicSpline::new_periodic(x, y)?,
             SciPyBoundaryType::SecondDerivative((left, right)) => {
                 let left_d2 = T::from_f64(*left).ok_or_else(|| {
                     InterpolateError::ComputationError(

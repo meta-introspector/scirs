@@ -23,7 +23,8 @@ use tokio::sync::Semaphore;
 /// Zero-copy array view over memory-mapped data
 pub struct ZeroCopyArrayView<'a, T> {
     mmap: &'a Mmap,
-    shape: Vec<usize>, _phantom: PhantomData<T>,
+    shape: Vec<usize>,
+    _phantom: PhantomData<T>,
 }
 
 impl<'a, T> ZeroCopyArrayView<'a, T>
@@ -52,7 +53,7 @@ where
 
         Ok(Self {
             mmap: _mmap,
-            shape: shape,
+            shape,
             _phantom: PhantomData,
         })
     }
@@ -62,7 +63,7 @@ where
         let ptr = self.mmap.as_ptr() as *const T;
         let slice = unsafe { slice::from_raw_parts(ptr, self.shape.iter().product()) };
 
-        ArrayView::from_shape(IxDyn(&self.shape), slice).expect("Shape mismatch in zero-copy view")
+        ArrayView::fromshape(IxDyn(&self.shape), slice).expect("Shape mismatch in zero-copy view")
     }
 
     /// Get a slice view of the data
@@ -76,7 +77,8 @@ where
 /// Zero-copy mutable array view
 pub struct ZeroCopyArrayViewMut<'a, T> {
     mmap: &'a mut MmapMut,
-    shape: Vec<usize>, _phantom: PhantomData<T>,
+    shape: Vec<usize>,
+    _phantom: PhantomData<T>,
 }
 
 impl<'a, T> ZeroCopyArrayViewMut<'a, T>
@@ -106,7 +108,7 @@ where
 
         Ok(Self {
             mmap: _mmap,
-            shape: shape,
+            shape,
             _phantom: PhantomData,
         })
     }
@@ -116,7 +118,7 @@ where
         let ptr = self.mmap.as_mut_ptr() as *mut T;
         let slice = unsafe { slice::from_raw_parts_mut(ptr, self.shape.iter().product()) };
 
-        ArrayViewMut::from_shape(IxDyn(&self.shape), slice)
+        ArrayViewMut::fromshape(IxDyn(&self.shape), slice)
             .expect("Shape mismatch in zero-copy view")
     }
 
@@ -136,7 +138,7 @@ pub struct ZeroCopyReader {
 
 impl ZeroCopyReader {
     /// Create a new zero-copy reader
-    pub fn new<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
         Ok(Self { file, mmap: None })
     }
@@ -183,7 +185,7 @@ pub struct ZeroCopyWriter {
 
 impl ZeroCopyWriter {
     /// Create a new zero-copy writer
-    pub fn new<P: AsRef<Path>>(_path: P, size: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, size: usize) -> Result<Self> {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -252,7 +254,10 @@ pub struct ZeroCopyCsvReader<'a> {
 impl<'a> ZeroCopyCsvReader<'a> {
     /// Create a new zero-copy CSV reader
     pub fn new(_data: &'a [u8], delimiter: u8) -> Self {
-        Self { data: _data, delimiter }
+        Self {
+            data: _data,
+            delimiter,
+        }
     }
 
     /// Iterate over lines without allocating
@@ -327,7 +332,10 @@ pub struct ZeroCopyBinaryReader<'a> {
 impl<'a> ZeroCopyBinaryReader<'a> {
     /// Create a new zero-copy binary reader
     pub fn new(_data: &'a [u8]) -> Self {
-        Self { data: _data, pos: 0 }
+        Self {
+            data: _data,
+            pos: 0,
+        }
     }
 
     /// Read a value without copying
@@ -419,8 +427,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f32, count) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f32, count) };
 
-            let a_view = ArrayView1::from_shape(count, a_slice).unwrap();
-            let b_view = ArrayView1::from_shape(count, b_slice).unwrap();
+            let a_view = ArrayView1::fromshape(count, a_slice).unwrap();
+            let b_view = ArrayView1::fromshape(count, b_slice).unwrap();
 
             // Simple addition implementation for testing to avoid hangs
             let result: Array1<f32> = a_view
@@ -442,7 +450,7 @@ pub mod simd_zero_copy {
 
             let slice = unsafe { slice::from_raw_parts(_mmap.as_ptr() as *const f32, count) };
 
-            let view = ArrayView1::from_shape(count, slice).unwrap();
+            let view = ArrayView1::fromshape(count, slice).unwrap();
 
             // Simple scalar multiplication for testing to avoid hangs
             let result: Array1<f32> = view.iter().map(|&x| x * scalar).collect();
@@ -460,8 +468,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f32, len) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f32, len) };
 
-            let a_view = ArrayView1::from_shape(len, a_slice).unwrap();
-            let b_view = ArrayView1::from_shape(len, b_slice).unwrap();
+            let a_view = ArrayView1::fromshape(len, a_slice).unwrap();
+            let b_view = ArrayView1::fromshape(len, b_slice).unwrap();
 
             // Simple dot product for testing to avoid hangs
             let result: f32 = a_view.iter().zip(b_view.iter()).map(|(&a, &b)| a * b).sum();
@@ -492,8 +500,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f64, count) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f64, count) };
 
-            let a_view = ArrayView1::from_shape(count, a_slice).unwrap();
-            let b_view = ArrayView1::from_shape(count, b_slice).unwrap();
+            let a_view = ArrayView1::fromshape(count, a_slice).unwrap();
+            let b_view = ArrayView1::fromshape(count, b_slice).unwrap();
 
             // Simple addition implementation for testing to avoid hangs
             let result: Array1<f64> = a_view
@@ -508,13 +516,13 @@ pub mod simd_zero_copy {
         pub fn gemm_mmap(
             a_mmap: &Mmap,
             b_mmap: &Mmap,
-            a_shape: (usize, usize),
-            b_shape: (usize, usize),
+            ashape: (usize, usize),
+            bshape: (usize, usize),
             alpha: f64,
             beta: f64,
         ) -> Result<Array2<f64>> {
-            let (m, k1) = a_shape;
-            let (k2, n) = b_shape;
+            let (m, k1) = ashape;
+            let (k2, n) = bshape;
 
             if k1 != k2 {
                 return Err(IoError::Other(
@@ -535,8 +543,8 @@ pub mod simd_zero_copy {
             let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f64, m * k1) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f64, k2 * n) };
 
-            let a_view = ArrayView2::from_shape((m, k1), a_slice).unwrap();
-            let b_view = ArrayView2::from_shape((k2, n), b_slice).unwrap();
+            let a_view = ArrayView2::fromshape((m, k1), a_slice).unwrap();
+            let b_view = ArrayView2::fromshape((k2, n), b_slice).unwrap();
 
             let mut c = Array2::<f64>::zeros((m, n));
 
@@ -554,7 +562,8 @@ pub struct AsyncZeroCopyProcessor<T> {
     chunk_size: usize,
     numa_node: Option<usize>,
     memory_policy: NumaMemoryPolicy,
-    async_config: AsyncConfig, _phantom: PhantomData<T>,
+    async_config: AsyncConfig,
+    _phantom: PhantomData<T>,
 }
 
 /// NUMA-aware memory allocation policy
@@ -606,7 +615,7 @@ pub enum MemoryAdvice {
 
 impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
     /// Create a new async zero-copy processor with NUMA awareness
-    pub fn new<P: AsRef<Path>>(_path: P, chunk_size: usize, config: AsyncConfig) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize, config: AsyncConfig) -> Result<Self> {
         let reader = ZeroCopyReader::new(_path)?;
         let numa_node = Self::detect_optimal_numa_node();
 
@@ -615,7 +624,8 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
             chunk_size,
             numa_node,
             memory_policy: NumaMemoryPolicy::Local,
-            async_config: config, _phantom: PhantomData,
+            async_config: config,
+            _phantom: PhantomData,
         })
     }
 
@@ -891,12 +901,13 @@ pub struct NumaTopologyInfo {
 /// Zero-copy streaming processor for large datasets
 pub struct ZeroCopyStreamProcessor<T> {
     reader: ZeroCopyReader,
-    chunk_size: usize, _phantom: PhantomData<T>,
+    chunk_size: usize,
+    _phantom: PhantomData<T>,
 }
 
 impl<T: Copy + 'static> ZeroCopyStreamProcessor<T> {
     /// Create a new streaming processor
-    pub fn new<P: AsRef<Path>>(_path: P, chunk_size: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize) -> Result<Self> {
         let reader = ZeroCopyReader::new(_path)?;
         Ok(Self {
             reader,

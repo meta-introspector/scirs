@@ -83,7 +83,7 @@ impl LBFGSHistory {
             s_vectors: Vec::with_capacity(_memory_size),
             y_vectors: Vec::with_capacity(_memory_size),
             rho_values: Vec::with_capacity(_memory_size),
-            _memory_size,
+            memory_size: _memory_size,
             current_pos: 0,
             stored_count: 0,
         }
@@ -163,7 +163,7 @@ impl<T: StreamingObjective> IncrementalNewton<T> {
         };
 
         Self {
-            _parameters: initial_parameters,
+            parameters: initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),

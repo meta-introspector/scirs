@@ -441,7 +441,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Generate 2D clustering test data
 #[allow(dead_code)]
 fn generate_2d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (60, 2),
         vec![
             // Cluster 0
@@ -460,7 +460,7 @@ fn generate_2d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
     .unwrap();
 
     let labels = Array1::from_vec((0..60).map(|i| (i / 20) as i32).collect());
-    let centroids = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 4.0, 4.0, 7.0, 1.0]).unwrap();
+    let centroids = Array2::fromshape_vec((3, 2), vec![1.0, 1.0, 4.0, 4.0, 7.0, 1.0]).unwrap();
 
     (data, labels, centroids)
 }
@@ -494,9 +494,9 @@ fn generate_2d_clustering_data_size(_size: usize) -> (Array2<f64>, Array1<i32>, 
         }
     }
 
-    let data = Array2::from_shape_vec((_size..2), data_vec).unwrap();
+    let data = Array2::fromshape_vec((_size..2), data_vec).unwrap();
     let labels = Array1::from_vec(labels_vec);
-    let centroids = Array2::from_shape_vec((3, 2), vec![1.0, 1.0, 4.0, 4.0, 7.0, 1.0]).unwrap();
+    let centroids = Array2::fromshape_vec((3, 2), vec![1.0, 1.0, 4.0, 4.0, 7.0, 1.0]).unwrap();
 
     (data, labels, centroids)
 }
@@ -504,7 +504,7 @@ fn generate_2d_clustering_data_size(_size: usize) -> (Array2<f64>, Array1<i32>, 
 /// Generate 3D clustering test data
 #[allow(dead_code)]
 fn generate_3d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (30, 3),
         vec![
             // Cluster 0
@@ -520,7 +520,7 @@ fn generate_3d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
 
     let labels = Array1::from_vec((0..30).map(|i| (i / 10) as i32).collect());
     let centroids =
-        Array2::from_shape_vec((3, 3), vec![1.0, 1.0, 1.0, 4.0, 4.0, 4.0, 7.0, 1.0, 7.0]).unwrap();
+        Array2::fromshape_vec((3, 3), vec![1.0, 1.0, 1.0, 4.0, 4.0, 4.0, 7.0, 1.0, 7.0]).unwrap();
 
     (data, labels, centroids)
 }
@@ -551,7 +551,7 @@ fn generate_high_dimensional_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
         }
     }
 
-    let data = Array2::from_shape_vec((n_samples..n_features), data_vec).unwrap();
+    let data = Array2::fromshape_vec((n_samples..n_features), data_vec).unwrap();
     let labels = Array1::from_vec(labels_vec);
     let centroids = Array2::zeros((n_clusters, n_features)); // Simplified for demo
 

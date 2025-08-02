@@ -1,12 +1,12 @@
-//! Example of adaptive filtering using LMS, NLMS, and RLS algorithms
-//!
-//! This example demonstrates adaptive filter applications including:
-//! - System identification
-//! - Noise cancellation
-//! - Echo cancellation
-//! - Equalization
+// Example of adaptive filtering using LMS, NLMS, and RLS algorithms
+//
+// This example demonstrates adaptive filter applications including:
+// - System identification
+// - Noise cancellation
+// - Echo cancellation
+// - Equalization
 
-use scirs2__signal::adaptive::{LmsFilter, NlmsFilter, RlsFilter};
+use scirs2_signal::adaptive::{LmsFilter, NlmsFilter, RlsFilter};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

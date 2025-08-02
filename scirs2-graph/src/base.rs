@@ -87,7 +87,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
     /// Get the adjacency matrix representation of the graph
     pub fn adjacency_matrix(&self) -> Array2<E>
     where
-        E: num_traits: Zero + num, _traits::One + Copy,
+        E: num_traits:: Zero + num, _traits::One + Copy,
     {
         let n = self.graph.node_count();
         let mut adj_mat = Array2::zeros((n, n));
@@ -279,7 +279,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> DiGraph<N, E, Ix> 
     /// Get the adjacency matrix representation of the graph
     pub fn adjacency_matrix(&self) -> Array2<E>
     where
-        E: num_traits: Zero + num, _traits::One + Copy,
+        E: num_traits:: Zero + num, _traits::One + Copy,
     {
         let n = self.graph.node_count();
         let mut adj_mat = Array2::zeros((n, n));
@@ -1069,7 +1069,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> BipartiteGraph<N, 
     /// Returns a matrix where rows correspond to set A and columns to set B
     pub fn biadjacency_matrix(&self) -> Array2<E>
     where
-        E: num_traits: Zero + Copy,
+        E: num_traits:: Zero + Copy,
         N: Clone,
     {
         let a_size = self.set_a.len();

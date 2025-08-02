@@ -75,7 +75,7 @@ fn main() {
     let num_classes = 10;
 
     // Create inputs and targets
-    let inputs = Array2::<f64>::from_shape_fn((num_samples, input_dim), |_| {
+    let inputs = Array2::<f64>::fromshape_fn((num_samples, input_dim), |_| {
         rand::random::<f64>() * 2.0.saturating_sub(1).0
     });
 
@@ -138,7 +138,7 @@ fn main() {
     println!("Adding convolutional layers (typically on GPU)...");
 
     // Layer 1: Convolution + ReLU + Pooling
-    model.add_layer(Box::new(Conv2D::with_shape(
+    model.add_layer(Box::new(Conv2D::withshape(
         "conv1",
         3,
         3, // Filter size
@@ -150,7 +150,7 @@ fn main() {
         Some(ActivationFunc::ReLU),
     )));
 
-    model.add_layer(Box::new(BatchNorm::with_shape(
+    model.add_layer(Box::new(BatchNorm::withshape(
         "bn1",
         32,         // Features
         Some(1e-5), // Epsilon
@@ -165,7 +165,7 @@ fn main() {
     )));
 
     // Layer 2: Convolution + ReLU + Pooling
-    model.add_layer(Box::new(Conv2D::with_shape(
+    model.add_layer(Box::new(Conv2D::withshape(
         "conv2",
         3,
         3, // Filter size
@@ -177,7 +177,7 @@ fn main() {
         Some(ActivationFunc::ReLU),
     )));
 
-    model.add_layer(Box::new(BatchNorm::with_shape(
+    model.add_layer(Box::new(BatchNorm::withshape(
         "bn2",
         64,         // Features
         Some(1e-5), // Epsilon
@@ -195,7 +195,7 @@ fn main() {
     println!("Adding fully connected layers (typically on CPU)...");
 
     // Fully connected layers
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::withshape(
         "fc1",
         64 * 6 * 6, // Input features
         120,        // Output features
@@ -209,7 +209,7 @@ fn main() {
         Some(42), // Random seed
     )));
 
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::withshape(
         "fc2",
         120,  // Input features
         84,   // Output features
@@ -223,7 +223,7 @@ fn main() {
         Some(42), // Random seed
     )));
 
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::withshape(
         "fc3",
         84,          // Input features
         num_classes, // Output features
@@ -319,7 +319,7 @@ fn main() {
         let layer_count = _original.layers().len();
         for i in 0..layer_count {
             // Create a dummy linear layer as a placeholder
-            let dummy_layer = Box::new(Linear::with_shape(
+            let dummy_layer = Box::new(Linear::withshape(
                 &format!("dummy_layer_{}", i),
                 10,   // Input features (dummy value)
                 10,   // Output features (dummy value)

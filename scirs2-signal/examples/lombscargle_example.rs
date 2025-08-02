@@ -1,5 +1,5 @@
 use rand::{rng, Rng};
-use scirs2__signal::lombscargle::{find_peaks, lombscargle, significance_levels, AutoFreqMethod};
+use scirs2_signal::lombscargle::{find_peaks, lombscargle, significance_levels, AutoFreqMethod};
 use std::error::Error;
 use std::f64::consts::PI;
 

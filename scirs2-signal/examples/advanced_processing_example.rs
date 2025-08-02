@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::Write;
 
-use scirs2__signal::{
+use scirs2_signal::{
 use std::f64::consts::PI;
     interpolate::polynomial::*,
     stft::{MemoryEfficientStft, MemoryEfficientStftConfig, StftConfig},

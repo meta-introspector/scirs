@@ -248,7 +248,7 @@ pub fn get_scientific_format_validators() -> FormatValidatorRegistry {
 
 /// Validate a file against a specific format
 #[allow(dead_code)]
-pub fn validate_format<P: AsRef<Path>>(_path: P, format: DataFormat) -> Result<bool> {
+pub fn validate_format<P: AsRef<Path>>(path: P, format: DataFormat) -> Result<bool> {
     let _path = _path.as_ref();
 
     // Open file
@@ -279,7 +279,7 @@ pub fn validate_format<P: AsRef<Path>>(_path: P, format: DataFormat) -> Result<b
 
 /// Detect the format of a file
 #[allow(dead_code)]
-pub fn detect_file_format<P: AsRef<Path>>(_path: P) -> Result<Option<String>> {
+pub fn detect_file_format<P: AsRef<Path>>(path: P) -> Result<Option<String>> {
     let _path = _path.as_ref();
 
     // Use registry to validate format
@@ -343,7 +343,7 @@ pub fn validate_file_format<P: AsRef<Path>>(
 
 /// Validate CSV file structure in detail
 #[allow(dead_code)]
-fn validate_csv_format<P: AsRef<Path>>(_path: P) -> Result<FormatValidationResult> {
+fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
     let _path = _path.as_ref();
 
     // Open file
@@ -473,7 +473,7 @@ fn count_csv_fields(_line: &[u8]) -> usize {
 
 /// Validate JSON file structure in detail
 #[allow(dead_code)]
-fn validate_json_format<P: AsRef<Path>>(_path: P) -> Result<FormatValidationResult> {
+fn validate_json_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
     let _path = _path.as_ref();
 
     // Open and attempt to parse as JSON
@@ -500,7 +500,7 @@ fn validate_json_format<P: AsRef<Path>>(_path: P) -> Result<FormatValidationResu
 
 /// Validate ARFF file structure in detail
 #[allow(dead_code)]
-fn validate_arff_format<P: AsRef<Path>>(_path: P) -> Result<FormatValidationResult> {
+fn validate_arff_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
     let _path = _path.as_ref();
 
     // Open file
@@ -561,7 +561,7 @@ fn validate_arff_format<P: AsRef<Path>>(_path: P) -> Result<FormatValidationResu
 
 /// Validate WAV file structure in detail
 #[allow(dead_code)]
-fn validate_wav_format<P: AsRef<Path>>(_path: P) -> Result<FormatValidationResult> {
+fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
     let _path = _path.as_ref();
 
     // Open file

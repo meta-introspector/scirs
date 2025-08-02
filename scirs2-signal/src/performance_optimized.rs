@@ -1,21 +1,21 @@
-//! Performance-optimized signal processing operations
-//!
-//! This module provides highly optimized implementations of critical signal
-//! processing operations using:
-//! - SIMD vectorization via scirs2-core abstractions
-//! - Parallel processing with optimal work distribution
-//! - Memory-efficient algorithms for large signals
-//! - Cache-aware data access patterns
+use ndarray::s;
+// Performance-optimized signal processing operations
+//
+// This module provides highly optimized implementations of critical signal
+// processing operations using:
+// - SIMD vectorization via scirs2-core abstractions
+// - Parallel processing with optimal work distribution
+// - Memory-efficient algorithms for large signals
+// - Cache-aware data access patterns
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, Zip, s};
-use num__complex::Complex64;
+use ndarray::{ Array1, Array2, ArrayView1, Zip};
+use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2__fft::{fft, ifft};
+use scirs2_fft::{fft, ifft};
 use std::time::Instant;
-use super::simd_convolve_1d;
 
 #[allow(unused_imports)]
 /// Configuration for performance optimization
@@ -709,8 +709,8 @@ pub mod benchmark {
         signal_size: usize,
         kernel_size: usize,
     ) -> SignalResult<BenchmarkResult> {
-        let signal = Array1::from_shape_fn(signal_size, |i| (i as f64 * 0.01).sin());
-        let kernel = Array1::from_shape_fn(kernel_size, |i| {
+        let signal = Array1::fromshape_fn(signal_size, |i| (i as f64 * 0.01).sin());
+        let kernel = Array1::fromshape_fn(kernel_size, |i| {
             (-((i as f64 - kernel_size as f64 / 2.0).powi(2)) / 10.0).exp()
         });
 
@@ -727,8 +727,12 @@ pub mod benchmark {
         // Compute accuracy
         let diff = &result_standard - &result_optimized;
         let max_error = diff.iter().map(|&x: &f64| x.abs()).fold(0.0, f64::max);
-        let accuracy =
-            1.0 - max_error / result_standard.iter().map(|&x: &f64| x.abs()).fold(0.0, f64::max);
+        let accuracy = 1.0
+            - max_error
+                / result_standard
+                    .iter()
+                    .map(|&x: &f64| x.abs())
+                    .fold(0.0, f64::max);
 
         Ok(BenchmarkResult {
             operation: "Convolution".to_string(),

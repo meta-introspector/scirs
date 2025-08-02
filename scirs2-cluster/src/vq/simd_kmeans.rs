@@ -43,7 +43,7 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 /// use ndarray::Array2;
 /// use scirs2__cluster::vq::{kmeans_simd, KMeansOptions, SimdOptimizationConfig};
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![
+/// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -553,7 +553,7 @@ mod tests {
 
     #[test]
     fn test_kmeans_simd() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
@@ -573,7 +573,7 @@ mod tests {
 
     #[test]
     fn test_mini_batch_kmeans_simd() {
-        let data = Array2::from_shape_vec((20, 2), (0..40).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((20, 2), (0..40).map(|x| x as f64).collect()).unwrap();
 
         let (centroids, labels, inertia) =
             mini_batch_kmeans_simd(data.view(), 3, 5, None, None).unwrap();
@@ -590,7 +590,7 @@ mod tests {
 
     #[test]
     fn test_kmeans_plus_plus_simd() {
-        let data = Array2::from_shape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
 
         let centroids = kmeans_plus_plus_simd(data.view(), 3, None, Some(42)).unwrap();
 
@@ -609,9 +609,9 @@ mod tests {
 
     #[test]
     fn test_compute_centroid_shift_simd() {
-        let old_centroids = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let old_centroids = Array2::fromshape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
 
-        let new_centroids = Array2::from_shape_vec((2, 2), vec![0.1, 0.1, 1.1, 1.1]).unwrap();
+        let new_centroids = Array2::fromshape_vec((2, 2), vec![0.1, 0.1, 1.1, 1.1]).unwrap();
 
         let config = SimdOptimizationConfig::default();
         let shift =

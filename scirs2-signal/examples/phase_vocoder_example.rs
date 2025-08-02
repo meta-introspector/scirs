@@ -1,9 +1,9 @@
-//! Example demonstrating the use of the phase vocoder for time stretching and pitch shifting
-//!
-//! This example generates a chirp signal and applies different time stretching
-//! and pitch shifting operations using the phase vocoder.
+// Example demonstrating the use of the phase vocoder for time stretching and pitch shifting
+//
+// This example generates a chirp signal and applies different time stretching
+// and pitch shifting operations using the phase vocoder.
 
-use scirs2__signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
+use scirs2_signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

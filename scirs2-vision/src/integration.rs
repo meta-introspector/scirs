@@ -1257,7 +1257,7 @@ impl CrossModulePerformanceTracker {
     }
 
     pub async fn track_and_analyze(
-        &mut self_result: &CrossModuleFusedResult, _elapsed: Duration_allocation: &ResourceAllocation,
+        &mut self_result: &CrossModuleFusedResult, _elapsed: Duration, allocation: &ResourceAllocation,
     ) -> Result<AdvancedPerformanceMetrics> {
         Ok(AdvancedPerformanceMetrics {
             overall_performance: 0.91,

@@ -321,7 +321,7 @@ mod tests {
         assert_eq!(non_zero_count, sparse_result.values.len());
 
         // Verify that all sparse components are present in the spectrum
-        for (&index, &_value) in sparse_result
+        for (&index, &value) in sparse_result
             .indices
             .iter()
             .zip(sparse_result.values.iter())

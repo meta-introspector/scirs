@@ -274,7 +274,7 @@ impl BenchmarkRunner {
     #[allow(clippy::type_complexity)]
     fn run_with_memory_monitoring(
         &self,
-        mut cmd: Command_timeout: Duration,
+        mut cmd: Command, timeout: Duration,
         suite_name: &str,
     ) -> Result<(BenchmarkStatus, Option<MemoryUsage>, Option<String>), Box<dyn std::error::Error>>
     {

@@ -396,7 +396,7 @@ fn create_sentiment_dataset() -> (Vec<Vec<String>>, Vec<usize>) {
     (texts, labels)
 // Create vocabulary from tokenized texts
 #[allow(dead_code)]
-fn create_vocabulary(_texts: &[Vec<String>]) -> (HashMap<String, usize>, HashMap<usize, String>) {
+fn create_vocabulary(texts: &[Vec<String>]) -> (HashMap<String, usize>, HashMap<usize, String>) {
     let mut word_to_idx = HashMap::new();
     let mut idx_to_word = HashMap::new();
     // Special tokens
@@ -405,26 +405,26 @@ fn create_vocabulary(_texts: &[Vec<String>]) -> (HashMap<String, usize>, HashMap
     for (i, token) in special_tokens.iter().enumerate() {
         word_to_idx.insert(token.to_string(), i);
         idx_to_word.insert(i, token.to_string());
-    // Add words from _texts
+    // Add words from texts
     let mut idx = special_tokens.len();
-    for text in _texts {
+    for text in texts {
         for word in text {
             if !word_to_idx.contains_key(word) {
                 word_to_idx.insert(word.clone(), idx);
                 idx_to_word.insert(idx, word.clone());
                 idx += 1;
     (word_to_idx, idx_to_word)
-// Convert _texts to token IDs with padding
+// Convert texts to token IDs with padding
 #[allow(dead_code)]
-fn tokenize_texts(
+fn tokenizetexts(
     texts: &[Vec<String>],
     word_to_idx: &HashMap<String, usize>,
     max_len: usize,
 ) -> Array2<usize> {
     let pad_idx = *word_to_idx.get("<pad>").unwrap_or(&0);
     let unk_idx = *word_to_idx.get("<unk>").unwrap_or(&1);
-    let mut tokens = Array2::<usize>::from_elem((_texts.len(), max_len), pad_idx);
-    for (i, text) in _texts.iter().enumerate() {
+    let mut tokens = Array2::<usize>::from_elem((texts.len(), max_len), pad_idx);
+    for (i, text) in texts.iter().enumerate() {
         for (j, word) in text.iter().enumerate().take(max_len) {
             tokens[[i, j]] = *word_to_idx.get(word).unwrap_or(&unk_idx);
     tokens
@@ -438,7 +438,7 @@ fn one_hot_encode(_labels: &[usize], num_classes: usize) -> Array2<f32> {
     one_hot
 // Shuffle the dataset
 #[allow(dead_code)]
-fn shuffle_dataset<T: Clone, U: Clone>(_xs: &[T], ys: &[U]) -> (Vec<T>, Vec<U>) {
+fn shuffle_dataset<T: Clone, U: Clone>(xs: &[T], ys: &[U]) -> (Vec<T>, Vec<U>) {
     assert_eq!(
         xs.len(),
         ys.len(),
@@ -595,7 +595,7 @@ fn example_predictions(_model: &mut BiLSTMClassifier, word_to_idx: &HashMap<Stri
         .collect();
     // Convert to token IDs
     let max_len = 20;
-    let x = tokenize_texts(&tokenized, word_to_idx, max_len);
+    let x = tokenizetexts(&tokenized, word_to_idx, max_len);
     // Make predictions
     let predictions = model.predict(&x);
     println!("\nExample Predictions:");
@@ -615,18 +615,18 @@ fn main() {
     let vocab_size = word_to_idx.len();
     println!("Vocabulary size: {}", vocab_size);
     // Split dataset
-    let (train_texts, test_texts, train_labels, test_labels) =
+    let (traintexts, testtexts, train_labels, test_labels) =
         train_test_split(&texts, &labels, 0.2);
     // Tokenize texts
     let max_len = 30;
-    let x_train = tokenize_texts(&train_texts, &word_to_idx, max_len);
-    let x_test = tokenize_texts(&test_texts, &word_to_idx, max_len);
+    let x_train = tokenizetexts(&traintexts, &word_to_idx, max_len);
+    let x_test = tokenizetexts(&testtexts, &word_to_idx, max_len);
     // One-hot encode labels
     let y_train_onehot = one_hot_encode(&train_labels, num_classes);
     // Model parameters
     let embedding_dim = 32;
     let hidden_size = 64;
-    let batch_size = train_texts.len();
+    let batch_size = traintexts.len();
     let use_attention = true;
     // Create model
     let mut model = BiLSTMClassifier::new(

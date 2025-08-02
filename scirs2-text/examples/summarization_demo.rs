@@ -1,6 +1,6 @@
 //! Text summarization demonstration
 
-use scirs2__text::{CentroidSummarizer, KeywordExtractor, TextRank};
+use scirs2_text::{CentroidSummarizer, KeywordExtractor, TextRank};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let textrank = TextRank::new(3); // Extract 3 sentences
     let summary = textrank.summarize(text)?;
 
-    println!("Original _text length: {} characters", text.len());
+    println!("Original text length: {} characters", text.len());
     println!("Summary length: {} characters", summary.len());
     println!("\nSummary:");
     println!("{summary}\n");
@@ -86,8 +86,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
          It uses deep learning models to process images and videos.",
     ];
 
-    let combined_text = docs.join(" ");
-    let multi_doc_summary = textrank.summarize(&combined_text)?;
+    let combinedtext = docs.join(" ");
+    let multi_doc_summary = textrank.summarize(&combinedtext)?;
 
     println!("Combined documents summary:");
     println!("{multi_doc_summary}\n");

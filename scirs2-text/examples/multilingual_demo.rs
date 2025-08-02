@@ -1,6 +1,6 @@
 //! Multilingual text processing and language detection example
 
-use scirs2__text::{Language, LanguageDetector, MultilingualProcessor, StopWords};
+use scirs2_text::{Language, LanguageDetector, MultilingualProcessor, StopWords};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (text, expected) in &texts {
         let result = detector.detect(text)?;
-        println!("\nText: \"{_text}\"");
+        println!("\nText: \"{text}\"");
         println!("Expected: {expected}");
         println!(
             "Detected: {} (confidence: {:.2}%)",
@@ -93,13 +93,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let processor = MultilingualProcessor::new();
 
-    let mixed_texts = vec![
+    let mixedtexts = vec![
         "Machine learning algorithms are transforming artificial intelligence",
         "Los algoritmos de aprendizaje automático están transformando la inteligencia artificial",
         "Les algorithmes d'apprentissage automatique transforment l'intelligence artificielle",
     ];
 
-    for text in &mixed_texts {
+    for text in &mixedtexts {
         let result = processor.process(text)?;
 
         println!("\nOriginal: \"{text}\"");

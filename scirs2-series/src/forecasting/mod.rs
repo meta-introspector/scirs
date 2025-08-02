@@ -184,7 +184,7 @@ where
         c if c >= 0.95 => F::from_f64(1.96).unwrap(),
         c if c >= 0.90 => F::from_f64(1.645).unwrap(),
         c if c >= 0.85 => F::from_f64(1.44).unwrap(),
-        c if c >= 0.80 => F::from_f64(1.282).unwrap(, _ =>, F::from_f64(1.0).unwrap(),
+        c if c >= 0.80 => F::from_f64(1.282).unwrap(, _ => F::from_f64(1.0).unwrap(),
     };
 
     // Compute forecast and confidence intervals
@@ -290,7 +290,7 @@ where
         c if c >= 0.95 => F::from_f64(1.96).unwrap(),
         c if c >= 0.90 => F::from_f64(1.645).unwrap(),
         c if c >= 0.85 => F::from_f64(1.44).unwrap(),
-        c if c >= 0.80 => F::from_f64(1.282).unwrap(, _ =>, F::from_f64(1.0).unwrap(),
+        c if c >= 0.80 => F::from_f64(1.282).unwrap(, _ => F::from_f64(1.0).unwrap(),
     };
 
     // Create forecast arrays
@@ -550,7 +550,7 @@ where
         c if c >= 0.95 => F::from_f64(1.96).unwrap(),
         c if c >= 0.90 => F::from_f64(1.645).unwrap(),
         c if c >= 0.85 => F::from_f64(1.44).unwrap(),
-        c if c >= 0.80 => F::from_f64(1.282).unwrap(, _ =>, F::from_f64(1.0).unwrap(),
+        c if c >= 0.80 => F::from_f64(1.282).unwrap(, _ => F::from_f64(1.0).unwrap(),
     };
 
     // Create forecast arrays
@@ -771,7 +771,7 @@ where
     let z_score = match conf_level {
         c if c >= 0.99 => F::from_f64(2.576).unwrap(),
         c if c >= 0.95 => F::from_f64(1.96).unwrap(),
-        c if c >= 0.90 => F::from_f64(1.645).unwrap(, _ =>, F::from_f64(1.0).unwrap(),
+        c if c >= 0.90 => F::from_f64(1.645).unwrap(, _ => F::from_f64(1.0).unwrap(),
     };
 
     for h in 0..horizon {
@@ -2229,7 +2229,7 @@ pub mod ensemble {
     }
 
     /// Calculate Mean Squared Error between forecast and actual values
-    fn calculate_mse<F: Float>(_forecast: &Array1<F>, actual: &Array1<F>) -> f64 {
+    fn calculate_mse<F: Float>(forecast: &Array1<F>, actual: &Array1<F>) -> f64 {
         let min_len = _forecast.len().min(actual.len());
         if min_len == 0 {
             return f64::INFINITY;

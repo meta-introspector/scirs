@@ -348,7 +348,7 @@ fn apply_weight<F: Float + FromPrimitive>(r: F, weight_fn: WeightFunction) -> F 
                 F::zero()
             }
         }
-        WeightFunction::InverseDistance =>, F::one() / (F::from_f64(1e-10).unwrap() + r * r),
+        WeightFunction::InverseDistance => F::one() / (F::from_f64(1e-10).unwrap() + r * r),
         WeightFunction::CubicSpline => {
             if r < F::from_f64(1.0 / 3.0).unwrap() {
                 let r2 = r * r;

@@ -123,9 +123,9 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
 
         // Compute derivatives based on the selected method
         let derivatives = match method {
-            MonotonicMethod::Pchip =>, Self::find_pchip_derivatives(&x_arr, &y_arr)?,
-            MonotonicMethod::Hyman =>, Self::find_hyman_derivatives(&x_arr, &y_arr)?,
-            MonotonicMethod::Steffen =>, Self::find_steffen_derivatives(&x_arr, &y_arr)?,
+            MonotonicMethod::Pchip => Self::find_pchip_derivatives(&x_arr, &y_arr)?,
+            MonotonicMethod::Hyman => Self::find_hyman_derivatives(&x_arr, &y_arr)?,
+            MonotonicMethod::Steffen => Self::find_steffen_derivatives(&x_arr, &y_arr)?,
             MonotonicMethod::ModifiedAkima => {
                 Self::find_modified_akima_derivatives(&x_arr, &y_arr)?
             }

@@ -13,7 +13,7 @@ mod tests {
     fn test_memory_efficient_integration() {
         // Create test data
         let data =
-            Array2::from_shape_fn((10, 10), |(i, j)| if i == j { (i + 1) as f64 } else { 0.0 });
+            Array2::fromshape_fn((10, 10), |(i, j)| if i == j { (i + 1) as f64 } else { 0.0 });
 
         // 1. Use chunk-wise operation to double all values
         let doubled = chunk_wise_op(
@@ -39,7 +39,7 @@ mod tests {
         let diagonal = diagonal_view(&evaluated).unwrap();
 
         // 7. Create a masked array to mask out zeros
-        let mask = Array2::from_shape_fn(evaluated.raw_dim(), |(i, j)| evaluated[[i, j]] == 0.0);
+        let mask = Array2::fromshape_fn(evaluated.raw_dim(), |(i, j)| evaluated[[i, j]] == 0.0);
         let masked = mask_array(evaluated.clone(), Some(mask), Some(0.0)).unwrap();
 
         // 8. Store the result in a disk-backed array
@@ -98,7 +98,7 @@ mod tests {
         // Create a larger test matrix
         let n = 20;
         let data =
-            Array2::from_shape_fn((n, n), |(i, j)| if i == j { (i + 1) as f64 } else { 0.0 });
+            Array2::fromshape_fn((n, n), |(i, j)| if i == j { (i + 1) as f64 } else { 0.0 });
 
         // Workflow test:
         // 1. Process in chunks
@@ -159,7 +159,7 @@ mod tests {
     #[test]
     fn test_masked_arrays_with_chunking() {
         // Create test data with NaN values
-        let mut data = Array2::from_shape_fn((10, 10), |(i, j)| (i * 10 + j) as f64);
+        let mut data = Array2::fromshape_fn((10, 10), |(i, j)| (i * 10 + j) as f64);
 
         // Add some NaN values
         data[[0, 0]] = f64::NAN;

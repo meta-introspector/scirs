@@ -1,17 +1,18 @@
-//! High-resolution spectral estimation algorithms
-//!
-//! This module implements advanced spectral estimation methods that provide
-//! superior frequency resolution compared to traditional periodogram-based approaches.
-//! These methods are particularly effective for analyzing sinusoidal signals in noise
-//! and can resolve closely spaced frequency components.
+use ndarray::s;
+// High-resolution spectral estimation algorithms
+//
+// This module implements advanced spectral estimation methods that provide
+// superior frequency resolution compared to traditional periodogram-based approaches.
+// These methods are particularly effective for analyzing sinusoidal signals in noise
+// and can resolve closely spaced frequency components.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, Axis, s};
-use num__complex::Complex64;
+use ndarray::{ Array1, Array2, ArrayView1, Axis};
+use num_complex::Complex64;
 use num_traits::Zero;
-use scirs2__linalg::solve as compute_solve;
-use scirs2__linalg::complex::complex_inverse;
-use scirs2__linalg::complex::decompositions::{complex_eig, complex_eigh};
+use scirs2_linalg::complex::complex_inverse;
+use scirs2_linalg::complex::decompositions::{complex_eig, complex_eigh};
+use scirs2_linalg::solve as compute_solve;
 use std::f64::consts::PI;
 
 #[allow(unused_imports)]
@@ -118,7 +119,7 @@ pub fn music(_data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrS
     let signal_dim = determine_signal_dimension(&eigen_pairs, config)?;
 
     // Extract noise subspace
-    let noise_eigenvectors: Array2<Complex64> = Array2::from_shape_vec(
+    let noise_eigenvectors: Array2<Complex64> = Array2::fromshape_vec(
         (n_samples, n_samples - signal_dim),
         eigen_pairs
             .iter()
@@ -195,7 +196,7 @@ pub fn esprit(_data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<Hr
     }
 
     // Extract signal subspace
-    let signal_eigenvectors: Array2<Complex64> = Array2::from_shape_vec(
+    let signal_eigenvectors: Array2<Complex64> = Array2::fromshape_vec(
         (n_samples, signal_dim),
         eigen_pairs
             .iter()
@@ -754,7 +755,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_music_basic() {
         // Create test signal with two sinusoids

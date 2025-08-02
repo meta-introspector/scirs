@@ -136,7 +136,7 @@ impl GpuRandomGenerator {
         }));
 
         let device = Arc::new(GpuContext::new(crate::gpu::GpuBackend::Cpu)?); // TODO: Proper device initialization
-        
+
         let mut generator = Self {
             device,
             state,
@@ -464,7 +464,11 @@ impl GpuRandomGenerator {
     }
 
     /// Generate normal random numbers
-    pub fn generate_normal(&self, count: usize, mean: f32, std_dev: f32
+    pub fn generate_normal(
+        &self,
+        count: usize,
+        mean: f32,
+        std_dev: f32,
     ) -> CoreResult<Array<f32, IxDyn>> {
         if let Some(kernel) = self.kernels.get("normal") {
             // Use direct normal generation if available
@@ -530,7 +534,11 @@ impl GpuRandomGenerator {
     }
 
     /// Box-Muller transformation for normal distribution
-    fn box_muller_transform(&self, uniform_samples: &Array<f32, IxDyn>, mean: f32, std_dev: f32
+    fn box_muller_transform(
+        &self,
+        uniform_samples: &Array<f32, IxDyn>,
+        mean: f32,
+        std_dev: f32,
     ) -> CoreResult<Array<f32, IxDyn>> {
         let len = uniform_samples.len();
         let mut normal_samples = Vec::with_capacity(len);

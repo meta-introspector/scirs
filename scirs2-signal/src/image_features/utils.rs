@@ -1,4 +1,4 @@
-//! Utility functions for image feature extraction
+// Utility functions for image feature extraction
 
 use ndarray::Array2;
 

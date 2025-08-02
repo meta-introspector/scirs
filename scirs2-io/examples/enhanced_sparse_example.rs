@@ -339,9 +339,7 @@ fn demonstrate_memory_analysis() -> Result<()> {
     let mut sparse = create_sample_sparse_matrix(size);
 
     let coo_memory = sparse.coo_data.values.len()
-        * (
-            std::mem::size_of::<f64>() + 2 * std::mem::size_of::<usize>()
-        );
+        * (std::mem::size_of::<f64>() + 2 * std::mem::size_of::<usize>());
 
     let csr = sparse.to_csr()?;
     let csr_memory = csr.values.len() * std::mem::size_of::<f64>()

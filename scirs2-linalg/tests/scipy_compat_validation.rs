@@ -660,7 +660,7 @@ mod performance_validation_tests {
         // Test that decompositions complete in reasonable time
         let n = 15; // Moderate size for CI environments
 
-        let matrix = Array2::from_shape_fn((n, n), |(i, j)| {
+        let matrix = Array2::fromshape_fn((n, n), |(i, j)| {
             if i == j {
                 (i + 1) as f64
             } else {

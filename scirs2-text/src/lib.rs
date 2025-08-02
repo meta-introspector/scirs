@@ -17,7 +17,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use scirs2__text::{
+//! use scirs2_text::{
 //!     tokenize::WordTokenizer,
 //!     vectorize::TfidfVectorizer,
 //!     sentiment::LexiconSentimentAnalyzer,

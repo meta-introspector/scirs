@@ -73,7 +73,7 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
         let window_size = config.window_size;
 
         Self {
-            _parameters: initial_parameters,
+            parameters: initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),

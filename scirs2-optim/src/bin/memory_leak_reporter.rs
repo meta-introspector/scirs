@@ -459,7 +459,7 @@ fn parse_heaptrack_results(_path: &Path) -> Result<HeaptrackResults> {
 fn parse_custom_profiler_results(_path: &Path) -> Result<CustomProfilerResults> {
     // Parse JSON from custom profiler
     let content = fs::read_to_string(_path)?;
-    let _json_data: serde, _json: Value =
+    let _json_data: serde_json:: Value =
         serde_json::from_str(&content).map_err(|e| OptimError::OptimizationError(e.to_string()))?;
 
     Ok(CustomProfilerResults {

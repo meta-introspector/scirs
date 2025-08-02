@@ -37,7 +37,7 @@ fn test_visualization_extreme_graphs() {
         // Create a deep computation graph (100 operations to avoid overflow)
         for i in 0..100 {
             let factor = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1]), vec![1.0 + i as f32 * 0.0001]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[1]), vec![1.0 + i as f32 * 0.0001]).unwrap(),
                 ctx,
             );
             current = T::simd_mul(&current, &factor);
@@ -51,7 +51,7 @@ fn test_visualization_extreme_graphs() {
         // Test visualization config with limits
         let config = VisualizationConfig {
             format: OutputFormat::Text,
-            show_shapes: true,
+            showshapes: true,
             show_operations: true,
             show_gradients: false,
             max_nodes: Some(50), // Limit to prevent excessive output
@@ -82,11 +82,11 @@ fn test_optimization_pathological_cases() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Case 1: Extremely deep chain of additions (constant folding opportunity)
         let mut chain =
-            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+            T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
 
         for _i in 0..500 {
             let constant = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1]), vec![0.001]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[1]), vec![0.001]).unwrap(),
                 ctx,
             );
             chain = chain + constant;
@@ -150,7 +150,7 @@ fn test_thread_pool_extreme_load() {
 
         for i in 0..100 {
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| (x + i) as f32).collect())
+                Array::fromshape_vec(IxDyn(&[1000]), (0..1000).map(|x| (x + i) as f32).collect())
                     .unwrap(),
                 ctx,
             );
@@ -218,7 +218,7 @@ fn test_custom_activations_extreme_inputs() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test with very large positive values
         let extreme_positive = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::fromshape_vec(
                 IxDyn(&[5]),
                 vec![100.0, 1000.0, 10000.0, f32::MAX / 2.0, 50.0],
             )
@@ -228,7 +228,7 @@ fn test_custom_activations_extreme_inputs() {
 
         // Test with very large negative values
         let extreme_negative = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::fromshape_vec(
                 IxDyn(&[5]),
                 vec![-100.0, -1000.0, -10000.0, f32::MIN / 2.0, -50.0],
             )
@@ -238,7 +238,7 @@ fn test_custom_activations_extreme_inputs() {
 
         // Test with edge values
         let _edge_values = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::fromshape_vec(
                 IxDyn(&[6]),
                 vec![
                     0.0,
@@ -281,7 +281,7 @@ fn test_custom_activations_extreme_inputs() {
 
             // Test edge values (skip infinity and NaN tests for some activations)
             let normal_edge = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![0.0, f32::EPSILON, -f32::EPSILON]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![0.0, f32::EPSILON, -f32::EPSILON]).unwrap(),
                 ctx,
             );
             let result_edge = T::custom_activation(&normal_edge, activation);
@@ -310,7 +310,7 @@ fn test_simd_operations_edge_cases() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test with very small values (underflow risk)
         let tiny_values = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::fromshape_vec(
                 IxDyn(&[8]),
                 vec![
                     f32::EPSILON,
@@ -329,7 +329,7 @@ fn test_simd_operations_edge_cases() {
 
         // Test with very large values (overflow risk)
         let huge_values = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::fromshape_vec(
                 IxDyn(&[8]),
                 vec![
                     f32::MAX / 2.0,
@@ -356,7 +356,7 @@ fn test_simd_operations_edge_cases() {
 
         // Test SIMD multiplication near overflow
         let near_overflow_a = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::fromshape_vec(
                 IxDyn(&[4]),
                 vec![1e20, -1e20, f32::MAX.sqrt(), -f32::MAX.sqrt()],
             )
@@ -364,7 +364,7 @@ fn test_simd_operations_edge_cases() {
             ctx,
         );
         let near_overflow_b = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::fromshape_vec(
                 IxDyn(&[4]),
                 vec![1e20, 1e20, f32::MAX.sqrt(), f32::MAX.sqrt()],
             )
@@ -383,7 +383,7 @@ fn test_simd_operations_edge_cases() {
 
         // Test SIMD operations with mixed normal and subnormal numbers
         let mixed_values = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::fromshape_vec(
                 IxDyn(&[8]),
                 vec![
                     1.0,
@@ -509,7 +509,7 @@ fn test_parallel_operations_numerical_stability() {
     };
 
     // Test parallel reduction with cancellation-prone values
-    let cancellation_test = Array::from_shape_vec(
+    let cancellation_test = Array::fromshape_vec(
         IxDyn(&[1000]),
         (0..1000)
             .map(|i| if i % 2 == 0 { 1e10 } else { -1e10 })
@@ -525,7 +525,7 @@ fn test_parallel_operations_numerical_stability() {
     );
 
     // Test parallel operations with very small numbers (but not denormalized to avoid precision issues)
-    let small_values = Array::from_shape_vec(
+    let small_values = Array::fromshape_vec(
         IxDyn(&[1000]),
         (0..1000)
             .map(|i| 1e-20 * (i as f32 + 1.0))
@@ -540,7 +540,7 @@ fn test_parallel_operations_numerical_stability() {
     assert!(small_mean.is_finite());
 
     // Test parallel matrix multiplication with ill-conditioned matrices
-    let ill_conditioned_a = Array::from_shape_vec(
+    let ill_conditioned_a = Array::fromshape_vec(
         IxDyn(&[100, 100]),
         (0..10000)
             .map(|i| {
@@ -558,7 +558,7 @@ fn test_parallel_operations_numerical_stability() {
     )
     .unwrap();
 
-    let identity = Array::from_shape_vec(
+    let identity = Array::fromshape_vec(
         IxDyn(&[100, 100]),
         (0..10000)
             .map(|i| if i / 100 == i % 100 { 1.0 } else { 0.0 })
@@ -581,13 +581,13 @@ fn test_parallel_operations_numerical_stability() {
     );
 
     // Test parallel element-wise operations with extreme ranges
-    let small_values = Array::from_shape_vec(
+    let small_values = Array::fromshape_vec(
         IxDyn(&[1000]),
         (0..1000).map(|_| f32::EPSILON).collect::<Vec<f32>>(),
     )
     .unwrap();
 
-    let large_values = Array::from_shape_vec(
+    let large_values = Array::fromshape_vec(
         IxDyn(&[1000]),
         (0..1000).map(|_| 1e20).collect::<Vec<f32>>(),
     )
@@ -617,7 +617,7 @@ fn test_graph_enhancements_edge_cases() {
         // Fill cache beyond capacity
         for i in 0..150 {
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1]), vec![i as f32]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[1]), vec![i as f32]).unwrap(),
                 ctx,
             );
             let cached = T::cached_op(&data, "square");
@@ -626,7 +626,7 @@ fn test_graph_enhancements_edge_cases() {
 
         // Test conditional operations with NaN conditions
         let nan_condition = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[1]), vec![f32::NAN]).unwrap(),
+            Array::fromshape_vec(IxDyn(&[1]), vec![f32::NAN]).unwrap(),
             ctx,
         );
         let true_branch = T::efficient_ones(&[5], ctx);
@@ -645,7 +645,7 @@ fn test_graph_enhancements_edge_cases() {
 
         // Test conditional operations with infinite conditions
         let inf_condition = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[1]), vec![f32::INFINITY]).unwrap(),
+            Array::fromshape_vec(IxDyn(&[1]), vec![f32::INFINITY]).unwrap(),
             ctx,
         );
 
@@ -713,19 +713,19 @@ fn test_cross_feature_integration_stress() {
         input_data[100] = 0.0;
 
         let input = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[batch_size, feature_size]), input_data).unwrap(),
+            Array::fromshape_vec(IxDyn(&[batch_size, feature_size]), input_data).unwrap(),
             ctx,
         );
 
         // Step 2: Apply visualization-optimized operations
-        let normalized = T::efficient_reshape_with_shape(&input, &[batch_size * feature_size]);
+        let normalized = T::efficient_reshape_withshape(&input, &[batch_size * feature_size]);
 
         // Step 3: SIMD operations with custom activations
         let simd_processed = T::simd_mul(&normalized, &normalized);
         let activated = T::custom_activation(&simd_processed, "gelu");
 
         // Step 4: Memory-efficient reshaping back
-        let reshaped = T::efficient_reshape_with_shape(&activated, &[batch_size, feature_size]);
+        let reshaped = T::efficient_reshape_withshape(&activated, &[batch_size, feature_size]);
 
         // Step 5: Parallel reductions with checkpointing
         let checkpointed = T::smart_checkpoint(&reshaped, 1000);
@@ -797,7 +797,7 @@ fn test_numerical_precision_stability() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test precision preservation through long computation chains
         let precise_input =
-            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+            T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
 
         let mut current = precise_input;
         let original_value = 1.0f32;
@@ -821,7 +821,7 @@ fn test_numerical_precision_stability() {
         let config = ParallelConfig::default();
 
         // Create values that sum to exactly zero but test floating point precision
-        let balanced_values = Array::from_shape_vec(
+        let balanced_values = Array::fromshape_vec(
             IxDyn(&[1000]),
             (0..1000)
                 .map(|i| if i < 500 { 1.0 / 500.0 } else { -1.0 / 500.0 })
@@ -838,7 +838,7 @@ fn test_numerical_precision_stability() {
 
         // Test numerical stability of custom activations near critical points
         let critical_points = T::convert_to_tensor(
-            Array::from_shape_vec(
+            Array::fromshape_vec(
                 IxDyn(&[7]),
                 vec![0.0, f32::EPSILON, -f32::EPSILON, 1.0, -1.0, 0.5, -0.5],
             )

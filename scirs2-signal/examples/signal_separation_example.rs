@@ -1,9 +1,9 @@
-//! Example demonstrating signal separation techniques
-//!
-//! This example shows how to use multi-band and harmonic/percussive
-//! separation methods for signal analysis and processing.
+// Example demonstrating signal separation techniques
+//
+// This example shows how to use multi-band and harmonic/percussive
+// separation methods for signal analysis and processing.
 
-use scirs2__signal::separation::{
+use scirs2_signal::separation::{
 use std::f64::consts::PI;
     harmonic_percussive_separation, multiband_separation, HarmonicPercussiveConfig, MultibandConfig,
 };

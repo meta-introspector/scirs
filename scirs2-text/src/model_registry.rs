@@ -200,7 +200,7 @@ pub struct ModelRegistry {
 
 impl ModelRegistry {
     /// Create new model registry
-    pub fn new<P: AsRef<Path>>(_registry_dir: P) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(_registry, dir: P) -> Result<Self> {
         let _registry_dir = _registry_dir.as_ref().to_path_buf();
 
         // Create registry directory if it doesn't exist
@@ -944,15 +944,15 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             .as_slice()
             .unwrap()
             .to_vec();
-        let embed_shape = self.token_embedding.get_embeddings().shape().to_vec();
+        let embedshape = self.token_embedding.get_embeddings().shape().to_vec();
         weights.insert("token_embeddings".to_string(), embed_weights);
-        shapes.insert("token_embeddings".to_string(), embed_shape);
+        shapes.insert("token_embeddings".to_string(), embedshape);
 
         // Serialize positional embeddings (placeholder - would need access to internal weights)
         let pos_embed_weights = vec![0.0f64; self.config.max_seq_len * self.config.d_model];
-        let pos_embed_shape = vec![self.config.max_seq_len, self.config.d_model];
+        let pos_embedshape = vec![self.config.max_seq_len, self.config.d_model];
         weights.insert("positional_embeddings".to_string(), pos_embed_weights);
-        shapes.insert("positional_embeddings".to_string(), pos_embed_shape);
+        shapes.insert("positional_embeddings".to_string(), pos_embedshape);
 
         // Serialize all encoder layers with real weights
         for i in 0..self.config.n_encoder_layers {
@@ -1035,42 +1035,42 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             // Placeholder for self-attention weights
             let self_attn_weight_size = self.config.d_model * self.config.d_model * 4; // Q, K, V, O
             let self_attn_weights = vec![0.0f64; self_attn_weight_size];
-            let self_attn_shape = vec![self.config.d_model, self.config.d_model * 4];
+            let self_attnshape = vec![self.config.d_model, self.config.d_model * 4];
             weights.insert(format!("decoder_{i}_self_attention"), self_attn_weights);
-            shapes.insert(format!("decoder_{i}_self_attention"), self_attn_shape);
+            shapes.insert(format!("decoder_{i}_self_attention"), self_attnshape);
 
             // Placeholder for cross-attention weights
             let cross_attn_weights = vec![0.0f64; self_attn_weight_size];
-            let cross_attn_shape = vec![self.config.d_model, self.config.d_model * 4];
+            let cross_attnshape = vec![self.config.d_model, self.config.d_model * 4];
             weights.insert(format!("decoder_{i}_cross_attention"), cross_attn_weights);
-            shapes.insert(format!("decoder_{i}_cross_attention"), cross_attn_shape);
+            shapes.insert(format!("decoder_{i}_cross_attention"), cross_attnshape);
 
             // Placeholder for feedforward weights
             let ff_weight_size = self.config.d_model * self.config.d_ff * 2; // W1, W2
             let ff_weights = vec![0.0f64; ff_weight_size];
-            let ff_shape = vec![self.config.d_model, self.config.d_ff * 2];
+            let ffshape = vec![self.config.d_model, self.config.d_ff * 2];
             weights.insert(format!("decoder_{i}_feedforward"), ff_weights);
-            shapes.insert(format!("decoder_{i}_feedforward"), ff_shape);
+            shapes.insert(format!("decoder_{i}_feedforward"), ffshape);
 
             // Placeholder for layer norm parameters
             let ln_weights = vec![1.0f64; self.config.d_model];
-            let ln_shape = vec![self.config.d_model];
+            let lnshape = vec![self.config.d_model];
             weights.insert(format!("decoder_{i}_ln1"), ln_weights.clone());
-            shapes.insert(format!("decoder_{i}_ln1"), ln_shape.clone());
+            shapes.insert(format!("decoder_{i}_ln1"), lnshape.clone());
 
             weights.insert(format!("decoder_{i}_ln2"), ln_weights.clone());
-            shapes.insert(format!("decoder_{i}_ln2"), ln_shape.clone());
+            shapes.insert(format!("decoder_{i}_ln2"), lnshape.clone());
 
             weights.insert(format!("decoder_{i}_ln3"), ln_weights);
-            shapes.insert(format!("decoder_{i}_ln3"), ln_shape);
+            shapes.insert(format!("decoder_{i}_ln3"), lnshape);
         }
 
         // Serialize output projection layer (placeholder - would need access to internal weights)
         let output_weight_size = self.config.d_model * self.config.vocab_size;
         let output_weights = vec![0.0f64; output_weight_size];
-        let output_shape = vec![self.config.d_model, self.config.vocab_size];
+        let outputshape = vec![self.config.d_model, self.config.vocab_size];
         weights.insert("output_projection".to_string(), output_weights);
-        shapes.insert("output_projection".to_string(), output_shape);
+        shapes.insert("output_projection".to_string(), outputshape);
 
         // Serialize vocabulary
         let (vocab_to_id, id_to_vocab) = self.vocabulary();
@@ -1163,12 +1163,12 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         let mut model = crate::transformer::TransformerModel::new(config.clone(), vocabulary)?;
 
         // Restore embedding weights
-        if let (Some(embed_weights), Some(embed_shape)) = (
+        if let (Some(embed_weights), Some(embedshape)) = (
             _data.weights.get("token_embeddings"),
             _data.shapes.get("token_embeddings"),
         ) {
-            let embed_array = ndarray::Array::from_shape_vec(
-                (embed_shape[0], embed_shape[1]),
+            let embed_array = ndarray::Array::fromshape_vec(
+                (embedshape[0], embedshape[1]),
                 embed_weights.clone(),
             )
             .map_err(|e| TextError::InvalidInput(format!("Invalid embedding shape: {e}")))?;
@@ -1176,12 +1176,12 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         }
 
         // Restore positional embeddings
-        if let (Some(pos_embed_weights), Some(pos_embed_shape)) = (
+        if let (Some(pos_embed_weights), Some(pos_embedshape)) = (
             _data.weights.get("positional_embeddings"),
             _data.shapes.get("positional_embeddings"),
         ) {
-            let _pos_embed_array = ndarray::Array::from_shape_vec(
-                (pos_embed_shape[0], pos_embed_shape[1]),
+            let _pos_embed_array = ndarray::Array::fromshape_vec(
+                (pos_embedshape[0], pos_embedshape[1]),
                 pos_embed_weights.clone(),
             )
             .map_err(|e| {
@@ -1199,13 +1199,13 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             // Restore attention weights
             if let (
                 Some(wq_weights),
-                Some(wq_shape),
+                Some(wqshape),
                 Some(wk_weights),
-                Some(wk_shape),
+                Some(wkshape),
                 Some(wv_weights),
-                Some(wv_shape),
+                Some(wvshape),
                 Some(wo_weights),
-                Some(wo_shape),
+                Some(woshape),
             ) = (
                 _data.weights.get(&format!("encoder_{i}_attention_wq")),
                 _data.shapes.get(&format!("encoder_{i}_attention_wq")),
@@ -1217,16 +1217,16 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 _data.shapes.get(&format!("encoder_{i}_attention_wo")),
             ) {
                 let w_q =
-                    ndarray::Array::from_shape_vec((wq_shape[0], wq_shape[1]), wq_weights.clone())
+                    ndarray::Array::fromshape_vec((wqshape[0], wqshape[1]), wq_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid wq shape: {e}")))?;
                 let w_k =
-                    ndarray::Array::from_shape_vec((wk_shape[0], wk_shape[1]), wk_weights.clone())
+                    ndarray::Array::fromshape_vec((wkshape[0], wkshape[1]), wk_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid wk shape: {e}")))?;
                 let w_v =
-                    ndarray::Array::from_shape_vec((wv_shape[0], wv_shape[1]), wv_weights.clone())
+                    ndarray::Array::fromshape_vec((wvshape[0], wvshape[1]), wv_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid wv shape: {e}")))?;
                 let w_o =
-                    ndarray::Array::from_shape_vec((wo_shape[0], wo_shape[1]), wo_weights.clone())
+                    ndarray::Array::fromshape_vec((woshape[0], woshape[1]), wo_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid wo shape: {e}")))?;
 
                 attention.set_weights(w_q, w_k, w_v, w_o)?;
@@ -1235,9 +1235,9 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             // Restore feedforward weights
             if let (
                 Some(w1_weights),
-                Some(w1_shape),
+                Some(w1shape),
                 Some(w2_weights),
-                Some(w2_shape),
+                Some(w2shape),
                 Some(b1_weights),
                 Some(b2_weights),
             ) = (
@@ -1249,10 +1249,10 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 _data.weights.get(&format!("encoder_{i}_ff_b2")),
             ) {
                 let w1 =
-                    ndarray::Array::from_shape_vec((w1_shape[0], w1_shape[1]), w1_weights.clone())
+                    ndarray::Array::fromshape_vec((w1shape[0], w1shape[1]), w1_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid w1 shape: {e}")))?;
                 let w2 =
-                    ndarray::Array::from_shape_vec((w2_shape[0], w2_shape[1]), w2_weights.clone())
+                    ndarray::Array::fromshape_vec((w2shape[0], w2shape[1]), w2_weights.clone())
                         .map_err(|e| TextError::InvalidInput(format!("Invalid w2 shape: {e}")))?;
                 let b1 = ndarray::Array::from_vec(b1_weights.clone());
                 let b2 = ndarray::Array::from_vec(b2_weights.clone());
@@ -1287,12 +1287,12 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         }
 
         // Restore output projection weights
-        if let (Some(output_weights), Some(output_shape)) = (
+        if let (Some(output_weights), Some(outputshape)) = (
             _data.weights.get("output_projection"),
             _data.shapes.get("output_projection"),
         ) {
-            let _output_array = ndarray::Array::from_shape_vec(
-                ndarray::IxDyn(output_shape),
+            let _output_array = ndarray::Array::fromshape_vec(
+                ndarray::IxDyn(outputshape),
                 output_weights.clone(),
             )
             .map_err(|e| {
@@ -1370,9 +1370,9 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
         // Serialize embedding weights
         if let Some(embeddings) = self.get_embeddings_matrix() {
             let embed_weights = embeddings.as_slice().unwrap().to_vec();
-            let embed_shape = embeddings.shape().to_vec();
+            let embedshape = embeddings.shape().to_vec();
             weights.insert("embeddings".to_string(), embed_weights);
-            shapes.insert("embeddings".to_string(), embed_shape);
+            shapes.insert("embeddings".to_string(), embedshape);
         }
 
         Ok(SerializableModelData {
@@ -1427,14 +1427,14 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
         let word2vec = crate::embeddings::Word2Vec::with_config(config);
 
         // Restore vocabulary and embeddings if available
-        if let (Some(vocab), Some(embed_weights), Some(embed_shape)) = (
+        if let (Some(vocab), Some(embed_weights), Some(embedshape)) = (
             _data.vocabulary.as_ref(),
             _data.weights.get("embeddings"),
             _data.shapes.get("embeddings"),
         ) {
             // Restore the full model state from serialized _data
-            let _embedding_matrix = ndarray::Array::from_shape_vec(
-                (embed_shape[0], embed_shape[1]),
+            let _embedding_matrix = ndarray::Array::fromshape_vec(
+                (embedshape[0], embedshape[1]),
                 embed_weights.clone(),
             )
             .map_err(|e| TextError::InvalidInput(format!("Invalid embedding shape: {e}")))?;

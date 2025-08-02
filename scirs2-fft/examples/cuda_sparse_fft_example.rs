@@ -36,7 +36,8 @@ fn main() {
     init_global_memory_manager(
         GPUBackend::CUDA,
         0, // First device
-        scirs2_fft::sparse_fft_gpu, _memory::AllocationStrategy::CacheBySize,
+        scirs2_fft::sparse_fft_gpu,
+        _memory::AllocationStrategy::CacheBySize,
         1024 * 1024 * 1024, // 1 GB limit
     )
     .unwrap();
@@ -221,8 +222,10 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 #[allow(dead_code)]
 fn create_comparison_plot(
     signal: &[f64],
-    cpu_result: &scirs2, _fft: :sparse_fft::SparseFFTResult,
-    cuda_result: &scirs2, _fft: :sparse_fft::SparseFFTResult,
+    cpu_result: &scirs2,
+    _fft: sparse_fft::SparseFFTResult,
+    cuda_result: &scirs2,
+    _fft: sparse_fft::SparseFFTResult,
 ) {
     // Create time domain plot
     let mut time_plot = Plot::new();
@@ -233,9 +236,9 @@ fn create_comparison_plot(
     time_plot.add_trace(time_trace);
     time_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("Time Domain Signal"))
-            .x_axis(Axis::new().title(Title::with_text("Time")))
-            .y_axis(Axis::new().title(Title::with_text("Amplitude"))),
+            .title(Title::withtext("Time Domain Signal"))
+            .x_axis(Axis::new().title(Title::withtext("Time")))
+            .y_axis(Axis::new().title(Title::withtext("Amplitude"))),
     );
 
     time_plot.write_html("cuda_sparse_fft_time_domain.html");
@@ -299,9 +302,9 @@ fn create_comparison_plot(
     freq_plot.add_trace(cuda_trace);
     freq_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("Frequency Domain Comparison"))
-            .x_axis(Axis::new().title(Title::with_text("Frequency Bin")))
-            .y_axis(Axis::new().title(Title::with_text("Magnitude"))),
+            .title(Title::withtext("Frequency Domain Comparison"))
+            .x_axis(Axis::new().title(Title::withtext("Frequency Bin")))
+            .y_axis(Axis::new().title(Title::withtext("Magnitude"))),
     );
 
     freq_plot.write_html("cuda_sparse_fft_frequency_domain.html");

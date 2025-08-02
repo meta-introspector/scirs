@@ -55,12 +55,12 @@ impl QuantumState {
             measurement_probs: vec![1.0 / dimensions as f64; dimensions],
         }
     }
-    
+
     pub fn new_uniform(n_qubits: usize) -> Self {
         let size = 1 << n_qubits;
         let amplitude = 1.0 / (size as f64).sqrt();
         let amplitudes = vec![amplitude; size];
-        
+
         Self {
             amplitudes,
             phases: vec![0.0; size],
@@ -405,7 +405,7 @@ impl QuantumOptimizer {
 
             #[cfg(not(feature = "parallel"))]
             {
-                for (i, individual) in population.iter().enumerate() {
+                for individual in population.iter() {
                     fitness_values[0] = objective_fn(individual);
                 }
             }
@@ -514,7 +514,7 @@ impl QuantumOptimizer {
     {
         let mut population = self.initialize_quantum_population(bounds);
         let f_factor = 0.5; // Differential weight
-        let cr_factor = 0.9; // Crossover probability
+        let _cr_factor = 0.9; // Crossover probability
 
         for iteration in 0..max_iterations {
             self.generation = iteration;
@@ -626,12 +626,7 @@ impl QuantumOptimizer {
             }
 
             // Update quantum state based on problem Hamiltonian
-            self.evolve_adiabatic_hamiltonian(
-                h_initial_weight,
-                h_problem_weight,
-                fitness,
-                bounds,
-            );
+            self.evolve_adiabatic_hamiltonian(h_initial_weight, h_problem_weight, fitness, bounds);
 
             self.convergence_history.push(self.best_fitness);
 
@@ -795,7 +790,10 @@ impl QuantumOptimizer {
     }
 
     #[allow(dead_code)]
-    fn evolve_population(&mut self, fitness_values: &[f64], population: &[Vec<f64>],
+    fn evolve_population(
+        &mut self,
+        fitness_values: &[f64],
+        population: &[Vec<f64>],
         bounds: &[(f64, f64)],
     ) -> Vec<Vec<f64>> {
         let mut new_population = Vec::with_capacity(self.population_size);
@@ -885,7 +883,15 @@ impl QuantumOptimizer {
         }
     }
 
-    fn update_velocity(&mut self, velocity: &mut Vec<f64>, position: &[f64], personal_best: &[f64], global_best: &[f64], iteration: usize, max_iterations: usize) {
+    fn update_velocity(
+        &mut self,
+        velocity: &mut [f64],
+        position: &[f64],
+        personal_best: &[f64],
+        global_best: &[f64],
+        iteration: usize,
+        max_iterations: usize,
+    ) {
         let w = 0.9 - 0.5 * iteration as f64 / max_iterations as f64; // Decreasing inertia
         let c1 = 2.0; // Cognitive coefficient
         let c2 = 2.0; // Social coefficient
@@ -921,7 +927,10 @@ impl QuantumOptimizer {
         // Update quantum state based on swarm distribution
         if !particles.is_empty() && !particles[0].is_empty() {
             for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
-                let values: Vec<f64> = particles.iter().map(|p| p.get(i).copied().unwrap_or(0.0)).collect();
+                let values: Vec<f64> = particles
+                    .iter()
+                    .map(|p| p.get(i).copied().unwrap_or(0.0))
+                    .collect();
                 let mean = values.iter().sum::<f64>() / values.len() as f64;
                 let variance =
                     values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
@@ -932,7 +941,12 @@ impl QuantumOptimizer {
         }
     }
 
-    fn calculate_quantum_perturbation(&mut self, dimension: usize, iteration: usize, max_iterations: usize) -> f64 {
+    fn calculate_quantum_perturbation(
+        &mut self,
+        dimension: usize,
+        iteration: usize,
+        max_iterations: usize,
+    ) -> f64 {
         let progress = iteration as f64 / max_iterations as f64;
         let amplitude = if dimension < self.state.amplitudes.len() {
             self.state.amplitudes[dimension]
@@ -967,7 +981,13 @@ impl QuantumOptimizer {
             .collect()
     }
 
-    fn apply_adiabatic_evolution(&mut self, solution: &[f64], fitness: f64, h_problem: f64, h_initial: f64) {
+    fn apply_adiabatic_evolution(
+        &mut self,
+        solution: &[f64],
+        fitness: f64,
+        h_problem: f64,
+        h_initial: f64,
+    ) {
         // Simplified adiabatic evolution
         #[allow(clippy::needless_range_loop)]
         for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
@@ -1015,7 +1035,10 @@ impl QuantumOptimizer {
             .collect()
     }
 
-    fn update_qaoa_params(&mut self, gamma_params: &mut [f64], beta_params: &mut [f64],
+    fn update_qaoa_params(
+        &mut self,
+        gamma_params: &mut [f64],
+        beta_params: &mut [f64],
         iteration: usize,
     ) {
         let step_size = 0.01 * (1.0 - iteration as f64 / 1000.0);
@@ -1038,31 +1061,42 @@ impl QuantumOptimizer {
     pub fn get_quantum_entropy(&self) -> f64 {
         self.state.entropy()
     }
-    
+
     /// Accept solution based on quantum criteria
-    fn accept_solution(&self, current_fitness: f64, new_fitness: f64, iteration: usize, max_iterations: usize) -> bool {
+    fn accept_solution(
+        &self,
+        current_fitness: f64,
+        new_fitness: f64,
+        iteration: usize,
+        max_iterations: usize,
+    ) -> bool {
         if new_fitness < current_fitness {
             return true;
         }
-        
+
         // Quantum acceptance probability
         let temperature = 1.0 - (iteration as f64 / max_iterations as f64);
         let delta_fitness = new_fitness - current_fitness;
         let quantum_probability = (-delta_fitness / temperature).exp();
-        
+
         use rand::Rng;
         let mut rng = rand::rng();
         rng.random::<f64>() < quantum_probability
     }
-    
+
     /// Quantum reproduction operation
-    fn quantum_reproduction(&mut self, parents: &[Vec<f64>], _fitness_values: &[f64], _bounds: &[(f64, f64)]) -> Vec<Vec<f64>> {
+    fn quantum_reproduction(
+        &mut self,
+        parents: &[Vec<f64>],
+        _fitness_values: &[f64],
+        _bounds: &[(f64, f64)],
+    ) -> Vec<Vec<f64>> {
         if parents.is_empty() {
             return vec![vec![0.0; self.dimensions]; self.population_size];
         }
-        
+
         let mut offspring = Vec::with_capacity(self.population_size);
-        
+
         for _ in 0..self.population_size {
             // Simple quantum crossover - average parents with quantum noise
             let mut child = vec![0.0; self.dimensions];
@@ -1074,18 +1108,23 @@ impl QuantumOptimizer {
                     }
                 }
                 child[i] = sum / parents.len() as f64;
-                
+
                 // Add quantum fluctuation
                 child[i] += self.calculate_quantum_fluctuation(i, 0, 100);
             }
             offspring.push(child);
         }
-        
+
         offspring
     }
-    
+
     /// Calculate quantum fluctuation for a dimension
-    fn calculate_quantum_fluctuation(&mut self, dimension: usize, _iteration: usize, _max_iterations: usize) -> f64 {
+    fn calculate_quantum_fluctuation(
+        &mut self,
+        dimension: usize,
+        _iteration: usize,
+        _max_iterations: usize,
+    ) -> f64 {
         // Simple quantum fluctuation based on state amplitude
         if dimension < self.state.amplitudes.len() {
             let amplitude = self.state.amplitudes[dimension];
@@ -1094,7 +1133,7 @@ impl QuantumOptimizer {
             0.0
         }
     }
-    
+
     /// Calculate quantum crossover probability
     fn calculate_quantum_crossover_probability(&self, _dimension: usize, iteration: usize) -> f64 {
         // Base crossover probability with quantum modulation
@@ -1102,7 +1141,7 @@ impl QuantumOptimizer {
         let quantum_modulation = (iteration as f64 * 0.1).sin() * 0.1;
         (base_probability + quantum_modulation).clamp(0.1, 0.9)
     }
-    
+
     /// Evolve adiabatic Hamiltonian
     fn evolve_adiabatic_hamiltonian(
         &mut self,

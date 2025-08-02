@@ -1977,7 +1977,7 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
     /// Generate quantum-inspired random noise
     fn generate_quantum_noise(&self) -> F {
         // Simulate quantum noise from environmental decoherence
-        use scirs2_core::rng;
+
         let mut rng = rand::rng();
         let noise: f64 = rng.gen_range(-0.01..0.01);
         F::from(noise).unwrap()

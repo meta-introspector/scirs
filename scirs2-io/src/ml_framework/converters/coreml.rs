@@ -3,7 +3,7 @@
 
 use crate::error::{IoError, Result};
 use crate::ml_framework::converters::MLFrameworkConverter;
-use crate::ml_framework::types::{MLModel, MLTensor, MLFramework};
+use crate::ml_framework::types::{MLFramework, MLModel, MLTensor};
 use ndarray::{ArrayD, IxDyn};
 use std::fs::File;
 use std::path::Path;
@@ -24,7 +24,7 @@ impl MLFrameworkConverter for CoreMLConverter {
                     "license": "MIT",
                     "shortDescription": model.metadata.model_name.clone().unwrap_or_default()
                 },
-                "input": model.metadata.input_shapes.iter().map(|(name, shape)| {
+                "input": model.metadata.inputshapes.iter().map(|(name, shape)| {
                     serde_json::json!({
                         "name": name,
                         "type": {
@@ -35,7 +35,7 @@ impl MLFrameworkConverter for CoreMLConverter {
                         }
                     })
                 }).collect::<Vec<_>>(),
-                "output": model.metadata.output_shapes.iter().map(|(name, shape)| {
+                "output": model.metadata.outputshapes.iter().map(|(name, shape)| {
                     serde_json::json!({
                         "name": name,
                         "type": {
@@ -98,7 +98,7 @@ impl MLFrameworkConverter for CoreMLConverter {
                                 .collect();
                             model
                                 .metadata
-                                .input_shapes
+                                .inputshapes
                                 .insert(name.to_string(), shape_vec);
                         }
                     }
@@ -123,7 +123,7 @@ impl MLFrameworkConverter for CoreMLConverter {
                                 .collect();
                             model
                                 .metadata
-                                .output_shapes
+                                .outputshapes
                                 .insert(name.to_string(), shape_vec);
                         }
                     }
@@ -140,7 +140,7 @@ impl MLFrameworkConverter for CoreMLConverter {
                 let data: Vec<f32> = serde_json::from_value(weight_data["floatValue"].clone())
                     .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
-                let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
+                let array = ArrayD::fromshape_vec(IxDyn(&shape), data)
                     .map_err(|e| IoError::Other(e.to_string()))?;
 
                 model
@@ -178,7 +178,7 @@ impl MLFrameworkConverter for CoreMLConverter {
             let data: Vec<f32> = serde_json::from_value(multiarray["floatValue"].clone())
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
-            let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
+            let array = ArrayD::fromshape_vec(IxDyn(&shape), data)
                 .map_err(|e| IoError::Other(e.to_string()))?;
 
             return Ok(MLTensor::new(array, None));

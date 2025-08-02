@@ -313,7 +313,7 @@ where
         }
 
         let seasonal_diff =
-            Array1::from_shape_fn(result.len() - _lag, |i| result[i + _lag] - result[i]);
+            Array1::fromshape_fn(result.len() - _lag, |i| result[i + _lag] - result[i]);
         result = seasonal_diff;
     }
 
@@ -327,7 +327,7 @@ where
             });
         }
 
-        let diff = Array1::from_shape_fn(result.len() - 1, |i| result[i + 1] - result[i]);
+        let diff = Array1::fromshape_fn(result.len() - 1, |i| result[i + 1] - result[i]);
         result = diff;
     }
 
@@ -627,8 +627,8 @@ where
         .min((n - 1) / 3);
 
     // Prepare regression data
-    let y_diff = Array1::from_shape_fn(n - 1, |i| ts[i + 1] - ts[i]);
-    let y_lag = Array1::from_shape_fn(n - 1, |i| ts[i]);
+    let y_diff = Array1::fromshape_fn(n - 1, |i| ts[i + 1] - ts[i]);
+    let y_lag = Array1::fromshape_fn(n - 1, |i| ts[i]);
 
     let start_idx = _lags;
     let regression_length = n - 1 - start_idx;

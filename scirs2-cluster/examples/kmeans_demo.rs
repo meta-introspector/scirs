@@ -9,7 +9,7 @@ fn main() {
     println!("=========================");
 
     // Create a simple dataset with three clusters
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (15, 2),
         vec![
             // Cluster 1

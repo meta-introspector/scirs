@@ -56,10 +56,10 @@ where
     fn combine_chunks(
         &self,
         results: Vec<(Array<T, D>, ChunkPosition)>,
-        output_shape: &[usize],
+        outputshape: &[usize],
     ) -> NdimageResult<Array<T, D>> {
         let overlap = <Self as ChunkProcessor<T, D>>::required_overlap(self);
-        combine_chunks_with_overlap(results, output_shape, overlap)
+        combine_chunks_with_overlap(results, outputshape, overlap)
     }
 }
 
@@ -98,10 +98,10 @@ where
     fn combine_chunks(
         &self,
         results: Vec<(Array<T, D>, ChunkPosition)>,
-        output_shape: &[usize],
+        outputshape: &[usize],
     ) -> NdimageResult<Array<T, D>> {
         let overlap = <Self as ChunkProcessor<T, D>>::required_overlap(self);
-        combine_chunks_with_overlap(results, output_shape, overlap)
+        combine_chunks_with_overlap(results, outputshape, overlap)
     }
 }
 
@@ -212,7 +212,7 @@ where
 #[allow(dead_code)]
 fn combine_chunks_with_overlap<T, D>(
     results: Vec<(Array<T, D>, ChunkPosition)>,
-    output_shape: &[usize],
+    outputshape: &[usize],
     overlap: usize,
 ) -> NdimageResult<Array<T, D>>
 where
@@ -222,7 +222,7 @@ where
     use ndarray::SliceInfoElem;
 
     // Create output array
-    let mut output = Array::<T, IxDyn>::zeros(IxDyn(output_shape));
+    let mut output = Array::<T, IxDyn>::zeros(IxDyn(outputshape));
 
     // Copy chunks into output, handling overlap
     for (chunk_result, position) in results {
@@ -239,7 +239,7 @@ where
             } else {
                 start
             };
-            let out_end = if end < output_shape[dim] {
+            let out_end = if end < outputshape[dim] {
                 end - overlap / 2
             } else {
                 end
@@ -249,8 +249,8 @@ where
 
             // Corresponding chunk region
             let ch_start = if start > 0 { overlap / 2 } else { 0 };
-            let ch_end = chunk_result._shape()[dim]
-                - if end < output_shape[dim] {
+            let ch_end = chunk_result.shape()[dim]
+                - if end < outputshape[dim] {
                     overlap / 2
                 } else {
                     0
@@ -350,7 +350,7 @@ mod tests {
 
     #[test]
     fn test_chunked_vs_regular() {
-        let input = Array2::<f64>::from_shape_fn((50, 50), |(i, j)| {
+        let input = Array2::<f64>::fromshape_fn((50, 50), |(i, j)| {
             (i as f64 * 0.1).sin() + (j as f64 * 0.1).cos()
         });
 

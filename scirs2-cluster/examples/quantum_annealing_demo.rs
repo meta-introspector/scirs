@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("===========================================");
 
     // Create sample data with three distinct clusters
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (12, 2),
         vec![
             // Cluster 1: Around origin

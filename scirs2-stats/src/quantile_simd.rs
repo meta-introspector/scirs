@@ -282,11 +282,11 @@ where
 /// SIMD-accelerated sorting for arrays
 ///
 /// Uses SIMD operations for comparison and swapping when beneficial
-pub(crate) fn simd_sort<F>(_data: &mut [F])
+pub(crate) fn simd_sort<F>(data: &mut [F])
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
 {
-    let n = _data.len();
+    let n = data.len();
     let optimizer = AutoOptimizer::new();
 
     if n <= 1 {
@@ -295,28 +295,28 @@ where
 
     // For small arrays, use insertion sort
     if n <= 32 {
-        insertion_sort(_data);
+        insertion_sort(data);
         return;
     }
 
     // For larger arrays, use introsort with SIMD optimizations
     let max_depth = (n.ilog2() * 2) as usize;
-    introsort_simd(_data, 0, n - 1, max_depth, &optimizer);
+    introsort_simd(data, 0, n - 1, max_depth, &optimizer);
 }
 
 /// Insertion sort for small arrays
 #[allow(dead_code)]
-fn insertion_sort<F: Float>(_data: &mut [F]) {
-    for i in 1.._data.len() {
-        let key = _data[i];
+fn insertion_sort<F: Float>(data: &mut [F]) {
+    for i in 1..data.len() {
+        let key = data[i];
         let mut j = i;
 
-        while j > 0 && _data[j - 1] > key {
-            _data[j] = _data[j - 1];
+        while j > 0 && data[j - 1] > key {
+            data[j] = data[j - 1];
             j -= 1;
         }
 
-        _data[j] = key;
+        data[j] = key;
     }
 }
 
@@ -362,54 +362,54 @@ fn introsort_simd<F>(
 
 /// Heapsort fallback for worst-case scenarios
 #[allow(dead_code)]
-fn heapsort<F: Float>(_data: &mut [F]) {
-    let n = _data.len();
+fn heapsort<F: Float>(data: &mut [F]) {
+    let n = data.len();
 
     // Build heap
     for i in (0..n / 2).rev() {
-        heapify(_data, n, i);
+        heapify(data, n, i);
     }
 
     // Extract elements from heap
     for i in (1..n).rev() {
-        _data.swap(0, i);
-        heapify(_data, i, 0);
+        data.swap(0, i);
+        heapify(data, i, 0);
     }
 }
 
 #[allow(dead_code)]
-fn heapify<F: Float>(_data: &mut [F], n: usize, i: usize) {
+fn heapify<F: Float>(data: &mut [F], n: usize, i: usize) {
     let mut largest = i;
     let left = 2 * i + 1;
     let right = 2 * i + 2;
 
-    if left < n && _data[left] > _data[largest] {
+    if left < n && data[left] > data[largest] {
         largest = left;
     }
 
-    if right < n && _data[right] > _data[largest] {
+    if right < n && data[right] > data[largest] {
         largest = right;
     }
 
     if largest != i {
-        _data.swap(i, largest);
-        heapify(_data, n, largest);
+        data.swap(i, largest);
+        heapify(data, n, largest);
     }
 }
 
 /// Compute quantile from sorted array
 #[allow(dead_code)]
-fn compute_quantile_from_sorted<F>(sorted_data: &[F], q: F, method: &str) -> StatsResult<F>
+fn compute_quantile_from_sorted<F>(sorteddata: &[F], q: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    let n = sorted_data.len();
+    let n = sorteddata.len();
 
     if q == F::zero() {
-        return Ok(sorted_data[0]);
+        return Ok(sorteddata[0]);
     }
     if q == F::one() {
-        return Ok(sorted_data[n - 1]);
+        return Ok(sorteddata[n - 1]);
     }
 
     let pos = q * F::from(n - 1).unwrap();
@@ -418,10 +418,10 @@ where
     let fraction = pos - pos.floor();
 
     if lower_idx == upper_idx {
-        Ok(sorted_data[lower_idx])
+        Ok(sorteddata[lower_idx])
     } else {
-        let lower_val = sorted_data[lower_idx];
-        let upper_val = sorted_data[upper_idx];
+        let lower_val = sorteddata[lower_idx];
+        let upper_val = sorteddata[upper_idx];
 
         match method {
             "linear" => Ok(lower_val + fraction * (upper_val - lower_val)),

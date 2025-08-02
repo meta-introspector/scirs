@@ -11,7 +11,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::formats::astronomical::{FitsFile, VOTable};
+//! use scirs2_io::formats::astronomical::{FitsFile, FitsTableReader, VOTable};
 //! use ndarray::Array2;
 //!
 //! // Read FITS file
@@ -25,7 +25,8 @@
 //!
 //! // Read FITS table
 //! let table_hdu = fits.get_hdu(1)?;
-//! let column_data = table_hdu.read_column("FLUX")?;
+//! let table_reader = FitsTableReader::new(table_hdu.clone())?;
+//! let column_data = table_reader.read_column("FLUX")?;
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
 
@@ -260,7 +261,7 @@ impl FitsDataType {
 
 impl FitsFile {
     /// Open a FITS file
-    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file_path = _path.as_ref().to_string_lossy().to_string();
         let mut file =
             File::open(_path.as_ref()).map_err(|_e| IoError::FileNotFound(file_path.clone()))?;
@@ -335,7 +336,7 @@ impl FitsFile {
     }
 
     /// Read a header from the current file position
-    fn read_header<R: Read>(_reader: &mut R) -> Result<FitsHeader> {
+    fn read_header<R: Read>(reader: &mut R) -> Result<FitsHeader> {
         let mut header = FitsHeader::new();
         let mut card_buf = [0u8; 80];
 
@@ -531,7 +532,7 @@ impl FitsFile {
         }
 
         // Reshape from FITS order to ndarray order
-        let array = Array2::from_shape_vec((naxis2, naxis1), values)
+        let array = Array2::fromshape_vec((naxis2, naxis1), values)
             .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))?;
 
         Ok(array.t().to_owned())
@@ -555,12 +556,12 @@ impl FitsFile {
 
 /// Trait for numeric types supported by FITS
 pub trait FitsNumeric: Default + Clone {
-    fn read_fits<R: Read>(_reader: &mut R, data_type: FitsDataType) -> Result<Self>;
+    fn read_fits<R: Read>(reader: &mut R, data_type: FitsDataType) -> Result<Self>;
     fn write_fits<W: Write>(&self, writer: &mut W, data_type: FitsDataType) -> Result<()>;
 }
 
 impl FitsNumeric for f32 {
-    fn read_fits<R: Read>(_reader: &mut R, data_type: FitsDataType) -> Result<Self> {
+    fn read_fits<R: Read>(reader: &mut R, data_type: FitsDataType) -> Result<Self> {
         match data_type {
             FitsDataType::Float32 => _reader
                 .read_f32::<BigEndian>()
@@ -596,7 +597,7 @@ impl FitsNumeric for f32 {
 }
 
 impl FitsNumeric for f64 {
-    fn read_fits<R: Read>(_reader: &mut R, data_type: FitsDataType) -> Result<Self> {
+    fn read_fits<R: Read>(reader: &mut R, data_type: FitsDataType) -> Result<Self> {
         match data_type {
             FitsDataType::Float64 => _reader
                 .read_f64::<BigEndian>()
@@ -635,7 +636,7 @@ pub struct FitsWriter {
 
 impl FitsWriter {
     /// Create a new FITS file
-    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
 
@@ -893,7 +894,7 @@ impl VOTable {
     }
 
     /// Read VOTable from XML file (simplified)
-    pub fn read<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn read<P: AsRef<Path>>(path: P) -> Result<Self> {
         // Simplified implementation
         // In reality, would use an XML parser
         Ok(Self::new())
@@ -1254,7 +1255,7 @@ mod tests {
         let path = temp_file.path();
 
         // Create test data
-        let data = Array2::from_shape_fn((10, 20), |(i, j)| (i * 20 + j) as f32);
+        let data = Array2::fromshape_fn((10, 20), |(i, j)| (i * 20 + j) as f32);
 
         // Write FITS
         {

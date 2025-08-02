@@ -1102,7 +1102,7 @@ mod tests {
             |x: &ArrayView1<f64>| -> Array1<f64> { Array1::from_vec(vec![1.0 - x[0] - x[1]]) };
 
         let ineq_jac = |_x: &ArrayView1<f64>| -> Array2<f64> {
-            Array2::from_shape_vec((1, 2), vec![-1.0, -1.0]).unwrap()
+            Array2::fromshape_vec((1, 2), vec![-1.0, -1.0]).unwrap()
         };
 
         // Use a feasible starting point closer to the solution
@@ -1140,7 +1140,7 @@ mod tests {
             |x: &ArrayView1<f64>| -> Array1<f64> { Array1::from_vec(vec![x[0] + x[1] - 2.0]) };
 
         let eq_jac = |_x: &ArrayView1<f64>| -> Array2<f64> {
-            Array2::from_shape_vec((1, 2), vec![1.0, 1.0]).unwrap()
+            Array2::fromshape_vec((1, 2), vec![1.0, 1.0]).unwrap()
         };
 
         // Use a feasible starting point that satisfies the constraint

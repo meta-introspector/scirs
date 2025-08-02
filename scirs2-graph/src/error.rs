@@ -219,7 +219,7 @@ pub enum GraphError {
 
 impl GraphError {
     /// Create a NodeNotFound error with minimal context
-    pub fn node_not_found<T: fmt::Display>(_node: T) -> Self {
+    pub fn node_not_found<T: fmt::Display>(node: T) -> Self {
         Self::NodeNotFound {
             _node: _node.to_string(),
             graph_size: 0,
@@ -241,7 +241,7 @@ impl GraphError {
     }
 
     /// Create an EdgeNotFound error with minimal context
-    pub fn edge_not_found<S: fmt::Display, T: fmt::Display>(_source: S, target: T) -> Self {
+    pub fn edge_not_found<S: fmt::Display, T: fmt::Display>(source: S, target: T) -> Self {
         Self::EdgeNotFound {
             src_node: _source.to_string(),
             target: target.to_string(),
@@ -417,7 +417,8 @@ impl GraphError {
             GraphError::SerializationError { .. } => "serialization",
             GraphError::Cancelled { .. } => "cancellation",
             GraphError::ConcurrencyError { .. } => "concurrency",
-            GraphError::FormatError { .. } => "format"_ => "other",
+            GraphError::FormatError { .. } => "format",
+            _ => "other",
         }
     }
 }

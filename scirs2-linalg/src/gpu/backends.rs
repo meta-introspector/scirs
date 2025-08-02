@@ -33,7 +33,7 @@ pub mod cuda {
     }
 
     fn cuda_get_device_properties(
-        _props: &mut CudaDeviceProperties_device: CudaDevice,
+        _props: &mut CudaDeviceProperties, device: CudaDevice,
     ) -> CudaResult {
         CUDA_SUCCESS
     }
@@ -46,7 +46,7 @@ pub mod cuda {
         CUDA_SUCCESS
     }
 
-    fn cuda_malloc(_ptr: *mut *mut std::ffi::c_void_size: usize) -> CudaResult {
+    fn cuda_malloc(_ptr: *mut *mut std::ffi::c_void, size: usize) -> CudaResult {
         CUDA_SUCCESS
     }
 
@@ -55,7 +55,7 @@ pub mod cuda {
     }
 
     fn cuda_memcpy(
-        _dst: *mut std::ffi::c_void_src: *const std::ffi::c_void, _count: usize_kind: i32,
+        _dst: *mut std::ffi::c_void, src: *const std::ffi::c_void, _count: usize, kind: i32,
     ) -> CudaResult {
         CUDA_SUCCESS
     }
@@ -95,9 +95,9 @@ pub mod cuda {
         integrated: bool,
         can_map_host_memory: bool,
         compute_mode: i32,
-        max_texture_1d: i32,
-        max_texture_2d: [i32; 2],
-        max_texture_3d: [i32; 3],
+        maxtexture_1d: i32,
+        maxtexture_2d: [i32; 2],
+        maxtexture_3d: [i32; 3],
         pci_bus_id: String,
         pci_device_id: String,
         unified_addressing: bool,
@@ -161,9 +161,9 @@ pub mod cuda {
                     integrated: false,
                     can_map_host_memory: true,
                     compute_mode: 0, // Default compute mode
-                    max_texture_1d: 131072,
-                    max_texture_2d: [131072, 65536],
-                    max_texture_3d: [16384, 16384, 16384],
+                    maxtexture_1d: 131072,
+                    maxtexture_2d: [131072, 65536],
+                    maxtexture_3d: [16384, 16384, 16384],
                     pci_bus_id: format!("0000:{:02x}:00.0", device_id),
                     pci_device_id: format!("10de:1b80"), // Mock RTX 2080 Ti
                     unified_addressing: true,
@@ -724,16 +724,16 @@ pub mod opencl {
     }
 
     fn cl_get_device_ids(
-        _platform: ClPlatformId_device_type: ClULong,
+        _platform: ClPlatformId_device, type: ClULong,
     ) -> (ClInt, Vec<ClDeviceId>) {
         (CL_SUCCESS, vec![])
     }
 
-    fn cl_get_device_info(_device: ClDeviceId_param_name: ClUInt) -> (ClInt, Vec<u8>) {
+    fn cl_get_device_info(_device: ClDeviceId_param, name: ClUInt) -> (ClInt, Vec<u8>) {
         (CL_SUCCESS, vec![0; 256])
     }
 
-    fn cl_get_platform_info(_platform: ClPlatformId_param_name: ClUInt) -> (ClInt, String) {
+    fn cl_get_platform_info(_platform: ClPlatformId_param, name: ClUInt) -> (ClInt, String) {
         (CL_SUCCESS, "Mock Platform".to_string())
     }
 
@@ -742,23 +742,23 @@ pub mod opencl {
     }
 
     fn cl_create_command_queue(
-        _context: ClContext_device: ClDeviceId,
+        _context: ClContext, device: ClDeviceId,
     ) -> (ClInt, ClCommandQueue) {
         (CL_SUCCESS, SafeClPtr::new(ptr::null_mut()))
     }
 
-    fn cl_create_buffer(_context: ClContext_flags: ClULong, _size: usize) -> (ClInt, ClMem) {
+    fn cl_create_buffer(_context: ClContext, flags: ClULong, _size: usize) -> (ClInt, ClMem) {
         (CL_SUCCESS, SafeClPtr::new(ptr::null_mut()))
     }
 
     fn cl_enqueue_write_buffer(
-        _queue: ClCommandQueue_buffer: ClMem, _blocking: ClBool_offset: usize, _size: usize_ptr: *const std::ffi::c_void,
+        _queue: ClCommandQueue, buffer: ClMem, _blocking: ClBool, offset: usize, _size: usize, ptr: *const std::ffi::c_void,
     ) -> ClInt {
         CL_SUCCESS
     }
 
     fn cl_enqueue_read_buffer(
-        _queue: ClCommandQueue_buffer: ClMem, _blocking: ClBool_offset: usize, _size: usize_ptr: *mut std::ffi::c_void,
+        _queue: ClCommandQueue, buffer: ClMem, _blocking: ClBool, offset: usize, _size: usize, ptr: *mut std::ffi::c_void,
     ) -> ClInt {
         CL_SUCCESS
     }
@@ -1037,7 +1037,7 @@ pub mod opencl {
 
                     let device_type = match opencl_device.device_type {
                         CL_DEVICE_TYPE_GPU => GpuDeviceType::OpenCl,
-                        CL_DEVICE_TYPE_CPU => GpuDeviceType::OpenCl_ =>, GpuDeviceType::OpenCl,
+                        CL_DEVICE_TYPE_CPU => GpuDeviceType::OpenCl_ => GpuDeviceType::OpenCl,
                     };
 
                     GpuDeviceInfo {
@@ -1534,7 +1534,7 @@ impl CpuFallbackBackend {
                 device_type: GpuDeviceType::OpenCl, // Use OpenCL as generic type
                 name: "CPU Fallback".to_string(),
                 total_memory: 8 * 1024 * 1024 * 1024, // 8GB estimate
-                compute_units: num, _cpus: get() as u32,
+                compute_units: num_cpus::get() as u32,
                 clock_frequency: 3000, // 3GHz estimate
                 supports_fp64: true,
                 supports_fp16: false,
@@ -1545,7 +1545,7 @@ impl CpuFallbackBackend {
                 registers_per_block: 0,
                 warp_size: 1, // No SIMD grouping for CPU
                 max_threads_per_mp: 1,
-                multiprocessor_count: num, _cpus: get() as u32,
+                multiprocessor_count: num_cpus::get() as u32,
                 supports_tensor_cores: false,
                 supports_mixed_precision: false,
                 vendor: "CPU".to_string(),

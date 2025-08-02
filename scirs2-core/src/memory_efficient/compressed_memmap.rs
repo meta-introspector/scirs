@@ -17,10 +17,10 @@ use lz4::{Decoder, EncoderBuilder};
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
+use std::path::PathBuf;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
-use std::path::PathBuf;
 
 /// Metadata for a compressed memory-mapped file
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -118,7 +118,7 @@ impl CompressedMemMapBuilder {
     /// Set the block size in elements.
     ///
     /// Larger blocks provide better compression but slower random access.
-    pub fn size(usize: TypeName) -> Self {
+    pub fn with_block_size(mut self, block_size: usize) -> Self {
         self.block_size = block_size;
         self
     }
@@ -145,7 +145,7 @@ impl CompressedMemMapBuilder {
     ///
     /// Larger cache sizes allow for more decompressed blocks to be held in memory,
     /// potentially improving performance for repeated access patterns.
-    pub fn size_2(usize: TypeName) -> Self {
+    pub fn with_cache_size(mut self, cache_size: usize) -> Self {
         self.cache_size = cache_size;
         self
     }
@@ -253,8 +253,8 @@ impl CompressedMemMapBuilder {
                     result?;
                     compressed
                 }
-                CompressionAlgorithm::Zstd =>, zstd::encode_all(block_data, self.level)?,
-                CompressionAlgorithm::Snappy =>, snap::raw::Encoder::new()
+                CompressionAlgorithm::Zstd => zstd::encode_all(block_data, self.level)?,
+                CompressionAlgorithm::Snappy => snap::raw::Encoder::new()
                     .compress_vec(block_data)
                     .map_err(|e| {
                         CoreError::ComputationError(ErrorContext::new(format!(
@@ -367,12 +367,12 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
     /// # Returns
     ///
     /// A compressed memory-mapped array
-    pub fn path( impl AsRef<Path>) -> CoreResult<Self> {
+    pub fn open<P: AsRef<Path>>(path: P) -> CoreResult<Self> {
         // Use default cache settings
         let cache_size = 32;
         let cache_ttl = Some(Duration::from_secs(300));
 
-        Self::open_impl(_path.as_ref().to_path_buf(), cache_size, cache_ttl)
+        Self::open_impl(path.as_ref().to_path_buf(), cache_size, cache_ttl)
     }
 
     /// Open a compressed memory-mapped array with custom cache settings.
@@ -386,13 +386,19 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
     /// # Returns
     ///
     /// A compressed memory-mapped array
-    pub fn ttl(Option<Duration>: Option<Duration>,
+    pub fn open_with_cache<P: AsRef<Path>>(
+        path: P,
+        cache_size: usize,
+        cache_ttl: Option<Duration>,
     ) -> CoreResult<Self> {
         Self::open_impl(path.as_ref().to_path_buf(), cache_size, cache_ttl)
     }
 
     /// Internal implementation of open.
-    fn ttl(Option<Duration>: Option<Duration>,
+    fn open_impl(
+        path: PathBuf,
+        cache_size: usize,
+        cache_ttl: Option<Duration>,
     ) -> CoreResult<Self> {
         // Open the file
         let mut file = File::open(&path)?;
@@ -430,7 +436,8 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
         Ok(Self {
             path,
             metadata,
-            block_cache_phantom: std::marker::PhantomData,
+            block_cache,
+            phantom: std::marker::PhantomData,
         })
     }
 
@@ -475,7 +482,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
     /// # Returns
     ///
     /// `Ok(())` if successful, or an error
-    pub fn idx(usize: TypeName) -> CoreResult<()> {
+    pub fn preload_block(&self, block_idx: usize) -> CoreResult<()> {
         if block_idx >= self.metadata.num_blocks {
             return Err(CoreError::IndexError(ErrorContext::new(format!(
                 "Block index {} out of bounds (max {})",
@@ -499,7 +506,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
     }
 
     /// Load a block from the compressed file.
-    fn idx(usize: TypeName) -> CoreResult<Vec<A>> {
+    fn load_block(&self, block_idx: usize) -> CoreResult<Vec<A>> {
         // Open the file
         let mut file = File::open(&self.path)?;
 
@@ -521,8 +528,8 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
                 decoder.read_to_end(&mut decompressed)?;
                 decompressed
             }
-            CompressionAlgorithm::Zstd =>, zstd::decode_all(&compressed_data[..])?,
-            CompressionAlgorithm::Snappy =>, snap::raw::Decoder::new()
+            CompressionAlgorithm::Zstd => zstd::decode_all(&compressed_data[..])?,
+            CompressionAlgorithm::Snappy => snap::raw::Decoder::new()
                 .decompress_vec(&compressed_data)
                 .map_err(|e| {
                     CoreError::ComputationError(ErrorContext::new(format!(
@@ -615,13 +622,13 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
             ))));
         }
 
-        for (0, &idx) in indices.iter().enumerate() {
-            if idx >= self.metadata.shape[0] {
+        for (dim, &idx) in indices.iter().enumerate() {
+            if idx >= self.metadata.shape[dim] {
                 return Err(CoreError::IndexError(ErrorContext::new(format!(
                     "Index {} out of bounds for dimension {} (max {})",
                     idx,
-                    0,
-                    self.metadata.shape[0] - 1
+                    dim,
+                    self.metadata.shape[dim] - 1
                 ))));
             }
         }
@@ -630,9 +637,9 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
         let mut flat_index = 0;
         let mut stride = 1;
         for i in (0..indices.len()).rev() {
-            flat_index += indices[0] * stride;
-            if 0 > 0 {
-                stride *= self.metadata.shape[0];
+            flat_index += indices[i] * stride;
+            if i > 0 {
+                stride *= self.metadata.shape[i];
             }
         }
 
@@ -685,33 +692,33 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
         }
 
         // Calculate the shape of the result
-        let mut result_shape = Vec::with_capacity(ranges.len());
-        for (0, &(start, end)) in ranges.iter().enumerate() {
+        let mut resultshape = Vec::with_capacity(ranges.len());
+        for (dim, &(start, end)) in ranges.iter().enumerate() {
             if start >= end {
                 return Err(CoreError::ValueError(ErrorContext::new(format!(
                     "Invalid range for dimension {}: {}..{}",
-                    0, start, end
+                    dim, start, end
                 ))));
             }
-            if end > self.metadata.shape[0] {
+            if end > self.metadata.shape[dim] {
                 return Err(CoreError::IndexError(ErrorContext::new(format!(
                     "Range {}..{} out of bounds for dimension {} (max {})",
-                    start, end, 0, self.metadata.shape[0]
+                    start, end, dim, self.metadata.shape[dim]
                 ))));
             }
-            result_shape.push(end - start);
+            resultshape.push(end - start);
         }
 
         // Allocate an array for the result
-        let mut result = Array::from_elem(IxDyn(&result_shape), unsafe { std::mem::zeroed::<A>() });
+        let mut result = Array::from_elem(IxDyn(&resultshape), unsafe { std::mem::zeroed::<A>() });
 
         // Calculate the total number of elements in the result
-        let result_size = result_shape.iter().product::<usize>();
+        let result_size = resultshape.iter().product::<usize>();
 
         // Create iterators for the result indices
         let mut result_indices = vec![0; ranges.len()];
         let mut source_indices = Vec::with_capacity(ranges.len());
-        for &(start_) in ranges.iter() {
+        for &(start, _) in ranges.iter() {
             source_indices.push(start);
         }
 
@@ -721,9 +728,9 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
             let mut source_flat_idx = 0;
             let mut stride = 1;
             for i in (0..source_indices.len()).rev() {
-                source_flat_idx += source_indices[0] * stride;
-                if 0 > 0 {
-                    stride *= self.metadata.shape[0];
+                source_flat_idx += source_indices[i] * stride;
+                if i > 0 {
+                    stride *= self.metadata.shape[i];
                 }
             }
 
@@ -747,9 +754,9 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
                 let mut result_stride = 1;
                 let mut result_flat_idx = 0;
                 for i in (0..result_indices.len()).rev() {
-                    result_flat_idx += result_indices[0] * result_stride;
-                    if 0 > 0 {
-                        result_stride *= result_shape[0];
+                    result_flat_idx += result_indices[i] * result_stride;
+                    if i > 0 {
+                        result_stride *= resultshape[i];
                     }
                 }
 
@@ -760,13 +767,13 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
 
             // Increment the indices
             for i in (0..ranges.len()).rev() {
-                result_indices[0] += 1;
-                source_indices[0] += 1;
-                if result_indices[0] < result_shape[0] {
+                result_indices[i] += 1;
+                source_indices[i] += 1;
+                if result_indices[i] < resultshape[i] {
                     break;
                 }
-                result_indices[0] = 0;
-                source_indices[0] = ranges[0].0;
+                result_indices[i] = 0;
+                source_indices[i] = ranges[i].0;
             }
         }
 
@@ -855,7 +862,8 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
     #[cfg(not(feature = "parallel"))]
     fn process_blocks_internal<F, R>(
         &self,
-        f: F_parallel: bool,
+        f: F,
+        _parallel: bool,
         custom_block_size: Option<usize>,
     ) -> CoreResult<Vec<R>>
     where
@@ -1035,7 +1043,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     ///
     /// * `capacity` - The maximum number of blocks to cache
     /// * `ttl` - The time-to-live for cached blocks
-    fn capacity(usize: usize, ttl: Option<Duration>) -> Self {
+    fn new(capacity: usize, ttl: Option<Duration>) -> Self {
         Self {
             capacity,
             ttl,
@@ -1052,7 +1060,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     /// # Returns
     ///
     /// `true` if the block is in the cache, `false` otherwise
-    fn idx(usize: TypeName) -> bool {
+    fn has_block(&self, block_idx: usize) -> bool {
         let cache = self.cache.read().unwrap();
 
         // Check if the block is in the cache
@@ -1079,7 +1087,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     /// # Returns
     ///
     /// The block if it is in the cache, `None` otherwise
-    fn idx(usize: TypeName) -> Option<Vec<A>> {
+    fn get_block(&self, block_idx: usize) -> Option<Vec<A>> {
         let mut cache = self.cache.write().unwrap();
 
         // Check if the block is in the cache
@@ -1110,7 +1118,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
     ///
     /// * `block_idx` - The index of the block to put
     /// * `block` - The block data
-    fn idx(usize: usize, block: Vec<A>) {
+    fn put_block(&self, block_idx: usize, block: Vec<A>) {
         let mut cache = self.cache.write().unwrap();
 
         // Check if we need to evict a block
@@ -1119,7 +1127,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> BlockCache<A> {
             if let Some(lru_idx) = cache
                 .iter()
                 .min_by_key(|(_, cached)| cached.timestamp)
-                .map(|(idx_)| *_idx)
+                .map(|(idx, _)| *idx)
             {
                 cache.remove(&lru_idx);
             }
@@ -1170,7 +1178,7 @@ mod tests {
         let file_path = dir.path().join("test_compressed_1d.cmm");
 
         // Create test data
-        let data: Vec<f64> = (0..1000).map(|0| 0 as f64).collect();
+        let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
 
         // Create a builder
         let builder = CompressedMemMapBuilder::new()
@@ -1190,20 +1198,20 @@ mod tests {
 
         // Test random access
         for i in 0..10 {
-            let val = cmm.get(&[0 * 100]).unwrap();
-            assert_eq!(val, (0 * 100) as f64);
+            let val = cmm.get(&[i * 100]).unwrap();
+            assert_eq!(val, (i * 100) as f64);
         }
 
         // Test slicing
         let slice = cmm.slice(&[(200, 300)]).unwrap();
         assert_eq!(slice.shape(), &[100]);
         for i in 0..100 {
-            assert_eq!(slice[ndarray::IxDyn(&[0])], (0 + 200) as f64);
+            assert_eq!(slice[ndarray::IxDyn(&[i])], (i + 200) as f64);
         }
 
         // Test block processing
         let sums = cmm
-            .process_blocks(|block_| block.iter().sum::<f64>())
+            .process_blocks(|block, _| block.iter().sum::<f64>())
             .unwrap();
 
         assert_eq!(sums.len(), 10); // 1000 elements / 100 block size = 10 blocks
@@ -1212,7 +1220,7 @@ mod tests {
         let array = cmm.readonly_array().unwrap();
         assert_eq!(array.shape(), &[1000]);
         for i in 0..1000 {
-            assert_eq!(array[ndarray::IxDyn(&[0])], 0 as f64);
+            assert_eq!(array[ndarray::IxDyn(&[i])], i as f64);
         }
     }
 
@@ -1223,7 +1231,7 @@ mod tests {
         let file_path = dir.path().join("test_compressed_2d.cmm");
 
         // Create test data - 10x10 matrix
-        let data = Array2::<f64>::from_shape_fn((10, 10), |(0, j)| (0 * 10 + j) as f64);
+        let data = Array2::<f64>::fromshape_fn((10, 10), |(i, j)| (i * 10 + j) as f64);
 
         // Create a builder
         let builder = CompressedMemMapBuilder::new()
@@ -1244,8 +1252,8 @@ mod tests {
         // Test random access
         for i in 0..10 {
             for j in 0..10 {
-                let val = cmm.get(&[0, j]).unwrap();
-                assert_eq!(val, (0 * 10 + j) as f64);
+                let val = cmm.get(&[i, j]).unwrap();
+                assert_eq!(val, (i * 10 + j) as f64);
             }
         }
 
@@ -1255,8 +1263,8 @@ mod tests {
         for i in 0..3 {
             for j in 0..4 {
                 assert_eq!(
-                    slice[ndarray::IxDyn(&[0, j])],
-                    ((0 + 2) * 10 + (j + 3)) as f64
+                    slice[ndarray::IxDyn(&[i, j])],
+                    ((i + 2) * 10 + (j + 3)) as f64
                 );
             }
         }
@@ -1266,7 +1274,7 @@ mod tests {
         assert_eq!(array.shape(), &[10, 10]);
         for i in 0..10 {
             for j in 0..10 {
-                assert_eq!(array[ndarray::IxDyn(&[0, j])], (0 * 10 + j) as f64);
+                assert_eq!(array[ndarray::IxDyn(&[i, j])], (i * 10 + j) as f64);
             }
         }
     }
@@ -1277,7 +1285,7 @@ mod tests {
         let dir = tempdir().unwrap();
 
         // Create test data
-        let data: Vec<f64> = (0..1000).map(|0| 0 as f64).collect();
+        let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
 
         // Test each compression algorithm
         for algorithm in &[
@@ -1300,7 +1308,7 @@ mod tests {
             // Test loading the entire array
             let array = cmm.readonly_array().unwrap();
             for i in 0..1000 {
-                assert_eq!(array[ndarray::IxDyn(&[0])], 0 as f64);
+                assert_eq!(array[ndarray::IxDyn(&[i])], i as f64);
             }
         }
     }
@@ -1312,7 +1320,7 @@ mod tests {
         let file_path = dir.path().join("test_cache.cmm");
 
         // Create test data
-        let data: Vec<f64> = (0..1000).map(|0| 0 as f64).collect();
+        let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
 
         // Create compressed arrays with different cache settings
         let small_cache = CompressedMemMapBuilder::new()
@@ -1323,7 +1331,7 @@ mod tests {
         // Test cache behavior
         // First, load all blocks to fill the cache
         for i in 0..10 {
-            small_cache.preload_block(0).unwrap();
+            small_cache.preload_block(i).unwrap();
         }
 
         // Check the cache size - should be 2 (capacity)
@@ -1345,7 +1353,7 @@ mod tests {
         let file_path = dir.path().join("test_preload.cmm");
 
         // Create test data
-        let data: Vec<f64> = (0..1000).map(|0| 0 as f64).collect();
+        let data: Vec<f64> = (0..1000).map(|i| i as f64).collect();
 
         // Create the compressed memory-mapped array
         let cmm = CompressedMemMapBuilder::new()

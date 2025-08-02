@@ -21,7 +21,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::alpha_shapes::AlphaShape;
+//! use scirs2_spatial::alphashapes::AlphaShape;
 //! use ndarray::array;
 //!
 //! // Create a set of 2D points
@@ -35,14 +35,14 @@
 //! ];
 //!
 //! // Compute alpha shape with α = 0.8
-//! let alpha_shape = AlphaShape::new(&points, 0.8).unwrap();
+//! let alphashape = AlphaShape::new(&points, 0.8).unwrap();
 //!
 //! // Get the boundary edges (in 2D) or faces (in 3D)
-//! let boundary = alpha_shape.boundary();
+//! let boundary = alphashape.boundary();
 //! println!("Boundary elements: {:?}", boundary);
 //!
 //! // Get the alpha complex (all included simplices)
-//! let complex = alpha_shape.complex();
+//! let complex = alphashape.complex();
 //! println!("Alpha complex: {:?}", complex);
 //! ```
 
@@ -91,7 +91,7 @@ impl AlphaShape {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::alpha_shapes::AlphaShape;
+    /// use scirs2_spatial::alphashapes::AlphaShape;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -101,8 +101,8 @@ impl AlphaShape {
     ///     [0.0, 1.0]
     /// ];
     ///
-    /// let alpha_shape = AlphaShape::new(&points, 1.0).unwrap();
-    /// let boundary = alpha_shape.boundary();
+    /// let alphashape = AlphaShape::new(&points, 1.0).unwrap();
+    /// let boundary = alphashape.boundary();
     /// println!("Boundary: {:?}", boundary);
     /// ```
     pub fn new(points: &Array2<f64>, alpha: f64) -> SpatialResult<Self> {
@@ -167,7 +167,7 @@ impl AlphaShape {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::alpha_shapes::AlphaShape;
+    /// use scirs2_spatial::alphashapes::AlphaShape;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -765,7 +765,7 @@ impl AlphaShape {
     /// # Examples
     ///
     /// ```
-    /// use scirs2_spatial::alpha_shapes::AlphaShape;
+    /// use scirs2_spatial::alphashapes::AlphaShape;
     /// use ndarray::array;
     ///
     /// let points = array![
@@ -860,19 +860,19 @@ mod tests {
     use ndarray::arr2;
 
     #[test]
-    fn test_alpha_shape_2d_basic() {
+    fn test_alphashape_2d_basic() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let alpha_shape = AlphaShape::new(&points, 1.0).unwrap();
+        let alphashape = AlphaShape::new(&points, 1.0).unwrap();
 
-        assert_eq!(alpha_shape.ndim(), 2);
-        assert_eq!(alpha_shape.npoints(), 4);
-        assert!(!alpha_shape.complex().is_empty());
-        assert!(!alpha_shape.boundary().is_empty());
+        assert_eq!(alphashape.ndim(), 2);
+        assert_eq!(alphashape.npoints(), 4);
+        assert!(!alphashape.complex().is_empty());
+        assert!(!alphashape.boundary().is_empty());
     }
 
     #[test]
-    fn test_alpha_shape_2d_with_interior_point() {
+    fn test_alphashape_2d_with_interior_point() {
         let points = arr2(&[
             [0.0, 0.0],
             [1.0, 0.0],
@@ -892,7 +892,7 @@ mod tests {
     }
 
     #[test]
-    fn test_alpha_shape_3d_basic() {
+    fn test_alphashape_3d_basic() {
         let points = arr2(&[
             [0.0, 0.0, 0.0],
             [1.0, 0.0, 0.0],
@@ -902,23 +902,23 @@ mod tests {
         ]);
 
         // Try with a large alpha to ensure we get some complex
-        let alpha_shape = AlphaShape::new(&points, 10.0).unwrap();
+        let alphashape = AlphaShape::new(&points, 10.0).unwrap();
 
-        assert_eq!(alpha_shape.ndim(), 3);
-        assert_eq!(alpha_shape.npoints(), 5);
+        assert_eq!(alphashape.ndim(), 3);
+        assert_eq!(alphashape.npoints(), 5);
 
         // With a large alpha, we should have some simplices
         // If not, the 3D circumradius calculation might be failing
-        if alpha_shape.complex().is_empty() {
+        if alphashape.complex().is_empty() {
             // This suggests the circumradius calculation is giving infinity for all simplices
             // Let's just verify the basic functionality works
             println!("3D alpha shape test: complex is empty with large alpha, which indicates circumradius issues");
-            assert_eq!(alpha_shape.boundary().len(), 0);
+            assert_eq!(alphashape.boundary().len(), 0);
         } else {
-            assert!(!alpha_shape.complex().is_empty());
+            assert!(!alphashape.complex().is_empty());
 
             // 3D boundary should consist of triangular faces
-            for face in alpha_shape.boundary() {
+            for face in alphashape.boundary() {
                 assert_eq!(face.len(), 3);
             }
         }
@@ -980,11 +980,11 @@ mod tests {
     }
 
     #[test]
-    fn test_alpha_shape_measure() {
+    fn test_alphashape_measure() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let alpha_shape = AlphaShape::new(&points, 2.0).unwrap();
-        let area = alpha_shape.measure().unwrap();
+        let alphashape = AlphaShape::new(&points, 2.0).unwrap();
+        let area = alphashape.measure().unwrap();
 
         // Square should have area close to 1.0
         assert!(area > 0.5);
@@ -1031,23 +1031,23 @@ mod tests {
     fn test_alpha_zero() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let alpha_shape = AlphaShape::new(&points, 0.0).unwrap();
+        let alphashape = AlphaShape::new(&points, 0.0).unwrap();
 
         // Alpha = 0 should give empty complex
-        assert_eq!(alpha_shape.complex().len(), 0);
-        assert_eq!(alpha_shape.boundary().len(), 0);
+        assert_eq!(alphashape.complex().len(), 0);
+        assert_eq!(alphashape.boundary().len(), 0);
     }
 
     #[test]
     fn test_alpha_infinity() {
         let points = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
 
-        let alpha_shape = AlphaShape::new(&points, f64::INFINITY).unwrap();
+        let alphashape = AlphaShape::new(&points, f64::INFINITY).unwrap();
 
         // Alpha = ∞ should include all simplices (convex hull)
         assert_eq!(
-            alpha_shape.complex().len(),
-            alpha_shape.delaunay().simplices().len()
+            alphashape.complex().len(),
+            alphashape.delaunay().simplices().len()
         );
     }
 }

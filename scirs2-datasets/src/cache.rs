@@ -722,7 +722,7 @@ impl CacheManager {
         if self.cache.is_cached(&name) {
             match self.cache.read_cached(&name) {
                 Ok(cached_data) => {
-                    match serde_json::from, _slice::<crate::utils::Dataset>(&cached_data) {
+                    match serde_json::from_slice::<crate::utils::Dataset>(&cached_data) {
                         Ok(dataset) => Ok(Some(dataset)),
                         Err(e) => {
                             // If deserialization fails, consider the cache entry invalid

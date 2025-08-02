@@ -566,7 +566,7 @@ impl FEMPoissonSolver {
         let p3 = &points[corner_nodes[2]];
 
         // Compute Jacobian for coordinate transformation from reference to physical element
-        let jacobian = Array2::from_shape_vec(
+        let jacobian = Array2::fromshape_vec(
             (2, 2),
             vec![p2.x - p1.x, p3.x - p1.x, p2.y - p1.y, p3.y - p1.y],
         )
@@ -580,7 +580,7 @@ impl FEMPoissonSolver {
         }
 
         // Inverse of Jacobian
-        let inv_j = Array2::from_shape_vec(
+        let inv_j = Array2::fromshape_vec(
             (2, 2),
             vec![
                 jacobian[[1, 1]] / det_j,
@@ -834,7 +834,7 @@ impl From<FEMResult> for PDESolution<f64> {
 
         // Create solution values as a 2D array with one column
         let mut values = Vec::new();
-        let u_reshaped = _result.u.into_shape_with_order((n, 1)).unwrap();
+        let u_reshaped = _result.u.intoshape_with_order((n, 1)).unwrap();
         values.push(u_reshaped);
 
         // Create solver info

@@ -533,7 +533,7 @@ impl<F: Float> StabilityMetrics<F> {
             x if x < 1.1 => StabilityGrade::Excellent,
             x if x < 10.0 => StabilityGrade::Good,
             x if x < 100.0 => StabilityGrade::Fair,
-            x if x < 1000.0 => StabilityGrade::Poor_ =>, StabilityGrade::Unstable,
+            x if x < 1000.0 => StabilityGrade::Poor_ => StabilityGrade::Unstable,
         }
     }
 
@@ -545,7 +545,7 @@ impl<F: Float> StabilityMetrics<F> {
             x if x < 1e-14 => StabilityGrade::Excellent,
             x if x < 1e-10 => StabilityGrade::Good,
             x if x < 1e-6 => StabilityGrade::Fair,
-            x if x < 1e-2 => StabilityGrade::Poor_ =>, StabilityGrade::Unstable,
+            x if x < 1e-2 => StabilityGrade::Poor_ => StabilityGrade::Unstable,
         }
     }
 
@@ -553,7 +553,7 @@ impl<F: Float> StabilityMetrics<F> {
         match metrics.combined_stability_score {
             x if x < 1e-12 => StabilityClassification::NumericallyStable,
             x if x < 1e-6 => StabilityClassification::WeaklyStable,
-            x if x < 1e-2 => StabilityClassification::MarginallyStable_ =>, StabilityClassification::Unstable,
+            x if x < 1e-2 => StabilityClassification::MarginallyStable_ => StabilityClassification::Unstable,
         }
     }
 
@@ -575,7 +575,7 @@ impl<F: Float> StabilityMetrics<F> {
             x if x < 1.0 => StabilityGrade::Excellent,
             x if x < 10.0 => StabilityGrade::Good,
             x if x < 100.0 => StabilityGrade::Fair,
-            x if x < 1000.0 => StabilityGrade::Poor_ =>, StabilityGrade::Unstable,
+            x if x < 1000.0 => StabilityGrade::Poor_ => StabilityGrade::Unstable,
         }
     }
 
@@ -584,7 +584,7 @@ impl<F: Float> StabilityMetrics<F> {
             x if x < 1e-12 => StabilityGrade::Excellent,
             x if x < 1e-8 => StabilityGrade::Good,
             x if x < 1e-4 => StabilityGrade::Fair,
-            x if x < 1e-1 => StabilityGrade::Poor_ =>, StabilityGrade::Unstable,
+            x if x < 1e-1 => StabilityGrade::Poor_ => StabilityGrade::Unstable,
         }
     }
 }

@@ -136,15 +136,15 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
             // Load first sample to determine shapes
             let (first_x, first_y) = dataset.get(batch_indices[0])?;
             // Create batch arrays
-            let batch_x_shape = [batch_indices.len()]
+            let batch_xshape = [batch_indices.len()]
                 .iter()
                 .chain(first_x.shape())
                 .cloned()
                 .collect::<Vec<_>>();
-            let batch_y_shape = [batch_indices.len()]
+            let batch_yshape = [batch_indices.len()]
                 .chain(first_y.shape())
-            let mut batch_x = Array::zeros(IxDyn(&batch_x_shape));
-            let mut batch_y = Array::zeros(IxDyn(&batch_y_shape));
+            let mut batch_x = Array::zeros(IxDyn(&batch_xshape));
+            let mut batch_y = Array::zeros(IxDyn(&batch_yshape));
             // Fill batch arrays
             for (i, &idx) in batch_indices.iter().enumerate() {
                 let (x, y) = dataset.get(idx)?;
@@ -174,12 +174,12 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
         // Calculate total samples across all batches
         let total_samples: usize = all_predictions.iter().map(|pred| pred.shape()[0]).sum();
         // Create combined arrays with proper dimensions
-        let mut combined_shape_pred = first_pred.shape().to_vec();
-        combined_shape_pred[0] = total_samples;
-        let mut combined_shape_target = first_target.shape().to_vec();
-        combined_shape_target[0] = total_samples;
-        let mut combined_preds = Array::<F>::zeros(IxDyn(&combined_shape_pred));
-        let mut combined_targets = Array::<F>::zeros(IxDyn(&combined_shape_target));
+        let mut combinedshape_pred = first_pred.shape().to_vec();
+        combinedshape_pred[0] = total_samples;
+        let mut combinedshape_target = first_target.shape().to_vec();
+        combinedshape_target[0] = total_samples;
+        let mut combined_preds = Array::<F>::zeros(IxDyn(&combinedshape_pred));
+        let mut combined_targets = Array::<F>::zeros(IxDyn(&combinedshape_target));
         // Concatenate all batch predictions and targets
         let mut sample_offset = 0;
         for (pred_batch, target_batch) in all_predictions.iter().zip(all_targets.iter()) {

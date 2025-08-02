@@ -68,7 +68,7 @@ impl<F: Float + FromPrimitive> Default for MiniBatchKMeansOptions<F> {
 /// use ndarray::{Array2, ArrayView2};
 /// use scirs2__cluster::vq::minibatch_kmeans;
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![
+/// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -140,7 +140,7 @@ where
         }
 
         let init_data =
-            Array2::from_shape_fn((init_size..n_features), |(i, j)| data[[indices[i], j]]);
+            Array2::fromshape_fn((init_size..n_features), |(i, j)| data[[indices[i], j]]);
         kmeans_plus_plus(init_data.view(), k, opts.random_seed)?
     } else {
         // Use all data points for initialization
@@ -405,7 +405,7 @@ mod tests {
     #[test]
     fn test_minibatch_kmeans_simple() {
         // Create a simple dataset with clear clusters
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
@@ -457,7 +457,7 @@ mod tests {
     #[test]
     fn test_minibatch_kmeans_empty_clusters() {
         // Create a dataset where empty clusters could occur
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (8, 2),
             vec![
                 1.0, 1.0, 1.1, 1.1, 1.2, 1.0, 1.0, 1.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.0, 5.0, 5.2,

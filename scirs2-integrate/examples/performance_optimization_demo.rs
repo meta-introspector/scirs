@@ -222,7 +222,7 @@ fn benchmark_parallel_operations() -> IntegrateResult<()> {
     for size in sizes {
         println!("   Matrix size: {}x{}", size, size / 10);
 
-        let test_matrix = Array2::from_shape_fn((size, size / 10), |(i, j)| {
+        let test_matrix = Array2::fromshape_fn((size, size / 10), |(i, j)| {
             (i as f64 * 0.1 + j as f64 * 0.05).sin()
         });
 
@@ -286,7 +286,7 @@ fn benchmark_memory_efficiency() -> IntegrateResult<()> {
 
         // Simulate different allocation patterns
         for i in 0..n_allocs {
-            let data = Array1::from_shape_fn(alloc_size, |j| (i as f64 + j as f64 * 0.1).sin());
+            let data = Array1::fromshape_fn(alloc_size, |j| (i as f64 + j as f64 * 0.1).sin());
             data_storage.push(data);
 
             // Record allocation

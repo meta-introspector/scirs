@@ -644,7 +644,7 @@ impl LogFileManager {
         let serialized = if self.config.enable_json_format {
             self.serialize_json(event)?
         } else {
-            self.serialize_text(event)
+            self.serializetext(event)
         };
 
         let data = format!("{serialized}\n");
@@ -782,7 +782,7 @@ impl LogFileManager {
 
     /// Serialize an audit event to text format.
     #[must_use]
-    fn serialize_text(&self, event: &AuditEvent) -> String {
+    fn serializetext(&self, event: &AuditEvent) -> String {
         format!(
             "[{}] {} {} {} user={} resource={} outcome={} description=\"{}\"",
             event.timestamp.format("%Y-%m-%d %H:%M:%S UTC"),
@@ -1776,7 +1776,7 @@ impl AuditLogger {
                 )))
             })
         } else {
-            self.parse_text_log_line(line)
+            self.parsetext_log_line(line)
         }
     }
 
@@ -1792,7 +1792,7 @@ impl AuditLogger {
                 crate::error::ErrorContext::new("JSON parsing requires serde feature".to_string()),
             ))
         } else {
-            self.parse_text_log_line(line)
+            self.parsetext_log_line(line)
         }
     }
 
@@ -1801,7 +1801,7 @@ impl AuditLogger {
     /// # Errors
     ///
     /// Returns an error if the log line cannot be parsed.
-    fn parse_text_log_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
+    fn parsetext_log_line(&self, line: &str) -> Result<AuditEvent, CoreError> {
         // Parse text format: [timestamp] category severity action user=X resource=Y outcome=Z description="..."
         let line = line.trim();
 

@@ -55,12 +55,12 @@ pub enum NetCDFDataType {
 impl From<NetCDFDataType> for DataType {
     fn from(_dtype: NetCDFDataType) -> Self {
         match _dtype {
-            NetCDFDataType::Byte =>, DataType::Byte,
-            NetCDFDataType::Char =>, DataType::Char,
-            NetCDFDataType::Short =>, DataType::Short,
-            NetCDFDataType::Int =>, DataType::Int,
-            NetCDFDataType::Float =>, DataType::Float,
-            NetCDFDataType::Double =>, DataType::Double,
+            NetCDFDataType::Byte => DataType::Byte,
+            NetCDFDataType::Char => DataType::Char,
+            NetCDFDataType::Short => DataType::Short,
+            NetCDFDataType::Int => DataType::Int,
+            NetCDFDataType::Float => DataType::Float,
+            NetCDFDataType::Double => DataType::Double,
         }
     }
 }
@@ -68,12 +68,12 @@ impl From<NetCDFDataType> for DataType {
 impl From<DataType> for NetCDFDataType {
     fn from(_dtype: DataType) -> Self {
         match _dtype {
-            DataType::Byte =>, NetCDFDataType::Byte,
-            DataType::Char =>, NetCDFDataType::Char,
-            DataType::Short =>, NetCDFDataType::Short,
-            DataType::Int =>, NetCDFDataType::Int,
-            DataType::Float =>, NetCDFDataType::Float,
-            DataType::Double =>, NetCDFDataType::Double,
+            DataType::Byte => NetCDFDataType::Byte,
+            DataType::Char => NetCDFDataType::Char,
+            DataType::Short => NetCDFDataType::Short,
+            DataType::Int => NetCDFDataType::Int,
+            DataType::Float => NetCDFDataType::Float,
+            DataType::Double => NetCDFDataType::Double,
         }
     }
 }
@@ -117,7 +117,7 @@ impl NetCDFFile {
     /// # Examples
     ///
     /// ```no_run
-    /// use scirs2__io::netcdf::NetCDFFile;
+    /// use scirs2_io::netcdf::NetCDFFile;
     ///
     /// // Open a NetCDF file for reading
     /// let nc = NetCDFFile::open("data.nc", None).unwrap();
@@ -128,7 +128,7 @@ impl NetCDFFile {
     /// // List the variables
     /// println!("Variables: {:?}", nc.variables());
     /// ```
-    pub fn open<P: AsRef<Path>>(_filename: P, options: Option<NetCDFOptions>) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(filename: P, options: Option<NetCDFOptions>) -> Result<Self> {
         let opts = options.unwrap_or_default();
         let path_str = _filename.as_ref().to_string_lossy().to_string();
         
@@ -236,7 +236,7 @@ impl NetCDFFile {
     /// # Examples
     ///
     /// ```no_run
-    /// use scirs2__io::netcdf::NetCDFFile;
+    /// use scirs2_io::netcdf::NetCDFFile;
     ///
     /// // Open a NetCDF file for reading
     /// let nc = NetCDFFile::open("data.nc", None).unwrap();
@@ -262,7 +262,7 @@ impl NetCDFFile {
             .collect();
         
         // Create ndarray from data and shape
-        let array = Array::from_shape_vec(IxDyn(&shape), data)
+        let array = Array::fromshape_vec(IxDyn(&shape), data)
             .map_err(|e| IOError::ConversionError(format!("Failed to reshape variable data: {}", e)))?;
         
         Ok(array)
@@ -331,7 +331,7 @@ impl NetCDFFile {
     ///
     /// ```no_run
     /// use ndarray::Array;
-    /// use scirs2__io::netcdf::{NetCDFFile, NetCDFOptions, NetCDFDataType};
+    /// use scirs2_io::netcdf::{NetCDFFile, NetCDFOptions, NetCDFDataType};
     ///
     /// // Create a new NetCDF file
     /// let opts = NetCDFOptions {
@@ -516,7 +516,7 @@ mod tests {
         nc.create_variable("temperature", NetCDFDataType::Float, &["x", "y"]).unwrap();
         
         // Write data
-        let data = Array2::from_shape_vec((3, 2), vec![20.0f32, 21.0, 22.0, 23.0, 24.0, 25.0]).unwrap();
+        let data = Array2::fromshape_vec((3, 2), vec![20.0f32, 21.0, 22.0, 23.0, 24.0, 25.0]).unwrap();
         nc.write_variable("temperature", &data).unwrap();
         
         // Add attributes

@@ -28,7 +28,7 @@ fn test_basic_operations() {
 
 #[test]
 #[allow(dead_code)]
-fn test_tensor_shapes() {
+fn test_tensorshapes() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test various tensor shapes
         let zeros = T::zeros(&[2, 3], ctx);

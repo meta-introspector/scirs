@@ -7,7 +7,6 @@ use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{Distribution, Uniform as RandUniform};
-use statrs::statistics::Statistics;
 
 /// Pareto distribution structure
 ///

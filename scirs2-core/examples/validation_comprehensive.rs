@@ -394,7 +394,7 @@ fn array_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     // Validate a 1D array
     let data_1d = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
     let constraints_1d = ArrayValidationConstraints::new()
-        .with_shape(vec![5])
+        .withshape(vec![5])
         .check_numeric_quality();
 
     let result = validator.validate_ndarray(&data_1d, &constraints_1d, &config)?;
@@ -412,7 +412,7 @@ fn array_validation_example() -> Result<(), Box<dyn std::error::Error>> {
         Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])?;
 
     let constraints_2d = ArrayValidationConstraints::new()
-        .with_shape(vec![3, 3])
+        .withshape(vec![3, 3])
         .check_numeric_quality();
 
     let result = validator.validate_ndarray(&data_2d, &constraints_2d, &config)?;

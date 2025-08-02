@@ -135,7 +135,7 @@ pub fn mean_shift(_img: &DynamicImage, params: &MeanShiftParams) -> Result<Array
     let labels = cluster_modes(&modes, params.spatial_bandwidth, params.color_bandwidth);
 
     // Reshape to image dimensions
-    let label_map = Array2::from_shape_vec((height as usize, width as usize), labels)?;
+    let label_map = Array2::fromshape_vec((height as usize, width as usize), labels)?;
 
     // Merge small regions
     let final_labels = merge_small_regions(&label_map, params.min_region_size);

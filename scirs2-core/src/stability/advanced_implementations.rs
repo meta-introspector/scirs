@@ -190,7 +190,7 @@ impl FormalVerificationEngine {
             0.0
         }
     }
-    
+
     /// Perform verification for a specific task
     fn perform_verification(
         _task_id: &str,
@@ -406,7 +406,9 @@ impl RuntimeContractValidator {
     }
 
     /// Report a contract violation
-    fn report_violation(&self, api_name: &str,
+    fn report_violation(
+        &self,
+        api_name: &str,
         module: &str,
         violation: ContractViolation,
     ) -> CoreResult<()> {
@@ -527,15 +529,15 @@ impl AdvancedPerformanceModeler {
         // Convert PerformanceMetrics to RuntimePerformanceMetrics
         let runtime_performance = RuntimePerformanceMetrics {
             execution_time: Duration::from_secs_f64(
-                performance.operation_times.values().sum::<f64>() / 
-                performance.operation_times.len().max(1) as f64
+                performance.operation_times.values().sum::<f64>()
+                    / performance.operation_times.len().max(1) as f64,
             ),
-            memory_usage: 0,  // Not available in PerformanceMetrics
-            cpu_usage: 0.0,   // Not available in PerformanceMetrics
+            memory_usage: 0, // Not available in PerformanceMetrics
+            cpu_usage: 0.0,  // Not available in PerformanceMetrics
             cache_hit_rate: performance.cache_hit_rate,
-            thread_count: 1,  // Default value
+            thread_count: 1, // Default value
         };
-        
+
         let data_point = PerformanceDataPoint {
             timestamp: Instant::now(),
             api_name: api_name.to_string(),

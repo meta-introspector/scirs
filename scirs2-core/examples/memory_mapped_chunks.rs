@@ -109,7 +109,7 @@ fn aggregate_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> 
     // Create test data - integers from 0 to 999,999
     let size = 1_000_000;
     println!("Creating a 1D array with {} elements", size);
-    let data = Array1::<i32>::from_shape_fn(size, |i| i as i32);
+    let data = Array1::<i32>::fromshape_fn(size, |i| i as i32);
 
     // Create a memory-mapped array
     let file_path = temp_dir.join("aggregate_example.bin");

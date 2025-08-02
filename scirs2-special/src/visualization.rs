@@ -163,7 +163,7 @@ pub mod gamma_plots {
     use crate::{digamma, gamma, gammaln};
 
     /// Plot gamma function and its logarithm
-    pub fn plot_gamma_family<P: AsRef<Path>>(_path: P) -> Result<(), Box<dyn Error>> {
+    pub fn plot_gamma_family<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
         let config = PlotConfig {
             title: "Gamma Function Family".to_string(),
             x_label: "x".to_string(),
@@ -181,7 +181,7 @@ pub mod gamma_plots {
 
     /// Create a heatmap of gamma function in complex plane
     #[cfg(feature = "plotting")]
-    pub fn plot_gamma_complex<P: AsRef<Path>>(_path: P) -> Result<(), Box<dyn Error>> {
+    pub fn plot_gamma_complex<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
         use crate::gamma::complex::gamma_complex;
 
         let root = BitMapBackend::new(_path.as_ref(), (800, 600)).into_drawing_area();
@@ -232,7 +232,7 @@ pub mod bessel_plots {
     use crate::bessel::{j0, j1, jn};
 
     /// Plot Bessel functions of the first kind
-    pub fn plot_bessel_j<P: AsRef<Path>>(_path: P) -> Result<(), Box<dyn Error>> {
+    pub fn plot_bessel_j<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
         let config = PlotConfig {
             title: "Bessel Functions of the First Kind".to_string(),
             ..Default::default()
@@ -248,7 +248,7 @@ pub mod bessel_plots {
     }
 
     /// Plot zeros of Bessel functions
-    pub fn plot_bessel_zeros<P: AsRef<Path>>(_path: P) -> Result<(), Box<dyn Error>> {
+    pub fn plot_bessel_zeros<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
         use crate::bessel__zeros::j0_zeros;
 
         #[cfg(feature = "plotting")]
@@ -309,7 +309,7 @@ pub mod error_function_plots {
     use crate::{erf, erfc, erfinv};
 
     /// Plot error functions and their inverses
-    pub fn plot_error_functions<P: AsRef<Path>>(_path: P) -> Result<(), Box<dyn Error>> {
+    pub fn plot_error_functions<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn Error>> {
         let config = PlotConfig {
             title: "Error Functions".to_string(),
             ..Default::default()
@@ -333,7 +333,7 @@ pub mod polynomial_plots {
     use crate::legendre;
 
     /// Plot Legendre polynomials
-    pub fn plot_legendre<P: AsRef<Path>>(_path: P, max_n: usize) -> Result<(), Box<dyn Error>> {
+    pub fn plot_legendre<P: AsRef<Path>>(path: P, max_n: usize) -> Result<(), Box<dyn Error>> {
         let config = PlotConfig {
             title: format!("Legendre Polynomials P_n(x) for _n = 0..{}", max_n),
             ..Default::default()

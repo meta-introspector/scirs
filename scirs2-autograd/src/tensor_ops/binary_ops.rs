@@ -21,19 +21,19 @@ pub struct MaybeReduceSum;
 pub struct MaybeBroadcast;
 
 #[cfg(feature = "blas")]
-macro_rules! bin_op_same_shape {
+macro_rules! bin_op_sameshape {
     ($vms_op:ident, $vmd_op:ident, $std_op:tt, $a:expr, $b:expr) => {
         unsafe {
             if same_type::<T, f32>() {
                 let mut y = Vec::with_capacity($a.len());
                 $vms_op($a.len() as MklInt, $a.as_ptr() as *const f32, $b.as_ptr() as *const f32, y.as_mut_ptr() as *mut f32);
                 y.set_len($a.len());
-                NdArray::from_shape_vec_unchecked($a.shape(), y)
+                NdArray::fromshape_vec_unchecked($a.shape(), y)
             } else if same_type::<T, f64>() {
                 let mut y = Vec::with_capacity($a.len());
                 $vmd_op($a.len() as MklInt, $a.as_ptr() as *const f64, $b.as_ptr() as *const f64, y.as_mut_ptr() as *mut f64);
                 y.set_len($a.len());
-                NdArray::from_shape_vec_unchecked($a.shape(), y)
+                NdArray::fromshape_vec_unchecked($a.shape(), y)
             } else {
                 $a $std_op $b
             }
@@ -41,14 +41,14 @@ macro_rules! bin_op_same_shape {
     };
 }
 
-impl<T: Float>, op::Op<T> for MaybeReduceSum {
+impl<T: Float> op::Op<T> for MaybeReduceSum {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let gy = ctx.input(0);
-        let orig_shape__ = crate::ndarray_ext::as_shape(&ctx.input(1));
-        let orig_shape_ = orig_shape__.as_slice(); // x shape: []
-        let gy_shape = gy.shape(); // gy shape: [1]
+        let origshape__ = crate::ndarray_ext::asshape(&ctx.input(1));
+        let origshape_ = origshape__.as_slice(); // x shape: []
+        let gyshape = gy.shape(); // gy shape: [1]
 
-        if orig_shape_ == gy_shape {
+        if origshape_ == gyshape {
             // The case where forward path didn't cause broadcast.
             ctx.append_output(gy.to_owned());
             return Ok(());
@@ -57,17 +57,17 @@ impl<T: Float>, op::Op<T> for MaybeReduceSum {
         // Broadcast occurred. We need reduction of the input.
 
         // First, handle the case where `input` is scalar.
-        let target_shape_is_scalar = crate::ndarray_ext::is_scalar_shape(orig_shape_);
-        let orig_shape = if target_shape_is_scalar {
-            vec![1; gy_shape.len()]
+        let targetshape_is_scalar = crate::ndarray_ext::is_scalarshape(origshape_);
+        let origshape = if targetshape_is_scalar {
+            vec![1; gyshape.len()]
         } else {
-            orig_shape_.to_vec()
+            origshape_.to_vec()
         };
 
-        if orig_shape == gy_shape {
+        if origshape == gyshape {
             // The case where forward path didn't cause broadcast.
             ctx.append_output(
-                gy.into_shape_with_order(ndarray::IxDyn(orig_shape_))
+                gy.intoshape_with_order(ndarray::IxDyn(origshape_))
                     .unwrap()
                     .to_owned(),
             );
@@ -78,7 +78,7 @@ impl<T: Float>, op::Op<T> for MaybeReduceSum {
         let mut folded: Option<NdArray<T>> = None;
 
         for (i, (&orig_ith_dim_size, &gy_ith_dim_size)) in
-            orig_shape.iter().zip(gy_shape).enumerate()
+            origshape.iter().zip(gyshape).enumerate()
         {
             if orig_ith_dim_size == 1 && 1 < gy_ith_dim_size {
                 // broadcast occurred for this dim, so do reduction
@@ -96,7 +96,7 @@ impl<T: Float>, op::Op<T> for MaybeReduceSum {
         }
         let ret = folded.unwrap();
         ctx.append_output(
-            ret.into_shape_with_order(orig_shape_)
+            ret.intoshape_with_order(origshape_)
                 .expect("bug of MaybeReduceSum probably"),
         );
         Ok(())
@@ -114,30 +114,30 @@ impl<T: Float>, op::Op<T> for MaybeReduceSum {
 }
 
 // Do broadcast if necessary.
-impl<T: Float>, op::Op<T> for MaybeBroadcast {
+impl<T: Float> op::Op<T> for MaybeBroadcast {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
-        let target_shape_ = ctx.input(1);
-        let target_shape_ = crate::ndarray_ext::as_shape(&target_shape_);
-        let target_shape = target_shape_.as_slice();
+        let targetshape_ = ctx.input(1);
+        let targetshape_ = crate::ndarray_ext::asshape(&targetshape_);
+        let targetshape = targetshape_.as_slice();
 
         let raw_input = ctx.input(0);
-        if raw_input.shape() == target_shape {
+        if raw_input.shape() == targetshape {
             ctx.append_output(raw_input.to_owned());
             return Ok(());
         }
 
         // make broadcast dims if needed
-        let input_is_scalar = crate::ndarray_ext::is_scalar_shape(raw_input.shape());
+        let input_is_scalar = crate::ndarray_ext::is_scalarshape(raw_input.shape());
         let input = if input_is_scalar {
             raw_input
-                .into_shape_with_order(vec![1; target_shape.len()])
+                .intoshape_with_order(vec![1; targetshape.len()])
                 .unwrap()
         } else {
             raw_input
         };
 
         // do broadcast
-        if let Some(ret) = input.broadcast(target_shape) {
+        if let Some(ret) = input.broadcast(targetshape) {
             ctx.append_output(ret.to_owned());
             Ok(())
         } else {
@@ -155,7 +155,7 @@ impl<T: Float>, op::Op<T> for MaybeBroadcast {
     }
 }
 
-impl<T: Float>, op::Op<T> for AddOp {
+impl<T: Float> op::Op<T> for AddOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         // Check if we have enough inputs
         let inputs = ctx.inputs();
@@ -185,7 +185,7 @@ impl<T: Float>, op::Op<T> for AddOp {
     }
 }
 
-impl<T: Float>, op::Op<T> for SubOp {
+impl<T: Float> op::Op<T> for SubOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x0 = &ctx.input(0);
         let x1 = &ctx.input(1);
@@ -215,7 +215,7 @@ impl<T: Float>, op::Op<T> for SubOp {
     }
 }
 
-impl<T: Float>, op::Op<T> for MulOp {
+impl<T: Float> op::Op<T> for MulOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let a = ctx.input(0);
         let b = ctx.input(1);
@@ -245,7 +245,7 @@ impl<T: Float>, op::Op<T> for MulOp {
     }
 }
 
-impl<T: Float>, op::Op<T> for DivOp {
+impl<T: Float> op::Op<T> for DivOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x0 = &ctx.input(0);
         let x1 = &ctx.input(1);
@@ -290,14 +290,14 @@ impl<T: Float>, op::Op<T> for DivOp {
 
 #[allow(dead_code)]
 fn maybe_reduce<'g, T: Float>(
-    target_shape: &Tensor<'g, T>,
+    targetshape: &Tensor<'g, T>,
     x: &Tensor<'g, T>,
     graph: &'g Graph<T>,
 ) -> Tensor<'g, T> {
     Tensor::builder(graph)
         .append_input(x, false)
-        .append_input(target_shape, false)
-        .set_shape(target_shape)
+        .append_input(targetshape, false)
+        .setshape(targetshape)
         .build(MaybeReduceSum)
 }
 
@@ -307,11 +307,11 @@ macro_rules! impl_bin_op_forward {
         {
             let shape0: &[usize] = x0.shape();
             let shape1: &[usize] = x1.shape();
-            let scalar_shape: &[usize] = &[];
-            let scalar_shape1 = &[0];
+            let scalarshape: &[usize] = &[];
+            let scalarshape1 = &[0];
 
-            let x0_is_scalar = shape0 == scalar_shape || shape0 == scalar_shape1;
-            let x1_is_scalar = shape1 == scalar_shape || shape1 == scalar_shape1;
+            let x0_is_scalar = shape0 == scalarshape || shape0 == scalarshape1;
+            let x1_is_scalar = shape1 == scalarshape || shape1 == scalarshape1;
 
             if x0_is_scalar && !x1_is_scalar {
                 let elem = x0[ndarray::IxDyn(&[])];
@@ -363,7 +363,7 @@ macro_rules! impl_bin_op_forward {
                     #[cfg(feature = "blas")]
                     {
                         use crate::{tensor_ops::blas, _ffi::*, same_type};
-                        bin_op_same_shape!($vms_op, $vmd_op, $bin_op, x0, x1)
+                        bin_op_sameshape!($vms_op, $vmd_op, $bin_op, x0, x1)
                     }
                     #[cfg(not(feature = "blas"))] {
                         x0 $bin_op x1

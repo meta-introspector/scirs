@@ -222,7 +222,7 @@ pub struct SubmissionMaterials {
     /// Supplementary materials
     pub supplementary_files: Vec<String>,
     /// Abstract
-    pub abstract_text: String,
+    pub abstracttext: String,
     /// Keywords
     pub keywords: Vec<String>,
     /// Author information (if not anonymous)
@@ -241,7 +241,7 @@ pub struct Review {
     /// Detailed scores
     pub detailed_scores: HashMap<String, f64>,
     /// Written review
-    pub review_text: String,
+    pub reviewtext: String,
     /// Recommendation
     pub recommendation: ReviewRecommendation,
     /// Review date

@@ -1,14 +1,15 @@
-//! FastICA implementation for Independent Component Analysis
-//!
-//! This module implements the FastICA algorithm for blind source separation.
+use ndarray::s;
+// FastICA implementation for Independent Component Analysis
+//
+// This module implements the FastICA algorithm for blind source separation.
 
+use super::{BssConfig, NonlinearityFunction};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
+use ndarray::{ Array1, Array2};
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};
 use scirs2_linalg::eigh;
 use statrs::statistics::Statistics;
-use super::{BssConfig, NonlinearityFunction};
 
 #[allow(unused_imports)]
 /// Implement FastICA algorithm for ICA

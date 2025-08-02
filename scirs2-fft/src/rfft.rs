@@ -213,7 +213,9 @@ where
 #[allow(dead_code)]
 pub fn rfft2<T>(
     x: &ArrayView2<T>,
-    shape: Option<(usize, usize)>, _axes: Option<(usize, usize)>, _norm: Option<&str>,
+    shape: Option<(usize, usize)>,
+    _axes: Option<(usize, usize)>,
+    _norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -274,7 +276,9 @@ where
 #[allow(dead_code)]
 pub fn irfft2<T>(
     x: &ArrayView2<T>,
-    shape: Option<(usize, usize)>, _axes: Option<(usize, usize)>, _norm: Option<&str>,
+    shape: Option<(usize, usize)>,
+    _axes: Option<(usize, usize)>,
+    _norm: Option<&str>,
 ) -> FFTResult<Array2<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -508,18 +512,18 @@ where
         n_dims - 1
     };
 
-    let mut out_shape = full_result.shape().to_vec();
+    let mut outshape = full_result.shape().to_vec();
 
     if shape.is_none() {
         // Only modify shape if not explicitly provided
-        out_shape[last_axis] = out_shape[last_axis] / 2 + 1;
+        outshape[last_axis] = outshape[last_axis] / 2 + 1;
     }
 
     // Get slice of the array with half size in the last transformed dimension
     let result = full_result
         .slice_each_axis(|ax| {
             if ax.axis.index() == last_axis {
-                ndarray::Slice::new(0, Some(out_shape[last_axis] as isize), 1)
+                ndarray::Slice::new(0, Some(outshape[last_axis] as isize), 1)
             } else {
                 ndarray::Slice::new(0, None, 1)
             }
@@ -638,7 +642,7 @@ where
     // Ignore unused parameters for now
     let _overwrite_x = overwrite_x.unwrap_or(false);
 
-    let x_shape = x.shape().to_vec();
+    let xshape = x.shape().to_vec();
     let n_dims = x.ndim();
 
     // Determine which axes to transform
@@ -658,7 +662,7 @@ where
     };
 
     // Determine output shape
-    let out_shape = match shape {
+    let outshape = match shape {
         Some(sh) => {
             // Check that shape and axes have compatible lengths
             if sh.len() != axes_to_transform.len()
@@ -678,11 +682,11 @@ where
                 sh
             } else if sh.len() == axes_to_transform.len() {
                 // If shape matches length of axes, apply each shape to the corresponding axis
-                let mut new_shape = x_shape.clone();
+                let mut newshape = xshape.clone();
                 for (i, &axis) in axes_to_transform.iter().enumerate() {
-                    new_shape[axis] = sh[i];
+                    newshape[axis] = sh[i];
                 }
-                new_shape
+                newshape
             } else {
                 // This should not happen due to the earlier check
                 return Err(FFTError::DimensionError(
@@ -692,7 +696,7 @@ where
         }
         None => {
             // If shape is not provided, infer output shape
-            let mut inferred_shape = x_shape.clone();
+            let mut inferredshape = xshape.clone();
             // Get the last axis to transform (SciPy applies real FFT to the last axis)
             let last_axis = if let Some(last) = axes_to_transform.last() {
                 *last
@@ -702,21 +706,21 @@ where
             };
 
             // For the last transformed axis, the output size is 2 * (input_size - 1)
-            inferred_shape[last_axis] = 2 * (inferred_shape[last_axis] - 1);
+            inferredshape[last_axis] = 2 * (inferredshape[last_axis] - 1);
 
-            inferred_shape
+            inferredshape
         }
     };
 
     // Reconstruct the full spectrum by using Hermitian symmetry
     // This is complex for arbitrary N-D arrays, so we'll delegate to a specialized function
     let full_spectrum =
-        reconstruct_hermitian_symmetry(x, &out_shape, axes_to_transform.as_slice())?;
+        reconstruct_hermitian_symmetry(x, &outshape, axes_to_transform.as_slice())?;
 
     // Compute the inverse FFT
     let complex_output = crate::fft::ifftn(
         &full_spectrum.to_owned(),
-        Some(out_shape.clone()),
+        Some(outshape.clone()),
         Some(axes_to_transform.clone()),
         norm,
         Some(_overwrite_x), // Pass through the overwrite flag
@@ -724,7 +728,7 @@ where
     )?;
 
     // Extract real parts for the output
-    let result = Array::from_shape_fn(IxDyn(&out_shape), |idx| complex_output[idx].re);
+    let result = Array::from_shape_fn(IxDyn(&outshape), |idx| complex_output[idx].re);
 
     Ok(result)
 }
@@ -738,18 +742,18 @@ where
 #[allow(dead_code)]
 fn reconstruct_hermitian_symmetry<T>(
     x: &ArrayView<T, IxDyn>,
-    out_shape: &[usize],
+    outshape: &[usize],
     axes: &[usize],
 ) -> FFTResult<Array<Complex64, IxDyn>>
 where
     T: NumCast + Copy + Debug + 'static,
 {
-    // Convert input to complex array with the output _shape
-    let mut result = Array::from_shape_fn(IxDyn(out_shape), |_| Complex64::zero());
+    // Convert input to complex array with the output shape
+    let mut result = Array::from_shape_fn(IxDyn(outshape), |_| Complex64::zero());
 
     // Copy the known values from input
-    let mut input_idx = vec![0; out_shape.len()];
-    let x_shape = x.shape();
+    let mut input_idx = vec![0; outshape.len()];
+    let xshape = x.shape();
 
     // For simplicity, we'll use a recursive approach to iterate through the input array
     fn fill_known_values<T>(
@@ -757,7 +761,7 @@ where
         result: &mut Array<Complex64, IxDyn>,
         curr_idx: &mut Vec<usize>,
         dim: usize,
-        x_shape: &[usize],
+        xshape: &[usize],
     ) -> FFTResult<()>
     where
         T: NumCast + Copy + Debug + 'static,
@@ -766,7 +770,7 @@ where
             // Base case: we have a complete index
             let mut in_bounds = true;
             for (i, &_idx) in curr_idx.iter().enumerate() {
-                if _idx >= x_shape[i] {
+                if _idx >= xshape[i] {
                     in_bounds = false;
                     break;
                 }
@@ -793,16 +797,16 @@ where
         }
 
         // Recursive case: iterate through the current dimension
-        for i in 0..x_shape[dim] {
+        for i in 0..xshape[dim] {
             curr_idx[dim] = i;
-            fill_known_values(x, result, curr_idx, dim + 1, x_shape)?;
+            fill_known_values(x, result, curr_idx, dim + 1, xshape)?;
         }
 
         Ok(())
     }
 
     // Fill known values
-    fill_known_values(x, &mut result, &mut input_idx, 0, x_shape)?;
+    fill_known_values(x, &mut result, &mut input_idx, 0, xshape)?;
 
     // Now fill in the remaining values using Hermitian symmetry
     // Get the primary transform axis (first one in the axes list)
@@ -813,20 +817,21 @@ where
     let mut processed = std::collections::HashSet::new();
 
     // First, mark all indices we've already processed
-    let mut idx = vec![0; out_shape.len()];
+    let mut idx = vec![0; outshape.len()];
 
     // Recursive function to mark indices as processed
     fn mark_processed(
         idx: &mut Vec<usize>,
-        dim: usize, shape: &[usize],
-        x_shape: &[usize],
+        dim: usize,
+        shape: &[usize],
+        xshape: &[usize],
         processed: &mut std::collections::HashSet<Vec<usize>>,
     ) {
         if dim == idx.len() {
             // Base case: we have a complete index
             let mut in_bounds = true;
             for (i, &index) in idx.iter().enumerate() {
-                if index >= x_shape[i] {
+                if index >= xshape[i] {
                     in_bounds = false;
                     break;
                 }
@@ -840,28 +845,28 @@ where
         }
 
         // Recursive case: iterate through the current dimension
-        for i in 0..x_shape[dim] {
+        for i in 0..xshape[dim] {
             idx[dim] = i;
-            mark_processed(idx, dim + 1, shape, x_shape, processed);
+            mark_processed(idx, dim + 1, shape, xshape, processed);
         }
     }
 
     // Mark all known indices as processed
-    mark_processed(&mut idx, 0, out_shape, x_shape, &mut processed);
+    mark_processed(&mut idx, 0, outshape, xshape, &mut processed);
 
     // Helper function to reflect an index along specified axes
-    fn reflect_index(_idx: &[usize], _shape: &[usize], axes: &[usize]) -> Vec<usize> {
+    fn reflect_index(_idx: &[usize], shape: &[usize], axes: &[usize]) -> Vec<usize> {
         let mut reflected = _idx.to_vec();
 
         for &axis in axes {
             // Skip 0 frequency component and Nyquist frequency (if present)
-            if _idx[axis] == 0 || (_shape[axis] % 2 == 0 && _idx[axis] == _shape[axis] / 2) {
+            if _idx[axis] == 0 || (shape[axis] % 2 == 0 && _idx[axis] == shape[axis] / 2) {
                 continue;
             }
 
             // Reflect along this axis
-            reflected[axis] = _shape[axis] - _idx[axis];
-            if reflected[axis] == _shape[axis] {
+            reflected[axis] = shape[axis] - _idx[axis];
+            if reflected[axis] == shape[axis] {
                 reflected[axis] = 0;
             }
         }
@@ -877,7 +882,7 @@ where
         // If this index has not been processed yet
         if !processed.contains(&idx) {
             // Find its conjugate symmetric counterpart by reflecting through all axes
-            let reflected = reflect_index(&idx, out_shape, axes);
+            let reflected = reflect_index(&idx, outshape, axes);
 
             // If the reflected index has been processed, we can compute this one
             if processed.contains(&reflected) {
@@ -890,9 +895,9 @@ where
         }
 
         // Move to the next index
-        for d in (0..out_shape.len()).rev() {
+        for d in (0..outshape.len()).rev() {
             idx[d] += 1;
-            if idx[d] < out_shape[d] {
+            if idx[d] < outshape[d] {
                 break;
             }
             idx[d] = 0;

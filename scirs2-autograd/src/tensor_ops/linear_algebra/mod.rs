@@ -103,20 +103,20 @@ where
         .append_input(a_axes.as_tensor(g), false)
         .append_input(b_axes.as_tensor(g), false)
         .build(dot_ops::TensordotPreprocess);
-    let final_shape = crate::tensor_ops::nth_tensor(pre, 0);
+    let finalshape = crate::tensor_ops::nth_tensor(pre, 0);
     let perm_a = crate::tensor_ops::nth_tensor(pre, 1);
     let perm_b = crate::tensor_ops::nth_tensor(pre, 2);
-    let new_shape_a = crate::tensor_ops::nth_tensor(pre, 3);
-    let new_shape_b = crate::tensor_ops::nth_tensor(pre, 4);
+    let newshape_a = crate::tensor_ops::nth_tensor(pre, 3);
+    let newshape_b = crate::tensor_ops::nth_tensor(pre, 4);
 
     let a_reshaped =
-        crate::tensor_ops::reshape(crate::tensor_ops::transpose(a, &perm_a), &new_shape_a);
+        crate::tensor_ops::reshape(crate::tensor_ops::transpose(a, &perm_a), &newshape_a);
     let b_reshaped =
-        crate::tensor_ops::reshape(crate::tensor_ops::transpose(b, &perm_b), &new_shape_b);
+        crate::tensor_ops::reshape(crate::tensor_ops::transpose(b, &perm_b), &newshape_b);
 
     // matmul
     let mm = matmul(a_reshaped, b_reshaped);
-    crate::tensor_ops::reshape(mm, &final_shape)
+    crate::tensor_ops::reshape(mm, &finalshape)
 }
 
 /// Batched matrix multiplication with inputs's transposition.
@@ -304,7 +304,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn eye<F: Float>(_size: usize, graph: &impl AsGraph<F>) -> Tensor<'_, F> {
+pub fn eye<F: Float>(size: usize, graph: &impl AsGraph<F>) -> Tensor<'_, F> {
     Tensor::builder(graph).build(crate::tensor_ops::linalg_ops::EyeOp { _size })
 }
 
@@ -720,7 +720,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn concat<'graph, A, F: Float>(_tensors: &[A], axis: isize) -> Tensor<'graph, F>
+pub fn concat<'graph, A, F: Float>(tensors: &[A], axis: isize) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
@@ -799,7 +799,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(crate::tensor_ops::scalar_ops::ScalarMulOp { scalar })
 }
 

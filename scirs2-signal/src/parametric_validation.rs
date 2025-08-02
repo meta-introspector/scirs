@@ -1,13 +1,13 @@
-//! Validation suite for parametric spectral estimation methods
-//!
-//! This module provides comprehensive validation for AR, MA, and ARMA models,
-//! including accuracy tests, stability analysis, and performance benchmarks.
+// Validation suite for parametric spectral estimation methods
+//
+// This module provides comprehensive validation for AR, MA, and ARMA models,
+// including accuracy tests, stability analysis, and performance benchmarks.
 
 use crate::error::SignalResult;
-use crate::parametric::{ARMethod, ar_spectrum, estimate_ar};
-use crate::parametric__arma::{ArmaMethod, ArmaModel, estimate_arma};
+use crate::parametric::{ar_spectrum, estimate_ar, ARMethod};
+use crate::parametric_arma::{estimate_arma, ArmaMethod, ArmaModel};
 use ndarray::Array1;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use rand::Rng;
 use std::f64::consts::PI;
 use std::time::Instant;
@@ -607,7 +607,7 @@ fn generate_arma_process(
 
 #[allow(dead_code)]
 fn add_noise(_signal: &Array1<f64>, snr_db: f64) -> SignalResult<Array1<f64>> {
-    let signal_power = _signal.iter().map(|&x| x * x).sum::<f64>() / _signal.len()  as f64;
+    let signal_power = _signal.iter().map(|&x| x * x).sum::<f64>() / _signal.len() as f64;
     let noise_power = signal_power / 10.0_f64.powf(snr_db / 10.0);
     let noise_std = noise_power.sqrt();
 
@@ -695,13 +695,13 @@ fn is_arma_identifiable(_model: &ArmaModel) -> bool {
 #[allow(dead_code)]
 fn select_ar_order(_signal: &Array1<f64>, max_order: usize) -> SignalResult<usize> {
     // Use AIC for _order selection
-    let n = _signal.len()  as f64;
+    let n = _signal.len() as f64;
     let mut best_aic = f64::INFINITY;
     let mut best_order = 1;
 
     for _order in 1..=max_order {
         let (__, variance) = estimate_ar(_signal, _order, ARMethod::Burg)?;
-        let aic = n * variance.ln() + 2.0 * _order  as f64;
+        let aic = n * variance.ln() + 2.0 * _order as f64;
 
         if aic < best_aic {
             best_aic = aic;
@@ -714,7 +714,7 @@ fn select_ar_order(_signal: &Array1<f64>, max_order: usize) -> SignalResult<usiz
 
 #[allow(dead_code)]
 fn compute_null_likelihood(_signal: &Array1<f64>) -> f64 {
-    let n = _signal.len()  as f64;
+    let n = _signal.len() as f64;
     let variance = _signal.iter().map(|&x| x * x).sum::<f64>() / n;
     -0.5 * n * (2.0 * PI * variance).ln() - 0.5 * n
 }
@@ -746,7 +746,7 @@ fn estimate_condition_number_ar(_signal: &Array1<f64>, order: usize) -> SignalRe
         for i in 0..n - k {
             r[k] += _signal[i] * _signal[i + k];
         }
-        r[k] /= (n - k)  as f64;
+        r[k] /= (n - k) as f64;
     }
 
     // Form Toeplitz matrix and estimate condition

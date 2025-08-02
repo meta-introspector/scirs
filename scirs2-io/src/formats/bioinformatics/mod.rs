@@ -13,7 +13,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::formats::bioinformatics::{FastaReader, FastqReader};
+//! use scirs2_io::formats::bioinformatics::{FastaReader, FastqReader};
 //!
 //! // Read FASTA file
 //! let mut reader = FastaReader::open("sequences.fasta")?;
@@ -116,7 +116,7 @@ pub struct FastaReader {
 
 impl FastaReader {
     /// Open a FASTA file for reading
-    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         Ok(Self {
@@ -224,7 +224,7 @@ pub struct FastaWriter {
 
 impl FastaWriter {
     /// Create a new FASTA file for writing
-    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         Ok(Self {
@@ -394,7 +394,7 @@ pub struct FastqReader {
 
 impl FastqReader {
     /// Open a FASTQ file for reading
-    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         Ok(Self {
@@ -405,7 +405,7 @@ impl FastqReader {
     }
 
     /// Open a FASTQ file with specific quality encoding
-    pub fn open_with_encoding<P: AsRef<Path>>(_path: P, encoding: QualityEncoding) -> Result<Self> {
+    pub fn open_with_encoding<P: AsRef<Path>>(path: P, encoding: QualityEncoding) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         Ok(Self {
@@ -513,7 +513,7 @@ pub struct FastqWriter {
 
 impl FastqWriter {
     /// Create a new FASTQ file for writing
-    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         Ok(Self {
@@ -595,7 +595,7 @@ impl FastqWriter {
 
 /// Count sequences in a FASTA file
 #[allow(dead_code)]
-pub fn count_fasta_sequences<P: AsRef<Path>>(_path: P) -> Result<usize> {
+pub fn count_fasta_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
     let file = File::open(_path.as_ref())
         .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
     let reader = BufReader::new(file);
@@ -611,7 +611,7 @@ pub fn count_fasta_sequences<P: AsRef<Path>>(_path: P) -> Result<usize> {
 
 /// Count sequences in a FASTQ file
 #[allow(dead_code)]
-pub fn count_fastq_sequences<P: AsRef<Path>>(_path: P) -> Result<usize> {
+pub fn count_fastq_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
     let file = File::open(_path.as_ref())
         .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
     let reader = BufReader::new(file);

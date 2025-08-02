@@ -1,17 +1,18 @@
-//! Comprehensive Optimization for Parametric Spectral Estimation
-//!
-//! This module provides advanced optimizations and enhancements for AR, MA, and ARMA
-//! spectral estimation methods, including:
-//! - Advanced numerical stabilization techniques
-//! - Parallel and SIMD-accelerated algorithms
-//! - Intelligent model order selection
-//! - Robust estimation methods for noisy data
-//! - Cross-validation and model validation
-//! - Performance optimization for large datasets
+use ndarray::s;
+// Comprehensive Optimization for Parametric Spectral Estimation
+//
+// This module provides advanced optimizations and enhancements for AR, MA, and ARMA
+// spectral estimation methods, including:
+// - Advanced numerical stabilization techniques
+// - Parallel and SIMD-accelerated algorithms
+// - Intelligent model order selection
+// - Robust estimation methods for noisy data
+// - Cross-validation and model validation
+// - Performance optimization for large datasets
 
 use crate::error::{SignalError, SignalResult};
 use crate::parametric::ARMethod;
-use ndarray::{Array1, s};
+use ndarray::{ Array1};
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_positive};
@@ -19,7 +20,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]
-use crate::parametric__enhanced::{
+use crate::parametric_enhanced::{
     enhanced_parametric_estimation, EstimationMethod, ParametricConfig,
 };
 /// Comprehensive optimization result for parametric methods
@@ -336,7 +337,7 @@ fn evaluate_model_order(
 
     // Calculate information criteria
     let log_likelihood = -0.5 * n as f64 * (result.variance.ln() + 1.0 + 2.0 * PI);
-    let aic = -2.0 * log_likelihood + 2.0 * order  as f64;
+    let aic = -2.0 * log_likelihood + 2.0 * order as f64;
     let bic = -2.0 * log_likelihood + order as f64 * (n as f64).ln();
 
     // Quick cross-validation estimate
@@ -600,7 +601,8 @@ struct AdvancedEstimationResult {
 #[allow(dead_code)]
 fn calculate_optimization_metrics(
     signal: &[f64],
-    ar_coeffs: &Array1<f64>, _ma_coeffs: Option<&Array1<f64>>,
+    ar_coeffs: &Array1<f64>,
+    _ma_coeffs: Option<&Array1<f64>>,
     noise_variance: f64,
 ) -> SignalResult<OptimizationMetrics> {
     let n = signal.len();
@@ -610,17 +612,17 @@ fn calculate_optimization_metrics(
     let log_likelihood = -0.5 * n as f64 * (noise_variance.ln() + 1.0 + 2.0 * PI);
 
     // Information criteria
-    let aic = -2.0 * log_likelihood + 2.0 * p  as f64;
+    let aic = -2.0 * log_likelihood + 2.0 * p as f64;
     let bic = -2.0 * log_likelihood + p as f64 * (n as f64).ln();
     let fpe = noise_variance * (n as f64 + p as f64) / (n as f64 - p as f64);
 
     // Calculate R-squared
-    let signal_mean = signal.iter().sum::<f64>() / n  as f64;
+    let signal_mean = signal.iter().sum::<f64>() / n as f64;
     let total_ss = signal
         .iter()
         .map(|&x| (x - signal_mean).powi(2))
         .sum::<f64>();
-    let residual_ss = noise_variance * n  as f64;
+    let residual_ss = noise_variance * n as f64;
     let r_squared = 1.0 - residual_ss / total_ss;
 
     Ok(OptimizationMetrics {
@@ -638,7 +640,8 @@ fn calculate_optimization_metrics(
 #[allow(dead_code)]
 fn compute_residuals(
     signal: &[f64],
-    ar_coeffs: &Array1<f64>, _ma_coeffs: Option<&Array1<f64>>,
+    ar_coeffs: &Array1<f64>,
+    _ma_coeffs: Option<&Array1<f64>>,
 ) -> SignalResult<Array1<f64>> {
     let n = signal.len();
     let p = ar_coeffs.len() - 1;
@@ -699,18 +702,18 @@ fn enhanced_cross_validation(
         }
     }
 
-    let mean_cv_score = cv_scores.iter().sum::<f64>() / cv_scores.len()  as f64;
+    let mean_cv_score = cv_scores.iter().sum::<f64>() / cv_scores.len() as f64;
     let cv_std = {
         let variance = cv_scores
             .iter()
             .map(|&x| (x - mean_cv_score).powi(2))
             .sum::<f64>()
-            / cv_scores.len()  as f64;
+            / cv_scores.len() as f64;
         variance.sqrt()
     };
 
     let prediction_accuracy =
-        prediction_accuracies.iter().sum::<f64>() / prediction_accuracies.len()  as f64;
+        prediction_accuracies.iter().sum::<f64>() / prediction_accuracies.len() as f64;
     let generalization_error = mean_cv_score * (1.0 + cv_std / mean_cv_score);
 
     Ok(CrossValidationResults {
@@ -772,7 +775,11 @@ fn comprehensive_stability_analysis(
 fn check_ar_stability(_ar_coeffs: &Array1<f64>) -> bool {
     // All roots of characteristic polynomial must be inside unit circle
     // This is a simplified check - could be improved with actual root finding
-    let sum_abs_coeffs: f64 = _ar_coeffs.slice(s![1..]).iter().map(|&x: &f64| x.abs()).sum();
+    let sum_abs_coeffs: f64 = _ar_coeffs
+        .slice(s![1..])
+        .iter()
+        .map(|&x: &f64| x.abs())
+        .sum();
     sum_abs_coeffs < 1.0 // Sufficient but not necessary condition
 }
 
@@ -816,7 +823,7 @@ fn analyze_performance_statistics(
 
     // Complexity metrics
     let time_complexity_factor = (n as f64 * p as f64).log2();
-    let memory_complexity_factor = (n + p)  as f64;
+    let memory_complexity_factor = (n + p) as f64;
     let condition_number = calculate_condition_number(&result.ar_coeffs);
     let stability_margin = if check_ar_stability(&result.ar_coeffs) {
         1.0

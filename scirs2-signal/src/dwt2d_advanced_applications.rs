@@ -1,18 +1,19 @@
-//! Advanced applications and algorithms for 2D Discrete Wavelet Transform
-//!
-//! This module provides specialized 2D wavelet algorithms for advanced applications
-//! including texture analysis, edge detection, compression, and adaptive processing.
+use ndarray::s;
+// Advanced applications and algorithms for 2D Discrete Wavelet Transform
+//
+// This module provides specialized 2D wavelet algorithms for advanced applications
+// including texture analysis, edge detection, compression, and adaptive processing.
 
 use crate::dwt::Wavelet;
-use crate::dwt2d__enhanced::BoundaryMode;
+use crate::dwt2d_enhanced::BoundaryMode;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Array3, s};
+use ndarray::{ Array1, Array2, Array3};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
 use statrs::statistics::Statistics;
 
-use crate::dwt2d__enhanced::{
+use crate::dwt2d_enhanced::{
     enhanced_dwt2d_decompose, enhanced_dwt2d_reconstruct, Dwt2dConfig, EnhancedDwt2dResult,
 };
 // use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
@@ -77,7 +78,7 @@ pub struct AdaptiveDenoisingConfig {
     /// Adaptation strategy
     pub adaptation: AdaptationStrategy,
     /// Preserve texture features
-    pub preserve_texture: bool,
+    pub preservetexture: bool,
     /// Edge preservation factor
     pub edge_preservation: f64,
     /// Noise variance (if known)
@@ -151,7 +152,7 @@ pub enum AdaptationStrategy {
 ///
 /// * Comprehensive texture analysis result
 #[allow(dead_code)]
-pub fn wavelet_texture_analysis<T>(
+pub fn wavelettexture_analysis<T>(
     image: &Array2<T>,
     wavelet: Wavelet,
     levels: usize,
@@ -208,7 +209,7 @@ where
     let homogeneity_features = aggregate_features(&homogeneity_features);
 
     // Create comprehensive texture descriptor
-    let texture_descriptor = create_texture_descriptor(
+    let texture_descriptor = createtexture_descriptor(
         &energy_features,
         &entropy_features,
         &contrast_features,
@@ -333,7 +334,7 @@ where
             apply_edge_adaptive_thresholding(&mut decomp, _config, noise_var)?;
         }
         AdaptationStrategy::TextureAdaptive => {
-            apply_texture_adaptive_thresholding(&mut decomp, _config, noise_var)?;
+            applytexture_adaptive_thresholding(&mut decomp, _config, noise_var)?;
         }
         AdaptationStrategy::MultiCriteria => {
             apply_multi_criteria_thresholding(&mut decomp, _config, noise_var)?;
@@ -393,7 +394,7 @@ where
     // Calculate achieved compression _ratio
     let original_size = image_f64.len() * 8; // Assuming 64-bit floats
     let compressed_size = encoded_data.len() * 8; // Simplified
-    let achieved_ratio = original_size as f64 / compressed_size  as f64;
+    let achieved_ratio = original_size as f64 / compressed_size as f64;
 
     Ok(CompressionResult {
         encoded_data,
@@ -545,7 +546,7 @@ fn compute_entropy(_array: &Array2<f64>) -> f64 {
         hist[bin.min(255)] += 1;
     }
 
-    let total = _array.len()  as f64;
+    let total = _array.len() as f64;
     hist.into_iter()
         .filter(|&count| count > 0)
         .map(|count| {
@@ -559,7 +560,7 @@ fn compute_entropy(_array: &Array2<f64>) -> f64 {
 fn compute_contrast(_array: &Array2<f64>) -> f64 {
     // Simplified contrast measure (standard deviation)
     let mean = _array.mean().unwrap_or(0.0);
-    let variance = _array.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _array.len()  as f64;
+    let variance = _array.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _array.len() as f64;
     variance.sqrt()
 }
 
@@ -581,7 +582,7 @@ fn aggregate_features(_features: &[SubbandFeatures]) -> SubbandFeatures {
         };
     }
 
-    let n = _features.len()  as f64;
+    let n = _features.len() as f64;
     SubbandFeatures {
         approx: _features.iter().map(|f| f.approx).sum::<f64>() / n,
         detail_h: _features.iter().map(|f| f.detail_h).sum::<f64>() / n,
@@ -591,7 +592,7 @@ fn aggregate_features(_features: &[SubbandFeatures]) -> SubbandFeatures {
 }
 
 #[allow(dead_code)]
-fn create_texture_descriptor(
+fn createtexture_descriptor(
     energy: &SubbandFeatures,
     entropy: &SubbandFeatures,
     contrast: &SubbandFeatures,
@@ -740,8 +741,8 @@ fn upsample_bilinear(
 
     let mut output = Array2::zeros(target_size);
 
-    let row_ratio = input_rows as f64 / target_rows  as f64;
-    let col_ratio = input_cols as f64 / target_cols  as f64;
+    let row_ratio = input_rows as f64 / target_rows as f64;
+    let col_ratio = input_cols as f64 / target_cols as f64;
 
     for i in 0..target_rows {
         for j in 0..target_cols {
@@ -753,8 +754,8 @@ fn upsample_bilinear(
             let i1 = (i0 + 1).min(input_rows - 1);
             let j1 = (j0 + 1).min(input_cols - 1);
 
-            let di = src_i - i0  as f64;
-            let dj = src_j - j0  as f64;
+            let di = src_i - i0 as f64;
+            let dj = src_j - j0 as f64;
 
             let val = (1.0 - di) * (1.0 - dj) * input[[i0, j0]]
                 + di * (1.0 - dj) * input[[i1, j0]]
@@ -776,7 +777,7 @@ fn estimate_noise_variance(_detail_coeffs: &Array2<f64>) -> f64 {
     _coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let median = _coeffs[_coeffs.len() / 2];
-    let mad: f64 = _coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / _coeffs.len()  as f64;
+    let mad: f64 = _coeffs.iter().map(|&x| (x - median).abs()).sum::<f64>() / _coeffs.len() as f64;
 
     // Convert MAD to standard deviation estimate
     mad / 0.6745
@@ -850,7 +851,7 @@ fn apply_edge_adaptive_thresholding(
 }
 
 #[allow(dead_code)]
-fn apply_texture_adaptive_thresholding(
+fn applytexture_adaptive_thresholding(
     decomp: &mut EnhancedDwt2dResult,
     config: &AdaptiveDenoisingConfig,
     noise_var: f64,
@@ -921,8 +922,8 @@ fn estimate_reconstruction_quality(
 #[allow(unused_imports)]
 mod tests {
     #[test]
-    fn test_texture_analysis() {
-        let image = Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64).collect()).unwrap();
+    fn testtexture_analysis() {
+        let image = Array2::fromshape_vec((8, 8), (0..64).map(|x| x as f64).collect()).unwrap();
         let config = Dwt2dConfig {
             boundary_mode: BoundaryMode::Symmetric,
             use_simd: false,
@@ -934,7 +935,7 @@ mod tests {
             compute_metrics: true,
         };
 
-        let result = wavelet_texture_analysis(&image, Wavelet::Haar, 2, &config);
+        let result = wavelettexture_analysis(&image, Wavelet::Haar, 2, &config);
         assert!(result.is_ok());
 
         let analysis = result.unwrap();

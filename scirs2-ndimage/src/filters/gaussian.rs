@@ -44,7 +44,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// use ndarray::Array2;
 /// use scirs2__ndimage::filters::{gaussian_filter, BorderMode};
 ///
-/// let image = Array2::from_shape_fn((10, 10), |(i, j)| {
+/// let image = Array2::fromshape_fn((10, 10), |(i, j)| {
 ///     ((i * j) as f64).sin()
 /// });
 ///
@@ -60,7 +60,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// use ndarray::Array3;
 /// use scirs2__ndimage::filters::gaussian_filter;
 ///
-/// let volume = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| {
+/// let volume = Array3::fromshape_fn((20, 20, 20), |(i, j, k)| {
 ///     (i + j + k) as f64
 /// });
 ///
@@ -381,7 +381,7 @@ where
     let kernel_radius = kernel_len / 2;
 
     // Get input shape for later
-    let input_shape = input.shape();
+    let inputshape = input.shape();
 
     // Convert to dynamic dimension to facilitate filtering across arbitrary axes
     let input_dyn = input.clone().into_dyn();
@@ -409,7 +409,7 @@ where
 
             // Calculate source position along the axis
             let src_pos = idx_vec[axis] as isize + kernel_pos;
-            let src_len = input_shape[axis] as isize;
+            let src_len = inputshape[axis] as isize;
 
             // Apply border mode to get actual index
             let src_idx = match mode {
@@ -479,7 +479,7 @@ where
     } else {
         // Process in parallel for larger arrays
         // Create a new closure that doesn't depend on the captured variables
-        let input_shape_clone = input_shape.to_vec();
+        let inputshape_clone = inputshape.to_vec();
         let axis_clone = axis;
         let mode_clone = *mode;
         let kernel_clone = kernel.clone();
@@ -500,7 +500,7 @@ where
 
                 // Calculate source position along the axis
                 let src_pos = idx_vec[axis_clone] as isize + kernel_pos;
-                let src_len = input_shape_clone[axis_clone] as isize;
+                let src_len = inputshape_clone[axis_clone] as isize;
 
                 // Apply border mode to get actual index
                 let src_idx = match mode_clone {
@@ -755,7 +755,7 @@ where
             // Apply kernel along each dimension
             for axis in 0..input.ndim() {
                 let mut output = Array::zeros(result.raw_dim());
-                let input_shape = result.shape();
+                let inputshape = result.shape();
 
                 let mut pad_width = vec![(0, 0); input.ndim()];
                 pad_width[axis] = (radius, radius);
@@ -773,7 +773,7 @@ where
 
                         // Calculate source position along the axis
                         let src_pos = idx[axis] as isize + kernel_pos;
-                        let src_len = input_shape[axis] as isize;
+                        let src_len = inputshape[axis] as isize;
 
                         // Apply border mode to get actual index
                         let src_idx = match border_mode {

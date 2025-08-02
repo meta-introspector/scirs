@@ -2397,8 +2397,8 @@ impl<F: Float> SynapticConnections<F> {
                             };
 
                             let synapse_type = match pre_neuron.neuron_type {
-                                NeuronType::Excitatory =>, SynapseType::Excitatory,
-                                NeuronType::Inhibitory => SynapseType::Inhibitory_ =>, SynapseType::Excitatory,
+                                NeuronType::Excitatory => SynapseType::Excitatory,
+                                NeuronType::Inhibitory => SynapseType::Inhibitory_ => SynapseType::Excitatory,
                             };
 
                             let synapse = Synapse {

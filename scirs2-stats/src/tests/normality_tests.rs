@@ -41,10 +41,10 @@ mod tests {
         let y = array![1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4];
 
         // Test if x is stochastically less than y (which is true)
-        let (_stat_p_value_less) = ks_2samp(&x.view(), &y.view(), "less").unwrap();
+        let _stat_p_value_less = ks_2samp(&x.view(), &y.view(), "less").unwrap();
 
         // Test the opposite direction (which should be false)
-        let (_stat_p_value_greater) = ks_2samp(&x.view(), &y.view(), "greater").unwrap();
+        let _stat_p_value_greater = ks_2samp(&x.view(), &y.view(), "greater").unwrap();
 
         // For these samples, ideally "less" should have a smaller p-value than "greater"
         // But due to the alternative hypothesis calculation, we'll temporarily disable this assertion

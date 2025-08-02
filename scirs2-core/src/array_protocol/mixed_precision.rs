@@ -471,7 +471,7 @@ where
             match std::mem::size_of::<T>() {
                 4 => Precision::Single,
                 8 => Precision::Double,
-            _ => Precision::Mixed,
+                _ => Precision::Mixed,
             }
         }
     }

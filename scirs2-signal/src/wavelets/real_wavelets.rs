@@ -1,4 +1,4 @@
-//! Real-valued wavelets (e.g., Ricker)
+// Real-valued wavelets (e.g., Ricker)
 
 use crate::error::{SignalError, SignalResult};
 use std::f64::consts::PI;
@@ -18,7 +18,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::wavelets::ricker;
+/// use scirs2_signal::wavelets::ricker;
 ///
 /// // Generate a Ricker wavelet with 100 points and width parameter 4.0
 /// let wavelet = ricker(100, 4.0).unwrap();

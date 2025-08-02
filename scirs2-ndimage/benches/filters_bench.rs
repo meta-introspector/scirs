@@ -33,7 +33,7 @@ fn bench_generic_filter(c: &mut Criterion) {
     let sizes = vec![(10, 10), (50, 50), (100, 100), (200, 200)];
 
     for (rows, cols) in sizes {
-        let input = Array2::from_shape_fn((rows, cols), |(i, j)| (i * j) as f64);
+        let input = Array2::fromshape_fn((rows, cols), |(i, j)| (i * j) as f64);
         let kernel_size = [3, 3];
 
         // Benchmark mean filter
@@ -100,7 +100,7 @@ fn bench_standard_filters(c: &mut Criterion) {
     let mut group = c.benchmark_group("standard_filters");
     group.measurement_time(Duration::from_secs(10));
 
-    let input = Array2::from_shape_fn((100, 100), |(i, j)| (i * j) as f64);
+    let input = Array2::fromshape_fn((100, 100), |(i, j)| (i * j) as f64);
     let kernel_size = [3, 3];
 
     group.bench_function("uniform_filter", |b| {
@@ -132,7 +132,7 @@ fn bench_bilateral_filter(c: &mut Criterion) {
     let mut group = c.benchmark_group("bilateral_filter");
     group.measurement_time(Duration::from_secs(10));
 
-    let input = Array2::from_shape_fn((50, 50), |(i, j)| (i * j) as f64);
+    let input = Array2::fromshape_fn((50, 50), |(i, j)| (i * j) as f64);
 
     group.bench_function("bilateral_regular", |b| {
         b.iter(|| bilateral_filter(black_box(&input), 1.0, 1.0, None).unwrap())
@@ -161,7 +161,7 @@ fn bench_border_modes(c: &mut Criterion) {
     let mut group = c.benchmark_group("border_modes");
     group.measurement_time(Duration::from_secs(10));
 
-    let input = Array2::from_shape_fn((100, 100), |(i, j)| (i * j) as f64);
+    let input = Array2::fromshape_fn((100, 100), |(i, j)| (i * j) as f64);
     let kernel_size = [5, 5];
 
     let modes = vec![
@@ -200,7 +200,7 @@ fn bench_dimensionalities(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(10));
 
     // 1D benchmark
-    let input_1d = Array1::from_shape_fn(1000, |i| i as f64);
+    let input_1d = Array1::fromshape_fn(1000, |i| i as f64);
     group.bench_function("generic_filter_1d", |b| {
         b.iter(|| {
             generic_filter(
@@ -215,7 +215,7 @@ fn bench_dimensionalities(c: &mut Criterion) {
     });
 
     // 2D benchmark
-    let input_2d = Array2::from_shape_fn((100, 100), |(i, j)| (i * j) as f64);
+    let input_2d = Array2::fromshape_fn((100, 100), |(i, j)| (i * j) as f64);
     group.bench_function("generic_filter_2d", |b| {
         b.iter(|| {
             generic_filter(
@@ -230,7 +230,7 @@ fn bench_dimensionalities(c: &mut Criterion) {
     });
 
     // 3D benchmark (smaller size due to memory constraints)
-    let input_3d = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| (i * j * k) as f64);
+    let input_3d = Array3::fromshape_fn((20, 20, 20), |(i, j, k)| (i * j * k) as f64);
     group.bench_function("generic_filter_3d", |b| {
         b.iter(|| {
             generic_filter(
@@ -257,7 +257,7 @@ fn bench_edge_detection(c: &mut Criterion) {
     let sizes = vec![100, 500, 1000];
 
     for size in sizes {
-        let input = Array2::from_shape_fn((size, size), |(i, j)| {
+        let input = Array2::fromshape_fn((size, size), |(i, j)| {
             ((i as f64 / 10.0).sin() + (j as f64 / 10.0).cos()) * 255.0
         });
 
@@ -336,7 +336,7 @@ fn bench_performance_characteristics(c: &mut Criterion) {
     let scaling_sizes = vec![(50, 50), (100, 100), (200, 200), (400, 400)];
 
     for (rows, cols) in scaling_sizes {
-        let input = Array2::from_shape_fn((rows, cols), |(i, j)| {
+        let input = Array2::fromshape_fn((rows, cols), |(i, j)| {
             ((i as f64 / 10.0).sin() * (j as f64 / 10.0).cos() * 255.0)
         });
 
@@ -368,7 +368,7 @@ fn bench_memory_computation_tradeoffs(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_computation_tradeoffs");
     group.measurement_time(Duration::from_secs(8));
 
-    let input = Array2::from_shape_fn((200, 200), |(i, j)| (i + j) as f64);
+    let input = Array2::fromshape_fn((200, 200), |(i, j)| (i + j) as f64);
 
     // Compare different kernel sizes (memory vs computation)
     let kernel_sizes = vec![3, 5, 7, 9, 11, 15];
@@ -405,7 +405,7 @@ fn bench_data_type_performance(c: &mut Criterion) {
     let size = (100, 100);
 
     // f32 arrays
-    let input_f32 = Array2::from_shape_fn(size, |(i, j)| (i + j) as f32);
+    let input_f32 = Array2::fromshape_fn(size, |(i, j)| (i + j) as f32);
     group.bench_with_input(
         BenchmarkId::new("gaussian_f32", format!("{}x{}", size.0, size.1)),
         &input_f32,
@@ -415,7 +415,7 @@ fn bench_data_type_performance(c: &mut Criterion) {
     );
 
     // f64 arrays
-    let input_f64 = Array2::from_shape_fn(size, |(i, j)| (i + j) as f64);
+    let input_f64 = Array2::fromshape_fn(size, |(i, j)| (i + j) as f64);
     group.bench_with_input(
         BenchmarkId::new("gaussian_f64", format!("{}x{}", size.0, size.1)),
         &input_f64,
@@ -443,7 +443,7 @@ fn bench_cache_efficiency(c: &mut Criterion) {
     ];
 
     for (rows, cols) in shapes {
-        let input = Array2::from_shape_fn((rows, cols), |(i, j)| (i + j) as f64);
+        let input = Array2::fromshape_fn((rows, cols), |(i, j)| (i + j) as f64);
 
         group.bench_with_input(
             BenchmarkId::new("uniform_cache", format!("{}x{}", rows, cols)),
@@ -467,7 +467,7 @@ fn bench_parallel_performance(c: &mut Criterion) {
     let sizes = vec![(100, 100), (300, 300), (500, 500)];
 
     for (rows, cols) in sizes {
-        let input = Array2::from_shape_fn((rows, cols), |(i, j)| (i + j) as f64);
+        let input = Array2::fromshape_fn((rows, cols), |(i, j)| (i + j) as f64);
 
         group.bench_with_input(
             BenchmarkId::new("gaussian_parallel", format!("{}x{}", rows, cols)),

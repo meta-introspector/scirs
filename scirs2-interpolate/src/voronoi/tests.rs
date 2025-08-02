@@ -31,7 +31,7 @@ use crate::voronoi::parallel::{
 #[allow(dead_code)]
 fn create_3d_test_data() -> (Array2<f64>, Array1<f64>) {
     // Create a simple 3D test dataset
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (8, 3),
         vec![
             0.0, 0.0, 0.0, // Cube corners
@@ -61,7 +61,7 @@ fn create_3d_test_data() -> (Array2<f64>, Array1<f64>) {
 #[allow(dead_code)]
 fn test_natural_neighbor_exact_points() {
     // Test that the interpolator returns exact values at data points
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
@@ -101,7 +101,7 @@ fn test_natural_neighbor_exact_points() {
 #[allow(dead_code)]
 fn test_natural_neighbor_helpers() {
     // Test the helper functions for creating interpolators
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
@@ -132,7 +132,7 @@ fn test_natural_neighbor_helpers() {
 #[allow(dead_code)]
 fn test_interpolate_multi() {
     // Test that the interpolator can handle multiple query points
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
@@ -144,7 +144,7 @@ fn test_interpolate_multi() {
     let interpolator = make_sibson_interpolator(points.clone(), values.clone()).unwrap();
 
     // Create a set of query points
-    let queries = Array2::from_shape_vec(
+    let queries = Array2::fromshape_vec(
         (3, 2),
         vec![
             0.25, 0.25, // Between (0,0) and (0.5,0.5)
@@ -188,7 +188,7 @@ fn test_linear_function_reproduction() {
         }
     }
 
-    let points = Array2::from_shape_vec((25, 2), points_vec).unwrap();
+    let points = Array2::fromshape_vec((25, 2), points_vec).unwrap();
     let values = Array1::from_vec(values_vec);
 
     // Create both types of interpolators
@@ -292,7 +292,7 @@ fn test_3d_linear_function_reproduction() {
 #[allow(dead_code)]
 fn test_voronoi_diagram_access() {
     // Test that we can access the underlying Voronoi diagram
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
@@ -320,7 +320,7 @@ fn test_voronoi_diagram_access() {
 #[allow(dead_code)]
 fn test_method_setting() {
     // Test that we can change the interpolation method
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
@@ -348,7 +348,7 @@ fn test_method_setting() {
 #[allow(dead_code)]
 fn test_parallel_interpolation() {
     // Test that parallel interpolation gives the same results as sequential
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
@@ -376,7 +376,7 @@ fn test_parallel_interpolation() {
         }
     }
 
-    let queries = Array2::from_shape_vec((25, 2), query_points).unwrap();
+    let queries = Array2::fromshape_vec((25, 2), query_points).unwrap();
 
     // Run both interpolation methods
     let sequential_results = sequential.interpolate_multi(&queries.view()).unwrap();
@@ -418,7 +418,7 @@ fn test_parallel_3d_interpolation() {
         }
     }
 
-    let queries = Array2::from_shape_vec((27, 3), query_points).unwrap();
+    let queries = Array2::fromshape_vec((27, 3), query_points).unwrap();
 
     // Run parallel interpolation
     let results = parallel.interpolate_multi(&queries.view()).unwrap();
@@ -438,7 +438,7 @@ fn test_parallel_3d_interpolation() {
 #[allow(dead_code)]
 fn test_parallel_config() {
     // Test that we can change the parallel configuration
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
@@ -491,7 +491,7 @@ fn test_gradient_linear_function() {
         }
     }
 
-    let points = Array2::from_shape_vec((25, 2), points_vec).unwrap();
+    let points = Array2::fromshape_vec((25, 2), points_vec).unwrap();
     let values = Array1::from_vec(values_vec);
 
     // Create interpolator
@@ -534,7 +534,7 @@ fn test_gradient_quadratic_function() {
         }
     }
 
-    let points = Array2::from_shape_vec((25, 2), points_vec).unwrap();
+    let points = Array2::fromshape_vec((25, 2), points_vec).unwrap();
     let values = Array1::from_vec(values_vec);
 
     // Create interpolator
@@ -560,7 +560,7 @@ fn test_gradient_quadratic_function() {
 #[allow(dead_code)]
 fn test_interpolate_with_gradient() {
     // Test the combined interpolate_with_gradient method
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
@@ -621,7 +621,7 @@ fn test_3d_gradient() {
 fn test_extrapolation_nearest_neighbor() {
     // Test nearest neighbor extrapolation
     let points =
-        Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
     // Function f(x,y) = x + y
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
@@ -653,7 +653,7 @@ fn test_extrapolation_nearest_neighbor() {
 fn test_extrapolation_inverse_distance() {
     // Test inverse distance weighting extrapolation
     let points =
-        Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
     // Function f(x,y) = x + y
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
@@ -682,7 +682,7 @@ fn test_extrapolation_inverse_distance() {
 #[allow(dead_code)]
 fn test_extrapolation_linear_gradient() {
     // Test linear gradient extrapolation
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (5, 2),
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
     )
@@ -712,7 +712,7 @@ fn test_extrapolation_linear_gradient() {
 fn test_extrapolation_constant_value() {
     // Test constant value extrapolation
     let points =
-        Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
     // Function f(x,y) = x + y
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
@@ -743,7 +743,7 @@ fn test_extrapolation_constant_value() {
 fn test_interpolate_or_extrapolate() {
     // Test the combined interpolate_or_extrapolate method
     let points =
-        Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+        Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
     // Function f(x,y) = x + y
     let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);

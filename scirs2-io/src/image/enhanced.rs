@@ -219,7 +219,7 @@ impl EnhancedImageProcessor {
         let rgb_img = resized_img.to_rgb8();
         let resized_raw = rgb_img.into_raw();
 
-        let resized_data = Array3::from_shape_vec(
+        let resized_data = Array3::fromshape_vec(
             (new_height as usize, new_width as usize, channels),
             resized_raw,
         )
@@ -438,7 +438,7 @@ impl EnhancedImageProcessor {
         let rgb_blurred = blurred.to_rgb8();
         let blurred_raw = rgb_blurred.into_raw();
 
-        let blurred_data = Array3::from_shape_vec((height, width_, 3), blurred_raw)
+        let blurred_data = Array3::fromshape_vec((height, width_, 3), blurred_raw)
             .map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(ImageData {

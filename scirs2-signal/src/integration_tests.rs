@@ -1,19 +1,19 @@
-//! Comprehensive integration tests demonstrating full signal processing pipelines
-//!
-//! This module provides end-to-end tests that demonstrate how different signal
-//! processing components work together to solve real-world problems. These tests
-//! serve as both validation and documentation of the library's capabilities.
+// Comprehensive integration tests demonstrating full signal processing pipelines
+//
+// This module provides end-to-end tests that demonstrate how different signal
+// processing components work together to solve real-world problems. These tests
+// serve as both validation and documentation of the library's capabilities.
 
-use crate::denoise_adaptive__advanced::{AdaptiveDenoisingConfig, adaptive_denoise_advanced};
+use crate::denoise_adaptive__advanced::{adaptive_denoise_advanced, AdaptiveDenoisingConfig};
 use crate::dwt::Wavelet;
-use crate::dwt2d__enhanced::{BoundaryMode, Dwt2dConfig, enhanced_dwt2d_decompose};
+use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
 use crate::error::{SignalError, SignalResult};
-use crate::filter::{FilterType, butter, filtfilt};
-use crate::lombscargle__enhanced::{LombScargleConfig, lombscargle_enhanced};
-use crate::multitaper::enhanced::{MultitaperConfig, enhanced_pmtm};
-use crate::parametric::{ARMethod, estimate_arma};
-use crate::sysid::{TfEstimationMethod, estimate_transfer_function};
-use crate::validation__runner::{ValidationConfig, validate_signal_processing_library};
+use crate::filter::{butter, filtfilt, FilterType};
+use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig};
+use crate::multitaper::enhanced::{enhanced_pmtm, MultitaperConfig};
+use crate::parametric::{estimate_arma, ARMethod};
+use crate::sysid::{estimate_transfer_function, TfEstimationMethod};
+use crate::validation__runner::{validate_signal_processing_library, ValidationConfig};
 use ndarray::{Array1, Array2};
 use rand::Rng;
 use statrs::statistics::Statistics;
@@ -73,9 +73,7 @@ fn test_biomedical_signal_pipeline() -> SignalResult<()> {
         })
         .collect();
 
-    println!(
-        "📊 Generated {} samples of synthetic ECG data"..noisy_ecg.len()
-    );
+    println!("📊 Generated {} samples of synthetic ECG data"..noisy_ecg.len());
 
     // Step 1: Preprocessing - Remove baseline wander and powerline interference
     println!("🔧 Step 1: Preprocessing...");
@@ -256,9 +254,7 @@ fn test_audio_processing_pipeline() -> SignalResult<()> {
         .map(|&signal| signal + 0.01 * rng.random_range(-1.0..1.0))
         .collect();
 
-    println!(
-        "📊 Generated {} samples of synthetic audio"..noisy_audio.len()
-    );
+    println!("📊 Generated {} samples of synthetic audio"..noisy_audio.len());
 
     // Step 1: Short-time spectral analysis
     println!("🔧 Step 1: Short-time spectral analysis...");
@@ -371,9 +367,7 @@ fn test_geophysical_processing_pipeline() -> SignalResult<()> {
         seismic_signal.push(sample + noise);
     }
 
-    println!(
-        "📊 Generated {} irregularly sampled seismic data points"..seismic_signal.len()
-    );
+    println!("📊 Generated {} irregularly sampled seismic data points"..seismic_signal.len());
 
     // Step 1: Lomb-Scargle periodogram for irregular data
     println!("🔧 Step 1: Lomb-Scargle spectral analysis...");

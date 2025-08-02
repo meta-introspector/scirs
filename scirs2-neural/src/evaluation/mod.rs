@@ -93,15 +93,15 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
         // Initialize metrics
         for metric_type in &_config.metrics {
             let metric: Box<dyn Metric<F>> = match metric_type {
-                MetricType::Loss =>, Box::new(LossMetric::new()),
-                MetricType::Accuracy =>, Box::new(AccuracyMetric::new()),
-                MetricType::Precision =>, Box::new(PrecisionMetric::new()),
-                MetricType::Recall =>, Box::new(RecallMetric::new()),
-                MetricType::F1Score =>, Box::new(F1ScoreMetric::new()),
-                MetricType::MeanSquaredError =>, Box::new(MeanSquaredErrorMetric::new()),
-                MetricType::MeanAbsoluteError =>, Box::new(MeanAbsoluteErrorMetric::new()),
-                MetricType::RSquared =>, Box::new(RSquaredMetric::new()),
-                MetricType::AUC =>, Box::new(AUCMetric::new()),
+                MetricType::Loss => Box::new(LossMetric::new()),
+                MetricType::Accuracy => Box::new(AccuracyMetric::new()),
+                MetricType::Precision => Box::new(PrecisionMetric::new()),
+                MetricType::Recall => Box::new(RecallMetric::new()),
+                MetricType::F1Score => Box::new(F1ScoreMetric::new()),
+                MetricType::MeanSquaredError => Box::new(MeanSquaredErrorMetric::new()),
+                MetricType::MeanAbsoluteError => Box::new(MeanAbsoluteErrorMetric::new()),
+                MetricType::RSquared => Box::new(RSquaredMetric::new()),
+                MetricType::AUC => Box::new(AUCMetric::new()),
                 MetricType::Custom(name) => {
                     return Err(Error::NotImplementedError(format!(
                         "Custom metric '{}' is not yet supported",
@@ -163,15 +163,15 @@ use rand::rng;
             // Load first sample to determine shapes
             let (first_x, first_y) = dataset.get(batch_indices[0])?;
             // Create batch arrays
-            let batch_x_shape = [batch_indices.len()]
+            let batch_xshape = [batch_indices.len()]
                 .iter()
                 .chain(first_x.shape())
                 .cloned()
                 .collect::<Vec<_>>();
-            let batch_y_shape = [batch_indices.len()]
+            let batch_yshape = [batch_indices.len()]
                 .chain(first_y.shape())
-            let mut batch_x = Array::zeros(IxDyn(&batch_x_shape));
-            let mut batch_y = Array::zeros(IxDyn(&batch_y_shape));
+            let mut batch_x = Array::zeros(IxDyn(&batch_xshape));
+            let mut batch_y = Array::zeros(IxDyn(&batch_yshape));
             // Fill batch arrays
             for (i, &idx) in batch_indices.iter().enumerate() {
                 let (x, y) = dataset.get(idx)?;

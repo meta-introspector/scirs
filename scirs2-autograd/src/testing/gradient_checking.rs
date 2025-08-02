@@ -619,7 +619,7 @@ where
 /// Comprehensive gradient check with detailed results
 #[allow(dead_code)]
 pub fn comprehensive_gradient_check<'a, F: Float, Func>(
-    _function: Func_input: &'a Tensor<'a, F>, _analytical_gradient: &'a Tensor<'a, F>, _config: GradientCheckConfig,
+    _function: Func, input: &'a Tensor<'a, F>, _analytical_gradient: &'a Tensor<'a, F>, _config: GradientCheckConfig,
 ) -> Result<GradientCheckResult<'a, F>, StabilityError>
 where
     Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,

@@ -40,7 +40,7 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ =>, BorderMode::Reflect, // Default fallback
+            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect, // Default fallback
         };
 
         // For now, handle 2D case (can be extended to n-dimensional)
@@ -90,7 +90,7 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ =>, BorderMode::Reflect,
+            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
@@ -136,7 +136,7 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ =>, BorderMode::Reflect,
+            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
@@ -181,7 +181,7 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ =>, BorderMode::Reflect,
+            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
@@ -305,7 +305,7 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ =>, BorderMode::Reflect,
+            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
@@ -359,7 +359,7 @@ pub mod scipy_ndimage {
             "reflect" => BorderMode::Reflect,
             "mirror" => BorderMode::Mirror,
             "wrap" => BorderMode::Wrap,
-            "nearest" => BorderMode::Nearest_ =>, BorderMode::Reflect,
+            "nearest" => BorderMode::Nearest_ => BorderMode::Reflect,
         };
 
         if D::NDIM == Some(2) {
@@ -670,7 +670,8 @@ impl ScipyCompatWrapper {
                         "reflect" => "BorderMode::Reflect",
                         "mirror" => "BorderMode::Mirror",
                         "wrap" => "BorderMode::Wrap",
-                        "nearest" => "BorderMode::Nearest"_ => "BorderMode::Reflect",
+                        "nearest" => "BorderMode::Nearest",
+                        _ => "BorderMode::Reflect",
                     };
                     converted.insert("mode".to_string(), border_mode.to_string());
                 }

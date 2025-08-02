@@ -1,4 +1,4 @@
-use scirs2__signal::window::*;
+use scirs2_signal::window::*;
 use std::error::Error;
 
 #[allow(dead_code)]

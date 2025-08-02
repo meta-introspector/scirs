@@ -410,7 +410,7 @@ mod tests {
     #[test]
     fn test_optimal_leaf_ordering_small() {
         // Create simple test data
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (4, 2),
             vec![
                 0.0, 0.0, // Point 0
@@ -458,7 +458,7 @@ mod tests {
     #[test]
     fn test_optimal_leaf_ordering_heuristic() {
         // Create test data with more points to test heuristic
-        let data = Array2::from_shape_vec((6, 1), vec![0.0, 1.0, 2.0, 10.0, 11.0, 12.0]).unwrap();
+        let data = Array2::fromshape_vec((6, 1), vec![0.0, 1.0, 2.0, 10.0, 11.0, 12.0]).unwrap();
 
         let linkage_matrix =
             linkage(data.view(), LinkageMethod::Average, Metric::Euclidean).unwrap();
@@ -494,7 +494,7 @@ mod tests {
     #[test]
     fn test_automatic_algorithm_selection() {
         // Small dataset should use exact algorithm
-        let small_data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let small_data = Array2::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
         let small_linkage =
             linkage(small_data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
         let small_distances = Array1::from_vec(vec![1.0, 2.0, 1.0]);
@@ -507,7 +507,7 @@ mod tests {
 
         // Larger dataset should use heuristic
         let large_data =
-            Array2::from_shape_vec((15, 1), (0..15).map(|i| i as f64).collect()).unwrap();
+            Array2::fromshape_vec((15, 1), (0..15).map(|i| i as f64).collect()).unwrap();
         let large_linkage =
             linkage(large_data.view(), LinkageMethod::Average, Metric::Euclidean).unwrap();
 
@@ -531,7 +531,7 @@ mod tests {
 
     #[test]
     fn test_apply_leaf_ordering() {
-        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let data = Array2::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
         let linkage_matrix =
             linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
 
@@ -551,7 +551,7 @@ mod tests {
     #[test]
     fn test_tree_construction() {
         // Test tree construction with simple linkage matrix
-        let linkage = Array2::from_shape_vec(
+        let linkage = Array2::fromshape_vec(
             (2, 4),
             vec![
                 0.0, 1.0, 1.0, 2.0, // Merge 0 and 1

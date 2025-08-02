@@ -989,7 +989,7 @@ impl NeuralLayer {
         let xavier_scale = (2.0 / (_input_size + output_size) as f64).sqrt();
 
         Self {
-            weights: Array2::from_shape_fn((output_size, _input_size), |_| {
+            weights: Array2::fromshape_fn((output_size, _input_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             biases: Array1::zeros(output_size),
@@ -1069,16 +1069,16 @@ impl RecurrentConnections {
         Self {
             hidden_state: Array1::zeros(_size),
             cell_state: Array1::zeros(_size),
-            recurrent_weights: Array2::from_shape_fn((_size, _size), |_| {
+            recurrent_weights: Array2::fromshape_fn((_size, _size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            input_gate_weights: Array2::from_shape_fn((_size, _size), |_| {
+            input_gate_weights: Array2::fromshape_fn((_size, _size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            forget_gate_weights: Array2::from_shape_fn((_size, _size), |_| {
+            forget_gate_weights: Array2::fromshape_fn((_size, _size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            output_gate_weights: Array2::from_shape_fn((_size, _size), |_| {
+            output_gate_weights: Array2::fromshape_fn((_size, _size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
         }
@@ -1204,10 +1204,10 @@ impl StrategySelector {
         let num_strategies = 5;
 
         Self {
-            selection_network: Array2::from_shape_fn((num_strategies, _hidden_size), |_| {
+            selection_network: Array2::fromshape_fn((num_strategies, _hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            strategy_embeddings: Array2::from_shape_fn((num_strategies, _hidden_size), |_| {
+            strategy_embeddings: Array2::fromshape_fn((num_strategies, _hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             strategy_weights: Array1::from_elem(num_strategies, 1.0 / num_strategies as f64),
@@ -1360,7 +1360,7 @@ impl AdaptationRateController {
     /// Create new adaptation rate controller
     pub fn new() -> Self {
         Self {
-            controller_network: Array2::from_shape_fn((1, 10), |_| {
+            controller_network: Array2::fromshape_fn((1, 10), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             current_rate: 0.1,
@@ -1394,7 +1394,7 @@ impl ProgressMonitor {
                 ProgressIndicator::new("gradient_norm".to_string()),
                 ProgressIndicator::new("step_size".to_string()),
             ],
-            monitoring_network: Array2::from_shape_fn((4, 10), |_| {
+            monitoring_network: Array2::fromshape_fn((4, 10), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             alert_thresholds: HashMap::new(),
@@ -1471,7 +1471,7 @@ impl PerformancePredictor {
     /// Create new performance predictor
     pub fn new(_hidden_size: usize) -> Self {
         Self {
-            prediction_network: Array2::from_shape_fn((1, _hidden_size), |_| {
+            prediction_network: Array2::fromshape_fn((1, _hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             feature_extractor: FeatureExtractor::new(_hidden_size),
@@ -1503,7 +1503,7 @@ impl FeatureExtractor {
     /// Create new feature extractor
     pub fn new(_feature_dim: usize) -> Self {
         Self {
-            extraction_layers: vec![Array2::from_shape_fn((_feature_dim, _feature_dim), |_| {
+            extraction_layers: vec![Array2::fromshape_fn((_feature_dim, _feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             })],
             feature_dim: _feature_dim,
@@ -1534,7 +1534,7 @@ impl TemporalFeatures {
     /// Create new temporal features
     pub fn new(_dim: usize) -> Self {
         Self {
-            time_embeddings: Array2::from_shape_fn((_dim, 100), |_| {
+            time_embeddings: Array2::fromshape_fn((_dim, 100), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             trend_analyzer: TrendAnalyzer::new(),
@@ -1569,7 +1569,7 @@ impl ConfidenceEstimator {
     /// Create new confidence estimator
     pub fn new(_hidden_size: usize) -> Self {
         Self {
-            confidence_network: Array2::from_shape_fn((1, _hidden_size), |_| {
+            confidence_network: Array2::fromshape_fn((1, _hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             uncertainty_quantifier: UncertaintyQuantifier::new(),
@@ -1731,12 +1731,12 @@ impl NeuralAdaptiveOptimizer {
         let mut rewards = Vec::new();
 
         for i in 0..num_steps {
-            states.push(Array1::from_shape_fn(
+            states.push(Array1::fromshape_fn(
                 self.optimization_network.architecture.input_size,
                 |_| rand::rng().gen::<f64>(),
             ));
 
-            actions.push(Array1::from_shape_fn(
+            actions.push(Array1::fromshape_fn(
                 self.optimization_network.architecture.output_size,
                 |_| rand::rng().gen::<f64>(),
             ));

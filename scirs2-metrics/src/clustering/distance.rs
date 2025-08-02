@@ -34,7 +34,7 @@ use crate::error::{MetricsError, Result};
 /// use scirs2__metrics::clustering::distance::inter_cluster_distances;
 ///
 /// // Create a small dataset with 2 clusters
-/// let x = Array2::from_shape_vec((6, 2), vec![
+/// let x = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.5, 1.8,
 ///     1.2, 2.2,
@@ -122,7 +122,8 @@ where
             let distance = match metric {
                 "euclidean" => euclidean_distance(centroid_i, centroid_j),
                 "manhattan" => manhattan_distance(centroid_i, centroid_j),
-                "cosine" => cosine_distance(centroid_i, centroid_j, _ => {
+                "cosine" => cosine_distance(centroid_i, centroid_j),
+                _ => {
                     return Err(MetricsError::InvalidInput(format!(
                         "Unsupported metric: {metric}"
                     )))
@@ -159,7 +160,7 @@ where
 /// use scirs2__metrics::clustering::distance::intra_cluster_distances;
 ///
 /// // Create a small dataset with 2 clusters
-/// let x = Array2::from_shape_vec((6, 2), vec![
+/// let x = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.5, 1.8,
 ///     1.2, 2.2,
@@ -251,7 +252,8 @@ where
                 let distance = match metric {
                     "euclidean" => euclidean_distance(&sample, centroid),
                     "manhattan" => manhattan_distance(&sample, centroid),
-                    "cosine" => cosine_distance(&sample, centroid, _ => {
+                    "cosine" => cosine_distance(&sample, centroid),
+                    _ => {
                         return Err(MetricsError::InvalidInput(format!(
                             "Unsupported metric: {metric}"
                         )))
@@ -295,7 +297,7 @@ where
 /// use scirs2__metrics::clustering::distance::distance_ratio_index;
 ///
 /// // Create a small dataset with 2 clusters
-/// let x = Array2::from_shape_vec((6, 2), vec![
+/// let x = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.5, 1.8,
 ///     1.2, 2.2,
@@ -401,7 +403,7 @@ where
 /// use scirs2__metrics::clustering::distance::isolation_index;
 ///
 /// // Create a small dataset with 2 clusters
-/// let x = Array2::from_shape_vec((6, 2), vec![
+/// let x = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.5, 1.8,
 ///     1.2, 2.2,
@@ -583,7 +585,7 @@ mod tests {
     #[test]
     fn test_inter_cluster_distances_euclidean() {
         // Create a simple dataset with 2 clearly separated clusters
-        let x = Array2::from_shape_vec(
+        let x = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
@@ -605,7 +607,7 @@ mod tests {
     #[test]
     fn test_intra_cluster_distances_euclidean() {
         // Create a simple dataset with 2 compact clusters
-        let x = Array2::from_shape_vec(
+        let x = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
@@ -627,7 +629,7 @@ mod tests {
     #[test]
     fn test_distance_ratio_index() {
         // Create a dataset with well-separated clusters
-        let x = Array2::from_shape_vec(
+        let x = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
@@ -644,7 +646,7 @@ mod tests {
     #[test]
     fn test_isolation_index() {
         // Create a dataset with well-separated clusters
-        let x = Array2::from_shape_vec(
+        let x = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )

@@ -404,7 +404,7 @@ impl SciPyBenchmarkSuite {
             + 'static,
     {
         match operation {
-            BenchmarkOperation::GaussianFilter =>, crate::filters::gaussian_filter_chunked(
+            BenchmarkOperation::GaussianFilter => crate::filters::gaussian_filter_chunked(
                 &input_data,
                 &[T::from_f64(1.0).unwrap(), T::from_f64(1.0).unwrap()],
                 Some(T::from_f64(4.0).unwrap()),

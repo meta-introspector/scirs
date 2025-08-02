@@ -1,17 +1,17 @@
-//! Enhanced parallel filtering operations with advanced memory optimization
-//!
-//! This module provides next-generation parallel implementations of filtering
-//! operations with advanced-efficient memory management, adaptive chunk sizing,
-//! and intelligent load balancing for optimal performance.
+// Enhanced parallel filtering operations with advanced memory optimization
+//
+// This module provides next-generation parallel implementations of filtering
+// operations with advanced-efficient memory management, adaptive chunk sizing,
+// and intelligent load balancing for optimal performance.
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::check_positive;
-use std::thread;
 use std::f64::consts::PI;
 use std::fmt::Debug;
+use std::thread;
 
 #[allow(unused_imports)]
 /// Enhanced parallel filtering configuration

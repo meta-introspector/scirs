@@ -197,7 +197,8 @@ impl<F: Float> Op<F> for QRExtractOp {
         // Extract the requested component
         match self.component {
             0 => ctx.append_output(q.into_dyn()),
-            1 => ctx.append_output(r.into_dyn(), _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
+            1 => ctx.append_output(r.into_dyn()),
+            _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
         }
 
         Ok(())
@@ -407,7 +408,8 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for SVDExtractOp {
         match self.component {
             0 => ctx.append_output(u.into_dyn()),
             1 => ctx.append_output(s.into_dyn()),
-            2 => ctx.append_output(v.into_dyn(), _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
+            2 => ctx.append_output(v.into_dyn()),
+            _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
         }
 
         Ok(())
@@ -795,7 +797,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for SymmetricEigenOp {
         if n == 1 {
             // For 1x1 matrix, eigenvalue is the single element, eigenvector is [1]
             let eigenvalues = Array1::from_vec(vec![input_2d[[0, 0]]]);
-            let eigenvectors = Array2::from_shape_vec((1, 1), vec![F::one()])
+            let eigenvectors = Array2::fromshape_vec((1, 1), vec![F::one()])
                 .map_err(|_| OpError::Other("Failed to create eigenvector matrix".into()))?;
 
             ctx.append_output(eigenvalues.into_dyn());
@@ -1401,7 +1403,8 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LUExtractOp {
         match self.component {
             0 => ctx.append_output(p.into_dyn()),
             1 => ctx.append_output(l.into_dyn()),
-            2 => ctx.append_output(u.into_dyn(), _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
+            2 => ctx.append_output(u.into_dyn()),
+            _ => return Err(OpError::IncompatibleShape("Invalid component index".into())),
         }
 
         Ok(())

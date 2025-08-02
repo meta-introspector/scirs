@@ -57,7 +57,7 @@ pub struct SilhouetteAnalysis<F: Float> {
 /// use scirs2__metrics::clustering::silhouette_score;
 ///
 /// // Create a small dataset with 2 clusters
-/// let x = Array2::from_shape_vec((6, 2), vec![
+/// let x = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.5, 1.8,
 ///     1.2, 2.2,
@@ -109,7 +109,7 @@ where
 /// use scirs2__metrics::clustering::silhouette_samples;
 ///
 /// // Create a small dataset with 2 clusters
-/// let x = Array2::from_shape_vec((6, 2), vec![
+/// let x = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2, // Cluster 0
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2, // Cluster 1
 /// ]).unwrap();
@@ -161,7 +161,7 @@ where
 /// use scirs2__metrics::clustering::silhouette_scores_per_cluster;
 ///
 /// // Create a small dataset with 3 clusters
-/// let x = Array2::from_shape_vec((9, 2), vec![
+/// let x = Array2::fromshape_vec((9, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,  // Cluster 0
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,  // Cluster 1
 ///     9.0, 10.0, 9.2, 9.8, 9.5, 10.2, // Cluster 2
@@ -214,7 +214,7 @@ where
 /// use scirs2__metrics::clustering::silhouette_analysis;
 ///
 /// // Create a small dataset with 3 clusters
-/// let x = Array2::from_shape_vec((9, 2), vec![
+/// let x = Array2::fromshape_vec((9, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,  // Cluster 0
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,  // Cluster 1
 ///     9.0, 10.0, 9.2, 9.8, 9.5, 10.2, // Cluster 2
@@ -447,7 +447,7 @@ where
 /// use scirs2__metrics::clustering::davies_bouldin_score;
 ///
 /// // Create a small dataset with 2 clusters
-/// let x = Array2::from_shape_vec((6, 2), vec![
+/// let x = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.5, 1.8,
 ///     1.2, 2.2,
@@ -582,7 +582,7 @@ where
 /// use scirs2__metrics::clustering::calinski_harabasz_score;
 ///
 /// // Create a small dataset with 2 clusters
-/// let x = Array2::from_shape_vec((6, 2), vec![
+/// let x = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.5, 1.8,
 ///     1.2, 2.2,

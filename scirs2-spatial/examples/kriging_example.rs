@@ -214,7 +214,7 @@ fn batch_prediction_example() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    let prediction_array = Array2::from_shape_fn((25, 2), |(i, j)| {
+    let prediction_array = Array2::fromshape_fn((25, 2), |(i, j)| {
         let row_idx = i / 5;
         let col_idx = i % 5;
         if j == 0 {

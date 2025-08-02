@@ -284,7 +284,10 @@ impl VersionManager {
     /// # Errors
     ///
     /// Returns an error if compatibility checking fails.
-    pub fn check_compatibility(&self, fromversion: &Version, toversion: &Version,
+    pub fn check_compatibility(
+        &self,
+        fromversion: &Version,
+        toversion: &Version,
     ) -> Result<CompatibilityLevel, CoreError> {
         self.compatibility_checker
             .check_compatibility(fromversion, toversion)

@@ -216,7 +216,7 @@ where
 
 /// Calculate error norm of residual vector
 #[allow(dead_code)]
-fn calculate_error<F: IntegrateFloat>(_residual: &Array1<F>, _params: &NewtonParameters<F>) -> F {
+fn calculate_error<F: IntegrateFloat>(residual: &Array1<F>, _params: &NewtonParameters<F>) -> F {
     // Use L-infinity norm (max absolute value)
     let mut max_abs = F::zero();
     for &r in _residual.iter() {

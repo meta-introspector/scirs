@@ -881,7 +881,7 @@ impl FeatureExtractor {
 impl DenseLayer {
     /// Create new dense layer
     pub fn new(_input_size: usize, output_size: usize, activation: ActivationType) -> Self {
-        let weights = Array2::from_shape_fn((output_size, _input_size), |_| {
+        let weights = Array2::fromshape_fn((output_size, _input_size), |_| {
             (rand::rng().gen::<f64>() - 0.5) * (2.0 / _input_size as f64).sqrt()
         });
         let bias = Array1::zeros(output_size);
@@ -913,13 +913,13 @@ impl FeatureAttention {
     /// Create new feature attention
     pub fn new(_feature_dim: usize) -> Self {
         Self {
-            query_weights: Array2::from_shape_fn((_feature_dim, _feature_dim), |_| {
+            query_weights: Array2::fromshape_fn((_feature_dim, _feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            key_weights: Array2::from_shape_fn((_feature_dim, _feature_dim), |_| {
+            key_weights: Array2::fromshape_fn((_feature_dim, _feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            value_weights: Array2::from_shape_fn((_feature_dim, _feature_dim), |_| {
+            value_weights: Array2::fromshape_fn((_feature_dim, _feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             attention_scores: Array1::zeros(_feature_dim),
@@ -951,10 +951,10 @@ impl ContextEncoder {
     pub fn new(_context_dim: usize) -> Self {
         Self {
             lstm: LSTMCell::new(_context_dim),
-            embedding_layer: Array2::from_shape_fn((_context_dim, 100), |_| {
+            embedding_layer: Array2::fromshape_fn((_context_dim, 100), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            aggregation_network: Array2::from_shape_fn((_context_dim, _context_dim), |_| {
+            aggregation_network: Array2::fromshape_fn((_context_dim, _context_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             context_dim: _context_dim,
@@ -966,16 +966,16 @@ impl LSTMCell {
     /// Create new LSTM cell
     pub fn new(_hidden_size: usize) -> Self {
         Self {
-            w_i: Array2::from_shape_fn((_hidden_size, _hidden_size * 2), |_| {
+            w_i: Array2::fromshape_fn((_hidden_size, _hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            w_f: Array2::from_shape_fn((_hidden_size, _hidden_size * 2), |_| {
+            w_f: Array2::fromshape_fn((_hidden_size, _hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            w_c: Array2::from_shape_fn((_hidden_size, _hidden_size * 2), |_| {
+            w_c: Array2::fromshape_fn((_hidden_size, _hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            w_o: Array2::from_shape_fn((_hidden_size, _hidden_size * 2), |_| {
+            w_o: Array2::fromshape_fn((_hidden_size, _hidden_size * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             hidden_state: Array1::zeros(_hidden_size),
@@ -988,13 +988,13 @@ impl ParameterGenerator {
     /// Create new parameter generator
     pub fn new(_param_dim: usize) -> Self {
         Self {
-            generator_network: Array2::from_shape_fn((_param_dim, _param_dim), |_| {
+            generator_network: Array2::fromshape_fn((_param_dim, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            conditioning_network: Array2::from_shape_fn((_param_dim, _param_dim), |_| {
+            conditioning_network: Array2::fromshape_fn((_param_dim, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            output_projection: Array2::from_shape_fn((_param_dim, _param_dim), |_| {
+            output_projection: Array2::fromshape_fn((_param_dim, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             param_dim: _param_dim,
@@ -1021,13 +1021,13 @@ impl UpdateNetwork {
     /// Create new update network
     pub fn new(_param_dim: usize) -> Self {
         Self {
-            update_network: Array2::from_shape_fn((_param_dim, _param_dim), |_| {
+            update_network: Array2::fromshape_fn((_param_dim, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            meta_gradient_network: Array2::from_shape_fn((_param_dim, _param_dim), |_| {
+            meta_gradient_network: Array2::fromshape_fn((_param_dim, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            lr_network: Array2::from_shape_fn((1, _param_dim), |_| {
+            lr_network: Array2::fromshape_fn((1, _param_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             update_history: VecDeque::with_capacity(100),
@@ -1128,7 +1128,7 @@ impl AdaptationStrategySelector {
 
         Self {
             strategy_scores,
-            selection_network: Array2::from_shape_fn((4, 10), |_| {
+            selection_network: Array2::fromshape_fn((4, 10), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             current_strategy: AdaptationStrategy::Gradient,
@@ -1141,7 +1141,7 @@ impl ProblemSimilarityMatcher {
     pub fn new(_feature_dim: usize) -> Self {
         Self {
             problem_embeddings: HashMap::new(),
-            similarity_network: Array2::from_shape_fn((1, _feature_dim * 2), |_| {
+            similarity_network: Array2::fromshape_fn((1, _feature_dim * 2), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             similarity_threshold: 0.7,
@@ -1496,7 +1496,7 @@ mod tests {
         let config = LearnedOptimizationConfig::default();
         let optimizer = FewShotLearningOptimizer::new(config);
 
-        let support_features = Array2::from_shape_fn((2, 10), |_| rand::rng().gen::<f64>());
+        let support_features = Array2::fromshape_fn((2, 10), |_| rand::rng().gen::<f64>());
         let similar_problems = vec!["problem1".to_string(), "problem2".to_string()];
 
         let strategy = optimizer

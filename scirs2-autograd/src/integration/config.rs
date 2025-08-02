@@ -660,7 +660,7 @@ pub fn get_config_value(_key: &str) -> Result<Option<ConfigValue>, IntegrationEr
 
 /// Set global configuration value
 #[allow(dead_code)]
-pub fn set_config_value<T: Into<ConfigValue>>(_key: &str, value: T) -> Result<(), IntegrationError> {
+pub fn set_config_value<T: Into<ConfigValue>>(key: &str, value: T) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
     let mut manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
@@ -692,7 +692,7 @@ pub fn update_integration_config(_config: IntegrationConfig) -> Result<(), Integ
 
 /// Load configuration from file
 #[allow(dead_code)]
-pub fn load_config_from_file<P: AsRef<Path>>(_path: P) -> Result<(), IntegrationError> {
+pub fn load_config_from_file<P: AsRef<Path>>(path: P) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
     let mut manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())
@@ -702,7 +702,7 @@ pub fn load_config_from_file<P: AsRef<Path>>(_path: P) -> Result<(), Integration
 
 /// Export configuration to file
 #[allow(dead_code)]
-pub fn export_config_to_file<P: AsRef<Path>>(_path: P) -> Result<(), IntegrationError> {
+pub fn export_config_to_file<P: AsRef<Path>>(path: P) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
     let manager_guard = manager.lock().map_err(|_| {
         IntegrationError::ConfigMismatch("Failed to acquire config lock".to_string())

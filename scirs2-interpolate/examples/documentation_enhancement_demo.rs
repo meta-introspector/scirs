@@ -161,7 +161,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Analyze the generated content from documentation enhancement
 #[allow(dead_code)]
-fn analyze_generated_content(_report: &scirs2_interpolate: :DocumentationReport) {
+fn analyze_generated_content(_report: &scirs2, interpolate: DocumentationReport) {
     println!("Generated Content Analysis:");
 
     // User guides analysis
@@ -227,7 +227,7 @@ fn analyze_generated_content(_report: &scirs2_interpolate: :DocumentationReport)
 
 /// Analyze documentation by target audience
 #[allow(dead_code)]
-fn analyze_by_audience_level(_report: &scirs2_interpolate: :DocumentationReport) {
+fn analyze_by_audience_level(_report: &scirs2, interpolate: DocumentationReport) {
     use std::collections::HashMap;
 
     let mut audience_content: HashMap<String, (usize, usize)> = HashMap::new();
@@ -265,7 +265,7 @@ fn analyze_by_audience_level(_report: &scirs2_interpolate: :DocumentationReport)
 
 /// Analyze example validation results
 #[allow(dead_code)]
-fn analyze_example_validation(_report: &scirs2_interpolate: :DocumentationReport) {
+fn analyze_example_validation(_report: &scirs2, interpolate: DocumentationReport) {
     println!("Example Validation Results:");
 
     let total_examples = _report.example_validations.len();
@@ -335,7 +335,7 @@ fn analyze_example_validation(_report: &scirs2_interpolate: :DocumentationReport
 
 /// Assess overall documentation quality
 #[allow(dead_code)]
-fn assess_documentation_quality(_report: &scirs2_interpolate: :DocumentationReport) {
+fn assess_documentation_quality(_report: &scirs2, interpolate: DocumentationReport) {
     println!("Documentation Quality Assessment:");
 
     if _report.analysis_results.is_empty() {
@@ -415,7 +415,7 @@ fn assess_documentation_quality(_report: &scirs2_interpolate: :DocumentationRepo
 
 /// Provide actionable documentation improvement plan
 #[allow(dead_code)]
-fn provide_documentation_action_plan(_report: &scirs2_interpolate: :DocumentationReport) {
+fn provide_documentation_action_plan(_report: &scirs2, interpolate: DocumentationReport) {
     match _report.readiness {
         DocumentationReadiness::Ready => {
             println!("✅ DOCUMENTATION READY FOR STABLE RELEASE");

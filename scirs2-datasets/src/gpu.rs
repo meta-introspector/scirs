@@ -71,7 +71,7 @@ pub struct GpuConfig {
 impl Default for GpuConfig {
     fn default() -> Self {
         Self {
-            backend: GpuBackend::Cuda { device_id: 0 },
+            backend: GpuBackend::Cuda { device, id: 0 },
             memory: GpuMemoryConfig::default(),
             threads_per_block: 256,
             enable_double_precision: true,
@@ -280,7 +280,7 @@ impl GpuContext {
 
     fn query_device_info(_backend: &GpuBackend) -> Result<GpuDeviceInfo> {
         match _backend {
-            GpuBackend::Cuda { device_id } =>, Self::query_cuda_device_info(*device_id),
+            GpuBackend::Cuda { device_id } => Self::query_cuda_device_info(*device_id),
             GpuBackend::OpenCl {
                 platform_id,
                 device_id,
@@ -289,7 +289,7 @@ impl GpuContext {
                 name: "CPU Fallback".to_string(),
                 total_memory_mb: 8192, // Assume 8GB
                 available_memory_mb: 4096,
-                compute_units: num, _cpus: get() as u32,
+                compute_units: num_cpus::get() as u32,
                 max_work_group_size: 1,
                 compute_capability: "N/A".to_string(),
                 supports_double_precision: true,
@@ -949,7 +949,7 @@ pub fn is_opencl_available() -> bool {
 pub fn get_optimal_gpu_config() -> GpuConfig {
     if is_cuda_available() {
         GpuConfig {
-            backend: GpuBackend::Cuda { device_id: 0 },
+            backend: GpuBackend::Cuda { device, id: 0 },
             threads_per_block: 256,
             enable_double_precision: true,
             use_fast_math: false,
@@ -1004,7 +1004,7 @@ pub fn list_gpu_devices() -> Result<Vec<GpuDeviceInfo>> {
         name: "CPU (Fallback)".to_string(),
         total_memory_mb: 8192,
         available_memory_mb: 4096,
-        compute_units: num, _cpus: get() as u32,
+        compute_units: num_cpus::get() as u32,
         max_work_group_size: 1,
         compute_capability: "N/A".to_string(),
         supports_double_precision: true,

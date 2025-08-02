@@ -826,7 +826,12 @@ pub mod pattern_utils {
 
     /// Get the prefetch pattern for a complex pattern.
     #[allow(dead_code)]
-    pub fn get_prefetch_pattern(pattern: &ComplexPattern, dimensions: &[usize], current_idx: usize, prefetch_count: usize) -> Vec<usize> {
+    pub fn get_prefetch_pattern(
+        pattern: &ComplexPattern,
+        dimensions: &[usize],
+        current_idx: usize,
+        prefetch_count: usize,
+    ) -> Vec<usize> {
         match pattern {
             ComplexPattern::RowMajor => {
                 // For row-major, prefetch the next sequential indices

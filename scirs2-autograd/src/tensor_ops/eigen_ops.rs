@@ -101,18 +101,18 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenOp {
         let eigen_vals = y_array.slice(ndarray::s![0..values_size]);
         let eigen_vecs = y_array.slice(ndarray::s![vectors_start..]);
 
-        let eigen_vals_1d = eigen_vals.to_shape(n).unwrap().to_owned();
-        let eigen_vecs_2d = eigen_vecs.to_shape((n, n)).unwrap().to_owned();
+        let eigen_vals_1d = eigen_vals.toshape(n).unwrap().to_owned();
+        let eigen_vecs_2d = eigen_vecs.toshape((n, n)).unwrap().to_owned();
 
         // Get gradients
         let grad_vals = gy_array
             .slice(ndarray::s![0..values_size])
-            .to_shape(n)
+            .toshape(n)
             .unwrap()
             .to_owned();
         let grad_vecs = gy_array
             .slice(ndarray::s![vectors_start..])
-            .to_shape((n, n))
+            .toshape((n, n))
             .unwrap()
             .to_owned();
 
@@ -208,7 +208,7 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenvaluesOp {
         };
 
         // Convert to the right shape
-        let grad_vals_1d = match grad_vals_array.to_shape(n) {
+        let grad_vals_1d = match grad_vals_array.toshape(n) {
             Ok(arr) => arr.to_owned(),
             Err(_) => {
                 ctx.append_input_grad(0, None);
@@ -723,7 +723,8 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenExtractOp {
         // Return the requested component
         match self.component {
             0 => ctx.append_output(eigenvalues.into_dyn()),
-            1 => ctx.append_output(eigenvectors.into_dyn(), _ => {
+            1 => ctx.append_output(eigenvectors.into_dyn()),
+            _ => {
                 return Err(OpError::Other(
                     "Invalid component index for eigen extraction".into(),
                 ))
@@ -776,10 +777,10 @@ pub fn eigenvalues<'g, F: Float + ScalarOperand + FromPrimitive>(
 
     // Get the shape of the input tensor for setting the output shape
     // For eigenvalues, we'll have a 1D tensor with size n for an n×n matrix
-    let matrix_shape = crate::tensor_ops::shape(matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     Tensor::builder(g)
         .append_input(matrix, false)
-        .set_shape(&matrix_shape)
+        .setshape(&matrixshape)
         .build(EigenvaluesOp)
 }

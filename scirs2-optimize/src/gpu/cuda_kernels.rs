@@ -43,7 +43,10 @@ impl FunctionEvaluationKernel {
 
         let kernel = _context.compile(kernel_source)?;
 
-        Ok(Self { _context, kernel })
+        Ok(Self {
+            context: _context,
+            kernel,
+        })
     }
 
     /// Evaluate a batch of points using the specified function type
@@ -95,7 +98,10 @@ impl GradientKernel {
 
         let kernel = _context.compile(kernel_source)?;
 
-        Ok(Self { _context, kernel })
+        Ok(Self {
+            context: _context,
+            kernel,
+        })
     }
 
     /// Compute gradients for a batch of points using finite differences
@@ -152,7 +158,10 @@ impl ParticleSwarmKernel {
 
         let kernel = _context.compile(kernel_source)?;
 
-        Ok(Self { _context, kernel })
+        Ok(Self {
+            context: _context,
+            kernel,
+        })
     }
 
     /// Update particle positions and velocities
@@ -204,7 +213,10 @@ impl DifferentialEvolutionKernel {
 
         let kernel = _context.compile(kernel_source)?;
 
-        Ok(Self { _context, kernel })
+        Ok(Self {
+            context: _context,
+            kernel,
+        })
     }
 
     /// Generate mutant vectors for differential evolution

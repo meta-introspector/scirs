@@ -48,10 +48,10 @@ pub trait Dataset {
     fn get(&self, index: usize) -> Option<(Box<dyn ArrayProtocol>, Box<dyn ArrayProtocol>)>;
 
     /// Get the input shape of the dataset.
-    fn input_shape(&self) -> Vec<usize>;
+    fn inputshape(&self) -> Vec<usize>;
 
     /// Get the output shape of the dataset.
-    fn output_shape(&self) -> Vec<usize>;
+    fn outputshape(&self) -> Vec<usize>;
 }
 
 /// In-memory dataset with arrays.
@@ -63,15 +63,19 @@ pub struct InMemoryDataset {
     targets: Vec<Box<dyn ArrayProtocol>>,
 
     /// Input shape.
-    input_shape: Vec<usize>,
+    inputshape: Vec<usize>,
 
     /// Output shape.
-    output_shape: Vec<usize>,
+    outputshape: Vec<usize>,
 }
 
 impl InMemoryDataset {
     /// Create a new in-memory dataset.
-    pub fn new(inputs: Vec<Box<dyn ArrayProtocol>>, targets: Vec<Box<dyn ArrayProtocol>>, input_shape: Vec<usize>, output_shape: Vec<usize>
+    pub fn new(
+        inputs: Vec<Box<dyn ArrayProtocol>>,
+        targets: Vec<Box<dyn ArrayProtocol>>,
+        inputshape: Vec<usize>,
+        outputshape: Vec<usize>,
     ) -> Self {
         assert_eq!(
             inputs.len(),
@@ -82,8 +86,8 @@ impl InMemoryDataset {
         Self {
             inputs,
             targets,
-            input_shape,
-            output_shape,
+            inputshape,
+            outputshape,
         }
     }
 
@@ -94,13 +98,13 @@ impl InMemoryDataset {
         D1: Dimension + Send + Sync,
         D2: Dimension + Send + Sync,
     {
-        let input_shape = _inputs.shape().to_vec();
-        let output_shape = targets.shape().to_vec();
+        let inputshape = _inputs.shape().to_vec();
+        let outputshape = targets.shape().to_vec();
 
         // Handle batched _inputs
-        let num_samples = input_shape[0];
+        let num_samples = inputshape[0];
         assert_eq!(
-            num_samples, output_shape[0],
+            num_samples, outputshape[0],
             "Inputs and targets must have the same number of samples"
         );
 
@@ -127,8 +131,8 @@ impl InMemoryDataset {
         Self {
             inputs: input_samples,
             targets: target_samples,
-            input_shape: input_shape[1..].to_vec(),
-            output_shape: output_shape[1..].to_vec(),
+            inputshape: inputshape[1..].to_vec(),
+            outputshape: outputshape[1..].to_vec(),
         }
     }
 }
@@ -146,12 +150,12 @@ impl Dataset for InMemoryDataset {
         Some((self.inputs[index].clone(), self.targets[index].clone()))
     }
 
-    fn input_shape(&self) -> Vec<usize> {
-        self.input_shape.clone()
+    fn inputshape(&self) -> Vec<usize> {
+        self.inputshape.clone()
     }
 
-    fn output_shape(&self) -> Vec<usize> {
-        self.output_shape.clone()
+    fn outputshape(&self) -> Vec<usize> {
+        self.outputshape.clone()
     }
 }
 
@@ -178,7 +182,9 @@ pub struct DataLoader {
 
 impl DataLoader {
     /// Create a new data loader.
-    pub fn new(dataset: Box<dyn Dataset>, batch_size: usize,
+    pub fn new(
+        dataset: Box<dyn Dataset>,
+        batch_size: usize,
         shuffle: bool,
         seed: Option<u64>,
     ) -> Self {
@@ -723,11 +729,7 @@ pub struct Trainer {
 
 impl Trainer {
     /// Create a new trainer.
-    pub fn new(
-        model: Sequential,
-        optimizer: Box<dyn Optimizer>,
-        loss_fn: Box<dyn Loss>,
-    ) -> Self {
+    pub fn new(model: Sequential, optimizer: Box<dyn Optimizer>, loss_fn: Box<dyn Loss>) -> Self {
         Self {
             model,
             optimizer,
@@ -1080,8 +1082,8 @@ mod tests {
 
         // Check properties
         assert_eq!(dataset.len(), 10);
-        assert_eq!(dataset.input_shape(), vec![5]);
-        assert_eq!(dataset.output_shape(), vec![2]);
+        assert_eq!(dataset.inputshape(), vec![5]);
+        assert_eq!(dataset.outputshape(), vec![2]);
 
         // Get a sample
         let (input, target) = dataset.get(0).unwrap();

@@ -210,8 +210,8 @@ where
     /// # Returns
     ///
     /// * A new empty BSR array
-    pub fn empty(_shape: (usize, usize), block_size: (usize, usize)) -> SparseResult<Self> {
-        let (rows, cols) = _shape;
+    pub fn empty(shape: (usize, usize), block_size: (usize, usize)) -> SparseResult<Self> {
+        let (rows, cols) = shape;
         let (r, c) = block_size;
 
         if r == 0 || c == 0 {
@@ -1124,7 +1124,7 @@ mod tests {
 
         // Convert to dense and check
         let dense = array.to_array();
-        let expected = Array2::from_shape_vec(
+        let expected = Array2::fromshape_vec(
             (4, 4),
             vec![
                 1.0, 2.0, 0.0, 0.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 5.0, 6.0, 0.0, 0.0, 7.0, 8.0,

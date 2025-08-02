@@ -21,7 +21,7 @@ pub struct TopicCoherence {
 impl Default for TopicCoherence {
     fn default() -> Self {
         Self {
-            window_size: 10_min,
+            window_size: 10,
             _count: 5, // Kept for API compatibility
             epsilon: 1e-12,
         }

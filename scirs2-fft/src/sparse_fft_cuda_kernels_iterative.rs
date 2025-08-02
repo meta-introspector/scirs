@@ -29,7 +29,9 @@ impl Default for CUDAFrequencyPruningSparseFFTKernel {
 /// Execute CUDA frequency pruning sparse FFT (stub)
 #[allow(dead_code)]
 pub fn execute_cuda_frequency_pruning_sparse_fft<T>(
-    _input: &[T], _k: usize, _threshold: f64,
+    _input: &[T],
+    _k: usize,
+    _threshold: f64,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug,
@@ -57,7 +59,9 @@ impl Default for CUDAIterativeSparseFFTKernel {
 /// Execute CUDA iterative sparse FFT (stub)
 #[allow(dead_code)]
 pub fn execute_cuda_iterative_sparse_fft<T>(
-    _input: &[T], _k: usize, _max_iterations: usize,
+    _input: &[T],
+    _k: usize,
+    _max_iterations: usize,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug,
@@ -85,7 +89,9 @@ impl Default for CUDASpectralFlatnessSparseFFTKernel {
 /// Execute CUDA spectral flatness sparse FFT (stub)
 #[allow(dead_code)]
 pub fn execute_cuda_spectral_flatness_sparse_fft<T>(
-    _input: &[T], _k: usize, _flatness_threshold: f64,
+    _input: &[T],
+    _k: usize,
+    _flatness_threshold: f64,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug,

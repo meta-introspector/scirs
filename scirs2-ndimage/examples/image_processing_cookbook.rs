@@ -363,7 +363,7 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!("use scirs2__ndimage::morphology::binary_hit_or_miss;");
     println!();
     println!("// Create template for your target shape");
-    println!("let template = Array2::from_shape_vec((5, 5), vec![");
+    println!("let template = Array2::fromshape_vec((5, 5), vec![");
     println!("    0, 1, 1, 1, 0,");
     println!("    1, 1, 1, 1, 1,");
     println!("    1, 1, 0, 1, 1,  // Shape with hole in center");
@@ -555,8 +555,8 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("    None, None, None, None");
     println!(")?;");
     println!();
-    println!("let mean_texture = texture_map.sum() / texture_map.len() as f64;");
-    println!("println!(\"Average texture roughness: {{:.4}}\", mean_texture);");
+    println!("let meantexture = texture_map.sum() / texture_map.len() as f64;");
+    println!("println!(\"Average texture roughness: {{:.4}}\", meantexture);");
     println!();
     println!("// Method 2: Edge density (pattern complexity)");
     println!("let edges = sobel(&image.view(), None, None, None)?;");
@@ -733,7 +733,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("use scirs2__ndimage::interpolation::{{affine_transform, InterpolationOrder, BoundaryMode}};");
     println!();
     println!("// Simple affine correction (shear + scale)");
-    println!("let affine_matrix = Array2::from_shape_vec((2, 3), vec![");
+    println!("let affine_matrix = Array2::fromshape_vec((2, 3), vec![");
     println!("    1.0,  0.2,  0.0,   // Scale X + shear + translation X");
     println!("    -0.1, 1.0,  0.0,   // Shear + scale Y + translation Y");
     println!("])?;");
@@ -1100,7 +1100,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("        }})");
     println!("        .collect::<Vec<_>>();");
     println!("    ");
-    println!("    Ok(Array2::from_shape_vec(_image.dim(), sketch)?)");
+    println!("    Ok(Array2::fromshape_vec(_image.dim(), sketch)?)");
     println!("}}");
     println!();
     println!("// Apply effects");
@@ -1168,7 +1168,7 @@ fn find_local_maxima(_image: &Array2<f64>, threshold: f64) -> Array2<u32> {
 #[allow(dead_code)]
 fn apply_perspective_correction(
     image: &Array2<f64>,
-    _src_corners: &[(f64, f64)],
+    src_corners: &[(f64, f64)],
     _dst_corners: &[(f64, f64)],
 ) -> NdimageResult<Array2<f64>> {
     // Simplified perspective correction

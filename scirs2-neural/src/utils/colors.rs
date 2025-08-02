@@ -123,20 +123,20 @@ pub const RESET: &str = "\x1b[0m";
 
 /// Colorize text with a foreground color
 #[allow(dead_code)]
-pub fn colorize<T: Display>(_text: T, color: Color) -> String {
-    format!("{}{}{}", color.fg_code(), _text, RESET)
+pub fn colorize<T: Display>(text: T, color: Color) -> String {
+    format!("{}{}{}", color.fg_code(), text, RESET)
 }
 
 /// Colorize text with a background color
 #[allow(dead_code)]
-pub fn colorize_bg<T: Display>(_text: T, color: Color) -> String {
-    format!("{}{}{}", color.bg_code(), _text, RESET)
+pub fn colorize_bg<T: Display>(text: T, color: Color) -> String {
+    format!("{}{}{}", color.bg_code(), text, RESET)
 }
 
 /// Style text with a text style
 #[allow(dead_code)]
-pub fn stylize<T: Display>(_text: T, style: Style) -> String {
-    format!("{}{}{}", style.code(), _text, RESET)
+pub fn stylize<T: Display>(text: T, style: Style) -> String {
+    format!("{}{}{}", style.code(), text, RESET)
 }
 
 /// Colorize and style text

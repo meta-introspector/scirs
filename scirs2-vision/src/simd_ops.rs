@@ -1136,7 +1136,9 @@ pub fn simd_convolve_adaptive_advanced(
     match (k_height, k_width) {
         (3, 3) => simd_convolve_3x3_specialized(image, kernel),
         (5, 5) => simd_convolve_5x5_specialized(image, kernel),
-        (7, 7) => simd_convolve_7x7_specialized(image, kernel)_ if k_height * k_width <= 49 => simd_convolve_small_kernel(image, kernel, _ => simd_convolve_large_kernel_fft(image, kernel),
+        (7, 7) => simd_convolve_7x7_specialized(image, kernel),
+        _ if k_height * k_width <= 49 => simd_convolve_small_kernel(image, kernel),
+        _ => simd_convolve_large_kernel_fft(image, kernel),
     }
 }
 
@@ -1393,7 +1395,7 @@ mod tests {
         assert_eq!(small_sigma_blurred, image);
 
         // Test with very large image to test normal path
-        let large_image = Array2::from_shape_fn((100, 100), |(y, x)| {
+        let large_image = Array2::fromshape_fn((100, 100), |(y, x)| {
             if y > 45 && y < 55 && x > 45 && x < 55 {
                 5.0
             } else {

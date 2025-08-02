@@ -399,7 +399,7 @@ pub struct AdvancedMultipleTextResult {
     /// Aggregated analytics
     pub aggregated_analytics: AdvancedTextAnalytics,
     /// Multi-text insights
-    pub multi_text_insights: HashMap<String, f64>,
+    pub multitext_insights: HashMap<String, f64>,
     /// Overall performance metrics
     pub overall_performance: TextPerformanceMetrics,
     /// Optimization recommendations
@@ -715,7 +715,7 @@ impl AdvancedTextCoordinator {
     }
 
     /// Advanced-optimized text processing with full feature coordination
-    pub fn advanced_process_text(&self, texts: &[String]) -> Result<AdvancedTextResult> {
+    pub fn advanced_processtext(&self, texts: &[String]) -> Result<AdvancedTextResult> {
         let start_time = Instant::now();
         let mut optimizations_applied = Vec::new();
 
@@ -735,11 +735,11 @@ impl AdvancedTextCoordinator {
         // Step 3: Neural ensemble processing
         let primary_result = if self.config.enable_neural_ensemble {
             let neural_ensemble = self.neural_ensemble.read().unwrap();
-            let result = neural_ensemble.process_texts_ensemble(texts)?;
+            let result = neural_ensemble.processtexts_ensemble(texts)?;
             optimizations_applied.push("Neural ensemble processing".to_string());
             result
         } else {
-            self.process_texts_standard(texts)?
+            self.processtexts_standard(texts)?
         };
 
         // Step 4: Advanced analytics
@@ -915,7 +915,7 @@ impl AdvancedTextCoordinator {
 
     // Private helper methods
 
-    fn process_texts_standard(&self, texts: &[String]) -> Result<TextProcessingResult> {
+    fn processtexts_standard(&self, texts: &[String]) -> Result<TextProcessingResult> {
         // Standard processing implementation
         let vectors = Array2::zeros((texts.len(), 768)); // Placeholder
         let sentiment = SentimentResult {
@@ -1307,7 +1307,7 @@ impl PerformanceOptimizer {
         })
     }
 
-    fn determine_optimal_strategy(&self_texts: &[String]) -> Result<OptimizationStrategy> {
+    fn determine_optimal_strategy(&selftexts: &[String]) -> Result<OptimizationStrategy> {
         Ok(OptimizationStrategy::Performance)
     }
 }
@@ -1323,13 +1323,13 @@ impl NeuralProcessingEnsemble {
         })
     }
 
-    fn process_texts_ensemble(&self, texts: &[String]) -> Result<TextProcessingResult> {
+    fn processtexts_ensemble(&self, texts: &[String]) -> Result<TextProcessingResult> {
         // Enhanced implementation with actual text processing
-        let num_texts = texts.len();
+        let numtexts = texts.len();
         let embedding_dim = 768;
 
         // Generate meaningful embeddings based on text content
-        let mut vectors = Array2::zeros((num_texts, embedding_dim));
+        let mut vectors = Array2::zeros((numtexts, embedding_dim));
         for (i, text) in texts.iter().enumerate() {
             // Simple but meaningful embedding based on text features
             let text_len = text.len() as f64;
@@ -1439,10 +1439,10 @@ impl NeuralProcessingEnsemble {
 
         for text in texts {
             // Generate embeddings for the text
-            let _text_embedding = self.get_advanced_embeddings(text)?;
+            let text_embedding = self.get_advanced_embeddings(text)?;
 
             // Simple classification based on text features and category matching
-            let _text_lower = text.to_lowercase();
+            let text_lower = text.to_lowercase();
             let word_count = text.split_whitespace().count();
             let _avg_word_len = if word_count > 0 {
                 text.len() as f64 / word_count as f64
@@ -1512,7 +1512,7 @@ impl TextMemoryOptimizer {
     }
 
     fn optimize_for_classification_batch(
-        &self_num_texts: usize,
+        &self_numtexts: usize,
         _num_categories: usize,
     ) -> Result<()> {
         Ok(()) // Placeholder
@@ -1552,7 +1552,7 @@ impl TextAnalyticsEngine {
     }
 
     fn analyze_comprehensive(
-        &self_texts: &[String],
+        &selftexts: &[String],
         _result: &TextProcessingResult,
     ) -> Result<AdvancedTextAnalytics> {
         Ok(AdvancedTextAnalytics::empty()) // Placeholder
@@ -1561,7 +1561,7 @@ impl TextAnalyticsEngine {
     fn analyze_similarity_context(
         &self,
         text1: &str,
-        _text2: &str,
+        text2: &str,
         _similarity: f64,
     ) -> Result<SimilarityAnalytics> {
         Ok(SimilarityAnalytics) // Placeholder
@@ -1624,7 +1624,7 @@ mod tests {
     }
 
     #[test]
-    fn test_advanced_process_text() {
+    fn test_advanced_processtext() {
         let config = AdvancedTextConfig::default();
         let coordinator = AdvancedTextCoordinator::new(config).unwrap();
 
@@ -1633,7 +1633,7 @@ mod tests {
             "Another document with different content.".to_string(),
         ];
 
-        let result = coordinator.advanced_process_text(&texts);
+        let result = coordinator.advanced_processtext(&texts);
         assert!(result.is_ok());
 
         let advanced_result = result.unwrap();

@@ -61,9 +61,9 @@ pub struct Size2D {
 /// Layer input/output information
 pub struct LayerIOInfo {
     /// Input shape
-    pub input_shape: Vec<usize>,
+    pub inputshape: Vec<usize>,
     /// Output shape
-    pub output_shape: Vec<usize>,
+    pub outputshape: Vec<usize>,
     /// Parameter count
     pub parameter_count: usize,
     /// Computation complexity (FLOPs)
@@ -140,7 +140,7 @@ pub enum ArrowStyle {
 /// Data flow information
 pub struct DataFlowInfo {
     /// Tensor shape flowing through connection
-    pub tensor_shape: Vec<usize>,
+    pub tensorshape: Vec<usize>,
     /// Data type
     pub data_type: String,
     /// Estimated memory usage in bytes
@@ -338,8 +338,8 @@ impl<
                     height: layer_height,
                 },
                 io_info: LayerIOInfo {
-                    input_shape: vec![32, 32, 3],  // Placeholder
-                    output_shape: vec![32, 32, 3], // Placeholder
+                    inputshape: vec![32, 32, 3],  // Placeholder
+                    outputshape: vec![32, 32, 3], // Placeholder
                     parameter_count,
                     flops,
                 visual_props: LayerVisualProps {
@@ -362,7 +362,7 @@ impl<
                     arrow: ArrowStyle::Simple,
                     opacity: 0.8,
                 data_flow: DataFlowInfo {
-                    tensor_shape: vec![32, 32, 3], // Placeholder
+                    tensorshape: vec![32, 32, 3], // Placeholder
                     data_type: "f32".to_string(),
                     memory_usage: 4096,   // Placeholder
                     batch_size: Some(32), // Default batch size
@@ -433,14 +433,14 @@ impl<
                 position: node_positions[i].clone(),
                     width: 120.0,
                     height: 60.0,
-                    input_shape: vec![1, 32], // Placeholder
-                    output_shape: vec![1, 32],
+                    inputshape: vec![1, 32], // Placeholder
+                    outputshape: vec![1, 32],
                     parameter_count: 1024,
                     flops: 2048,
         // Create connections between sequential layers
         for i in 0..(layer_info.len() - 1) {
                 connection_type: ConnectionType::Sequential,
-                    tensor_shape: vec![1, 32],
+                    tensorshape: vec![1, 32],
                     data_type: "float32".to_string(),
                     memory_usage: 128, // 1 * 32 * 4 bytes
                     batch_size: Some(1),
@@ -522,7 +522,7 @@ impl<
                             to_layer: to_idx,
                             connection_type: ConnectionType::Lateral,
                             data_flow: DataFlowInfo {
-                                tensor_shape: vec![1, 16],
+                                tensorshape: vec![1, 16],
                                 data_type: "float32".to_string(),
                                 memory_usage: 64, // 1 * 16 * 4 bytes
                                 batch_size: Some(1),
@@ -661,12 +661,12 @@ impl<
                 layer_pos.position.y + 8.0,
                 layer_pos.layer_type
             // Draw parameter info below the layer
-            let param_text = if layer_pos.io_info.parameter_count > 0 {
+            let paramtext = if layer_pos.io_info.parameter_count > 0 {
                 format!("{}K params", layer_pos.io_info.parameter_count / 1000)
                 "No params".to_string()
                 r#"  <text x="{}" y="{}" class="layer-info">{}</text>
                 y + height + 15.0,
-                param_text
+                paramtext
             // Draw layer index
                 r#"  <text x="{}" y="{}" class="layer-info">Layer {}</text>
                 y - 10.0,

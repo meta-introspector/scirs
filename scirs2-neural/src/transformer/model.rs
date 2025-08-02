@@ -74,7 +74,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     /// * `rng` - Random number generator for weight initialization
     /// # Returns
     /// * A new transformer model
-    pub fn new<R: Rng>(_config: TransformerConfig, rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(config: TransformerConfig, rng: &mut R) -> Result<Self> {
         // Create encoder
         let encoder = TransformerEncoder::new(
             _config.d_model,
@@ -113,8 +113,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
             return Err(NeuralError::InferenceError(
                 "Source must have at least 3 dimensions [batch, src_len, features]".to_string(),
             ));
-        let src_shape = src.shape();
-        let src_feat_dim = src_shape[src.ndim() - 1];
+        let srcshape = src.shape();
+        let src_feat_dim = srcshape[src.ndim() - 1];
         if src_feat_dim != self.config.d_model {
             return Err(NeuralError::InferenceError(format!(
                 "Last dimension of source ({}) must match d_model ({})",
@@ -123,8 +123,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         // Check target shape
         if tgt.ndim() < 3 {
                 "Target must have at least 3 dimensions [batch, tgt_len, features]".to_string(),
-        let tgt_shape = tgt.shape();
-        let tgt_feat_dim = tgt_shape[tgt.ndim() - 1];
+        let tgtshape = tgt.shape();
+        let tgt_feat_dim = tgtshape[tgt.ndim() - 1];
         if tgt_feat_dim != self.config.d_model {
                 "Last dimension of target ({}) must match d_model ({})",
                 tgt_feat_dim, self.config.d_model
@@ -155,8 +155,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         // Check input shape
         if input.ndim() < 3 {
                 "Input must have at least 3 dimensions [batch, seq_len, features]".to_string(),
-        let input_shape = input.shape();
-        let feat_dim = input_shape[input.ndim() - 1];
+        let inputshape = input.shape();
+        let feat_dim = inputshape[input.ndim() - 1];
         if feat_dim != self.config.d_model {
                 "Last dimension of input ({}) must match d_model ({})",
                 feat_dim, self.config.d_model

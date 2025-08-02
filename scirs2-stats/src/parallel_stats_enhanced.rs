@@ -920,7 +920,7 @@ where
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    use ndarray::{array, Array2};
+    use ndarray::array;
 
     #[test]
     fn test_parallel_histogram() {

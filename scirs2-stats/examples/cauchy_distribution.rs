@@ -1,5 +1,5 @@
 use scirs2_stats::distributions::cauchy::Cauchy;
-use scirs2_stats::traits::distribution::{ContinuousDistribution, Distribution};
+use scirs2_stats::traits::{ContinuousDistribution, Distribution};
 use std::error::Error;
 
 #[allow(dead_code)]

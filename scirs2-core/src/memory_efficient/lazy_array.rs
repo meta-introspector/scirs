@@ -118,7 +118,7 @@ where
     }
 
     /// Create a new lazy array with a given shape but no concrete data
-    pub fn from_shape(shape: Vec<usize>) -> Self {
+    pub fn fromshape(shape: Vec<usize>) -> Self {
         Self {
             concrete_data: None,
             shape,
@@ -127,9 +127,9 @@ where
         }
     }
 
-    /// Alias for from_shape for consistency with existing usage
-    pub fn with_shape(shape: Vec<usize>) -> Self {
-        Self::from_shape(shape)
+    /// Alias for fromshape for consistency with existing usage
+    pub fn withshape(shape: Vec<usize>) -> Self {
+        Self::fromshape(shape)
     }
 
     /// Add a unary operation to the lazy array - immediate evaluation version
@@ -151,8 +151,8 @@ where
         // but still record the operation for test consistency
         if let Some(ref data) = self.concrete_data {
             // Apply the operation immediately by downcasting the boxed operation
-            if let Some(concrete_op) = boxed_op.downcast_ref::<F>() {
-                let mapped_data = data.mapv(|x| concrete_op(&x));
+            if let Some(concreteop) = boxed_op.downcast_ref::<F>() {
+                let mapped_data = data.mapv(|x| concreteop(&x));
                 let mut result = LazyArray::new(mapped_data);
 
                 // Record the operation for consistency with tests
@@ -165,7 +165,7 @@ where
         }
 
         // For cases without concrete data, fall back to the deferred system
-        let mut result = LazyArray::<B, D>::with_shape(self.shape.clone());
+        let mut result = LazyArray::<B, D>::withshape(self.shape.clone());
         result.ops.push(lazy_op);
 
         let rc_self = Rc::new(self.clone()) as Rc<dyn Any>;
@@ -192,7 +192,7 @@ where
         };
 
         // Create a new lazy array with the result type
-        let mut result = LazyArray::<C, D>::with_shape(self.shape.clone());
+        let mut result = LazyArray::<C, D>::withshape(self.shape.clone());
 
         // Add the operation
         result.ops.push(lazy_op);
@@ -223,7 +223,7 @@ where
         };
 
         // Create a new lazy array with the result type
-        let mut result = LazyArray::<B, IxDyn>::with_shape(vec![1]);
+        let mut result = LazyArray::<B, IxDyn>::withshape(vec![1]);
 
         // Add the operation
         result.ops.push(lazy_op);
@@ -238,17 +238,17 @@ where
     /// Add a reshape operation to the lazy array
     pub fn reshape(&self, shape: Vec<usize>) -> Self {
         // Create a boxed shape data
-        let boxed_shape = Rc::new(shape.clone()) as Rc<dyn Any>;
+        let boxedshape = Rc::new(shape.clone()) as Rc<dyn Any>;
 
         // Create the lazy operation
         let lazy_op = LazyOp {
             kind: LazyOpKind::Reshape,
             op: Rc::new(()) as Rc<dyn Any>, // dummy op
-            data: Some(boxed_shape),
+            data: Some(boxedshape),
         };
 
         // Create a new lazy array with the new shape
-        let mut result = Self::with_shape(shape);
+        let mut result = Self::withshape(shape);
 
         // Copy existing operations
         result.ops = self.ops.clone();
@@ -282,13 +282,13 @@ where
         };
 
         // Calculate new shape after transpose
-        let mut new_shape = self.shape.clone();
+        let mut newshape = self.shape.clone();
         for (i, &axis) in axes.iter().enumerate() {
-            new_shape[i] = self.shape[axis];
+            newshape[i] = self.shape[axis];
         }
 
         // Create a new lazy array with the transposed shape
-        let mut result = Self::with_shape(new_shape);
+        let mut result = Self::withshape(newshape);
 
         // Copy existing operations
         result.ops = self.ops.clone();

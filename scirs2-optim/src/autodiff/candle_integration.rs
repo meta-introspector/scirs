@@ -210,18 +210,18 @@ impl<T: Float + Default + Clone> CandleTensor<T> {
     }
     
     /// Create tensor with zeros
-    pub fn zeros(_shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
-        Self::full(_shape, T::zero(), dtype, device)
+    pub fn zeros(shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
+        Self::full(shape, T::zero(), dtype, device)
     }
     
     /// Create tensor with ones
-    pub fn ones(_shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
-        Self::full(_shape, T::one(), dtype, device)
+    pub fn ones(shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
+        Self::full(shape, T::one(), dtype, device)
     }
     
     /// Create tensor with random values
-    pub fn randn(_shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
-        let size = _shape.iter().product();
+    pub fn randn(shape: &[usize], dtype: CandleDataType, device: CandleDevice) -> Self {
+        let size = shape.iter().product();
         let data = Array1::from_vec(
             (0..size).map(|_| T::from(fastrand::f32()).unwrap()).collect()
         );
@@ -343,8 +343,8 @@ impl<T: Float + Default + Clone> CandleTensor<T> {
     }
     
     /// Reshape tensor
-    pub fn reshape(&mut self, new_shape: &[usize]) -> Result<()> {
-        let new_size: usize = new_shape.iter().product();
+    pub fn reshape(&mut self, newshape: &[usize]) -> Result<()> {
+        let new_size: usize = newshape.iter().product();
         if new_size != self.data.len() {
             return Err(OptimError::DimensionMismatch {
                 expected: vec![self.data.len()],
@@ -352,7 +352,7 @@ impl<T: Float + Default + Clone> CandleTensor<T> {
             });
         }
         
-        self._shape = new_shape.to_vec();
+        self.shape = newshape.to_vec();
         Ok(())
     }
     
@@ -534,9 +534,9 @@ impl<T: Float + Default + Clone> CandleOptimizer<T> {
     /// Get current loss scale factor
     fn get_loss_scale(&self) -> T {
         match &self.mixed_precision.loss_scaling {
-            LossScalingStrategy::Fixed(scale) =>, T::from(*scale).unwrap(),
+            LossScalingStrategy::Fixed(scale) => T::from(*scale).unwrap(),
             LossScalingStrategy::Dynamic { init_scale, .. } => T::from(*init_scale).unwrap(),
-            LossScalingStrategy::Adaptive { .. } =>, T::from(1024.0).unwrap(), // Default adaptive scale
+            LossScalingStrategy::Adaptive { .. } => T::from(1024.0).unwrap(), // Default adaptive scale
         }
     }
     
@@ -798,7 +798,7 @@ pub mod utils {
     }
     
     /// Convert Candle tensor to ndarray
-    pub fn to_ndarray<T: Float + Clone>(_tensor: &CandleTensor<T>) -> Array1<T> {
+    pub fn to_ndarray<T: Float + Clone>(tensor: &CandleTensor<T>) -> Array1<T> {
         _tensor.data.clone()
     }
     
@@ -821,7 +821,7 @@ pub mod utils {
     }
     
     /// Check if two tensors are on the same device
-    pub fn same_device<T: Float>(_tensor1: &CandleTensor<T>, tensor2: &CandleTensor<T>) -> bool {
+    pub fn same_device<T: Float>(tensor1: &CandleTensor<T>, tensor2: &CandleTensor<T>) -> bool {
         _tensor1.device == tensor2.device
     }
     

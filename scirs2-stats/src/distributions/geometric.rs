@@ -7,7 +7,6 @@ use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{Distribution, Geometric as RandGeometric};
-use statrs::statistics::Statistics;
 
 /// Geometric distribution structure
 ///

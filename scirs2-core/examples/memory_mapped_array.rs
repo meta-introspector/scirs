@@ -80,7 +80,7 @@ fn large_array_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>
     // For this example, we'll use a relatively small array
     let rows = 1000;
     let cols = 1000;
-    let data = Array2::<f32>::from_shape_fn((rows, cols), |(i, j)| (i * cols + j) as f32);
+    let data = Array2::<f32>::fromshape_fn((rows, cols), |(i, j)| (i * cols + j) as f32);
 
     let size_mb = (rows * cols * std::mem::size_of::<f32>()) as f64 / (1024.0 * 1024.0);
     println!("Created a {}x{} array ({:.2} MB)", rows, cols, size_mb);
@@ -127,7 +127,7 @@ fn multi_dimensional_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::
 
     // Create a 3D array
     let shape = (10, 10, 10);
-    let data = Array3::<i32>::from_shape_fn(shape, |(i, j, k)| (i * 100 + j * 10 + k) as i32);
+    let data = Array3::<i32>::fromshape_fn(shape, |(i, j, k)| (i * 100 + j * 10 + k) as i32);
     println!("Created a 10x10x10 3D array");
 
     // Create a temporary memory-mapped file
@@ -169,7 +169,7 @@ fn performance_comparison_example(temp_dir: &Path) -> Result<(), Box<dyn std::er
     // Create in-memory array
     let start = Instant::now();
     let data =
-        Array2::<f64>::from_shape_fn((rows, cols), |(i, j)| i as f64 * cols as f64 + j as f64);
+        Array2::<f64>::fromshape_fn((rows, cols), |(i, j)| i as f64 * cols as f64 + j as f64);
     let in_memory_creation_time = start.elapsed();
     println!(
         "In-memory array creation time: {:?}",

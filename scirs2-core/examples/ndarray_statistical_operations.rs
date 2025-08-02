@@ -174,7 +174,7 @@ fn main() {
 
 // Helper function to print a 2D array
 #[allow(dead_code)]
-fn print_array2<T: std::fmt::Display>(_arr: &Array2<T>) {
+fn print_array2<T: std::fmt::Display>(arr: &Array2<T>) {
     for row in _arr.rows() {
         for item in row.iter() {
             print!("{item:6} ");

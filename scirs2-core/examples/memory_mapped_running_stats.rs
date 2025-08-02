@@ -162,7 +162,7 @@ fn create_large_dataset(
     let file_path = temp_dir.join("large_dataset.bin");
 
     // First create an array with the first chunk to initialize the file
-    let initial_data = Array1::<f64>::from_shape_fn(chunk_size, |i| {
+    let initial_data = Array1::<f64>::fromshape_fn(chunk_size, |i| {
         // Generate a deterministic pattern
         let x = i as f64;
         (x / 1000.0).sin() * 10.0 + (x / 5000.0).cos() * 5.0 + (i % 100) as f64 / 10.0
@@ -253,7 +253,7 @@ fn calculate_statistics(
     // Process each chunk
     let chunk_stats = mmap.process_chunks(strategy, |chunk_data, chunk_idx| {
         // Create a temporary view for this chunk
-        let chunk = ArrayView1::from_shape(chunk_data.len(), chunk_data).unwrap();
+        let chunk = ArrayView1::fromshape(chunk_data.len(), chunk_data).unwrap();
 
         // Create a stats accumulator for this chunk
         let mut chunk_stats = OnlineStats::new();

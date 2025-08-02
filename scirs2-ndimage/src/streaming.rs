@@ -78,7 +78,7 @@ pub struct OverlapInfo {
 
 /// Streaming processor for large arrays
 pub struct StreamProcessor<T> {
-    config: StreamConfig_phantom: std::marker::PhantomData<T>,
+    config: StreamConfig, phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> StreamProcessor<T>
@@ -279,8 +279,8 @@ where
         file.read_exact(byte_buffer)?;
 
         // Create array from buffer
-        let chunk_shape: Vec<_> = chunk_info.ranges.iter().map(|r| r.end - r.start).collect();
-        Ok(Array::from_shape_vec(IxDyn(&chunk_shape), buffer)?)
+        let chunkshape: Vec<_> = chunk_info.ranges.iter().map(|r| r.end - r.start).collect();
+        Ok(Array::fromshape_vec(IxDyn(&chunkshape), buffer)?)
     }
 
     /// Write a chunk to a file
@@ -344,12 +344,12 @@ struct ChunkIterator {
 }
 
 impl ChunkIterator {
-    fn new(_shape: &[usize], chunk_dims: &[usize], overlap: &[usize]) -> Self {
+    fn new(shape: &[usize], chunk_dims: &[usize], overlap: &[usize]) -> Self {
         Self {
-            _shape: _shape.to_vec(),
+            shape: shape.to_vec(),
             chunk_dims: chunk_dims.to_vec(),
             overlap: overlap.to_vec(),
-            current: vec![0; _shape.len()],
+            current: vec![0; shape.len()],
             done: false,
         }
     }
@@ -467,11 +467,11 @@ where
         // Weight decreases towards the edges of each _chunk to provide smooth blending
 
         // Get the shapes for calculations
-        let output_shape = output.shape();
-        let chunk_shape = new_chunk.shape();
+        let outputshape = output.shape();
+        let chunkshape = new_chunk.shape();
 
         // Ensure shapes are compatible
-        if output_shape != chunk_shape {
+        if outputshape != chunkshape {
             return Err(NdimageError::DimensionError(
                 "Output and _chunk shapes must match for overlap merging".to_string(),
             ));
@@ -488,9 +488,9 @@ where
                 let distance_from_edge = coord_in_dim;
                 let weight = T::from_f64(distance_from_edge as f64 / overlap_size as f64).unwrap();
                 *output_pixel = *output_pixel * (T::one() - weight) + chunk_pixel * weight;
-            } else if coord_in_dim >= output_shape[dim] - overlap_size {
+            } else if coord_in_dim >= outputshape[dim] - overlap_size {
                 // We're in the overlap region at the end
-                let distance_from_end = output_shape[dim] - 1 - coord_in_dim;
+                let distance_from_end = outputshape[dim] - 1 - coord_in_dim;
                 let weight = T::from_f64(distance_from_end as f64 / overlap_size as f64).unwrap();
                 *output_pixel = *output_pixel * (T::one() - weight) + chunk_pixel * weight;
             } else {
@@ -1035,10 +1035,10 @@ where
     ) -> NdimageResult<Array<T, D>>;
 
     /// Check if chunk size is suitable for GPU processing
-    fn is_gpu_suitable(&self, chunk_shape: &[usize]) -> bool;
+    fn is_gpu_suitable(&self, chunkshape: &[usize]) -> bool;
 
     /// Estimate GPU memory requirements
-    fn gpu_memory_requirement(&self, chunk_shape: &[usize]) -> usize;
+    fn gpu_memory_requirement(&self, chunkshape: &[usize]) -> usize;
 }
 
 /// Placeholder for GPU context
@@ -1095,7 +1095,7 @@ where
         .map_err(|e| NdimageError::IoError(format!("Failed to open input file: {}", e)))?;
 
     let mut input_reader: Box<dyn Read> = match compression {
-        CompressionType::None =>, Box::new(BufReader::new(input_file)),
+        CompressionType::None => Box::new(BufReader::new(input_file)),
         CompressionType::Gzip => {
             #[cfg(feature = "compression")]
             {
@@ -1140,7 +1140,7 @@ where
         .map_err(|e| NdimageError::IoError(format!("Failed to create output file: {}", e)))?;
 
     let mut output_writer: Box<dyn Write> = match compression {
-        CompressionType::None =>, Box::new(BufWriter::new(output_file)),
+        CompressionType::None => Box::new(BufWriter::new(output_file)),
         CompressionType::Gzip => {
             #[cfg(feature = "compression")]
             {

@@ -36,7 +36,10 @@ where
     D: Dimension,
 {
     /// Creates a new slice from a memory-mapped array and slice information.
-    pub fn new(source: MemoryMappedArray<A>, slice_info: SliceInfo<Vec<SliceInfoElem>, D, D>) -> Self {
+    pub fn new(
+        source: MemoryMappedArray<A>,
+        slice_info: SliceInfo<Vec<SliceInfoElem>, D, D>,
+    ) -> Self {
         Self {
             source,
             slice_info,
@@ -47,29 +50,29 @@ where
     /// Returns the shape of the slice.
     ///
     /// Note: This is a simplified version for backward compatibility.
-    /// For the accurate calculated shape, use `calculated_shape()`.
+    /// For the accurate calculated shape, use `calculatedshape()`.
     pub fn shape(&self) -> D {
         // Simplified approach for backward compatibility
         // This might not be 100% accurate but prevents breaking existing code
-        self.calculate_sliced_shape().unwrap_or_default()
+        self.calculate_slicedshape().unwrap_or_default()
     }
 
     /// Returns the accurately calculated shape of the slice.
     ///
     /// Calculates the actual shape based on the slice parameters and source shape.
-    pub fn calculated_shape(&self) -> CoreResult<D> {
-        self.calculate_sliced_shape()
+    pub fn calculatedshape(&self) -> CoreResult<D> {
+        self.calculate_slicedshape()
     }
 
     /// Calculate the actual shape after slicing
-    fn calculate_sliced_shape(&self) -> CoreResult<D> {
-        let source_shape = &self.source.shape;
+    fn calculate_slicedshape(&self) -> CoreResult<D> {
+        let sourceshape = &self.source.shape;
         let slice_elements = self.slice_info.as_ref();
 
         let mut result_dims = Vec::new();
 
         // Process each dimension up to the source dimensions
-        for (dim_idx, &dim_size) in source_shape.iter().enumerate() {
+        for (dim_idx, &dim_size) in sourceshape.iter().enumerate() {
             if dim_idx < slice_elements.len() {
                 match &slice_elements[dim_idx] {
                     SliceInfoElem::Slice { start, end, step } => {
@@ -339,15 +342,15 @@ where
         array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>,
         context: &str,
     ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
-        let source_shape = array.shape().to_vec();
-        let source_ndim = source_shape.len();
+        let sourceshape = array.shape().to_vec();
+        let source_ndim = sourceshape.len();
         let target_ndim = D::NDIM;
 
         // Handle dynamic dimensions (IxDyn) first
         if target_ndim.is_none() {
             return array.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
-                    "Failed to convert {context} array to dynamic dimension type. Source shape: {source_shape:?}"
+                    "Failed to convert {context} array to dynamic dimension type. Source shape: {sourceshape:?}"
                 )))
             });
         }
@@ -359,7 +362,7 @@ where
             return array.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
                     "Dimension conversion failed for {} array despite matching dimensions ({} -> {}). Source shape: {:?}, target dimension type: {}",
-                    context, source_ndim, target_ndim, source_shape, std::any::type_name::<D>()
+                    context, source_ndim, target_ndim, sourceshape, std::any::type_name::<D>()
                 )))
             });
         }
@@ -378,7 +381,7 @@ where
                 // This case is already handled above, but for completeness
                 array.into_dimensionality::<D>().map_err(|_| {
                     CoreError::DimensionError(ErrorContext::new(format!(
-                        "Unexpected dimension conversion failure for {context} array with matching dimensions. Source shape: {source_shape:?}"
+                        "Unexpected dimension conversion failure for {context} array with matching dimensions. Source shape: {sourceshape:?}"
                     )))
                 })
             }
@@ -386,8 +389,13 @@ where
     }
 
     /// Try to expand dimensions by adding singleton dimensions.
-    fn try_expand_dimensions(array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>, context: &str, source_dims: usize, target_dims: usize) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
-        let source_shape = array.shape().to_vec();
+    fn try_expand_dimensions(
+        array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>,
+        context: &str,
+        source_dims: usize,
+        target_dims: usize,
+    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+        let sourceshape = array.shape().to_vec();
         let dims_to_add = target_dims - source_dims;
 
         if dims_to_add == 0 {
@@ -399,13 +407,13 @@ where
         }
 
         // Create expanded shape by adding singleton dimensions at the end
-        let mut expanded_shape = source_shape.clone();
-        expanded_shape.resize(source_dims + dims_to_add, 1);
+        let mut expandedshape = sourceshape.clone();
+        expandedshape.resize(source_dims + dims_to_add, 1);
 
         // Try to reshape to expanded shape
         match array
             .clone()
-            .into_shape_with_order(ndarray::IxDyn(&expanded_shape))
+            .into_shape_with_order(ndarray::IxDyn(&expandedshape))
         {
             Ok(reshaped) => reshaped.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
@@ -414,14 +422,14 @@ where
             }),
             Err(_) => {
                 // Try adding singleton dimensions at the beginning instead
-                let mut alt_shape = vec![1; dims_to_add];
-                alt_shape.extend_from_slice(&source_shape);
+                let mut altshape = vec![1; dims_to_add];
+                altshape.extend_from_slice(&sourceshape);
 
                 array
-                    .into_shape_with_order(ndarray::IxDyn(&alt_shape))
+                    .into_shape_with_order(ndarray::IxDyn(&altshape))
                     .map_err(|_| {
                         CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot reshape {context} array from shape {source_shape:?} to any expanded shape"
+                            "Cannot reshape {context} array from shape {sourceshape:?} to any expanded shape"
                         )))
                     })?
                     .into_dimensionality::<D>()
@@ -435,37 +443,42 @@ where
     }
 
     /// Try to squeeze singleton dimensions.
-    fn try_squeeze_dimensions(array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>, context: &str, source_dims: usize, target_dims: usize) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
-        let source_shape = array.shape().to_vec();
+    fn try_squeeze_dimensions(
+        array: ndarray::ArrayBase<ndarray::OwnedRepr<A>, ndarray::IxDyn>,
+        context: &str,
+        source_dims: usize,
+        target_dims: usize,
+    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+        let sourceshape = array.shape().to_vec();
 
         // Find and remove singleton dimensions
-        let mut squeezed_shape = Vec::new();
+        let mut squeezedshape = Vec::new();
         let mut removed_dims = 0;
         let dims_to_remove = source_dims - target_dims;
 
-        for &dim_size in &source_shape {
+        for &dim_size in &sourceshape {
             if dim_size == 1 && removed_dims < dims_to_remove {
                 // Skip singleton dimension
                 removed_dims += 1;
             } else {
-                squeezed_shape.push(dim_size);
+                squeezedshape.push(dim_size);
             }
         }
 
-        if squeezed_shape.len() != target_dims {
+        if squeezedshape.len() != target_dims {
             return Err(CoreError::DimensionError(ErrorContext::new(format!(
                 "Cannot squeeze {} array from {} to {} dimensions. Source shape: {:?}, only {} singleton dimensions available",
-                context, source_dims, target_dims, source_shape,
-                source_shape.iter().filter(|&&x| x == 1).count()
+                context, source_dims, target_dims, sourceshape,
+                sourceshape.iter().filter(|&&x| x == 1).count()
             ))));
         }
 
         // Reshape to squeezed shape and convert
         array
-            .into_shape_with_order(ndarray::IxDyn(&squeezed_shape))
+            .into_shape_with_order(ndarray::IxDyn(&squeezedshape))
             .map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
-                    "Cannot reshape {context} array from shape {source_shape:?} to squeezed shape {squeezed_shape:?}"
+                    "Cannot reshape {context} array from shape {sourceshape:?} to squeezed shape {squeezedshape:?}"
                 )))
             })?
             .into_dimensionality::<D>()
@@ -489,16 +502,19 @@ where
     }
 
     /// Generic slice loading that works for all dimension types
-    fn load_slice_generic(&self, data_slice: &[A]) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+    fn load_slice_generic(
+        &self,
+        data_slice: &[A],
+    ) -> CoreResult<ArrayBase<ndarray::OwnedRepr<A>, D>> {
         use ndarray::IxDyn;
 
         // Validate dimension compatibility first
         self.validate_dimension_compatibility()?;
 
         // Create dynamic array view from source
-        let source_shape = IxDyn(&self.source.shape);
+        let sourceshape = IxDyn(&self.source.shape);
         let source_array =
-            ndarray::ArrayView::from_shape(source_shape, data_slice).map_err(|e| {
+            ndarray::ArrayView::from_shape(sourceshape, data_slice).map_err(|e| {
                 CoreError::ShapeError(ErrorContext::new(format!(
                     "Failed to create array view from source shape {:?}: {}",
                     self.source.shape, e
@@ -568,7 +584,11 @@ where
     }
 
     /// Safely apply slice to array view with proper error handling, returning owned array
-    fn apply_slice_safely_owned(&self, source_array: ndarray::ArrayView<A, IxDyn>, slice_elements: &[SliceInfoElem]) -> CoreResult<ndarray::Array<A, IxDyn>> {
+    fn apply_slice_safely_owned(
+        &self,
+        source_array: ndarray::ArrayView<A, IxDyn>,
+        slice_elements: &[SliceInfoElem],
+    ) -> CoreResult<ndarray::Array<A, IxDyn>> {
         if slice_elements.is_empty() {
             return Ok(source_array.to_owned());
         }
@@ -645,7 +665,11 @@ pub trait MemoryMappedSlicing<A: Clone + Copy + 'static + Send + Sync> {
     ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix1>>;
 
     /// Creates a 2D slice using ranges for each dimension.
-    fn slice_2d(&self, row_range: impl RangeBounds<usize>, col_range: impl RangeBounds<usize>) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>>;
+    fn slice_2d(
+        &self,
+        row_range: impl RangeBounds<usize>,
+        col_range: impl RangeBounds<usize>,
+    ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>>;
 }
 
 impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryMappedArray<A> {
@@ -660,12 +684,12 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
         // Create a default slice that returns the whole array
         // This is a limitation - we can't properly convert generic SliceArg to SliceInfo
         // without knowing the specific slice type at compile time
-        let sliced_shape = self.shape.clone();
+        let slicedshape = self.shape.clone();
 
         // Create SliceInfo that represents the identity slice on the sliced data
         // This is because we're creating a new MemoryMappedArray that contains just the sliced data
         let mut elems = Vec::new();
-        for &dim_size in &sliced_shape {
+        for &dim_size in &slicedshape {
             elems.push(SliceInfoElem::Slice {
                 start: 0,
                 end: Some(dim_size as isize),
@@ -673,9 +697,8 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
             });
         }
 
-        let slice_info = unsafe { SliceInfo::new(elems) }.map_err(|_| {
-            CoreError::ShapeError(ErrorContext::new("Failed to create slice info"))
-        })?;
+        let slice_info = unsafe { SliceInfo::new(elems) }
+            .map_err(|_| CoreError::ShapeError(ErrorContext::new("Failed to create slice info")))?;
 
         // Create a slice that references the original memory-mapped array
         // This is an identity slice for now
@@ -689,7 +712,10 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
         Ok(MemoryMappedSlice::new(source, slice_info))
     }
 
-    fn slice_1d(&self, range: impl RangeBounds<usize>) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix1>> {
+    fn slice_1d(
+        &self,
+        range: impl RangeBounds<usize>,
+    ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix1>> {
         // Convert to explicit range
         let start = match range.start_bound() {
             std::ops::Bound::Included(&n) => n,
@@ -731,7 +757,11 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
         Ok(MemoryMappedSlice::new(source, slice_info))
     }
 
-    fn slice_2d(&self, row_range: impl RangeBounds<usize>, col_range: impl RangeBounds<usize>) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>> {
+    fn slice_2d(
+        &self,
+        row_range: impl RangeBounds<usize>,
+        col_range: impl RangeBounds<usize>,
+    ) -> CoreResult<MemoryMappedSlice<A, ndarray::Ix2>> {
         // Ensure we're working with a 2D array
         if self.shape.len() != 2 {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(

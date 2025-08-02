@@ -3,7 +3,7 @@
 
 use crate::error::{IoError, Result};
 use crate::ml_framework::converters::MLFrameworkConverter;
-use crate::ml_framework::types::{MLModel, MLTensor, MLFramework};
+use crate::ml_framework::types::{MLFramework, MLModel, MLTensor};
 use ndarray::{ArrayD, IxDyn};
 use std::fs::File;
 use std::path::Path;
@@ -19,8 +19,8 @@ impl MLFrameworkConverter for ONNXConverter {
             "version": "1.0",
             "graph": {
                 "name": model.metadata.model_name,
-                "inputs": model.metadata.input_shapes,
-                "outputs": model.metadata.output_shapes,
+                "inputs": model.metadata.inputshapes,
+                "outputs": model.metadata.outputshapes,
                 "initializers": model.weights.iter().map(|(name, tensor)| {
                     serde_json::json!({
                         "name": name,
@@ -58,7 +58,7 @@ impl MLFrameworkConverter for ONNXConverter {
                             .iter()
                             .filter_map(|v| v.as_u64().map(|u| u as usize))
                             .collect();
-                        model.metadata.input_shapes.insert(name.clone(), shape_vec);
+                        model.metadata.inputshapes.insert(name.clone(), shape_vec);
                     }
                 }
             }
@@ -70,7 +70,7 @@ impl MLFrameworkConverter for ONNXConverter {
                             .iter()
                             .filter_map(|v| v.as_u64().map(|u| u as usize))
                             .collect();
-                        model.metadata.output_shapes.insert(name.clone(), shape_vec);
+                        model.metadata.outputshapes.insert(name.clone(), shape_vec);
                     }
                 }
             }
@@ -104,7 +104,7 @@ impl MLFrameworkConverter for ONNXConverter {
                                 vec![0.0f32; total_elements]
                             };
 
-                            if let Ok(array) = ArrayD::from_shape_vec(IxDyn(&shape_vec), data) {
+                            if let Ok(array) = ArrayD::fromshape_vec(IxDyn(&shape_vec), data) {
                                 model.weights.insert(
                                     name.to_string(),
                                     MLTensor::new(array, Some(name.to_string())),
@@ -148,7 +148,7 @@ impl MLFrameworkConverter for ONNXConverter {
             .and_then(|v| v.as_str())
             .map(|s| s.to_string());
 
-        let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
+        let array = ArrayD::fromshape_vec(IxDyn(&shape), data)
             .map_err(|e| IoError::Other(e.to_string()))?;
 
         Ok(MLTensor::new(array, name))

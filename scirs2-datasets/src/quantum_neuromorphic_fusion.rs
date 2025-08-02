@@ -533,7 +533,7 @@ impl QuantumNeuromorphicFusion {
 
     fn evolve_quantum_states(
         &self,
-        neurons: &mut [QuantumNeuron], _synapses: &[QuantumSynapse]_time_step: usize,
+        neurons: &mut [QuantumNeuron], _synapses: &[QuantumSynapse]_time, step: usize,
         rng: &mut StdRng,
     ) -> Result<()> {
         for neuron in neurons.iter_mut() {
@@ -934,7 +934,7 @@ mod tests {
     #[test]
     fn test_dataset_transformation_with_fusion() {
         let data =
-            Array2::from_shape_vec((10, 4), (0..40).map(|x| x as f64 * 0.1).collect()).unwrap();
+            Array2::fromshape_vec((10, 4), (0..40).map(|x| x as f64 * 0.1).collect()).unwrap();
         let targets = Array1::from((0..10).map(|x| (x % 3) as f64).collect::<Vec<_>>());
         let dataset = Dataset::new(data, Some(targets));
 

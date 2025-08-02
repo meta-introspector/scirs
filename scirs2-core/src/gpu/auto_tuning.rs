@@ -3,8 +3,8 @@
 //! This module provides capabilities for automatically tuning GPU kernel parameters
 //! to achieve optimal performance on different hardware configurations and workloads.
 
-use rand::Rng;
 use crate::gpu::{GpuBackend, GpuError, GpuKernelHandle};
+use rand::Rng;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};

@@ -179,7 +179,7 @@ impl VisionTransformer {
         let patch_embedding = PatchEmbedding::new(&_config)?;
         let pos_embedding = Self::initialize_positional_embeddings(seq_length, _config.hidden_dim);
         let cls_token =
-            Array1::from_shape_fn(_config.hidden_dim, |_| rand::random::<f32>() * 0.02 - 0.01);
+            Array1::fromshape_fn(_config.hidden_dim, |_| rand::random::<f32>() * 0.02 - 0.01);
 
         let mut layers = Vec::with_capacity(_config.num_layers);
         for _ in 0.._config.num_layers {
@@ -299,7 +299,7 @@ impl VisionTransformer {
         // Skip class token (index 0) and reshape patch tokens
         let patch_features = features.slice(s![1.., ..]);
         let dense_features = patch_features
-            .to_shape((num_patches_h, num_patches_w, self.config.hidden_dim))?
+            .toshape((num_patches_h, num_patches_w, self.config.hidden_dim))?
             .to_owned();
 
         Ok(dense_features)
@@ -354,7 +354,7 @@ impl PatchEmbedding {
         let kernel_size = _config.patch_size;
 
         // Initialize convolution weights (out_channels, in_channels, kernel_h, kernel_w)
-        let conv_weights = Array4::from_shape_fn(
+        let conv_weights = Array4::fromshape_fn(
             (out_channels, in_channels, kernel_size, kernel_size),
             |_| rand::random::<f32>() * 0.02 - 0.01,
         );
@@ -362,7 +362,7 @@ impl PatchEmbedding {
         let bias = Array1::zeros(out_channels);
 
         // Linear projection weights
-        let proj_weights = Array2::from_shape_fn((out_channels, out_channels), |_| {
+        let proj_weights = Array2::fromshape_fn((out_channels, out_channels), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
         let proj_bias = Array1::zeros(out_channels);
@@ -498,16 +498,16 @@ impl MultiHeadAttention {
         let scale = 1.0 / (head_dim as f32).sqrt();
 
         // Initialize projection weights
-        let q_proj = Array2::from_shape_fn((hidden_dim, hidden_dim), |_| {
+        let q_proj = Array2::fromshape_fn((hidden_dim, hidden_dim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
-        let k_proj = Array2::from_shape_fn((hidden_dim, hidden_dim), |_| {
+        let k_proj = Array2::fromshape_fn((hidden_dim, hidden_dim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
-        let v_proj = Array2::from_shape_fn((hidden_dim, hidden_dim), |_| {
+        let v_proj = Array2::fromshape_fn((hidden_dim, hidden_dim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
-        let out_proj = Array2::from_shape_fn((hidden_dim, hidden_dim), |_| {
+        let out_proj = Array2::fromshape_fn((hidden_dim, hidden_dim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
 
@@ -559,7 +559,7 @@ impl MultiHeadAttention {
     /// Reshape input for multi-head attention
     fn reshape_for_heads(&self, input: &Array2<f32>, seq_len: usize) -> Result<Array3<f32>> {
         let reshaped = input
-            .to_shape((seq_len, self.num_heads, self.head_dim))?
+            .toshape((seq_len, self.num_heads, self.head_dim))?
             .to_owned();
         // Transpose to (num_heads, seq_len, head_dim)
         Ok(reshaped.permuted_axes([1, 0, 2]))
@@ -622,11 +622,11 @@ impl MLP {
         let hidden_dim = _config.hidden_dim;
         let mlp_dim = _config.mlp_dim;
 
-        let fc1_weights = Array2::from_shape_fn((hidden_dim, mlp_dim), |_| {
+        let fc1_weights = Array2::fromshape_fn((hidden_dim, mlp_dim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
         let fc1_bias = Array1::zeros(mlp_dim);
-        let fc2_weights = Array2::from_shape_fn((mlp_dim, hidden_dim), |_| {
+        let fc2_weights = Array2::fromshape_fn((mlp_dim, hidden_dim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
         let fc2_bias = Array1::zeros(hidden_dim);
@@ -661,10 +661,10 @@ impl MLP {
 
 impl LayerNorm {
     /// Create new layer normalization
-    fn new(_normalized_shape: usize) -> Self {
+    fn new(normalizedshape: usize) -> Self {
         Self {
-            weight: Array1::ones(_normalized_shape),
-            bias: Array1::zeros(_normalized_shape),
+            weight: Array1::ones(normalizedshape),
+            bias: Array1::zeros(normalizedshape),
             eps: 1e-5,
         }
     }
@@ -690,7 +690,7 @@ impl LayerNorm {
 impl ClassificationHead {
     /// Create new classification head
     fn new(_hidden_dim: usize, num_classes: usize) -> Self {
-        let weights = Array2::from_shape_fn((_hidden_dim, num_classes), |_| {
+        let weights = Array2::fromshape_fn((_hidden_dim, num_classes), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
         let bias = Array1::zeros(num_classes);
@@ -916,7 +916,7 @@ impl SwinTransformerBlock {
         let (h, w, c) = input.dim();
 
         // Reshape to sequence format for attention
-        let input_seq = input.to_shape((h * w, c))?.to_owned();
+        let input_seq = input.toshape((h * w, c))?.to_owned();
 
         // Layer norm + window attention + residual
         let norm1_output = self.norm1.apply(&input_seq.view())?;
@@ -929,7 +929,7 @@ impl SwinTransformerBlock {
         let residual2 = &residual1 + &mlp_output;
 
         // Reshape back to spatial format
-        let output = residual2.to_shape((h, w, c))?.to_owned();
+        let output = residual2.toshape((h, w, c))?.to_owned();
         Ok(output)
     }
 }
@@ -945,7 +945,7 @@ impl WindowAttention {
 impl PatchMerging {
     /// Create new patch merging layer
     fn new(_hidden_dim: usize) -> Result<Self> {
-        let reduction = Array2::from_shape_fn((4 * _hidden_dim, 2 * _hidden_dim), |_| {
+        let reduction = Array2::fromshape_fn((4 * _hidden_dim, 2 * _hidden_dim), |_| {
             rand::random::<f32>() * 0.02 - 0.01
         });
         let norm = LayerNorm::new(4 * hidden_dim);
@@ -985,12 +985,12 @@ impl PatchMerging {
         }
 
         // Reshape for linear projection
-        let merged_seq = merged.to_shape((new_h * new_w, 4 * c))?.to_owned();
+        let merged_seq = merged.toshape((new_h * new_w, 4 * c))?.to_owned();
         let normalized = self.norm.apply(&merged_seq.view())?;
         let projected = normalized.dot(&self.reduction);
 
         // Reshape back to spatial format
-        let output = projected.to_shape((new_h, new_w, 2 * c))?.to_owned();
+        let output = projected.toshape((new_h, new_w, 2 * c))?.to_owned();
         Ok(output)
     }
 }
@@ -1232,7 +1232,7 @@ impl CrossAttentionLayer {
         // In a full implementation, we'd have separate Q, K, V projections
         let combined = ndarray::stack![Axis(0), q_input.view(), k_input.view()];
         let combined_2d = combined
-            .to_shape((
+            .toshape((
                 combined.shape()[0] * combined.shape()[1],
                 combined.shape()[2],
             ))?

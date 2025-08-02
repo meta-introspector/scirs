@@ -444,7 +444,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(activation_ops::Identity)
 }
 
@@ -569,7 +569,7 @@ where
 /// });
 ///    ```
 #[allow(dead_code)]
-pub fn gather_common<'graph, A, B, F: Float>(_param: A, indices: B, axis: isize) -> Tensor<'graph, F>
+pub fn gather_common<'graph, A, B, F: Float>(param: A, indices: B, axis: isize) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     B: AsRef<Tensor<'graph, F>> + Copy,
@@ -608,7 +608,7 @@ where
 /// });
 ///    ```
 #[allow(dead_code)]
-pub fn gather<'graph, A, B, F: Float>(_param: A, indices: B, axis: isize) -> Tensor<'graph, F>
+pub fn gather<'graph, A, B, F: Float>(param: A, indices: B, axis: isize) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     B: AsRef<Tensor<'graph, F>> + Copy,
@@ -649,7 +649,7 @@ where
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
         .append_input(t, false)
-        .set_shape(&t)
+        .setshape(&t)
         .build(array_ops::Reshape)
 }
 
@@ -862,24 +862,24 @@ where
     D: ndarray::Dimension,
 {
     // Store the original array shape for later use
-    let original_shape = arr.shape().to_vec();
+    let originalshape = arr.shape().to_vec();
     let arr = arr.into_dyn();
 
     // Create the tensor with explicitly set known shape
-    let shape_isize: Vec<isize> = original_shape.iter().map(|&s| s as isize).collect();
+    let shape_isize: Vec<isize> = originalshape.iter().map(|&s| s as isize).collect();
     let tensor = Tensor::builder(graph)
-        .set_known_shape(&shape_isize)
+        .set_knownshape(&shape_isize)
         .set_differentiable(false)
         .build(const_gen_ops::ConvertToTensor { arr });
 
     // Manually handle shape for debug purposes
     if let Some(ctx) = crate::graph::AsGraph::context_ref(graph) {
         if let Ok(eval_result) = tensor.eval(ctx) {
-            if eval_result.shape() != original_shape.as_slice() {
+            if eval_result.shape() != originalshape.as_slice() {
                 // For debugging only, doesn't affect the actual tensor shape
                 println!(
                     "DEBUG: convert_to_tensor shape mismatch: Expected {:?}, got {:?}",
-                    original_shape,
+                    originalshape,
                     eval_result.shape()
                 );
             }
@@ -902,10 +902,10 @@ where
 /// });
 ///    ```
 #[allow(dead_code)]
-pub fn scalar<F: Float>(_val: F, graph: &impl AsGraph<F>) -> Tensor<F> {
+pub fn scalar<F: Float>(val: F, graph: &impl AsGraph<F>) -> Tensor<F> {
     let op = const_gen_ops::Scalar { _val };
-    // For scalars, use set_known_shape with empty shape (scalar)
-    Tensor::builder(graph).set_known_shape(&[]).build(op)
+    // For scalars, use set_knownshape with empty shape (scalar)
+    Tensor::builder(graph).set_knownshape(&[]).build(op)
 }
 
 /// Outputs values sampled from the normal distribution.
@@ -939,7 +939,7 @@ where
     let t = shape.as_tensor(graph);
     Tensor::builder(graph)
         .append_input(t, false)
-        .set_shape(&t)
+        .setshape(&t)
         .build(random_ops::RandomNormal::new(arr_rng, mean, stddev))
 }
 
@@ -974,7 +974,7 @@ where
     let t = shape.as_tensor(graph);
     Tensor::builder(graph)
         .append_input(t, false)
-        .set_shape(&t)
+        .setshape(&t)
         .build(random_ops::RandomUniform::new(arr_rng, min, max))
 }
 
@@ -1005,7 +1005,7 @@ where
     let t = shape.as_tensor(graph);
     Tensor::builder(graph)
         .append_input(t, false)
-        .set_shape(&t)
+        .setshape(&t)
         .build(random_ops::StandardNormal::new(arr_rng))
 }
 
@@ -1036,7 +1036,7 @@ where
     let t = shape.as_tensor(graph);
     Tensor::builder(graph)
         .append_input(t, false)
-        .set_shape(&t)
+        .setshape(&t)
         .build(random_ops::StandardUniform::new(arr_rng))
 }
 
@@ -1069,7 +1069,7 @@ where
     let t = shape.as_tensor(graph);
     Tensor::builder(graph)
         .append_input(t, false)
-        .set_shape(&t)
+        .setshape(&t)
         .build(random_ops::Bernoulli::new(arr_rng, p))
 }
 
@@ -1102,7 +1102,7 @@ where
     let t = shape.as_tensor(graph);
     Tensor::builder(graph)
         .append_input(t, false)
-        .set_shape(&t)
+        .setshape(&t)
         .build(random_ops::Exponential::new(arr_rng, lambda))
 }
 
@@ -1137,7 +1137,7 @@ where
     let t = shape.as_tensor(graph);
     Tensor::builder(graph)
         .append_input(t, false)
-        .set_shape(&t)
+        .setshape(&t)
         .build(random_ops::Gamma::new(arr_rng, shape_param, scale))
 }
 
@@ -1172,7 +1172,7 @@ where
     let t = shape.as_tensor(graph);
     Tensor::builder(graph)
         .append_input(t, false)
-        .set_shape(&t)
+        .setshape(&t)
         .build(random_ops::LogNormal::new(arr_rng, mean, stddev))
 }
 
@@ -1189,11 +1189,11 @@ where
 /// });
 ///    ```
 #[allow(dead_code)]
-pub fn zeros<'graph, A, F: Float>(_shape: &A, graph: &'graph impl AsGraph<F>) -> Tensor<'graph, F>
+pub fn zeros<'graph, A, F: Float>(shape: &A, graph: &'graph impl AsGraph<F>) -> Tensor<'graph, F>
 where
     A: AsTensor<'graph, F>,
 {
-    let shape_tensor = _shape.as_tensor(graph);
+    let shape_tensor = shape.as_tensor(graph);
     Tensor::builder(graph)
         .append_input(shape_tensor, false)
         .build(const_gen_ops::Zeros)
@@ -1212,12 +1212,12 @@ where
 /// });
 ///    ```
 #[allow(dead_code)]
-pub fn ones<'graph, A, F: Float>(_shape: &A, graph: &'graph impl AsGraph<F>) -> Tensor<'graph, F>
+pub fn ones<'graph, A, F: Float>(shape: &A, graph: &'graph impl AsGraph<F>) -> Tensor<'graph, F>
 where
     A: AsTensor<'graph, F>,
 {
     Tensor::builder(graph)
-        .append_input(_shape.as_tensor(graph), false)
+        .append_input(shape.as_tensor(graph), false)
         .build(const_gen_ops::Ones)
 }
 
@@ -1240,8 +1240,8 @@ where
     D: ndarray::Dimension,
 {
     // Save the original shape for debugging
-    let orig_shape = _arr.shape().to_vec();
-    println!("Creating variable with shape: {orig_shape:?}");
+    let origshape = _arr.shape().to_vec();
+    println!("Creating variable with shape: {origshape:?}");
 
     // Convert the array to dynamic form for tensor creation
     let arr_dyn = _arr.into_dyn();
@@ -1253,10 +1253,10 @@ where
     if let Some(ctx) = crate::graph::AsGraph::context_ref(graph) {
         if let Ok(eval_result) = tensor.eval(ctx) {
             println!("Created tensor with shape: {:?}", eval_result.shape());
-            if eval_result.shape() != orig_shape.as_slice() {
+            if eval_result.shape() != origshape.as_slice() {
                 println!(
                     "WARNING: Shape mismatch! Expected {:?}, got {:?}",
-                    orig_shape,
+                    origshape,
                     eval_result.shape()
                 );
             }
@@ -1510,7 +1510,7 @@ pub use memory__optimization::{
 
 // Efficient tensor operations
 pub use efficient__ops::{
-    clear_reshape_cache, efficient_concat, efficient_reshape, efficient_reshape_with_shape,
+    clear_reshape_cache, efficient_concat, efficient_reshape, efficient_reshape_withshape,
     efficient_slice, efficient_transpose, get_reshape_cache_stats, EfficientOpsManager,
     EfficientOpsStats, SliceRange,
 };

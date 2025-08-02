@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a tall-and-skinny matrix representing feature vectors
     let m_tall = 2000;
     let n_tall = 25;
-    let tall_matrix = Array2::from_shape_fn((m_tall, n_tall), |(i, j)| {
+    let tall_matrix = Array2::fromshape_fn((m_tall, n_tall), |(i, j)| {
         // Simulate feature matrix with some structure
         let freq1 = 2.0 * std::f64::consts::PI * (i as f64) / 100.0;
         let freq2 = 2.0 * std::f64::consts::PI * (j as f64) / 10.0;
@@ -113,7 +113,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let m_short = 20;
     let n_short = 1000;
-    let short_matrix = Array2::from_shape_fn((m_short, n_short), |(i, j)| {
+    let short_matrix = Array2::fromshape_fn((m_short, n_short), |(i, j)| {
         // Simulate compressed sensing or genomics data
         let signal = (j as f64 / 50.0).sin() * (i as f64 + 1.0);
         signal + 0.01 * (i * j) as f64 / 10000.0
@@ -171,15 +171,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let test_matrices = vec![
         (
             "Tall Feature Matrix",
-            Array2::from_shape_fn((800, 15), |(i, j)| (i + j + 1) as f64),
+            Array2::fromshape_fn((800, 15), |(i, j)| (i + j + 1) as f64),
         ),
         (
             "Short Genomics Matrix",
-            Array2::from_shape_fn((12, 600), |(i, j)| (i * j + 1) as f64),
+            Array2::fromshape_fn((12, 600), |(i, j)| (i * j + 1) as f64),
         ),
         (
             "Square-ish Matrix",
-            Array2::from_shape_fn((120, 100), |(i, j)| (i + j + 1) as f64),
+            Array2::fromshape_fn((120, 100), |(i, j)| (i + j + 1) as f64),
         ),
     ];
 
@@ -235,8 +235,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let a_size = (400, 200);
     let b_size = (200, 300);
 
-    let matrix_a = Array2::from_shape_fn(a_size, |(i, j)| ((i + j + 1) as f64).sin() / 100.0);
-    let matrix_b = Array2::from_shape_fn(b_size, |(i, j)| ((i * j + 1) as f64).cos() / 100.0);
+    let matrix_a = Array2::fromshape_fn(a_size, |(i, j)| ((i + j + 1) as f64).sin() / 100.0);
+    let matrix_b = Array2::fromshape_fn(b_size, |(i, j)| ((i * j + 1) as f64).cos() / 100.0);
 
     println!(
         "   Matrix A: {}×{}, Matrix B: {}×{}",
@@ -283,12 +283,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a low-rank matrix for demonstration
     let rank_true = 10;
     let u_true =
-        Array2::from_shape_fn((300, rank_true), |(i, j)| ((i + j + 1) as f64).sin() / 10.0);
-    let s_true = Array1::from_shape_fn(rank_true, |i| {
+        Array2::fromshape_fn((300, rank_true), |(i, j)| ((i + j + 1) as f64).sin() / 10.0);
+    let s_true = Array1::fromshape_fn(rank_true, |i| {
         10.0 * (-(i as f64) / 2.0).exp() // Exponentially decaying singular values
     });
     let vt_true =
-        Array2::from_shape_fn((rank_true, 200), |(i, j)| ((i * j + 1) as f64).cos() / 10.0);
+        Array2::fromshape_fn((rank_true, 200), |(i, j)| ((i * j + 1) as f64).cos() / 10.0);
 
     // Construct low-rank matrix: A = U * S * V^T
     let s_matrix = Array2::from_diag(&s_true);
@@ -361,7 +361,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (m, n_description) in test_sizes {
         let test_matrix =
-            Array2::from_shape_fn((m, n), |(i, j)| (i + j + 1) as f64 / (m + n) as f64);
+            Array2::fromshape_fn((m, n), |(i, j)| (i + j + 1) as f64 / (m + n) as f64);
 
         let start_time = Instant::now();
         let result = adaptive_decomposition(&test_matrix.view(), &config)?;

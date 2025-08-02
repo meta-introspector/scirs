@@ -145,7 +145,8 @@ where
                     size: self.size,
                     mmap_view: Some(mmap),
                     mmap_view_mut: None,
-                    is_temp: false, phantom: PhantomData,
+                    is_temp: false,
+                    phantom: PhantomData,
                 })
             }
             AccessMode::ReadWrite | AccessMode::CopyOnWrite => {
@@ -171,7 +172,8 @@ where
                     size: self.size,
                     mmap_view: None,
                     mmap_view_mut: Some(mmap),
-                    is_temp: false, phantom: PhantomData,
+                    is_temp: false,
+                    phantom: PhantomData,
                 })
             }
             AccessMode::Write => {
@@ -320,7 +322,8 @@ where
             size,
             mmap_view: Some(mmap),
             mmap_view_mut: None,
-            is_temp: false, phantom: PhantomData,
+            is_temp: false,
+            phantom: PhantomData,
         })
     }
 
@@ -400,7 +403,8 @@ where
                     size,
                     mmap_view: Some(mmap),
                     mmap_view_mut: None,
-                    is_temp: false, phantom: PhantomData,
+                    is_temp: false,
+                    phantom: PhantomData,
                 })
             }
             AccessMode::ReadWrite => {
@@ -454,7 +458,8 @@ where
                     size,
                     mmap_view: None,
                     mmap_view_mut: Some(mmap),
-                    is_temp: false, phantom: PhantomData,
+                    is_temp: false,
+                    phantom: PhantomData,
                 })
             }
             AccessMode::Write => {
@@ -532,7 +537,8 @@ where
                     size,
                     mmap_view: None,
                     mmap_view_mut: Some(mmap),
-                    is_temp: false, phantom: PhantomData,
+                    is_temp: false,
+                    phantom: PhantomData,
                 })
             }
             AccessMode::CopyOnWrite => {
@@ -557,7 +563,8 @@ where
                     size,
                     mmap_view: None,
                     mmap_view_mut: Some(mmap),
-                    is_temp: false, phantom: PhantomData,
+                    is_temp: false,
+                    phantom: PhantomData,
                 })
             }
         }
@@ -631,7 +638,7 @@ where
             }
         };
 
-        // No need to create a separate dimension object - use the from_shape_vec method on Array directly
+        // No need to create a separate dimension object - use the fromshape_vec method on Array directly
         // This approach works because we're not trying to use the dimension directly
         let shape_vec = self.shape.clone();
 

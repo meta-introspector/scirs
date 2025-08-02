@@ -487,7 +487,7 @@ impl AdvancedNumericalValidator {
             ValidationAlgorithm::ClosenessCentrality => {
                 AlgorithmOutput::ScoreMap(closeness_centrality(graph, false))
             }
-            ValidationAlgorithm::DegreeCentrality =>, AlgorithmOutput::ScoreMap({
+            ValidationAlgorithm::DegreeCentrality => AlgorithmOutput::ScoreMap({
                 let mut degree_map = HashMap::new();
                 for node in graph.nodes() {
                     degree_map.insert(*node, graph.degree(node) as f64);
@@ -743,7 +743,7 @@ impl AdvancedNumericalValidator {
     fn compare_results(
         &self,
         standard: &AlgorithmOutput,
-        advanced: &AlgorithmOutput_algorithm: &ValidationAlgorithm,
+        advanced: &AlgorithmOutput, algorithm: &ValidationAlgorithm,
     ) -> Result<ValidationMetrics> {
         match (standard, advanced) {
             (AlgorithmOutput::ScoreMap(std_scores), AlgorithmOutput::ScoreMap(ut_scores)) => {

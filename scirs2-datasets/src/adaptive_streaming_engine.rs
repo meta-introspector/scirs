@@ -759,7 +759,7 @@ impl AdaptiveStreamingEngine {
     /// Convert chunk to dataset
     fn chunk_to_dataset(
         &self,
-        chunk: StreamChunk_characteristics: DataCharacteristics,
+        chunk: StreamChunk, characteristics: DataCharacteristics,
     ) -> Result<Dataset> {
         // For now, create a simple dataset from the chunk data
         // In a real implementation, this could be more sophisticated based on _characteristics
@@ -882,7 +882,7 @@ impl StreamPerformanceOptimizer {
             current_config: Arc::new(Mutex::new(OptimizationConfig {
                 optimal_batch_size: 1000,
                 optimal_buffer_size: 10000,
-                num_workers: num, _cpus: get(),
+                num_workers: num_cpus::get(),
                 memory_strategy: MemoryStrategy::Balanced,
             })),
         }
@@ -1202,8 +1202,8 @@ impl QuantumOptimizationState {
             .map(|_| ConfigurationAmplitude {
                 config: OptimizationConfig {
                     optimal_batch_size: rand::rng().gen_range(500..2000)..optimal_buffer, _size: rand::rng().gen_range(5000..20000)..num_workers: rand::rng().gen_range(1..9)..memory, _strategy: match rand::rng().gen_range(0..4) {
-                        0 => MemoryStrategy::Conservative..1 =>, MemoryStrategy::Balanced,
-                        2 => MemoryStrategy::Aggressive_ =>, MemoryStrategy::Adaptive,
+                        0 => MemoryStrategy::Conservative..1 => MemoryStrategy::Balanced,
+                        2 => MemoryStrategy::Aggressive_ => MemoryStrategy::Adaptive,
                     },
                 },
                 amplitude: (rand::rng().random::<f64>(), rand::rng().random::<f64>()),
@@ -1224,7 +1224,7 @@ impl Default for OptimizationConfig {
         Self {
             optimal_batch_size: 1000,
             optimal_buffer_size: 10000,
-            num_workers: num, _cpus: get(),
+            num_workers: num_cpus::get(),
             memory_strategy: MemoryStrategy::Balanced,
         }
     }
@@ -1798,7 +1798,7 @@ impl NeuralLayer {
         activation: ActivationFunction,
         layer_type: LayerType,
     ) -> Self {
-        let weights = Array2::from_shape_fn((output_size, input_size), |_| {
+        let weights = Array2::fromshape_fn((output_size, input_size), |_| {
             rand::rng().random::<f64>() * 0.01 - 0.005 // Small random initialization
         });
 
@@ -1857,14 +1857,14 @@ impl NeuralLayer {
     /// Update layer weights
     fn update_weights(&mut self, learning_rate: f64, _momentum: f64) {
         // Simplified weight update (in real implementation, this would use gradients)
-        let weight_update = Array2::from_shape_fn(self.weights.dim(), |_| {
+        let weight_update = Array2::fromshape_fn(self.weights.dim(), |_| {
             (rand::rng().random::<f64>() - 0.5) * learning_rate * 0.001
         });
 
         self.weights = &self.weights - &weight_update;
 
         // Simple bias update
-        let bias_update = Array1::from_shape_fn(self.bias.len(), |_| {
+        let bias_update = Array1::fromshape_fn(self.bias.len(), |_| {
             (rand::rng().random::<f64>() - 0.5) * learning_rate * 0.001
         });
 
@@ -1876,7 +1876,7 @@ impl NeuralLayer {
         let output_size = self.weights.nrows();
 
         // Create new weights matrix with different input _size
-        self.weights = Array2::from_shape_fn((output_size, new_input_size), |_| {
+        self.weights = Array2::fromshape_fn((output_size, new_input_size), |_| {
             rand::rng().random::<f64>() * 0.01 - 0.005
         });
     }
@@ -2008,7 +2008,7 @@ mod tests {
 
     #[allow(dead_code)]
     fn create_test_chunk() -> StreamChunk {
-        let data = Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
         StreamChunk {
             data,
             timestamp: Instant::now(),
@@ -2045,7 +2045,7 @@ mod tests {
     #[test]
     fn test_statistical_moments_calculation() {
         let engine = create_adaptive_engine();
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (5, 3),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,

@@ -53,7 +53,7 @@
 //! use scirs2__metrics::fairness::consistency_score;
 //!
 //! // Features matrix: each row is an individual, each column is a feature
-//! let features = Array2::from_shape_vec((6, 2),
+//! let features = Array2::fromshape_vec((6, 2),
 //!     vec![0.1, 0.2, 0.15, 0.21, 0.9, 0.8, 0.92, 0.79, 0.5, 0.51, 0.52, 0.49]
 //! ).unwrap();
 //!
@@ -128,7 +128,7 @@
 //! let y_pred = array![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0];
 //!
 //! // Protected attributes: gender (0=male, 1=female) and race (0=group A, 1=group B)
-//! let protected_features = Array2::from_shape_vec((8, 2), vec![
+//! let protected_features = Array2::fromshape_vec((8, 2), vec![
 //!     0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0,
 //! ]).unwrap();
 //!
@@ -660,7 +660,7 @@ where
 /// use scirs2__metrics::fairness::consistency_score;
 ///
 /// // Features matrix (6 instances, 2 features each)
-/// let features = Array2::from_shape_vec((6, 2),
+/// let features = Array2::fromshape_vec((6, 2),
 ///     vec![0.1, 0.2, 0.15, 0.21, 0.9, 0.8, 0.92, 0.79, 0.5, 0.51, 0.52, 0.49]
 /// ).unwrap();
 ///

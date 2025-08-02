@@ -1351,7 +1351,7 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
         operations / (0.001 * 1e9) // Mock with fixed _runtime
     }
 
-    fn calculate_efficiency(&self, kernel: &CompiledKernel_runtime: f64) -> f64 {
+    fn calculate_efficiency(&self, kernel: &CompiledKernel, runtime: f64) -> f64 {
         // Mock efficiency calculation
         kernel.performance_data.memory_bandwidth_efficiency * 0.9
     }
@@ -1387,7 +1387,7 @@ _kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
     fn evaluate_configuration(
         &self,
         kernel: &CompiledKernel,
-        config: &AutoTuneConfig_problem_size: usize,
+        config: &AutoTuneConfig_problem, size: usize,
     ) -> LinalgResult<f64> {
         // Mock performance evaluation
         let base_performance = kernel.performance_data.theoretical_peak_gflops;
@@ -1924,7 +1924,7 @@ where
 
     /// Launch CUDA matrix-vector multiplication kernel (f32)
     fn launch_cuda_matvec_f32(
-        &self_a_ptr: *const f32_x_ptr: *const f32, _y_ptr: *mut f32,
+        &self_a_ptr: *const f32_x, ptr: *const f32, _y_ptr: *mut f32,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2010,7 +2010,7 @@ where
 
     /// Launch OpenCL matrix-vector multiplication kernel (f32)
     fn launch_opencl_matvec_f32(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x_ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
+        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x, ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2026,7 +2026,7 @@ where
 
     /// Launch OpenCL matrix-vector multiplication kernel (f64)
     fn launch_opencl_matvec_f64(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x_ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
+        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x, ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2036,7 +2036,7 @@ where
 
     /// Launch OpenCL matrix multiplication kernel (f32, basic)
     fn launch_opencl_matmul_f32_basic(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b_ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2048,7 +2048,7 @@ where
 
     /// Launch OpenCL matrix multiplication kernel (f32, optimized)
     fn launch_opencl_matmul_f32_optimized(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b_ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2060,7 +2060,7 @@ where
 
     /// Launch OpenCL matrix multiplication kernel (f32, vectorized)
     fn launch_opencl_matmul_f32_vectorized(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b_ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2072,7 +2072,7 @@ where
 
     /// Launch OpenCL matrix multiplication kernel (f64)
     fn launch_opencl_matmul_f64(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b_ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2083,7 +2083,7 @@ where
 
     /// Launch ROCm matrix-vector multiplication kernel (f32)
     fn launch_rocm_matvec_f32(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x_ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
+        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x, ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2094,7 +2094,7 @@ where
 
     /// Launch ROCm matrix multiplication kernel (f32)
     fn launch_rocm_matmul_f32(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b_ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2105,7 +2105,7 @@ where
 
     /// Launch Metal matrix-vector multiplication kernel (f32)
     fn launch_metal_matvec_f32(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x_ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
+        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_x, ptr: *mut std::ffi::c_void_y, _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
     ) -> LinalgResult<()> {
@@ -2116,7 +2116,7 @@ where
 
     /// Launch Metal matrix multiplication kernel (f32)
     fn launch_metal_matmul_f32(
-        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b_ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
+        &self_ctx: &dyn GpuContext_a, _ptr: *mut std::ffi::c_void_b, ptr: *mut std::ffi::c_void_c, _ptr: *mut std::ffi::c_void,
         m: usize,
         n: usize,
         k: usize,
@@ -2328,13 +2328,13 @@ where
     pub fn intelligent_dispatch_decision(
         &self,
         operation: &str,
-        matrix_shape: (usize, usize),
+        matrixshape: (usize, usize),
         data_characteristics: &DataCharacteristics,
         available_devices: &[GpuDeviceInfo],
     ) -> LinalgResult<DispatchDecision> {
         // 1. Analyze workload _characteristics
         let workload_analysis =
-            self.analyze_workload(operation, matrix_shape, data_characteristics)?;
+            self.analyze_workload(operation, matrixshape, data_characteristics)?;
 
         // 2. Predict performance for each option
         let performance_predictions =
@@ -2353,27 +2353,27 @@ where
     fn analyze_workload(
         &self,
         operation: &str,
-        matrix_shape: (usize, usize),
+        matrixshape: (usize, usize),
         data_characteristics: &DataCharacteristics,
     ) -> LinalgResult<WorkloadAnalysis> {
         let _analyzer = self.workload_analyzer.lock().map_err(|_| {
             LinalgError::ComputationError("Failed to lock workload analyzer".to_string())
         })?;
 
-        let compute_intensity = self.estimate_compute_intensity(operation, matrix_shape);
-        let memory_requirements = self.estimate_memory_requirements(matrix_shape);
+        let compute_intensity = self.estimate_compute_intensity(operation, matrixshape);
+        let memory_requirements = self.estimate_memory_requirements(matrixshape);
         let sparsity = data_characteristics.sparsity_ratio;
-        let access_pattern = self.detect_access_pattern(operation, matrix_shape);
+        let access_pattern = self.detect_access_pattern(operation, matrixshape);
 
         Ok(WorkloadAnalysis {
             operation: operation.to_string(),
-            matrix_shape,
+            matrixshape,
             compute_intensity,
             memory_requirements,
             sparsity,
             access_pattern: access_pattern.clone(),
-            parallelization_potential: self.estimate_parallelization_potential(matrix_shape),
-            cache_efficiency: self.estimate_cache_efficiency(matrix_shape, &access_pattern),
+            parallelization_potential: self.estimate_parallelization_potential(matrixshape),
+            cache_efficiency: self.estimate_cache_efficiency(matrixshape, &access_pattern),
         })
     }
 
@@ -2518,7 +2518,7 @@ where
                 }
             }
             "matvec" => MemoryAccessPattern::Sequential,
-            "transpose" => MemoryAccessPattern::Strided(shape.1, _ =>, MemoryAccessPattern::Sequential,
+            "transpose" => MemoryAccessPattern::Strided(shape.1, _ => MemoryAccessPattern::Sequential,
         }
     }
 
@@ -2529,7 +2529,7 @@ where
     }
 
     fn estimate_cache_efficiency(
-        &self_shape: (usize, usize),
+        &selfshape: (usize, usize),
         pattern: &MemoryAccessPattern,
     ) -> f64 {
         let cache_line_size = 64; // bytes
@@ -2590,7 +2590,7 @@ pub struct DataCharacteristics {
 #[derive(Debug)]
 pub struct WorkloadAnalysis {
     pub operation: String,
-    pub matrix_shape: (usize, usize),
+    pub matrixshape: (usize, usize),
     pub compute_intensity: f64,
     pub memory_requirements: usize,
     pub sparsity: f64,
@@ -2649,7 +2649,7 @@ impl GpuPerformancePredictor {
     }
 
     pub fn predict_gpu_performance(
-        &self_operation: &str, _workload: &WorkloadAnalysis_device: &GpuDeviceInfo,
+        &self_operation: &str, _workload: &WorkloadAnalysis, device: &GpuDeviceInfo,
     ) -> LinalgResult<PerformancePrediction> {
         // Simplified prediction - in practice would use sophisticated ML models
         Ok(PerformancePrediction {

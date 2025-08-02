@@ -73,9 +73,9 @@ pub struct FusionChain<F: Float> {
     /// Operations in the chain
     operations: Vec<FusableOperation<F>>,
     /// Input tensor shapes
-    input_shapes: Vec<Vec<usize>>,
+    inputshapes: Vec<Vec<usize>>,
     /// Output shape
-    output_shape: Vec<usize>,
+    outputshape: Vec<usize>,
     /// Estimated performance benefit
     performance_benefit: f64,
 }
@@ -91,33 +91,33 @@ impl<F: Float> FusionChain<F> {
     pub fn new() -> Self {
         Self {
             operations: Vec::new(),
-            input_shapes: Vec::new(),
-            output_shape: Vec::new(),
+            inputshapes: Vec::new(),
+            outputshape: Vec::new(),
             performance_benefit: 0.0,
         }
     }
 
     /// Add an operation to the chain
-    pub fn add_operation(&mut self, op: FusableOperation<F>, input_shape: Vec<usize>) {
-        // For the first operation, set output _shape before estimating benefit
-        if self.output_shape.is_empty() {
-            self.output_shape = input_shape.clone();
+    pub fn add_operation(&mut self, op: FusableOperation<F>, inputshape: Vec<usize>) {
+        // For the first operation, set output shape before estimating benefit
+        if self.outputshape.is_empty() {
+            self.outputshape = inputshape.clone();
         }
 
         // Estimate performance benefit before moving op
         self.performance_benefit += self.estimate_benefit(&op);
 
         self.operations.push(op);
-        self.input_shapes.push(input_shape.clone());
+        self.inputshapes.push(inputshape.clone());
 
-        // For element-wise operations, output _shape matches input _shape
-        self.output_shape = input_shape;
+        // For element-wise operations, output shape matches input shape
+        self.outputshape = inputshape;
     }
 
     /// Estimate performance benefit of adding this operation
     fn estimate_benefit(&self, op: &FusableOperation<F>) -> f64 {
         // Each fused operation saves one memory round-trip
-        let elements = self.output_shape.iter().product::<usize>() as f64;
+        let elements = self.outputshape.iter().product::<usize>() as f64;
 
         match op {
             FusableOperation::Add
@@ -246,19 +246,19 @@ impl<F: Float> LoopFusionOptimizer<F> {
         let mut current_op = start_op;
 
         loop {
-            if visited.contains(&current_op) {
+            if visited.contains(&currentop) {
                 break;
             }
 
             // Check if current operation is fusable
-            if let Some(fusable_op) = self.classify_operation(current_op, graph) {
-                visited.insert(current_op);
+            if let Some(fusableop) = self.classify_operation(current_op, graph) {
+                visited.insert(currentop);
 
                 // For this example, assume shape is [100] - in practice would extract from graph
                 chain.add_operation(fusable_op, vec![100]);
 
                 // Find next operation in chain
-                if let Some(next_op) = self.find_next_fusable_operation(current_op, graph) {
+                if let Some(nextop) = self.find_next_fusable_operation(current_op, graph) {
                     current_op = next_op;
                 } else {
                     break;
@@ -330,7 +330,7 @@ impl<F: Float> FusedKernel<F> {
     /// Compile the fusion chain into an executable kernel
     fn compile_kernel(_chain: &FusionChain<F>) -> KernelResult<F> {
         let operations = _chain.operations.clone();
-        let _output_shape = _chain.output_shape.clone();
+        let _outputshape = _chain.outputshape.clone();
 
         Ok(Box::new(
             move |inputs: &[&Array<F, IxDyn>]| -> Result<Array<F, IxDyn>, OpError> {
@@ -705,7 +705,7 @@ mod tests {
 
         let kernel = FusedKernel::from_chain(chain).unwrap();
 
-        let input = Array::from_shape_vec(IxDyn(&[5]), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+        let input = Array::fromshape_vec(IxDyn(&[5]), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
         let result = kernel.execute(&[&input]).unwrap();
 
         // Should be (x^2) * 2 = [2, 8, 18, 32, 50]
@@ -766,7 +766,7 @@ mod tests {
 
         let kernel = FusedKernel::from_chain(chain).unwrap();
 
-        let input = Array::from_shape_vec(IxDyn(&[4]), vec![-2.0, -1.0, 1.0, 2.0]).unwrap();
+        let input = Array::fromshape_vec(IxDyn(&[4]), vec![-2.0, -1.0, 1.0, 2.0]).unwrap();
         let result = kernel.execute(&[&input]).unwrap();
 
         // Expected: x^2 -> ReLU -> *3 -> +1

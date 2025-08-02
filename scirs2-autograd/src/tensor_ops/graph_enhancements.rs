@@ -179,7 +179,8 @@ impl<F: Float> Op<F> for CachedOp {
         let result = match self.operation_name.as_str() {
             "identity" => input.to_owned(),
             "square" => input.mapv(|x| x * x),
-            "sqrt" => input.mapv(|x| x.sqrt(), _ => input.to_owned(),
+            "sqrt" => input.mapv(|x| x.sqrt()),
+            _ => input.to_owned(),
         };
 
         ctx.append_output(result);
@@ -296,7 +297,7 @@ pub fn smart_checkpoint<'g, F: Float>(
 
 /// Create a cached operation
 #[allow(dead_code)]
-pub fn cached_op<'g, F: Float>(_tensor: &Tensor<'g, F>, operation_name: &str) -> Tensor<'g, F> {
+pub fn cached_op<'g, F: Float>(tensor: &Tensor<'g, F>, operation_name: &str) -> Tensor<'g, F> {
     let g = _tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)

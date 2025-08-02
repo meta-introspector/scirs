@@ -62,7 +62,7 @@ impl QuantizedTensor {
             .map(|&q| (q as i32 - self.zero_point) as f32 * self.scale)
             .collect();
 
-        let array = ArrayD::from_shape_vec(IxDyn(&self.metadata.shape), data)
+        let array = ArrayD::fromshape_vec(IxDyn(&self.metadata.shape), data)
             .map_err(|e| IoError::Other(e.to_string()))?;
 
         Ok(MLTensor::new(array, self.metadata.name.clone()))

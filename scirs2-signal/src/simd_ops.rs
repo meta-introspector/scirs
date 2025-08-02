@@ -1,11 +1,12 @@
-//! SIMD-optimized signal processing operations
-//!
-//! This module provides SIMD-accelerated implementations of common signal
-//! processing operations using scirs2-core's unified SIMD abstractions.
+use ndarray::s;
+// SIMD-optimized signal processing operations
+//
+// This module provides SIMD-accelerated implementations of common signal
+// processing operations using scirs2-core's unified SIMD abstractions.
 
 use crate::error::{SignalError, SignalResult};
 use crate::hilbert::hilbert;
-use ndarray::{Array1, ArrayView1, s};
+use ndarray::{ Array1, ArrayView1};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::f64::consts::PI;
@@ -67,7 +68,8 @@ pub fn simd_convolve_f32(_signal: &[f32], kernel: &[f32], mode: &str) -> SignalR
 #[allow(dead_code)]
 fn simd_convolve_direct_f32(
     signal: &ArrayView1<f32>,
-    kernel: &ArrayView1<f32>, _caps: &PlatformCapabilities,
+    kernel: &ArrayView1<f32>,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<Vec<f32>> {
     let n_signal = signal.len();
     let n_kernel = kernel.len();
@@ -104,7 +106,8 @@ fn simd_convolve_direct_f32(
 #[allow(dead_code)]
 fn simd_convolve_overlap_save_f32(
     signal: &ArrayView1<f32>,
-    kernel: &ArrayView1<f32>, _caps: &PlatformCapabilities,
+    kernel: &ArrayView1<f32>,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<Vec<f32>> {
     let n_signal = signal.len();
     let n_kernel = kernel.len();
@@ -822,7 +825,8 @@ pub fn simd_convolve_f64(_signal: &[f64], kernel: &[f64], mode: &str) -> SignalR
 #[allow(dead_code)]
 fn simd_convolve_direct_f64(
     signal: &ArrayView1<f64>,
-    kernel: &ArrayView1<f64>, _caps: &PlatformCapabilities,
+    kernel: &ArrayView1<f64>,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<Vec<f64>> {
     let n_signal = signal.len();
     let n_kernel = kernel.len();
@@ -853,7 +857,8 @@ fn simd_convolve_direct_f64(
 #[allow(dead_code)]
 fn simd_convolve_overlap_save_f64(
     signal: &ArrayView1<f64>,
-    kernel: &ArrayView1<f64>, _caps: &PlatformCapabilities,
+    kernel: &ArrayView1<f64>,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<Vec<f64>> {
     let n_signal = signal.len();
     let n_kernel = kernel.len();
@@ -963,7 +968,7 @@ pub fn simd_autocorrelation_slice_f64(_signal: &[f64], max_lag: usize) -> Signal
             let x2 = signal_view.slice(s![_lag..n]);
 
             // SIMD dot product for correlation
-            autocorr[_lag] = f64::simd_dot(&x1, &x2) / available_len  as f64;
+            autocorr[_lag] = f64::simd_dot(&x1, &x2) / available_len as f64;
         }
     }
 
@@ -984,8 +989,8 @@ pub fn simd_spectral_features_f64(
 
     let signal_view = ArrayView1::from(signal);
     let energy = f64::simd_dot(&signal_view, &signal_view);
-    let mean = signal.iter().sum::<f64>() / signal.len()  as f64;
-    let variance = signal.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / signal.len()  as f64;
+    let mean = signal.iter().sum::<f64>() / signal.len() as f64;
+    let variance = signal.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64;
 
     Ok((energy, variance.sqrt(), mean))
 }
@@ -1133,7 +1138,7 @@ pub fn simd_spectral_flatness_f64(_spectrum: &[f64]) -> SignalResult<f64> {
 
     // Arithmetic mean using SIMD
     let _spectrum_view = ArrayView1::from(&positive_values);
-    let arithmetic_mean = positive_values.iter().sum::<f64>() / positive_values.len()  as f64;
+    let arithmetic_mean = positive_values.iter().sum::<f64>() / positive_values.len() as f64;
 
     // Geometric mean (log domain for numerical stability)
     let log_sum = positive_values.iter().map(|&x| x.ln()).sum::<f64>();
@@ -1192,9 +1197,9 @@ pub fn simd_mel_filterbank_f64(
     let mut mel_energies = vec![0.0; n_mels];
 
     for m in 0..n_mels {
-        let mel_center = mel_min + (mel_max - mel_min) * (m + 1) as f64 / (n_mels + 1)  as f64;
-        let mel_low = mel_min + (mel_max - mel_min) * m as f64 / (n_mels + 1)  as f64;
-        let mel_high = mel_min + (mel_max - mel_min) * (m + 2) as f64 / (n_mels + 1)  as f64;
+        let mel_center = mel_min + (mel_max - mel_min) * (m + 1) as f64 / (n_mels + 1) as f64;
+        let mel_low = mel_min + (mel_max - mel_min) * m as f64 / (n_mels + 1) as f64;
+        let mel_high = mel_min + (mel_max - mel_min) * (m + 2) as f64 / (n_mels + 1) as f64;
 
         let f_center = mel_to_hz(mel_center);
         let f_low = mel_to_hz(mel_low);
@@ -1452,7 +1457,10 @@ where
 ///
 /// * Cepstral coefficients
 #[allow(dead_code)]
-pub fn simd_cepstral_analysis_f64(_log_spectrum: &[f64], n_coeffs: usize) -> SignalResult<Vec<f64>> {
+pub fn simd_cepstral_analysis_f64(
+    _log_spectrum: &[f64],
+    n_coeffs: usize,
+) -> SignalResult<Vec<f64>> {
     if _log_spectrum.is_empty() || n_coeffs == 0 || n_coeffs > _log_spectrum.len() {
         return Err(SignalError::ValueError(
             "Invalid _spectrum or coefficient count".to_string(),

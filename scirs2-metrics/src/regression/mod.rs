@@ -19,12 +19,12 @@ use ndarray::{ArrayBase, Data, Dimension};
 use num_traits::{Float, FromPrimitive, NumCast};
 
 /// Check if two arrays have the same shape
-pub(crate) fn check_same_shape<F, S1, S2, D1, D2>(
+pub(crate) fn check_sameshape<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
 ) -> crate::error::Result<()>
 where
-    F: num_traits: Float,
+    F: num_traits:: Float,
     S1: ndarray::Data<Elem = F>,
     S2: ndarray::Data<Elem = F>,
     D1: ndarray::Dimension,
@@ -54,7 +54,7 @@ pub(crate) fn check_non_negative<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> crate::error::Result<()>
 where
-    F: num_traits: Float + std::fmt::Debug,
+    F: num_traits:: Float + std::fmt::Debug,
     S1: ndarray::Data<Elem = F>,
     S2: ndarray::Data<Elem = F>,
     D1: ndarray::Dimension,
@@ -85,7 +85,7 @@ pub(crate) fn check_positive<F, S1, S2, D1, D2>(
     y_pred: &ArrayBase<S2, D2>,
 ) -> crate::error::Result<()>
 where
-    F: num_traits: Float + std::fmt::Debug,
+    F: num_traits:: Float + std::fmt::Debug,
     S1: ndarray::Data<Elem = F>,
     S2: ndarray::Data<Elem = F>,
     D1: ndarray::Dimension,
@@ -113,7 +113,7 @@ where
 /// Calculate the mean of an array
 pub(crate) fn mean<F, S, D>(_arr: &ArrayBase<S, D>) -> F
 where
-    F: num_traits: Float,
+    F: num_traits:: Float,
     S: ndarray::Data<Elem = F>,
     D: ndarray::Dimension,
 {

@@ -136,9 +136,9 @@ impl<F: Float + Debug> Activation<F> for Softmax {
         let weighted_sum = (grad_output * _output).sum_axis(Axis(self.axis));
 
         // Broadcast the weighted sum back to original shape
-        let mut sum_shape = _output.shape().to_vec();
-        sum_shape[self.axis] = 1;
-        let weighted_sum_reshaped = weighted_sum.into_shape_with_order(sum_shape)?;
+        let mut sumshape = _output.shape().to_vec();
+        sumshape[self.axis] = 1;
+        let weighted_sum_reshaped = weighted_sum.into_shape_with_order(sumshape)?;
         let weighted_sum_broadcast = weighted_sum_reshaped.broadcast(_output.shape()).unwrap();
 
         // Compute gradient: softmax * (grad_output - weighted_sum)

@@ -38,13 +38,13 @@ type AdamUpdateReturn<F, D> = (Array<F, D>, Array<F, D>, Array<F, D>);
 /// let input_size = 3;
 /// let hidden_size = 4;
 /// // Initialize inputs and parameters
-/// let x = Array::from_shape_fn((batch_size, input_size), |_| 0.1);
-/// let h_prev = Array::from_shape_fn((batch_size, hidden_size), |_| 0.0);
-/// let c_prev = Array::from_shape_fn((batch_size, hidden_size), |_| 0.0);
-/// let w_ih = Array::from_shape_fn((4 * hidden_size, input_size), |_| 0.1);
-/// let w_hh = Array::from_shape_fn((4 * hidden_size, hidden_size), |_| 0.1);
-/// let b_ih = Array::from_shape_fn(4 * hidden_size, |_| 0.1);
-/// let b_hh = Array::from_shape_fn(4 * hidden_size, |_| 0.1);
+/// let x = Array::fromshape_fn((batch_size, input_size), |_| 0.1);
+/// let h_prev = Array::fromshape_fn((batch_size, hidden_size), |_| 0.0);
+/// let c_prev = Array::fromshape_fn((batch_size, hidden_size), |_| 0.0);
+/// let w_ih = Array::fromshape_fn((4 * hidden_size, input_size), |_| 0.1);
+/// let w_hh = Array::fromshape_fn((4 * hidden_size, hidden_size), |_| 0.1);
+/// let b_ih = Array::fromshape_fn(4 * hidden_size, |_| 0.1);
+/// let b_hh = Array::fromshape_fn(4 * hidden_size, |_| 0.1);
 /// // Forward pass
 /// let (h_next, c_next_) = lstm_cell(
 ///     &x.view(), &h_prev.view(), &c_prev.view(),
@@ -154,7 +154,7 @@ fn sigmoid<F: Float>(x: F) -> F {
 /// use rand::prelude::*;
 /// use scirs2_neural::linalg::dropout;
 /// // Create input tensor
-/// let x = Array::from_shape_fn((3, 4), |_| 1.0);
+/// let x = Array::fromshape_fn((3, 4), |_| 1.0);
 /// // Apply dropout in training mode
 /// let mut rng = StdRng::seed_from_u64(42);
 /// let (y_train, mask) = dropout(&x.view(), 0.5, &mut rng, true).unwrap();
@@ -205,7 +205,7 @@ pub fn dropout<F, D, R>(
 /// let dropout_rate = 0.5;
 /// let (y, mask) = dropout(&x.view(), dropout_rate, &mut rng, true).unwrap();
 /// // Gradient of loss with respect to dropout output
-/// let dout = Array::from_shape_fn(x.raw_dim(), |_| 0.1);
+/// let dout = Array::fromshape_fn(x.raw_dim(), |_| 0.1);
 /// // Backward pass
 /// let dx = dropout_backward(&dout.view(), &mask.view(), dropout_rate).unwrap();
 /// assert_eq!(dx.shape(), x.shape());

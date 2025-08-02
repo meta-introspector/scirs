@@ -881,7 +881,7 @@ where
     Err(GraphError::NoPath {
         src_node: format!("{source:?}"),
         target: format!("{target:?}"),
-        _nodes: 0_edges: 0,
+        _nodes: 0, edges: 0,
     })
 }
 

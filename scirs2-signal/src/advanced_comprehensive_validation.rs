@@ -1,21 +1,19 @@
-//! Advanced Mode Comprehensive Validation Suite
-//!
-//! This module combines all enhanced validation capabilities for comprehensive
-//! testing of scirs2-signal implementations in Advanced mode.
+// Advanced Mode Comprehensive Validation Suite
+//
+// This module combines all enhanced validation capabilities for comprehensive
+// testing of scirs2-signal implementations in Advanced mode.
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle_edge_case__validation::{EdgeCaseValidationResult, run_edge_case_validation};
-use crate::parametric_advanced__enhanced::comprehensive_parametric_validation;
-use crate::wpt_super__validation::{AdvancedWptValidationResult, run_advanced_wpt_validation};
+use crate::lombscargle_edge_case_validation::{run_edge_case_validation, EdgeCaseValidationResult};
+use crate::parametric_advanced_enhanced::comprehensive_parametric_validation;
+use crate::wpt_super_validation::{run_advanced_wpt_validation, AdvancedWptValidationResult};
 use ndarray::Array1;
 use std::time::Instant;
 
 #[allow(unused_imports)]
-use crate::multitaper::validation::{
-    EnhancedMultitaperValidationResult,
-};
-use crate::scipy_validation__comprehensive::{
+use crate::multitaper::validation::EnhancedMultitaperValidationResult;
+use crate::scipy_validation_comprehensive::{
     run_comprehensive_scipy_validation, ComprehensiveSciPyValidationResult,
 };
 /// Comprehensive validation result for Advanced mode

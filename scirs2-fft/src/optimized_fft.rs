@@ -263,7 +263,8 @@ impl OptimizedFFT {
             "radix2" => self.radix2_fft(&mut data),
             "bluestein" => self.bluestein_fft(&mut data),
             "prime_factor" => self.prime_factor_fft(&mut data),
-            "default" => self.default_fft(&data, _ => self.default_fft(&data),
+            "default" => self.default_fft(&data),
+            _ => self.default_fft(&data),
         }?;
 
         // Update statistics if enabled
@@ -323,7 +324,8 @@ impl OptimizedFFT {
         let result = match algorithm.as_str() {
             "radix2" => self.radix2_ifft(&data),
             "bluestein" => self.bluestein_ifft(&data),
-            "prime_factor" => self.prime_factor_ifft(&data, _ => ifft(&data, Some(size)),
+            "prime_factor" => self.prime_factor_ifft(&data),
+            _ => ifft(&data, Some(size)),
         }?;
 
         // Record metrics if enabled

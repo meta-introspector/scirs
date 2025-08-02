@@ -26,7 +26,7 @@ where
 {
     let g = a.as_ref().graph();
     Tensor::builder(g)
-        .set_shape(&infer_bin_op_shape(g, shape(a), shape(b)))
+        .setshape(&infer_bin_opshape(g, shape(a), shape(b)))
         .append_input(a.as_ref(), false)
         .append_input(b.as_ref(), false)
         .build(binary_ops::AddOp)
@@ -44,7 +44,7 @@ where
 {
     let g = a.as_ref().graph();
     Tensor::builder(g)
-        .set_shape(&infer_bin_op_shape(g, shape(a), shape(b)))
+        .setshape(&infer_bin_opshape(g, shape(a), shape(b)))
         .append_input(a.as_ref(), false)
         .append_input(b.as_ref(), false)
         .build(binary_ops::SubOp)
@@ -62,7 +62,7 @@ where
 {
     let g = a.as_ref().graph();
     Tensor::builder(g)
-        .set_shape(&infer_bin_op_shape(g, shape(a), shape(b)))
+        .setshape(&infer_bin_opshape(g, shape(a), shape(b)))
         .append_input(a.as_ref(), false)
         .append_input(b.as_ref(), false)
         .build(binary_ops::MulOp)
@@ -80,7 +80,7 @@ where
 {
     let g = a.as_ref().graph();
     Tensor::builder(g)
-        .set_shape(&infer_bin_op_shape(g, shape(a), shape(b)))
+        .setshape(&infer_bin_opshape(g, shape(a), shape(b)))
         .append_input(a.as_ref(), false)
         .append_input(b.as_ref(), false)
         .build(binary_ops::DivOp)
@@ -97,7 +97,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Sqrt)
 }
 
@@ -111,7 +111,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Pow { a })
 }
 
@@ -135,7 +135,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Abs)
 }
 
@@ -149,7 +149,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::NegOp)
 }
 
@@ -163,7 +163,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Ln)
 }
 
@@ -177,7 +177,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Log2)
 }
 
@@ -191,7 +191,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Log10)
 }
 
@@ -205,7 +205,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Exp)
 }
 
@@ -219,7 +219,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Exp2)
 }
 
@@ -233,7 +233,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Exp10)
 }
 
@@ -247,7 +247,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Sin)
 }
 
@@ -261,7 +261,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Cos)
 }
 
@@ -275,7 +275,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Tan)
 }
 
@@ -289,7 +289,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Asin)
 }
 
@@ -303,7 +303,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Acos)
 }
 
@@ -317,7 +317,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Atan)
 }
 
@@ -331,7 +331,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Sinh)
 }
 
@@ -345,7 +345,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Cosh)
 }
 
@@ -359,7 +359,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Tanh)
 }
 
@@ -373,7 +373,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Asinh)
 }
 
@@ -387,7 +387,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Acosh)
 }
 
@@ -401,7 +401,7 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Atanh)
 }
 
@@ -680,7 +680,7 @@ where
     let a = a.as_ref();
     let g = a.graph();
     Tensor::builder(g)
-        .set_shape(&shape(a))
+        .setshape(&shape(a))
         .append_input(a.as_ref(), false)
         .build(math_ops::Floor)
 }
@@ -710,7 +710,7 @@ where
     let a = a.as_ref();
     let g = a.graph();
     Tensor::builder(g)
-        .set_shape(&shape(a))
+        .setshape(&shape(a))
         .append_input(a.as_ref(), false)
         .build(math_ops::Ceil)
 }
@@ -762,13 +762,13 @@ where
     let g = x.graph();
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
-        .set_shape(&shape(x))
+        .setshape(&shape(x))
         .build(math_ops::Sign)
 }
 
 #[inline]
 #[allow(dead_code)]
-fn infer_bin_op_shape<'graph, A, B, F: Float>(
+fn infer_bin_opshape<'graph, A, B, F: Float>(
     g: &'graph Graph<F>,
     shape_a: A,
     shape_b: B,

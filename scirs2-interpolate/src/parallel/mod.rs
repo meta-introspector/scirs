@@ -26,7 +26,7 @@
 //! use scirs2__interpolate::local::mls::{WeightFunction, PolynomialBasis};
 //!
 //! // Create sample data
-//! let points = Array2::from_shape_vec((5, 2), vec![
+//! let points = Array2::fromshape_vec((5, 2), vec![
 //!     0.0, 0.0,
 //!     1.0, 0.0,
 //!     0.0, 1.0,
@@ -45,7 +45,7 @@
 //! ).unwrap();
 //!
 //! // Evaluate at multiple points in parallel
-//! let query_points = Array2::from_shape_vec((2, 2), vec![
+//! let query_points = Array2::fromshape_vec((2, 2), vec![
 //!     0.25, 0.25,
 //!     0.75, 0.75,
 //! ]).unwrap();

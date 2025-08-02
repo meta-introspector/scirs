@@ -617,7 +617,8 @@ impl BenchmarkRunner {
     /// Benchmark an operation with different strategies
     #[allow(dead_code)]
     pub fn benchmark_operation<F, T>(
-        &self, name: &str,
+        &self,
+        name: &str,
         mut operation: F,
     ) -> CoreResult<Vec<BenchmarkMeasurement>>
     where

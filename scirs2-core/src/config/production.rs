@@ -482,7 +482,12 @@ impl ProductionConfig {
     }
 
     /// Register a configuration entry with validation
-    pub fn register(&mut self, key: String, default_value: Option<String>, validator: Option<String>, reloadable: bool,
+    pub fn register(
+        &mut self,
+        key: String,
+        default_value: Option<String>,
+        validator: Option<String>,
+        reloadable: bool,
         description: Option<String>,
     ) -> CoreResult<()> {
         let mut entries = self.entries.write().map_err(|_| {
@@ -530,7 +535,11 @@ impl ProductionConfig {
     }
 
     /// Set feature flag
-    pub fn set_feature_flag(&mut self, name: String, enabled: bool, rollout_percentage: f64,
+    pub fn set_feature_flag(
+        &mut self,
+        name: String,
+        enabled: bool,
+        rollout_percentage: f64,
     ) -> CoreResult<()> {
         let mut flags = self.feature_flags.write().map_err(|_| {
             CoreError::ConfigError(ErrorContext::new("Failed to acquire feature flags lock"))

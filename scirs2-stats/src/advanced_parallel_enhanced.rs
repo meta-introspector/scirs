@@ -516,7 +516,7 @@ impl AdvancedParallelProcessor {
     // Placeholder execution methods
 
     fn execute_parallel_operations<F, D>(
-        &self, &ArrayBase<D, Ix1>, _operations: &[StatisticalOperation], _strategy: &ExecutionStrategy_memory_layout: &MemoryLayout_load, _config: &LoadBalancingConfig,
+        &self, &ArrayBase<D, Ix1>, _operations: &[StatisticalOperation], _strategy: &ExecutionStrategy_memory, layout: &MemoryLayout_load, _config: &LoadBalancingConfig,
     ) -> StatsResult<AdvancedParallelStatisticsResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy,
@@ -533,7 +533,7 @@ impl AdvancedParallelProcessor {
     }
 
     fn execute_parallel_matrix_operations<F>(
-        &self, _metrics: &[Array2<F>], _operation: &MatrixOperationType_strategy: &MatrixExecutionStrategy_numa, _layout: &NumaMatrixLayout,
+        &self, _metrics: &[Array2<F>], _operation: &MatrixOperationType, strategy: &MatrixExecutionStrategy_numa, _layout: &NumaMatrixLayout,
     ) -> StatsResult<AdvancedParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy
@@ -565,7 +565,7 @@ impl AdvancedParallelProcessor {
     }
 
     fn execute_batch_processing<F, D>(
-        &self, _metrics: &[ArrayBase<D, Ix1>], _operations: &[BatchOperation], _strategy: &BatchProcessingStrategy_numa_schedule: &NumaBatchSchedule,
+        &self, _metrics: &[ArrayBase<D, Ix1>], _operations: &[BatchOperation], _strategy: &BatchProcessingStrategy_numa, schedule: &NumaBatchSchedule,
     ) -> StatsResult<Vec<BatchProcessingResult<F>>>
     where
         F: Float + NumCast + Send + Sync + Copy,
@@ -584,21 +584,21 @@ impl AdvancedParallelProcessor {
     // Performance update methods
 
     fn update_performance_models(
-        &self, &DataCharacteristics, _strategy: &ExecutionStrategy_execution_time: Duration, _metrics: &PerformanceMetrics,
+        &self, &DataCharacteristics, _strategy: &ExecutionStrategy_execution, time: Duration, _metrics: &PerformanceMetrics,
     ) -> StatsResult<()> {
         // Placeholder for ML model updates
         Ok(())
     }
 
     fn update_matrix_performance_models(
-        &self, &MatrixCharacteristics, _strategy: &MatrixExecutionStrategy_execution_time: Duration, _metrics: &MatrixPerformanceMetrics,
+        &self, &MatrixCharacteristics, _strategy: &MatrixExecutionStrategy_execution, time: Duration, _metrics: &MatrixPerformanceMetrics,
     ) -> StatsResult<()> {
         // Placeholder for matrix ML model updates
         Ok(())
     }
 
     fn update_batch_performance_models(
-        &self, &BatchCharacteristics, _strategy: &BatchProcessingStrategy_execution_time: Duration, _results: &[BatchProcessingResult<f64>],
+        &self, &BatchCharacteristics, _strategy: &BatchProcessingStrategy_execution, time: Duration, _results: &[BatchProcessingResult<f64>],
     ) -> StatsResult<()> {
         // Placeholder for batch ML model updates
         Ok(())

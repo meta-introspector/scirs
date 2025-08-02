@@ -671,7 +671,8 @@ fn computer_graphics_applications() -> Result<(), Box<dyn std::error::Error>> {
             1 => "Horizon Front",
             2 => "Horizon Side ",
             3 => "Horizon Back ",
-            4 => "Low Angle    "_ => "Unknown      ",
+            4 => "Low Angle    ",
+            _ => "Unknown      ",
         };
 
         println!(

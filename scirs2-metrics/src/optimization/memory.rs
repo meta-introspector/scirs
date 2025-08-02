@@ -244,7 +244,7 @@ where
     pub fn new() -> Self {
         IncrementalMetrics {
             state: S::default(),
-            count: 0_marker: PhantomData,
+            count: 0, marker: PhantomData,
         }
     }
 
@@ -252,7 +252,7 @@ where
     pub fn with_state(_state: S) -> Self {
         IncrementalMetrics {
             _state,
-            count: 0_marker: PhantomData,
+            count: 0, marker: PhantomData,
         }
     }
 

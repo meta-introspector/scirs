@@ -12,17 +12,17 @@ use std::collections::HashMap;
 
 // Helper functions for creating symbolic expressions
 #[allow(dead_code)]
-fn var<F: IntegrateFloat>(_name: &str) -> SymbolicExpression<F> {
+fn var<F: IntegrateFloat>(name: &str) -> SymbolicExpression<F> {
     SymbolicExpression::var(_name)
 }
 
 #[allow(dead_code)]
-fn indexed_var<F: IntegrateFloat>(_name: &str, index: usize) -> SymbolicExpression<F> {
+fn indexed_var<F: IntegrateFloat>(name: &str, index: usize) -> SymbolicExpression<F> {
     SymbolicExpression::indexed_var(_name, index)
 }
 
 #[allow(dead_code)]
-fn constant<F: IntegrateFloat>(_value: F) -> SymbolicExpression<F> {
+fn constant<F: IntegrateFloat>(value: F) -> SymbolicExpression<F> {
     SymbolicExpression::constant(_value)
 }
 
@@ -189,7 +189,7 @@ impl<F: IntegrateFloat> Default for SymbolicODEBuilder<F> {
 
 /// Example: Create a symbolic Jacobian for the Van der Pol oscillator
 #[allow(dead_code)]
-pub fn example_van_der_pol<F: IntegrateFloat>(_mu: F) -> IntegrateResult<SymbolicJacobian<F>> {
+pub fn example_van_der_pol<F: IntegrateFloat>(mu: F) -> IntegrateResult<SymbolicJacobian<F>> {
     use SymbolicExpression::*;
 
     // Variables: y[0] = x, y[1] = x'

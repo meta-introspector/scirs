@@ -110,17 +110,17 @@ where
     let free_axes_b: Vec<usize> = (0.._b.ndim()).filter(|&ax| !axes_b.contains(&ax)).collect();
 
     // Determine the shape of the result tensor
-    let mut result_shape = Vec::with_capacity(free_axes_a.len() + free_axes_b.len());
+    let mut resultshape = Vec::with_capacity(free_axes_a.len() + free_axes_b.len());
     let mut free_dims_a = Vec::with_capacity(free_axes_a.len());
     let mut free_dims_b = Vec::with_capacity(free_axes_b.len());
 
     for &ax in &free_axes_a {
-        result_shape.push(_a.shape()[ax]);
+        resultshape.push(_a.shape()[ax]);
         free_dims_a.push(_a.shape()[ax]);
     }
 
     for &ax in &free_axes_b {
-        result_shape.push(_b.shape()[ax]);
+        resultshape.push(_b.shape()[ax]);
         free_dims_b.push(_b.shape()[ax]);
     }
 
@@ -129,7 +129,7 @@ where
     let b_dyn = _b.view().into_dyn();
 
     // Create the result tensor
-    let result = ArrayD::zeros(result_shape.clone());
+    let result = ArrayD::zeros(resultshape.clone());
     let result = Arc::new(Mutex::new(result));
 
     // Generate all free indices combinations
@@ -315,25 +315,25 @@ where
     }
 
     // Determine output shape
-    let mut out_shape = Vec::with_capacity(batch_dims + 2);
+    let mut outshape = Vec::with_capacity(batch_dims + 2);
     for i in 0..batch_dims {
-        out_shape.push(a.shape()[i]);
+        outshape.push(a.shape()[i]);
     }
-    out_shape.push(a.shape()[batch_dims]); // M
-    out_shape.push(b.shape()[batch_dims + 1]); // N
+    outshape.push(a.shape()[batch_dims]); // M
+    outshape.push(b.shape()[batch_dims + 1]); // N
 
     // Convert to dynamic array views
     let a_dyn = a.view().into_dyn();
     let b_dyn = b.view().into_dyn();
 
     // Flatten batch dimensions
-    let batch_size: usize = out_shape.iter().take(batch_dims).product();
+    let batch_size: usize = outshape.iter().take(batch_dims).product();
     let m = a.shape()[batch_dims]; // rows in A
     let k = a.shape()[batch_dims + 1]; // cols in A, rows in B
     let n = b.shape()[batch_dims + 1]; // cols in B
 
     // Create result array
-    let result = ArrayD::zeros(out_shape.clone());
+    let result = ArrayD::zeros(outshape.clone());
     let result = Arc::new(Mutex::new(result));
 
     // Generate all batch indices
@@ -360,7 +360,7 @@ where
     }
 
     generate_batch_indices(
-        &out_shape,
+        &outshape,
         Vec::new(),
         0,
         batch_dims,
@@ -492,8 +492,8 @@ where
     }
 
     // Determine output shape
-    let mut out_shape = tensor.shape().to_vec();
-    out_shape[mode] = matrix.shape()[0];
+    let mut outshape = tensor.shape().to_vec();
+    outshape[mode] = matrix.shape()[0];
 
     // Convert to dynamic array views
     let tensor_dyn = tensor.view().into_dyn();
@@ -507,7 +507,7 @@ where
     };
 
     // Create result array with mutex for thread-safe updates
-    let result = ArrayD::zeros(out_shape.clone());
+    let result = ArrayD::zeros(outshape.clone());
     let result = Arc::new(Mutex::new(result));
 
     // Generate all indices for tensor except the mode dimension
@@ -728,13 +728,13 @@ where
     }
 
     // Determine output shape
-    let mut output_shape = Vec::with_capacity(output_indices.len());
+    let mut outputshape = Vec::with_capacity(output_indices.len());
     for &idx in &output_indices {
-        output_shape.push(index_to_dim[&idx]);
+        outputshape.push(index_to_dim[&idx]);
     }
 
     // Create the output tensor
-    let result = Arc::new(Mutex::new(ArrayD::zeros(output_shape.clone())));
+    let result = Arc::new(Mutex::new(ArrayD::zeros(outputshape.clone())));
 
     // Collect contracted indices (those not in output_indices)
     let mut contracted_indices: Vec<char> = Vec::new();
@@ -748,7 +748,7 @@ where
 
     // Generate all output index combinations
     let mut all_output_indices = Vec::new();
-    let total_output_combinations: usize = output_shape.iter().product();
+    let total_output_combinations: usize = outputshape.iter().product();
     all_output_indices.reserve(total_output_combinations);
 
     fn generate_output_indices(
@@ -770,7 +770,7 @@ where
         }
     }
 
-    generate_output_indices(&output_shape, Vec::new(), 0, &mut all_output_indices);
+    generate_output_indices(&outputshape, Vec::new(), 0, &mut all_output_indices);
 
     // Process each output combination in parallel
     use scirs2_core::parallel_ops::*;
@@ -1006,11 +1006,11 @@ where
     }
 
     // Populate the unfolded _tensor (vectorized for better performance)
-    let tensor_shape = _tensor.shape().to_vec();
+    let tensorshape = _tensor.shape().to_vec();
 
     // Generate all indices
     let mut all_indices = Vec::new();
-    let total_elements: usize = tensor_shape.iter().product();
+    let total_elements: usize = tensorshape.iter().product();
     all_indices.reserve(total_elements);
 
     fn generate_tensor_indices(
@@ -1032,7 +1032,7 @@ where
         }
     }
 
-    generate_tensor_indices(&tensor_shape, Vec::new(), 0, &mut all_indices);
+    generate_tensor_indices(&tensorshape, Vec::new(), 0, &mut all_indices);
 
     // Process all indices in parallel
     use scirs2_core::parallel_ops::*;
@@ -1041,7 +1041,7 @@ where
         .par_iter()
         .map(|idx| {
             let mode_idx = idx[mode];
-            let col_idx = calc_col_idx(idx, &tensor_shape, mode);
+            let col_idx = calc_col_idx(idx, &tensorshape, mode);
             let val = _tensor[idx.as_slice()];
             (mode_idx, col_idx, val)
         })

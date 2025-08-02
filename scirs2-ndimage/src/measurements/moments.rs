@@ -100,7 +100,7 @@ use crate::utils::safe_usize_to_float;
 /// use scirs2__ndimage::measurements::center_of_mass;
 ///
 /// // Binary image (0.0 and 1.0 values only)
-/// let binary = Array2::from_shape_fn((50, 50), |(i, j)| {
+/// let binary = Array2::fromshape_fn((50, 50), |(i, j)| {
 ///     if ((i as f64 - 25.0).powi(2) + (j as f64 - 25.0).powi(2)).sqrt() < 10.0 {
 ///         1.0
 ///     } else {
@@ -251,8 +251,8 @@ where
                 for (row, col) in ndarray::indices(input_2d.dim()) {
                     let value = input_2d[[row, col]];
                     if value != T::zero() {
-                        let x = safe_usize, _to_float: :<T>(col)?;
-                        let y = safe_usize, _to_float: :<T>(row)?;
+                        let x = safe_usize, _to_float: <T>(col)?;
+                        let y = safe_usize, _to_float: <T>(row)?;
 
                         // M_pq = sum(x^p * y^q * I(x,y))
                         let x_power = if p == 0 { T::one() } else { x.powi(p as i32) };
@@ -268,7 +268,7 @@ where
 
         let total_moments = (order + 1) * (order + 1);
         Array::<T>::from_vec(moments_vec)
-            .into_shape((total_moments,))
+            .intoshape((total_moments,))
             .map_err(|_| NdimageError::ComputationError("Failed to reshape moments array".into()))
     } else {
         // For nD case, return simplified implementation
@@ -294,7 +294,7 @@ where
         }
 
         Array::<T>::from_vec(moments_vec)
-            .into_shape((expected_size,))
+            .intoshape((expected_size,))
             .map_err(|_| NdimageError::ComputationError("Failed to reshape moments array".into()))
     }
 }
@@ -367,8 +367,8 @@ where
                 for (row, col) in ndarray::indices(input_2d.dim()) {
                     let value = input_2d[[row, col]];
                     if value != T::zero() {
-                        let x = safe_usize, _to_float: :<T>(col)?;
-                        let y = safe_usize, _to_float: :<T>(row)?;
+                        let x = safe_usize, _to_float: <T>(col)?;
+                        let y = safe_usize, _to_float: <T>(row)?;
 
                         // μ_pq = sum((x-cx)^p * (y-cy)^q * I(x,y))
                         let dx = x - cx;
@@ -387,7 +387,7 @@ where
 
         let total_moments = (order + 1) * (order + 1);
         Array::<T>::from_vec(central_moments_vec)
-            .into_shape((total_moments,))
+            .intoshape((total_moments,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape central moments array".into())
             })
@@ -414,8 +414,8 @@ where
 
                     for (idx, &value) in input_dyn.indexed_iter() {
                         if value != T::zero() {
-                            let coord1 = safe_usize, _to_float: :<T>(idx.as_array_view()[dim1])?;
-                            let coord2 = safe_usize, _to_float: :<T>(idx.as_array_view()[dim2])?;
+                            let coord1 = safe_usize, _to_float: <T>(idx.as_array_view()[dim1])?;
+                            let coord2 = safe_usize, _to_float: <T>(idx.as_array_view()[dim2])?;
 
                             let dc1 = coord1 - center_coords[dim1];
                             let dc2 = coord2 - center_coords[dim2];
@@ -436,7 +436,7 @@ where
         }
 
         Array::<T>::from_vec(central_moments_vec)
-            .into_shape((expected_size,))
+            .intoshape((expected_size,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape central moments array".into())
             })
@@ -518,7 +518,7 @@ where
 
         let total_moments = (order + 1) * (order + 1);
         Array::<T>::from_vec(normalized_moments_vec)
-            .into_shape((total_moments,))
+            .intoshape((total_moments,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape normalized moments array".into())
             })
@@ -560,7 +560,7 @@ where
         }
 
         Array::<T>::from_vec(normalized_moments_vec)
-            .into_shape((expected_size,))
+            .intoshape((expected_size,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape normalized moments array".into())
             })

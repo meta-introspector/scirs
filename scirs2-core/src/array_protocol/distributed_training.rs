@@ -95,6 +95,7 @@ impl Default for DistributedTrainingConfig {
 }
 
 /// A node in a distributed training cluster.
+#[allow(dead_code)]
 pub struct DistributedNode {
     /// Configuration for the node.
     config: DistributedTrainingConfig,
@@ -368,6 +369,7 @@ impl DistributedCommunication for MockDistributedCommunication {
 }
 
 /// Distributed Dataset that partitions data across workers.
+#[allow(dead_code)]
 pub struct DistributedDataset {
     /// The underlying dataset.
     dataset: Box<dyn Dataset>,
@@ -426,16 +428,17 @@ impl Dataset for DistributedDataset {
         self.dataset.get(global_index)
     }
 
-    fn input_shape(&self) -> Vec<usize> {
-        self.dataset.input_shape()
+    fn inputshape(&self) -> Vec<usize> {
+        self.dataset.inputshape()
     }
 
-    fn output_shape(&self) -> Vec<usize> {
-        self.dataset.output_shape()
+    fn outputshape(&self) -> Vec<usize> {
+        self.dataset.outputshape()
     }
 }
 
 /// Distributed Trainer for handling distributed training.
+#[allow(dead_code)]
 pub struct DistributedTrainer {
     /// The underlying trainer.
     trainer: Trainer,
@@ -460,12 +463,17 @@ impl DistributedTrainer {
         Self {
             trainer,
             config,
-            channel: CommunicationChannel::new(channel), batch_counter: 0,
+            channel: CommunicationChannel::new(channel),
+            batch_counter: 0,
         }
     }
 
     /// Train the model in a distributed setting.
-    pub fn train(&mut self, train_loader: &mut DataLoader, num_epochs: usize, val_loader: Option<&mut DataLoader>,
+    pub fn train(
+        &mut self,
+        train_loader: &mut DataLoader,
+        num_epochs: usize,
+        val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // Synchronize initial model parameters
         self.synchronize_parameters()?;
@@ -509,7 +517,11 @@ impl DistributedTrainer {
     }
 
     /// Train the model using data parallelism.
-    fn train_data_parallel(&mut self, train_loader: &mut DataLoader, num_epochs: usize, val_loader: Option<&mut DataLoader>,
+    fn train_data_parallel(
+        &mut self,
+        train_loader: &mut DataLoader,
+        num_epochs: usize,
+        val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // Create a callback for parameter synchronization
         let _sync_callback = ParameterSyncCallback::new(
@@ -527,7 +539,11 @@ impl DistributedTrainer {
     }
 
     /// Train the model using model parallelism.
-    fn train_model_parallel(&mut self, _train_loader: &mut DataLoader, _num_epochs: usize, _val_loader: Option<&mut DataLoader>,
+    fn train_model_parallel(
+        &mut self,
+        _train_loader: &mut DataLoader,
+        _num_epochs: usize,
+        _val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would implement a custom training loop
@@ -537,7 +553,11 @@ impl DistributedTrainer {
     }
 
     /// Train the model using hybrid parallelism.
-    fn train_hybrid_parallel(&mut self, _train_loader: &mut DataLoader, _num_epochs: usize, _val_loader: Option<&mut DataLoader>,
+    fn train_hybrid_parallel(
+        &mut self,
+        _train_loader: &mut DataLoader,
+        _num_epochs: usize,
+        _val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would implement a custom training loop
@@ -547,7 +567,11 @@ impl DistributedTrainer {
     }
 
     /// Train the model using pipeline parallelism.
-    fn train_pipeline_parallel(&mut self, _train_loader: &mut DataLoader, _num_epochs: usize, _val_loader: Option<&mut DataLoader>,
+    fn train_pipeline_parallel(
+        &mut self,
+        _train_loader: &mut DataLoader,
+        _num_epochs: usize,
+        _val_loader: Option<&mut DataLoader>,
     ) -> CoreResult<()> {
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would implement a custom training loop
@@ -691,8 +715,8 @@ mod tests {
 
         // Check properties
         assert_eq!(dist_dataset.len(), 5);
-        assert_eq!(dist_dataset.input_shape(), vec![5]);
-        assert_eq!(dist_dataset.output_shape(), vec![2]);
+        assert_eq!(dist_dataset.inputshape(), vec![5]);
+        assert_eq!(dist_dataset.outputshape(), vec![2]);
 
         // Get a sample
         let (input, target) = dist_dataset.get(0).unwrap();

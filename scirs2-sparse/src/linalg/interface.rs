@@ -494,13 +494,13 @@ pub struct FunctionOperator<F> {
 impl<F: Float + 'static> FunctionOperator<F> {
     /// Create a new function-based operator
     #[allow(dead_code)]
-    pub fn new<MV, RMV>(_shape: (usize, usize), matvec_fn: MV, rmatvec_fn: Option<RMV>) -> Self
+    pub fn new<MV, RMV>(shape: (usize, usize), matvec_fn: MV, rmatvec_fn: Option<RMV>) -> Self
     where
         MV: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
         RMV: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
     {
         Self {
-            shape: _shape,
+            shape: shape,
             matvec_fn: Box::new(matvec_fn),
             rmatvec_fn: rmatvec_fn
                 .map(|f| Box::new(f) as Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>),
@@ -509,11 +509,11 @@ impl<F: Float + 'static> FunctionOperator<F> {
 
     /// Create a matrix-free operator from a function
     #[allow(dead_code)]
-    pub fn from_function<FMv>(_shape: (usize, usize), matvec_fn: FMv) -> Self
+    pub fn from_function<FMv>(shape: (usize, usize), matvec_fn: FMv) -> Self
     where
         FMv: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
     {
-        Self::new(_shape, matvec_fn, None::<fn(&[F]) -> SparseResult<Vec<F>>>)
+        Self::new(shape, matvec_fn, None::<fn(&[F]) -> SparseResult<Vec<F>>>)
     }
 }
 
@@ -770,7 +770,7 @@ impl<F: Float + NumAssign> LinearOperator<F> for ScaledOperator<F> {
 /// Chain/composition of multiple operators: A_n * A_(n-1) * ... * A_1
 pub struct ChainOperator<F> {
     operators: Vec<Box<dyn LinearOperator<F>>>,
-    total_shape: (usize, usize),
+    totalshape: (usize, usize),
 }
 
 impl<F: Float + NumAssign> ChainOperator<F> {
@@ -799,18 +799,18 @@ impl<F: Float + NumAssign> ChainOperator<F> {
 
         let (first_rows, _) = _operators[0].shape();
         let (_, last_cols) = _operators.last().unwrap().shape();
-        let total_shape = (first_rows, last_cols);
+        let totalshape = (first_rows, last_cols);
 
         Ok(Self {
             operators: _operators,
-            total_shape,
+            totalshape,
         })
     }
 }
 
 impl<F: Float + NumAssign> LinearOperator<F> for ChainOperator<F> {
     fn shape(&self) -> (usize, usize) {
-        self.total_shape
+        self.totalshape
     }
 
     fn matvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
@@ -1239,7 +1239,7 @@ mod tests {
         }));
 
         // Attempting to create adjoint should fail
-        assert!(AdjointOperator::new(func_op).is_err());
+        assert!(AdjointOperator::new(funcop).is_err());
     }
 
     #[test]

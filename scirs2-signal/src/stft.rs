@@ -1,23 +1,24 @@
-//! Short-Time Fourier Transform (STFT) implementation.
-//!
-//! This module provides a parametrized discrete Short-time Fourier transform (STFT)
-//! and its inverse (ISTFT), similar to SciPy's ShortTimeFFT class.
-//!
-//! Features:
-//! - Memory-efficient processing for large signals
-//! - Streaming STFT with configurable chunk sizes
-//! - Zero-copy processing where possible
-//! - Parallel processing support
+use ndarray::s;
+// Short-Time Fourier Transform (STFT) implementation.
+//
+// This module provides a parametrized discrete Short-time Fourier transform (STFT)
+// and its inverse (ISTFT), similar to SciPy's ShortTimeFFT class.
+//
+// Features:
+// - Memory-efficient processing for large signals
+// - Streaming STFT with configurable chunk sizes
+// - Zero-copy processing where possible
+// - Parallel processing support
 
-use crate::window;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
-use num__complex::Complex64;
+use crate::lti::design::tf;
+use crate::window;
+use ndarray::{ Array1, Array2};
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use std::f64::consts::PI;
 use std::fmt::Debug;
-use crate::lti::design::tf;
 
 /// Configuration options for STFT
 #[derive(Debug, Clone, Default)]
@@ -102,8 +103,8 @@ impl std::str::FromStr for ScalingMode {
 /// # Example
 ///
 /// ```rust
-/// use scirs2__signal::stft::{ShortTimeFft, StftConfig};
-/// use scirs2__signal::window;
+/// use scirs2_signal::stft::{ShortTimeFft, StftConfig};
+/// use scirs2_signal::window;
 /// use ndarray::Array1;
 ///
 ///
@@ -196,7 +197,12 @@ impl ShortTimeFft {
     /// # Returns
     ///
     /// * Result containing a new ShortTimeFft instance
-    pub fn new(_win: &[f64], hop: usize, fs: f64, config: Option<StftConfig>) -> SignalResult<Self> {
+    pub fn new(
+        _win: &[f64],
+        hop: usize,
+        fs: f64,
+        config: Option<StftConfig>,
+    ) -> SignalResult<Self> {
         // Use default config if none provided
         let config = config.unwrap_or_default();
         // Validate input parameters

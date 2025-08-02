@@ -1,50 +1,51 @@
-//! Wiener filtering module
-//!
-//! This module implements Wiener filtering techniques for signal denoising and restoration.
-//! Wiener filters are optimal linear filters for signal restoration in the presence of
-//! additive noise, based on a statistical approach.
-//!
-//! The implementation includes:
-//! - Time-domain Wiener filtering for 1D signals
-//! - Frequency-domain Wiener filtering for noise reduction
-//! - Adaptive Wiener filtering with local variance estimation
-//! - Iterative Wiener filtering for improved restoration
-//!
-//! # Example
-//! ```
-//! use ndarray::Array1;
-//! use scirs2__signal::wiener::wiener_filter;
-//! use scirs2__signal::waveforms;
-//! use rand::Rng;
-//!
-//! // Create a test signal
-//! let fs = 1000.0;
-//! let t: Vec<f64> = (0..1000).map(|i| i as f64 / fs).collect();
-//! let clean_signal_vec = waveforms::chirp(
-//!     &t, 10.0, 1.0, 100.0, "linear", 0.0
-//! ).unwrap();
-//!
-//! // Convert to ndarray
-//! let clean_signal = Array1::from_vec(clean_signal_vec);
-//!
-//! // Add noise
-//! let mut rng = rand::rng();
-//! let mut noisy_signal = clean_signal.clone();
-//! for i in 0..noisy_signal.len() {
-//!     noisy_signal[i] += 0.5 * rng.random_range(-1.0..1.0);
-//! }
-//!
-//! // Apply Wiener filter
-//! let denoised_signal = wiener_filter(&noisy_signal, None, None).unwrap();
-//! ```
+use ndarray::s;
+// Wiener filtering module
+//
+// This module implements Wiener filtering techniques for signal denoising and restoration.
+// Wiener filters are optimal linear filters for signal restoration in the presence of
+// additive noise, based on a statistical approach.
+//
+// The implementation includes:
+// - Time-domain Wiener filtering for 1D signals
+// - Frequency-domain Wiener filtering for noise reduction
+// - Adaptive Wiener filtering with local variance estimation
+// - Iterative Wiener filtering for improved restoration
+//
+// # Example
+// ```
+// use ndarray::Array1;
+// use scirs2_signal::wiener::wiener_filter;
+// use scirs2_signal::waveforms;
+// use rand::Rng;
+//
+// // Create a test signal
+// let fs = 1000.0;
+// let t: Vec<f64> = (0..1000).map(|i| i as f64 / fs).collect();
+// let clean_signal_vec = waveforms::chirp(
+//     &t, 10.0, 1.0, 100.0, "linear", 0.0
+// ).unwrap();
+//
+// // Convert to ndarray
+// let clean_signal = Array1::from_vec(clean_signal_vec);
+//
+// // Add noise
+// let mut rng = rand::rng();
+// let mut noisy_signal = clean_signal.clone();
+// for i in 0..noisy_signal.len() {
+//     noisy_signal[i] += 0.5 * rng.random_range(-1.0..1.0);
+// }
+//
+// // Apply Wiener filter
+// let denoised_signal = wiener_filter(&noisy_signal, None, None).unwrap();
+// ```
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
-use num__complex::Complex64;
+use ndarray::{ Array1, Array2};
+use num_complex::Complex64;
 use rand::Rng;
+use scirs2_fft;
 use statrs::statistics::Statistics;
 use std::cmp;
-use scirs2_fft;
 
 #[allow(unused_imports)]
 /// Configuration for Wiener filtering
@@ -103,7 +104,7 @@ impl Default for WienerConfig {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::wiener::wiener_filter;
+/// use scirs2_signal::wiener::wiener_filter;
 ///
 /// let noisy_signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0, 0.0]);
 /// let result = wiener_filter(&noisy_signal, Some(0.1), None);

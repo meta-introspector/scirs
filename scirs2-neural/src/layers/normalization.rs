@@ -19,7 +19,7 @@ use std::sync::{Arc, RwLock};
 #[derive(Debug)]
 pub struct LayerNorm<F: Float + Debug + Send + Sync> {
     /// Dimensionality of the input features
-    normalized_shape: Vec<usize>,
+    normalizedshape: Vec<usize>,
     /// Learnable scale parameter
     gamma: Array<F, IxDyn>,
     /// Learnable shift parameter
@@ -60,7 +60,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for LayerNo
         };
 
         Self {
-            normalized_shape: self.normalized_shape.clone(),
+            normalizedshape: self.normalizedshape.clone(),
             gamma: self.gamma.clone(),
             beta: self.beta.clone(),
             dgamma: Arc::new(RwLock::new(self.dgamma.read().unwrap().clone())),
@@ -76,15 +76,15 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for LayerNo
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
     /// Create a new layer normalization layer
-    pub fn new<R: Rng>(_normalized_shape: usize, eps: f64, _rng: &mut R) -> Result<Self> {
-        let gamma = Array::<F, IxDyn>::from_elem(IxDyn(&[_normalized_shape]), F::one());
-        let beta = Array::<F, IxDyn>::from_elem(IxDyn(&[_normalized_shape]), F::zero());
+    pub fn new<R: Rng>(normalizedshape: usize, eps: f64, _rng: &mut R) -> Result<Self> {
+        let gamma = Array::<F, IxDyn>::from_elem(IxDyn(&[normalizedshape]), F::one());
+        let beta = Array::<F, IxDyn>::from_elem(IxDyn(&[normalizedshape]), F::zero());
 
         let dgamma = Arc::new(RwLock::new(Array::<F, IxDyn>::zeros(IxDyn(&[
-            _normalized_shape,
+            normalizedshape,
         ]))));
         let dbeta = Arc::new(RwLock::new(Array::<F, IxDyn>::zeros(IxDyn(&[
-            _normalized_shape,
+            normalizedshape,
         ]))));
 
         let eps = F::from(eps).ok_or_else(|| {
@@ -92,7 +92,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
         })?;
 
         Ok(Self {
-            normalized_shape: vec![_normalized_shape],
+            normalizedshape: vec![normalizedshape],
             gamma,
             beta,
             dgamma,
@@ -106,8 +106,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
     }
 
     /// Get the normalized shape
-    pub fn normalized_shape(&self) -> usize {
-        self.normalized_shape[0]
+    pub fn normalizedshape(&self) -> usize {
+        self.normalizedshape[0]
     }
 
     /// Get the epsilon value
@@ -124,7 +124,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
             *cache = Some(input.clone());
         }
 
-        let input_shape = input.shape();
+        let inputshape = input.shape();
         let ndim = input.ndim();
 
         if ndim < 1 {
@@ -133,16 +133,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
             ));
         }
 
-        let feat_dim = input_shape[ndim - 1];
-        if feat_dim != self.normalized_shape[0] {
+        let feat_dim = inputshape[ndim - 1];
+        if feat_dim != self.normalizedshape[0] {
             return Err(NeuralError::InvalidArchitecture(format!(
-                "Last dimension of input ({}) must match normalized_shape ({})",
-                feat_dim, self.normalized_shape[0]
+                "Last dimension of input ({}) must match normalizedshape ({})",
+                feat_dim, self.normalizedshape[0]
             )));
         }
 
-        let batch_shape: Vec<usize> = input_shape[..ndim - 1].to_vec();
-        let batch_size: usize = batch_shape.iter().product();
+        let batchshape: Vec<usize> = inputshape[..ndim - 1].to_vec();
+        let batch_size: usize = batchshape.iter().product();
 
         // Reshape input to 2D: [batch_size, features]
         let reshaped = input
@@ -193,7 +193,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
 
         // Reshape back to original shape
         let output = normalized
-            .into_shape_with_order(IxDyn(input_shape))
+            .into_shape_with_order(IxDyn(inputshape))
             .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape output: {e}")))?;
 
         Ok(output)

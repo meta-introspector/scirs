@@ -42,17 +42,17 @@
 
 use ndarray::{Array, Dimension, IxDyn};
 use rand::rngs::StdRng;
+use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_distr::{Distribution, Uniform};
 use std::cell::RefCell;
-use rand::seq::SliceRandom;
 
 // Re-export traits for external use
 pub use rand::{Rng, RngCore};
 
 /// Compatibility wrapper for updated rand API
 /// In rand 0.9, provides a convenient alias for rng() wrapped in Random
-/// This allows usage like: scirs2_core: random::rng().random_range(0..100)
+/// This allows usage like: scirs2, core: random::rng().random_range(0..100)
 #[allow(dead_code)]
 pub fn rng() -> Random<rand::rngs::ThreadRng> {
     Random { rng: rand::rng() }
@@ -215,34 +215,36 @@ pub mod sampling {
     use rand_distr as rdistr;
 
     /// Sample uniformly from [0, 1)
-    pub fn random_uniform01<R: Rng>(_rng: &mut Random<R>) -> f64 {
-        Uniform::new(0.0_f64, 1.0_f64).unwrap().sample(&mut _rng.rng)
+    pub fn random_uniform01<R: Rng>(rng: &mut Random<R>) -> f64 {
+        Uniform::new(0.0_f64, 1.0_f64)
+            .unwrap()
+            .sample(&mut rng.rng)
     }
 
     /// Sample from a standard normal distribution (mean 0, std dev 1)
-    pub fn random_standard_normal<R: Rng>(_rng: &mut Random<R>) -> f64 {
+    pub fn random_standard_normal<R: Rng>(rng: &mut Random<R>) -> f64 {
         rdistr::Normal::new(0.0_f64, 1.0_f64)
             .unwrap()
-            .sample(&mut _rng.rng)
+            .sample(&mut rng.rng)
     }
 
     /// Sample from a normal distribution with given mean and standard deviation
-    pub fn random_normal<R: Rng>(_rng: &mut Random<R>, mean: f64, std_dev: f64) -> f64 {
+    pub fn random_normal<R: Rng>(rng: &mut Random<R>, mean: f64, std_dev: f64) -> f64 {
         rdistr::Normal::new(mean, std_dev)
             .unwrap()
-            .sample(&mut _rng.rng)
+            .sample(&mut rng.rng)
     }
 
     /// Sample from a log-normal distribution
-    pub fn random_lognormal<R: Rng>(_rng: &mut Random<R>, mean: f64, std_dev: f64) -> f64 {
+    pub fn random_lognormal<R: Rng>(rng: &mut Random<R>, mean: f64, std_dev: f64) -> f64 {
         rdistr::LogNormal::new(mean, std_dev)
             .unwrap()
-            .sample(&mut _rng.rng)
+            .sample(&mut rng.rng)
     }
 
     /// Sample from an exponential distribution
-    pub fn random_exponential<R: Rng>(_rng: &mut Random<R>, lambda: f64) -> f64 {
-        rdistr::Exp::new(lambda).unwrap().sample(&mut _rng.rng)
+    pub fn random_exponential<R: Rng>(rng: &mut Random<R>, lambda: f64) -> f64 {
+        rdistr::Exp::new(lambda).unwrap().sample(&mut rng.rng)
     }
 
     /// Generate an array of random integers in a range
@@ -374,7 +376,9 @@ pub mod quasi_monte_carlo {
             for direction_number in direction_numbers.iter_mut().take(dimensions) {
                 let mut direction = vec![1u64 << 31]; // First direction number
                 for i in 1usize..32 {
-                    direction.push(direction[i.saturating_sub(1)] ^ (direction[i.saturating_sub(1)] >> 1));
+                    direction.push(
+                        direction[i.saturating_sub(1)] ^ (direction[i.saturating_sub(1)] >> 1),
+                    );
                 }
                 *direction_number = direction;
             }
@@ -675,7 +679,11 @@ pub mod variance_reduction {
         }
 
         /// Generate stratified samples for variance reduction
-        pub fn stratified_samples(&mut self, strata: usize, samples_per_stratum: usize) -> Vec<f64> {
+        pub fn stratified_samples(
+            &mut self,
+            strata: usize,
+            samples_per_stratum: usize,
+        ) -> Vec<f64> {
             let mut all_samples = Vec::new();
 
             for i in 0..strata {
@@ -741,7 +749,11 @@ pub mod variance_reduction {
         }
 
         /// Apply control variate correction
-        pub fn apply_correction(&self, target_samples: &[f64], control_samples: &[f64]) -> Vec<f64> {
+        pub fn apply_correction(
+            &self,
+            target_samples: &[f64],
+            control_samples: &[f64],
+        ) -> Vec<f64> {
             if let Some(c) = self.optimal_coefficient {
                 target_samples
                     .iter()
@@ -836,7 +848,7 @@ pub mod importance_sampling {
         where
             F: Fn(f64) -> f64,
         {
-            let mut _samples = Vec::new();
+            let mut samples = Vec::new();
             let mut proposal_mean: f64 = 0.0;
             let mut proposal_std: f64 = 1.0;
 
@@ -885,10 +897,10 @@ pub mod importance_sampling {
                     proposal_std = variance.sqrt().max(0.1); // Prevent collapse
                 }
 
-                _samples.extend(round_sample_vec);
+                samples.extend(round_sample_vec);
             }
 
-            _samples
+            samples
         }
     }
 
@@ -1201,7 +1213,7 @@ pub mod specialized_distributions {
             loop {
                 let u1 = rng.sample(uniform);
                 let u2 = rng.sample(uniform);
-                let u3 = rng.sample(uniform);
+                let _u3 = rng.sample(uniform);
 
                 let theta = (2.0 * std::f64::consts::PI * u1) - std::f64::consts::PI;
                 let cos_theta = theta.cos();
@@ -1257,7 +1269,7 @@ mod tests {
 
     #[test]
     fn test_sobol_sequence() {
-        let mut sobol = quasi_monte_carlo::SobolSequence::new(2);
+        let mut sobol = quasi_monte_carlo::SobolSequence::dimensions(2);
         let points = sobol.generate_points(10);
 
         assert_eq!(points.len(), 10);
@@ -1267,7 +1279,7 @@ mod tests {
 
     #[test]
     fn test_halton_sequence() {
-        let mut halton = quasi_monte_carlo::HaltonSequence::new(2);
+        let mut halton = quasi_monte_carlo::HaltonSequence::dimensions(2);
         let points = halton.generate_points(10);
 
         assert_eq!(points.len(), 10);
@@ -1350,7 +1362,7 @@ mod tests {
 
     #[test]
     fn test_von_mises_distribution() {
-        let von_mises = specialized_distributions::VonMises::new(0.0, 1.0).unwrap();
+        let von_mises = specialized_distributions::VonMises::mu(0.0, 1.0).unwrap();
         let mut rng = Random::default();
 
         let samples = von_mises.sample_vec(&mut rng, 100);

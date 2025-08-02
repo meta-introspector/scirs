@@ -1659,7 +1659,7 @@ mod tests {
 
         // Create sample log-likelihood matrix: 5 samples, 10 observations
         let log_likelihood_samples =
-            Array2::from_shape_fn((5, 10), |(i, j)| -1.0 - 0.1 * i as f64 - 0.05 * j as f64);
+            Array2::fromshape_fn((5, 10), |(i, j)| -1.0 - 0.1 * i as f64 - 0.05 * j as f64);
 
         let result = bic_calc
             .evaluate_model(&log_likelihood_samples, 3, 10)
@@ -1679,7 +1679,7 @@ mod tests {
 
         let observed_data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
         let posterior_samples =
-            Array2::from_shape_fn((100, 5), |(i, j)| 1.0 + j as f64 + 0.1 * (i as f64 - 50.0));
+            Array2::fromshape_fn((100, 5), |(i, j)| 1.0 + j as f64 + 0.1 * (i as f64 - 50.0));
 
         let result = ppc
             .check_model_adequacy(&observed_data, &posterior_samples)
@@ -1717,7 +1717,7 @@ mod tests {
             .with_weighting_method(ModelWeightingMethod::InformationCriteria);
 
         // 3 models, 5 observations
-        let predictions = Array2::from_shape_vec(
+        let predictions = Array2::fromshape_vec(
             (3, 5),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, // Model 1

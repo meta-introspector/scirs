@@ -368,7 +368,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
 
         // Use predicated SIMD operations if available
         if self.simd_capabilities.mask_registers {
-            self.predicated_simd_conditional(&mut result, a, b, condition, true_op, false_op)?;
+            self.predicated_simd_conditional(&mut result, a, b, condition, true_op, falseop)?;
         } else {
             // Fallback to scalar implementation
             Zip::from(&mut result)

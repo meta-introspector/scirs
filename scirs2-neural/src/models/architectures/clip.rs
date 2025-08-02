@@ -296,8 +296,8 @@ pub struct CLIP<
         // Compute similarity matrix (batch_size x batch_size)
         let logits_per_image =
             compute_similarity(&image_features_norm, &text_features_norm, self.logit_scale)?;
-        // Transpose to get logits_per_text (currently unused but kept for API consistency)
-        let _logits_per_text = logits_per_image.t().into_dyn();
+        // Transpose to get logits_pertext (currently unused but kept for API consistency)
+        let _logits_pertext = logits_per_image.t().into_dyn();
         Ok((image_features, text_features, logits_per_image))
     /// Forward pass for zero-shot image classification using a text encoder
     pub fn forward_classification(

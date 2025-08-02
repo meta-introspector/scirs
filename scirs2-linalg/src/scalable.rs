@@ -164,7 +164,7 @@ pub fn classify_aspect_ratio<F>(_matrix: &ArrayView2<F>, threshold: f64) -> Aspe
 /// use ndarray::Array2;
 /// use scirs2_linalg::scalable::{tsqr, ScalableConfig};
 ///
-/// let tall_matrix = Array2::from_shape_fn((1000, 50), |(i, j)| {
+/// let tall_matrix = Array2::fromshape_fn((1000, 50), |(i, j)| {
 ///     (i as f64 + j as f64).sin()
 /// });
 /// let config = ScalableConfig::default();
@@ -325,7 +325,7 @@ where
 /// use scirs2_linalg::scalable::{adaptive_decomposition, ScalableConfig, AspectRatio};
 ///
 /// // Tall matrix - should select TSQR
-/// let tall_matrix = Array2::from_shape_fn((500, 20), |(i, j)| {
+/// let tall_matrix = Array2::fromshape_fn((500, 20), |(i, j)| {
 ///     (i + j + 1) as f64
 /// });
 ///
@@ -637,7 +637,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_decomposition() {
-        let tall_matrix = Array2::from_shape_fn((100, 5), |(i, j)| (i + j) as f64);
+        let tall_matrix = Array2::fromshape_fn((100, 5), |(i, j)| (i + j) as f64);
         let config = ScalableConfig::default();
 
         let result = adaptive_decomposition(&tall_matrix.view(), &config).unwrap();
@@ -715,8 +715,8 @@ mod tests {
 
     #[test]
     fn test_blocked_matmul() {
-        let a = Array2::from_shape_fn((20, 30), |(i, j)| (i + j) as f64);
-        let b = Array2::from_shape_fn((30, 25), |(i, j)| (i * j) as f64);
+        let a = Array2::fromshape_fn((20, 30), |(i, j)| (i + j) as f64);
+        let b = Array2::fromshape_fn((30, 25), |(i, j)| (i * j) as f64);
 
         let config = ScalableConfig::default().with_block_size(10);
         let result_blocked = blocked_matmul(&a.view(), &b.view(), &config).unwrap();

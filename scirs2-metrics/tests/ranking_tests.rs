@@ -141,14 +141,14 @@ fn test_metrics_edge_cases() {
     assert!(ndcg_score(&y_true, &y_score, None).is_err());
 
     // Arrays with different shapes should return error
-    let y_true_diff_shape = vec![array![0.0, 1.0, 0.0, 0.0, 0.0]];
-    let y_score_diff_shape = vec![array![0.1, 0.9, 0.2, 0.3]];
+    let y_true_diffshape = vec![array![0.0, 1.0, 0.0, 0.0, 0.0]];
+    let y_score_diffshape = vec![array![0.1, 0.9, 0.2, 0.3]];
 
-    assert!(mean_reciprocal_rank(&y_true_diff_shape, &y_score_diff_shape).is_err());
-    assert!(ndcg_score(&y_true_diff_shape, &y_score_diff_shape, None).is_err());
-    assert!(mean_average_precision(&y_true_diff_shape, &y_score_diff_shape, None).is_err());
-    assert!(precision_at_k(&y_true_diff_shape, &y_score_diff_shape, 3).is_err());
-    assert!(recall_at_k(&y_true_diff_shape, &y_score_diff_shape, 3).is_err());
+    assert!(mean_reciprocal_rank(&y_true_diffshape, &y_score_diffshape).is_err());
+    assert!(ndcg_score(&y_true_diffshape, &y_score_diffshape, None).is_err());
+    assert!(mean_average_precision(&y_true_diffshape, &y_score_diffshape, None).is_err());
+    assert!(precision_at_k(&y_true_diffshape, &y_score_diffshape, 3).is_err());
+    assert!(recall_at_k(&y_true_diffshape, &y_score_diffshape, 3).is_err());
 }
 
 #[test]

@@ -25,8 +25,8 @@ fn main() {
         println!("Input tensor id: {}", a.id());
 
         // Check the shape of norm (should be scalar)
-        let norm_shape = norm.shape();
-        println!("Norm shape: {:?}", norm_shape);
+        let normshape = norm.shape();
+        println!("Norm shape: {:?}", normshape);
 
         // Try gradient computation
         println!("Computing gradient...");

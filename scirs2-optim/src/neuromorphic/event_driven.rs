@@ -591,9 +591,9 @@ impl<T: Float + Send + Sync> AdaptiveEventHandler<T> {
     
     fn get_adaptation_factor(&self) -> T {
         match self.current_strategy {
-            AdaptationStrategy::Conservative =>, T::from(0.5).unwrap(),
-            AdaptationStrategy::Balanced =>, T::one(),
-            AdaptationStrategy::Aggressive =>, T::from(1.5).unwrap(),
+            AdaptationStrategy::Conservative => T::from(0.5).unwrap(),
+            AdaptationStrategy::Balanced => T::one(),
+            AdaptationStrategy::Aggressive => T::from(1.5).unwrap(),
         }
     }
 }

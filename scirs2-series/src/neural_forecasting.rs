@@ -88,7 +88,7 @@ impl ActivationFunction {
                 let sigmoid = F::one() / (F::one() + (-x).exp());
                 sigmoid * (F::one() + x * (F::one() - sigmoid))
             }
-            ActivationFunction::Linear =>, F::one(),
+            ActivationFunction::Linear => F::one(),
         }
     }
 }
@@ -4199,7 +4199,7 @@ mod tests {
     fn test_lstm_network() {
         let network = LSTMNetwork::<f64>::new(5, vec![10, 8], 1, 0.1);
         let input_sequence =
-            Array2::from_shape_vec((4, 5), (0..20).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::fromshape_vec((4, 5), (0..20).map(|i| i as f64 * 0.1).collect()).unwrap();
 
         let output = network.forward(&input_sequence).unwrap();
         assert_eq!(output.dim(), (4, 1));
@@ -4213,7 +4213,7 @@ mod tests {
     fn test_multi_head_attention() {
         let attention = MultiHeadAttention::<f64>::new(64, 8).unwrap();
         let input =
-            Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((10, 64), (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output = attention.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 64));
@@ -4223,7 +4223,7 @@ mod tests {
     fn test_transformer_block() {
         let block = TransformerBlock::<f64>::new(64, 8, 256).unwrap();
         let input =
-            Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((10, 64), (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output = block.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 64));
@@ -4243,7 +4243,7 @@ mod tests {
         .unwrap();
 
         let input_sequence =
-            Array2::from_shape_vec((10, 1), (0..10).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::fromshape_vec((10, 1), (0..10).map(|i| i as f64 * 0.1).collect()).unwrap();
 
         let output = model.forward(&input_sequence).unwrap();
         assert_eq!(output.dim(), (10, 1));
@@ -4257,7 +4257,7 @@ mod tests {
     fn test_feed_forward_network() {
         let ffn = FeedForwardNetwork::<f64>::new(64, 256, ActivationFunction::ReLU);
         let input =
-            Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((10, 64), (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output = ffn.forward(&input);
         assert_eq!(output.dim(), (10, 64));
@@ -4374,7 +4374,7 @@ mod tests {
         );
 
         let input =
-            Array2::from_shape_vec((10, 16), (0..160).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((10, 16), (0..160).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output = mamba.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 16));
@@ -4393,7 +4393,7 @@ mod tests {
         )
         .unwrap();
 
-        let input = Array2::from_shape_vec((20, 64), (0..1280).map(|i| i as f64 * 0.001).collect())
+        let input = Array2::fromshape_vec((20, 64), (0..1280).map(|i| i as f64 * 0.001).collect())
             .unwrap();
 
         let output = flash_attn.forward(&input).unwrap();
@@ -4415,7 +4415,7 @@ mod tests {
         );
 
         let input =
-            Array2::from_shape_vec((10, 32), (0..320).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((10, 32), (0..320).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output = moe.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 16));
@@ -4430,7 +4430,7 @@ mod tests {
         let layer_norm = LayerNorm::<f64>::new(64);
 
         let input =
-            Array2::from_shape_vec((10, 64), (0..640).map(|i| (i as f64 * 0.1) + 5.0).collect())
+            Array2::fromshape_vec((10, 64), (0..640).map(|i| (i as f64 * 0.1) + 5.0).collect())
                 .unwrap(); // Non-zero mean
 
         let output = layer_norm.forward(&input);
@@ -4491,7 +4491,7 @@ mod tests {
         let large_block = FlashAttention::<f64>::new(32, 4, 16).unwrap();
 
         let input =
-            Array2::from_shape_vec((12, 32), (0..384).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((12, 32), (0..384).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output_small = small_block.forward(&input).unwrap();
         let output_large = large_block.forward(&input).unwrap();
@@ -4551,7 +4551,7 @@ mod tests {
         let mqa = MultiQueryAttention::<f64>::new(64, 8).unwrap();
 
         let input =
-            Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.001).collect()).unwrap();
+            Array2::fromshape_vec((10, 64), (0..640).map(|i| i as f64 * 0.001).collect()).unwrap();
 
         let output = mqa.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 64));
@@ -4566,7 +4566,7 @@ mod tests {
         let rope = RotaryPositionalEmbedding::<f64>::new(32, 100);
 
         let input =
-            Array2::from_shape_vec((8, 32), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((8, 32), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output = rope.apply(&input);
         assert_eq!(output.dim(), (8, 32));
@@ -4580,9 +4580,9 @@ mod tests {
 
         // Test query-key application
         let queries =
-            Array2::from_shape_vec((5, 32), (0..160).map(|i| i as f64 * 0.02).collect()).unwrap();
+            Array2::fromshape_vec((5, 32), (0..160).map(|i| i as f64 * 0.02).collect()).unwrap();
         let keys =
-            Array2::from_shape_vec((5, 32), (0..160).map(|i| i as f64 * 0.015).collect()).unwrap();
+            Array2::fromshape_vec((5, 32), (0..160).map(|i| i as f64 * 0.015).collect()).unwrap();
 
         let (q_rope, k_rope) = rope.apply_to_qk(&queries, &keys);
         assert_eq!(q_rope.dim(), (5, 32));
@@ -4594,7 +4594,7 @@ mod tests {
         let alibi = ALiBiAttention::<f64>::new(64, 8).unwrap();
 
         let input =
-            Array2::from_shape_vec((12, 64), (0..768).map(|i| i as f64 * 0.001).collect()).unwrap();
+            Array2::fromshape_vec((12, 64), (0..768).map(|i| i as f64 * 0.001).collect()).unwrap();
 
         let output = alibi.forward(&input).unwrap();
         assert_eq!(output.dim(), (12, 64));
@@ -4620,7 +4620,7 @@ mod tests {
             .unwrap();
 
             let input =
-                Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.001).collect())
+                Array2::fromshape_vec((10, 64), (0..640).map(|i| i as f64 * 0.001).collect())
                     .unwrap();
 
             let output = block.forward(&input).unwrap();
@@ -4644,7 +4644,7 @@ mod tests {
         .unwrap();
 
         let input =
-            Array2::from_shape_vec((6, 32), (0..192).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((6, 32), (0..192).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output = block.forward(&input).unwrap();
         assert_eq!(output.dim(), (6, 32));
@@ -4661,7 +4661,7 @@ mod tests {
         let mha = MultiHeadAttention::<f64>::new(64, 8).unwrap();
 
         let input =
-            Array2::from_shape_vec((16, 64), (0..1024).map(|i| i as f64 * 0.0005).collect())
+            Array2::fromshape_vec((16, 64), (0..1024).map(|i| i as f64 * 0.0005).collect())
                 .unwrap();
 
         let mqa_output = mqa.forward(&input).unwrap();
@@ -4682,9 +4682,9 @@ mod tests {
 
         // Test with different sequence lengths to verify position bias
         let short_input =
-            Array2::from_shape_vec((4, 32), (0..128).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((4, 32), (0..128).map(|i| i as f64 * 0.01).collect()).unwrap();
         let long_input =
-            Array2::from_shape_vec((8, 32), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((8, 32), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let short_output = alibi.forward(&short_input).unwrap();
         let long_output = alibi.forward(&long_input).unwrap();
@@ -4735,7 +4735,7 @@ mod tests {
         .unwrap();
 
         let input =
-            Array2::from_shape_vec((16, 32), (0..512).map(|i| i as f64 * 0.001).collect()).unwrap();
+            Array2::fromshape_vec((16, 32), (0..512).map(|i| i as f64 * 0.001).collect()).unwrap();
 
         let output = ring_attn.forward(&input).unwrap();
 
@@ -4753,7 +4753,7 @@ mod tests {
         );
 
         let input =
-            Array2::from_shape_vec((12, 64), (0..768).map(|i| i as f64 * 0.001).collect()).unwrap();
+            Array2::fromshape_vec((12, 64), (0..768).map(|i| i as f64 * 0.001).collect()).unwrap();
 
         let output = hyena.forward(&input).unwrap();
         assert_eq!(output.dim(), (12, 64));
@@ -4773,7 +4773,7 @@ mod tests {
         .unwrap();
 
         let input =
-            Array2::from_shape_vec((10, 32), (0..320).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((10, 32), (0..320).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output = rats.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 48)); // model_dim + pattern_dim
@@ -4792,7 +4792,7 @@ mod tests {
         .unwrap();
 
         let input =
-            Array2::from_shape_vec((8, 32), (0..256).map(|i| i as f64 * 0.005).collect()).unwrap();
+            Array2::fromshape_vec((8, 32), (0..256).map(|i| i as f64 * 0.005).collect()).unwrap();
 
         let output = quantum_attn.forward(&input).unwrap();
         assert_eq!(output.dim(), (8, 32));
@@ -4813,7 +4813,7 @@ mod tests {
         .unwrap();
 
         let input =
-            Array2::from_shape_vec((5, 64), (0..320).map(|i| i as f64 * 0.002).collect()).unwrap();
+            Array2::fromshape_vec((5, 64), (0..320).map(|i| i as f64 * 0.002).collect()).unwrap();
 
         let output = spec_decoder.generate_speculative(&input, 3).unwrap();
         assert_eq!(output.dim(), (8, 64)); // 5 + 3 = 8
@@ -4851,7 +4851,7 @@ mod tests {
 
         // Memory should be updated (test by verifying it doesn't crash)
         let input =
-            Array2::from_shape_vec((5, 16), (0..80).map(|i| i as f64 * 0.02).collect()).unwrap();
+            Array2::fromshape_vec((5, 16), (0..80).map(|i| i as f64 * 0.02).collect()).unwrap();
 
         let output = rats.forward(&input).unwrap();
         assert_eq!(output.dim(), (5, 24)); // 16 + 8
@@ -4862,13 +4862,13 @@ mod tests {
         let hyena = HyenaAttention::<f64>::new(32, 2, 64);
 
         let input =
-            Array2::from_shape_vec((8, 32), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((8, 32), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output1 = hyena.forward(&input).unwrap();
 
         // Test with different input to verify convolution behavior
         let input2 =
-            Array2::from_shape_vec((8, 32), (0..256).map(|i| -i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((8, 32), (0..256).map(|i| -i as f64 * 0.01).collect()).unwrap();
 
         let output2 = hyena.forward(&input2).unwrap();
 
@@ -4903,7 +4903,7 @@ mod tests {
         let ring_attn_device1 = RingAttention::<f64>::new(16, 2, 4, 1).unwrap();
 
         let input =
-            Array2::from_shape_vec((16, 16), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
+            Array2::fromshape_vec((16, 16), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
 
         let output0 = ring_attn_device0.forward(&input).unwrap();
         let output1 = ring_attn_device1.forward(&input).unwrap();

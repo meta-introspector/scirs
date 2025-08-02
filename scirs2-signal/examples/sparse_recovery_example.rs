@@ -1,8 +1,8 @@
 /// Example demonstrating sparse signal recovery techniques
 use ndarray::{Array1, Array2};
 use rand::{seq::SliceRandom, Rng};
-use scirs2__linalg::vector_norm;
-use scirs2__signal::sparse::{
+use scirs2_linalg::vector_norm;
+use scirs2_signal::sparse::{
 use rand::seq::SliceRandom;
 use std::f64::consts::PI;
     compressed_sensing_recover, image_inpainting, measure_sparsity, random_sensing_matrix,

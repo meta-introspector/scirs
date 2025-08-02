@@ -1291,10 +1291,7 @@ pub fn has_stability_guarantee(api_name: &str, module: &str) -> bool {
 
 /// Validate API usage against stability contracts
 #[allow(dead_code)]
-pub fn validate_api_usage(api_name: &str,
-    module: &str,
-    _context: &UsageContext,
-) -> CoreResult<()> {
+pub fn validate_api_usage(api_name: &str, module: &str, _context: &UsageContext) -> CoreResult<()> {
     global_stability_manager().validate_usage(api_name, module, _context)
 }
 
@@ -1303,7 +1300,7 @@ pub fn validate_api_usage(api_name: &str,
 pub fn has_long_term_stability(api_name: &str, module: &str) -> bool {
     // For now, return true for all APIs
     let _ = (api_name, module); // Use parameters to avoid warnings
-    true  // Default to true for all cases
+    true // Default to true for all cases
 }
 
 /// Stability contract for APIs

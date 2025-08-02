@@ -128,8 +128,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
             return Err(NeuralError::InferenceError(
                 "Input must have at least 3 dimensions [batch, tgt_len, features]".to_string(),
             ));
-        let input_shape = input.shape();
-        let feat_dim = input_shape[input.ndim() - 1];
+        let inputshape = input.shape();
+        let feat_dim = inputshape[input.ndim() - 1];
         if feat_dim != self.d_model {
             return Err(NeuralError::InferenceError(format!(
                 "Last dimension of input ({}) must match d_model ({})",
@@ -138,8 +138,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
         if encoder_output.ndim() < 3 {
                 "Encoder output must have at least 3 dimensions [batch, src_len, features]"
                     .to_string(),
-        let encoder_shape = encoder_output.shape();
-        let encoder_feat_dim = encoder_shape[encoder_output.ndim() - 1];
+        let encodershape = encoder_output.shape();
+        let encoder_feat_dim = encodershape[encoder_output.ndim() - 1];
         if encoder_feat_dim != self.d_model {
                 "Last dimension of encoder output ({}) must match d_model ({})",
                 encoder_feat_dim, self.d_model
@@ -247,7 +247,7 @@ mod tests {
     use rand::rngs::SmallRng;
     use rand::SeedableRng;
     #[test]
-    fn test_decoder_layer_shape() {
+    fn test_decoder_layershape() {
         // Set up decoder layer
         let mut rng = rand::rng();
         let d_model = 64;
@@ -272,7 +272,7 @@ mod tests {
             .unwrap();
         // Check output shape
         assert_eq!(output.shape(), decoder_input.shape());
-    fn test_decoder_stack_shape() {
+    fn test_decoder_stackshape() {
         // Set up decoder
         let n_layers = 2;
         let decoder = TransformerDecoder::<f64>::new(

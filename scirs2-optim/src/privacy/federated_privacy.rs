@@ -4326,7 +4326,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ContinualLearnin
 impl Default for ByzantineRobustConfig {
     fn default() -> Self {
         Self {
-            method: ByzantineRobustMethod::TrimmedMean { trim_ratio: 0.1 },
+            method: ByzantineRobustMethod::TrimmedMean { trim, ratio: 0.1 },
             expected_byzantine_ratio: 0.1,
             dynamic_detection: true,
             reputation_system: ReputationSystemConfig::default(),

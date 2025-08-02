@@ -545,7 +545,7 @@ pub fn irfft_1d(_input: &ArrayView1<Complex64>, output_size: usize) -> LinalgRes
 /// use num_complex::Complex;
 /// use scirs2_linalg::fft::fft_2d;
 ///
-/// let input = Array2::from_shape_fn((4, 4), |(i, j)| {
+/// let input = Array2::fromshape_fn((4, 4), |(i, j)| {
 ///     Complex::new((i + j) as f64, 0.0)
 /// });
 ///
@@ -1286,7 +1286,7 @@ mod tests {
 
     #[test]
     fn test_fft_2d() {
-        let input = Array2::from_shape_fn((4, 4), |(i, j)| Complex64::new((i + j) as f64, 0.0));
+        let input = Array2::fromshape_fn((4, 4), |(i, j)| Complex64::new((i + j) as f64, 0.0));
 
         let result = fft_2d(&input.view(), false).unwrap();
         assert_eq!(result.shape(), &[4, 4]);
@@ -1352,7 +1352,7 @@ mod tests {
 
     #[test]
     fn test_periodogram_psd() {
-        let signal = Array1::from_shape_fn(16, |i| (2.0 * PI * i as f64 / 16.0).sin());
+        let signal = Array1::fromshape_fn(16, |i| (2.0 * PI * i as f64 / 16.0).sin());
         let psd = periodogram_psd(&signal.view(), WindowFunction::Rectangular, None).unwrap();
 
         assert_eq!(psd.len(), 9); // N/2 + 1 for real FFT
@@ -1361,7 +1361,7 @@ mod tests {
 
     #[test]
     fn test_welch_psd() {
-        let signal = Array1::from_shape_fn(64, |i| (2.0 * PI * i as f64 / 8.0).sin());
+        let signal = Array1::fromshape_fn(64, |i| (2.0 * PI * i as f64 / 8.0).sin());
         let psd = welch_psd(&signal.view(), 16, 0.5, WindowFunction::Hann).unwrap();
 
         assert!(!psd.is_empty());
@@ -1399,7 +1399,7 @@ mod tests {
 
     #[test]
     fn test_fft_3d() {
-        let input = Array3::from_shape_fn((2, 2, 2), |(i, j, k)| {
+        let input = Array3::fromshape_fn((2, 2, 2), |(i, j, k)| {
             Complex64::new((i + j + k) as f64, 0.0)
         });
 

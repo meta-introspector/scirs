@@ -1760,7 +1760,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
 impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<F> {
     fn new(_algorithm: AnomalyDetectionAlgorithm) -> Result<Self> {
         let threshold = match &_algorithm {
-            AnomalyDetectionAlgorithm::ZScore { threshold } =>, F::from(*threshold).unwrap(),
+            AnomalyDetectionAlgorithm::ZScore { threshold } => F::from(*threshold).unwrap(),
             AnomalyDetectionAlgorithm::IsolationForest { contamination: _ } => {
                 F::from(0.5).unwrap()
             }
@@ -2752,7 +2752,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Adaptive
     /// Update experience in the RL agent
     pub fn update_experience(
         &mut self_state: &Array1<F>, _action: &Array1<F>,
-        reward: F_performance_metrics: &HashMap<String, F>,
+        reward: F_performance, metrics: &HashMap<String, F>,
     ) -> Result<()> {
         // Update training _metrics
         let _metrics = RLTrainingMetrics {
@@ -2986,7 +2986,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
 
         impl<F: Float + std::iter::Sum> OnlineOptimizer<F> for PlaceholderOptimizer<F> {
             fn update(
-                &mut self_parameters: &mut Array1<F>, _features: &Array1<F>, _target: F_learning_rate: F,
+                &mut self_parameters: &mut Array1<F>, _features: &Array1<F>, _target: F_learning, rate: F,
             ) -> Result<()> {
                 Ok(())
             }
@@ -4280,7 +4280,7 @@ impl Default for NeuralAdaptiveConfig {
                 weight_decay: 0.0001,
             },
             rl_config: RLConfig {
-                algorithm: RLAlgorithm::DQN { double_dqn: true },
+                algorithm: RLAlgorithm::DQN { double, dqn: true },
                 exploration_rate: 0.1,
                 exploration_decay: 0.995,
                 min_exploration: 0.01,

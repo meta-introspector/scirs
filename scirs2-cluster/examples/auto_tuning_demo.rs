@@ -82,7 +82,7 @@ fn test_individual_algorithm_tuning(
         (
             "Random Search",
             TuningConfig {
-                strategy: SearchStrategy::RandomSearch { n_trials: 30 },
+                strategy: SearchStrategy::RandomSearch { n, trials: 30 },
                 max_evaluations: 30,
                 metric: EvaluationMetric::CalinskiHarabaszIndex,
                 cv_config: CrossValidationConfig {
@@ -203,7 +203,7 @@ fn test_automatic_algorithm_selection(
 
     // Full algorithm comparison
     let full_config = TuningConfig {
-        strategy: SearchStrategy::RandomSearch { n_trials: 15 },
+        strategy: SearchStrategy::RandomSearch { n, trials: 15 },
         max_evaluations: 15,
         metric: EvaluationMetric::SilhouetteScore,
         cv_config: CrossValidationConfig {
@@ -344,7 +344,7 @@ fn create_dense_clusters_data(_n_samples: usize, n_features: usize) -> Array2<f6
         }
     }
 
-    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
+    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create sparse data for testing
@@ -367,7 +367,7 @@ fn create_sparse_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
+    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create high-dimensional data for testing
@@ -395,7 +395,7 @@ fn create_high_dimensional_data(_n_samples: usize, n_features: usize) -> Array2<
         }
     }
 
-    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
+    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create noisy data for testing
@@ -427,7 +427,7 @@ fn create_noisy_data(_n_samples: usize, n_features: usize) -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
+    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
 }
 
 #[cfg(test)]

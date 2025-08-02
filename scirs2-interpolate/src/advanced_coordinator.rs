@@ -246,7 +246,7 @@ pub struct GradientStatistics<F: Float> {
     /// Maximum gradient
     pub max_gradient: F,
     /// Gradient distribution characteristics
-    pub distribution_shape: F,
+    pub distributionshape: F,
 }
 
 /// Frequency content analysis
@@ -1348,12 +1348,12 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
     ) -> InterpolateResult<AccuracyPrediction<F>> {
         // Base accuracy depends on method and data characteristics
         let base_accuracy = match method {
-            InterpolationMethodType::Linear =>, F::from(0.7).unwrap(),
-            InterpolationMethodType::CubicSpline =>, F::from(0.95).unwrap(),
-            InterpolationMethodType::BSpline =>, F::from(0.9).unwrap(),
-            InterpolationMethodType::RadialBasisFunction =>, F::from(0.92).unwrap(),
-            InterpolationMethodType::Kriging =>, F::from(0.88).unwrap(),
-            InterpolationMethodType::AkimaSpline => F::from(0.93).unwrap(, _ =>, F::from(0.85).unwrap(),
+            InterpolationMethodType::Linear => F::from(0.7).unwrap(),
+            InterpolationMethodType::CubicSpline => F::from(0.95).unwrap(),
+            InterpolationMethodType::BSpline => F::from(0.9).unwrap(),
+            InterpolationMethodType::RadialBasisFunction => F::from(0.92).unwrap(),
+            InterpolationMethodType::Kriging => F::from(0.88).unwrap(),
+            InterpolationMethodType::AkimaSpline => F::from(0.93).unwrap(, _ => F::from(0.85).unwrap(),
         };
 
         // Adjust based on data characteristics
@@ -2410,7 +2410,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
                 mean_magnitude: F::zero(),
                 variance: F::zero(),
                 max_gradient: F::zero(),
-                distribution_shape: F::one(),
+                distributionshape: F::one(),
             });
         }
 
@@ -2431,7 +2431,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
                 mean_magnitude: F::zero(),
                 variance: F::zero(),
                 max_gradient: F::zero(),
-                distribution_shape: F::one(),
+                distributionshape: F::one(),
             });
         }
 
@@ -2457,7 +2457,7 @@ impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
             mean_magnitude: mean,
             variance,
             max_gradient: max_grad,
-            distribution_shape: F::one(), // Simplified
+            distributionshape: F::one(), // Simplified
         })
     }
 

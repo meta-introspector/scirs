@@ -163,7 +163,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
                 Array1::from_vec(unique_x),
                 Array1::from_vec(unique_y),
             ],
-            values: vec![Array2::from_shape_vec((solution.len(), 1), solution.to_vec()).map_err(|_| IntegrateError::ComputationError("Shape error".to_string()))?],
+            values: vec![Array2::fromshape_vec((solution.len(), 1), solution.to_vec()).map_err(|_| IntegrateError::ComputationError("Shape error".to_string()))?],
             error_estimate: None,
             info: PDESolverInfo {
                 num_iterations: 1,
@@ -205,12 +205,12 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
             let (xi, eta) = (gp[0], gp[1]);
             
             // Trial shape functions and derivatives
-            let trial_shapes = self.trial_shape_functions(xi, eta);
-            let trial_grads = self.trial_shape_gradients(xi, eta, inv_j.view())?;
+            let trialshapes = self.trialshape_functions(xi, eta);
+            let trial_grads = self.trialshape_gradients(xi, eta, inv_j.view())?;
             
             // Test functions (SUPG-modified)
-            let test_shapes = self.supg_test_functions(xi, eta, convection, tau_supg, inv_j.view())?;
-            let test_grads = self.test_shape_gradients(xi, eta, inv_j.view())?;
+            let testshapes = self.supg_test_functions(xi, eta, convection, tau_supg, inv_j.view())?;
+            let test_grads = self.testshape_gradients(xi, eta, inv_j.view())?;
             
             // Physical coordinates for source evaluation
             let (x, y) = self.map_to_physical(xi, eta, &node_coords);
@@ -221,7 +221,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
                 let global_i = element[i];
                 
                 // RHS contribution
-                rhs[global_i] = rhs[global_i] + test_shapes[i] * source_val * weight * area;
+                rhs[global_i] = rhs[global_i] + testshapes[i] * source_val * weight * area;
                 
                 for j in 0..element.len() {
                     let global_j = element[j];
@@ -233,7 +233,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
                     );
                     
                     // Convection term: ∫ ψᵢ (b·∇φⱼ) dx
-                    let convection_term = test_shapes[i] * (
+                    let convection_term = testshapes[i] * (
                         convection.0 * trial_grads[[j, 0]] +
                         convection.1 * trial_grads[[j, 1]]
                     );
@@ -284,8 +284,8 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
         tau: F,
         inv_j: ArrayView2<F>,
     ) -> IntegrateResult<Array1<F>> {
-        let standard_test = self.test_shape_functions(xi, eta);
-        let test_grads = self.test_shape_gradients(xi, eta, inv_j)?;
+        let standard_test = self.testshape_functions(xi, eta);
+        let test_grads = self.testshape_gradients(xi, eta, inv_j)?;
         
         let mut supg_test = standard_test.clone();
         
@@ -299,23 +299,23 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
     }
     
     /// Trial shape functions (standard linear for now)
-    fn trial_shape_functions(_xi: F, eta: F) -> Array1<F> {
+    fn trialshape_functions(_xi: F, eta: F) -> Array1<F> {
         // Linear triangular shape functions
         let zeta = F::one() - _xi - eta;
         Array1::from_vec(vec![zeta, _xi, eta])
     }
     
     /// Test shape functions (can be different from trial)
-    fn test_shape_functions(_xi: F, eta: F) -> Array1<F> {
+    fn testshape_functions(_xi: F, eta: F) -> Array1<F> {
         // For standard Galerkin, same as trial functions
         // For Petrov-Galerkin, these could be different
-        self.trial_shape_functions(_xi, eta)
+        self.trialshape_functions(_xi, eta)
     }
     
     /// Trial shape function gradients
-    fn trial_shape_gradients(_xi: F_eta: F, inv_j: ArrayView2<F>) -> IntegrateResult<Array2<F>> {
+    fn trialshape_gradients(_xi: F, eta: F, inv_j: ArrayView2<F>) -> IntegrateResult<Array2<F>> {
         // Linear triangular gradients in reference element
-        let ref_grads = Array2::from_shape_vec((3, 2), vec![
+        let ref_grads = Array2::fromshape_vec((3, 2), vec![
             -F::one(), -F::one(),  // ∇N₁
              F::one(),  F::zero(), // ∇N₂
              F::zero(), F::one(),  // ∇N₃
@@ -335,9 +335,9 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
     }
     
     /// Test shape function gradients
-    fn test_shape_gradients(_xi: F, eta: F, inv_j: ArrayView2<F>) -> IntegrateResult<Array2<F>> {
+    fn testshape_gradients(_xi: F, eta: F, inv_j: ArrayView2<F>) -> IntegrateResult<Array2<F>> {
         // For standard formulation, same as trial gradients
-        self.trial_shape_gradients(_xi, eta, inv_j)
+        self.trialshape_gradients(_xi, eta, inv_j)
     }
     
     /// Get element coordinates
@@ -375,7 +375,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
             ));
         }
         
-        let inv_j = Array2::from_shape_vec((2, 2), vec![
+        let inv_j = Array2::fromshape_vec((2, 2), vec![
             j22 / det_j, -j12 / det_j,
             -j21 / det_j, j11 / det_j,
         ]).map_err(|_| IntegrateError::ComputationError("Shape error".to_string()))?;
@@ -405,7 +405,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
     
     /// Map reference coordinates to physical coordinates
     fn map_to_physical(_xi: F, eta: F, node_coords: &Array2<F>) -> (F, F) {
-        let shapes = self.trial_shape_functions(_xi, eta);
+        let shapes = self.trialshape_functions(_xi, eta);
         
         let mut x = F::zero();
         let mut y = F::zero();
@@ -609,12 +609,12 @@ impl StabilizedFormulations {
     }
     
     /// Create GLS formulation for general stability
-    pub fn gls<F: IntegrateFloat>(_tau: F) -> PetrovGalerkinType<F> {
+    pub fn gls<F: IntegrateFloat>(tau: F) -> PetrovGalerkinType<F> {
         PetrovGalerkinType::GLS { _tau }
     }
     
     /// Create discontinuous Galerkin formulation
-    pub fn discontinuous_galerkin<F: IntegrateFloat>(_penalty: F) -> PetrovGalerkinType<F> {
+    pub fn discontinuous_galerkin<F: IntegrateFloat>(penalty: F) -> PetrovGalerkinType<F> {
         PetrovGalerkinType::DiscontinuousGalerkin { _penalty }
     }
 }
@@ -640,21 +640,21 @@ mod tests {
     }
     
     #[test]
-    fn test_shape_functions() {
+    fn testshape_functions() {
         // Create simple triangular mesh
-        let nodes = Array2::from_shape_vec((3, 2), vec![
+        let nodes = Array2::fromshape_vec((3, 2), vec![
             0.0, 0.0,
             1.0, 0.0,
             0.0, 1.0,
         ]).unwrap();
         
-        let elements = Array2::from_shape_vec((1, 3), vec![0, 1, 2]).unwrap();
+        let elements = Array2::fromshape_vec((1, 3), vec![0, 1, 2]).unwrap();
         
         let formulation = StabilizedFormulations::supg((1.0, 0.0), 0.1);
         let solver = PetrovGalerkinSolver::new(formulation, nodes, elements, 1, 1);
         
         // Test shape functions at element center
-        let shapes = solver.trial_shape_functions(1.0/3.0, 1.0/3.0);
+        let shapes = solver.trialshape_functions(1.0/3.0, 1.0/3.0);
         
         // At center of reference triangle, all shape functions should be 1/3
         assert_abs_diff_eq!(shapes[0], 1.0/3.0, epsilon = 1e-10);
@@ -668,13 +668,13 @@ mod tests {
     
     #[test]
     fn test_jacobian_computation() {
-        let nodes = Array2::from_shape_vec((3, 2), vec![
+        let nodes = Array2::fromshape_vec((3, 2), vec![
             0.0, 0.0,
             1.0, 0.0,
             0.0, 1.0,
         ]).unwrap();
         
-        let elements = Array2::from_shape_vec((1, 3), vec![0, 1, 2]).unwrap();
+        let elements = Array2::fromshape_vec((1, 3), vec![0, 1, 2]).unwrap();
         let formulation = StabilizedFormulations::supg((1.0, 0.0), 0.1);
         let solver = PetrovGalerkinSolver::new(formulation, nodes, elements, 1, 1);
         

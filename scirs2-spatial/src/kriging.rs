@@ -872,7 +872,7 @@ mod tests {
     fn test_ordinary_kriging_basic() {
         // Simple 2D case
         let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
         let values = arr1(&[1.0, 2.0, 3.0, 4.0]);
 
         let variogram = VariogramModel::spherical(1.5, 1.0, 0.1);
@@ -895,7 +895,7 @@ mod tests {
     #[test]
     fn test_ordinary_kriging_exact_interpolation() {
         // Test that predictions at data locations are exact
-        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let points = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
         let values = arr1(&[1.0, 2.0, 3.0]);
 
         let variogram = VariogramModel::spherical(1.0, 0.5, 0.01); // Small nugget
@@ -911,7 +911,7 @@ mod tests {
 
     #[test]
     fn test_simple_kriging() {
-        let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let points = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
         let values = arr1(&[1.5, 2.5, 3.5]);
         let mean = 2.0;
 
@@ -929,7 +929,7 @@ mod tests {
     #[test]
     fn test_batch_prediction() {
         let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
         let values = arr1(&[1.0, 2.0, 3.0, 4.0]);
 
         let variogram = VariogramModel::spherical(1.5, 1.0, 0.1);
@@ -937,7 +937,7 @@ mod tests {
         kriging.fit().unwrap();
 
         let test_points =
-            Array2::from_shape_vec((3, 2), vec![0.25, 0.25, 0.5, 0.5, 0.75, 0.75]).unwrap();
+            Array2::fromshape_vec((3, 2), vec![0.25, 0.25, 0.5, 0.5, 0.75, 0.75]).unwrap();
 
         let predictions = kriging.predict_batch(&test_points.view()).unwrap();
 
@@ -954,7 +954,7 @@ mod tests {
 
     #[test]
     fn test_cross_validation() {
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -990,7 +990,7 @@ mod tests {
 
     #[test]
     fn test_error_cases() {
-        let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 0.0]).unwrap();
+        let points = Array2::fromshape_vec((2, 2), vec![0.0, 0.0, 1.0, 0.0]).unwrap();
         let values = arr1(&[1.0, 2.0, 3.0]); // Wrong length
         let variogram = VariogramModel::spherical(1.0, 0.5, 0.1);
 
@@ -998,7 +998,7 @@ mod tests {
         assert!(result.is_err());
 
         // Too few points
-        let points = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 0.0]).unwrap();
+        let points = Array2::fromshape_vec((2, 2), vec![0.0, 0.0, 1.0, 0.0]).unwrap();
         let values = arr1(&[1.0, 2.0]);
         let variogram = VariogramModel::spherical(1.0, 0.5, 0.1);
 

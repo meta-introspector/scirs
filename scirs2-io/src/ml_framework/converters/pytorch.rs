@@ -3,8 +3,8 @@
 
 use crate::error::{IoError, Result};
 use crate::ml_framework::converters::MLFrameworkConverter;
-use crate::ml_framework::types::{MLModel, MLTensor, MLFramework};
-use crate::ml_framework::utils::{tensor_to_python_dict, python_dict_to_tensor};
+use crate::ml_framework::types::{MLFramework, MLModel, MLTensor};
+use crate::ml_framework::utils::{python_dict_to_tensor, tensor_to_python_dict};
 use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;

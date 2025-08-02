@@ -166,7 +166,7 @@ where
 #[allow(dead_code)]
 pub fn apply_filter_with_boundary<T, D, F>(
     input: &Array<T, D>,
-    kernel_shape: &[usize],
+    kernelshape: &[usize],
     mode: BorderMode,
     constant_value: Option<T>,
     mut filter_fn: F,
@@ -183,10 +183,10 @@ where
         ));
     }
 
-    if kernel_shape.len() != input.ndim() {
+    if kernelshape.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
-            "Kernel _shape must have same length as input dimensions (got {} expected {})",
-            kernel_shape.len(),
+            "Kernel shape must have same length as input dimensions (got {} expected {})",
+            kernelshape.len(),
             input.ndim()
         )));
     }
@@ -201,13 +201,13 @@ where
     // Apply filter at each position
     // For now, we'll use a simple nested loop approach
     // In the future, this could be parallelized
-    let _shape = input._shape();
+    let shape = input.shape();
     let mut indices = vec![0usize; input.ndim()];
 
-    _fn increment_indices(_indices: &mut [usize], _shape: &[usize]) -> bool {
+    _fn increment_indices(_indices: &mut [usize], shape: &[usize]) -> bool {
         for i in (0.._indices.len()).rev() {
             _indices[i] += 1;
-            if _indices[i] < _shape[i] {
+            if _indices[i] < shape[i] {
                 return true;
             }
             _indices[i] = 0;
@@ -225,7 +225,7 @@ where
         output_dyn[dyn_indices] = _value;
 
         // Move to next position
-        if !increment_indices(&mut indices, _shape) {
+        if !increment_indices(&mut indices, shape) {
             break;
         }
     }
@@ -246,15 +246,15 @@ where
     D: Dimension,
     E: Dimension,
 {
-    let kernel_shape: Vec<usize> = kernel.shape().to_vec();
-    let kernel_center: Vec<isize> = kernel_shape.iter().map(|&s| (s / 2) as isize).collect();
+    let kernelshape: Vec<usize> = kernel.shape().to_vec();
+    let kernel_center: Vec<isize> = kernelshape.iter().map(|&s| (s / 2) as isize).collect();
 
     // Clone kernel for use in closure
     let kernel_clone = kernel.clone();
 
     apply_filter_with_boundary(
         input,
-        &kernel_shape,
+        &kernelshape,
         mode,
         constant_value,
         |handler, center_pos| {
@@ -288,7 +288,7 @@ where
                 // Get kernel _value (flipped for convolution)
                 let mut flipped_indices = vec![0usize; handler.ndim()];
                 for i in 0..handler.ndim() {
-                    flipped_indices[i] = kernel_shape[i] - kernel_indices[i] - 1;
+                    flipped_indices[i] = kernelshape[i] - kernel_indices[i] - 1;
                 }
                 let kernel_dyn = kernel_clone.view().into_dyn();
                 let kernel_val = kernel_dyn[ndarray::IxDyn(&flipped_indices)];
@@ -296,7 +296,7 @@ where
                 sum = sum + input_val * kernel_val;
 
                 // Move to next kernel position
-                if !increment_kernel_indices(&mut kernel_indices, &kernel_shape) {
+                if !increment_kernel_indices(&mut kernel_indices, &kernelshape) {
                     break;
                 }
             }

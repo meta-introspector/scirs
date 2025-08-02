@@ -12,7 +12,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2__text::spelling::ErrorModel;
+//! use scirs2_text::spelling::ErrorModel;
 //!
 //! # fn main() {
 //! // Create a default error model
@@ -70,7 +70,7 @@ impl Default for ErrorModel {
             p_deletion: 0.25,
             p_insertion: 0.25,
             p_substitution: 0.25,
-            p_transposition: 0.25_char,
+            p_transposition: 0.25,
             _confusion: HashMap::new(),
             max_edit_distance: 2, // Default max distance
         }

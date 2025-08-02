@@ -69,7 +69,7 @@ fn main() -> Result<()> {
 }
 // Create a simple feed-forward neural network for the XOR problem
 #[allow(dead_code)]
-fn create_model<R: Rng>(_rng: &mut R) -> Result<impl Model<f32>> {
+fn create_model<R: Rng>(rng: &mut R) -> Result<impl Model<f32>> {
     // Create a sequential model
     let mut model = Sequential::new();
     // First layer: 2 inputs -> 4 hidden neurons with ReLU activation

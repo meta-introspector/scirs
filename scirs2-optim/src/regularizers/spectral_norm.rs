@@ -66,14 +66,14 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> SpectralNorm<A> {
 
         // Initialize u and v if not already done
         if self.u.is_none() || self.u.as_ref().unwrap().len() != m {
-            self.u = Some(Array::from_shape_fn((m,), |_| {
+            self.u = Some(Array::fromshape_fn((m,), |_| {
                 let val: f64 = self.rng.random_range(0.0, 1.0);
                 A::from_f64(val).unwrap()
             }));
         }
 
         if self.v.is_none() || self.v.as_ref().unwrap().len() != n {
-            self.v = Some(Array::from_shape_fn((n,), |_| {
+            self.v = Some(Array::fromshape_fn((n,), |_| {
                 let val: f64 = self.rng.gen_range(0.0..1.0);
                 A::from_f64(val).unwrap()
             }));
@@ -127,14 +127,14 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> SpectralNorm<A> {
         let kernel_w = shape[3];
 
         let weights_2d = weights
-            .to_shape((out_channels, in_channels * kernel_h * kernel_w))
+            .toshape((out_channels, in_channels * kernel_h * kernel_w))
             .map_err(|e| OptimError::InvalidConfig(format!("Cannot reshape weights: {}", e)))?;
         let weights_2d_owned = weights_2d.to_owned();
         let normalized_2d = self.normalize(&weights_2d_owned)?;
 
         // Reshape back to 4D
         let normalized_4d = normalized_2d
-            .to_shape((out_channels, in_channels, kernel_h, kernel_w))
+            .toshape((out_channels, in_channels, kernel_h, kernel_w))
             .map_err(|e| {
                 OptimError::InvalidConfig(format!("Cannot reshape normalized weights: {}", e))
             })?;
@@ -201,7 +201,7 @@ mod tests {
         let mut sn = SpectralNorm::new(5);
 
         // Create a 4D tensor (out_channels, in_channels, height, width)
-        let weights = Array::from_shape_fn((2, 3, 3, 3), |(o, i, h, w)| {
+        let weights = Array::fromshape_fn((2, 3, 3, 3), |(o, i, h, w)| {
             (o * 27 + i * 9 + h * 3 + w) as f64
         });
 

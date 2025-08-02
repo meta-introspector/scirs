@@ -6,30 +6,31 @@
 #![allow(dead_code)]
 #![allow(missing_docs)]
 
-pub mod types;
+pub mod batch_processing;
 pub mod converters;
 pub mod datasets;
+pub mod optimization;
+pub mod quantization;
+pub mod serving;
+pub mod types;
 pub mod utils;
 pub mod validation;
-pub mod quantization;
-pub mod optimization;
-pub mod batch_processing;
-pub mod serving;
 
 // Re-export core types for backward compatibility
-pub use types::{MLFramework, DataType, TensorMetadata, ModelMetadata, MLTensor, MLModel};
+pub use batch_processing::{BatchProcessor, DataLoader};
 pub use converters::{
-    MLFrameworkConverter, get_converter,
-    PyTorchConverter, TensorFlowConverter, ONNXConverter, SafeTensorsConverter,
-    JAXConverter, MXNetConverter, CoreMLConverter, HuggingFaceConverter,
+    get_converter, CoreMLConverter, HuggingFaceConverter, JAXConverter, MLFrameworkConverter,
+    MXNetConverter, ONNXConverter, PyTorchConverter, SafeTensorsConverter, TensorFlowConverter,
 };
 pub use datasets::MLDataset;
-pub use validation::{ModelValidator, ValidationConfig, ValidationReport, BatchValidator};
-pub use quantization::{QuantizationMethod, QuantizedTensor, ModelQuantizer, QuantizedModel};
-pub use optimization::{OptimizationTechnique, ModelOptimizer};
-pub use batch_processing::{BatchProcessor, DataLoader};
-pub use serving::{ModelServer, ServerConfig, ApiConfig, InferenceRequest, InferenceResponse, 
-    ResponseStatus, ServerMetrics, HealthStatus, ModelInfo, LoadBalancer};
+pub use optimization::{ModelOptimizer, OptimizationTechnique};
+pub use quantization::{ModelQuantizer, QuantizationMethod, QuantizedModel, QuantizedTensor};
+pub use serving::{
+    ApiConfig, HealthStatus, InferenceRequest, InferenceResponse, LoadBalancer, ModelInfo,
+    ModelServer, ResponseStatus, ServerConfig, ServerMetrics,
+};
+pub use types::{DataType, MLFramework, MLModel, MLTensor, ModelMetadata, TensorMetadata};
+pub use validation::{BatchValidator, ModelValidator, ValidationConfig, ValidationReport};
 
 // Import required dependencies for the remaining modules
 use crate::error::{IoError, Result};
@@ -44,7 +45,7 @@ use std::path::{Path, PathBuf};
 #[cfg(feature = "async")]
 use tokio::{
     fs,
-    sync::{Arc, Mutex, RwLock},
+    sync::{Mutex, RwLock},
     time::{sleep, Duration, Instant},
 };
 

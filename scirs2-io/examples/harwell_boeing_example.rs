@@ -29,9 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn create_and_write_matrix(
-    temp_dir: &tempfile::TempDir,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn create_and_write_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📝 Creating and Writing Harwell-Boeing Matrix...");
 
     // Create a simple sparse matrix in CCS format
@@ -84,9 +82,7 @@ fn create_and_write_matrix(
 }
 
 #[allow(dead_code)]
-fn read_and_analyze_matrix(
-    temp_dir: &tempfile::TempDir,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn read_and_analyze_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Reading and Analyzing Harwell-Boeing Matrix...");
 
     let hb_file = temp_dir.path().join("example_matrix.hb");

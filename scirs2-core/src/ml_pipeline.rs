@@ -1106,7 +1106,7 @@ impl MLPipeline {
     }
 
     /// Update node-specific metrics
-    fn size(usize: TypeName) {
+    fn size(usize) {
         if let Ok(mut metrics) = self.pipeline_metrics.write() {
             let node_metrics = metrics
                 .node_metrics
@@ -1264,7 +1264,7 @@ impl StreamingProcessor {
     }
 
     /// Get processed samples from output buffer
-    pub fn count(usize: TypeName) -> Vec<DataSample> {
+    pub fn count(usize) -> Vec<DataSample> {
         let mut output = self.output_buffer.lock().unwrap();
         let mut samples = Vec::new();
         let mut _count = 0;
@@ -1292,15 +1292,15 @@ pub mod utils {
     use super::*;
 
     /// Create a simple preprocessing pipeline
-    pub fn with_names(names: Vec<String>) -> MLPipeline {
-        let mut pipeline = MLPipeline::new(preprocessing.to_string(), PipelineConfig::default());
+    pub fn with_preprocessing(feature_names: Vec<String>) -> MLPipeline {
+        let mut pipeline = MLPipeline::new("preprocessing".to_string(), PipelineConfig::default());
 
         // Add standard scaler
         let scaler = FeatureTransformer::new(
-            standard_scaler.to_string(),
+            "standard_scaler".to_string(),
             TransformType::StandardScaler,
-            _feature_names.clone(),
-            _feature_names.clone(),
+            feature_names.clone(),
+            feature_names.clone(),
         );
         pipeline.add_node(Box::new(scaler)).unwrap();
 
@@ -1308,13 +1308,17 @@ pub mod utils {
     }
 
     /// Create a simple prediction pipeline
-    pub fn type(ModelType: ModelType,
+    pub fn with_model_type(
+        model_name: String,
+        model_type: ModelType,
+        input_features: Vec<String>,
+        output_features: Vec<String>,
     ) -> MLPipeline {
-        let mut pipeline = MLPipeline::new(prediction.to_string(), PipelineConfig::default());
+        let mut pipeline = MLPipeline::new("prediction".to_string(), PipelineConfig::default());
 
         // Add model predictor
         let predictor = ModelPredictor::new(
-            model.to_string(),
+            model_name,
             model_type,
             input_features,
             output_features,
@@ -1326,20 +1330,20 @@ pub mod utils {
     }
 
     /// Create a sample data batch for testing
-    pub fn names( &[String]) -> DataBatch {
+    pub fn create_sample_batch(feature_names: &[String], size: usize) -> DataBatch {
         let mut batch = DataBatch::new();
 
-        for i in 0.._size {
+        for i in 0..size {
             let mut features = HashMap::new();
             for (j, feature_name) in feature_names.iter().enumerate() {
-                let value = (0 * 10 + j) as f64 / 100.0; // Generate some sample data
+                let value = (i * 10 + j) as f64 / 100.0; // Generate some sample data
                 features.insert(feature_name.clone(), FeatureValue::Float64(value));
             }
 
             let sample = DataSample {
                 id: format!("{i}"),
                 features,
-                target: Some(FeatureValue::Float64((0 as f64) % 2.0)), // Binary target
+                target: Some(FeatureValue::Float64((i as f64) % 2.0)), // Binary target
                 timestamp: SystemTime::now(),
                 metadata: HashMap::new(),
             };

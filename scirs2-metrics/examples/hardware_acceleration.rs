@@ -266,8 +266,8 @@ fn hardware_matrix_example() -> Result<()> {
 
     // Test matrix-vector multiplication
     let matrix =
-        Array2::from_shape_fn((1000, 500), |(i, j)| (i as f64 * 0.01) + (j as f64 * 0.001));
-    let vector = Array1::from_shape_fn(500, |i| (i as f64).sin());
+        Array2::fromshape_fn((1000, 500), |(i, j)| (i as f64 * 0.01) + (j as f64 * 0.001));
+    let vector = Array1::fromshape_fn(500, |i| (i as f64).sin());
 
     println!(
         "  Matrix shape: {:?}, Vector length: {}",
@@ -283,7 +283,7 @@ fn hardware_matrix_example() -> Result<()> {
     );
 
     // Test pairwise distance computation
-    let data_points = Array2::from_shape_fn((100, 50), |(i, j)| {
+    let data_points = Array2::fromshape_fn((100, 50), |(i, j)| {
         (i as f64 * 0.1) + (j as f64 * 0.05).cos()
     });
 
@@ -299,7 +299,7 @@ fn hardware_matrix_example() -> Result<()> {
     }
 
     // Test correlation matrix computation
-    let correlation_data = Array2::from_shape_fn((500, 20), |(i, j)| {
+    let correlation_data = Array2::fromshape_fn((500, 20), |(i, j)| {
         (i as f64 * 0.01).sin() + (j as f64 * 0.1).cos() + (i + j) as f64 * 0.001
     });
 

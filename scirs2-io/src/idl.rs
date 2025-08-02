@@ -128,7 +128,7 @@ enum Endianness {
 
 impl IdlReader {
     /// Create a new IDL reader
-    pub fn new<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
         let mut reader = BufReader::new(file);
 
@@ -308,7 +308,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Byte(array))
     }
@@ -325,7 +325,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Int(array))
     }
@@ -342,7 +342,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Long(array))
     }
@@ -359,7 +359,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Float(array))
     }
@@ -376,7 +376,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Double(array))
     }
@@ -395,7 +395,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Complex(array))
     }
@@ -414,7 +414,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::DoubleComplex(array))
     }
@@ -431,7 +431,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::UInt(array))
     }
@@ -448,7 +448,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::ULong(array))
     }
@@ -465,7 +465,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::Long64(array))
     }
@@ -482,7 +482,7 @@ impl IdlReader {
 
         let shape = IxDyn(&dims);
         let array =
-            Array::from_shape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
+            Array::fromshape_vec(shape, data).map_err(|e| IoError::FormatError(e.to_string()))?;
 
         Ok(IdlType::ULong64(array))
     }
@@ -646,7 +646,7 @@ impl IdlReader {
 
 /// Read variables from an IDL save file
 #[allow(dead_code)]
-pub fn read_idl<P: AsRef<Path>>(_path: P) -> Result<HashMap<String, IdlType>> {
+pub fn read_idl<P: AsRef<Path>>(path: P) -> Result<HashMap<String, IdlType>> {
     let mut reader = IdlReader::new(_path)?;
     reader.read_all()
 }
@@ -659,7 +659,7 @@ pub struct IdlWriter {
 
 impl IdlWriter {
     /// Create a new IDL writer
-    pub fn new<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
         let mut writer = BufWriter::new(file);
 
@@ -949,7 +949,7 @@ impl IdlWriter {
 
 /// Write variables to an IDL save file
 #[allow(dead_code)]
-pub fn write_idl<P: AsRef<Path>>(_path: P, variables: &HashMap<String, IdlType>) -> Result<()> {
+pub fn write_idl<P: AsRef<Path>>(path: P, variables: &HashMap<String, IdlType>) -> Result<()> {
     let mut writer = IdlWriter::new(_path)?;
     writer.write_all(variables)
 }

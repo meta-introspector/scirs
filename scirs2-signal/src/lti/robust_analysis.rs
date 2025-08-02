@@ -1,17 +1,18 @@
-//! Robust Controllability and Observability Analysis
-//!
-//! This module provides enhanced numerical robustness and advanced analysis capabilities
-//! for Linear Time-Invariant system controllability and observability properties.
-//!
-//! Key Features:
-//! - Numerically robust matrix computations using SVD-based methods
-//! - Sensitivity analysis to parameter perturbations
-//! - Structured perturbation analysis for real-world robustness
-//! - Performance-oriented controllability/observability metrics
-//! - Frequency-domain controllability/observability measures
-//! - Advanced condition assessment and uncertainty quantification
-//! - Multi-scale Gramian analysis for different time horizons
+// Robust Controllability and Observability Analysis
+//
+// This module provides enhanced numerical robustness and advanced analysis capabilities
+// for Linear Time-Invariant system controllability and observability properties.
+//
+// Key Features:
+// - Numerically robust matrix computations using SVD-based methods
+// - Sensitivity analysis to parameter perturbations
+// - Structured perturbation analysis for real-world robustness
+// - Performance-oriented controllability/observability metrics
+// - Frequency-domain controllability/observability measures
+// - Advanced condition assessment and uncertainty quantification
+// - Multi-scale Gramian analysis for different time horizons
 
+use super::analysis::{ControllabilityAnalysis, ObservabilityAnalysis};
 use crate::error::{SignalError, SignalResult};
 use crate::lti::systems::StateSpace;
 use ndarray::{Array1, Array2};
@@ -19,7 +20,6 @@ use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
-use super::analysis::{ControllabilityAnalysis, ObservabilityAnalysis};
 
 #[allow(unused_imports)]
 /// Robust controllability and observability analysis result
@@ -535,9 +535,9 @@ fn build_controllability_matrix_robust(_ss: &StateSpace) -> SignalResult<Array2<
     }
 
     // Convert to proper matrix format
-    let a_matrix = Array2::from_shape_vec((n, n), _ss.a.clone())
+    let a_matrix = Array2::fromshape_vec((n, n), _ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
-    let b_matrix = Array2::from_shape_vec((n, m), _ss.b.clone())
+    let b_matrix = Array2::fromshape_vec((n, m), _ss.b.clone())
         .map_err(|_| SignalError::ValueError("Invalid B matrix shape".to_string()))?;
 
     // Build controllability matrix: [B AB A²B ... A^(n-1)B]
@@ -581,9 +581,9 @@ fn build_observability_matrix_robust(_ss: &StateSpace) -> SignalResult<Array2<f6
     }
 
     // Convert to proper matrix format
-    let a_matrix = Array2::from_shape_vec((n, n), _ss.a.clone())
+    let a_matrix = Array2::fromshape_vec((n, n), _ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
-    let c_matrix = Array2::from_shape_vec((p, n), _ss.c.clone())
+    let c_matrix = Array2::fromshape_vec((p, n), _ss.c.clone())
         .map_err(|_| SignalError::ValueError("Invalid C matrix shape".to_string()))?;
 
     // Build observability matrix: [C; CA; CA²; ...; CA^(n-1)]
@@ -864,7 +864,7 @@ fn estimate_smallest_singular_value(_matrix: &Array2<f64>) -> f64 {
         }
     }
 
-    let dimension = (m * n)  as f64;
+    let dimension = (m * n) as f64;
     (frobenius_norm_sq / dimension).sqrt()
 }
 
@@ -880,9 +880,9 @@ fn compute_mode_controllability_degrees(
     let mut degrees = Array1::zeros(n);
 
     // Compute A matrix in proper format
-    let a_matrix = Array2::from_shape_vec((n, n), ss.a.clone())
+    let a_matrix = Array2::fromshape_vec((n, n), ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
-    let b_matrix = Array2::from_shape_vec((n, ss.n_inputs), ss.b.clone())
+    let b_matrix = Array2::fromshape_vec((n, ss.n_inputs), ss.b.clone())
         .map_err(|_| SignalError::ValueError("Invalid B matrix shape".to_string()))?;
 
     // For each state, compute how well it can be controlled
@@ -928,9 +928,9 @@ fn compute_mode_observability_degrees(
     let mut degrees = Array1::zeros(n);
 
     // Compute A and C matrices in proper format
-    let a_matrix = Array2::from_shape_vec((n, n), ss.a.clone())
+    let a_matrix = Array2::fromshape_vec((n, n), ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
-    let c_matrix = Array2::from_shape_vec((ss.n_outputs, n), ss.c.clone())
+    let c_matrix = Array2::fromshape_vec((ss.n_outputs, n), ss.c.clone())
         .map_err(|_| SignalError::ValueError("Invalid C matrix shape".to_string()))?;
 
     // For each state, compute how well it can be observed
@@ -1228,7 +1228,7 @@ fn frequency_domain_analysis(
 
     // Generate logarithmically spaced frequencies
     let mut frequencies = Array1::zeros(num_freq);
-    let log_step = (f_max / f_min).ln() / (num_freq - 1)  as f64;
+    let log_step = (f_max / f_min).ln() / (num_freq - 1) as f64;
     for i in 0..num_freq {
         frequencies[i] = f_min * (i as f64 * log_step).exp();
     }
@@ -1372,7 +1372,7 @@ mod tests {
     #[test]
     fn test_svd_controllability_analysis() {
         let controllability_matrix =
-            Array2::from_shape_vec((2, 4), vec![1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -2.0]).unwrap();
+            Array2::fromshape_vec((2, 4), vec![1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -2.0]).unwrap();
         let config = RobustAnalysisConfig::default();
 
         let analysis = svd_controllability_analysis(&controllability_matrix, &config).unwrap();

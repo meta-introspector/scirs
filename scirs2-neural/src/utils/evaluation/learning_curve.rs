@@ -128,12 +128,12 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
         // Pre-allocate result string with estimated capacity
         let mut result = String::with_capacity(width * height * 2);
         // Add title with styling if provided
-        if let Some(title_text) = title {
+        if let Some(titletext) = title {
             if color_options.enabled {
-                let styled_title = stylize(title_text, Style::Bold);
+                let styled_title = stylize(titletext, Style::Bold);
                 result.push_str(&format!("{styled_title}\n\n"));
             } else {
-                result.push_str(&format!("{title_text}\n\n"));
+                result.push_str(&format!("{titletext}\n\n"));
             }
         } else if color_options.enabled {
             let styled_metric = stylize(metric_name, Style::Bold);

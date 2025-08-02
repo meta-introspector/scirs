@@ -76,15 +76,15 @@ fn create_performance_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>
     }
 
     let layout = Layout::new()
-        .title(Title::with_text("FFT Performance Comparison"))
+        .title(Title::withtext("FFT Performance Comparison"))
         .x_axis(
             Axis::new()
-                .title(Title::with_text("Input Size"))
+                .title(Title::withtext("Input Size"))
                 .type_(AxisType::Log),
         )
         .y_axis(
             Axis::new()
-                .title(Title::with_text("Time (ms)"))
+                .title(Title::withtext("Time (ms)"))
                 .type_(AxisType::Log),
         );
 
@@ -127,15 +127,15 @@ fn create_memory_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     }
 
     let layout = Layout::new()
-        .title(Title::with_text("FFT Memory Usage Comparison"))
+        .title(Title::withtext("FFT Memory Usage Comparison"))
         .x_axis(
             Axis::new()
-                .title(Title::with_text("Input Size"))
+                .title(Title::withtext("Input Size"))
                 .type_(AxisType::Log),
         )
         .y_axis(
             Axis::new()
-                .title(Title::with_text("Memory (KB)"))
+                .title(Title::withtext("Memory (KB)"))
                 .type_(AxisType::Log),
         );
 
@@ -178,15 +178,15 @@ fn create_accuracy_plot(_data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     }
 
     let layout = Layout::new()
-        .title(Title::with_text("FFT Accuracy Comparison"))
+        .title(Title::withtext("FFT Accuracy Comparison"))
         .x_axis(
             Axis::new()
-                .title(Title::with_text("Input Size"))
+                .title(Title::withtext("Input Size"))
                 .type_(AxisType::Log),
         )
         .y_axis(
             Axis::new()
-                .title(Title::with_text("Error"))
+                .title(Title::withtext("Error"))
                 .type_(AxisType::Log),
         );
 

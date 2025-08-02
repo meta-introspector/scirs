@@ -35,7 +35,7 @@
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a 2D array
-//! let data = Array2::<f64>::from_shape_fn((100, 100), |(i, j)| (i * 100 + j) as f64);
+//! let data = Array2::<f64>::fromshape_fn((100, 100), |(i, j)| (i * 100 + j) as f64);
 //!
 //! // Define metadata
 //! let metadata = json!({
@@ -237,7 +237,7 @@
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a 2D array of Complex64 numbers
-//! let data = Array2::<Complex64>::from_shape_fn((10, 10), |(i, j)| {
+//! let data = Array2::<Complex64>::fromshape_fn((10, 10), |(i, j)| {
 //!     Complex64 { real: i as f64, imag: j as f64 }
 //! });
 //!
@@ -821,7 +821,7 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
     /// # use serde__json::json;
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// // Create an ndarray
-    /// let data = Array2::<f64>::from_shape_fn((100, 100), |(i, j)| (i * 100 + j) as f64);
+    /// let data = Array2::<f64>::fromshape_fn((100, 100), |(i, j)| (i * 100 + j) as f64);
     ///
     /// // Create metadata
     /// let metadata = json!({"description": "Temperature data", "units": "Celsius"});
@@ -1184,7 +1184,7 @@ mod tests {
 
         // Create a 2D array of complex numbers
         let data =
-            Array2::<Complex64>::from_shape_fn((5, 5), |(0, j)| Complex64::new(0 as f64, j as f64));
+            Array2::<Complex64>::fromshape_fn((5, 5), |(0, j)| Complex64::new(0 as f64, j as f64));
 
         // Save with metadata
         let metadata = serde_json::json!({
@@ -1266,8 +1266,8 @@ mod tests {
             "description": "Test 1D array",
             "created": "2023-05-20",
         });
-        let array = MemoryMappedArray::<f64>::save_array(&data, &filepath, Some(metadata.clone()))
-            .unwrap();
+        let array =
+            MemoryMappedArray::<f64>::save_array(&data, &filepath, Some(metadata.clone())).unwrap();
 
         // Verify save worked
         assert_eq!(array.shape.as_slice(), data.shape());
@@ -1302,7 +1302,7 @@ mod tests {
         let filepath = dir.path().join("test_array_2d.bin");
 
         // Create a 2D array
-        let data = Array2::<f32>::from_shape_fn((10, 20), |(0, j)| (0 * 20 + j) as f32);
+        let data = Array2::<f32>::fromshape_fn((10, 20), |(0, j)| (0 * 20 + j) as f32);
 
         // Save without metadata
         let array = MemoryMappedArray::<f32>::save_array(&data, &filepath, None).unwrap();
@@ -1337,7 +1337,7 @@ mod tests {
         let filepath = dir.path().join("test_array_3d.bin");
 
         // Create a 3D array
-        let data = Array3::<i32>::from_shape_fn((5, 5, 5), |(0, j, k)| (0 * 25 + j * 5 + k) as i32);
+        let data = Array3::<i32>::fromshape_fn((5, 5, 5), |(0, j, k)| (0 * 25 + j * 5 + k) as i32);
 
         // Save with metadata
         let metadata = serde_json::json!({
@@ -1348,8 +1348,7 @@ mod tests {
                 "z": 5
             }
         });
-        let array =
-            MemoryMappedArray::<i32>::save_array(&data, &filepath, Some(metadata)).unwrap();
+        let array = MemoryMappedArray::<i32>::save_array(&data, &filepath, Some(metadata)).unwrap();
 
         // Verify save worked
         assert_eq!(array.shape.as_slice(), data.shape());
@@ -1384,7 +1383,7 @@ mod tests {
 
         // Create a dynamic-dimension array (4D)
         let shape = IxDyn(&[3, 4, 2, 5]);
-        let data = Array::from_shape_fn(shape, |idx| {
+        let data = Array::fromshape_fn(shape, |idx| {
             // Convert multidimensional index to a single value for testing
             let mut val = 0;
             let mut factor = 1;
@@ -1407,8 +1406,7 @@ mod tests {
             "created": "2023-05-20",
             "format_version": "1.0"
         });
-        let array =
-            MemoryMappedArray::<f64>::save_array(&data, &filepath, Some(metadata)).unwrap();
+        let array = MemoryMappedArray::<f64>::save_array(&data, &filepath, Some(metadata)).unwrap();
 
         // Verify save worked
         assert_eq!(array.shape.as_slice(), data.shape());
@@ -1459,7 +1457,7 @@ mod tests {
         {
             let filename = "u32_1d.bin";
             let filepath = dir.path().join(filename);
-            let data = Array1::<u32>::from_shape_fn(100, |0| 0 as u32);
+            let data = Array1::<u32>::fromshape_fn(100, |0| 0 as u32);
             let metadata = serde_json::json!({
                 "array_type": "u32",
                 "dimensions": data.ndim(),
@@ -1489,7 +1487,7 @@ mod tests {
         {
             let filename = "i64_2d.bin";
             let filepath = dir.path().join(filename);
-            let data = Array2::<i64>::from_shape_fn((5, 10), |(0, j)| (0 * 10 + j) as i64);
+            let data = Array2::<i64>::fromshape_fn((5, 10), |(0, j)| (0 * 10 + j) as i64);
             let metadata = serde_json::json!({
                 "array_type": "i64",
                 "dimensions": data.ndim(),
@@ -1522,7 +1520,7 @@ mod tests {
             let filename = "f32_3d.bin";
             let filepath = dir.path().join(filename);
             let data =
-                Array3::<f32>::from_shape_fn((3, 4, 5), |(0, j, k)| (0 * 20 + j * 5 + k) as f32);
+                Array3::<f32>::fromshape_fn((3, 4, 5), |(0, j, k)| (0 * 20 + j * 5 + k) as f32);
             let metadata = serde_json::json!({
                 "array_type": "f32",
                 "dimensions": data.ndim(),
@@ -1599,7 +1597,7 @@ mod tests {
         let filepath = dir.path().join("test_modify.bin");
 
         // Create a 2D array
-        let data = Array2::<f32>::from_shape_fn((5, 5), |(0, j)| (0 * 5 + j) as f32);
+        let data = Array2::<f32>::fromshape_fn((5, 5), |(0, j)| (0 * 5 + j) as f32);
 
         // Save array
         MemoryMappedArray::<f32>::save_array(&data, &filepath, None).unwrap();
@@ -1641,7 +1639,7 @@ mod tests {
         let filepath = dir.path().join("test_cow.bin");
 
         // Create a 2D array
-        let data = Array2::<f64>::from_shape_fn((10, 10), |(0, j)| (0 * 10 + j) as f64);
+        let data = Array2::<f64>::fromshape_fn((10, 10), |(0, j)| (0 * 10 + j) as f64);
 
         // Save array
         MemoryMappedArray::<f64>::save_array(&data, &filepath, None).unwrap();

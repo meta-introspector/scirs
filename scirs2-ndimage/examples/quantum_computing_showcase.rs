@@ -154,7 +154,7 @@ fn create_test_images() -> TestImages {
     }
 
     // Create edge feature template
-    let edge_features = Array2::from_shape_vec(
+    let edge_features = Array2::fromshape_vec(
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
@@ -188,15 +188,15 @@ fn demonstrate_quantum_superposition_filtering(
 
     // Create multiple filter states
     let gaussian_filter =
-        Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 4.0, 2.0, 1.0, 2.0, 1.0]).unwrap()
+        Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 4.0, 2.0, 1.0, 2.0, 1.0]).unwrap()
             / 16.0;
 
     let edge_filter =
-        Array2::from_shape_vec((3, 3), vec![-1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+        Array2::fromshape_vec((3, 3), vec![-1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0])
             .unwrap();
 
     let identity_filter =
-        Array2::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]).unwrap();
+        Array2::fromshape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]).unwrap();
 
     let filter_states = vec![gaussian_filter, edge_filter, identity_filter];
 
@@ -466,14 +466,14 @@ fn demonstrate_quantum_amplitude_amplification(
     let start = Instant::now();
 
     // Create target features to amplify
-    let edge_feature = "Array"2::from_shape_vec(
+    let edge_feature = "Array"2::fromshape_vec(
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
     .unwrap();
 
     let corner_feature =
-        Array2::from_shape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
+        Array2::fromshape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
             .unwrap();
 
     let target_features = vec![edge_feature, corner_feature];

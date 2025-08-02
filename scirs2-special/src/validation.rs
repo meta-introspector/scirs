@@ -85,7 +85,7 @@ where
 
 /// Check if two arrays have the same shape
 #[allow(dead_code)]
-pub fn check_same_shape<S1, S2, D1, D2>(
+pub fn check_sameshape<S1, S2, D1, D2>(
     a: &ArrayBase<S1, D1>,
     a_name: &str,
     b: &ArrayBase<S2, D2>,
@@ -97,7 +97,7 @@ where
     D1: Dimension,
     D2: Dimension,
 {
-    validation::check_same_shape(a, a_name, b, b_name).map_err(|_| {
+    validation::check_sameshape(a, a_name, b, b_name).map_err(|_| {
         SpecialError::ValueError(format!(
             "{} and {} must have the same shape, got {:?} and {:?}",
             a_name,
@@ -230,13 +230,13 @@ mod tests {
     }
 
     #[test]
-    fn test_check_same_shape() {
+    fn test_check_sameshape() {
         let a = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
         let b = arr2(&[[5.0, 6.0], [7.0, 8.0]]);
-        assert!(check_same_shape(&a, "a", &b, "b").is_ok());
+        assert!(check_sameshape(&a, "a", &b, "b").is_ok());
 
         let c = arr2(&[[1.0], [2.0]]);
-        assert!(check_same_shape(&a, "a", &c, "c").is_err());
+        assert!(check_sameshape(&a, "a", &c, "c").is_err());
     }
 
     #[test]

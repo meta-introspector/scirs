@@ -221,8 +221,8 @@ where
         Self::from_raw_csc(values, col_ptrs, row_indices, shape)
     }
 
-    pub fn empty(_shape: (usize, usize)) -> Self {
-        let (rows, cols) = _shape;
+    pub fn empty(shape: (usize, usize)) -> Self {
+        let (rows, cols) = shape;
         let indptr = vec![0; cols + 1];
 
         CscMatrix {

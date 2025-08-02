@@ -415,7 +415,7 @@ mod tests {
     use crate::tokenize::WhitespaceTokenizer;
     use crate::vectorize::TfidfVectorizer;
 
-    fn create_test_texts() -> Vec<&'static str> {
+    fn create_testtexts() -> Vec<&'static str> {
         vec![
             "This is a test document",
             "Another test document here",
@@ -428,7 +428,7 @@ mod tests {
     #[test]
     fn test_parallel_tokenizer() {
         let tokenizer = ParallelTokenizer::new(WhitespaceTokenizer::new());
-        let texts = create_test_texts();
+        let texts = create_testtexts();
 
         let tokens = tokenizer.tokenize(&texts);
 
@@ -440,7 +440,7 @@ mod tests {
     #[test]
     fn test_parallel_tokenizer_with_mapper() {
         let tokenizer = ParallelTokenizer::new(WhitespaceTokenizer::new());
-        let texts = create_test_texts();
+        let texts = create_testtexts();
 
         let token_counts = tokenizer.tokenize_and_map(&texts, |tokens| tokens.len());
 
@@ -451,7 +451,7 @@ mod tests {
     #[test]
     fn test_parallel_vectorizer() {
         let mut vectorizer = TfidfVectorizer::default();
-        let texts = create_test_texts();
+        let texts = create_testtexts();
 
         vectorizer.fit(&texts).unwrap();
         let parallel_vectorizer = ParallelVectorizer::new(vectorizer);
@@ -463,9 +463,9 @@ mod tests {
     }
 
     #[test]
-    fn test_parallel_text_processor() {
+    fn test_paralleltext_processor() {
         let processor = ParallelTextProcessor::new();
-        let texts = create_test_texts();
+        let texts = create_testtexts();
 
         let word_counts = processor.process(&texts, |text| text.split_whitespace().count());
 
@@ -473,9 +473,9 @@ mod tests {
     }
 
     #[test]
-    fn test_parallel_text_processor_with_progress() {
+    fn test_paralleltext_processor_with_progress() {
         let processor = ParallelTextProcessor::new();
-        let texts = create_test_texts();
+        let texts = create_testtexts();
 
         let (word_counts, progress) = processor
             .process_with_progress(&texts, |text| text.split_whitespace().count(), 2)
@@ -488,7 +488,7 @@ mod tests {
     #[test]
     fn test_parallel_corpus_processor() {
         let processor = ParallelCorpusProcessor::new(2);
-        let texts = create_test_texts();
+        let texts = create_testtexts();
 
         let result = processor
             .process(&texts, |batch| {

@@ -23,13 +23,13 @@ use std::hint::black_box;
 /// Create a test vector
 #[allow(dead_code)]
 fn create_test_vector(n: usize) -> Array1<f64> {
-    Array1::from_shape_fn(n, |i| ((i + 1) as f64 * 0.1).sin())
+    Array1::fromshape_fn(n, |i| ((i + 1) as f64 * 0.1).sin())
 }
 
 /// Create a general test matrix for comparison
 #[allow(dead_code)]
 fn create_general_matrix(n: usize) -> Array2<f64> {
-    Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin())
+    Array2::fromshape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin())
 }
 
 /// Create block matrices for testing
@@ -37,7 +37,7 @@ fn create_general_matrix(n: usize) -> Array2<f64> {
 fn create_block_matrices(_block_size: usize, num_blocks: usize) -> Vec<Array2<f64>> {
     (0..num_blocks)
         .map(|k| {
-            Array2::from_shape_fn((_block_size, _block_size), |(i, j)| {
+            Array2::fromshape_fn((_block_size, _block_size), |(i, j)| {
                 ((i + j + k + 1) as f64 * 0.1).sin()
             })
         })
@@ -484,7 +484,7 @@ fn bench_banded_operations(c: &mut Criterion) {
 
     for &size in &[500, 1000, 2000] {
         for &bandwidth in &[5, 10, 20, 50] {
-            let matrix_data = Array2::from_shape_fn((2 * bandwidth + 1, size), |(i, j)| {
+            let matrix_data = Array2::fromshape_fn((2 * bandwidth + 1, size), |(i, j)| {
                 ((i + j + 1) as f64 * 0.1).sin()
             });
             let vector = create_test_vector(size);

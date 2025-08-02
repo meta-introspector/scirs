@@ -357,7 +357,7 @@ impl<F: Float> CustomMetricResults<F> {
     }
 }
 
-impl<F: Float + fmt::Display>, fmt::Display for CustomMetricResults<F> {
+impl<F: Float + fmt::Display> fmt::Display for CustomMetricResults<F> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Custom {} Metrics:", self.metric_type)?;
         writeln!(f, "{:-<50}", "")?;

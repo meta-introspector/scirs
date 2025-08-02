@@ -11,21 +11,21 @@
 //! # Example
 //!
 //! ```
-//! use scirs2_text::spelling::NGramModel;
+//! use scirs2text::spelling::NGramModel;
 //!
 //! # fn main() {
 //! // Create a new trigram language model
 //! let mut model = NGramModel::new(3);
 //!
 //! // Train the model with some text
-//! model.add_text("The quick brown fox jumps over the lazy dog.");
-//! model.add_text("Programming languages like Python and Rust are popular.");
+//! model.addtext("The quick brown fox jumps over the lazy dog.");
+//! model.addtext("Programming languages like Python and Rust are popular.");
 //!
 //! // Get probability of a word given its context
 //! let context = vec!["quick".to_string(), "brown".to_string()];
 //! let prob = model.probability("fox", &context);
 //!
-//! // Higher probability for words that appeared in the training _text
+//! // Higher probability for words that appeared in the training text
 //! assert!(prob > model.probability("cat", &context));
 //! # }
 //! ```
@@ -76,7 +76,7 @@ impl NGramModel {
     }
 
     /// Add a text to the language model
-    pub fn add_text(&mut self, text: &str) {
+    pub fn addtext(&mut self, text: &str) {
         let words: Vec<String> = text
             .split_whitespace()
             .map(|s| {
@@ -166,7 +166,7 @@ impl NGramModel {
                 continue;
             }
 
-            self.add_text(&line);
+            self.addtext(&line);
         }
 
         Ok(())
@@ -386,7 +386,7 @@ mod tests {
         let mut model = NGramModel::new(3);
 
         // Add some training data
-        model.add_text("The quick brown fox jumps over the lazy dog.");
+        model.addtext("The quick brown fox jumps over the lazy dog.");
 
         // Test unigram probabilities
         let p_the = model.unigram_probability("the");

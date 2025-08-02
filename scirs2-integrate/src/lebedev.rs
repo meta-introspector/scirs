@@ -128,7 +128,7 @@ impl LebedevOrder {
 /// assert!((weight_sum - 1.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn lebedev_rule<F: IntegrateFloat>(_order: LebedevOrder) -> IntegrateResult<LebedevRule<F>> {
+pub fn lebedev_rule<F: IntegrateFloat>(order: LebedevOrder) -> IntegrateResult<LebedevRule<F>> {
     // Generate the rule based on the requested _order
     match _order {
         LebedevOrder::Order6 => generate_order6(),

@@ -164,7 +164,7 @@ pub mod astronomy {
                 spectral_classes.push(spectral_class as f64);
             }
 
-            let data_array = Array2::from_shape_vec((n_stars, 8), data)
+            let data_array = Array2::fromshape_vec((n_stars, 8), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(spectral_classes);
@@ -251,7 +251,7 @@ pub mod astronomy {
                 planet_types.push(planet_type as f64);
             }
 
-            let data_array = Array2::from_shape_vec((n_planets, 6), data)
+            let data_array = Array2::fromshape_vec((n_planets, 6), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(planet_types);
@@ -304,7 +304,7 @@ pub mod astronomy {
             for _ in 0..n_supernovae {
                 let sn_type = rng.gen_range(0..4);
 
-                let (peak_mag..decline_rate, color_evolution, host_mass) = match sn_type {
+                let (peak_mag, decline_rate, color_evolution, host_mass) = match sn_type {
                     0 => (-19.3, 1.1, 0.2, 10.5), // Type Ia
                     1 => (-18.5, 1.8, 0.5, 9.8),  // Type Ib/c
                     2 => (-16.8, 0.8, 0.3, 9.2),  // Type II-P
@@ -341,7 +341,7 @@ pub mod astronomy {
                 sn_types.push(sn_type as f64);
             }
 
-            let data_array = Array2::from_shape_vec((n_supernovae..10), data)
+            let data_array = Array2::fromshape_vec((n_supernovae..10), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(sn_types);
@@ -453,7 +453,7 @@ pub mod genomics {
                 phenotypes.push(condition as f64);
             }
 
-            let data_array = Array2::from_shape_vec((n_samples, n_genes), data)
+            let data_array = Array2::fromshape_vec((n_samples, n_genes), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(phenotypes);
@@ -557,7 +557,7 @@ pub mod genomics {
             }
 
             let n_features = 4_usize.pow(k as u32); // 4^k possible k-mers
-            let data_array = Array2::from_shape_vec((n_sequences, n_features), data)
+            let data_array = Array2::fromshape_vec((n_sequences, n_features), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(sequence_types);
@@ -715,7 +715,8 @@ pub mod climate {
                                     + std::f64::consts::PI)
                                     .cos()
                         }
-                        1 => 1.0 + 0.2 * (year_progress * 2.0 * std::f64::consts::PI).sin(, _ => 1.0,
+                        1 => 1.0 + 0.2 * (year_progress * 2.0 * std::f64::consts::PI).sin(),
+                        _ => 1.0,
                     };
 
                     let precip = if rng.random::<f64>() < 0.3 {
@@ -753,7 +754,7 @@ pub mod climate {
                 ]);
             }
 
-            let data_array = Array2::from_shape_vec((n_stations, 8), data)
+            let data_array = Array2::fromshape_vec((n_stations, 8), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(climate_zones);
@@ -855,7 +856,7 @@ pub mod climate {
                 air_quality_index.push(aqi);
             }
 
-            let data_array = Array2::from_shape_vec((n_measurements, 12), data)
+            let data_array = Array2::fromshape_vec((n_measurements, 12), data)
                 .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
             let target = Array1::from_vec(air_quality_index);

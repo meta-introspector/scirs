@@ -1,15 +1,16 @@
-//! Cutting-edge denoising methods
-//!
-//! This module implements state-of-the-art denoising algorithms including:
-//! - Dictionary Learning-based denoising (K-SVD)
-//! - Sparse coding denoising
-//! - Non-Local Sparse Coding (NLSC)
-//! - BM3D-inspired block matching
-//! - Adaptive dictionary methods
-//! - Learned iterative shrinkage thresholding (LISTA)
+use ndarray::s;
+// Cutting-edge denoising methods
+//
+// This module implements state-of-the-art denoising algorithms including:
+// - Dictionary Learning-based denoising (K-SVD)
+// - Sparse coding denoising
+// - Non-Local Sparse Coding (NLSC)
+// - BM3D-inspired block matching
+// - Adaptive dictionary methods
+// - Learned iterative shrinkage thresholding (LISTA)
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, s};
+use ndarray::{ Array1, Array2, ArrayView1};
 use scirs2_core::parallel_ops::*;
 use std::f64::consts::PI;
 
@@ -350,7 +351,7 @@ fn ksvd_dictionary_learning(
             let diff = &patch.to_owned() - &reconstruction;
             error += diff.dot(&diff);
         }
-        error /= num_patches  as f64;
+        error /= num_patches as f64;
 
         reconstruction_error = error;
 
@@ -766,7 +767,7 @@ mod tests {
         let n = 128;
         let mut signal = Array1::zeros(n);
         for i in 0..n {
-            let t = i as f64 / n  as f64;
+            let t = i as f64 / n as f64;
             signal[i] = (2.0 * PI * 5.0 * t).sin() + 0.5 * (2.0 * PI * 10.0 * t).sin();
         }
 

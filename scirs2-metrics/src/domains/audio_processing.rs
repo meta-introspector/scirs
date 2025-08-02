@@ -674,8 +674,8 @@ impl AudioProcessingMetrics {
     /// Evaluate speech recognition output
     pub fn evaluate_speech_recognition(
         &mut self,
-        reference_text: &[String],
-        hypothesis_text: &[String],
+        referencetext: &[String],
+        hypothesistext: &[String],
         reference_phones: Option<&[Vec<String>]>,
         hypothesis_phones: Option<&[Vec<String>]>,
         confidence_scores: Option<&[f64]>,
@@ -683,12 +683,12 @@ impl AudioProcessingMetrics {
         // Calculate WER
         let wer = self
             .speech_recognition
-            .calculate_wer(reference_text, hypothesis_text)?;
+            .calculate_wer(referencetext, hypothesistext)?;
 
         // Calculate CER
         let cer = self
             .speech_recognition
-            .calculate_cer(reference_text, hypothesis_text)?;
+            .calculate_cer(referencetext, hypothesistext)?;
 
         // Calculate PER if phone sequences provided
         let per =
@@ -704,7 +704,7 @@ impl AudioProcessingMetrics {
         // Calculate BLEU score (treating as translation task)
         let bleu = Some(
             self.speech_recognition
-                .calculate_bleu(reference_text, hypothesis_text)?,
+                .calculate_bleu(referencetext, hypothesistext)?,
         );
 
         // Calculate confidence metrics
@@ -714,8 +714,8 @@ impl AudioProcessingMetrics {
                 let correlation = self
                     .speech_recognition
                     .calculate_confidence_wer_correlation(
-                        reference_text,
-                        hypothesis_text,
+                        referencetext,
+                        hypothesistext,
                         conf_scores,
                     )?;
                 (avg_conf, Some(correlation))

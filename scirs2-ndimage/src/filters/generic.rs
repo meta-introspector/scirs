@@ -20,7 +20,7 @@ use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function for safe conversion from numeric values to float
 #[allow(dead_code)]
-fn safe_to_float<T: Float + FromPrimitive>(_value: f64) -> T {
+fn safe_to_float<T: Float + FromPrimitive>(value: f64) -> T {
     T::from_f64(_value).unwrap_or_else(|| T::zero())
 }
 
@@ -57,7 +57,7 @@ fn safe_to_float<T: Float + FromPrimitive>(_value: f64) -> T {
 ///     max - min
 /// };
 ///
-/// let input = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
+/// let input = Array2::fromshape_fn((5, 5), |(i, j)| (i + j) as f64);
 /// let result = generic_filter(&input, range_func, &[3, 3], None, None).unwrap();
 /// ```
 #[allow(dead_code)]
@@ -405,7 +405,7 @@ pub mod filter_functions {
     use num_traits::Float;
 
     /// Calculate the mean of values
-    pub fn mean<T: Float>(_values: &[T]) -> T {
+    pub fn mean<T: Float>(values: &[T]) -> T {
         if _values.is_empty() {
             return T::zero();
         }
@@ -414,7 +414,7 @@ pub mod filter_functions {
     }
 
     /// Calculate the standard deviation of values
-    pub fn std_dev<T: Float>(_values: &[T]) -> T {
+    pub fn std_dev<T: Float>(values: &[T]) -> T {
         if _values.len() <= 1 {
             return T::zero();
         }
@@ -430,7 +430,7 @@ pub mod filter_functions {
     }
 
     /// Calculate the range (max - min) of values
-    pub fn range<T: Float>(_values: &[T]) -> T {
+    pub fn range<T: Float>(values: &[T]) -> T {
         if _values.is_empty() {
             return T::zero();
         }
@@ -441,7 +441,7 @@ pub mod filter_functions {
     }
 
     /// Calculate the variance of values
-    pub fn variance<T: Float>(_values: &[T]) -> T {
+    pub fn variance<T: Float>(values: &[T]) -> T {
         if _values.len() <= 1 {
             return T::zero();
         }
@@ -455,7 +455,7 @@ pub mod filter_functions {
     }
 
     /// Calculate the maximum value
-    pub fn maximum<T: Float>(_values: &[T]) -> T {
+    pub fn maximum<T: Float>(values: &[T]) -> T {
         if _values.is_empty() {
             return T::zero();
         }
@@ -463,7 +463,7 @@ pub mod filter_functions {
     }
 
     /// Calculate the minimum value  
-    pub fn minimum<T: Float>(_values: &[T]) -> T {
+    pub fn minimum<T: Float>(values: &[T]) -> T {
         if _values.is_empty() {
             return T::zero();
         }
@@ -471,7 +471,7 @@ pub mod filter_functions {
     }
 
     /// Calculate the median value
-    pub fn median<T: Float>(_values: &[T]) -> T {
+    pub fn median<T: Float>(values: &[T]) -> T {
         if _values.is_empty() {
             return T::zero();
         }
@@ -647,7 +647,7 @@ mod tests {
     #[test]
     fn test_parallel_generic_filter() {
         // Create a large enough array to trigger parallel processing
-        let input = Array2::from_shape_fn((200, 200), |(i, j)| (i * j) as f64);
+        let input = Array2::fromshape_fn((200, 200), |(i, j)| (i * j) as f64);
 
         // Test with mean function
         let result = generic_filter(&input, filter_functions::mean, &[3, 3], None, None)

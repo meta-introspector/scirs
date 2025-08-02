@@ -1,11 +1,12 @@
-//! Non-negative Matrix Factorization (NMF) for blind source separation
-//!
-//! This module implements NMF techniques for signal processing.
+use ndarray::s;
+// Non-negative Matrix Factorization (NMF) for blind source separation
+//
+// This module implements NMF techniques for signal processing.
 
-use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, s};
-use rand::{Rng, SeedableRng};
 use super::BssConfig;
+use crate::error::{SignalError, SignalResult};
+use ndarray::{ Array2};
+use rand::{Rng, SeedableRng};
 
 #[allow(unused_imports)]
 /// Apply Non-negative Matrix Factorization (NMF) to separate mixed signals

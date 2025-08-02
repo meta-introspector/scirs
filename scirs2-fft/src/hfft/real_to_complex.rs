@@ -182,7 +182,7 @@ where
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
             // Create a view with the correct type
             let ptr = x.as_ptr() as *const f64;
-            let real_view = unsafe { ArrayView2::from_shape_ptr(x.dim(), ptr) };
+            let real_view = unsafe { ArrayView2::fromshape_ptr(x.dim(), ptr) };
 
             return _ihfft2_real(&real_view, shape, axes, norm);
         }
@@ -216,7 +216,8 @@ where
 fn _ihfft2_real(
     x: &ArrayView2<f64>,
     shape: Option<(usize, usize)>,
-    axes: Option<(usize, usize)>, _norm: Option<&str>,
+    axes: Option<(usize, usize)>,
+    _norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>> {
     // Extract dimensions
     let (n_rows, n_cols) = x.dim();
@@ -320,17 +321,17 @@ where
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
             // Create a view with the correct type
             let ptr = x.as_ptr() as *const f64;
-            let real_view = unsafe { ArrayView::from_shape_ptr(IxDyn(x.shape()), ptr) };
+            let real_view = unsafe { ArrayView::fromshape_ptr(IxDyn(x.shape()), ptr) };
 
             return _ihfftn_real(&real_view, shape, axes, norm, overwrite_x, workers);
         }
     }
 
     // For other types, convert to real and call the internal implementation
-    let x_shape = x.shape().to_vec();
+    let xshape = x.shape().to_vec();
 
     // Convert input to real array
-    let real_input = Array::from_shape_fn(IxDyn(&x_shape), |idx| {
+    let real_input = Array::from_shape_fn(IxDyn(&xshape), |idx| {
         let val = x[idx.clone()];
 
         // Try direct conversion to f64
@@ -352,21 +353,23 @@ fn _ihfftn_real(
     x: &ArrayView<f64, IxDyn>,
     shape: Option<Vec<usize>>,
     axes: Option<Vec<usize>>,
-    norm: Option<&str>, _overwrite_x: Option<bool>, _workers: Option<usize>,
+    norm: Option<&str>,
+    _overwrite_x: Option<bool>,
+    _workers: Option<usize>,
 ) -> FFTResult<Array<Complex64, IxDyn>> {
     // The overwrite_x and _workers parameters are not used in this implementation
     // They are included for API compatibility with scipy's fftn
 
-    let x_shape = x.shape().to_vec();
-    let ndim = x_shape.len();
+    let xshape = x.shape().to_vec();
+    let ndim = xshape.len();
 
     // Handle empty array case
-    if ndim == 0 || x_shape.contains(&0) {
+    if ndim == 0 || xshape.contains(&0) {
         return Ok(Array::zeros(IxDyn(&[])));
     }
 
     // Determine the output shape
-    let out_shape = match shape {
+    let outshape = match shape {
         Some(s) => {
             if s.len() != ndim {
                 return Err(FFTError::ValueError(format!(
@@ -377,7 +380,7 @@ fn _ihfftn_real(
             }
             s
         }
-        None => x_shape.clone(),
+        None => xshape.clone(),
     };
 
     // Determine the axes
@@ -407,10 +410,10 @@ fn _ihfftn_real(
             real_vals.push(val);
         }
 
-        let result = _ihfft_real(&real_vals, Some(out_shape[0]), norm)?;
-        let mut complex_result = Array::zeros(IxDyn(&[out_shape[0]]));
+        let result = _ihfft_real(&real_vals, Some(outshape[0]), norm)?;
+        let mut complex_result = Array::zeros(IxDyn(&[outshape[0]]));
 
-        for i in 0..out_shape[0] {
+        for i in 0..outshape[0] {
             complex_result[i] = result[i];
         }
 
@@ -419,7 +422,7 @@ fn _ihfftn_real(
 
     // Create a complex array from the real input
     let complex_input =
-        Array::from_shape_fn(IxDyn(&x_shape), |idx| Complex64::new(x[idx.clone()], 0.0));
+        Array::from_shape_fn(IxDyn(&xshape), |idx| Complex64::new(x[idx.clone()], 0.0));
 
     // For multi-dimensional transforms, we have to transform along each axis
     let mut array = complex_input;
@@ -427,15 +430,15 @@ fn _ihfftn_real(
     // For each axis, perform a 1D transform along that axis
     for &axis in &transform_axes {
         // Get the shape for this axis transformation
-        let axis_dim = out_shape[axis];
+        let axis_dim = outshape[axis];
 
         // Reshape the array to transform along this axis
         let _dim_permutation: Vec<_> = (0..ndim).collect();
-        let mut working_shape = array.shape().to_vec();
-        working_shape[axis] = axis_dim;
+        let mut workingshape = array.shape().to_vec();
+        workingshape[axis] = axis_dim;
 
         // Allocate an array for the result along this axis
-        let mut axis_result = Array::zeros(IxDyn(&working_shape));
+        let mut axis_result = Array::zeros(IxDyn(&workingshape));
 
         // For each "fiber" along the current axis, perform a 1D IFFT
         let mut indices = vec![0; ndim];

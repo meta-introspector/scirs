@@ -491,7 +491,7 @@ impl DatasetExplorer {
             match unique_values.len() {
                 1 => InferredDataType::Unknown, // Constant
                 2 => InferredDataType::Binary,
-                3..=20 => InferredDataType::Categorical_ =>, InferredDataType::Numerical,
+                3..=20 => InferredDataType::Categorical_ => InferredDataType::Numerical,
             }
         } else {
             InferredDataType::Numerical
@@ -1064,7 +1064,7 @@ impl DatasetExplorer {
         Ok(())
     }
 
-    fn display_feature_detail(&self, feature: &FeatureStats_dataset: &Dataset) -> Result<()> {
+    fn display_feature_detail(&self, feature: &FeatureStats, dataset: &Dataset) -> Result<()> {
         println!("\n📊 Feature: {}", feature.name);
         println!("==================");
         println!("Type: {:?}", feature.data_type);
@@ -1210,7 +1210,7 @@ pub mod convenience {
         let summary = explorer.summarize(_dataset)?;
 
         let content = match output_format {
-            OutputFormat::Json =>, serde_json::to_string_pretty(&summary)
+            OutputFormat::Json => serde_json::to_string_pretty(&summary)
                 .map_err(|e| DatasetsError::SerdeError(e.to_string()))?_ => {
                 return Err(DatasetsError::InvalidFormat(
                     "Only JSON export is currently supported in convenience function".to_string(),

@@ -77,7 +77,7 @@ pub fn validate_conv_params(
 
 /// Calculate output shape for convolution operations
 #[allow(dead_code)]
-pub fn calculate_output_shape(
+pub fn calculate_outputshape(
     input_height: usize,
     input_width: usize,
     kernel_size: (usize, usize),
@@ -135,22 +135,22 @@ mod tests {
     }
 
     #[test]
-    fn test_output_shape_calculation() {
+    fn test_outputshape_calculation() {
         // Valid padding, stride 1
         assert_eq!(
-            calculate_output_shape(32, 32, (3, 3), (1, 1), (0, 0), (1, 1)),
+            calculate_outputshape(32, 32, (3, 3), (1, 1), (0, 0), (1, 1)),
             (30, 30)
         );
 
         // Same padding, stride 1
         assert_eq!(
-            calculate_output_shape(32, 32, (3, 3), (1, 1), (1, 1), (1, 1)),
+            calculate_outputshape(32, 32, (3, 3), (1, 1), (1, 1), (1, 1)),
             (32, 32)
         );
 
         // Stride 2
         assert_eq!(
-            calculate_output_shape(32, 32, (3, 3), (2, 2), (1, 1), (1, 1)),
+            calculate_outputshape(32, 32, (3, 3), (2, 2), (1, 1), (1, 1)),
             (16, 16)
         );
     }

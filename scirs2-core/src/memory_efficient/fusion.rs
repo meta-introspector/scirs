@@ -148,12 +148,12 @@ impl Default for OpFusion {
 
 /// Register a fused operation in the global registry
 #[allow(dead_code)]
-pub fn register_fusion<T: 'static>(_op: Arc<dyn FusedOp>) -> Result<(), CoreError> {
+pub fn register_fusion<T: 'static>(op: Arc<dyn FusedOp>) -> Result<(), CoreError> {
     let type_id = TypeId::of::<T>();
 
     let mut registry = FUSION_REGISTRY.lock().unwrap();
     let ops = registry.entry(type_id).or_default();
-    ops.push(_op);
+    ops.push(op);
 
     Ok(())
 }

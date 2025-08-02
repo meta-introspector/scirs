@@ -818,7 +818,7 @@ pub mod technical_indicators {
     use super::*;
 
     /// Simple Moving Average
-    pub fn sma<F: Float + Clone>(_data: &Array1<F>, window: usize) -> Result<Array1<F>> {
+    pub fn sma<F: Float + Clone>(data: &Array1<F>, window: usize) -> Result<Array1<F>> {
         if window == 0 {
             return Err(TimeSeriesError::InvalidInput(
                 "Window size must be positive".to_string(),
@@ -845,7 +845,7 @@ pub mod technical_indicators {
     }
 
     /// Exponential Moving Average
-    pub fn ema<F: Float + Clone>(_data: &Array1<F>, alpha: F) -> Result<Array1<F>> {
+    pub fn ema<F: Float + Clone>(data: &Array1<F>, alpha: F) -> Result<Array1<F>> {
         if _data.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Data cannot be empty".to_string(),
@@ -907,7 +907,7 @@ pub mod technical_indicators {
     }
 
     /// Relative Strength Index (RSI)
-    pub fn rsi<F: Float + Clone>(_data: &Array1<F>, period: usize) -> Result<Array1<F>> {
+    pub fn rsi<F: Float + Clone>(data: &Array1<F>, period: usize) -> Result<Array1<F>> {
         if period == 0 {
             return Err(TimeSeriesError::InvalidInput(
                 "Period must be positive".to_string(),
@@ -1173,7 +1173,7 @@ pub mod technical_indicators {
     }
 
     /// On-Balance Volume (OBV)
-    pub fn obv<F: Float + Clone>(_close: &Array1<F>, volume: &Array1<F>) -> Result<Array1<F>> {
+    pub fn obv<F: Float + Clone>(close: &Array1<F>, volume: &Array1<F>) -> Result<Array1<F>> {
         if _close.len() != volume.len() {
             return Err(TimeSeriesError::DimensionMismatch {
                 expected: _close.len(),
@@ -1465,7 +1465,7 @@ pub mod volatility {
     use super::*;
 
     /// Calculate realized volatility from high-frequency returns
-    pub fn realized_volatility<F: Float>(_returns: &Array1<F>) -> F {
+    pub fn realized_volatility<F: Float>(returns: &Array1<F>) -> F {
         _returns.mapv(|x| x * x).sum()
     }
 
@@ -1632,7 +1632,7 @@ pub mod volatility {
     }
 
     /// Exponentially Weighted Moving Average (EWMA) volatility
-    pub fn ewma_volatility<F: Float + Clone>(_returns: &Array1<F>, lambda: F) -> Result<Array1<F>> {
+    pub fn ewma_volatility<F: Float + Clone>(returns: &Array1<F>, lambda: F) -> Result<Array1<F>> {
         if _returns.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Returns cannot be empty".to_string(),
@@ -1735,7 +1735,7 @@ pub mod risk {
     use super::*;
 
     /// Calculate Value at Risk (VaR) using historical simulation
-    pub fn var_historical<F: Float + Clone>(_returns: &Array1<F>, confidence: f64) -> Result<F> {
+    pub fn var_historical<F: Float + Clone>(returns: &Array1<F>, confidence: f64) -> Result<F> {
         if _returns.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Returns cannot be empty".to_string(),
@@ -1776,7 +1776,7 @@ pub mod risk {
     }
 
     /// Calculate maximum drawdown
-    pub fn max_drawdown<F: Float + Clone>(_prices: &Array1<F>) -> Result<F> {
+    pub fn max_drawdown<F: Float + Clone>(prices: &Array1<F>) -> Result<F> {
         if _prices.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Prices cannot be empty".to_string(),
@@ -2049,7 +2049,7 @@ pub mod risk {
     }
 
     /// Omega ratio (probability-weighted gains over losses)
-    pub fn omega_ratio<F: Float + Clone>(_returns: &Array1<F>, threshold: F) -> Result<F> {
+    pub fn omega_ratio<F: Float + Clone>(returns: &Array1<F>, threshold: F) -> Result<F> {
         if _returns.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Returns cannot be empty".to_string(),
@@ -4292,7 +4292,7 @@ pub mod advanced_technical_indicators {
     }
 
     /// On-Balance Volume (OBV)
-    pub fn obv<F: Float + Clone>(_close: &Array1<F>, volume: &Array1<F>) -> Result<Array1<F>> {
+    pub fn obv<F: Float + Clone>(close: &Array1<F>, volume: &Array1<F>) -> Result<Array1<F>> {
         if _close.len() != volume.len() {
             return Err(TimeSeriesError::DimensionMismatch {
                 expected: _close.len(),
@@ -4875,7 +4875,7 @@ pub mod risk_metrics {
     }
 
     /// Calculate Value at Risk using parametric method
-    pub fn parametric_var<F: Float + Clone>(_returns: &Array1<F>, confidence_level: F) -> Result<F> {
+    pub fn parametric_var<F: Float + Clone>(returns: &Array1<F>, confidence_level: F) -> Result<F> {
         if _returns.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Returns array cannot be empty".to_string(),
@@ -4980,7 +4980,7 @@ pub mod risk_metrics {
     }
 
     /// Calculate maximum drawdown from cumulative returns
-    fn calculate_max_drawdown<F: Float + Clone>(_cumulative_returns: &Array1<F>) -> F {
+    fn calculate_max_drawdown<F: Float + Clone>(_cumulative, returns: &Array1<F>) -> F {
         let mut max_drawdown = F::zero();
         let mut peak = _cumulative_returns[0];
 
@@ -4998,7 +4998,7 @@ pub mod risk_metrics {
     }
 
     /// Calculate maximum consecutive losses
-    fn calculate_max_consecutive_losses<F: Float + Clone>(_returns: &Array1<F>) -> usize {
+    fn calculate_max_consecutive_losses<F: Float + Clone>(returns: &Array1<F>) -> usize {
         let mut max_consecutive = 0;
         let mut current_consecutive = 0;
 
@@ -5015,7 +5015,7 @@ pub mod risk_metrics {
     }
 
     /// Calculate Pain Index (average drawdown)
-    fn calculate_pain_index<F: Float + Clone>(_cumulative_returns: &Array1<F>) -> F {
+    fn calculate_pain_index<F: Float + Clone>(_cumulative, returns: &Array1<F>) -> F {
         let mut peak = _cumulative_returns[0];
         let mut total_drawdown = F::zero();
         let n = _cumulative_returns.len();
@@ -5032,7 +5032,7 @@ pub mod risk_metrics {
     }
 
     /// Calculate Ulcer Index (RMS of drawdowns)
-    fn calculate_ulcer_index<F: Float + Clone>(_cumulative_returns: &Array1<F>) -> F {
+    fn calculate_ulcer_index<F: Float + Clone>(_cumulative, returns: &Array1<F>) -> F {
         let mut peak = _cumulative_returns[0];
         let mut sum_squared_drawdowns = F::zero();
         let n = _cumulative_returns.len();

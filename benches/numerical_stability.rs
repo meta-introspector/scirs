@@ -104,7 +104,7 @@ fn generate_pathological_matrix(size: usize, test_type: &str) -> Array2<f64> {
 
 /// Test numerical accuracy of linear solvers
 #[allow(dead_code)]
-fn test_solve_accuracy(matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) -> (bool, f64) {
+fn test_solve_accuracy(_matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) -> (bool, f64) {
     let rhs = matrix.dot(known_solution);
 
     match solve(matrix, &rhs.view(), None) {
@@ -122,7 +122,7 @@ fn test_solve_accuracy(matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) -
 
 /// Test numerical accuracy of matrix inversion
 #[allow(dead_code)]
-fn test_inverse_accuracy(matrix: &ArrayView2<f64>) -> (bool, f64) {
+fn test_inverse_accuracy(_matrix: &ArrayView2<f64>) -> (bool, f64) {
     match inv(matrix, None) {
         Ok(inv_matrix) => {
             let product = matrix.dot(&inv_matrix);
@@ -140,7 +140,7 @@ fn test_inverse_accuracy(matrix: &ArrayView2<f64>) -> (bool, f64) {
 
 /// Test numerical accuracy of matrix decompositions
 #[allow(dead_code)]
-fn test_decomposition_accuracy(matrix: &ArrayView2<f64>, decomp_type: &str) -> (bool, f64) {
+fn test_decomposition_accuracy(_matrix: &ArrayView2<f64>, decomp_type: &str) -> (bool, f64) {
     match decomp_type {
         "lu" => match lu(matrix, None) {
             Ok((p, l, u)) => {
@@ -363,7 +363,7 @@ fn bench_edge_cases(c: &mut Criterion) {
     let mut results = Vec::new();
 
     // Test with very small matrices
-    let tiny_matrix = Array2::from_shape_vec((2, 2), vec![1e-15, 1e-14, 1e-14, 1e-13]).unwrap();
+    let tiny_matrix = Array2::fromshape_vec((2, 2), vec![1e-15, 1e-14, 1e-14, 1e-13]).unwrap();
 
     group.bench_function("tiny_matrix_det", |b| {
         b.iter(|| {
@@ -387,7 +387,7 @@ fn bench_edge_cases(c: &mut Criterion) {
     });
 
     // Test with very large values
-    let large_matrix = Array2::from_shape_vec((2, 2), vec![1e15, 1e14, 1e14, 1e13]).unwrap();
+    let large_matrix = Array2::fromshape_vec((2, 2), vec![1e15, 1e14, 1e14, 1e13]).unwrap();
 
     group.bench_function("large_matrix_det", |b| {
         b.iter(|| {
@@ -416,7 +416,7 @@ fn bench_edge_cases(c: &mut Criterion) {
 
 /// Estimate condition number using singular values
 #[allow(dead_code)]
-fn estimate_condition_number(matrix: &ArrayView2<f64>) -> f64 {
+fn estimate_condition_number(_matrix: &ArrayView2<f64>) -> f64 {
     match svd(matrix, false, None) {
         Ok((_, s_)) => {
             let max_sv = s.iter().cloned().fold(0.0, f64::max);

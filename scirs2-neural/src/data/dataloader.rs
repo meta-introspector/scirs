@@ -53,7 +53,7 @@ impl<
             shuffle,
             drop_last,
             indices,
-            position: 0_phantom: PhantomData,
+            position: 0, phantom: PhantomData,
         }
     }
     /// Reset the data loader state
@@ -98,15 +98,15 @@ impl<
         // Load first sample to determine shapes
         let (first_x, first_y) = self.dataset.get(indices[0])?;
         // Create batch arrays
-        let batch_x_shape = [indices.len()]
+        let batch_xshape = [indices.len()]
             .iter()
             .chain(first_x.shape())
             .cloned()
             .collect::<Vec<_>>();
-        let batch_y_shape = [indices.len()]
+        let batch_yshape = [indices.len()]
             .chain(first_y.shape())
-        let mut batch_x = Array::zeros(IxDyn(&batch_x_shape));
-        let mut batch_y = Array::zeros(IxDyn(&batch_y_shape));
+        let mut batch_x = Array::zeros(IxDyn(&batch_xshape));
+        let mut batch_y = Array::zeros(IxDyn(&batch_yshape));
         // Fill batch arrays
         for (i, &idx) in indices.iter().enumerate() {
             let (x, y) = self.dataset.get(idx)?;

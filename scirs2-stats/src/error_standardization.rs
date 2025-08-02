@@ -844,7 +844,7 @@ impl AutoRecoverySystem {
                     priority: 2,
                     performance_impact: PerformanceImpact::Minimal,
                     code_example: Some(
-                        "let aligned_data = data.broadcast_to(target_shape);".to_string(),
+                        "let aligned_data = data.broadcast_to(targetshape);".to_string(),
                     ),
                     automatic: false, // Usually requires user input
                 })

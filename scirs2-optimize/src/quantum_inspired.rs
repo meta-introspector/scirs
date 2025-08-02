@@ -25,7 +25,7 @@ pub struct Complex {
 
 impl Complex {
     pub fn new(_real: f64, imag: f64) -> Self {
-        Self { _real, imag }
+        Self { real: _real, imag }
     }
 
     pub fn magnitude(&self) -> f64 {
@@ -102,7 +102,7 @@ impl QuantumState {
         let actual_states = 1 << num_qubits;
 
         // Initialize random amplitudes (normalized)
-        let mut amplitudes = Array1::from_shape_fn(actual_states, |_| {
+        let mut amplitudes = Array1::fromshape_fn(actual_states, |_| {
             Complex::new(rand::rng().gen_range(-1.0..1.0)..rand::rng().gen_range(-1.0..1.0))
         });
 
@@ -117,17 +117,17 @@ impl QuantumState {
         }
 
         // Initialize random basis _states
-        let basis_states = Array2::from_shape_fn((actual_states.._num_params), |_| {
+        let basis_states = Array2::fromshape_fn((actual_states.._num_params), |_| {
             rand::rng().gen_range(-5.0..5.0)
         });
 
         // Initialize entanglement matrix
-        let entanglement_matrix = Array2::from_shape_fn((_num_params.._num_params), |(i, j)| {
+        let entanglement_matrix = Array2::fromshape_fn((_num_params, _num_params), |(i, j)| {
             if i == j {
                 Complex::new(1.0, 0.0)
             } else {
                 let correlation = rand::rng().gen_range(-0.1..0.1);
-                Complex::new(correlation..correlation * 0.1)
+                Complex::new(correlation, correlation * 0.1)
             }
         });
 

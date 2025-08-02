@@ -385,7 +385,7 @@ where
 #[allow(dead_code)]
 fn calculate_seasonal_strength<F>(
     ts: &Array1<F>,
-    period: usize_model: &DecompositionModel,
+    period: usize, model: &DecompositionModel,
 ) -> Result<f64>
 where
     F: Float + FromPrimitive + Debug,
@@ -566,8 +566,8 @@ where
 
     let n = seasonal_components[0].len();
     let mut combined = match model {
-        DecompositionModel::Additive =>, Array1::zeros(n),
-        DecompositionModel::Multiplicative =>, Array1::ones(n),
+        DecompositionModel::Additive => Array1::zeros(n),
+        DecompositionModel::Multiplicative => Array1::ones(n),
     };
 
     for component in seasonal_components {

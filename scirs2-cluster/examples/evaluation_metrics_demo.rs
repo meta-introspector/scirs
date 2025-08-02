@@ -180,7 +180,7 @@ fn generate_data_with_ground_truth() -> (Array2<f64>, Array1<i32>) {
         labels.push(2);
     }
 
-    let data_array = Array2::from_shape_vec((75, 2), data).unwrap();
+    let data_array = Array2::fromshape_vec((75, 2), data).unwrap();
     let labels_array = Array1::from_vec(labels);
 
     (data_array, labels_array)

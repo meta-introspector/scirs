@@ -1,19 +1,19 @@
-//! Comprehensive numerical validation against SciPy for all signal processing modules
-//!
-//! This module provides extensive validation of scirs2-signal implementations against
-//! SciPy's signal processing functions. It includes:
-//! - Filter design validation (Butterworth, Chebyshev, Elliptic, Bessel)
-//! - Spectral analysis validation (Welch, periodogram, multitaper)
-//! - Wavelet transform validation (DWT, CWT, WPT)
-//! - System identification validation (AR, ARMA, transfer functions)
-//! - Signal processing utilities validation (convolution, correlation, resampling)
-//! - Performance benchmarking against SciPy
-//! - Cross-platform consistency verification
+// Comprehensive numerical validation against SciPy for all signal processing modules
+//
+// This module provides extensive validation of scirs2-signal implementations against
+// SciPy's signal processing functions. It includes:
+// - Filter design validation (Butterworth, Chebyshev, Elliptic, Bessel)
+// - Spectral analysis validation (Welch, periodogram, multitaper)
+// - Wavelet transform validation (DWT, CWT, WPT)
+// - System identification validation (AR, ARMA, transfer functions)
+// - Signal processing utilities validation (convolution, correlation, resampling)
+// - Performance benchmarking against SciPy
+// - Cross-platform consistency verification
 
-use crate::dwt::{Wavelet, dwt_decompose, dwt_reconstruct};
+use crate::dwt::{dwt_decompose, dwt_reconstruct, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use crate::filter::butter;
-use crate::parametric::{ARMethod, estimate_ar};
+use crate::parametric::{estimate_ar, ARMethod};
 use crate::spectral::welch;
 use ndarray::Array1;
 use num_traits::Float;
@@ -754,7 +754,8 @@ fn validate_dwt_implementation(_signal: &[f64]) -> SignalResult<DwtValidation> {
 
     // Test perfect reconstruction
     let (coeffs_a, coeffs_d) = dwt_decompose(_signal, &wavelet, "symmetric")?;
-    let reconstructed = dwt_reconstruct(&coeffs_a, &coeffs_d, &wavelet, _signal.len(), "symmetric")?;
+    let reconstructed =
+        dwt_reconstruct(&coeffs_a, &coeffs_d, &wavelet, _signal.len(), "symmetric")?;
 
     // Calculate reconstruction error
     let reconstruction_error = _signal
@@ -763,7 +764,7 @@ fn validate_dwt_implementation(_signal: &[f64]) -> SignalResult<DwtValidation> {
         .map(|(orig, recon)| (orig - recon).powi(2))
         .sum::<f64>()
         .sqrt()
-        / _signal.len()  as f64;
+        / _signal.len() as f64;
 
     // Energy conservation check
     let original_energy: f64 = _signal.iter().map(|x| x.powi(2)).sum();
@@ -807,7 +808,7 @@ fn validate_sysid_implementations() -> SignalResult<SysIdValidationResult> {
     }
 
     // Validate AR estimation
-    let ar_validation = validate_ar_estimation(&signal..&true_ar_coeffs)?;
+    let ar_validation = validate_ar_estimation(&signal, &true_ar_coeffs)?;
 
     // Simplified validations for other methods
     let arma_validation = ArmaValidation {
@@ -873,7 +874,7 @@ fn calculate_coefficient_accuracy(_estimated: &[f64], true_coeffs: &[f64]) -> f6
         .zip(true_coeffs.iter())
         .map(|(est, true_val)| (est - true_val).powi(2))
         .sum::<f64>()
-        / _estimated.len()  as f64;
+        / _estimated.len() as f64;
 
     // Convert MSE to accuracy percentage
     let accuracy = 1.0 - mse.sqrt();
@@ -981,7 +982,8 @@ fn compute_overall_metrics(
     filter_validation: &FilterValidationResult,
     spectral_validation: &SpectralValidationResult,
     wavelet_validation: &WaveletValidationResult,
-    sysid_validation: &SysIdValidationResult_utilities, _validation: &UtilitiesValidationResult,
+    sysid_validation: &SysIdValidationResult_utilities,
+    _validation: &UtilitiesValidationResult,
 ) -> SignalResult<OverallValidationMetrics> {
     // Compute weighted average of all _validation scores
     let mut total_score = 0.0;

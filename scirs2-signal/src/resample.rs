@@ -1,7 +1,7 @@
-//! Resampling and rate conversion
-//!
-//! This module provides functions for resampling signals at different rates,
-//! including upsampling, downsampling, and arbitrary resampling.
+// Resampling and rate conversion
+//
+// This module provides functions for resampling signals at different rates,
+// including upsampling, downsampling, and arbitrary resampling.
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
@@ -25,7 +25,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::resample::resample;
+/// use scirs2_signal::resample::resample;
 ///
 /// // Generate a simple signal
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -175,7 +175,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::resample::upsample;
+/// use scirs2_signal::resample::upsample;
 ///
 /// // Generate a simple signal
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -228,7 +228,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::resample::downsample;
+/// use scirs2_signal::resample::downsample;
 ///
 /// // Generate a simple signal
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -281,7 +281,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::resample::resample_poly;
+/// use scirs2_signal::resample::resample_poly;
 ///
 /// // Generate a simple signal
 /// let signal = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -386,7 +386,7 @@ fn rational_approximation(x: f64) -> (usize, usize) {
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_resample_identity() {
         // Resampling with up=1, down=1 should return the original signal

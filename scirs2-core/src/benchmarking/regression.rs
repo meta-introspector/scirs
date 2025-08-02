@@ -8,9 +8,9 @@ use crate::error::{CoreError, CoreResult, ErrorContext};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::path::PathBuf;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use std::path::PathBuf;
 
 /// Performance regression detection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -103,7 +103,7 @@ pub struct HistoricalResult {
 
 impl HistoricalResult {
     /// Create from a benchmark result
-    pub fn result( &BenchmarkResult) -> Self {
+    pub fn from_result(result: &BenchmarkResult) -> Self {
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
@@ -299,7 +299,7 @@ impl RegressionDetector {
     }
 
     /// Load historical results for a benchmark
-    fn name( &str) -> CoreResult<Vec<HistoricalResult>> {
+    fn load_historical_results(&self, benchmark_name: &str) -> CoreResult<Vec<HistoricalResult>> {
         let file_path = self.get_results_file_path(benchmark_name);
 
         if !file_path.exists() {
@@ -322,8 +322,7 @@ impl RegressionDetector {
     }
 
     /// Calculate baseline performance from historical results
-    fn results(&[HistoricalResult]: &[HistoricalResult],
-    ) -> CoreResult<HistoricalResult> {
+    fn results(&[HistoricalResult]: &[HistoricalResult]) -> CoreResult<HistoricalResult> {
         if historical_results.is_empty() {
             return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
                 "No historical _results for baseline calculation",
@@ -394,8 +393,7 @@ impl RegressionDetector {
     }
 
     /// Analyze performance trend over time
-    fn results(&[HistoricalResult]: &[HistoricalResult],
-    ) -> CoreResult<PerformanceTrend> {
+    fn results(&[HistoricalResult]: &[HistoricalResult]) -> CoreResult<PerformanceTrend> {
         if historical_results.len() < 5 {
             return Ok(PerformanceTrend::Unknown);
         }
@@ -431,7 +429,8 @@ impl RegressionDetector {
     }
 
     /// Calculate confidence in the regression analysis
-    fn results(&[HistoricalResult]: &[HistoricalResult],
+    fn results(
+        &[HistoricalResult]: &[HistoricalResult],
         current: &HistoricalResult,
     ) -> CoreResult<f64> {
         let sample_size_factor = (historical_results.len() as f64 / 10.0).min(1.0);
@@ -445,7 +444,7 @@ impl RegressionDetector {
     }
 
     /// Get the file path for storing results
-    fn name( &str) -> PathBuf {
+    fn get_results_file_path(&self, benchmark_name: &str) -> PathBuf {
         let safe_name = benchmark_name.replace(|c: char| !c.is_alphanumeric(), "_");
         self.config
             .results_directory
@@ -458,8 +457,7 @@ pub struct RegressionTestUtils;
 
 impl RegressionTestUtils {
     /// Run a complete regression test suite
-    pub fn names(&[&str]: &[&str],
-    ) -> CoreResult<Vec<RegressionAnalysis>> {
+    pub fn names(&[&str]: &[&str]) -> CoreResult<Vec<RegressionAnalysis>> {
         let mut analyses = Vec::new();
 
         for &name in benchmark_names {
@@ -482,7 +480,7 @@ impl RegressionTestUtils {
     }
 
     /// Generate a regression report
-    pub fn analyses( &[RegressionAnalysis]) -> String {
+    pub fn analyses(analyses: &[RegressionAnalysis]) -> String {
         let mut report = String::new();
 
         report.push_str("# Performance Regression Report\n\n");

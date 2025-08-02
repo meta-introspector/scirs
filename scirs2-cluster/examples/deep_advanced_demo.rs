@@ -71,8 +71,8 @@ fn transformer_embedding_demo() -> Result<(), Box<dyn std::error::Error>> {
     let embeddings = embedder.embed_features(&data.view())?;
 
     println!("   ✅ Transformer embeddings generated");
-    let emb_shape = embeddings.shape();
-    println!("   📐 Embedding shape: {emb_shape:?}");
+    let embshape = embeddings.shape();
+    println!("   📐 Embedding shape: {embshape:?}");
     println!("   🧠 Multi-head attention with {heads} heads", heads = 8);
     println!("   🔄 Processed through 6 transformer layers");
     println!("   ⚡ Enhanced with positional encodings");
@@ -90,8 +90,8 @@ fn graph_neural_network_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_graph_structured_data();
     let embeddings = create_sample_embeddings(data.nrows());
 
-    let graph_shape = data.shape();
-    println!("   📊 Graph data shape: {graph_shape:?}");
+    let graphshape = data.shape();
+    println!("   📊 Graph data shape: {graphshape:?}");
     println!("   🕸️  Building k-NN graph structure...");
 
     // Create GNN processor
@@ -130,8 +130,8 @@ fn reinforcement_learning_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_dynamic_clustering_data();
     let embeddings = create_sample_embeddings(data.nrows());
 
-    let dyn_shape = data.shape();
-    println!("   📊 Dynamic data shape: {dyn_shape:?}");
+    let dynshape = data.shape();
+    println!("   📊 Dynamic data shape: {dynshape:?}");
     println!("   🎮 Initializing RL agent for clustering optimization...");
 
     // Create RL agent
@@ -160,8 +160,8 @@ fn neural_architecture_search_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_architecture_search_data();
     let embeddings = create_sample_embeddings(data.nrows());
 
-    let arch_shape = data.shape();
-    println!("   📊 Architecture search data shape: {arch_shape:?}");
+    let archshape = data.shape();
+    println!("   📊 Architecture search data shape: {archshape:?}");
     println!("   🔍 Searching for optimal clustering architecture...");
 
     // Create NAS engine
@@ -191,8 +191,8 @@ fn neural_architecture_search_demo() -> Result<(), Box<dyn std::error::Error>> {
 fn deep_ensemble_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_ensemble_test_data();
 
-    let ens_shape = data.shape();
-    println!("   📊 Ensemble data shape: {ens_shape:?}");
+    let ensshape = data.shape();
+    println!("   📊 Ensemble data shape: {ensshape:?}");
     println!("   🎭 Creating deep ensemble with uncertainty quantification...");
 
     // Create base Advanced clusterer for comparison
@@ -242,8 +242,8 @@ fn deep_ensemble_demo() -> Result<(), Box<dyn std::error::Error>> {
 fn complete_deep_advanced_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_comprehensive_test_data();
 
-    let comp_shape = data.shape();
-    println!("   📊 Comprehensive data shape: {comp_shape:?}");
+    let compshape = data.shape();
+    println!("   📊 Comprehensive data shape: {compshape:?}");
     println!("   🚀 Launching complete Deep Advanced pipeline...");
 
     // Create deep Advanced clusterer
@@ -309,8 +309,8 @@ fn complete_deep_advanced_demo() -> Result<(), Box<dyn std::error::Error>> {
 fn advanced_visualization_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_visualization_data();
 
-    let vis_shape = data.shape();
-    println!("   📊 Visualization data shape: {vis_shape:?}");
+    let visshape = data.shape();
+    println!("   📊 Visualization data shape: {visshape:?}");
     println!("   🎨 Creating advanced deep learning visualizations...");
 
     // Create base clustering result
@@ -372,7 +372,7 @@ fn create_complex_high_dimensional_data() -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -392,7 +392,7 @@ fn create_graph_structured_data() -> Array2<f64> {
         data_vec.extend_from_slice(&[x, y, z]);
     }
 
-    Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
+    Array2::fromshape_vec((n_samples, 3), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -415,7 +415,7 @@ fn create_dynamic_clustering_data() -> Array2<f64> {
         data_vec.extend_from_slice(&[base_x + noise_x, base_y + noise_y]);
     }
 
-    Array2::from_shape_vec((n_samples, 2), data_vec).unwrap()
+    Array2::fromshape_vec((n_samples, 2), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -435,7 +435,7 @@ fn create_architecture_search_data() -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -455,7 +455,7 @@ fn create_ensemble_test_data() -> Array2<f64> {
         data_vec.extend_from_slice(&[x, y, z]);
     }
 
-    Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
+    Array2::fromshape_vec((n_samples, 3), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -478,7 +478,7 @@ fn create_comprehensive_test_data() -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
+    Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
 #[allow(dead_code)]
@@ -498,7 +498,7 @@ fn create_visualization_data() -> Array2<f64> {
         data_vec.extend_from_slice(&[x, y, z]);
     }
 
-    Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
+    Array2::fromshape_vec((n_samples, 3), data_vec).unwrap()
 }
 
 #[allow(dead_code)]

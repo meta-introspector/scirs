@@ -1,4 +1,4 @@
-use scirs2__text::{
+use scirs2_text::{
     FrequencyFilter, LengthFilter, RegexFilter, Result, StopwordsFilter, TokenFilter, Tokenizer,
     WordTokenizer,
 };
@@ -11,7 +11,7 @@ fn main() -> Result<()> {
 
     // Create a sample text
     let text = "The quick brown fox jumps over the lazy dog. The fox is quick and brown.";
-    println!("Original text: {_text}\n");
+    println!("Original text: {text}\n");
 
     // Create a tokenizer
     let tokenizer = WordTokenizer::default();
@@ -25,8 +25,8 @@ fn main() -> Result<()> {
     let filtered = length_filter.apply(&tokens);
     println!("Tokens with length 4-6: {filtered:?}");
 
-    let filtered_text = length_filter.filter_text(text, &tokenizer)?;
-    println!("Filtered text: {filtered_text}\n");
+    let filteredtext = length_filter.filtertext(text, &tokenizer)?;
+    println!("Filtered text: {filteredtext}\n");
 
     // 2. Filter by frequency
     println!("2. Frequency Filtering");
@@ -49,8 +49,8 @@ fn main() -> Result<()> {
     let filtered = freq_filter.apply(&tokens);
     println!("\nTokens that appear 2+ times: {filtered:?}");
 
-    let filtered_text = freq_filter.filter_text(text, &tokenizer)?;
-    println!("Filtered text: {filtered_text}\n");
+    let filteredtext = freq_filter.filtertext(text, &tokenizer)?;
+    println!("Filtered text: {filteredtext}\n");
 
     // 3. Filter by regex pattern
     println!("3. Regex Filtering");
@@ -61,8 +61,8 @@ fn main() -> Result<()> {
     let filtered = regex_filter.apply(&tokens);
     println!("Tokens containing a vowel followed by 'w' or 'r': {filtered:?}");
 
-    let filtered_text = regex_filter.filter_text(text, &tokenizer)?;
-    println!("Filtered text: {filtered_text}\n");
+    let filteredtext = regex_filter.filtertext(text, &tokenizer)?;
+    println!("Filtered text: {filteredtext}\n");
 
     // 4. Stopwords filtering
     println!("4. Stopwords Filtering");
@@ -82,8 +82,8 @@ fn main() -> Result<()> {
     let filtered = stopwords_filter.apply(&tokens);
     println!("Tokens with stopwords removed: {filtered:?}");
 
-    let filtered_text = stopwords_filter.filter_text(text, &tokenizer)?;
-    println!("Filtered text: {filtered_text}\n");
+    let filteredtext = stopwords_filter.filtertext(text, &tokenizer)?;
+    println!("Filtered text: {filteredtext}\n");
 
     // 5. Composite filtering
     println!("5. Composite Filtering");
@@ -99,13 +99,13 @@ fn main() -> Result<()> {
     println!("Tokens with length 3-5 AND starting with lowercase letter: {filtered:?}");
 
     // First filter by length
-    let text_with_length = length_filter.filter_text(text, &tokenizer)?;
+    let text_with_length = length_filter.filtertext(text, &tokenizer)?;
 
     // Then apply regex filter to the already filtered text
-    let filtered_text = regex_filter.filter_text(&text_with_length, &tokenizer)?;
+    let filteredtext = regex_filter.filtertext(&text_with_length, &tokenizer)?;
 
     // We should see only words that are 3-5 chars AND start with lowercase
-    println!("Filtered text: {filtered_text}\n");
+    println!("Filtered text: {filteredtext}\n");
 
     Ok(())
 }

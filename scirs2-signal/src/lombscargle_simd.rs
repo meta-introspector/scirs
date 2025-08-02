@@ -1,10 +1,10 @@
-//! SIMD-optimized Lomb-Scargle periodogram with enhanced validation
-//!
-//! This module provides high-performance SIMD and parallel implementations
-//! of the Lomb-Scargle periodogram with comprehensive validation.
+// SIMD-optimized Lomb-Scargle periodogram with enhanced validation
+//
+// This module provides high-performance SIMD and parallel implementations
+// of the Lomb-Scargle periodogram with comprehensive validation.
 
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle__enhanced::{LombScargleConfig, WindowType};
+use crate::lombscargle_enhanced::{LombScargleConfig, WindowType};
 use crate::window::{blackman, hamming, hann};
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast};
@@ -66,7 +66,7 @@ pub struct ValidationMetrics {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::lombscargle_simd::{simd_lombscargle, LombScargleConfig};
+/// use scirs2_signal::lombscargle_simd::{simd_lombscargle, LombScargleConfig};
 ///
 /// // Generate unevenly sampled data
 /// let times = vec![0.0, 0.1, 0.3, 0.7, 1.2, 1.5, 2.0, 2.1];
@@ -274,7 +274,7 @@ fn apply_window(_values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec
     let mut windowed = vec![0.0; n];
     let values_view = ArrayView1::from(_values);
     let window_view = ArrayView1::from(&window);
-    let windowed_view = ArrayView1::from_shape(n, &mut windowed).unwrap();
+    let windowed_view = ArrayView1::fromshape(n, &mut windowed).unwrap();
 
     f64::simd_mul(&values_view, &window_view, &windowed_view);
 
@@ -341,19 +341,19 @@ fn compute_simd_fast_lombscargle(
     let mut power = vec![0.0; frequencies.len()];
 
     // Center the data
-    let mean_val: f64 = values.iter().sum::<f64>() / n  as f64;
+    let mean_val: f64 = values.iter().sum::<f64>() / n as f64;
     let mut values_centered = vec![0.0; n];
     let values_view = ArrayView1::from(values);
-    let centered_view = ArrayView1::from_shape(n, &mut values_centered).unwrap();
+    let centered_view = ArrayView1::fromshape(n, &mut values_centered).unwrap();
 
     // SIMD subtraction for centering
     f64::simd_sub_scalar(&values_view, mean_val, &centered_view);
 
     // Precompute time shifts
-    let t_mean = times.iter().sum::<f64>() / n  as f64;
+    let t_mean = times.iter().sum::<f64>() / n as f64;
     let mut times_shifted = vec![0.0; n];
     let times_view = ArrayView1::from(times);
-    let shifted_view = ArrayView1::from_shape(n, &mut times_shifted).unwrap();
+    let shifted_view = ArrayView1::fromshape(n, &mut times_shifted).unwrap();
 
     f64::simd_sub_scalar(&times_view, t_mean, &shifted_view);
 
@@ -485,7 +485,7 @@ fn compute_validation_metrics(
     let peak_freq = frequencies[peak_idx];
 
     // Estimate SNR
-    let mean_power: f64 = power.iter().sum::<f64>() / n_freq  as f64;
+    let mean_power: f64 = power.iter().sum::<f64>() / n_freq as f64;
     let noise_est = power
         .iter()
         .filter(|&&p| (p - mean_power).abs() < mean_power)
@@ -493,7 +493,7 @@ fn compute_validation_metrics(
         / power
             .iter()
             .filter(|&&p| (p - mean_power).abs() < mean_power)
-            .count()  as f64;
+            .count() as f64;
 
     let snr = max_power / noise_est.max(1e-10);
 
@@ -614,7 +614,7 @@ fn compute_parallel_bootstrap_ci(
 #[allow(dead_code)]
 fn compute_false_alarm_probability(_power: &[f64], n_data: usize) -> SignalResult<Vec<f64>> {
     let n_freq = _power.len();
-    let n_eff = n_freq  as f64; // Simplified; could use more sophisticated estimate
+    let n_eff = n_freq as f64; // Simplified; could use more sophisticated estimate
 
     // Baluev (2008) approximation for FAP
     let fap: Vec<f64> = _power

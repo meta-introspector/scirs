@@ -74,8 +74,8 @@ pub struct ModelMetadata {
     pub model_name: Option<String>,
     pub model_version: Option<String>,
     pub architecture: Option<String>,
-    pub input_shapes: HashMap<String, Vec<usize>>,
-    pub output_shapes: HashMap<String, Vec<usize>>,
+    pub inputshapes: HashMap<String, Vec<usize>>,
+    pub outputshapes: HashMap<String, Vec<usize>>,
     pub parameters: HashMap<String, serde_json::Value>,
 }
 
@@ -145,8 +145,8 @@ impl MLModel {
                 model_name: None,
                 model_version: None,
                 architecture: None,
-                input_shapes: HashMap::new(),
-                output_shapes: HashMap::new(),
+                inputshapes: HashMap::new(),
+                outputshapes: HashMap::new(),
                 parameters: HashMap::new(),
             },
             weights: HashMap::new(),
@@ -165,14 +165,21 @@ impl MLModel {
     }
 
     /// Save model to file
-    pub fn save(&self, framework: MLFramework, path: impl AsRef<std::path::Path>) -> crate::error::Result<()> {
+    pub fn save(
+        &self,
+        framework: MLFramework,
+        path: impl AsRef<std::path::Path>,
+    ) -> crate::error::Result<()> {
         use crate::ml_framework::converters::get_converter;
         let converter = get_converter(framework);
         converter.save_model(self, path.as_ref())
     }
 
     /// Load model from file
-    pub fn load(framework: MLFramework, path: impl AsRef<std::path::Path>) -> crate::error::Result<Self> {
+    pub fn load(
+        framework: MLFramework,
+        path: impl AsRef<std::path::Path>,
+    ) -> crate::error::Result<Self> {
         use crate::ml_framework::converters::get_converter;
         let converter = get_converter(framework);
         converter.load_model(path.as_ref())

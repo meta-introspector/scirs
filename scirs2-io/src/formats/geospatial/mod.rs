@@ -13,7 +13,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::formats::geospatial::{GeoTiff, Shapefile, GeoJson};
+//! use scirs2_io::formats::geospatial::{GeoTiff, Shapefile, GeoJson};
 //! use ndarray::Array2;
 //!
 //! // Read GeoTIFF
@@ -25,8 +25,8 @@
 //! // Read Shapefile
 //! let shapefile = Shapefile::open("cities.shp")?;
 //! for feature in shapefile.features() {
-//!     let geometry = feature.geometry();
-//!     let attributes = feature.attributes();
+//!     let geometry = &feature.geometry;
+//!     let attributes = &feature.attributes;
 //! }
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
@@ -154,7 +154,7 @@ pub enum GeoTiffDataType {
 
 impl GeoTiff {
     /// Open a GeoTIFF file
-    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         // This is a simplified implementation for basic GeoTIFF files
         // In reality, we would use a proper TIFF/GeoTIFF library like tiff crate
         let file_path = _path.as_ref().to_string_lossy().to_string();
@@ -268,7 +268,7 @@ impl GeoTiff {
                         .collect()
                 };
 
-                Array2::from_shape_vec((self.height as usize, self.width as usize), data)
+                Array2::fromshape_vec((self.height as usize, self.width as usize), data)
                     .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
             }
             Err(_) => {
@@ -279,7 +279,7 @@ impl GeoTiff {
                         T::from_f32(val as f32)
                     })
                     .collect();
-                Array2::from_shape_vec((self.height as usize, self.width as usize), data)
+                Array2::fromshape_vec((self.height as usize, self.width as usize), data)
                     .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
             }
         }
@@ -309,7 +309,7 @@ impl GeoTiff {
 
         // Simplified implementation
         let data = vec![T::zero(); (width * height) as usize];
-        Array2::from_shape_vec((height as usize, width as usize), data)
+        Array2::fromshape_vec((height as usize, width as usize), data)
             .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
     }
 
@@ -574,7 +574,7 @@ pub struct Shapefile {
 
 impl Shapefile {
     /// Open a shapefile
-    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         // Simplified implementation that validates file existence and structure
         // In reality, would use a proper shapefile library to read .shp, .shx, .dbf files
 
@@ -706,7 +706,7 @@ pub struct GeoJsonGeometry {
 
 impl GeoJson {
     /// Read GeoJSON from file
-    pub fn read<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn read<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         let _reader = BufReader::new(file);
@@ -1015,7 +1015,7 @@ impl KMLDocument {
     }
 
     /// Read KML from file
-    pub fn read_kml<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn read_kml<P: AsRef<Path>>(path: P) -> Result<Self> {
         // Simplified KML reading - in a real implementation, would use proper XML parser
         let _content = std::fs::read_to_string(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to read KML file: {e}")))?;
@@ -1033,8 +1033,9 @@ impl KMLDocument {
 
 /// Simple XML escaping function
 #[allow(dead_code)]
-fn xml_escape(_text: &str) -> String {
-    _text.replace('&', "&amp;")
+fn xml_escape(text: &str) -> String {
+    text
+        .replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('"', "&quot;")

@@ -359,7 +359,7 @@ impl Angle64 {
     pub fn radians_2(&self) -> f64 {
         self.radians
     }
-    
+
     /// Get the angle in radians (alias)
     pub fn radians(&self) -> f64 {
         self.radians
@@ -369,7 +369,7 @@ impl Angle64 {
     pub fn degrees_2(&self) -> f64 {
         self.radians * 180.0 / std::f64::consts::PI
     }
-    
+
     /// Get the angle in degrees (alias)
     pub fn degrees(&self) -> f64 {
         self.radians * 180.0 / std::f64::consts::PI

@@ -41,7 +41,7 @@ fn test_complete_advanced_pipeline() {
         let simd_processed = T::simd_mul(&activated, &activated);
 
         // Apply memory-efficient operations
-        let reshaped = T::efficient_reshape_with_shape(&simd_processed, &[8192]);
+        let reshaped = T::efficient_reshape_withshape(&simd_processed, &[8192]);
 
         // Use caching for frequently accessed results
         let cached_result = T::cached_op(&reshaped, "square");
@@ -153,7 +153,7 @@ fn test_comprehensive_graph_visualization() {
     for format in output_formats {
         let config = VisualizationConfig {
             format,
-            show_shapes: true,
+            showshapes: true,
             show_operations: true,
             show_gradients: true,
             max_nodes: Some(100),
@@ -237,8 +237,8 @@ fn test_comprehensive_parallel_operations() {
     for (i, config) in configs.iter().enumerate() {
         // Test parallel element-wise operations
         let a =
-            Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| x as f32).collect()).unwrap();
-        let b = Array::from_shape_vec(IxDyn(&[1000]), (0..1000).map(|x| (x * 2) as f32).collect())
+            Array::fromshape_vec(IxDyn(&[1000]), (0..1000).map(|x| x as f32).collect()).unwrap();
+        let b = Array::fromshape_vec(IxDyn(&[1000]), (0..1000).map(|x| (x * 2) as f32).collect())
             .unwrap();
 
         let add_result = ParallelElementWise::add(&a, &b, config).unwrap();
@@ -263,7 +263,7 @@ fn test_comprehensive_parallel_operations() {
 #[allow(dead_code)]
 fn test_comprehensive_custom_activations() {
     ag::run(|ctx: &mut ag::Context<f32>| {
-        let test_data = Array::from_shape_vec(
+        let test_data = Array::fromshape_vec(
             IxDyn(&[100]),
             (0..100).map(|x| (x as f32 - 50.0) / 10.0).collect(), // Range from -5 to 4.5
         )
@@ -317,7 +317,7 @@ fn test_comprehensive_efficient_operations() {
         let ones = T::efficient_ones(&[50, 40], ctx);
 
         // Test efficient reshape
-        let reshaped = T::efficient_reshape_with_shape(&zeros, &[2000]);
+        let reshaped = T::efficient_reshape_withshape(&zeros, &[2000]);
         let reshaped_output = reshaped.eval(ctx).unwrap();
         assert_eq!(reshaped_output.len(), 2000);
         assert!(reshaped_output.iter().all(|&x| x == 0.0));
@@ -353,11 +353,11 @@ fn test_comprehensive_simd_operations() {
         // Create test data that benefits from SIMD
         let size = 1024; // Good for SIMD alignment
         let a = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[size]), (0..size).map(|x| x as f32).collect()).unwrap(),
+            Array::fromshape_vec(IxDyn(&[size]), (0..size).map(|x| x as f32).collect()).unwrap(),
             ctx,
         );
         let b = T::convert_to_tensor(
-            Array::from_shape_vec(IxDyn(&[size]), (0..size).map(|x| (x * 2) as f32).collect())
+            Array::fromshape_vec(IxDyn(&[size]), (0..size).map(|x| (x * 2) as f32).collect())
                 .unwrap(),
             ctx,
         );
@@ -380,7 +380,7 @@ fn test_comprehensive_simd_operations() {
 
         // Test SIMD unary operations
         let test_values =
-            Array::from_shape_vec(IxDyn(&[8]), vec![-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0, 3.0])
+            Array::fromshape_vec(IxDyn(&[8]), vec![-2.0, -1.0, -0.5, 0.0, 0.5, 1.0, 2.0, 3.0])
                 .unwrap();
         let x = T::convert_to_tensor(test_values, ctx);
 
@@ -438,9 +438,9 @@ fn test_comprehensive_graph_enhancements() {
 
         // Test conditional operations
         let condition_true =
-            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+            T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
         let condition_false =
-            T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![-1.0]).unwrap(), ctx);
+            T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![-1.0]).unwrap(), ctx);
 
         let true_branch = T::efficient_ones(&[5], ctx);
         let false_branch = T::efficient_zeros(&[5], ctx);

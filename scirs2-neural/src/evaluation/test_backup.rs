@@ -129,15 +129,15 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluat
             // Load first sample to determine shapes
             let (first_x, first_y) = dataset.get(batch_indices[0])?;
             // Create batch arrays
-            let batch_x_shape = [batch_indices.len()]
+            let batch_xshape = [batch_indices.len()]
                 .iter()
                 .chain(first_x.shape())
                 .cloned()
                 .collect::<Vec<_>>();
-            let batch_y_shape = [batch_indices.len()]
+            let batch_yshape = [batch_indices.len()]
                 .chain(first_y.shape())
-            let mut batch_x = Array::zeros(IxDyn(&batch_x_shape));
-            let mut batch_y = Array::zeros(IxDyn(&batch_y_shape));
+            let mut batch_x = Array::zeros(IxDyn(&batch_xshape));
+            let mut batch_y = Array::zeros(IxDyn(&batch_yshape));
             // Fill batch arrays
             for (i, &idx) in batch_indices.iter().enumerate() {
                 let (x, y) = dataset.get(idx)?;
@@ -167,13 +167,13 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> TestEvaluat
         let first_pred = &all_predictions[0];
         let first_target = &all_targets[0];
         // Create output shape for concatenated arrays
-        let mut pred_shape = first_pred.shape().to_vec();
-        pred_shape[0] = total_samples;
-        let mut target_shape = first_target.shape().to_vec();
-        target_shape[0] = total_samples;
+        let mut predshape = first_pred.shape().to_vec();
+        predshape[0] = total_samples;
+        let mut targetshape = first_target.shape().to_vec();
+        targetshape[0] = total_samples;
         // Initialize combined arrays
-        let mut combined_preds = Array::<F>::zeros(IxDyn(&pred_shape));
-        let mut combined_targets = Array::<F>::zeros(IxDyn(&target_shape));
+        let mut combined_preds = Array::<F>::zeros(IxDyn(&predshape));
+        let mut combined_targets = Array::<F>::zeros(IxDyn(&targetshape));
         // Copy data from all batches
         let mut current_idx = 0;
         for (pred_batch, target_batch) in all_predictions.iter().zip(all_targets.iter()) {

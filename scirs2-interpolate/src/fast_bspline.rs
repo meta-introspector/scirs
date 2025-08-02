@@ -633,7 +633,7 @@ where
         let chunk_size = self.chunk_size;
         let chunks: Vec<_> = x_vals.as_slice().unwrap().chunks(chunk_size).collect();
 
-        let results: Result<Vec<_>_> = chunks
+        let results: Result<Vec<_>> = chunks
             .into_iter()
             .map(|chunk| {
                 let mut chunk_results = Vec::with_capacity(chunk.len());

@@ -170,7 +170,7 @@ impl DistributedComputationEngine {
         let total_memory: usize = matrices
             .iter()
             .map(|m| {
-                let (rows, cols) = m.local_shape();
+                let (rows, cols) = m.localshape();
                 rows * cols * std::mem::size_of::<T>()
             })
             .sum();
@@ -213,8 +213,8 @@ impl DistributedComputationEngine {
         T: Float,
     {
         // Analyze matrix shapes and distributions for optimization opportunities
-        let (m, k) = a.global_shape();
-        let (k2, n) = b.global_shape();
+        let (m, k) = a.globalshape();
+        let (k2, n) = b.globalshape();
         
         // Check if redistribution would be beneficial
         let computation_cost = m * k * n;

@@ -505,7 +505,7 @@ mod tests {
     }
 
     #[test]
-    fn test_text_ml_pipeline() {
+    fn testtext_ml_pipeline() {
         let mut pipeline =
             TextMLPipeline::new().configure_preprocessor(|p| p.with_feature_selection(10));
 

@@ -3,7 +3,7 @@
 
 use crate::error::{IoError, Result};
 use crate::ml_framework::converters::{MLFrameworkConverter, SafeTensorsConverter};
-use crate::ml_framework::types::{MLModel, MLTensor, MLFramework};
+use crate::ml_framework::types::{MLFramework, MLModel, MLTensor};
 use std::fs::File;
 use std::path::Path;
 

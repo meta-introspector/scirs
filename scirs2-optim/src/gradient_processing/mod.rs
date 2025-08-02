@@ -473,17 +473,17 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientMask<A, D> {
     }
 
     /// Create a mask that freezes all parameters
-    pub fn freeze_all(_shape: D) -> Self {
+    pub fn freeze_all(shape: D) -> Self {
         Self {
-            mask: Array::from_elem(_shape, false),
+            mask: Array::from_elem(shape, false),
             lr_multipliers: None,
         }
     }
 
     /// Create a mask that updates all parameters
-    pub fn update_all(_shape: D) -> Self {
+    pub fn update_all(shape: D) -> Self {
         Self {
-            mask: Array::from_elem(_shape, true),
+            mask: Array::from_elem(shape, true),
             lr_multipliers: None,
         }
     }

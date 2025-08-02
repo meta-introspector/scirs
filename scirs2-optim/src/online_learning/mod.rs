@@ -293,13 +293,13 @@ pub struct OnlinePerformanceMetrics<A: Float> {
 impl<A: Float + ScalarOperand + Debug + std::iter::Sum, D: Dimension> OnlineOptimizer<A, D> {
     /// Create a new online optimizer
     pub fn new(_strategy: OnlineLearningStrategy, initial_parameters: Array<A, D>) -> Self {
-        let param_shape = initial_parameters.raw_dim();
-        let gradient_accumulator = Array::zeros(param_shape.clone());
+        let paramshape = initial_parameters.raw_dim();
+        let gradient_accumulator = Array::zeros(paramshape.clone());
         let second_moment_accumulator = match &_strategy {
             OnlineLearningStrategy::AdaptiveSGD {
                 adaptation_method: LearningRateAdaptation::Adam { .. },
                 ..
-            } => Some(Array::zeros(param_shape)),
+            } => Some(Array::zeros(paramshape)),
             _ => None,
         };
 
@@ -856,7 +856,7 @@ mod tests {
     fn test_online_update() {
         let strategy = OnlineLearningStrategy::AdaptiveSGD {
             initial_lr: 0.1,
-            adaptation_method: LearningRateAdaptation::ExponentialDecay { decay_rate: 0.99 },
+            adaptation_method: LearningRateAdaptation::ExponentialDecay { decay, rate: 0.99 },
         };
 
         let initial_params = Array1::from_vec(vec![1.0, 2.0, 3.0]);

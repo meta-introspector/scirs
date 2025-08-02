@@ -3,7 +3,7 @@
 // This example demonstrates the enhanced statistical spelling correction
 // functionality in the scirs2-text crate, including context-aware correction.
 
-use scirs2__text::{
+use scirs2_text::{
     DictionaryCorrector, ErrorModel, SpellingCorrector, StatisticalCorrector,
     StatisticalCorrectorConfig,
 };
@@ -71,7 +71,7 @@ fn train_language_model(_corrector: &mut StatisticalCorrector) {
     println!("Training language model with sample text...");
 
     // Add sample training text
-    _corrector.add_training_text(SAMPLE_TRAINING_TEXT);
+    _corrector.add_trainingtext(SAMPLE_TRAINING_TEXT);
 
     // Add more specialized training examples for context disambiguation
     let additional_examples = [
@@ -105,7 +105,7 @@ fn train_language_model(_corrector: &mut StatisticalCorrector) {
     ];
 
     for example in &additional_examples {
-        _corrector.add_training_text(example);
+        _corrector.add_trainingtext(example);
     }
 
     println!(
@@ -205,10 +205,10 @@ fn context_aware_correction_demo(
     println!("{TEXT_WITH_CONTEXT_MISSPELLINGS}\n");
 
     // Correct the text
-    let corrected_text = corrector.correct_text(TEXT_WITH_CONTEXT_MISSPELLINGS)?;
+    let correctedtext = corrector.correcttext(TEXT_WITH_CONTEXT_MISSPELLINGS)?;
 
     println!("Corrected text:");
-    println!("{corrected_text}\n");
+    println!("{correctedtext}\n");
 
     println!("Expected text:");
     println!("{EXPECTED_CORRECTED_TEXT}\n");
@@ -222,11 +222,11 @@ fn context_aware_correction_demo(
 
     println!("Example 1: 'bnk' in financial context");
     println!("Before: {text1}");
-    println!("After:  {}\n", corrector.correct_text(text1)?);
+    println!("After:  {}\n", corrector.correcttext(text1)?);
 
     println!("Example 2: 'bnk' in geographical context");
     println!("Before: {text2}");
-    println!("After:  {}\n", corrector.correct_text(text2)?);
+    println!("After:  {}\n", corrector.correcttext(text2)?);
 
     // Example 2: there/their homophone confusion
     let text3 = "Their was a problem with the computer.";
@@ -234,11 +234,11 @@ fn context_aware_correction_demo(
 
     println!("Example 3: 'their' used incorrectly");
     println!("Before: {text3}");
-    println!("After:  {}\n", corrector.correct_text(text3)?);
+    println!("After:  {}\n", corrector.correcttext(text3)?);
 
     println!("Example 4: 'there' used incorrectly");
     println!("Before: {text4}");
-    println!("After:  {}\n", corrector.correct_text(text4)?);
+    println!("After:  {}\n", corrector.correcttext(text4)?);
 
     Ok(())
 }
@@ -252,16 +252,16 @@ fn performance_test(
     println!("\n=== Performance Test ===\n");
 
     // Create test text with a mix of correct and incorrect words
-    let test_text = TEXT_WITH_CONTEXT_MISSPELLINGS.repeat(10);
+    let testtext = TEXT_WITH_CONTEXT_MISSPELLINGS.repeat(10);
 
     // Measure dictionary _corrector performance
     let start = Instant::now();
-    let _ = dict_corrector.correct_text(&test_text)?;
+    let _ = dict_corrector.correcttext(&testtext)?;
     let dict_time = start.elapsed();
 
     // Measure statistical _corrector performance
     let start = Instant::now();
-    let _ = stat_corrector.correct_text(&test_text)?;
+    let _ = stat_corrector.correcttext(&testtext)?;
     let stat_time = start.elapsed();
 
     // Create a non-contextual statistical _corrector for comparison
@@ -277,12 +277,12 @@ fn performance_test(
 
     // Measure non-contextual statistical _corrector performance
     let start = Instant::now();
-    let _ = non_context_corrector.correct_text(&test_text)?;
+    let _ = non_context_corrector.correcttext(&testtext)?;
     let non_context_time = start.elapsed();
 
     println!(
         "Performance comparison on text with {} characters:",
-        test_text.len()
+        testtext.len()
     );
     println!("  - Dictionary _corrector: {dict_time:?}");
     println!("  - Statistical _corrector (without context): {non_context_time:?}");
@@ -370,7 +370,7 @@ fn configuration_demo() -> Result<(), Box<dyn std::error::Error>> {
         // Show a context example if context is enabled
         if config.use_context {
             let context_example = "Going to the bnk to deposit money. The river bnk was muddy.";
-            let corrected = corrector.correct_text(context_example)?;
+            let corrected = corrector.correcttext(context_example)?;
             println!("\n  Context example:");
             println!("    Before: {context_example}");
             println!("    After:  {corrected}");
@@ -459,10 +459,10 @@ fn noise_model_demo() -> Result<(), Box<dyn std::error::Error>> {
 
     // Test some examples
     println!("\nCorrecting text with transposition-heavy error model:");
-    let test_text = "I recieved a mesage about thier acheivements.";
-    let corrected = custom_corrector.correct_text(test_text)?;
+    let testtext = "I recieved a mesage about thier acheivements.";
+    let corrected = custom_corrector.correcttext(testtext)?;
 
-    println!("Before: {test_text}");
+    println!("Before: {testtext}");
     println!("After:  {corrected}");
 
     Ok(())

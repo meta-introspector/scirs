@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 6: L-shaped polygon operations
     println!("6. L-shaped Polygon Operations");
-    l_shape_operations_example()?;
+    lshape_operations_example()?;
     println!();
 
     // Example 7: Self-intersection detection
@@ -254,9 +254,9 @@ fn triangle_operations_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn l_shape_operations_example() -> Result<(), Box<dyn std::error::Error>> {
+fn lshape_operations_example() -> Result<(), Box<dyn std::error::Error>> {
     // L-shaped polygon
-    let l_shape = array![
+    let lshape = array![
         [0.0, 0.0],
         [2.0, 0.0],
         [2.0, 1.0],
@@ -270,23 +270,23 @@ fn l_shape_operations_example() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("L-shaped polygon and square");
 
-    let l_area = compute_polygon_area(&l_shape.view())?;
+    let l_area = compute_polygon_area(&lshape.view())?;
     let sq_area = compute_polygon_area(&square.view())?;
     println!("Areas: L-shape = {l_area:.3}, square = {sq_area:.3}");
 
-    let l_convex = is_convex_polygon(&l_shape.view())?;
+    let l_convex = is_convex_polygon(&lshape.view())?;
     let sq_convex = is_convex_polygon(&square.view())?;
     println!("Convex: L-shape = {l_convex}, square = {sq_convex}");
 
     // Union
-    let union_result = polygon_union(&l_shape.view(), &square.view())?;
+    let union_result = polygon_union(&lshape.view(), &square.view())?;
     println!("Union:");
     println!("  Vertices: {}", union_result.nrows());
     let union_area = compute_polygon_area(&union_result.view())?;
     println!("  Area: {union_area:.3}");
 
     // Intersection
-    let intersection_result = polygon_intersection(&l_shape.view(), &square.view())?;
+    let intersection_result = polygon_intersection(&lshape.view(), &square.view())?;
     println!("Intersection:");
     println!("  Vertices: {}", intersection_result.nrows());
     if intersection_result.nrows() > 0 {
@@ -349,7 +349,7 @@ fn regular_hexagon(_radius: f64, center_x: f64, center_y: f64) -> Array2<f64> {
         vertices.push(_y);
     }
 
-    Array2::from_shape_vec((6, 2), vertices).unwrap()
+    Array2::fromshape_vec((6, 2), vertices).unwrap()
 }
 
 /// Create a simple star polygon (5-pointed)
@@ -372,7 +372,7 @@ fn create_star_polygon() -> Array2<f64> {
         vertices.push(y);
     }
 
-    Array2::from_shape_vec((10, 2), vertices).unwrap()
+    Array2::fromshape_vec((10, 2), vertices).unwrap()
 }
 
 /// Print polygon vertices (limited to first few vertices for readability)

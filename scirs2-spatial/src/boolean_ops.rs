@@ -148,7 +148,7 @@ impl LabeledPolygon {
             data.push(vertex.x);
             data.push(vertex.y);
         }
-        Array2::from_shape_vec((self.vertices.len(), 2), data).unwrap()
+        Array2::fromshape_vec((self.vertices.len(), 2), data).unwrap()
     }
 
     fn is_point_inside(&self, _point: &Point2D) -> bool {

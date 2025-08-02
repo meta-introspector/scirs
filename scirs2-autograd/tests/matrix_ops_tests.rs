@@ -8,7 +8,7 @@ use scirs2_autograd as ag;
 fn test_matrix_inverse() {
     ag::run::<f32_>(|ctx| {
         // Create a simple test matrix with known inverse
-        let a_data = Array2::<f32>::from_shape_vec((2, 2), vec![4.0, 7.0, 2.0, 6.0]).unwrap();
+        let a_data = Array2::<f32>::fromshape_vec((2, 2), vec![4.0, 7.0, 2.0, 6.0]).unwrap();
 
         // The inverse should be:
         // [ 0.6  -0.7 ]

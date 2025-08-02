@@ -124,7 +124,7 @@ fn bayesian_information_criteria_example() -> Result<()> {
     let bic_calc = BayesianInformationCriteria::new().with_num_samples(1000);
 
     // Simulate log-likelihood samples: 100 MCMC samples, 50 observations
-    let log_likelihood_samples = Array2::from_shape_fn((100, 50), |(i, j)| {
+    let log_likelihood_samples = Array2::fromshape_fn((100, 50), |(i, j)| {
         // Simulate realistic log-likelihoods with some variance
         -1.5 - 0.01 * i as f64 - 0.02 * j as f64 + 0.1 * (i as f64 * 0.1).sin()
     });
@@ -145,7 +145,7 @@ fn bayesian_information_criteria_example() -> Result<()> {
     for (i, num_params) in [3, 5, 8, 12].iter().enumerate() {
         // Simulate different model complexities
         let complexity_factor = 1.0 + 0.1 * i as f64;
-        let model_samples = Array2::from_shape_fn((100, 50), |(sample, obs)| {
+        let model_samples = Array2::fromshape_fn((100, 50), |(sample, obs)| {
             -1.5 * complexity_factor - 0.01 * sample as f64 - 0.02 * obs as f64
         });
 
@@ -179,7 +179,7 @@ fn posterior_predictive_check_example() -> Result<()> {
     ]);
 
     // Simulate posterior predictive samples: 1000 samples, 20 observations
-    let posterior_predictive_samples = Array2::from_shape_fn((1000, 20), |(sample, obs)| {
+    let posterior_predictive_samples = Array2::fromshape_fn((1000, 20), |(sample, obs)| {
         // Simulate data from fitted model with some variation
         let base_mean = 2.0;
         let sample_variation = 0.1 * ((sample as f64 * 0.01).sin());
@@ -260,7 +260,7 @@ fn credible_interval_example() -> Result<()> {
 #[allow(dead_code)]
 fn bayesian_model_averaging_example() -> Result<()> {
     // Simulate predictions from 4 different models for 10 test cases
-    let predictions = Array2::from_shape_vec(
+    let predictions = Array2::fromshape_vec(
         (4, 10),
         vec![
             // Model 1: Linear model
@@ -329,7 +329,7 @@ fn comprehensive_bayesian_workflow() -> Result<()> {
     let true_y: Array1<f64> = x_values.mapv(|x| 2.0 * x + 1.0 + 0.5 * (x * 0.5).sin());
 
     // Model 1: Linear model log-likelihoods (better fit for linear trend)
-    let model1_loglik = Array2::from_shape_fn((n_samples, n_obs), |(s, i)| {
+    let model1_loglik = Array2::fromshape_fn((n_samples, n_obs), |(s, i)| {
         let prediction = 2.1 * x_values[i] + 0.9;
         let residual = true_y[i] - prediction;
         let noise = 0.1 * ((s as f64 * 0.01).sin());
@@ -337,7 +337,7 @@ fn comprehensive_bayesian_workflow() -> Result<()> {
     });
 
     // Model 2: Polynomial model log-likelihoods (captures non-linearity better)
-    let model2_loglik = Array2::from_shape_fn((n_samples, n_obs), |(s, i)| {
+    let model2_loglik = Array2::fromshape_fn((n_samples, n_obs), |(s, i)| {
         let x = x_values[i];
         let prediction = 2.0 * x + 1.0 + 0.4 * (x * 0.5).sin();
         let residual = true_y[i] - prediction;
@@ -375,12 +375,12 @@ fn comprehensive_bayesian_workflow() -> Result<()> {
     println!("    LOO-CV: {:.2}", model2_info.loo_cv);
 
     // Step 4: Posterior predictive checks
-    let observed_residuals = Array1::from_shape_fn(n_obs, |i| {
+    let observed_residuals = Array1::fromshape_fn(n_obs, |i| {
         let linear_pred = 2.1 * x_values[i] + 0.9;
         true_y[i] - linear_pred
     });
 
-    let predicted_residuals = Array2::from_shape_fn((n_samples, n_obs), |(s, i)| {
+    let predicted_residuals = Array2::fromshape_fn((n_samples, n_obs), |(s, i)| {
         0.1 * ((s as f64 * 0.01 + i as f64 * 0.1).sin())
     });
 
@@ -392,7 +392,7 @@ fn comprehensive_bayesian_workflow() -> Result<()> {
     println!("  Model adequate: {}", ppc_result.model_adequate);
 
     // Step 5: Bayesian model averaging
-    let model_predictions = Array2::from_shape_fn((2, n_obs), |(model, i)| {
+    let model_predictions = Array2::fromshape_fn((2, n_obs), |(model, i)| {
         if model == 0 {
             2.1 * x_values[i] + 0.9 // Linear model
         } else {

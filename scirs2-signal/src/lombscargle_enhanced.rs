@@ -1,10 +1,10 @@
-//! Enhanced Lomb-Scargle periodogram with additional validation and features
-//!
-//! This module provides advanced features for Lomb-Scargle analysis including:
-//! - Window function support
-//! - Bootstrap confidence intervals
-//! - False alarm probability estimation
-//! - Numerical stability improvements
+// Enhanced Lomb-Scargle periodogram with additional validation and features
+//
+// This module provides advanced features for Lomb-Scargle analysis including:
+// - Window function support
+// - Bootstrap confidence intervals
+// - False alarm probability estimation
+// - Numerical stability improvements
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
@@ -161,7 +161,14 @@ where
     let power = if config.use_fast {
         compute_fast_lombscargle(&times_f64, &windowed_values, &frequencies, config.tolerance)?
     } else {
-        compute_standard_lombscargle(&times_f64, &windowed_values, &frequencies, None, None, Some(false))?
+        compute_standard_lombscargle(
+            &times_f64,
+            &windowed_values,
+            &frequencies,
+            None,
+            None,
+            Some(false),
+        )?
     };
 
     // Compute bootstrap confidence intervals if requested
@@ -205,7 +212,7 @@ fn apply_window(_values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec
         WindowType::Blackman => {
             let mut w = vec![0.0; n];
             for i in 0..n {
-                let x = 2.0 * PI * i as f64 / (n - 1)  as f64;
+                let x = 2.0 * PI * i as f64 / (n - 1) as f64;
                 w[i] = 0.42 - 0.5 * x.cos() + 0.08 * (2.0 * x).cos();
             }
             w
@@ -244,7 +251,7 @@ fn compute_frequency_grid(_times: &[f64], config: &LombScargleConfig) -> SignalR
     let t_span = _times[n - 1] - _times[0];
 
     // Estimate average sampling rate
-    let avg_dt = t_span / (n - 1)  as f64;
+    let avg_dt = t_span / (n - 1) as f64;
     let nyquist = 0.5 / avg_dt;
 
     // Determine frequency range
@@ -281,11 +288,11 @@ fn compute_fast_lombscargle(
     let mut power = vec![0.0; frequencies.len()];
 
     // Center the data
-    let mean_val: f64 = values.iter().sum::<f64>() / n  as f64;
+    let mean_val: f64 = values.iter().sum::<f64>() / n as f64;
     let values_centered: Vec<f64> = values.iter().map(|&v| v - mean_val).collect();
 
     // Precompute time shifts for numerical stability
-    let t_mean = times.iter().sum::<f64>() / n  as f64;
+    let t_mean = times.iter().sum::<f64>() / n as f64;
     let times_shifted: Vec<f64> = times.iter().map(|&t| t - t_mean).collect();
 
     for (i, &freq) in frequencies.iter().enumerate() {
@@ -328,7 +335,7 @@ fn compute_fast_lombscargle(
         s_tau2 = s_tau2.max(tolerance);
 
         // Compute variance
-        let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n  as f64;
+        let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n as f64;
 
         if variance > tolerance {
             // Standard normalization
@@ -352,9 +359,9 @@ fn compute_standard_lombscargle(
     let mut power = vec![0.0; frequencies.len()];
 
     // Center the data
-    let mean_val: f64 = values.iter().sum::<f64>() / n  as f64;
+    let mean_val: f64 = values.iter().sum::<f64>() / n as f64;
     let values_centered: Vec<f64> = values.iter().map(|&v| v - mean_val).collect();
-    let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n  as f64;
+    let variance: f64 = values_centered.iter().map(|&v| v * v).sum::<f64>() / n as f64;
 
     if variance == 0.0 {
         return Ok(power); // All zeros
@@ -473,7 +480,7 @@ pub fn false_alarm_probability(
         "standard" => {
             // Baluev (2008) approximation
             let z = peak_power;
-            let n_eff = n_frequencies  as f64;
+            let n_eff = n_frequencies as f64;
 
             if z <= 0.0 {
                 1.0
@@ -486,7 +493,7 @@ pub fn false_alarm_probability(
         "model" => {
             // For model normalization, use chi-squared distribution
             let dof = 2.0; // Degrees of freedom for sinusoidal model
-            let chi2 = peak_power * (n_samples - 3)  as f64;
+            let chi2 = peak_power * (n_samples - 3) as f64;
 
             // Approximate using incomplete gamma function
             let prob_single = (-chi2 / 2.0).exp();

@@ -1303,7 +1303,7 @@ impl From<SpectralResult> for PDESolution<f64> {
         // Clone the _result.u to avoid the move issue
         let u_clone = _result.u.clone();
         let u_len = u_clone.len();
-        let u_reshaped = u_clone.into_shape_with_order((u_len, 1)).unwrap();
+        let u_reshaped = u_clone.intoshape_with_order((u_len, 1)).unwrap();
         values.push(u_reshaped);
 
         // Create solver info

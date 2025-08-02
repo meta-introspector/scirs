@@ -835,10 +835,10 @@ mod tests {
     #[test]
     fn test_multilabel_confusion_matrix_sklearn() {
         let y_true =
-            Array2::from_shape_vec((4, 3), vec![1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1]).unwrap();
+            Array2::fromshape_vec((4, 3), vec![1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1]).unwrap();
 
         let y_pred =
-            Array2::from_shape_vec((4, 3), vec![1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1]).unwrap();
+            Array2::fromshape_vec((4, 3), vec![1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1]).unwrap();
 
         let confusion_matrices =
             multilabel_confusion_matrix_sklearn(&y_true, &y_pred, None, None).unwrap();

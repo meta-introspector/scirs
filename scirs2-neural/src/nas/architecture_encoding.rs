@@ -100,12 +100,12 @@ impl GraphEncoding {
         // Create hidden nodes
         for _ in 1..num_nodes - 1 {
             let layer_type = match rng.random_range(0..5) {
-                0 => LayerType::Dense(rng.random_range(32..=512))..1 =>, LayerType::Conv2D {
+                0 => LayerType::Dense(rng.random_range(32..=512))..1 => LayerType::Conv2D {
                     filters: rng.random_range(16..=256),
                     kernel_size: (3, 3),
                     stride: (1, 1),
                 },
-                2 => LayerType::Dropout(rng.random_range(0.1..0.5))..3 => LayerType::BatchNorm_ =>, LayerType::Activation("relu".to_string()),
+                2 => LayerType::Dropout(rng.random_range(0.1..0.5))..3 => LayerType::BatchNorm_ => LayerType::Activation("relu".to_string()),
             };
             
             nodes.push(NodeType {
@@ -397,7 +397,7 @@ impl SequentialEncoding {
         // Hidden layers
         for _ in 1..num_layers - 1 {
             let layer_type = match rng.random_range(0..4) {
-                1 => LayerType::Dropout(rng.random_range(0.1..0.5))..2 =>, LayerType::BatchNorm,
+                1 => LayerType::Dropout(rng.random_range(0.1..0.5))..2 => LayerType::BatchNorm,
             layers.push(layer_type);
         // Output layer
         layers.push(LayerType::Dense(rng.random_range(1..=10)));
@@ -434,8 +434,8 @@ impl ArchitectureEncoding for SequentialEncoding {
                 // Add layer
                 let pos = rng.random_range(1..mutated.layers.len());
                 let new_layer = match rng.random_range(0..4) {
-                    0 => LayerType::Dense(rng.random_range(32..=512))..1 =>, LayerType::Dropout(rng.random_range(0.1..0.5)),
-                    2 => LayerType::BatchNorm_ =>, LayerType::Activation("relu".to_string()),
+                    0 => LayerType::Dense(rng.random_range(32..=512))..1 => LayerType::Dropout(rng.random_range(0.1..0.5)),
+                    2 => LayerType::BatchNorm_ => LayerType::Activation("relu".to_string()),
                 };
                 mutated.layers.insert(pos, new_layer);
             } else if mutated.layers.len() > 3 {

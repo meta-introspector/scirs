@@ -718,7 +718,7 @@ fn export_scatter_2d_to_csv<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_plotly<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output_path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot2D_output, path: P, _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "Plotly export not yet implemented".to_string(),
@@ -727,7 +727,7 @@ fn export_scatter_2d_to_plotly<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_d3<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output_path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot2D_output, path: P, _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "D3.js export not yet implemented".to_string(),
@@ -736,7 +736,7 @@ fn export_scatter_2d_to_d3<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_svg<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output_path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot2D_output, path: P, _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "SVG export not yet implemented".to_string(),
@@ -745,7 +745,7 @@ fn export_scatter_2d_to_svg<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_png<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output_path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot2D_output, path: P, _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "PNG export requires image rendering library".to_string(),
@@ -754,7 +754,7 @@ fn export_scatter_2d_to_png<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_threejs<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output_path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot3D_output, path: P, _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "Three.js export not yet implemented".to_string(),
@@ -763,7 +763,7 @@ fn export_scatter_3d_to_threejs<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_gltf<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output_path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot3D_output, path: P, _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "GLTF export not yet implemented".to_string(),
@@ -772,7 +772,7 @@ fn export_scatter_3d_to_gltf<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_webgl<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output_path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot3D_output, path: P, _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "WebGL export not yet implemented".to_string(),
@@ -781,7 +781,7 @@ fn export_scatter_3d_to_webgl<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_unity<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output_path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot3D_output, path: P, _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "Unity3D export not yet implemented".to_string(),
@@ -790,7 +790,7 @@ fn export_scatter_3d_to_unity<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_blender<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output_path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot3D_output, path: P, _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "Blender export not yet implemented".to_string(),
@@ -916,7 +916,7 @@ mod tests {
     #[test]
     fn test_scatter_2d_csv_export() {
         let plot = ScatterPlot2D {
-            points: Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+            points: Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
             labels: Array1::from_vec(vec![0, 1]),
             centroids: None,
             colors: vec!["#FF0000".to_string(), "#00FF00".to_string()],

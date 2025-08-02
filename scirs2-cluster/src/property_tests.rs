@@ -15,7 +15,7 @@ mod tests {
     fn clustering_data_strategy() -> impl Strategy<Value = Array2<f64>> {
         (3usize..20, 2usize..5).prop_flat_map(|(n_points, n_features)| {
             prop::collection::vec(-10.0f64..10.0f64, n_points * n_features)
-                .prop_map(move |data| Array2::from_shape_vec((n_points, n_features), data).unwrap())
+                .prop_map(move |data| Array2::fromshape_vec((n_points, n_features), data).unwrap())
         })
     }
 
@@ -106,7 +106,7 @@ mod tests {
         #[test]
         fn test_kmeans_identical_points() {
             // Test with all identical points
-            let data = Array2::from_shape_vec((5, 2), vec![1.0; 10]).unwrap();
+            let data = Array2::fromshape_vec((5, 2), vec![1.0; 10]).unwrap();
 
             let result = kmeans2(
                 data.view(),

@@ -177,7 +177,7 @@ impl<F: IntegrateFloat> SymplecticIntegrator<F> for GaussLegendre6<F> {
         let c = [c1, c2, c3];
 
         // Coefficient matrix A (3x3)
-        let a = Array2::<F>::from_shape_vec(
+        let a = Array2::<F>::fromshape_vec(
             (3, 3),
             vec![
                 F::from_f64(5.0 / 36.0).unwrap(),

@@ -184,7 +184,7 @@ where
         let center_x = width as f64 / 2.0;
         let radius = (height.min(width) as f64) / 4.0;
 
-        Array2::from_shape_fn((height, width), |(i, j)| {
+        Array2::fromshape_fn((height, width), |(i, j)| {
             let dy = i as f64 - center_y;
             let dx = j as f64 - center_x;
             radius - (dy * dy + dx * dx).sqrt()
@@ -300,7 +300,7 @@ where
             match k {
                 0 => {
                     // Vertical division
-                    Array2::from_shape_fn(
+                    Array2::fromshape_fn(
                         (height, width),
                         |(_, j)| {
                             if j < width / 2 {
@@ -313,7 +313,7 @@ where
                 }
                 1 => {
                     // Horizontal division
-                    Array2::from_shape_fn((height, width), |(i_)| {
+                    Array2::fromshape_fn((height, width), |(i_)| {
                         if i < height / 2 {
                             10.0
                         } else {
@@ -323,7 +323,7 @@ where
                 }
                 2 => {
                     // Diagonal division
-                    Array2::from_shape_fn((height, width), |(i, j)| {
+                    Array2::fromshape_fn((height, width), |(i, j)| {
                         if i + j < (height + width) / 2 {
                             10.0
                         } else {
@@ -529,10 +529,10 @@ pub fn mask_to_level_set(
 
 /// Create checkerboard initialization for multi-phase segmentation
 #[allow(dead_code)]
-pub fn checkerboard_level_set(_shape: (usize, usize), square_size: usize) -> Array2<f64> {
-    let (height, width) = _shape;
+pub fn checkerboard_level_set(shape: (usize, usize), square_size: usize) -> Array2<f64> {
+    let (height, width) = shape;
 
-    Array2::from_shape_fn((height, width), |(i, j)| {
+    Array2::fromshape_fn((height, width), |(i, j)| {
         let row_even = (i / square_size) % 2 == 0;
         let col_even = (j / square_size) % 2 == 0;
 

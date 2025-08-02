@@ -276,7 +276,7 @@ impl BpeTokenizer {
         let mut all_tokens = Vec::new();
 
         for text in corpus {
-            let processed_text = if self.config.lowercase {
+            let processedtext = if self.config.lowercase {
                 text.to_lowercase()
             } else {
                 text.to_string()
@@ -287,7 +287,7 @@ impl BpeTokenizer {
             if self.config.character_level {
                 // Character-level tokenization
                 let initial_tokens: Vec<String> =
-                    processed_text.chars().map(|c| c.to_string()).collect();
+                    processedtext.chars().map(|c| c.to_string()).collect();
                 // Add character sequence directly
                 for token in &initial_tokens {
                     *token_counts.entry(token.clone()).or_insert(0) += 1;
@@ -295,7 +295,7 @@ impl BpeTokenizer {
                 all_tokens.push(initial_tokens);
             } else {
                 // Word-level tokenization with characters as base tokens
-                for word in processed_text.split_whitespace() {
+                for word in processedtext.split_whitespace() {
                     let chars: Vec<String> = word.chars().map(|c| c.to_string()).collect();
                     // Count individual characters
                     for token in &chars {
@@ -425,7 +425,7 @@ impl Tokenizer for BpeTokenizer {
             ));
         }
 
-        let processed_text = if self.config.lowercase {
+        let processedtext = if self.config.lowercase {
             text.to_lowercase()
         } else {
             text.to_string()
@@ -435,10 +435,10 @@ impl Tokenizer for BpeTokenizer {
 
         if self.config.character_level {
             // Tokenize as a single sequence
-            tokens = self.tokenize_word(&processed_text)?;
+            tokens = self.tokenize_word(&processedtext)?;
         } else {
             // Tokenize each word separately
-            for word in processed_text.split_whitespace() {
+            for word in processedtext.split_whitespace() {
                 let word_tokens = self.tokenize_word(word)?;
                 tokens.extend(word_tokens);
             }
@@ -543,7 +543,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bpe_tokenizer_empty_text() {
+    fn test_bpe_tokenizer_emptytext() {
         let corpus = ["this is a test"];
         let mut tokenizer = BpeTokenizer::with_defaults();
         tokenizer.train(&corpus).unwrap();

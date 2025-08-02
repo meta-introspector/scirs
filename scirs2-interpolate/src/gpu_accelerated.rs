@@ -401,16 +401,16 @@ where
     fn fit_cpu(&mut self) -> InterpolateResult<()> {
         // Convert GPU kernel to CPU kernel
         let cpu_kernel = match self.kernel {
-            GpuRBFKernel::Gaussian =>, RBFKernel::Gaussian,
-            GpuRBFKernel::Multiquadric =>, RBFKernel::Multiquadric,
-            GpuRBFKernel::InverseMultiquadric =>, RBFKernel::InverseMultiquadric,
-            GpuRBFKernel::Linear =>, RBFKernel::Linear,
-            GpuRBFKernel::Cubic =>, RBFKernel::Cubic,
-            GpuRBFKernel::ThinPlate =>, RBFKernel::ThinPlateSpline,
+            GpuRBFKernel::Gaussian => RBFKernel::Gaussian,
+            GpuRBFKernel::Multiquadric => RBFKernel::Multiquadric,
+            GpuRBFKernel::InverseMultiquadric => RBFKernel::InverseMultiquadric,
+            GpuRBFKernel::Linear => RBFKernel::Linear,
+            GpuRBFKernel::Cubic => RBFKernel::Cubic,
+            GpuRBFKernel::ThinPlate => RBFKernel::ThinPlateSpline,
         };
 
         // Convert 1D data to 2D format expected by RBFInterpolator
-        let points_2d = Array2::from_shape_vec((self.x_data.len(), 1), self.x_data.to_vec())
+        let points_2d = Array2::fromshape_vec((self.x_data.len(), 1), self.x_data.to_vec())
             .map_err(|e| {
                 InterpolateError::ComputationError(format!("Failed to reshape points: {}", e))
             })?;
@@ -430,7 +430,7 @@ where
     fn evaluate_cpu(&self, x_eval: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         if let Some(ref cpu_interpolator) = self.cpu_fallback {
             // Convert 1D evaluation points to 2D format
-            let eval_points_2d = Array2::from_shape_vec((x_eval.len(), 1), x_eval.to_vec())
+            let eval_points_2d = Array2::fromshape_vec((x_eval.len(), 1), x_eval.to_vec())
                 .map_err(|e| {
                     InterpolateError::ComputationError(format!(
                         "Failed to reshape _eval points: {}",
@@ -486,7 +486,7 @@ where
         match self.kernel {
             GpuRBFKernel::Gaussian => (-r * r).exp(),
             GpuRBFKernel::Multiquadric => (T::one() + r * r).sqrt(),
-            GpuRBFKernel::InverseMultiquadric =>, T::one() / (T::one() + r * r).sqrt(),
+            GpuRBFKernel::InverseMultiquadric => T::one() / (T::one() + r * r).sqrt(),
             GpuRBFKernel::Linear => r,
             GpuRBFKernel::Cubic => r * r * r,
             GpuRBFKernel::ThinPlate => {

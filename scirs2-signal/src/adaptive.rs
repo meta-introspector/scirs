@@ -1,16 +1,16 @@
-//! Advanced adaptive filtering algorithms
-//!
-//! This module provides comprehensive adaptive filter implementations including classical
-//! algorithms (LMS, RLS, NLMS) and advanced variants (Variable Step-Size LMS, Affine
-//! Projection Algorithm, Frequency Domain LMS, robust adaptive filters). These filters
-//! are used for applications such as noise cancellation, system identification, echo
-//! cancellation, equalization, beamforming, and channel estimation.
+// Advanced adaptive filtering algorithms
+//
+// This module provides comprehensive adaptive filter implementations including classical
+// algorithms (LMS, RLS, NLMS) and advanced variants (Variable Step-Size LMS, Affine
+// Projection Algorithm, Frequency Domain LMS, robust adaptive filters). These filters
+// are used for applications such as noise cancellation, system identification, echo
+// cancellation, equalization, beamforming, and channel estimation.
 
+use super::*;
 use crate::error::{SignalError, SignalResult};
-use rustfft::{FftPlanner, num_complex::Complex};
+use rustfft::{num_complex::Complex, FftPlanner};
 use std::collections::VecDeque;
 use std::fmt::Debug;
-use super::*;
 
 #[allow(unused_imports)]
 /// Least Mean Squares (LMS) adaptive filter
@@ -22,7 +22,7 @@ use super::*;
 /// # Examples
 ///
 /// ```ignore
-/// use scirs2__signal::adaptive::LmsFilter;
+/// use scirs2_signal::adaptive::LmsFilter;
 ///
 /// let mut lms = LmsFilter::new(4, 0.01, 0.0).unwrap();
 /// let output = lms.adapt(&[1.0, 0.5, -0.3, 0.8], 0.5).unwrap();
@@ -182,7 +182,7 @@ impl LmsFilter {
 /// # Examples
 ///
 /// ```ignore
-/// use scirs2__signal::adaptive::RlsFilter;
+/// use scirs2_signal::adaptive::RlsFilter;
 ///
 /// let mut rls = RlsFilter::new(4, 0.99, 1000.0).unwrap();
 /// let output = rls.adapt(&[1.0, 0.5, -0.3, 0.8], 0.5).unwrap();
@@ -1291,7 +1291,7 @@ fn solve_linear_system_small(_matrix: &[Vec<f64>], rhs: &[f64]) -> SignalResult<
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_lms_creation() {
         let lms = LmsFilter::new(4, 0.01, 0.0)

@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         values_vec.push(test_function(x..y));
     }
 
-    let points = Array2::from_shape_vec((n_points, 2), points_vec)?;
+    let points = Array2::fromshape_vec((n_points, 2), points_vec)?;
     let values = Array1::from_vec(values_vec);
 
     // Create a Sibson interpolator

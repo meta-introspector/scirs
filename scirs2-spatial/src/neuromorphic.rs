@@ -826,14 +826,14 @@ impl CompetitiveNeuralClusterer {
 
         // Initialize neurons with random weights
         for _ in 0.._num_clusters {
-            let weights = Array1::from_shape_fn(input_dims, |_| rand::random::<f64>());
+            let weights = Array1::fromshape_fn(input_dims, |_| rand::random::<f64>());
             neurons.push(weights);
             learning_rates.push(0.1);
         }
 
         // Initialize inhibition matrix
         let inhibition_strengths =
-            Array2::from_shape_fn((_num_clusters, _num_clusters), |(i, j)| {
+            Array2::fromshape_fn((_num_clusters, _num_clusters), |(i, j)| {
                 if i == j {
                     0.0
                 } else {
@@ -3132,7 +3132,7 @@ impl AdvancedMemristiveLearning {
 impl MemristiveCrossbar {
     /// Create new memristive crossbar
     pub fn new(_rows: usize, cols: usize, device_type: MemristiveDeviceType) -> Self {
-        let conductances = Array2::from_shape_fn((_rows, cols), |_| rand::random::<f64>() * 0.1);
+        let conductances = Array2::fromshape_fn((_rows, cols), |_| rand::random::<f64>() * 0.1);
         let resistances = conductances.mapv(|g| if g > 1e-12 { 1.0 / g } else { 1e12 });
         let switching_thresholds = Array2::from_elem((_rows, cols), 0.5);
         let retention_times = Array2::from_elem((_rows, cols), 1e6);
@@ -3140,7 +3140,7 @@ impl MemristiveCrossbar {
         let programming_voltages = Array2::from_elem((_rows, cols), 1.0);
         let temperature_coefficients = Array2::from_elem((_rows, cols), 0.01);
         let device_variability =
-            Array2::from_shape_fn((_rows, cols), |_| rand::random::<f64>() * 0.01);
+            Array2::fromshape_fn((_rows, cols), |_| rand::random::<f64>() * 0.01);
 
         Self {
             conductances,

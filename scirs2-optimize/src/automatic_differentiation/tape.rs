@@ -21,7 +21,7 @@ pub struct Variable {
 impl Variable {
     /// Create a new variable
     pub fn new(_id: usize, value: f64) -> Self {
-        Self { _id, value }
+        Self { id: _id, value }
     }
 }
 
@@ -696,7 +696,7 @@ impl StreamingTape {
     pub fn new(_batch_size: usize) -> Self {
         Self {
             current_batch: Vec::with_capacity(_batch_size),
-            _batch_size,
+            batch_size: _batch_size,
             batch_processor: None,
         }
     }

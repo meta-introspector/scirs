@@ -100,6 +100,7 @@ impl EnvironmentInfo {
     }
 
     /// Get list of enabled features
+    #[allow(clippy::vec_init_then_push)]
     fn get_enabled_features() -> Vec<String> {
         #[allow(unused_mut)]
         let mut features = Vec::with_capacity(5);
@@ -311,7 +312,9 @@ impl ErrorDiagnostics {
     }
 
     /// Generate contextual suggestions based on error analysis
-    fn generate_contextual_suggestions(&self, _error: &CoreError,
+    fn generate_contextual_suggestions(
+        &self,
+        _error: &CoreError,
         report: &ErrorDiagnosticReport,
     ) -> Vec<String> {
         let mut suggestions = Vec::new();

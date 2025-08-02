@@ -78,7 +78,7 @@ where
                 // scalar ones for every operation
                 for i in 0..num_inputs {
                     let x_tensor = y_tensor.get_backprop_input(i);
-                    let _x_shape = match x_tensor.inner().known_shape {
+                    let _xshape = match x_tensor.inner().knownshape {
                         Some(ref shape) => shape.get().to_vec(),
                         None => vec![1], // Default to scalar if shape unknown
                     };

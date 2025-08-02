@@ -147,7 +147,7 @@ impl<F: Float + Debug + 'static> TransferLearningManager<F> {
     /// Get effective learning rate for a layer
     pub fn get_layer_learning_rate(&self, layer_name: &str) -> F {
         match self.layer_states.get(layer_name) {
-            Some(LayerState::Frozen) =>, F::zero(),
+            Some(LayerState::Frozen) => F::zero(),
             Some(LayerState::Trainable) => self.base_learning_rate,
             Some(LayerState::ReducedLearningRate(ratio)) => {
                 self.base_learning_rate * F::from(*ratio).unwrap_or(F::one())
@@ -306,21 +306,21 @@ impl PretrainedWeightLoader {
             .collect()
     /// Check weight compatibility with expected shapes
     pub fn check_weight_compatibility(
-        expected_shapes: &HashMap<String, Vec<usize>>,
+        expectedshapes: &HashMap<String, Vec<usize>>,
     ) -> CompatibilityReport {
         let mut compatible = Vec::new();
         let mut incompatible = Vec::new();
         let mut missing = Vec::new();
-        for (layer_name, expected_shape) in expected_shapes {
+        for (layer_name, expectedshape) in expectedshapes {
             let weight_key = self.layer_mapping.get(layer_name).unwrap_or(layer_name);
             if let Some(weights) = self.weights.get(weight_key) {
-                if weights.shape() == expected_shape.as_slice() {
+                if weights.shape() == expectedshape.as_slice() {
                     compatible.push(layer_name.clone());
                 } else {
                     incompatible.push(WeightMismatch {
                         layer_name: layer_name.clone(),
-                        expected_shape: expected_shape.clone(),
-                        actual_shape: weights.shape().to_vec(),
+                        expectedshape: expectedshape.clone(),
+                        actualshape: weights.shape().to_vec(),
                     });
             } else {
                 missing.push(layer_name.clone());
@@ -405,9 +405,9 @@ pub struct WeightMismatch {
     /// Layer name
     pub layer_name: String,
     /// Expected weight shape
-    pub expected_shape: Vec<usize>,
+    pub expectedshape: Vec<usize>,
     /// Actual weight shape in pretrained model
-    pub actual_shape: Vec<usize>,
+    pub actualshape: Vec<usize>,
 impl CompatibilityReport {
     /// Check if all _weights are compatible
     pub fn is_fully_compatible(&self) -> bool {
@@ -434,7 +434,7 @@ impl std::fmt::Display for CompatibilityReport {
                 writeln!(
                     f,
                     "  {}: expected {:?}, got {:?}",
-                    mismatch.layer_name, mismatch.expected_shape, mismatch.actual_shape
+                    mismatch.layer_name, mismatch.expectedshape, mismatch.actualshape
                 )?;
         if !self.missing.is_empty() {
             writeln!(f, "\nMissing layers:")?;
@@ -533,7 +533,7 @@ pub enum SurgeryOperation {
     ResizeLayer {
         /// Name of the layer to resize
         /// New shape for the layer
-        new_shape: Vec<usize>,
+        newshape: Vec<usize>,
         /// Weight initialization strategy for resized layer
         init_strategy: WeightInitStrategy,
 /// Layer configuration for surgery operations
@@ -541,9 +541,9 @@ pub struct LayerConfig {
     /// Layer type
     pub layer_type: String,
     /// Input shape
-    pub input_shape: Vec<usize>,
+    pub inputshape: Vec<usize>,
     /// Output shape
-    pub output_shape: Vec<usize>,
+    pub outputshape: Vec<usize>,
     /// Additional parameters
     pub params: HashMap<String, f64>,
 impl ModelSurgery {
@@ -576,14 +576,14 @@ impl ModelSurgery {
                     applied_operations
                         .push(format!("Replaced layer {old_layer} with {new_layer}"));
                 SurgeryOperation::ResizeLayer {
-                    new_shape,
+                    newshape,
                     init_strategy,
-                    self.resize_layer(model_config, layer_name, new_shape, init_strategy)?;
+                    self.resize_layer(model_config, layer_name, newshape, init_strategy)?;
                         "Resized layer {} to shape {:?}",
-                        layer_name, new_shape
+                        layer_name, newshape
         Ok(applied_operations)
     fn add_layer_at_position(
-        _model_config: &mut ModelConfig, _position: usize_layer_name: &str, _layer_config: &LayerConfig,
+        _model_config: &mut ModelConfig, _position: usize_layer, name: &str, _layer_config: &LayerConfig,
         // Implementation would modify the model configuration
     fn remove_layer(&self, _model_config: &mut ModelConfig_layer, _name: &str) -> Result<()> {
         // Implementation would remove the layer from model configuration
@@ -591,7 +591,7 @@ impl ModelSurgery {
         _old_layer: &str, _new_layer: &str,
         // Implementation would replace the layer in model configuration
     fn resize_layer(
-        _new_shape: &[usize], _init_strategy: &WeightInitStrategy,
+        _newshape: &[usize], _init_strategy: &WeightInitStrategy,
         // Implementation would resize the layer and reinitialize weights
 impl Default for ModelSurgery {
 /// Placeholder for model configuration
@@ -643,12 +643,12 @@ impl<
     /// Setup transfer learning for a model
     pub fn setup_transfer_learning(
         layer_names: &[String],
-        expected_shapes: Option<&HashMap<String, Vec<usize>>>,
+        expectedshapes: Option<&HashMap<String, Vec<usize>>>,
     ) -> Result<TransferLearningSetupReport> {
         // Initialize layer states
         self.transfer_manager.initialize_layer_states(layer_names)?;
         // Check weight compatibility if shapes provided
-        let compatibility_report = if let Some(shapes) = expected_shapes {
+        let compatibility_report = if let Some(shapes) = expectedshapes {
             Some(self.weight_loader.check_weight_compatibility(shapes))
             None
         // Apply model surgery if configured
@@ -920,11 +920,11 @@ mod tests {
         assert!(stats.min == 1.0);
         assert!(stats.max == 9.0);
     fn test_compatibility_report() {
-        let mut expected_shapes = HashMap::new();
-        expected_shapes.insert("layer1".to_string(), vec![10, 5]);
-        expected_shapes.insert("layer2".to_string(), vec![5, 4]); // Mismatch
-        expected_shapes.insert("layer3".to_string(), vec![3, 2]); // Missing
-        let report = loader.check_weight_compatibility(&expected_shapes);
+        let mut expectedshapes = HashMap::new();
+        expectedshapes.insert("layer1".to_string(), vec![10, 5]);
+        expectedshapes.insert("layer2".to_string(), vec![5, 4]); // Mismatch
+        expectedshapes.insert("layer3".to_string(), vec![3, 2]); // Missing
+        let report = loader.check_weight_compatibility(&expectedshapes);
         assert_eq!(report.compatible.len(), 1);
         assert_eq!(report.incompatible.len(), 1);
         assert_eq!(report.missing.len(), 1);
@@ -937,8 +937,8 @@ mod tests {
             layer_name: "new_layer".to_string(),
             layer_config: LayerConfig {
                 layer_type: "dense".to_string(),
-                input_shape: vec![10],
-                output_shape: vec![5],
+                inputshape: vec![10],
+                outputshape: vec![5],
                 params: HashMap::new(),
             },
         });

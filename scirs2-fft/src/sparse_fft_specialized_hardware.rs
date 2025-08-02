@@ -323,7 +323,8 @@ impl HardwareAbstractionLayer for FPGAAccelerator {
 
     fn execute_sparse_fft(
         &mut self,
-        input_handle: u64, output_handle: u64,
+        input_handle: u64,
+        output_handle: u64,
         config: &SparseFFTConfig,
     ) -> FFTResult<Duration> {
         let start = Instant::now();
@@ -481,7 +482,8 @@ impl HardwareAbstractionLayer for ASICAccelerator {
 
     fn execute_sparse_fft(
         &mut self,
-        input_handle: u64, output_handle: u64,
+        input_handle: u64,
+        output_handle: u64,
         config: &SparseFFTConfig,
     ) -> FFTResult<Duration> {
         let start = Instant::now();

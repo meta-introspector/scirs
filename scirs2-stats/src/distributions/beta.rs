@@ -7,9 +7,7 @@ use crate::sampling::SampleableDistribution;
 use crate::traits::{ContinuousCDF, ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
-use rand::rng;
 use rand_distr::{Beta as RandBeta, Distribution};
-use statrs::statistics::Statistics;
 use std::fmt::Debug;
 
 /// Beta distribution structure
@@ -331,7 +329,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs_vec(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {

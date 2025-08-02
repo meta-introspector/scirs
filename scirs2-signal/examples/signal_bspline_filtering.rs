@@ -1,4 +1,4 @@
-use scirs2__signal::spline::{
+use scirs2_signal::spline::{
     bspline_basis, bspline_coefficients, bspline_derivative, bspline_evaluate, bspline_filter,
     bspline_smooth, SplineOrder,
 };

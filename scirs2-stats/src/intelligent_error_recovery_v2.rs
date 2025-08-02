@@ -694,7 +694,7 @@ where
 
         // Add graceful degradation as last resort
         strategies.push(RecoveryStrategy::GracefulDegradation {
-            fallback_result: DegradedResult::ApproximateResult { accuracy_estimate: 0.8 },
+            fallback_result: DegradedResult::ApproximateResult { accuracy, estimate: 0.8 },
         });
 
         strategies
@@ -935,7 +935,7 @@ mod tests {
         let recovery_system = create_advanced_error_recovery::<f64>();
         let classification = ErrorClassification::NumericalInstability {
             severity: InstabilitySeverity::High,
-            cause: InstabilityCause::IllConditioned { condition_number: 1e12 },
+            cause: InstabilityCause::IllConditioned { condition, number: 1e12 },
         };
         let context = RecoveryContext::default();
         

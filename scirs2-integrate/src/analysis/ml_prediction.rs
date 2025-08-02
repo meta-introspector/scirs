@@ -353,7 +353,7 @@ pub struct StatisticalFeatures {
     /// Quantile levels to extract
     pub quantile_levels: Vec<f64>,
     /// Extract distribution shape features
-    pub distribution_shape: bool,
+    pub distributionshape: bool,
     /// Extract correlation features
     pub correlation_features: bool,
     /// Extract entropy measures
@@ -1350,7 +1350,7 @@ impl BifurcationPredictionNetwork {
         }
 
         let mut rng = rand::rng();
-        let mask: Array1<f64> = Array1::from_shape_fn(x.len(), |_| {
+        let mask: Array1<f64> = Array1::fromshape_fn(x.len(), |_| {
             if rng.random::<f64>() < dropout_rate {
                 0.0
             } else {
@@ -1765,7 +1765,7 @@ impl Default for StatisticalFeatures {
             moments: true,
             quantiles: true,
             quantile_levels: vec![0.25, 0.5, 0.75],
-            distribution_shape: true,
+            distributionshape: true,
             correlation_features: true,
             entropy_measures: true,
         }

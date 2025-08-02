@@ -114,29 +114,29 @@ impl LSTMCell {
         let scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
 
         // Initialize weights with Xavier initialization
-        let w_i = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let w_i = Array2::fromshape_fn((hidden_size, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_f = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let w_f = Array2::fromshape_fn((hidden_size, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_o = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let w_o = Array2::fromshape_fn((hidden_size, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_c = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let w_c = Array2::fromshape_fn((hidden_size, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let u_i = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_i = Array2::fromshape_fn((hidden_size, hidden_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let u_f = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_f = Array2::fromshape_fn((hidden_size, hidden_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let u_o = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_o = Array2::fromshape_fn((hidden_size, hidden_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let u_c = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_c = Array2::fromshape_fn((hidden_size, hidden_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
@@ -245,23 +245,23 @@ impl GRUCell {
         let scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
 
         // Initialize weights with Xavier initialization
-        let w_z = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let w_z = Array2::fromshape_fn((hidden_size, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_r = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let w_r = Array2::fromshape_fn((hidden_size, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_h = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let w_h = Array2::fromshape_fn((hidden_size, _input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let u_z = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_z = Array2::fromshape_fn((hidden_size, hidden_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let u_r = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_r = Array2::fromshape_fn((hidden_size, hidden_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let u_h = Array2::from_shape_fn((hidden_size, hidden_size), |_| {
+        let u_h = Array2::fromshape_fn((hidden_size, hidden_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
@@ -446,7 +446,7 @@ impl Conv1D {
         let scale = (2.0 / (input_channels * kernel_size) as f64).sqrt();
 
         // Initialize _filters with Xavier initialization
-        let _filters = Array3::from_shape_fn((num_filters, input_channels, kernel_size), |_| {
+        let _filters = Array3::fromshape_fn((num_filters, input_channels, kernel_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
@@ -572,7 +572,7 @@ impl ResidualBlock1D {
         // Skip projection if input and output _channels differ
         let skip_projection = if _input_channels != output_channels {
             let scale = (2.0 / _input_channels as f64).sqrt();
-            Some(Array2::from_shape_fn(
+            Some(Array2::fromshape_fn(
                 (output_channels, _input_channels),
                 |_| rand::rng().gen_range(-scale..scale),
             ))
@@ -720,7 +720,7 @@ impl MultiScaleCNN {
         // Combination layer
         let total_features = kernel_sizes.len() * num_filters_per_scale;
         let _scale = (2.0 / total_features as f64).sqrt();
-        let combination_weights = Array2::from_shape_fn((output_size, total_features), |_| {
+        let combination_weights = Array2::fromshape_fn((output_size, total_features), |_| {
             rand::rng().gen_range(-_scale.._scale)
         });
 
@@ -820,23 +820,23 @@ impl AdditiveAttention {
     pub fn new(_encoder_dim: usize, decoder_dim: usize, attention_dim: usize) -> Self {
         let scale = (2.0 / attention_dim as f64).sqrt();
 
-        let w_a = Array2::from_shape_fn((attention_dim, _encoder_dim + decoder_dim), |_| {
+        let w_a = Array2::fromshape_fn((attention_dim, _encoder_dim + decoder_dim), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let w_q = Array2::from_shape_fn((attention_dim, decoder_dim), |_| {
+        let w_q = Array2::fromshape_fn((attention_dim, decoder_dim), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let w_k = Array2::from_shape_fn((attention_dim, _encoder_dim), |_| {
+        let w_k = Array2::fromshape_fn((attention_dim, _encoder_dim), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let w_v = Array2::from_shape_fn((_encoder_dim, _encoder_dim), |_| {
+        let w_v = Array2::fromshape_fn((_encoder_dim, _encoder_dim), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 
-        let v_a = Array1::from_shape_fn(attention_dim, |_| rand::rng().gen_range(-scale..scale));
+        let v_a = Array1::fromshape_fn(attention_dim, |_| rand::rng().gen_range(-scale..scale));
 
         Self {
             w_a,
@@ -915,10 +915,10 @@ impl SelfAttention {
         let d_k = _d_model;
         let scale = (2.0 / _d_model as f64).sqrt();
 
-        let w_q = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_k = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_v = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_o = Array2::from_shape_fn((d_k, _d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_q = Array2::fromshape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_k = Array2::fromshape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_v = Array2::fromshape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_o = Array2::fromshape_fn((d_k, _d_model), |_| rand::rng().gen_range(-scale..scale));
 
         Self {
             w_q,
@@ -1019,10 +1019,10 @@ impl CrossAttention {
         let d_k = _d_model;
         let scale = (2.0 / _d_model as f64).sqrt();
 
-        let w_q = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_k = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_v = Array2::from_shape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
-        let w_o = Array2::from_shape_fn((d_k, _d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_q = Array2::fromshape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_k = Array2::fromshape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_v = Array2::fromshape_fn((_d_model, d_k), |_| rand::rng().gen_range(-scale..scale));
+        let w_o = Array2::fromshape_fn((d_k, _d_model), |_| rand::rng().gen_range(-scale..scale));
 
         Self {
             w_q,
@@ -1122,9 +1122,9 @@ impl PositionwiseFeedForward {
         let scale2 = (2.0 / d_ff as f64).sqrt();
 
         let w1 =
-            Array2::from_shape_fn((d_ff, _d_model), |_| rand::rng().gen_range(-scale1..scale1));
+            Array2::fromshape_fn((d_ff, _d_model), |_| rand::rng().gen_range(-scale1..scale1));
         let w2 =
-            Array2::from_shape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale2..scale2));
+            Array2::fromshape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale2..scale2));
         let b1 = Array1::zeros(d_ff);
         let b2 = Array1::zeros(_d_model);
 
@@ -1199,7 +1199,7 @@ impl TextCNN {
         let fc_input_size = num_filters * filter_sizes.len();
         let scale = (2.0 / fc_input_size as f64).sqrt();
 
-        let fc_weights = Array2::from_shape_fn((num_classes, fc_input_size), |_| {
+        let fc_weights = Array2::fromshape_fn((num_classes, fc_input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
         let fc_bias = Array1::zeros(num_classes);
@@ -1298,7 +1298,7 @@ impl CNNLSTMHybrid {
         let classifier_input_size = lstm_hidden_size * 2; // Bidirectional
         let scale = (2.0 / classifier_input_size as f64).sqrt();
 
-        let classifier = Array2::from_shape_fn((num_classes, classifier_input_size), |_| {
+        let classifier = Array2::fromshape_fn((num_classes, classifier_input_size), |_| {
             rand::rng().gen_range(-scale..scale)
         });
         let classifier_bias = Array1::zeros(num_classes);
@@ -1317,7 +1317,7 @@ impl CNNLSTMHybrid {
         let cnn_features = self.cnn.forward(embeddings)?;
 
         // Reshape for LSTM input (simplified)
-        let lstm_input = Array2::from_shape_vec((1, cnn_features.len()), cnn_features.to_vec())
+        let lstm_input = Array2::fromshape_vec((1, cnn_features.len()), cnn_features.to_vec())
             .map_err(|e| TextError::InvalidInput(format!("Reshape error: {e}")))?;
 
         // Process through LSTM
@@ -1345,10 +1345,10 @@ pub struct LayerNorm {
 
 impl LayerNorm {
     /// Create new layer normalization layer
-    pub fn new(_normalized_shape: usize) -> Self {
+    pub fn new(normalizedshape: usize) -> Self {
         Self {
-            weight: Array1::ones(_normalized_shape),
-            bias: Array1::zeros(_normalized_shape),
+            weight: Array1::ones(normalizedshape),
+            bias: Array1::zeros(normalizedshape),
             eps: 1e-6,
         }
     }
@@ -1449,16 +1449,16 @@ impl MultiHeadAttention {
         let d_k = _d_model / num_heads;
         let scale = (2.0 / _d_model as f64).sqrt();
 
-        let w_q = Array2::from_shape_fn((_d_model, _d_model), |_| {
+        let w_q = Array2::fromshape_fn((_d_model, _d_model), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_k = Array2::from_shape_fn((_d_model, _d_model), |_| {
+        let w_k = Array2::fromshape_fn((_d_model, _d_model), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_v = Array2::from_shape_fn((_d_model, _d_model), |_| {
+        let w_v = Array2::fromshape_fn((_d_model, _d_model), |_| {
             rand::rng().gen_range(-scale..scale)
         });
-        let w_o = Array2::from_shape_fn((_d_model, _d_model), |_| {
+        let w_o = Array2::fromshape_fn((_d_model, _d_model), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 

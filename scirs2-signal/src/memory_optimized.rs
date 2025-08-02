@@ -1,15 +1,15 @@
-//! Memory-optimized algorithms for large signal processing
-//!
-//! This module provides memory-efficient implementations of signal processing
-//! algorithms designed to work with very large signals that might not fit
-//! entirely in memory, or where memory usage needs to be carefully controlled.
+// Memory-optimized algorithms for large signal processing
+//
+// This module provides memory-efficient implementations of signal processing
+// algorithms designed to work with very large signals that might not fit
+// entirely in memory, or where memory usage needs to be carefully controlled.
 
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex;
 use rustfft::FftPlanner;
 use scirs2_core::parallel_ops::*;
-use std::fs;
 use std::f64::consts::PI;
+use std::fs;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::time::Instant;
@@ -436,7 +436,6 @@ fn memory_fft_out_of_core(
     log2_n: usize,
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
-
     let start_time = Instant::now();
     let mut memory_stats = MemoryStats {
         peak_memory: 0,
@@ -544,7 +543,6 @@ fn process_fft_stage_disk(
     stage: usize,
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
-
     let start_time = std::time::Instant::now();
     let mut disk_ops = 0;
 
@@ -686,7 +684,9 @@ fn process_fft_stage_disk(
 fn process_fft_stages_memory(
     input_file: &str,
     output_file: &str,
-    n: usize, _start_stage: usize_num, _stages: usize,
+    n: usize,
+    _start_stage: usize_num,
+    _stages: usize,
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
     // For simplicity, delegate to in-core implementation
@@ -703,9 +703,9 @@ pub fn memory_optimized_spectrogram(
     input_file: &str,
     output_file: &str,
     window_size: usize,
-    hop_size: usize, _config: &MemoryConfig,
+    hop_size: usize,
+    _config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<f64>> {
-
     let start_time = Instant::now();
 
     // Validate parameters

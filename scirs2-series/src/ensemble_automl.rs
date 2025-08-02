@@ -1856,14 +1856,14 @@ mod tests {
         let mut meta_model = LinearRegressionMeta::<f64>::new();
 
         let predictions =
-            Array2::from_shape_vec((10, 3), (0..30).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::fromshape_vec((10, 3), (0..30).map(|i| i as f64 * 0.1).collect()).unwrap();
         let targets = Array1::from_vec((0..10).map(|i| i as f64).collect());
 
         let result = meta_model.train(&predictions, &targets);
         assert!(result.is_ok());
 
         let test_predictions =
-            Array2::from_shape_vec((5, 3), (0..15).map(|i| i as f64 * 0.2).collect()).unwrap();
+            Array2::fromshape_vec((5, 3), (0..15).map(|i| i as f64 * 0.2).collect()).unwrap();
         let forecast = meta_model.predict(&test_predictions);
         assert!(forecast.is_ok());
         assert_eq!(forecast.unwrap().len(), 5);

@@ -1,15 +1,15 @@
-//! Enhanced edge case validation for Lomb-Scargle periodogram
-//!
-//! This module provides comprehensive validation of Lomb-Scargle implementations
-//! focusing on edge cases and extreme conditions that may not be covered in
-//! standard validation suites. Key areas include:
-//! - Very sparse and very dense sampling patterns
-//! - Extreme signal-to-noise ratios
-//! - Pathological time series (constant values, monotonic trends)
-//! - Numerical precision limits and overflow/underflow conditions
-//! - Multi-modal and complex frequency content
-//! - Time series with gaps and missing data
-//! - Non-stationary signals with time-varying frequencies
+// Enhanced edge case validation for Lomb-Scargle periodogram
+//
+// This module provides comprehensive validation of Lomb-Scargle implementations
+// focusing on edge cases and extreme conditions that may not be covered in
+// standard validation suites. Key areas include:
+// - Very sparse and very dense sampling patterns
+// - Extreme signal-to-noise ratios
+// - Pathological time series (constant values, monotonic trends)
+// - Numerical precision limits and overflow/underflow conditions
+// - Multi-modal and complex frequency content
+// - Time series with gaps and missing data
+// - Non-stationary signals with time-varying frequencies
 
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::lombscargle;
@@ -286,7 +286,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
     // Estimate other metrics
     let sparse_frequency_resolution = estimate_frequency_resolution(&freqs, &pgram, peak_idx);
     let aliasing_resistance = assess_aliasing_resistance(&times, &signal)?;
-    let false_peak_rate = count_false_peaks(&pgram, peak_idx) as f64 / pgram.len()  as f64;
+    let false_peak_rate = count_false_peaks(&pgram, peak_idx) as f64 / pgram.len() as f64;
     let min_detectable_power = *peak_power * 0.1; // Heuristic
 
     Ok(SparseSamplingValidation {
@@ -1046,7 +1046,7 @@ fn estimate_resolution_improvement(_freqs: &[f64]) -> f64 {
 fn assess_spectral_leakage(_pgram: &[f64]) -> f64 {
     // Simplified spectral leakage assessment
     let max_power = _pgram.iter().fold(0.0, |acc, &x| acc.max(x));
-    let mean_power = _pgram.iter().sum::<f64>() / _pgram.len()  as f64;
+    let mean_power = _pgram.iter().sum::<f64>() / _pgram.len() as f64;
 
     if max_power > 0.0 {
         let dynamic_range = max_power / mean_power;
@@ -1146,7 +1146,11 @@ fn compute_dynamic_range(_pgram: &[f64]) -> f64 {
 // Additional helper functions would be implemented similarly...
 
 #[allow(dead_code)]
-fn assess_harmonic_detection(_times: &[f64], signal: &[f64], fundamental: f64) -> SignalResult<f64> {
+fn assess_harmonic_detection(
+    _times: &[f64],
+    signal: &[f64],
+    fundamental: f64,
+) -> SignalResult<f64> {
     let (freqs, pgram) = lombscargle(
         _times,
         signal,
@@ -1220,7 +1224,7 @@ fn assess_chirp_detection(_times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     )?;
 
     // Simple metric: check if power is distributed rather than concentrated
-    let mean_power = pgram.iter().sum::<f64>() / pgram.len()  as f64;
+    let mean_power = pgram.iter().sum::<f64>() / pgram.len() as f64;
     let std_power =
         (pgram.iter().map(|&x| (x - mean_power).powi(2)).sum::<f64>() / pgram.len() as f64).sqrt();
 
@@ -1318,8 +1322,8 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
         return 0.0;
     }
 
-    let mean_x = x.iter().sum::<f64>() / x.len()  as f64;
-    let mean_y = y.iter().sum::<f64>() / y.len()  as f64;
+    let mean_x = x.iter().sum::<f64>() / x.len() as f64;
+    let mean_y = y.iter().sum::<f64>() / y.len() as f64;
 
     let numerator: f64 = x
         .iter()
@@ -1340,7 +1344,12 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
 }
 
 #[allow(dead_code)]
-fn assess_frequency_tracking(_times: &[f64], signal: &[f64], f0: f64, f1: f64) -> SignalResult<f64> {
+fn assess_frequency_tracking(
+    _times: &[f64],
+    signal: &[f64],
+    f0: f64,
+    f1: f64,
+) -> SignalResult<f64> {
     // For frequency tracking, check if we see power distributed across the swept range
     let (freqs, pgram) = lombscargle(
         _times,

@@ -1,10 +1,10 @@
-//! Advanced Enhanced Lomb-Scargle Validation Example
-//!
-//! This example demonstrates the comprehensive Advanced validation suite for
-//! Lomb-Scargle periodogram, including SciPy comparison, SIMD validation,
-//! memory profiling, and statistical validation.
+// Advanced Enhanced Lomb-Scargle Validation Example
+//
+// This example demonstrates the comprehensive Advanced validation suite for
+// Lomb-Scargle periodogram, including SciPy comparison, SIMD validation,
+// memory profiling, and statistical validation.
 
-use scirs2__signal::{generate_advanced_lombscargle_report, run_advanced_lombscargle_validation};
+use scirs2_signal::{generate_advanced_lombscargle_report, run_advanced_lombscargle_validation};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

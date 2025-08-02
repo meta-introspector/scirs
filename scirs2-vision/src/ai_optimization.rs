@@ -894,7 +894,7 @@ impl GeneticPipelineOptimizer {
 
             // Crossover
             if rng.gen_range(0.0..1.0) < self.ga_params.crossover_rate {
-                let (mut child1..mut child2) =
+                let (mut child1, mut child2) =
                     self.advanced_crossover(&parent1, &parent2, &mut rng);
 
                 // Apply adaptive mutation
@@ -930,9 +930,11 @@ impl GeneticPipelineOptimizer {
 
     /// Advanced crossover combining multiple strategies
     fn advanced_crossover(
-        &self..parent1: &PipelineGenome,
+        &self,
+        parent1: &PipelineGenome,
         parent2: &PipelineGenome,
-        rng: &mut impl Rng,) -> (PipelineGenome, PipelineGenome) {
+        rng: &mut impl Rng,
+    ) -> (PipelineGenome, PipelineGenome) {
         let mut child1_genes = HashMap::new();
         let mut child2_genes = HashMap::new();
 

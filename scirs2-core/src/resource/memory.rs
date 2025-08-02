@@ -60,13 +60,13 @@ impl MemoryInfo {
         #[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]
         return Ok(Self::default());
     }
-    
+
     fn parse_meminfo_value(line: &str) -> Option<u64> {
         let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() < 2 {
             return None;
         }
-        
+
         // The second part is typically the value in KB
         parts[1].parse::<u64>().ok()
     }

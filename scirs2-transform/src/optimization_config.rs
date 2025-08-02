@@ -33,7 +33,7 @@ impl SystemResources {
     pub fn detect() -> Self {
         SystemResources {
             memory_mb: Self::detect_memory_mb(),
-            cpu_cores: num, _cpus: get(),
+            cpu_cores: num_cpus::get(),
             has_gpu: Self::detect_gpu(),
             has_simd: Self::detect_simd(),
             l3_cache_kb: Self::detect_l3_cache_kb(),
@@ -1235,7 +1235,7 @@ mod tests {
     #[test]
     fn test_data_characteristics_analysis() {
         let data =
-            Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
+            Array2::fromshape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
         let chars = DataCharacteristics::analyze(&data.view()).unwrap();
 
         assert_eq!(chars.n_samples, 100);

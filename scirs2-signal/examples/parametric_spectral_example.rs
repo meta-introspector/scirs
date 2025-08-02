@@ -2,11 +2,11 @@ use std::fs::File;
 use std::io::Write;
 
 use rand::{rng, Rng};
-use scirs2__signal::parametric::{
+use scirs2_signal::parametric::{
     ar_spectrum, arma_spectrum, estimate_ar, estimate_arma, select_ar_order, ARMethod,
     OrderSelection,
 };
-use scirs2__signal::spectral::periodogram;
+use scirs2_signal::spectral::periodogram;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

@@ -50,7 +50,7 @@ where
     T: NumCast + Copy + Debug + 'static,
 {
     // Handle Complex64 type directly
-    if let Some(complex) = try_as_complex(&_val) {
+    if let Some(complex) = try_as_complex(&val) {
         return Ok(complex);
     }
     
@@ -63,7 +63,7 @@ where
 
 /// Try to convert a value to Complex64
 #[allow(dead_code)]
-fn try_as_complex<T: 'static>(_val: &T) -> Option<Complex64> {
+fn try_as_complex<T: 'static>(val: &T) -> Option<Complex64> {
     use std::any::Any;
     
     // Try direct cast
@@ -322,10 +322,10 @@ where
     T: NumCast + Copy + Debug + 'static,
 {
     // Get input array shape
-    let input_shape = input.shape();
+    let inputshape = input.shape();
     
     // Determine output shape
-    let (n_rows_out, n_cols_out) = shape.unwrap_or((input_shape[0], input_shape[1]));
+    let (n_rows_out, n_cols_out) = shape.unwrap_or((inputshape[0], inputshape[1]));
     
     // Determine axes to transform
     let (axis1, axis2) = axes.unwrap_or((0, 1));
@@ -339,21 +339,21 @@ where
     let norm_mode = match norm {
         Some("forward") => NormMode::Forward,
         Some("backward") => NormMode::Backward,
-        Some("ortho") => NormMode::Ortho_ =>, NormMode::Backward, // Default
+        Some("ortho") => NormMode::Ortho_ => NormMode::Backward, // Default
     };
     
     // Create output array
     let mut output = Array2::<Complex64>::zeros((n_rows_out, n_cols_out));
     
     // Convert input to complex with minimal allocations
-    let mut temp_buffer = Vec::with_capacity(input_shape[0].max(input_shape[1]));
+    let mut temp_buffer = Vec::with_capacity(inputshape[0].max(inputshape[1]));
     let mut output_buffer = Vec::with_capacity(n_rows_out.max(n_cols_out));
     
     // First, transform along rows
-    for i in 0..input_shape[0].min(n_rows_out) {
+    for i in 0..inputshape[0].min(n_rows_out) {
         // Extract row
         temp_buffer.clear();
-        for j in 0..input_shape[1] {
+        for j in 0..inputshape[1] {
             let complex = to_complex_value(input[[i, j]])?;
             temp_buffer.push(complex);
         }
@@ -368,7 +368,7 @@ where
     }
     
     // Zero-fill any remaining rows
-    for i in input_shape[0].min(n_rows_out)..n_rows_out {
+    for i in inputshape[0].min(n_rows_out)..n_rows_out {
         for j in 0..n_cols_out {
             output[[i, j]] = Complex64::new(0.0, 0.0);
         }
@@ -436,10 +436,10 @@ where
     T: NumCast + Copy + Debug + 'static,
 {
     // Get input array shape
-    let input_shape = input.shape();
+    let inputshape = input.shape();
     
     // Determine output shape
-    let (n_rows_out, n_cols_out) = shape.unwrap_or((input_shape[0], input_shape[1]));
+    let (n_rows_out, n_cols_out) = shape.unwrap_or((inputshape[0], inputshape[1]));
     
     // Determine axes to transform
     let (axis1, axis2) = axes.unwrap_or((0, 1));
@@ -453,21 +453,21 @@ where
     let norm_mode = match norm {
         Some("forward") => NormMode::Forward,
         Some("backward") => NormMode::Backward,
-        Some("ortho") => NormMode::Ortho_ =>, NormMode::Backward, // Default
+        Some("ortho") => NormMode::Ortho_ => NormMode::Backward, // Default
     };
     
     // Create output array
     let mut output = Array2::<Complex64>::zeros((n_rows_out, n_cols_out));
     
     // Convert input to complex with minimal allocations
-    let mut temp_buffer = Vec::with_capacity(input_shape[0].max(input_shape[1]));
+    let mut temp_buffer = Vec::with_capacity(inputshape[0].max(inputshape[1]));
     let mut output_buffer = Vec::with_capacity(n_rows_out.max(n_cols_out));
     
     // First, transform along rows
-    for i in 0..input_shape[0].min(n_rows_out) {
+    for i in 0..inputshape[0].min(n_rows_out) {
         // Extract row
         temp_buffer.clear();
-        for j in 0..input_shape[1] {
+        for j in 0..inputshape[1] {
             let complex = to_complex_value(input[[i, j]])?;
             temp_buffer.push(complex);
         }
@@ -482,7 +482,7 @@ where
     }
     
     // Zero-fill any remaining rows
-    for i in input_shape[0].min(n_rows_out)..n_rows_out {
+    for i in inputshape[0].min(n_rows_out)..n_rows_out {
         for j in 0..n_cols_out {
             output[[i, j]] = Complex64::new(0.0, 0.0);
         }

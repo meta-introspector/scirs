@@ -504,7 +504,7 @@ pub fn make_local_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_max_neighbors: usize,
+    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_max, neighbors: usize,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -573,7 +573,7 @@ pub fn make_fixed_rank_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_rank: usize,
+    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F, rank: usize,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -642,7 +642,7 @@ pub fn make_tapered_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_taper_range: F,
+    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_taper, range: F,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(
@@ -711,7 +711,7 @@ pub fn make_hodlr_kriging<
         + std::ops::RemAssign
         + 'static,
 >(
-    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_leaf_size: usize,
+    _points: &ArrayView2<F>, _values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_leaf, size: usize,
 ) -> InterpolateResult<FastKriging<F>> {
     // Implementation placeholder - will be completed in future update
     Err(InterpolateError::NotImplemented(

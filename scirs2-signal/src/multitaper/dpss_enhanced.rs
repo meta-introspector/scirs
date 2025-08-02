@@ -1,13 +1,13 @@
-//! Enhanced DPSS (Discrete Prolate Spheroidal Sequences) implementation
-//!
-//! This module provides a corrected and validated implementation of DPSS
-//! computation following SciPy's approach and Percival & Walden (1993).
-//! Updated to remove ndarray-linalg dependency.
+// Enhanced DPSS (Discrete Prolate Spheroidal Sequences) implementation
+//
+// This module provides a corrected and validated implementation of DPSS
+// computation following SciPy's approach and Percival & Walden (1993).
+// Updated to remove ndarray-linalg dependency.
 
-use approx::assert_abs_diff_eq;
 use crate::error::{SignalError, SignalResult};
+use approx::assert_abs_diff_eq;
 use ndarray::{Array1, Array2};
-use rustfft::{FftPlanner, num_complex::Complex};
+use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_core::validation::check_positive;
 use std::f64::consts::PI;
 
@@ -211,7 +211,8 @@ fn qr_step(_diag: &mut [f64], off_diag: &mut [f64], q: &mut Array2<f64>) -> Sign
         // Compute Givens rotation to eliminate off_diag[i]
         let (c, s) = givens_rotation(
             _diag[i] * c_prev + off_diag[i] * s_prev,
-            off_diag[i] * c_prev - _diag[i] * s_prev + if i < n - 2 { off_diag[i + 1] } else { 0.0 },
+            off_diag[i] * c_prev - _diag[i] * s_prev
+                + if i < n - 2 { off_diag[i + 1] } else { 0.0 },
         );
 
         // Apply rotation to tridiagonal matrix
@@ -453,7 +454,7 @@ pub fn generate_reference_values() -> SignalResult<()> {
 
 #[cfg(test)]
 mod tests {
-use approx::{assert_relative_eq};
+    use approx::assert_relative_eq;
     #[test]
     fn test_dpss_basic() {
         let (tapers, ratios) = dpss_enhanced(64, 4.0, 7, true).unwrap();

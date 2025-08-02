@@ -46,7 +46,7 @@ pub struct DataSlice {
 /// use scirs2__metrics::classification::accuracy_score;
 ///
 /// // Create sample dataset
-/// let features = Array2::from_shape_vec((8, 3), vec![
+/// let features = Array2::fromshape_vec((8, 3), vec![
 ///     // age, gender(0=male, 1=female), region(0,1,2)
 ///     25.0, 0.0, 0.0,
 ///     30.0, 0.0, 1.0,
@@ -203,7 +203,7 @@ where
 /// let y_pred = array![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0];
 ///
 /// // Demographic groups: gender (0=male, 1=female) and age_group (0=young, 1=old)
-/// let groups = Array2::from_shape_vec((8, 2), vec![
+/// let groups = Array2::fromshape_vec((8, 2), vec![
 ///     0.0, 0.0, // male, young
 ///     0.0, 1.0, // male, old
 ///     1.0, 0.0, // female, young
@@ -436,7 +436,7 @@ where
 /// let y_pred = array![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0];
 ///
 /// // Protected attributes: gender (0=male, 1=female) and race (0=group A, 1=group B)
-/// let protected_features = Array2::from_shape_vec((8, 2), vec![
+/// let protected_features = Array2::fromshape_vec((8, 2), vec![
 ///     0.0, 0.0,
 ///     0.0, 1.0,
 ///     1.0, 0.0,

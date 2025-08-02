@@ -101,7 +101,7 @@ pub enum ShapeTransform {
     /// Reshape tensor
     Reshape {
         /// Target shape after reshaping
-        target_shape: Vec<usize>,
+        targetshape: Vec<usize>,
     /// Channel-first to channel-last
     ChannelsFirstToLast,
     /// Channel-last to channel-first
@@ -188,9 +188,9 @@ pub struct LayerDefinition<F: Float + Debug> {
     /// Layer parameters
     pub parameters: HashMap<String, ParameterValue<F>>,
     /// Input shape
-    pub input_shape: Vec<Option<usize>>,
+    pub inputshape: Vec<Option<usize>>,
     /// Output shape
-    pub output_shape: Vec<Option<usize>>,
+    pub outputshape: Vec<Option<usize>>,
 /// Parameter value for layer definitions
 pub enum ParameterValue<F: Float + Debug> {
     /// Scalar value
@@ -425,7 +425,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
     ) -> Result<ValidationReport<F>> {
         match self.conversion_settings.validation_mode {
             ValidationMode::None => Ok(ValidationReport::empty()),
-            ValidationMode::ShapeOnly => self.validate_shapes(original, converted),
+            ValidationMode::ShapeOnly => self.validateshapes(original, converted),
             ValidationMode::Numerical { tolerance } => {
                 self.validate_numerical(original, converted, test_inputs, tolerance)
             }
@@ -551,7 +551,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         let contents = std::fs::read_to_string(model_path).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to read ONNX file: {e}"))
         // Parse JSON-formatted ONNX model
-        let onnx_json: serde, _json: Value = serde_json::from_str(&contents).map_err(|e| {
+        let onnx_json: serde_json:: Value = serde_json::from_str(&contents).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to parse ONNX JSON: {e}"))
         // Extract opset version
         let opset_version = onnx_json["opset_import"][0]["version"]
@@ -776,7 +776,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
             variables_data.insertjson!({
                 "tensor": {
                     "dtype": "DT_FLOAT",
-                    "tensor_shape": {
+                    "tensorshape": {
                         "dim": tensor.shape(.iter().map(|&d| json!({"size": d})).collect::<Vec<_>>()
                     },
                     "tensor_content": tensor_data
@@ -817,7 +817,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
             })?;
         let json_string = serde_json::to_string_pretty(&saved_model).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to write TensorFlow model: {}", e))
-    fn validate_shapes(
+    fn validateshapes(
         let mut report = ValidationReport::new();
         // Check input/output shapes
         for (orig_input, conv_input) in original
@@ -829,8 +829,8 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
             if orig_input.shape != conv_input.shape {
                 report.shape_mismatches.push(ShapeMismatch {
                     layer_name: orig_input.name.clone(),
-                    original_shape: orig_input.shape.clone(),
-                    converted_shape: conv_input.shape.clone(),
+                    originalshape: orig_input.shape.clone(),
+                    convertedshape: conv_input.shape.clone(),
                 });
         Ok(report)
     fn validate_numerical(
@@ -912,9 +912,9 @@ pub struct ShapeMismatch {
     /// Layer or tensor name
     pub layer_name: String,
     /// Original shape
-    pub original_shape: Vec<Option<usize>>,
+    pub originalshape: Vec<Option<usize>>,
     /// Converted shape
-    pub converted_shape: Vec<Option<usize>>,
+    pub convertedshape: Vec<Option<usize>>,
 /// Numerical difference information
 pub struct NumericalDifference<F: Float + Debug> {
     /// Maximum absolute difference
@@ -1008,11 +1008,11 @@ mod tests {
         assert_eq!(spec.shape[1], Some(3)); // Fixed channel dimension
         assert_eq!(spec.dtype, DataType::Float32);
         assert_eq!(spec.value_range, Some((0.0, 1.0)));
-    fn test_shape_transform() {
+    fn testshape_transform() {
         let transpose = ShapeTransform::Transpose {
             axes: vec![0, 2, 1, 3],
         let reshape = ShapeTransform::Reshape {
-            target_shape: vec![1, 224, 224, 3],
+            targetshape: vec![1, 224, 224, 3],
         let channels_first_to_last = ShapeTransform::ChannelsFirstToLast;
         assert!(matches!(transpose, ShapeTransform::Transpose { .. }));
         assert!(matches!(reshape, ShapeTransform::Reshape { .. }));

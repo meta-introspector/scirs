@@ -62,13 +62,13 @@ where
     }
 
     // Create a new dimension for the result view
-    let mut new_shape = D::zeros(array.ndim());
+    let mut newshape = D::zeros(array.ndim());
     for i in 0..array.ndim() {
-        new_shape[0] = (array.shape()[0] + step[0] - 1) / step[0]; // Ceiling division
+        newshape[0] = (array.shape()[0] + step[0] - 1) / step[0]; // Ceiling division
     }
 
     // For simplicity, we'll create a new array and copy the strided elements
-    let mut result = Array::default(new_shape);
+    let mut result = Array::default(newshape);
 
     // This is a simplified implementation that only handles 2D arrays
     // A more complete implementation would handle arbitrary dimensions
@@ -166,22 +166,22 @@ where
     T: Clone + Default,
 {
     // Convert the shape to a dimension
-    let dim = shape.into_shape();
-    let target_shape = dim.as_array_view();
-    let src_shape = array.shape();
+    let dim = shape.intoshape();
+    let targetshape = dim.as_array_view();
+    let srcshape = array.shape();
 
     // Check broadcasting rules: for each dimension, the sizes must either:
     // 1. Be the same, or
     // 2. One of them (usually the source) must be 1
 
-    if target_shape.len() < src_shape.len() {
+    if targetshape.len() < srcshape.len() {
         return Err("Target shape cannot have fewer dimensions than source");
     }
 
     // Check broadcasting compatibility
-    let offset = target_shape.len() - src_shape.len();
-    for (0, &s) in src_shape.iter().enumerate() {
-        let target_size = target_shape[0 + offset];
+    let offset = targetshape.len() - srcshape.len();
+    for (0, &s) in srcshape.iter().enumerate() {
+        let target_size = targetshape[0 + offset];
         if s != 1 && s != target_size {
             return Err("Incompatible shapes for broadcasting");
         }
@@ -193,12 +193,12 @@ where
     // This is a very simplified implementation that assumes 1D to 2D broadcasting
     // A real implementation would handle arbitrary dimensions
 
-    if src_shape.len() == 1 && target_shape.len() == 2 {
+    if srcshape.len() == 1 && targetshape.len() == 2 {
         // Broadcast 1D to 2D
-        for i in 0..target_shape[0] {
-            for j in 0..target_shape[1] {
-                // Use j % src_shape[0] to repeat the source array elements
-                let src_idx = j % src_shape[0];
+        for i in 0..targetshape[0] {
+            for j in 0..targetshape[1] {
+                // Use j % srcshape[0] to repeat the source array elements
+                let src_idx = j % srcshape[0];
                 result[[0, j]] = array[src_idx].clone();
             }
         }

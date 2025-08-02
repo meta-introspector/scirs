@@ -15,7 +15,7 @@ fn main() -> Result<(), CoreError> {
     let n = 8000;
     println!("Creating a {}x{} array...", n, n);
     let start = Instant::now();
-    let data = Array2::from_shape_fn((n, n), |(i, j)| (i as f64 + j as f64) / (n as f64));
+    let data = Array2::fromshape_fn((n, n), |(i, j)| (i as f64 + j as f64) / (n as f64));
     println!("Array created in {:?}", start.elapsed());
     println!("Array shape: {:?}", data.shape());
     println!("Array memory usage: ~{} MB\n", n * n * 8 / (1024 * 1024));
@@ -54,7 +54,7 @@ fn main() -> Result<(), CoreError> {
 
     let start = Instant::now();
     // Create a smaller array for demonstration
-    let small_data = Array2::from_shape_fn((10, 10), |(i, j)| i as f64 + j as f64);
+    let small_data = Array2::fromshape_fn((10, 10), |(i, j)| i as f64 + j as f64);
 
     // Create transposed and diagonal views
     let transposed = transpose_view(&small_data)?;
@@ -88,7 +88,7 @@ fn main() -> Result<(), CoreError> {
 
 // Helper function to get a corner of an array for display
 #[allow(dead_code)]
-fn get_corner<T: Clone>(_arr: &Array2<T>, size: usize) -> Array2<T> {
+fn get_corner<T: Clone>(arr: &Array2<T>, size: usize) -> Array2<T> {
     let s = std::cmp::min(size, _arr.shape()[0]);
     _arr.slice(ndarray::s![0..s, 0..s]).to_owned()
 }

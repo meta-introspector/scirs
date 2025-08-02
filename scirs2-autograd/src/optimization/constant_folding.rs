@@ -167,14 +167,14 @@ impl ConstantPattern {
 
 /// Check if a tensor represents a literal constant
 #[allow(dead_code)]
-pub fn is_literal_constant<F: Float>(_tensor_internal: &TensorInternal<F>) -> bool {
+pub fn is_literal_constant<F: Float>(_tensor, internal: &TensorInternal<F>) -> bool {
     // Check if this is a constant tensor created from a literal value
     false
 }
 
 /// Extract constant value from a tensor if possible
 #[allow(dead_code)]
-pub fn extract_constant_value<F: Float>(_tensor_internal: &TensorInternal<F>) -> Option<ConstantValue<F>> {
+pub fn extract_constant_value<F: Float>(_tensor, internal: &TensorInternal<F>) -> Option<ConstantValue<F>> {
     // Try to extract a constant value from various tensor types
     None
 }

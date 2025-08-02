@@ -137,7 +137,7 @@ typedef struct {
         api.push_str("scirs2_error_t scirs2_tensor_from_data(void* data, size_t* shape, size_t ndim, int dtype, scirs2_tensor_t* tensor);\n");
         api.push_str("void scirs2_tensor_free(scirs2_tensor_t* tensor);\n");
             "scirs2_error_t scirs2_tensor_get_data(scirs2_tensor_t* tensor, void** data);\n",
-        api.push_str("scirs2_error_t scirs2_tensor_get_shape(scirs2_tensor_t* tensor, size_t** shape, size_t* ndim);\n\n");
+        api.push_str("scirs2_error_t scirs2_tensor_getshape(scirs2_tensor_t* tensor, size_t** shape, size_t* ndim);\n\n");
         api.push_str("// Inference functions\n");
         api.push_str("scirs2_error_t scirs2_model_predict(scirs2_model_t model, scirs2_tensor_t* input, scirs2_tensor_t* output);\n");
         api.push_str("scirs2_error_t scirs2_model_predict_batch(scirs2_model_t model, scirs2_tensor_t* inputs, size_t batch_size, scirs2_tensor_t* outputs);\n\n");

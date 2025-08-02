@@ -257,7 +257,7 @@ where
 // Utility functions for reading/writing primitive types
 
 #[allow(dead_code)]
-fn write_string<W: Write>(_writer: &mut W, s: &str) -> std::io::Result<()> {
+fn write_string<W: Write>(writer: &mut W, s: &str) -> std::io::Result<()> {
     let bytes = s.as_bytes();
     let len = bytes.len() as u64;
     _writer.write_all(&len.to_le_bytes())?;
@@ -266,7 +266,7 @@ fn write_string<W: Write>(_writer: &mut W, s: &str) -> std::io::Result<()> {
 }
 
 #[allow(dead_code)]
-fn read_string<R: Read>(_reader: &mut R) -> std::io::Result<String> {
+fn read_string<R: Read>(reader: &mut R) -> std::io::Result<String> {
     let mut len_bytes = [0u8; 8];
     _reader.read_exact(&mut len_bytes)?;
     let len = u64::from_le_bytes(len_bytes) as usize;
@@ -278,19 +278,19 @@ fn read_string<R: Read>(_reader: &mut R) -> std::io::Result<String> {
 }
 
 #[allow(dead_code)]
-fn write_usize<W: Write>(_writer: &mut W, n: usize) -> std::io::Result<()> {
+fn write_usize<W: Write>(writer: &mut W, n: usize) -> std::io::Result<()> {
     _writer.write_all(&(n as u64).to_le_bytes())
 }
 
 #[allow(dead_code)]
-fn read_usize<R: Read>(_reader: &mut R) -> std::io::Result<usize> {
+fn read_usize<R: Read>(reader: &mut R) -> std::io::Result<usize> {
     let mut bytes = [0u8; 8];
     _reader.read_exact(&mut bytes)?;
     Ok(u64::from_le_bytes(bytes) as usize)
 }
 
 #[allow(dead_code)]
-fn write_array<W: Write, T: Copy>(_writer: &mut W, array: &Array1<T>) -> std::io::Result<()> {
+fn write_array<W: Write, T: Copy>(writer: &mut W, array: &Array1<T>) -> std::io::Result<()> {
     let len = array.len() as u64;
     _writer.write_all(&len.to_le_bytes())?;
 
@@ -303,7 +303,7 @@ fn write_array<W: Write, T: Copy>(_writer: &mut W, array: &Array1<T>) -> std::io
 }
 
 #[allow(dead_code)]
-fn read_array<R: Read, T: Copy>(_reader: &mut R) -> std::io::Result<Array1<T>> {
+fn read_array<R: Read, T: Copy>(reader: &mut R) -> std::io::Result<Array1<T>> {
     let mut len_bytes = [0u8; 8];
     _reader.read_exact(&mut len_bytes)?;
     let len = u64::from_le_bytes(len_bytes) as usize;

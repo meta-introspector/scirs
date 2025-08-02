@@ -79,7 +79,7 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
 
         // Sample mask
         let mut rng = scirs2_core::random::rng();
-        let mask = Array::from_shape_fn(weights.raw_dim(), |_| {
+        let mask = Array::fromshape_fn(weights.raw_dim(), |_| {
             rng.random_bool_with_chance(keep_prob_f64)
         });
 
@@ -104,7 +104,7 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
     pub fn apply_to_gradients<D: Dimension>(
         &self,
         gradients: &Array<A, D>,
-        weights_shape: D,
+        weightsshape: D,
         training: bool,
     ) -> Array<A, D> {
         if !training || self.drop_prob == A::zero() {
@@ -115,9 +115,9 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
         let keep_prob = A::one() - self.drop_prob;
         let keep_prob_f64 = keep_prob.to_f64().unwrap();
 
-        // Create mask with same _shape as weights
+        // Create mask with same shape as weights
         let mut rng = scirs2_core::random::rng();
-        let mask = Array::from_shape_fn(weights_shape, |_| {
+        let mask = Array::fromshape_fn(weightsshape, |_| {
             rng.random_bool_with_chance(keep_prob_f64)
         });
 
@@ -215,10 +215,10 @@ mod tests {
     fn test_dropconnect_gradients() {
         let dc = DropConnect::new(0.5).unwrap();
         let gradients = array![[1.0, 1.0], [1.0, 1.0]];
-        let weights_shape = gradients.raw_dim();
+        let weightsshape = gradients.raw_dim();
 
         // Apply to gradients
-        let masked_grads = dc.apply_to_gradients(&gradients, weights_shape, true);
+        let masked_grads = dc.apply_to_gradients(&gradients, weightsshape, true);
 
         // Check scaling
         for &grad in masked_grads.iter() {

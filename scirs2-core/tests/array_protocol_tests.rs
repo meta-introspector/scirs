@@ -183,7 +183,8 @@ fn test_array_function_dispatch() {
 
     // Manually create and register the function with an implementation
     let implementation = std::sync::Arc::new(
-        move |_args: &[Box<dyn std::any::Any>], kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
+        move |_args: &[Box<dyn std::any::Any>],
+              kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
             // In a real implementation, we would extract the arguments properly
             // For this test, we just return a fixed result
             Ok(Box::new(10.0f64) as Box<dyn std::any::Any>)
@@ -305,7 +306,8 @@ fn test_array_interoperability() {
     // Register a handler for the dot_product function in the global registry
     let dot_product_name = "test::dot_product";
     let implementation = std::sync::Arc::new(
-        move |_args: &[Box<dyn std::any::Any>], kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
+        move |_args: &[Box<dyn std::any::Any>],
+              kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
             // In a real implementation, we would extract the arguments properly
             // For this test, we just return a fixed result - a dummy NdarrayWrapper
             let dummy_array = ndarray::Array2::<f64>::eye(3);
@@ -515,7 +517,8 @@ fn test_mixed_array_types() {
     // First, let's create a wrapper for mixed array addition
     let add_op_name = "scirs2::array_protocol::operations::add";
     let add_implementation = std::sync::Arc::new(
-        move |_args: &[Box<dyn std::any::Any>], kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
+        move |_args: &[Box<dyn std::any::Any>],
+              kwargs: &std::collections::HashMap<String, Box<dyn std::any::Any>>| {
             // In a real implementation, we would extract and handle arguments properly
             // For this test, we just return a fixed result
             let dummy_array = ndarray::Array2::<f64>::ones((3, 3));
@@ -653,8 +656,7 @@ impl<T: Clone + 'static> CustomArray<T> {
 
 // Implement ArrayProtocol for the custom array type
 impl<T: Clone + Send + Sync + 'static> ArrayProtocol for CustomArray<T> {
-    fn kwargs( &HashMap<String, Box<dyn Any>>,
-    ) -> Result<Box<dyn Any>, NotImplemented> {
+    fn kwargs(_kwargs: &HashMap<String, Box<dyn Any>>) -> Result<Box<dyn Any>, NotImplemented> {
         if func.name == "test::custom_sum" {
             // For testing purposes, just return a fixed value
             Ok(Box::new(42.0f64))

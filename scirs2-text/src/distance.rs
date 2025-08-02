@@ -444,7 +444,7 @@ mod tests {
     }
 
     #[test]
-    fn test_text_cosine_similarity() {
+    fn testtext_cosine_similarity() {
         let result =
             text_cosine_similarity("this is a test", "this is another test", None).unwrap();
         assert!(result > 0.5 && result < 1.0);

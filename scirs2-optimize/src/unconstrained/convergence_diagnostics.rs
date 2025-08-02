@@ -350,7 +350,7 @@ impl DiagnosticCollector {
     pub fn new(_options: DiagnosticOptions) -> Self {
         let history_window = _options.history_window;
         Self {
-            _options,
+            options: _options,
             nit: Vec::new(),
             start_time: Instant::now(),
             f_history: VecDeque::with_capacity(history_window),

@@ -18,7 +18,7 @@ use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
-fn safe_i32_to_float<T: Float + FromPrimitive>(_value: i32) -> NdimageResult<T> {
+fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(_value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", _value))
     })
@@ -26,7 +26,7 @@ fn safe_i32_to_float<T: Float + FromPrimitive>(_value: i32) -> NdimageResult<T> 
 
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
-fn safe_to_usize<T: Float>(_value: T) -> NdimageResult<usize> {
+fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     _value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert _value to usize".to_string())
     })
@@ -34,7 +34,7 @@ fn safe_to_usize<T: Float>(_value: T) -> NdimageResult<usize> {
 
 /// Helper function for safe isize conversion
 #[allow(dead_code)]
-fn safe_to_isize<T: Float>(_value: T) -> NdimageResult<isize> {
+fn safe_to_isize<T: Float>(value: T) -> NdimageResult<isize> {
     _value.to_isize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert _value to isize".to_string())
     })
@@ -42,7 +42,7 @@ fn safe_to_isize<T: Float>(_value: T) -> NdimageResult<isize> {
 
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
-fn safe_to_i32<T: Float>(_value: T) -> NdimageResult<i32> {
+fn safe_to_i32<T: Float>(value: T) -> NdimageResult<i32> {
     _value
         .to_i32()
         .ok_or_else(|| NdimageError::ComputationError("Failed to convert _value to i32".to_string()))
@@ -50,7 +50,7 @@ fn safe_to_i32<T: Float>(_value: T) -> NdimageResult<i32> {
 
 /// Helper function for safe usize to float conversion
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
@@ -151,11 +151,11 @@ where
             let t2 = t * t;
             let t3 = t2 * t;
 
-            let neg_half: T = crate::utils::safe_f64, _to_float: :<T>(-0.5)?;
-            let half: T = crate::utils::safe_f64, _to_float: :<T>(0.5)?;
-            let one_half: T = crate::utils::safe_f64, _to_float: :<T>(1.5)?;
-            let two_half: T = crate::utils::safe_f64, _to_float: :<T>(2.5)?;
-            let two: T = crate::utils::safe_f64, _to_float: :<T>(2.0)?;
+            let neg_half: T = crate::utils::safe_f64, _to_float: <T>(-0.5)?;
+            let half: T = crate::utils::safe_f64, _to_float: <T>(0.5)?;
+            let one_half: T = crate::utils::safe_f64, _to_float: <T>(1.5)?;
+            let two_half: T = crate::utils::safe_f64, _to_float: <T>(2.5)?;
+            let two: T = crate::utils::safe_f64, _to_float: <T>(2.0)?;
 
             Ok(vec![
                 neg_half * t3 + t2 - half * t,
@@ -188,15 +188,15 @@ where
         let t5 = t4 * t;
 
         // Pre-computed B-spline basis functions with constants
-        let c120: T = crate::utils::safe_f64, _to_float: :<T>(1.0 / 120.0)?;
-        let c24: T = crate::utils::safe_f64, _to_float: :<T>(1.0 / 24.0)?;
-        let c12: T = crate::utils::safe_f64, _to_float: :<T>(1.0 / 12.0)?;
-        let c2: T = crate::utils::safe_f64, _to_float: :<T>(2.0)?;
-        let c3: T = crate::utils::safe_f64, _to_float: :<T>(3.0)?;
-        let c4: T = crate::utils::safe_f64, _to_float: :<T>(4.0)?;
-        let c5: T = crate::utils::safe_f64, _to_float: :<T>(5.0)?;
-        let c6: T = crate::utils::safe_f64, _to_float: :<T>(6.0)?;
-        let c10: T = crate::utils::safe_f64, _to_float: :<T>(10.0)?;
+        let c120: T = crate::utils::safe_f64, _to_float: <T>(1.0 / 120.0)?;
+        let c24: T = crate::utils::safe_f64, _to_float: <T>(1.0 / 24.0)?;
+        let c12: T = crate::utils::safe_f64, _to_float: <T>(1.0 / 12.0)?;
+        let c2: T = crate::utils::safe_f64, _to_float: <T>(2.0)?;
+        let c3: T = crate::utils::safe_f64, _to_float: <T>(3.0)?;
+        let c4: T = crate::utils::safe_f64, _to_float: <T>(4.0)?;
+        let c5: T = crate::utils::safe_f64, _to_float: <T>(5.0)?;
+        let c6: T = crate::utils::safe_f64, _to_float: <T>(6.0)?;
+        let c10: T = crate::utils::safe_f64, _to_float: <T>(10.0)?;
 
         coeffs[0] = c120 * (-t5 + c5 * t4 - c10 * t3 + c10 * t2 - c5 * t + T::one());
         coeffs[1] = c24 * (t5 - c2 * t4 - c3 * t3 + c6 * t2 + c4 * t + T::one());

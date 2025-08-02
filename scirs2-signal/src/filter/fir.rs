@@ -1,14 +1,14 @@
-//! FIR (Finite Impulse Response) filter design functions
-//!
-//! This module provides comprehensive FIR filter design capabilities including
-//! window-based design (firwin) and optimal equiripple design (Parks-McClellan/Remez).
-//! FIR filters offer linear phase response and guaranteed stability.
+// FIR (Finite Impulse Response) filter design functions
+//
+// This module provides comprehensive FIR filter design capabilities including
+// window-based design (firwin) and optimal equiripple design (Parks-McClellan/Remez).
+// FIR filters offer linear phase response and guaranteed stability.
 
+use super::common::validation::validate_cutoff_frequency;
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use std::f64::consts::PI;
 use std::fmt::Debug;
-use super::common::validation::validate_cutoff_frequency;
 
 #[allow(unused_imports)]
 /// FIR filter design using window method
@@ -30,7 +30,7 @@ use super::common::validation::validate_cutoff_frequency;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::fir::firwin;
+/// use scirs2_signal::filter::fir::firwin;
 ///
 /// // Design a 65-tap lowpass filter with Hamming window
 /// let h = firwin(65, 0.3, "hamming", true).unwrap();
@@ -39,7 +39,12 @@ use super::common::validation::validate_cutoff_frequency;
 /// let h = firwin(65, 0.3, "hamming", false).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn firwin<T>(_numtaps: usize, cutoff: T, window: &str, pass_zero: bool) -> SignalResult<Vec<f64>>
+pub fn firwin<T>(
+    _numtaps: usize,
+    cutoff: T,
+    window: &str,
+    pass_zero: bool,
+) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
 {
@@ -132,7 +137,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::fir::remez;
+/// use scirs2_signal::filter::fir::remez;
 ///
 /// // Design a 65-tap lowpass filter
 /// // Passband: 0-0.4, Stopband: 0.45-1.0

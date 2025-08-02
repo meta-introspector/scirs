@@ -192,7 +192,7 @@ pub struct SearchStats {
 
 impl QueryKey {
     /// Create a new query key from coordinates
-    fn from_coords<F: Float + FromPrimitive>(_coords: &[F], k: usize, radius: Option<F>) -> Self {
+    fn from_coords<F: Float + FromPrimitive>(coords: &[F], k: usize, radius: Option<F>) -> Self {
         const QUANTIZATION_FACTOR: f64 = 1000.0;
 
         let quantized_coords: Vec<i64> = _coords
@@ -231,7 +231,7 @@ where
     ///     EnhancedNearestNeighborSearcher, IndexType, SearchConfig
     /// };
     ///
-    /// let points = Array2::from_shape_vec((5, 2), vec![
+    /// let points = Array2::fromshape_vec((5, 2), vec![
     ///     0.0, 0.0,
     ///     1.0, 0.0,
     ///     0.0, 1.0,
@@ -260,7 +260,7 @@ where
 
         // Determine the best index _type if using adaptive
         let actual_index_type = match index_type {
-            IndexType::Adaptive =>, Self::choose_index_type(n_points, n_dims, &config),
+            IndexType::Adaptive => Self::choose_index_type(n_points, n_dims, &config),
             other => other,
         };
 
@@ -337,7 +337,7 @@ where
     ///     EnhancedNearestNeighborSearcher, IndexType, SearchConfig
     /// };
     ///
-    /// let points = Array2::from_shape_vec((4, 2), vec![
+    /// let points = Array2::fromshape_vec((4, 2), vec![
     ///     0.0, 0.0,
     ///     1.0, 0.0,
     ///     0.0, 1.0,
@@ -1486,7 +1486,7 @@ impl<F: Float + FromPrimitive> LSHIndex<F> {
 ///     make_enhanced_searcher, SearchConfig
 /// };
 ///
-/// let points = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
+/// let points = Array2::fromshape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
 /// let searcher = make_enhanced_searcher(points, None).unwrap();
 /// ```
 #[allow(dead_code)]

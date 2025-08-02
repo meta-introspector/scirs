@@ -377,7 +377,7 @@ impl HalfspaceIntersection {
         });
 
         // Convert to Array2
-        let vertex_array = Array2::from_shape_vec(
+        let vertex_array = Array2::fromshape_vec(
             (vertices.len(), 2),
             vertices.iter().flat_map(|&(x, y)| vec![x, y]).collect(),
         )
@@ -442,7 +442,7 @@ impl HalfspaceIntersection {
         }
 
         // Convert to ndarray for convex hull computation
-        let dual_array = Array2::from_shape_vec(
+        let dual_array = Array2::fromshape_vec(
             (dual_points.len(), dim),
             dual_points.into_iter().flatten().collect(),
         )
@@ -484,7 +484,7 @@ impl HalfspaceIntersection {
         }
 
         // Convert vertices to array
-        let vertices = Array2::from_shape_vec(
+        let vertices = Array2::fromshape_vec(
             (primal_vertices.len(), dim),
             primal_vertices.into_iter().flatten().collect(),
         )
@@ -660,7 +660,7 @@ impl HalfspaceIntersection {
             return Ok(Array2::zeros((0, dim)));
         }
 
-        Array2::from_shape_vec(
+        Array2::fromshape_vec(
             (vertices.len(), dim),
             vertices.into_iter().flatten().collect(),
         )

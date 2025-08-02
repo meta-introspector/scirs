@@ -66,7 +66,7 @@ where
 {
     array: &'a ArrayBase<S, D>,
     // Chunk shape is necessary for the full implementation of chunked processing
-    chunk_shape: D,
+    chunkshape: D,
     // Current position needed for iterative processing
     #[allow(dead_code)]
     position: D,
@@ -78,11 +78,11 @@ where
     D: Dimension,
 {
     /// Create a new chunk processor for the given array and chunk shape
-    pub fn new(array: &'a ArrayBase<S, D>, chunk_shape: D) -> Self {
+    pub fn new(array: &'a ArrayBase<S, D>, chunkshape: D) -> Self {
         let position = D::zeros(array.ndim());
         Self {
             array,
-            chunk_shape,
+            chunkshape,
             position,
         }
     }
@@ -96,26 +96,26 @@ where
         use ndarray::{IntoDimension, Slice};
 
         // Get array shape and chunk shape as slices
-        let array_shape = self.array.shape();
-        let chunk_shape = self.chunk_shape.slice();
+        let arrayshape = self.array.shape();
+        let chunkshape = self.chunkshape.slice();
 
         // Calculate number of chunks in each dimension
         let mut num_chunks_per_dim = vec![];
-        for i in 0..array_shape.len() {
-            let n_chunks = array_shape[i].div_ceil(chunk_shape[i]);
+        for i in 0..arrayshape.len() {
+            let n_chunks = arrayshape[i].div_ceil(chunkshape[i]);
             num_chunks_per_dim.push(n_chunks);
         }
 
         // Iterate through all possible chunk positions
-        let mut chunk_indices = vec![0; array_shape.len()];
+        let mut chunk_indices = vec![0; arrayshape.len()];
         loop {
             // Calculate the slice for current chunk
             let mut slices = vec![];
             let mut position_vec = vec![];
 
-            for i in 0..array_shape.len() {
-                let start = chunk_indices[i] * chunk_shape[i];
-                let end = ((chunk_indices[i] + 1) * chunk_shape[i]).min(array_shape[i]);
+            for i in 0..arrayshape.len() {
+                let start = chunk_indices[i] * chunkshape[i];
+                let end = ((chunk_indices[i] + 1) * chunkshape[i]).min(arrayshape[i]);
                 slices.push(Slice::from(start..end));
                 position_vec.push(start);
             }
@@ -168,12 +168,12 @@ where
 
     /// Get the total number of chunks
     pub fn num_chunks(&self) -> usize {
-        let array_shape = self.array.shape();
-        let chunk_shape = self.chunk_shape.slice();
+        let arrayshape = self.array.shape();
+        let chunkshape = self.chunkshape.slice();
 
         let mut total_chunks = 1;
-        for i in 0..array_shape.len() {
-            let n_chunks = array_shape[i].div_ceil(chunk_shape[i]);
+        for i in 0..arrayshape.len() {
+            let n_chunks = arrayshape[i].div_ceil(chunkshape[i]);
             total_chunks *= n_chunks;
         }
 
@@ -187,7 +187,7 @@ where
     S: Data<Elem = A>,
 {
     array: &'a ArrayBase<S, Ix2>,
-    chunk_shape: (usize, usize),
+    chunkshape: (usize, usize),
     // Current position tracking for iterator implementation
     #[allow(dead_code)]
     current_row: usize,
@@ -200,10 +200,10 @@ where
     S: Data<Elem = A>,
 {
     /// Create a new 2D chunk processor
-    pub fn new(array: &'a ArrayBase<S, Ix2>, chunk_shape: (usize, usize)) -> Self {
+    pub fn new(array: &'a ArrayBase<S, Ix2>, chunkshape: (usize, usize)) -> Self {
         Self {
             array,
-            chunk_shape,
+            chunkshape,
             current_row: 0,
             current_col: 0,
         }
@@ -215,7 +215,7 @@ where
         F: FnMut(&ArrayBase<ViewRepr<&A>, Ix2>, (usize, usize)),
     {
         let (rows, cols) = self.array.dim();
-        let (chunk_rows, chunk_cols) = self.chunk_shape;
+        let (chunk_rows, chunk_cols) = self.chunkshape;
 
         for row_start in (0..rows).step_by(chunk_rows) {
             for col_start in (0..cols).step_by(chunk_cols) {

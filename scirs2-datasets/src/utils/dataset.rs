@@ -21,7 +21,7 @@ use std::collections::HashMap;
 /// use ndarray::Array2;
 /// use scirs2__datasets::utils::Dataset;
 ///
-/// let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+/// let data = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 /// let dataset = Dataset::new(data, None)
 ///     .with_feature_names(vec!["feature1".to_string(), "feature2".to_string()])
 ///     .with_description("Sample dataset".to_string());

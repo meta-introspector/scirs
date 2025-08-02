@@ -496,7 +496,7 @@ impl MemoryMonitor {
             s if s >= 0.9 => PerformanceGrade::Excellent,
             s if s >= 0.7 => PerformanceGrade::Good,
             s if s >= 0.5 => PerformanceGrade::Fair,
-            s if s >= 0.3 => PerformanceGrade::Poor_ =>, PerformanceGrade::Critical,
+            s if s >= 0.3 => PerformanceGrade::Poor_ => PerformanceGrade::Critical,
         };
 
         PerformanceSummary {
@@ -1231,7 +1231,7 @@ impl StressMemoryProfiler {
             s if s >= 0.9 => StressPerformanceGrade::Excellent,
             s if s >= 0.7 => StressPerformanceGrade::Good,
             s if s >= 0.5 => StressPerformanceGrade::Fair,
-            s if s >= 0.3 => StressPerformanceGrade::Poor_ =>, StressPerformanceGrade::Critical,
+            s if s >= 0.3 => StressPerformanceGrade::Poor_ => StressPerformanceGrade::Critical,
         }
     }
 

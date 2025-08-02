@@ -534,7 +534,11 @@ impl ProductionProfiler {
     }
 
     /// Start profiling a workload
-    pub fn start_profiling_workload(&self, workload_id: &str, workload_type: WorkloadType) -> CoreResult<()> {
+    pub fn start_profiling_workload(
+        &self,
+        workload_id: &str,
+        workload_type: WorkloadType,
+    ) -> CoreResult<()> {
         // Check if we should sample this workload
         if !self.should_sample()? {
             return Ok(());
@@ -558,7 +562,12 @@ impl ProductionProfiler {
     }
 
     /// Finish workload analysis and generate report
-    pub fn finish_workload_analysis(&mut self, workload_id: &str, workload_type: WorkloadType, start_time: SystemTime) -> CoreResult<WorkloadAnalysisReport> {
+    pub fn finish_workload_analysis(
+        &mut self,
+        workload_id: &str,
+        workload_type: WorkloadType,
+        start_time: SystemTime,
+    ) -> CoreResult<WorkloadAnalysisReport> {
         // For this example, we'll analyze the first active session
         let session_id = {
             let sessions = self.active_sessions.read().map_err(|_| {
@@ -573,7 +582,11 @@ impl ProductionProfiler {
     }
 
     /// Finish specific workload analysis by ID
-    pub fn finish_profiling_workload(&self, workload_id: &str, workload_type: WorkloadType, start_time: SystemTime
+    pub fn finish_profiling_workload(
+        &self,
+        workload_id: &str,
+        workload_type: WorkloadType,
+        start_time: SystemTime,
     ) -> CoreResult<WorkloadAnalysisReport> {
         let _timeout = Duration::from_secs(60); // Placeholder
 
@@ -870,7 +883,9 @@ impl ProductionProfiler {
     }
 
     /// Calculate the quality of the analysis based on sample size and findings
-    fn calculate_quality_score(&self, total_samples: usize,
+    fn calculate_quality_score(
+        &self,
+        total_samples: usize,
         bottlenecks: &[PerformanceBottleneck],
         regressions: &[PerformanceRegression],
     ) -> u8 {
@@ -902,7 +917,12 @@ impl ProductionProfiler {
     }
 
     /// Record performance data for regression detection
-    pub fn record_performance_data(&self, workload_id: &str, function_id: &str, duration: Duration) -> CoreResult<()> {
+    pub fn record_performance_data(
+        &self,
+        workload_id: &str,
+        function_id: &str,
+        duration: Duration,
+    ) -> CoreResult<()> {
         if let Ok(mut history) = self.performance_history.lock() {
             let entry = history
                 .entry(workload_id.to_string())

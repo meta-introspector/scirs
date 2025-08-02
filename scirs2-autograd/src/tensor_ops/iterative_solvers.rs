@@ -19,16 +19,16 @@ impl<F: Float + ndarray::ScalarOperand + FromPrimitive> Op<F> for ConjugateGradi
         let a = ctx.input(0);
         let b = ctx.input(1);
 
-        let a_shape = a.shape();
-        let b_shape = b.shape();
+        let ashape = a.shape();
+        let bshape = b.shape();
 
-        if a_shape.len() != 2 || a_shape[0] != a_shape[1] {
+        if ashape.len() != 2 || ashape[0] != ashape[1] {
             return Err(OpError::IncompatibleShape(
                 "CG requires square matrix".into(),
             ));
         }
 
-        if b_shape.len() != 1 || b_shape[0] != a_shape[0] {
+        if bshape.len() != 1 || bshape[0] != ashape[0] {
             return Err(OpError::IncompatibleShape(
                 "Incompatible dimensions for Ax=b".into(),
             ));
@@ -145,16 +145,16 @@ impl<F: Float + ndarray::ScalarOperand + FromPrimitive> Op<F> for GMRESOp {
         let a = ctx.input(0);
         let b = ctx.input(1);
 
-        let a_shape = a.shape();
-        let b_shape = b.shape();
+        let ashape = a.shape();
+        let bshape = b.shape();
 
-        if a_shape.len() != 2 || a_shape[0] != a_shape[1] {
+        if ashape.len() != 2 || ashape[0] != ashape[1] {
             return Err(OpError::IncompatibleShape(
                 "GMRES requires square matrix".into(),
             ));
         }
 
-        if b_shape.len() != 1 || b_shape[0] != a_shape[0] {
+        if bshape.len() != 1 || bshape[0] != ashape[0] {
             return Err(OpError::IncompatibleShape(
                 "Incompatible dimensions for Ax=b".into(),
             ));
@@ -199,16 +199,16 @@ impl<F: Float + ndarray::ScalarOperand + FromPrimitive> Op<F> for BiCGSTABOp {
         let a = ctx.input(0);
         let b = ctx.input(1);
 
-        let a_shape = a.shape();
-        let b_shape = b.shape();
+        let ashape = a.shape();
+        let bshape = b.shape();
 
-        if a_shape.len() != 2 || a_shape[0] != a_shape[1] {
+        if ashape.len() != 2 || ashape[0] != ashape[1] {
             return Err(OpError::IncompatibleShape(
                 "BiCGSTAB requires square matrix".into(),
             ));
         }
 
-        if b_shape.len() != 1 || b_shape[0] != a_shape[0] {
+        if bshape.len() != 1 || bshape[0] != ashape[0] {
             return Err(OpError::IncompatibleShape(
                 "Incompatible dimensions for Ax=b".into(),
             ));

@@ -35,7 +35,7 @@ pub trait OptimizedSpatialSearch<F: Float> {
     fn parallel_k_nearest_neighbors(
         &self,
         queries: &ArrayView2<F>,
-        k: usize_workers: Option<usize>,
+        k: usize, workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>>;
 
     /// Adaptive k-nearest neighbor search that adjusts strategy based on query characteristics
@@ -311,7 +311,7 @@ where
     fn parallel_k_nearest_neighbors(
         &self,
         queries: &ArrayView2<F>,
-        k: usize_workers: Option<usize>,
+        k: usize, workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         use scirs2_core::parallel_ops::*;
 
@@ -324,7 +324,7 @@ where
                     let query_slice = query.as_slice().unwrap();
                     self.k_nearest_neighbors(query_slice, k)
                 })
-                .collect::<Result<Vec<_>_>>()
+                .collect::<Result<Vec<_>>>()
         })
     }
 
@@ -332,7 +332,7 @@ where
     fn parallel_k_nearest_neighbors(
         &self,
         queries: &ArrayView2<F>,
-        k: usize_workers: Option<usize>,
+        k: usize, workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         // Fallback to sequential processing
         self.batch_k_nearest_neighbors(queries, k)
@@ -384,7 +384,7 @@ where
     fn parallel_k_nearest_neighbors(
         &self,
         queries: &ArrayView2<F>,
-        k: usize_workers: Option<usize>,
+        k: usize, workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         use scirs2_core::parallel_ops::*;
 
@@ -397,7 +397,7 @@ where
                     let query_slice = query.as_slice().unwrap();
                     self.k_nearest_neighbors(query_slice, k)
                 })
-                .collect::<Result<Vec<_>_>>()
+                .collect::<Result<Vec<_>>>()
         })
     }
 
@@ -405,7 +405,7 @@ where
     fn parallel_k_nearest_neighbors(
         &self,
         queries: &ArrayView2<F>,
-        k: usize_workers: Option<usize>,
+        k: usize, workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         // Fallback to sequential processing
         self.batch_k_nearest_neighbors(queries, k)

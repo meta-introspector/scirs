@@ -52,7 +52,7 @@ impl Vocabulary {
         }
     fn word_to_id(&self, word: &str) -> usize {
         self.word_to_id.get(word).copied().unwrap_or(1) // Default to <UNK>
-    fn tokenize_text(&self, text: &str, max_length: usize) -> Vec<usize> {
+    fn tokenizetext(&self, text: &str, max_length: usize) -> Vec<usize> {
         let words: Vec<&str> = text.split_whitespace().collect();
         let mut tokens = vec![2]; // Start with <START> token
         for word in words.iter().take(max_length - 2) {
@@ -220,7 +220,7 @@ impl Dataset<f32> for TextDataset {
         let mut label_array = Array2::zeros((1, self.num_classes));
         let tokens = self
             .vocab
-            .tokenize_text(&self.texts[index], self.max_length);
+            .tokenizetext(&self.texts[index], self.max_length);
         for (j, &token) in tokens.iter().enumerate() {
             tokens_array[[0, j]] = token as f32;
         // One-hot encode label
@@ -230,7 +230,7 @@ impl Dataset<f32> for TextDataset {
         Box::new(self.clone())
 /// Build a text classification model using embeddings and LSTM
 #[allow(dead_code)]
-fn build_text_model(
+fn buildtext_model(
     _vocab_size: usize,
     embedding_dim: usize,
     hidden_dim: usize,
@@ -262,7 +262,7 @@ fn build_text_model(
     Ok(model)
 /// Build an advanced text model with attention
 #[allow(dead_code)]
-fn build_attention_text_model(
+fn build_attentiontext_model(
     // Simplified attention-based model using dense layers
     let input_size = max_length;
     // Multi-layer processing to simulate transformer-like behavior
@@ -274,7 +274,7 @@ fn build_attention_text_model(
     // Global pooling simulation
 /// Calculate text classification metrics
 #[allow(dead_code)]
-fn calculate_text_metrics(
+fn calculatetext_metrics(
     predictions: &ArrayD<f32>,
     targets: &ArrayD<f32>,
 ) -> HashMap<String, f32> {
@@ -309,7 +309,7 @@ fn calculate_text_metrics(
     metrics
 /// Train text classification model
 #[allow(dead_code)]
-fn train_text_classifier() -> StdResult<()> {
+fn traintext_classifier() -> StdResult<()> {
     println!("📝 Starting Text Classification Training Example");
     println!("{}", "=".repeat(60));
     let mut rng = SmallRng::seed_from_u64(42);
@@ -343,7 +343,7 @@ fn train_text_classifier() -> StdResult<()> {
         );
     // Build model
     println!("\n🏗️  Building text classification model...");
-    let model = build_text_model(
+    let model = buildtext_model(
         dataset.vocab.vocab_size,
         embedding_dim,
         max_length,
@@ -419,7 +419,7 @@ fn train_text_classifier() -> StdResult<()> {
             println!("   Actual: {}", class_names[true_class]);
             println!();
     // Calculate detailed metrics
-    let detailed_metrics = calculate_text_metrics(&predictions, &sample_targets);
+    let detailed_metrics = calculatetext_metrics(&predictions, &sample_targets);
     println!("📈 Detailed Metrics:");
     for (metric, value) in &detailed_metrics {
     Ok(())
@@ -429,22 +429,22 @@ fn demonstrate_attention_model() -> StdResult<()> {
     println!("\n🎯 Attention-Based Model Demo:");
     let mut rng = SmallRng::seed_from_u64(123);
     // Create attention model
-    let model = build_attention_text_model(1000, 128, 256, 3, 20, &mut rng)?;
+    let model = build_attentiontext_model(1000, 128, 256, 3, 20, &mut rng)?;
     println!model.params(.iter().map(|p| p.len()).sum::<usize>()
     println!("   ✅ Attention mechanism simulation completed");
 /// Demonstrate text preprocessing
 #[allow(dead_code)]
-fn demonstrate_text_preprocessing() -> StdResult<()> {
+fn demonstratetext_preprocessing() -> StdResult<()> {
     println!("\n🔤 Text Preprocessing Demo:");
     println!("{}", "-".repeat(30));
     let mut vocab = Vocabulary::new();
     // Add some sample words
-    let sample_text = "This is a great movie and I really love it";
-    for word in sample_text.split_whitespace() {
+    let sampletext = "This is a great movie and I really love it";
+    for word in sampletext.split_whitespace() {
         vocab.add_word(word);
     // Tokenize text
-    let tokens = vocab.tokenize_text(sample_text, 15);
-    println!("   - Original text: \"{}\"", sample_text);
+    let tokens = vocab.tokenizetext(sampletext, 15);
+    println!("   - Original text: \"{}\"", sampletext);
     println!("   - Vocabulary size: {}", vocab.vocab_size);
     println!("   - Tokenized: {:?}", tokens);
     // Show token to word mapping for first few tokens
@@ -457,10 +457,10 @@ fn demonstrate_text_preprocessing() -> StdResult<()> {
 #[allow(dead_code)]
 fn main() -> StdResult<()> {
     // Main training example
-    train_text_classifier()?;
+    traintext_classifier()?;
     // Additional demonstrations
     demonstrate_attention_model()?;
-    demonstrate_text_preprocessing()?;
+    demonstratetext_preprocessing()?;
     println!("\n🌟 All text classification examples completed successfully!");
     println!("🔗 Next steps:");
     println!("   - Try with real text datasets (IMDB, Reuters, etc.)");
@@ -477,10 +477,10 @@ mod tests {
         let word_id = vocab.add_word("test");
         assert_eq!(vocab.word_to_id("test"), word_id);
         assert_eq!(vocab.vocab_size, 5); // 4 special tokens + 1 added word
-    fn test_text_tokenization() {
+    fn testtext_tokenization() {
         vocab.add_word("hello");
         vocab.add_word("world");
-        let tokens = vocab.tokenize_text("hello world", 5);
+        let tokens = vocab.tokenizetext("hello world", 5);
         assert_eq!(tokens.len(), 5); // Should be padded to length 5
         assert_eq!(tokens[0], 2); // <START> token
         assert_eq!(tokens[3], 3); // <END> token
@@ -490,7 +490,7 @@ mod tests {
         assert_eq!(dataset.num_classes, 3);
         assert_eq!(dataset.max_length, 15);
     fn test_model_creation() -> StdResult<()> {
-        let model = build_text_model(100, 32, 64, 3, 10, &mut rng)?;
+        let model = buildtext_model(100, 32, 64, 3, 10, &mut rng)?;
         assert!(!model.is_empty());
         Ok(())
     fn test_metrics_calculation() {
@@ -506,5 +506,5 @@ mod tests {
         let targets = Array2::from_shape_vec(
                 0.0, 1.0, 0.0, // Class 1
                 1.0, 0.0, 0.0, // Class 0
-        let metrics = calculate_text_metrics(&predictions, &targets);
+        let metrics = calculatetext_metrics(&predictions, &targets);
         assert_eq!(metrics["accuracy"], 1.0);

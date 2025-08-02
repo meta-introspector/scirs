@@ -284,7 +284,7 @@ impl Device for CpuDevice {
 
     fn copy_peer(
         &self,
-        _src: usize,
+        src: usize,
         _dst_device: &dyn Device,
         _dst: usize,
         _size: usize,
@@ -346,19 +346,19 @@ impl Device for GpuContextWrapper {
         Ok(())
     }
 
-    unsafe fn copy_from_host(&self, _src: *const u8, _dst: usize, _size: usize) -> CoreResult<()> {
+    unsafe fn copy_from_host(&self, src: *const u8, _dst: usize, _size: usize) -> CoreResult<()> {
         // Would use GPU-specific memory copy operations
         Ok(())
     }
 
-    unsafe fn copy_to_host(&self, _src: usize, _dst: *mut u8, _size: usize) -> CoreResult<()> {
+    unsafe fn copy_to_host(&self, src: usize, _dst: *mut u8, _size: usize) -> CoreResult<()> {
         // Would use GPU-specific memory copy operations
         Ok(())
     }
 
     fn copy_peer(
         &self,
-        _src: usize,
+        src: usize,
         _dst_device: &dyn Device,
         _dst: usize,
         _size: usize,

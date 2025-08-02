@@ -13,7 +13,7 @@
 //! - **Multi-objective optimization**: Balance performance, memory, and energy efficiency
 //! - **Context-Aware Optimization**: Environment and workload-specific adaptations
 
-use rand::{Rng};
+use rand::Rng;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Cache locality hint for prefetch operations
@@ -281,17 +281,17 @@ impl PerformanceHints {
 
     /// Optimized memory copy with cache awareness
     #[inline]
-    pub fn cache_aware_copy<T: Copy>(_src: &[T], dst: &mut [T]) {
-        assert_eq!(_src.len(), dst.len());
+    pub fn cache_aware_copy<T: Copy>(src: &[T], dst: &mut [T]) {
+        assert_eq!(src.len(), dst.len());
 
-        if std::mem::size_of_val(_src) > 64 * 1024 {
+        if std::mem::size_of_val(src) > 64 * 1024 {
             // Large copy: use non-temporal stores to avoid cache pollution
             #[cfg(target_arch = "x86_64")]
             {
                 unsafe {
-                    let src_ptr = _src.as_ptr() as *const u8;
+                    let src_ptr = src.as_ptr() as *const u8;
                     let dst_ptr = dst.as_mut_ptr() as *mut u8;
-                    let len = std::mem::size_of_val(_src);
+                    let len = std::mem::size_of_val(src);
 
                     // Use non-temporal memory copy for large transfers
                     std::ptr::copy_nonoverlapping(src_ptr, dst_ptr, len);
@@ -304,26 +304,26 @@ impl PerformanceHints {
         }
 
         // Regular copy for smaller data or unsupported architectures
-        dst.copy_from_slice(_src);
+        dst.copy_from_slice(src);
     }
 
     /// Optimized memory set with cache awareness
     #[inline]
-    pub fn cache_aware_memset<T: Copy>(_dst: &mut [T], value: T) {
-        if std::mem::size_of_val(_dst) > 32 * 1024 {
+    pub fn cache_aware_memset<T: Copy>(dst: &mut [T], value: T) {
+        if std::mem::size_of_val(dst) > 32 * 1024 {
             // Large memset: use vectorized operations where possible
             #[cfg(all(feature = "simd", target_arch = "x86_64"))]
             {
                 // For large arrays, try to use SIMD if T is appropriate
                 if std::mem::size_of::<T>() == 8 {
                     // 64-bit values can use SSE2
-                    let chunks = _dst.len() / 2;
+                    let chunks = dst.len() / 2;
                     for i in 0..chunks {
-                        _dst[i * 2] = value;
-                        _dst[i * 2 + 1] = value;
+                        dst[i * 2] = value;
+                        dst[i * 2 + 1] = value;
                     }
                     // Handle remainder
-                    for item in _dst.iter_mut().skip(chunks * 2) {
+                    for item in dst.iter_mut().skip(chunks * 2) {
                         *item = value;
                     }
                     return;
@@ -332,7 +332,7 @@ impl PerformanceHints {
         }
 
         // Regular fill for smaller data or unsupported cases
-        _dst.fill(value);
+        dst.fill(value);
     }
 }
 
@@ -428,7 +428,10 @@ impl Default for StrategySelector {
 
 impl StrategySelector {
     /// Select the best strategy for given operation characteristics
-    pub fn select_strategy(&self, operation_size: usize, is_memory_bound: bool,
+    pub fn select_strategy(
+        &self,
+        operation_size: usize,
+        is_memory_bound: bool,
     ) -> OptimizationStrategy {
         // Use epsilon-greedy exploration
         use std::collections::hash_map::DefaultHasher;
@@ -489,8 +492,7 @@ impl StrategySelector {
     }
 
     /// Update strategy weights based on performance feedback
-    pub fn update_weights(&mut self, strategy: OptimizationStrategy, performance_score: f64,
-    ) {
+    pub fn update_weights(&mut self, strategy: OptimizationStrategy, performance_score: f64) {
         if let Some(weight) = self.strategy_weights.get_mut(&strategy) {
             *weight = *weight * (1.0 - self.learning_rate) + performance_score * self.learning_rate;
         }
@@ -706,9 +708,7 @@ impl AdaptiveOptimizer {
     }
 
     /// Select the optimal strategy for a given operation
-    pub fn select_for_operation(&self, operation_name: &str,
-        size: usize,
-    ) -> OptimizationStrategy {
+    pub fn select_for_operation(&self, operation_name: &str, size: usize) -> OptimizationStrategy {
         // Determine if operation is memory-bound based on operation name
         let memory_bound = operation_name.contains("copy")
             || operation_name.contains("memset")
@@ -731,7 +731,12 @@ impl AdaptiveOptimizer {
     }
 
     /// Record performance measurement and update adaptive parameters
-    pub fn record_performance(&mut self, operation: &str, size: usize, strategy: OptimizationStrategy, duration_ns: u64,
+    pub fn record_performance(
+        &mut self,
+        operation: &str,
+        size: usize,
+        strategy: OptimizationStrategy,
+        duration_ns: u64,
     ) {
         // Calculate performance score (higher is better)
         let ops_per_ns = size as f64 / duration_ns as f64;
@@ -765,8 +770,7 @@ impl AdaptiveOptimizer {
     }
 
     /// Analyze operation characteristics to suggest optimizations
-    pub fn analyze_operation(&self, operation_name: &str, input_size: usize,
-    ) -> OptimizationAdvice {
+    pub fn analyze_operation(&self, operation_name: &str, input_size: usize) -> OptimizationAdvice {
         let strategy = self.select_optimal_strategy(operation_name, input_size);
         let chunk_size = if strategy == OptimizationStrategy::Parallel {
             Some(self.optimal_chunk_size::<f64>())
@@ -803,40 +807,45 @@ impl AdaptiveOptimizer {
     fn is_intel_golden_cove_or_newer() -> bool {
         crate::performance_optimization::is_intel_golden_cove_or_newer()
     }
-    
+
     /// Select optimal strategy based on operation name and input size
-    pub fn select_optimal_strategy(&self, _operation_name: &str, input_size: usize) -> OptimizationStrategy {
+    pub fn select_optimal_strategy(
+        &self,
+        _operation_name: &str,
+        input_size: usize,
+    ) -> OptimizationStrategy {
         // Check GPU threshold first (if available)
         if input_size >= self.gpu_threshold.load(Ordering::Relaxed) && self.has_gpu_support() {
             return OptimizationStrategy::Gpu;
         }
-        
+
         // Check parallel threshold
         if input_size >= self.parallel_threshold.load(Ordering::Relaxed) {
             return OptimizationStrategy::Parallel;
         }
-        
+
         // Check SIMD threshold
         if input_size >= self.simd_threshold.load(Ordering::Relaxed) && self.has_simd_support() {
             return OptimizationStrategy::Simd;
         }
-        
+
         // Default to scalar
         OptimizationStrategy::Scalar
     }
-    
+
     /// Check if GPU support is available
     pub fn has_gpu_support(&self) -> bool {
         // For now, return false since GPU support is not implemented
         false
     }
-    
+
     /// Check if SIMD support is available  
     pub fn has_simd_support(&self) -> bool {
         // Check if SIMD instructions are available on this platform
         #[cfg(target_arch = "x86_64")]
         {
-            std::arch::is_x86_feature_detected!("avx2") || std::arch::is_x86_feature_detected!("sse4.1")
+            std::arch::is_x86_feature_detected!("avx2")
+                || std::arch::is_x86_feature_detected!("sse4.1")
         }
         #[cfg(target_arch = "aarch64")]
         {
@@ -1042,14 +1051,18 @@ pub mod fast_paths {
 }
 
 /// Memory access pattern optimizer
+#[allow(dead_code)]
 pub struct MemoryAccessOptimizer {
     /// Stride detection for array access
     stride_detector: StrideDetector,
 }
 
 #[derive(Default)]
+#[allow(dead_code)]
 struct StrideDetector {
-    last_address: Option<usize>, detected_stride: Option<isize>, confidence: f32,
+    last_address: Option<usize>,
+    detected_stride: Option<isize>,
+    confidence: f32,
 }
 
 impl MemoryAccessOptimizer {
@@ -1536,7 +1549,10 @@ pub mod benchmarking {
         }
 
         /// Generate performance recommendations
-        fn generate_recommendations(&self, measurements: &[BenchmarkMeasurement], strategy_summary: &HashMap<OptimizationStrategy, StrategyPerformance>,
+        fn generate_recommendations(
+            &self,
+            measurements: &[BenchmarkMeasurement],
+            strategy_summary: &HashMap<OptimizationStrategy, StrategyPerformance>,
         ) -> Vec<String> {
             let mut recommendations = Vec::new();
 
@@ -2015,36 +2031,36 @@ pub mod cache_aware_algorithms {
     }
 
     /// Adaptive memory copy with optimal strategy selection
-    pub fn adaptive_memcpy<T: Copy>(_src: &[T], dst: &mut [T]) {
-        debug_assert_eq!(_src.len(), dst.len());
+    pub fn adaptive_memcpy<T: Copy>(src: &[T], dst: &mut [T]) {
+        debug_assert_eq!(src.len(), dst.len());
 
-        let _len = _src.len();
-        let size_bytes = std::mem::size_of_val(_src);
+        let _len = src.len();
+        let size_bytes = std::mem::size_of_val(src);
 
         // Choose strategy based on size
         if size_bytes <= 64 {
             // Small copy - use simple loop
-            dst.copy_from_slice(_src);
+            dst.copy_from_slice(src);
         } else if size_bytes <= 4096 {
             // Medium copy - use cache-optimized copy with prefetching
-            cache_optimized_copy(_src, dst);
+            cache_optimized_copy(src, dst);
         } else {
             // Large copy - use streaming copy to avoid cache pollution
-            streaming_copy(_src, dst);
+            streaming_copy(src, dst);
         }
     }
 
     /// Cache-optimized copy with prefetching
-    fn cache_optimized_copy<T: Copy>(_src: &[T], dst: &mut [T]) {
+    fn cache_optimized_copy<T: Copy>(src: &[T], dst: &mut [T]) {
         let chunk_size = 64 / std::mem::size_of::<T>(); // One cache line worth
 
-        for (src_chunk, dst_chunk) in _src.chunks(chunk_size).zip(dst.chunks_mut(chunk_size)) {
+        for (src_chunk, dst_chunk) in src.chunks(chunk_size).zip(dst.chunks_mut(chunk_size)) {
             // Prefetch next source chunk
             if src_chunk.as_ptr() as usize + std::mem::size_of_val(src_chunk)
-                < _src.as_ptr() as usize + std::mem::size_of_val(_src)
+                < src.as_ptr() as usize + std::mem::size_of_val(src)
             {
-                let next_src = unsafe { src_chunk.as_ptr().add(chunk_size) };
-                PerformanceHints::prefetch_read(unsafe { &*next_src });
+                let nextsrc = unsafe { src_chunk.as_ptr().add(chunk_size) };
+                PerformanceHints::prefetch_read(unsafe { &*nextsrc });
             }
 
             dst_chunk.copy_from_slice(src_chunk);
@@ -2052,15 +2068,15 @@ pub mod cache_aware_algorithms {
     }
 
     /// Streaming copy for large data to avoid cache pollution
-    fn streaming_copy<T: Copy>(_src: &[T], dst: &mut [T]) {
+    fn streaming_copy<T: Copy>(src: &[T], dst: &mut [T]) {
         // Use non-temporal stores for large copies to bypass cache
         // For now, fall back to regular copy as non-temporal intrinsics are unstable
-        dst.copy_from_slice(_src);
+        dst.copy_from_slice(src);
     }
 
     /// Cache-aware 2D array transpose
-    pub fn cache_aware_transpose<T: Copy>(_src: &[T], dst: &mut [T], rows: usize, cols: usize) {
-        debug_assert_eq!(_src.len(), rows * cols);
+    pub fn cache_aware_transpose<T: Copy>(src: &[T], dst: &mut [T], rows: usize, cols: usize) {
+        debug_assert_eq!(src.len(), rows * cols);
         debug_assert_eq!(dst.len(), rows * cols);
 
         let block_size = detect_optimal_block_size::<T>().min(32);
@@ -2068,18 +2084,18 @@ pub mod cache_aware_algorithms {
         // Block-wise transpose for better cache locality
         for i in (0..rows).step_by(block_size) {
             for j in (0..cols).step_by(block_size) {
-                let max_i = (0 + block_size).min(rows);
+                let max_i = (i + block_size).min(rows);
                 let max_j = (j + block_size).min(cols);
 
                 // Transpose within the block
                 for ii in i..max_i {
                     // Prefetch next row
                     if ii + 1 < max_i {
-                        PerformanceHints::prefetch_read(&_src[(ii + 1) * cols + j]);
+                        PerformanceHints::prefetch_read(&src[(ii + 1) * cols + j]);
                     }
 
                     for jj in j..max_j {
-                        dst[jj * rows + ii] = _src[ii * cols + jj];
+                        dst[jj * rows + ii] = src[ii * cols + jj];
                     }
                 }
             }
@@ -2872,7 +2888,7 @@ pub mod advanced_optimization {
                 if let Ok(mut optimizer) = self.multi_objective_optimizer.lock() {
                     let target = PerformanceTarget {
                         execution_time_ns: 1_000_000_000, // 1 second default
-                        memory_usage_bytes: 1_000_000, // 1MB default
+                        memory_usage_bytes: 1_000_000,    // 1MB default
                         throughput_ops_per_sec: 1000.0,
                         energy_consumption_j: 1.0,
                         cache_hit_rate: 0.8,
@@ -2897,7 +2913,10 @@ pub mod advanced_optimization {
         }
 
         /// Learn from execution results
-        pub fn learn_from_execution(&mut self, result: &ExecutionContext, target: &PerformanceTarget,
+        pub fn learn_from_execution(
+            &mut self,
+            result: &ExecutionContext,
+            target: &PerformanceTarget,
         ) -> Result<(), OptimizationError> {
             if !self.config.enable_adaptive_learning {
                 return Ok(());
@@ -2922,7 +2941,11 @@ pub mod advanced_optimization {
             // Update strategy classifier
             if let Ok(mut classifier) = self.strategy_classifier.write() {
                 // TODO: Determine actual strategy used from context
-                classifier.update_from_context(result, OptimizationStrategy::CacheOptimized, target)?;
+                classifier.update_from_context(
+                    result,
+                    OptimizationStrategy::CacheOptimized,
+                    target,
+                )?;
             }
 
             // Update hyperparameter tuner
@@ -2934,7 +2957,8 @@ pub mod advanced_optimization {
             if let Ok(mut history) = self.learning_history.lock() {
                 // TODO: Need to determine actual strategy used from result
                 // For now, use a default strategy
-                history.record_performance_improvement(OptimizationStrategy::CacheOptimized, target)?;
+                history
+                    .record_performance_improvement(OptimizationStrategy::CacheOptimized, target)?;
             }
 
             Ok(())
@@ -3015,7 +3039,9 @@ pub mod advanced_optimization {
             }
         }
 
-        fn generate_learning_recommendation(&self, _context: &ExecutionContext,
+        fn generate_learning_recommendation(
+            &self,
+            _context: &ExecutionContext,
         ) -> Result<LearningRecommendation, OptimizationError> {
             Ok(LearningRecommendation {
                 collect_more_data: true,
@@ -3274,8 +3300,11 @@ pub mod advanced_optimization {
             self.decision_tree.classify(features)
         }
 
-        pub fn update_from_context(&mut self, _context: &ExecutionContext,
-            strategy: OptimizationStrategy, _performance: &PerformanceTarget,
+        pub fn update_from_context(
+            &mut self,
+            _context: &ExecutionContext,
+            strategy: OptimizationStrategy,
+            _performance: &PerformanceTarget,
         ) -> Result<(), OptimizationError> {
             // Update strategy confidence
             let confidence = self.strategy_confidence.entry(strategy).or_insert(0.5);
@@ -3404,12 +3433,16 @@ pub mod advanced_optimization {
             }
         }
 
-        pub fn suggest_parameters(&self, _features: &[f64],
+        pub fn suggest_parameters(
+            &self,
+            _features: &[f64],
         ) -> Result<HashMap<String, f64>, OptimizationError> {
             Ok(self.current_params.clone())
         }
 
-        pub fn update_with_context(&mut self, _context: &ExecutionContext,
+        pub fn update_with_context(
+            &mut self,
+            _context: &ExecutionContext,
             performance: &PerformanceTarget,
         ) -> Result<(), OptimizationError> {
             let evaluation = HyperparameterEvaluation {
@@ -3429,8 +3462,11 @@ pub mod advanced_optimization {
 
             Ok(())
         }
-        
-        pub fn get_optimal_parameters(&self, _features: &[f64]) -> Result<HashMap<String, f64>, OptimizationError> {
+
+        pub fn get_optimal_parameters(
+            &self,
+            _features: &[f64],
+        ) -> Result<HashMap<String, f64>, OptimizationError> {
             // Return current parameters for now
             // In a real implementation, this would use the Gaussian process model
             // to predict optimal parameters based on the features
@@ -3462,7 +3498,9 @@ pub mod advanced_optimization {
             }
         }
 
-        pub fn optimize(&mut self, _target: &PerformanceTarget,
+        pub fn optimize(
+            &mut self,
+            _target: &PerformanceTarget,
         ) -> Result<Option<ParetoSolution>, OptimizationError> {
             // Simplified multi-objective optimization
             let solution = ParetoSolution {
@@ -3519,7 +3557,8 @@ pub mod advanced_optimization {
 
         pub fn record_performance_improvement(
             &mut self,
-            strategy: OptimizationStrategy, _performance: &PerformanceTarget,
+            strategy: OptimizationStrategy,
+            _performance: &PerformanceTarget,
         ) -> Result<(), OptimizationError> {
             let improvement = PerformanceImprovement {
                 timestamp: Instant::now(),

@@ -69,7 +69,7 @@ fn demonstrate_basic_mat_v5() -> Result<(), Box<dyn std::error::Error>> {
     let single_array = Array1::from(vec![1.0f32, 2.5f32, std::f32::consts::PI]).into_dyn();
     vars.insert("single_data".to_string(), MatType::Single(single_array));
 
-    let int32_array = Array2::from_shape_fn((2, 3), |(i, j)| (i * 3 + j) as i32).into_dyn();
+    let int32_array = Array2::fromshape_fn((2, 3), |(i, j)| (i * 3 + j) as i32).into_dyn();
     vars.insert("int32_matrix".to_string(), MatType::Int32(int32_array));
 
     // Logical array
@@ -147,7 +147,7 @@ fn demonstrate_enhanced_features() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create test data
     let mut vars = HashMap::new();
-    let large_array = Array2::from_shape_fn((100, 100), |(i, j)| (i + j) as f64).into_dyn();
+    let large_array = Array2::fromshape_fn((100, 100), |(i, j)| (i + j) as f64).into_dyn();
     vars.insert("large_matrix".to_string(), MatType::Double(large_array));
 
     let small_array = Array1::from(vec![1.0, 2.0, 3.0]).into_dyn();
@@ -206,7 +206,7 @@ fn demonstrate_cell_arrays() -> Result<(), Box<dyn std::error::Error>> {
     let cells = vec![
         MatType::Double(Array1::from(vec![1.0, 2.0, 3.0]).into_dyn()),
         MatType::Char("Cell string".to_string()),
-        MatType::Int32(Array2::from_shape_fn((2, 2), |(i, j)| (i + j) as i32).into_dyn()),
+        MatType::Int32(Array2::fromshape_fn((2, 2), |(i, j)| (i + j) as i32).into_dyn()),
         MatType::Logical(Array1::from(vec![true, false, true]).into_dyn()),
     ];
 
@@ -350,7 +350,7 @@ fn demonstrate_format_detection() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create test data
     let mut vars = HashMap::new();
-    let test_array = Array2::from_shape_fn((50, 50), |(i, j)| (i + j) as f64).into_dyn();
+    let test_array = Array2::fromshape_fn((50, 50), |(i, j)| (i + j) as f64).into_dyn();
     vars.insert("test_matrix".to_string(), MatType::Double(test_array));
 
     // Write with explicit v5 format
@@ -408,7 +408,7 @@ fn demonstrate_performance_and_errors() -> Result<(), Box<dyn std::error::Error>
 
         // Create test data
         let mut vars = HashMap::new();
-        let large_array = Array2::from_shape_fn((rows, cols), |(i, j)| (i + j) as f64).into_dyn();
+        let large_array = Array2::fromshape_fn((rows, cols), |(i, j)| (i + j) as f64).into_dyn();
         vars.insert(
             "performance_matrix".to_string(),
             MatType::Double(large_array),

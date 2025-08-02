@@ -98,8 +98,8 @@ pub fn diag(_diag: &[f64]) -> SparseResult<CsrMatrix<f64>> {
 ///
 /// * Density (fraction of non-zero elements)
 #[allow(dead_code)]
-pub fn density(_shape: (usize, usize), nnz: usize) -> f64 {
-    let (rows, cols) = _shape;
+pub fn density(shape: (usize, usize), nnz: usize) -> f64 {
+    let (rows, cols) = shape;
     if rows == 0 || cols == 0 {
         return 0.0;
     }
@@ -152,14 +152,14 @@ pub fn is_symmetric(_matrix: &CsrMatrix<f64>) -> bool {
 ///
 /// * Random sparse matrix in CSR format
 #[allow(dead_code)]
-pub fn random(_shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f64>> {
+pub fn random(shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f64>> {
     if !(0.0..=1.0).contains(&density) {
         return Err(SparseError::ValueError(format!(
             "Density must be between 0 and 1, got {density}"
         )));
     }
 
-    let (rows, cols) = _shape;
+    let (rows, cols) = shape;
     if rows == 0 || cols == 0 {
         return Err(SparseError::ValueError(
             "Matrix dimensions must be positive".to_string(),
@@ -172,7 +172,7 @@ pub fn random(_shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f6
 
     if nnz == 0 {
         // Return empty matrix
-        return CsrMatrix::new(Vec::new(), Vec::new(), Vec::new(), _shape);
+        return CsrMatrix::new(Vec::new(), Vec::new(), Vec::new(), shape);
     }
 
     // Generate random non-zero elements
@@ -201,7 +201,7 @@ pub fn random(_shape: (usize, usize), density: f64) -> SparseResult<CsrMatrix<f6
         }
     }
 
-    CsrMatrix::new(data, row_indices, col_indices, _shape)
+    CsrMatrix::new(data, row_indices, col_indices, shape)
 }
 
 /// Calculate the sparsity pattern of a matrix

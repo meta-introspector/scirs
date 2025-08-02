@@ -57,8 +57,8 @@ impl SegmentationDataset {
                 }
             }
         // Generate geometric shapes with different semantic classes
-        let num_shapes = self.rng.gen_range(3..8);
-        for _ in 0..num_shapes {
+        let numshapes = self.rng.gen_range(3..8);
+        for _ in 0..numshapes {
             let shape_type = self.rng.gen_range(0..3);
             let class_id = self.rng.gen_range(1..self.config.num_classes);
             let color = match class_id {
@@ -526,7 +526,7 @@ mod tests {
     fn test_segmentation_metrics() {
         let metrics = SegmentationMetrics::new(3);
         // Test perfect prediction
-        let predictions = Array3::<usize>::from_shape_fn((1, 4, 4), |(_, i, j)| (i + j) % 3);
+        let predictions = Array3::<usize>::fromshape_fn((1, 4, 4), |(_, i, j)| (i + j) % 3);
         let ground_truth = predictions.clone();
         let pixel_acc = metrics.pixel_accuracy(&predictions, &ground_truth);
         assert_eq!(pixel_acc, 1.0);
@@ -552,14 +552,14 @@ mod tests {
         assert_eq!(output.shape()[3], config.input_size.1);
         Ok(())
     fn test_logits_to_predictions() {
-        let logits = Array4::<f32>::from_shape_fn((1, 3, 2, 2), |(_, c__)| c as f32);
+        let logits = Array4::<f32>::fromshape_fn((1, 3, 2, 2), |(_, c__)| c as f32);
         let logits_dyn = logits.into_dyn();
         let predictions = logits_to_predictions(&logits_dyn);
         // Should predict class 2 (highest logit) for all pixels
         for &pred in predictions.iter() {
             assert_eq!(pred, 2);
     fn test_masks_to_targets() {
-        let masks = Array3::<usize>::from_shape_fn((1, 2, 2), |(_, i, j)| (i + j) % 3);
+        let masks = Array3::<usize>::fromshape_fn((1, 2, 2), |(_, i, j)| (i + j) % 3);
         let targets = masks_to_targets(&masks, 3);
         assert_eq!(targets.shape(), &[1, 3, 2, 2]);
         // Check one-hot encoding

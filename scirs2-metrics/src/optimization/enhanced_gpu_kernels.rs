@@ -588,9 +588,9 @@ pub struct WebGpuDevice {
 /// WebGPU limits
 #[derive(Debug, Clone)]
 pub struct WebGpuLimits {
-    pub max_texture_dimension_1d: u32,
-    pub max_texture_dimension_2d: u32,
-    pub max_texture_dimension_3d: u32,
+    pub maxtexture_dimension_1d: u32,
+    pub maxtexture_dimension_2d: u32,
+    pub maxtexture_dimension_3d: u32,
     pub max_bind_groups: u32,
     pub max_buffer_size: u64,
     pub max_compute_workgroup_size_x: u32,
@@ -1279,7 +1279,7 @@ fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
     /// Benchmark correlation kernel with specific parameters
     fn benchmark_correlation_kernel(
         &mut self,
-        size: usize_params: &KernelOptimizationParams,
+        size: usize, params: &KernelOptimizationParams,
     ) -> Result<f64> {
         // Generate test data
         let x: Vec<f32> = (0..size).map(|i| (i as f32) * 0.001).collect();

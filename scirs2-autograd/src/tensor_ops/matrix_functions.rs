@@ -701,11 +701,11 @@ pub fn matrix_sqrt<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
     matrix: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {
     let g = matrix.graph();
-    let matrix_shape = crate::tensor_ops::shape(matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     Tensor::builder(g)
         .append_input(matrix, false)
-        .set_shape(&matrix_shape)
+        .setshape(&matrixshape)
         .build(MatrixSqrtOp)
 }
 
@@ -715,11 +715,11 @@ pub fn matrix_log<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
     matrix: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {
     let g = matrix.graph();
-    let matrix_shape = crate::tensor_ops::shape(matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     Tensor::builder(g)
         .append_input(matrix, false)
-        .set_shape(&matrix_shape)
+        .setshape(&matrixshape)
         .build(MatrixLogOp)
 }
 
@@ -730,11 +730,11 @@ pub fn matrix_power<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
     power: f64,
 ) -> Tensor<'g, F> {
     let g = matrix.graph();
-    let matrix_shape = crate::tensor_ops::shape(matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     Tensor::builder(g)
         .append_input(matrix, false)
-        .set_shape(&matrix_shape)
+        .setshape(&matrixshape)
         .build(MatrixPowOp { power })
 }
 

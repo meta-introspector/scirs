@@ -1,4 +1,4 @@
-//! Edge-based feature extraction for images
+// Edge-based feature extraction for images
 
 use crate::error::SignalResult;
 use ndarray::Array2;

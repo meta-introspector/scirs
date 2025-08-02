@@ -90,7 +90,7 @@ fn main() -> NdimageResult<()> {
                     duration: *duration,
                     memory_allocated: 0,
                     memory_deallocated: 0,
-                    array_shape: vec![test_image.nrows(), test_image.ncols()],
+                    arrayshape: vec![test_image.nrows(), test_image.ncols()],
                     backend: Backend::Cpu,
                     thread_count: 1,
                     timestamp: std::time::Instant::now(),

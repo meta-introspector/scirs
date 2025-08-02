@@ -1,11 +1,11 @@
 use ndarray::{Array, Array1, Array2};
-// use num__complex::Complex64;
+// use num_complex::Complex64;
 use rand::{rng, Rng};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2__signal::window;
-use scirs2__signal::wvd::{
+use scirs2_signal::window;
+use scirs2_signal::wvd::{
 use std::f64::consts::PI;
     cross_wigner_ville, extract_ridges, frequency_axis, smoothed_pseudo_wigner_ville, time_axis,
     wigner_ville, WvdConfig,

@@ -211,7 +211,7 @@ fn create_border_mode_comparison(
         }
 
         // Draw label
-        draw_text(&mut grid, label, x_offset + 10, y_offset + 20);
+        drawtext(&mut grid, label, x_offset + 10, y_offset + 20);
     }
 
     // Save grid
@@ -222,7 +222,7 @@ fn create_border_mode_comparison(
 
 /// Draw simple text on an image
 #[allow(dead_code)]
-fn draw_text(_img: &mut RgbaImage, text: &str, x: u32, y: u32) {
+fn drawtext(_img: &mut RgbaImage, text: &str, x: u32, y: u32) {
     let color = image::Rgba([255, 255, 255, 255]);
     let shadow_color = image::Rgba([0, 0, 0, 192]);
 

@@ -80,7 +80,7 @@ fn main() {
     println!("Example 4: Preconditioned conjugate gradient");
 
     // Create a Jacobi preconditioner
-    let precond = jacobi_preconditioner(&spd_op).unwrap();
+    let precond = jacobi_preconditioner(&spdop).unwrap();
 
     // Solve using preconditioned conjugate gradient
     let solution3 =

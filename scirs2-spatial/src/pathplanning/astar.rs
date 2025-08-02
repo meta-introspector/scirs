@@ -303,7 +303,7 @@ impl AStarPlanner {
     }
 
     // Reconstruct the path from the goal node to the start node
-    fn reconstruct_path<N: Clone + Eq + Hash>(_goal_node: Rc<Node<N>>) -> Path<N> {
+    fn reconstruct_path<N: Clone + Eq + Hash>(_goal, node: Rc<Node<N>>) -> Path<N> {
         let mut path = Vec::new();
         let mut current = Some(_goal_node);
         let mut cost = 0.0;

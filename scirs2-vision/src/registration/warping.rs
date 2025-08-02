@@ -2109,7 +2109,7 @@ pub fn compute_depth_map(
 #[allow(dead_code)]
 fn image_to_array2(_image: &GrayImage) -> Array2<f32> {
     let (width, height) = _image.dimensions();
-    Array2::from_shape_fn((height as usize, width as usize), |(y, x)| {
+    Array2::fromshape_fn((height as usize, width as usize), |(y, x)| {
         _image.get_pixel(x as u32, y as u32)[0] as f32 / 255.0
     })
 }

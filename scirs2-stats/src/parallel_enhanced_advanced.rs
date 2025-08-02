@@ -730,7 +730,7 @@ where
     where
         D: Data<Elem = F> + Sync + Send,
     {
-        use rand::{rng, Rng, SeedableRng};
+        use rand::{Rng, SeedableRng};
         use rand_chacha::ChaCha8Rng;
 
         let num_threads = self

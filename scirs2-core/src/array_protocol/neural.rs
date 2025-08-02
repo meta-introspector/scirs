@@ -38,7 +38,11 @@ pub trait Layer: Send + Sync {
     fn parameters_mut(&mut self) -> Vec<&mut Box<dyn ArrayProtocol>>;
 
     /// Update a specific parameter by name
-    fn update_parameter(&mut self, name: &str, value: Box<dyn ArrayProtocol>) -> Result<(), OperationError>;
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError>;
 
     /// Get parameter names
     fn parameter_names(&self) -> Vec<String>;
@@ -54,7 +58,6 @@ pub trait Layer: Send + Sync {
 
     /// Get the layer's name.
     fn name(&self) -> &str;
-
 }
 
 /// Linear (dense/fully-connected) layer.
@@ -170,7 +173,11 @@ impl Layer for Linear {
         params
     }
 
-    fn update_parameter(&mut self, name: &str, value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
         match name {
             "weights" => {
                 self.weights = value;
@@ -207,8 +214,6 @@ impl Layer for Linear {
     fn name(&self) -> &str {
         &self.name
     }
-
-    
 }
 
 /// Convolutional layer.
@@ -258,7 +263,7 @@ impl Conv2D {
 
     /// Create a new convolutional layer with randomly initialized weights.
     #[allow(clippy::too_many_arguments)]
-    pub fn with_shape(
+    pub fn withshape(
         name: &str,
         filter_height: usize,
         filter_width: usize,
@@ -344,7 +349,11 @@ impl Layer for Conv2D {
         params
     }
 
-    fn update_parameter(&mut self, name: &str, value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
         match name {
             "filters" => {
                 self.filters = value;
@@ -381,8 +390,6 @@ impl Layer for Conv2D {
     fn name(&self) -> &str {
         &self.name
     }
-
-    
 }
 
 /// Builder for creating Conv2D layers
@@ -454,7 +461,7 @@ impl Conv2DBuilder {
 
     /// Build the Conv2D layer
     pub fn build(self) -> Conv2D {
-        Conv2D::with_shape(
+        Conv2D::withshape(
             &self.name,
             self.filter_height,
             self.filter_width,
@@ -469,6 +476,7 @@ impl Conv2DBuilder {
 }
 
 /// Max pooling layer.
+#[allow(dead_code)]
 pub struct MaxPool2D {
     /// The layer's name.
     name: String,
@@ -531,7 +539,11 @@ impl Layer for MaxPool2D {
         Vec::new()
     }
 
-    fn update_parameter(&mut self, name: &str, _value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        _value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
         Err(OperationError::Other(format!(
             "MaxPool2D has no parameter: {name}"
         )))
@@ -557,8 +569,6 @@ impl Layer for MaxPool2D {
     fn name(&self) -> &str {
         &self.name
     }
-
-    
 }
 
 /// Batch normalization layer.
@@ -607,7 +617,7 @@ impl BatchNorm {
     }
 
     /// Create a new batch normalization layer with initialized parameters.
-    pub fn with_shape(
+    pub fn withshape(
         name: &str,
         num_features: usize,
         epsilon: Option<f64>,
@@ -658,7 +668,11 @@ impl Layer for BatchNorm {
         vec![&mut self.scale, &mut self.offset]
     }
 
-    fn update_parameter(&mut self, name: &str, value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
         match name {
             "scale" => {
                 self.scale = value;
@@ -691,8 +705,6 @@ impl Layer for BatchNorm {
     fn name(&self) -> &str {
         &self.name
     }
-
-    
 }
 
 /// Dropout layer.
@@ -744,7 +756,11 @@ impl Layer for Dropout {
         Vec::new()
     }
 
-    fn update_parameter(&mut self, name: &str, _value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        _value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
         Err(OperationError::Other(format!(
             "Dropout has no parameter: {name}"
         )))
@@ -770,8 +786,6 @@ impl Layer for Dropout {
     fn name(&self) -> &str {
         &self.name
     }
-
-    
 }
 
 /// Multi-head attention layer.
@@ -913,7 +927,11 @@ impl Layer for MultiHeadAttention {
         vec![&mut self.wq, &mut self.wk, &mut self.wv, &mut self.wo]
     }
 
-    fn update_parameter(&mut self, name: &str, value: Box<dyn ArrayProtocol>) -> Result<(), OperationError> {
+    fn update_parameter(
+        &mut self,
+        name: &str,
+        value: Box<dyn ArrayProtocol>,
+    ) -> Result<(), OperationError> {
         match name {
             "wq" => {
                 self.wq = value;
@@ -959,8 +977,6 @@ impl Layer for MultiHeadAttention {
     fn name(&self) -> &str {
         &self.name
     }
-
-    
 }
 
 /// Sequential model that chains layers together.
@@ -1167,13 +1183,13 @@ impl Sequential {
 
 /// Example function to create a simple CNN model.
 #[allow(dead_code)]
-pub fn create_simple_cnn(input_shape: (usize, usize, usize), num_classes: usize) -> Sequential {
-    let (height, width, channels) = input_shape;
+pub fn create_simple_cnn(inputshape: (usize, usize, usize), num_classes: usize) -> Sequential {
+    let (height, width, channels) = inputshape;
 
     let mut model = Sequential::new("SimpleCNN", Vec::new());
 
     // First convolutional block
-    model.add_layer(Box::new(Conv2D::with_shape(
+    model.add_layer(Box::new(Conv2D::withshape(
         "conv1",
         3,
         3, // Filter size
@@ -1193,7 +1209,7 @@ pub fn create_simple_cnn(input_shape: (usize, usize, usize), num_classes: usize)
     )));
 
     // Second convolutional block
-    model.add_layer(Box::new(Conv2D::with_shape(
+    model.add_layer(Box::new(Conv2D::withshape(
         "conv2",
         3,
         3, // Filter size

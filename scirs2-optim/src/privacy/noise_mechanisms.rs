@@ -843,7 +843,7 @@ where
 
 /// Validate differential privacy parameters
 #[allow(dead_code)]
-pub fn validate_privacy_parameters<T: Float>(_epsilon: T, delta: Option<T>) -> Result<()> {
+pub fn validate_privacy_parameters<T: Float>(epsilon: T, delta: Option<T>) -> Result<()> {
     if _epsilon <= T::zero() {
         return Err(OptimError::InvalidConfig(
             "Epsilon must be positive".to_string(),

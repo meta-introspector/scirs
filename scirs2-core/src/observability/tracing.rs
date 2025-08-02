@@ -1733,7 +1733,7 @@ pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
     };
 
     let tracing = TracingSystem::new(config)?;
-    let adaptive_sampler = AdaptiveSampler::new(0.1, 1000.0); // 10% base rate, target 1000 samples/sec
+    let _adaptive_sampler = AdaptiveSampler::new(0.1, 1000.0); // 10% base rate, target 1000 samples/sec
     let batch_exporter = BatchExporter::new(
         Box::new(ConsoleExporter::new(true)),
         50,                     // batch size
@@ -1752,7 +1752,7 @@ pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
         let alloc_span = tracing.start_span("memory_allocation")?;
         alloc_span.add_attribute("allocation_size", "8MB")?;
 
-        let memory_result = alloc_span.in_span(|| {
+        let _memory_result = alloc_span.in_span(|| {
             // Simulate memory allocation
             std::thread::sleep(Duration::from_millis(10));
             "allocated"
@@ -1762,7 +1762,7 @@ pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
         let compute_span = tracing.start_span("matrix_compute")?;
         compute_span.add_metric("flops", 2_000_000_000.0)?; // 2 billion operations
 
-        let compute_result = compute_span.in_span(|| {
+        let _compute_result = compute_span.in_span(|| {
             // Simulate computation
             std::thread::sleep(Duration::from_millis(100));
             "computed"

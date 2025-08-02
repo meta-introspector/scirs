@@ -303,7 +303,7 @@ impl VersionNegotiator {
         &self,
         selected_version: &Version,
         client_capabilities: &ClientCapabilities,
-        metadata: &mut NegotiationMetadata,
+        _metadata: &mut NegotiationMetadata,
     ) -> Result<(BTreeSet<String>, BTreeSet<String>, NegotiationStatus), CoreError> {
         let available_features = self.feature_matrix.get_supported_features(selected_version);
         let unsupported_features: BTreeSet<String> = client_capabilities

@@ -1,14 +1,15 @@
-//! Advanced Enhanced SIMD Operations for Signal Processing
-//!
-//! This module provides the most impactful SIMD optimizations that were missing
-//! from the existing implementation, focusing on FFT, STFT, wavelets, and
-//! advanced signal processing operations that provide maximum performance benefit.
+use ndarray::s;
+// Advanced Enhanced SIMD Operations for Signal Processing
+//
+// This module provides the most impactful SIMD optimizations that were missing
+// from the existing implementation, focusing on FFT, STFT, wavelets, and
+// advanced signal processing operations that provide maximum performance benefit.
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::simd__advanced::SimdConfig;
-use ndarray::{Array1, Array2, Axis, s};
-use num__complex::Complex64;
+use crate::simd_advanced::SimdConfig;
+use ndarray::{ Array1, Array2, Axis};
+use num_complex::Complex64;
 use num_traits::{Float, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
@@ -254,7 +255,7 @@ pub fn advanced_simd_fft(
 
     // Calculate performance metrics
     let reference_time = estimate_scalar_fft_time(n);
-    let simd_acceleration = reference_time as f64 / computation_time  as f64;
+    let simd_acceleration = reference_time as f64 / computation_time as f64;
 
     let performance_metrics = FftPerformanceMetrics {
         computation_time_ns: computation_time,
@@ -370,12 +371,12 @@ pub fn advanced_simd_stft(
     }
 
     // Create time and frequency axes
-    let time_axis = Array1::from_shape_fn(num_frames, |i| i as f64 * hop_size as f64);
+    let time_axis = Array1::fromshape_fn(num_frames, |i| i as f64 * hop_size as f64);
     let frequency_axis =
-        Array1::from_shape_fn(num_freqs, |i| i as f64 * 0.5 / (num_freqs - 1) as f64);
+        Array1::fromshape_fn(num_freqs, |i| i as f64 * 0.5 / (num_freqs - 1) as f64);
 
     let total_time = start_time.elapsed().as_nanos() as u64;
-    let per_frame_time = total_time as f64 / num_frames  as f64;
+    let per_frame_time = total_time as f64 / num_frames as f64;
 
     let performance_metrics = StftPerformanceMetrics {
         total_time_ns: total_time,
@@ -577,7 +578,7 @@ fn simd_dft_direct(
         for j in (0..n).step_by(4) {
             let end = (j + 4).min(n);
             for l in j..end {
-                let angle = -2.0 * PI * (k * l) as f64 / n  as f64;
+                let angle = -2.0 * PI * (k * l) as f64 / n as f64;
                 let twiddle = Complex64::new(angle.cos(), angle.sin());
                 sum += input[l] * twiddle;
             }
@@ -714,7 +715,10 @@ fn process_stft_frames_sequential(
 /// SIMD-optimized DWT using lifting scheme
 #[allow(dead_code)]
 fn simd_dwt_lifting(
-    signal: &Array1<f64>, _h0: &Array1<f64>, _h1: &Array1<f64>, _caps: &PlatformCapabilities,
+    signal: &Array1<f64>,
+    _h0: &Array1<f64>,
+    _h1: &Array1<f64>,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     let n = signal.len();
     let half_n = n / 2;
@@ -753,7 +757,10 @@ fn simd_dwt_lifting(
 fn simd_dwt_convolution(
     signal: &Array1<f64>,
     h0: &Array1<f64>,
-    h1: &Array1<f64>, _g0: &Array1<f64>, _g1: &Array1<f64>, _caps: &PlatformCapabilities,
+    h1: &Array1<f64>,
+    _g0: &Array1<f64>,
+    _g1: &Array1<f64>,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     // Low-pass filtering and downsampling
     let low_pass = simd_convolve_same(signal, h0)?;
@@ -771,7 +778,8 @@ fn simd_dwt_convolution(
 fn simd_resample_polyphase(
     signal: &Array1<f64>,
     ratio: f64,
-    output_len: usize, _caps: &PlatformCapabilities,
+    output_len: usize,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<Array1<f64>> {
     // Polyphase filter implementation with SIMD
     let mut output = Array1::<f64>::zeros(output_len);
@@ -807,7 +815,8 @@ fn simd_resample_polyphase(
 fn simd_resample_interpolation(
     signal: &Array1<f64>,
     ratio: f64,
-    output_len: usize, _caps: &PlatformCapabilities,
+    output_len: usize,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<Array1<f64>> {
     let mut output = Array1::<f64>::zeros(output_len);
 
@@ -944,7 +953,9 @@ fn bit_reverse_simd(_data: &mut Array1<Complex64>) -> SignalResult<()> {
 
 #[allow(dead_code)]
 fn perform_radix4_butterfly_avx2(
-    _data: &mut Array1<Complex64>, _start: usize, _step: usize,
+    _data: &mut Array1<Complex64>,
+    _start: usize,
+    _step: usize,
 ) -> SignalResult<()> {
     // Simplified radix-4 butterfly - would use actual AVX2 intrinsics
     Ok(())
@@ -952,7 +963,7 @@ fn perform_radix4_butterfly_avx2(
 
 #[allow(dead_code)]
 fn twiddle_factor(k: usize, n: usize) -> Complex64 {
-    let angle = -2.0 * PI * k as f64 / n  as f64;
+    let angle = -2.0 * PI * k as f64 / n as f64;
     Complex64::new(angle.cos(), angle.sin())
 }
 
@@ -1025,7 +1036,8 @@ fn prime_factorization(mut n: usize) -> Vec<usize> {
 
 #[allow(dead_code)]
 fn bluestein_fft(
-    input: &Array1<Complex64>, _padded_size: usize,
+    input: &Array1<Complex64>,
+    _padded_size: usize,
 ) -> SignalResult<Array1<Complex64>> {
     // Simplified Bluestein algorithm - would implement full algorithm
     Ok(input.clone())
@@ -1035,10 +1047,14 @@ fn bluestein_fft(
 fn pack_real_to_complex(_input: &Array1<f64>) -> Array1<Complex64> {
     let n = _input.len();
     let complex_len = n / 2;
-    Array1::from_shape_fn(complex_len, |i| {
+    Array1::fromshape_fn(complex_len, |i| {
         Complex64::new(
             _input[2 * i],
-            if 2 * i + 1 < n { _input[2 * i + 1] } else { 0.0 },
+            if 2 * i + 1 < n {
+                _input[2 * i + 1]
+            } else {
+                0.0
+            },
         )
     })
 }

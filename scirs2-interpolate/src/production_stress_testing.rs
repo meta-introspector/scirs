@@ -796,7 +796,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                                         "Severe performance degradation in {} method",
                                         method_name
                                     ),
-                                    trigger_conditions: format!("Data _size: {}", data_size),
+                                    trigger_conditions: format!("Data , size: {}", data_size),
                                     production_impact: ProductionImpact::SeverePerformance,
                                     mitigation: Some(
                                         "Consider algorithm optimization or data _size limits"
@@ -812,7 +812,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                         issues.push(StressTestIssue {
                             severity: IssueSeverity::Critical,
                             description: format!("{} method exceeded timeout", method_name),
-                            trigger_conditions: format!("Data _size: {}", data_size),
+                            trigger_conditions: format!("Data , size: {}", data_size),
                             production_impact: ProductionImpact::Blocking,
                             mitigation: Some("Add timeout handling in production".to_string()),
                         });
@@ -832,7 +832,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                     issues.push(StressTestIssue {
                         severity: IssueSeverity::Critical,
                         description: format!("{} method panicked", method_name),
-                        trigger_conditions: format!("Data _size: {}", data_size),
+                        trigger_conditions: format!("Data , size: {}", data_size),
                         production_impact: ProductionImpact::Blocking,
                         mitigation: Some("Add panic handling in production".to_string()),
                     });
@@ -1056,7 +1056,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
             issues: vec![StressTestIssue {
                 severity: IssueSeverity::High,
                 description: "Test failed due to error".to_string(),
-                trigger_conditions: format!("Data _size: {}", data_size),
+                trigger_conditions: format!("Data , size: {}", data_size),
                 production_impact: ProductionImpact::Reliability,
                 mitigation: Some("Add error handling for this scenario".to_string()),
             }],
@@ -1106,7 +1106,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
             issues: vec![StressTestIssue {
                 severity: IssueSeverity::Critical,
                 description: "Test caused panic - critical production risk".to_string(),
-                trigger_conditions: format!("Data _size: {}", data_size),
+                trigger_conditions: format!("Data , size: {}", data_size),
                 production_impact: ProductionImpact::Blocking,
                 mitigation: Some("Add panic handling and input validation".to_string()),
             }],

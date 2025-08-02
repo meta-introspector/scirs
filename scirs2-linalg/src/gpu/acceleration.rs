@@ -754,7 +754,7 @@ pub trait CompressionAlgorithm<T>: Send + Sync {
 pub struct CompressedData {
     algorithm: String,
     compressed_bytes: Vec<u8>,
-    original_shape: (usize, usize),
+    originalshape: (usize, usize),
     compression_ratio: f64,
     compression_time: f64,
 }
@@ -845,14 +845,14 @@ where
     pub fn out_of_core_matmul(
         &mut self,
         context: &dyn super::GpuContext,
-        a_shape: (usize, usize),
-        b_shape: (usize, usize),
+        ashape: (usize, usize),
+        bshape: (usize, usize),
         load_a: impl Fn(usize, usize, usize, usize) -> LinalgResult<Array2<T>>,
         load_b: impl Fn(usize, usize, usize, usize) -> LinalgResult<Array2<T>>,
         store_c: impl Fn(usize, usize, &Array2<T>) -> LinalgResult<()>,
     ) -> LinalgResult<()> {
-        let (m, k) = a_shape;
-        let (k2, n) = b_shape;
+        let (m, k) = ashape;
+        let (k2, n) = bshape;
 
         if k != k2 {
             return Err(LinalgError::ShapeError(
@@ -1188,7 +1188,7 @@ impl<T> CompressionEngine<T> {
 /// Mock GPU buffer implementation for testing
 #[derive(Debug)]
 pub struct MockGpuBuffer<T> {
-    size: usize_phantom: std::marker::PhantomData<T>,
+    size: usize, phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> MockGpuBuffer<T> {

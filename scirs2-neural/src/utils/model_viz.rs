@@ -16,9 +16,9 @@ struct ModelNode {
     /// Layer name or description
     name: String,
     /// Input shape
-    input_shape: Option<Vec<usize>>,
+    inputshape: Option<Vec<usize>>,
     /// Output shape
-    output_shape: Option<Vec<usize>>,
+    outputshape: Option<Vec<usize>>,
     /// Number of parameters
     parameters: Option<usize>,
     /// Layer type
@@ -33,7 +33,7 @@ pub struct ModelVizOptions {
     /// Show parameter counts
     pub show_params: bool,
     /// Show layer shapes
-    pub show_shapes: bool,
+    pub showshapes: bool,
     /// Show layer properties
     pub show_properties: bool,
     /// Color options
@@ -45,7 +45,7 @@ impl Default for ModelVizOptions {
         Self {
             width: 80,
             show_params: true,
-            show_shapes: true,
+            showshapes: true,
             show_properties: true,
             color_options: ColorOptions::default(),
         }
@@ -56,7 +56,7 @@ impl Default for ModelVizOptions {
 ///
 /// # Arguments
 /// * `model` - The sequential model to visualize
-/// * `input_shape` - Optional input shape to propagate through the model
+/// * `inputshape` - Optional input shape to propagate through the model
 /// * `title` - Optional title for the visualization
 /// * `options` - Visualization options
 /// # Returns
@@ -66,7 +66,7 @@ pub fn sequential_model_summary<
     F: Float + Debug + ScalarOperand + num_traits::FromPrimitive + std::fmt::Display,
 >(
     model: &Sequential<F>,
-    input_shape: Option<Vec<usize>>,
+    inputshape: Option<Vec<usize>>,
     title: Option<&str>,
     options: Option<ModelVizOptions>,
 ) -> Result<String> {
@@ -75,11 +75,11 @@ pub fn sequential_model_summary<
     let colors = &options.color_options;
     let mut result = String::new();
     // Add title
-    if let Some(title_text) = title {
+    if let Some(titletext) = title {
         if colors.enabled {
-            result.push_str(&stylize(title_text, Style::Bold));
+            result.push_str(&stylize(titletext, Style::Bold));
         } else {
-            result.push_str(title_text);
+            result.push_str(titletext);
         }
         result.push_str("\n\n");
     }
@@ -93,12 +93,12 @@ pub fn sequential_model_summary<
 
     // Create nodes for each layer
     let mut nodes = Vec::new();
-    // Add input node if _shape is provided
-    if let Some(_shape) = input_shape.clone() {
+    // Add input node if shape is provided
+    if let Some(shape) = inputshape.clone() {
         nodes.push(ModelNode {
             name: "Input".to_string(),
-            input_shape: None,
-            output_shape: Some(_shape),
+            inputshape: None,
+            outputshape: Some(shape),
             parameters: Some(0),
             layer_type: "Input".to_string(),
             properties: Vec::new(),
@@ -115,17 +115,17 @@ pub fn sequential_model_summary<
         };
         // Create properties from layer info
         let mut properties = Vec::new();
-        if let Some(ref input_shape) = layer_info.input_shape {
-            properties.push(("Input Shape".to_string(), format!("{input_shape:?}")));
+        if let Some(ref inputshape) = layer_info.inputshape {
+            properties.push(("Input Shape".to_string(), format!("{inputshape:?}")));
         }
-        if let Some(ref output_shape) = layer_info.output_shape {
-            properties.push(("Output Shape".to_string(), format!("{output_shape:?}")));
+        if let Some(ref outputshape) = layer_info.outputshape {
+            properties.push(("Output Shape".to_string(), format!("{outputshape:?}")));
         }
 
         let node = ModelNode {
             name: layer_name,
-            input_shape: layer_info.input_shape.clone(),
-            output_shape: layer_info.output_shape.clone(),
+            inputshape: layer_info.inputshape.clone(),
+            outputshape: layer_info.outputshape.clone(),
             parameters: Some(layer_info.parameter_count),
             layer_type: layer_info.layer_type.clone(),
             properties,
@@ -133,34 +133,34 @@ pub fn sequential_model_summary<
         nodes.push(node);
     }
 
-    // Try to propagate shapes if input _shape is provided
-    if let Some(input_shape) = input_shape {
+    // Try to propagate shapes if input shape is provided
+    if let Some(inputshape) = inputshape {
         // For now, simplified approach since we can't easily run the forward pass here
         // In a full implementation, this would use actual layer logic
-        let mut current_shape = input_shape;
+        let mut currentshape = inputshape;
         for (i, node) in nodes.iter_mut().enumerate() {
             if i > 0 {
                 // Skip input node
-                node.input_shape = Some(current_shape.clone());
-                // Very simplified _shape propagation (would need more detailed layer info)
+                node.inputshape = Some(currentshape.clone());
+                // Very simplified shape propagation (would need more detailed layer info)
                 if node.layer_type == "Dense" {
                     if let Some(output_size) = extract_output_size(node) {
-                        // For Dense layers, output _shape is (batch_size, output_size)
-                        if !current_shape.is_empty() {
-                            let mut output_shape = current_shape.clone();
-                            if output_shape.len() > 1 {
-                                let last_idx = output_shape.len() - 1;
-                                output_shape[last_idx] = output_size;
+                        // For Dense layers, output shape is (batch_size, output_size)
+                        if !currentshape.is_empty() {
+                            let mut outputshape = currentshape.clone();
+                            if outputshape.len() > 1 {
+                                let last_idx = outputshape.len() - 1;
+                                outputshape[last_idx] = output_size;
                             } else {
-                                output_shape = vec![output_size];
+                                outputshape = vec![output_size];
                             }
-                            current_shape = output_shape.clone();
-                            node.output_shape = Some(output_shape);
+                            currentshape = outputshape.clone();
+                            node.outputshape = Some(outputshape);
                         }
                     }
                 } else {
-                    // For other layer types, assume _shape is preserved
-                    node.output_shape = Some(current_shape.clone());
+                    // For other layer types, assume shape is preserved
+                    node.outputshape = Some(currentshape.clone());
                 }
             }
         }
@@ -181,12 +181,12 @@ pub fn sequential_model_summary<
         .max()
         .unwrap_or(8)
         .max(8);
-    let shape_width = if options.show_shapes {
+    let shape_width = if options.showshapes {
         nodes
             .iter()
             .map(|node| {
-                let input_str = node.input_shape.as_ref().map(|s| format!("{s:?}"));
-                let output_str = node.output_shape.as_ref().map(|s| format!("{s:?}"));
+                let input_str = node.inputshape.as_ref().map(|s| format!("{s:?}"));
+                let output_str = node.outputshape.as_ref().map(|s| format!("{s:?}"));
                 let input_len = input_str.as_ref().map(|s| s.len()).unwrap_or(0);
                 let output_len = output_str.as_ref().map(|s| s.len()).unwrap_or(0);
                 input_len.max(output_len)
@@ -219,7 +219,7 @@ pub fn sequential_model_summary<
         width = name_width,
         type_width = type_width
     );
-    if options.show_shapes {
+    if options.showshapes {
         header.push_str(&format!(
             " | {:<shape_width$}",
             if options.color_options.enabled {
@@ -248,7 +248,7 @@ pub fn sequential_model_summary<
     // Add separator
     let total_width = name_width
         + type_width
-        + (if options.show_shapes {
+        + (if options.showshapes {
             shape_width + 3
         } else {
             0
@@ -283,10 +283,10 @@ pub fn sequential_model_summary<
             type_width = type_width
         ));
 
-        // Output _shape
-        if options.show_shapes {
-            let shape_str = if let Some(_shape) = &node.output_shape {
-                format!("{_shape:?}")
+        // Output shape
+        if options.showshapes {
+            let shape_str = if let Some(shape) = &node.outputshape {
+                format!("{shape:?}")
             } else {
                 "?".to_string()
             };
@@ -371,7 +371,7 @@ pub fn sequential_model_dataflow<
     F: Float + Debug + ScalarOperand + num_traits::FromPrimitive + std::fmt::Display,
 >(
     model: &Sequential<F>,
-    input_shape: Vec<usize>,
+    inputshape: Vec<usize>,
     options: Option<ModelVizOptions>,
 ) -> Result<String> {
     let options = options.unwrap_or_default();
@@ -382,14 +382,14 @@ pub fn sequential_model_dataflow<
     // Add input node
     nodes.push(ModelNode {
         name: "Input".to_string(),
-        input_shape: None,
-        output_shape: Some(input_shape.clone()),
+        inputshape: None,
+        outputshape: Some(inputshape.clone()),
         parameters: Some(0),
         layer_type: "Input".to_string(),
         properties: Vec::new(),
     });
-    // Add layer nodes with simplified _shape propagation
-    let mut current_shape = input_shape.clone();
+    // Add layer nodes with simplified shape propagation
+    let mut currentshape = inputshape.clone();
 
     for (i, layer_info) in layer_infos.iter().enumerate() {
         let layer_name = if layer_info.name.starts_with("Layer_") {
@@ -406,44 +406,44 @@ pub fn sequential_model_dataflow<
                 layer_info.parameter_count.to_string(),
             ));
         }
-        let input_shape = current_shape.clone();
-        // Very simplified _shape inference
-        let output_shape = match layer_type.as_str() {
+        let inputshape = currentshape.clone();
+        // Very simplified shape inference
+        let outputshape = match layer_type.as_str() {
             "Dense" => {
                 if let Some(output_size) = properties
                     .iter()
                     .find(|(key, _)| key == "output_dim")
                     .map(|(_, value)| value.parse::<usize>().unwrap_or(0))
                 {
-                    if !current_shape.is_empty() {
-                        let mut new_shape = current_shape.clone();
-                        let last_idx = new_shape.len() - 1;
-                        new_shape[last_idx] = output_size;
-                        new_shape
+                    if !currentshape.is_empty() {
+                        let mut newshape = currentshape.clone();
+                        let last_idx = newshape.len() - 1;
+                        newshape[last_idx] = output_size;
+                        newshape
                     } else {
                         vec![output_size]
                     }
                 } else {
-                    current_shape.clone()
+                    currentshape.clone()
                 }
             }
             "Conv2D" => {
-                if current_shape.len() >= 3 {
+                if currentshape.len() >= 3 {
                     // Very simplified...in reality we'd need filter count, strides, etc.
-                    current_shape.clone()
+                    currentshape.clone()
                 } else {
-                    current_shape.clone()
+                    currentshape.clone()
                 }
             }
-            _ => current_shape.clone(),
+            _ => currentshape.clone(),
         };
 
-        current_shape = output_shape.clone();
+        currentshape = outputshape.clone();
 
         let node = ModelNode {
             name: layer_name,
-            input_shape: Some(input_shape),
-            output_shape: Some(output_shape),
+            inputshape: Some(inputshape),
+            outputshape: Some(outputshape),
             parameters: Some(0), // Simplified for now
             layer_type,
             properties,
@@ -499,16 +499,16 @@ pub fn sequential_model_dataflow<
         result.push('│');
         result.push('\n');
 
-        // Draw _shape info
-        if let Some(_shape) = &node.output_shape {
-            let shape_str = format!("{_shape:?}");
-            let padded_shape = format!("{shape_str:^width$}", width = box_width - 2);
+        // Draw shape info
+        if let Some(shape) = &node.outputshape {
+            let shape_str = format!("{shape:?}");
+            let paddedshape = format!("{shape_str:^width$}", width = box_width - 2);
             result.push_str(&" ".repeat((width - box_width) / 2));
             result.push('│');
             if options.color_options.enabled {
-                result.push_str(&stylize(&padded_shape, Style::Dim));
+                result.push_str(&stylize(&paddedshape, Style::Dim));
             } else {
-                result.push_str(&padded_shape);
+                result.push_str(&paddedshape);
             }
             result.push('│');
             result.push('\n');

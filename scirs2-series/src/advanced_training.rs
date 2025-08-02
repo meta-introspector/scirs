@@ -932,16 +932,16 @@ mod tests {
 
         // Create sample tasks
         let task1 = TaskData {
-            support_x: Array2::from_shape_vec((5, 4), (0..20).map(|i| i as f64 * 0.1).collect())
+            support_x: Array2::fromshape_vec((5, 4), (0..20).map(|i| i as f64 * 0.1).collect())
                 .unwrap(),
-            support_y: Array2::from_shape_vec((5, 2), (0..10).map(|i| i as f64 * 0.2).collect())
+            support_y: Array2::fromshape_vec((5, 2), (0..10).map(|i| i as f64 * 0.2).collect())
                 .unwrap(),
-            query_x: Array2::from_shape_vec(
+            query_x: Array2::fromshape_vec(
                 (3, 4),
                 (0..12).map(|i| i as f64 * 0.1 + 0.5).collect(),
             )
             .unwrap(),
-            query_y: Array2::from_shape_vec((3, 2), (0..6).map(|i| i as f64 * 0.2 + 0.3).collect())
+            query_y: Array2::fromshape_vec((3, 2), (0..6).map(|i| i as f64 * 0.2 + 0.3).collect())
                 .unwrap(),
         };
 
@@ -978,7 +978,7 @@ mod tests {
         let vae = TimeSeriesVAE::<f64>::new(10, 3, 5, 16, 16);
 
         let input =
-            Array2::from_shape_vec((10, 3), (0..30).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::fromshape_vec((10, 3), (0..30).map(|i| i as f64 * 0.1).collect()).unwrap();
 
         // Test encoding
         let (mean, logvar) = vae.encode(&input).unwrap();
@@ -1819,7 +1819,7 @@ mod advanced_tests {
         let transformer = TimeSeriesTransformer::<f64>::new(10, 5, 64, 8, 4, 256);
 
         let input =
-            Array2::from_shape_vec((2, 10), (0..20).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::fromshape_vec((2, 10), (0..20).map(|i| i as f64 * 0.1).collect()).unwrap();
 
         let output = transformer.forward(&input).unwrap();
         assert_eq!(output.dim(), (2, 5)); // batch_size x pred_len
@@ -2871,10 +2871,10 @@ mod advanced_meta_learning_tests {
         let proto_net = PrototypicalNetworks::<f64>::new(10, 5, vec![8]);
 
         let support_x =
-            Array2::from_shape_vec((4, 10), (0..40).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::fromshape_vec((4, 10), (0..40).map(|i| i as f64 * 0.1).collect()).unwrap();
         let support_y = Array1::from_vec(vec![0, 0, 1, 1]);
         let query_x =
-            Array2::from_shape_vec((2, 10), (40..60).map(|i| i as f64 * 0.1).collect()).unwrap();
+            Array2::fromshape_vec((2, 10), (40..60).map(|i| i as f64 * 0.1).collect()).unwrap();
 
         let predictions = proto_net
             .few_shot_episode(&support_x, &support_y, &query_x)
@@ -2887,13 +2887,13 @@ mod advanced_meta_learning_tests {
         let mut reptile = REPTILE::<f64>::new(5, 8, 3, 0.01, 0.1, 5);
 
         let task = TaskData {
-            support_x: Array2::from_shape_vec((3, 5), (0..15).map(|i| i as f64 * 0.1).collect())
+            support_x: Array2::fromshape_vec((3, 5), (0..15).map(|i| i as f64 * 0.1).collect())
                 .unwrap(),
-            support_y: Array2::from_shape_vec((3, 3), (0..9).map(|i| i as f64 * 0.1).collect())
+            support_y: Array2::fromshape_vec((3, 3), (0..9).map(|i| i as f64 * 0.1).collect())
                 .unwrap(),
-            query_x: Array2::from_shape_vec((2, 5), (15..25).map(|i| i as f64 * 0.1).collect())
+            query_x: Array2::fromshape_vec((2, 5), (15..25).map(|i| i as f64 * 0.1).collect())
                 .unwrap(),
-            query_y: Array2::from_shape_vec((2, 3), (9..15).map(|i| i as f64 * 0.1).collect())
+            query_y: Array2::fromshape_vec((2, 3), (9..15).map(|i| i as f64 * 0.1).collect())
                 .unwrap(),
         };
 
@@ -2935,9 +2935,9 @@ mod advanced_meta_learning_tests {
     #[test]
     fn test_few_shot_episode_structure() {
         let episode = FewShotEpisode {
-            support_x: Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+            support_x: Array2::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
             support_y: Array1::from_vec(vec![0, 1]),
-            query_x: Array2::from_shape_vec((1, 3), vec![7.0, 8.0, 9.0]).unwrap(),
+            query_x: Array2::fromshape_vec((1, 3), vec![7.0, 8.0, 9.0]).unwrap(),
             query_y: Array1::from_vec(vec![1]),
         };
 

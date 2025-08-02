@@ -387,7 +387,7 @@ impl CacheAwareAlgorithms {
     }
 
     /// Memory-efficient reduction with minimal cache misses
-    pub fn reduction_blocked<F: IntegrateFloat>(_data: ArrayView1<F>, block_size: usize) -> F {
+    pub fn reduction_blocked<F: IntegrateFloat>(data: ArrayView1<F>, block_size: usize) -> F {
         let n = _data.len();
         let mut partial_sums = Vec::new();
 
@@ -447,7 +447,7 @@ impl DataLayoutOptimizer {
     }
 
     /// Reorder data for better spatial locality
-    pub fn spatial_reorder<F: IntegrateFloat>(_data: &mut [(F, F)], // Input: (value, key) pairs
+    pub fn spatial_reorder<F: IntegrateFloat>(data: &mut [(F, F)], // Input: (value, key) pairs
     ) {
         // Sort by key to improve spatial locality
         _data.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));

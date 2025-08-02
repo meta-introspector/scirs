@@ -80,7 +80,7 @@ fn generate_sample_data() -> Array2<f64> {
         data.push(4.0 + noise_y);
     }
 
-    Array2::from_shape_vec((150, 2), data).unwrap()
+    Array2::fromshape_vec((150, 2), data).unwrap()
 }
 
 #[allow(dead_code)]
@@ -232,7 +232,7 @@ fn demo_simd_distances(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     );
 
     // Create some centroids for distance-to-centroids demo
-    let centroids = Array2::from_shape_vec(
+    let centroids = Array2::fromshape_vec(
         (3, 2),
         vec![
             0.0, 0.0, // Center of cluster 1

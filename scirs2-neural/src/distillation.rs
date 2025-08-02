@@ -340,12 +340,12 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 if student_feat.len() == teacher_feat.len() {
                     Ok(student_feat
                         .clone()
-                        .to_shape(teacher_feat.raw_dim())?
+                        .toshape(teacher_feat.raw_dim())?
                         .to_owned())
                 } else {
                     // Pad or truncate
-                    let target_shape = teacher_feat.raw_dim();
-                    let mut adapted = Array::zeros(target_shape);
+                    let targetshape = teacher_feat.raw_dim();
+                    let mut adapted = Array::zeros(targetshape);
                     // Copy available data
                     let min_size = student_feat.len().min(teacher_feat.len());
                     for (i, &val) in student_feat.iter().take(min_size).enumerate() {

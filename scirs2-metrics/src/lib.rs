@@ -66,7 +66,7 @@
 //! use scirs2__metrics::clustering::silhouette_score;
 //!
 //! // Create a small dataset with 2 clusters
-//! let X = Array2::from_shape_vec((6, 2), vec![
+//! let X = Array2::fromshape_vec((6, 2), vec![
 //!     1.0, 2.0,
 //!     1.5, 1.8,
 //!     1.2, 2.2,
@@ -145,14 +145,14 @@
 //! };
 //!
 //! // Multi-label data: 3 samples, 5 labels
-//! let y_true = Array2::from_shape_vec((3, 5), vec![
+//! let y_true = Array2::fromshape_vec((3, 5), vec![
 //!     1.0, 0.0, 1.0, 0.0, 0.0,  // Sample 1: labels 0 and 2 are relevant
 //!     0.0, 0.0, 1.0, 1.0, 0.0,  // Sample 2: labels 2 and 3 are relevant
 //!     0.0, 1.0, 1.0, 0.0, 1.0,  // Sample 3: labels 1, 2, and 4 are relevant
 //! ]).unwrap();
 //!
 //! // Predicted scores for each label
-//! let y_score = Array2::from_shape_vec((3, 5), vec![
+//! let y_score = Array2::fromshape_vec((3, 5), vec![
 //!     0.9, 0.2, 0.8, 0.3, 0.1,  // Scores for sample 1
 //!     0.2, 0.3, 0.9, 0.7, 0.1,  // Scores for sample 2
 //!     0.1, 0.9, 0.8, 0.2, 0.7,  // Scores for sample 3
@@ -276,7 +276,7 @@
 //!
 //! // Comprehensive bias detection
 //! // Create a dataset with multiple demographic attributes
-//! let features = Array2::from_shape_vec((8, 3), vec![
+//! let features = Array2::fromshape_vec((8, 3), vec![
 //!     // Feature columns: age, gender(0=male, 1=female), income_level(0=low, 1=medium, 2=high)
 //!     30.0, 0.0, 1.0,
 //!     25.0, 0.0, 0.0,
@@ -306,7 +306,7 @@
 //! ).unwrap();
 //!
 //! // Analyze performance for intersectional groups
-//! let protected_attrs = Array2::from_shape_vec((8, 2), vec![
+//! let protected_attrs = Array2::fromshape_vec((8, 2), vec![
 //!     // gender, income_level (simplified to binary: 0=low, 1=high)
 //!     0.0, 1.0,
 //!     0.0, 0.0,
@@ -351,7 +351,7 @@
 //! use ndarray::{Array, Ix1};
 //! use scirs2__metrics::evaluation::train_test_split;
 //!
-//! let x = Array::<f64>::linspace(0., 9., 10).into_shape(Ix1(10)).unwrap();
+//! let x = Array::<f64>::linspace(0., 9., 10).intoshape(Ix1(10)).unwrap();
 //! let y = &x * 2.;
 //!
 //! let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).unwrap();

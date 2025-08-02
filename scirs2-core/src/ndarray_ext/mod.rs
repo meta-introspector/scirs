@@ -99,7 +99,10 @@ where
 /// assert_eq!(c.shape(), &[4, 2]);
 /// ```
 #[allow(dead_code)]
-pub fn stack_2d<T>(_arrays: &[ArrayView<T, Ix2>], axis: usize) -> Result<Array<T, Ix2>, &'static str>
+pub fn stack_2d<T>(
+    _arrays: &[ArrayView<T, Ix2>],
+    axis: usize,
+) -> Result<Array<T, Ix2>, &'static str>
 where
     T: Clone + Default,
 {
@@ -108,14 +111,14 @@ where
     }
 
     // Validate that all _arrays have the same shape
-    let first_shape = _arrays[0].shape();
+    let firstshape = _arrays[0].shape();
     for array in _arrays.iter().skip(1) {
-        if array.shape() != first_shape {
+        if array.shape() != firstshape {
             return Err("All _arrays must have the same shape for stacking");
         }
     }
 
-    let (rows, cols) = (first_shape[0], first_shape[1]);
+    let (rows, cols) = (firstshape[0], firstshape[1]);
 
     // Calculate the new shape
     let (new_rows, new_cols) = match axis {
@@ -589,7 +592,7 @@ pub fn is_broadcast_compatible(shape1: &[usize], shape2: &[usize]) -> bool {
 ///
 /// The broadcasted shape as a `Vec<usize>`, or `None` if the shapes are incompatible
 #[allow(dead_code)]
-pub fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Vec<usize>> {
+pub fn broadcastshape(shape1: &[usize], shape2: &[usize]) -> Option<Vec<usize>> {
     if !is_broadcast_compatible(shape1, shape2) {
         return None;
     }

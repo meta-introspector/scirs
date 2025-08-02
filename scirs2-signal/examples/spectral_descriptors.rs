@@ -1,10 +1,10 @@
-//! Example of spectral descriptors using the utilities module
-//!
-//! This example demonstrates how to use the spectral utilities to analyze
-//! the characteristics of a signal's frequency content.
+// Example of spectral descriptors using the utilities module
+//
+// This example demonstrates how to use the spectral utilities to analyze
+// the characteristics of a signal's frequency content.
 
-use scirs2__signal::spectral::periodogram;
-use scirs2__signal::utilities::spectral::*;
+use scirs2_signal::spectral::periodogram;
+use scirs2_signal::utilities::spectral::*;
 use std::f64::consts::PI;
 use crate::utilities::spectral::spectral_flux;
 use crate::utilities::spectral::spectral_centroid;

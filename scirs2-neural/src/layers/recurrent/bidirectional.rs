@@ -93,14 +93,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         *self.input_cache.write().unwrap() = Some(input.clone());
 
         // Check input dimensions
-        let input_shape = input.shape();
-        if input_shape.len() != 3 {
+        let inputshape = input.shape();
+        if inputshape.len() != 3 {
             return Err(NeuralError::InferenceError(format!(
-                "Expected 3D input [batch_size, seq_len, input_size], got {input_shape:?}"
+                "Expected 3D input [batch_size, seq_len, input_size], got {inputshape:?}"
             )));
         }
-        let _batch_size = input_shape[0];
-        let seq_len = input_shape[1];
+        let _batch_size = inputshape[0];
+        let seq_len = inputshape[1];
 
         // Forward direction
         let forward_output = self.forward_layer.forward(input)?;
@@ -188,15 +188,15 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         let cached_input = input_ref.as_ref().unwrap();
 
         // Check gradient dimensions
-        let grad_shape = grad_output.shape();
-        if grad_shape.len() != 3 {
+        let gradshape = grad_output.shape();
+        if gradshape.len() != 3 {
             return Err(NeuralError::InferenceError(format!(
-                "Expected 3D gradient [batch_size, seq_len, hidden_size*2], got {grad_shape:?}"
+                "Expected 3D gradient [batch_size, seq_len, hidden_size*2], got {gradshape:?}"
             )));
         }
-        let _batch_size = grad_shape[0];
-        let seq_len = grad_shape[1];
-        let total_hidden = grad_shape[2];
+        let _batch_size = gradshape[0];
+        let seq_len = gradshape[1];
+        let total_hidden = gradshape[2];
 
         // If no backward layer, we need to handle gradients for both directions processed
         // by the same layer

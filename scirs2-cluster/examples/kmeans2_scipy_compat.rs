@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Testing empty cluster handling:");
 
     // Create data that might lead to empty clusters
-    let sparse_data = Array2::from_shape_vec(
+    let sparse_data = Array2::fromshape_vec(
         (6, 2),
         vec![
             0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 10.0, 10.0, 10.1, 10.1, 10.2, 10.2,
@@ -138,7 +138,7 @@ fn generate_sample_data() -> Array2<f64> {
         data.push(y);
     }
 
-    Array2::from_shape_vec((90, 2), data).unwrap()
+    Array2::fromshape_vec((90, 2), data).unwrap()
 }
 
 #[allow(dead_code)]

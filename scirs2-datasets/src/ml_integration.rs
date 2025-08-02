@@ -391,7 +391,7 @@ impl MLPipeline {
         }
     }
 
-    fn random_undersample(&self, dataset: &Dataset_random_state: Option<u64>) -> Result<Dataset> {
+    fn random_undersample(&self, dataset: &Dataset_random, state: Option<u64>) -> Result<Dataset> {
         let target = dataset.target.as_ref().ok_or_else(|| {
             DatasetsError::InvalidFormat("Target required for balancing".to_string())
         })?;

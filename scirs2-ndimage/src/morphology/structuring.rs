@@ -187,13 +187,13 @@ where
 ///
 /// * `Result<Array<bool, IxDyn>>` - Box structuring element
 #[allow(dead_code)]
-pub fn box_structure(_shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
+pub fn box_structure(shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
     // Validate inputs
-    if _shape.is_empty() {
+    if shape.is_empty() {
         return Err(NdimageError::InvalidInput("Shape cannot be empty".into()));
     }
 
-    for &s in _shape {
+    for &s in shape {
         if s == 0 {
             return Err(NdimageError::InvalidInput(
                 "Shape dimensions must be greater than 0".into(),
@@ -202,7 +202,7 @@ pub fn box_structure(_shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
     }
 
     // Create a box of ones
-    let structure = Array::<bool>::from_elem(IxDyn(_shape), true);
+    let structure = Array::<bool>::from_elem(IxDyn(shape), true);
     Ok(structure)
 }
 

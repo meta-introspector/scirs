@@ -311,10 +311,7 @@ where
 
     // Read back results and extract real part
     let output_data = output_buffer.read_to_host()?;
-    let result: Vec<f64> = output_data
-        .iter()
-        .map(|&[real_imag]| real as f64)
-        .collect();
+    let result: Vec<f64> = output_data.iter().map(|&[real_imag]| real as f64).collect();
 
     Ok(result)
 }

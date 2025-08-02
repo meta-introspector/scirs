@@ -25,9 +25,11 @@
 //!     .num_workers(4);
 //!
 //! // Process chunks in parallel
-//! let results: Vec<Array2<f64>> = reader.process_parallel(|chunk| {
-//!     // Process each chunk
-//!     Ok(chunk)
+//! let results: Vec<i32> = reader.process_parallel(|chunk| {
+//!     // Process each chunk (calculate some statistic from the bytes)
+//!     // This is a simplified example - real implementation would parse CSV data
+//!     let sum: u32 = chunk.iter().map(|&b| b as u32).sum();
+//!     Ok((sum / chunk.len() as u32) as i32) // Return average byte value
 //! })?;
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
@@ -119,7 +121,7 @@ pub struct DistributedReader {
 
 impl DistributedReader {
     /// Create a new distributed reader
-    pub fn new<P: AsRef<Path>>(_path: P) -> Self {
+    pub fn new<P: AsRef<Path>>(path: P) -> Self {
         Self {
             file_path: _path.as_ref().to_path_buf(),
             partition_strategy: PartitionStrategy::SizeBased {
@@ -395,7 +397,7 @@ impl std::fmt::Debug for MergeStrategy {
 
 impl DistributedWriter {
     /// Create a new distributed writer
-    pub fn new<P: AsRef<Path>>(_output_dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(_output, dir: P) -> Self {
         Self {
             output_dir: _output_dir.as_ref().to_path_buf(),
             num_partitions: num_cpus::get(),
@@ -558,10 +560,10 @@ pub enum Distribution {
 
 impl DistributedArray {
     /// Create a new distributed array
-    pub fn new(_shape: Vec<usize>, distribution: Distribution) -> Self {
+    pub fn new(shape: Vec<usize>, distribution: Distribution) -> Self {
         Self {
             partitions: Vec::new(),
-            shape: _shape,
+            shape: shape,
             distribution,
         }
     }
@@ -750,7 +752,7 @@ mod tests {
 
     #[test]
     fn test_distributed_array() {
-        let array = Array2::from_shape_fn((100, 50), |(i, j)| (i * 50 + j) as f64);
+        let array = Array2::fromshape_fn((100, 50), |(i, j)| (i * 50 + j) as f64);
 
         let distributed = DistributedArray::scatter(
             &array,

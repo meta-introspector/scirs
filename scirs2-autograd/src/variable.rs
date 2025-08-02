@@ -494,7 +494,7 @@ impl VariableEnvironment<f32> {
     /// Creates a new `VariableEnvironment` using the one that was previously persisted.
     ///
     /// Returns the result of the execution.
-    pub fn load<P: AsRef<Path>>(_path: P) -> Result<VariableEnvironment<f32>, Box<dyn Error>> {
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<VariableEnvironment<f32>, Box<dyn Error>> {
         let raw: DeserializedVariableEnvironment<f32> = Self::deserialize(_path)?;
         Self::load_internal(raw)
     }
@@ -517,7 +517,7 @@ impl VariableEnvironment<f64> {
     /// Creates a new `VariableEnvironment` using the one that was previously persisted.
     ///
     /// Returns the result of the execution.
-    pub fn load<P: AsRef<Path>>(_path: P) -> Result<VariableEnvironment<f64>, Box<dyn Error>> {
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<VariableEnvironment<f64>, Box<dyn Error>> {
         let raw: DeserializedVariableEnvironment<f64> = Self::deserialize(_path)?;
         Self::load_internal(raw)
     }
@@ -570,7 +570,7 @@ impl<'env, F: Float> VariableEnvironment<F> {
         Ok(())
     }
 
-    fn deserialize<T, P: AsRef<Path>>(_path: P) -> Result<T, Box<dyn Error>>
+    fn deserialize<T, P: AsRef<Path>>(path: P) -> Result<T, Box<dyn Error>>
     where
         T: for<'de> Deserialize<'de>,
     {

@@ -2075,7 +2075,7 @@ impl CpuInfo {
     fn detect() -> FFTResult<Self> {
         // Implement CPU detection logic
         Ok(Self {
-            core_count: num, _cpus: get(),
+            core_count: num_cpus::get(),
             cache_sizes: vec![32768, 262144, 8388608], // Default L1, L2, L3
             frequency_mhz: 2400,                       // Default frequency
             architecture: "x86_64".to_string(),

@@ -12,7 +12,7 @@ use std::hint::black_box;
 // Helper functions to generate test data
 #[allow(dead_code)]
 fn create_random_array2_f32(_rows: usize, cols: usize) -> Array2<f32> {
-    Array2::from_shape_fn((_rows, cols), |(i, j)| {
+    Array2::fromshape_fn((_rows, cols), |(i, j)| {
         ((i * cols + j) % 100) as f32 / 100.0
     })
 }

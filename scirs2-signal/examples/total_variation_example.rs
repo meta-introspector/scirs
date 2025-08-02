@@ -3,7 +3,7 @@ use ndarray::{Array1, Array2, Array3};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2__signal::tv::{
+use scirs2_signal::tv::{
     tv_bregman_1d, tv_bregman_2d, tv_denoise_1d, tv_denoise_2d, tv_denoise_color, tv_inpaint,
     TvConfig, TvVariant,
 };

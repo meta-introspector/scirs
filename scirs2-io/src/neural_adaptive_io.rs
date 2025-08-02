@@ -11,10 +11,10 @@ use crate::error::Result;
 use ndarray::{Array1, Array2};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use serde::{Deserialize, Serialize};
+use statrs::statistics::Statistics;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
-use statrs::statistics::Statistics;
 
 /// Advanced Adam optimizer for neural network training
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -39,10 +39,10 @@ pub struct AdamOptimizer {
 
 impl AdamOptimizer {
     /// Create a new Adam optimizer
-    pub fn new(_weight_shape: (usize, usize), bias_size: usize) -> Self {
+    pub fn new(_weightshape: (usize, usize), bias_size: usize) -> Self {
         Self {
-            m_weights: Array2::zeros(_weight_shape),
-            v_weights: Array2::zeros(_weight_shape),
+            m_weights: Array2::zeros(_weightshape),
+            v_weights: Array2::zeros(_weightshape),
             m_bias: Array1::zeros(bias_size),
             v_bias: Array1::zeros(bias_size),
             beta1: 0.9,
@@ -216,8 +216,8 @@ impl NeuralIoNetwork {
     }
 
     /// Generate random weights using Xavier initialization
-    fn random_weights(_shape: (usize, usize), scale: f32) -> Array2<f32> {
-        Array2::from_shape_fn(_shape, |_| {
+    fn random_weights(shape: (usize, usize), scale: f32) -> Array2<f32> {
+        Array2::fromshape_fn(shape, |_| {
             // Simple pseudo-random number generation
             let mut state = std::ptr::addr_of!(scale) as usize;
             state = state.wrapping_mul(1103515245).wrapping_add(12345);
@@ -253,12 +253,12 @@ impl NeuralIoNetwork {
         // Output layer weight gradients
         let _output_weight_grad = output_bias_grad
             .view()
-            .to_shape((output_bias_grad.len(), 1))
+            .toshape((output_bias_grad.len(), 1))
             .unwrap()
             .dot(
                 &hidden_output2
                     .view()
-                    .to_shape((1, hidden_output2.len()))
+                    .toshape((1, hidden_output2.len()))
                     .unwrap(),
             );
 
@@ -279,12 +279,12 @@ impl NeuralIoNetwork {
         // Input weight gradients
         let _input_weight_grad = input_bias_grad
             .view()
-            .to_shape((input_bias_grad.len(), 1))
+            .toshape((input_bias_grad.len(), 1))
             .unwrap()
             .dot(
                 &attended_input
                     .view()
-                    .to_shape((1, attended_input.len()))
+                    .toshape((1, attended_input.len()))
                     .unwrap(),
             );
 

@@ -1109,7 +1109,7 @@ impl TutorialSystem {
             "Intuitive" => LearningStyle::Intuitive,
             "Applied" => LearningStyle::Applied,
             "Historical" => LearningStyle::Historical,
-            "Experimental" => LearningStyle::Experimental_ =>, LearningStyle::Hybrid(vec![LearningStyle::Visual, LearningStyle::Analytical]),
+            "Experimental" => LearningStyle::Experimental_ => LearningStyle::Hybrid(vec![LearningStyle::Visual, LearningStyle::Analytical]),
         };
 
         println!(

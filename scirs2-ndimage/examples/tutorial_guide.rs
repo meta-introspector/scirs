@@ -44,7 +44,7 @@ fn main() -> NdimageResult<()> {
 
     // Tutorial 5: Shape Analysis
     println!("\n🔬 TUTORIAL 5: Shape Analysis with Morphology");
-    tutorial_5_shape_analysis()?;
+    tutorial_5shape_analysis()?;
 
     // Tutorial 6: Object Detection
     println!("\n🎯 TUTORIAL 6: Object Detection and Measurement");
@@ -82,7 +82,7 @@ fn tutorial_1_getting_started() -> NdimageResult<()> {
 
     // Create a simple image to demonstrate
     println!("Let's create a simple 8x8 grayscale image:");
-    let simple_image = Array2::from_shape_fn((8, 8), |(i, j)| {
+    let simple_image = Array2::fromshape_fn((8, 8), |(i, j)| {
         // Create a checkerboard pattern
         if (i + j) % 2 == 0 {
             1.0
@@ -111,7 +111,7 @@ fn tutorial_1_getting_started() -> NdimageResult<()> {
     println!("Color images have multiple channels (typically RGB).");
     println!("They are represented as 3D arrays: (height, width, channels)");
 
-    let color_image = Array3::from_shape_fn((4, 4, 3), |(i, j, c)| {
+    let color_image = Array3::fromshape_fn((4, 4, 3), |(i, j, c)| {
         match c {
             0 => {
                 if i < 2 {
@@ -174,7 +174,7 @@ fn tutorial_2_working_with_images() -> NdimageResult<()> {
 
     // Example 2: Gradient image
     println!("2. Creating a gradient image:");
-    let gradient = Array2::from_shape_fn((50, 50), |(i, j)| {
+    let gradient = Array2::fromshape_fn((50, 50), |(i, j)| {
         i as f64 / 49.0 // Vertical gradient from 0 to 1
     });
     println!("   Vertical gradient from black (top) to white (bottom)");
@@ -224,7 +224,7 @@ fn tutorial_2_working_with_images() -> NdimageResult<()> {
 
     // Key takeaways
     println!("🎯 KEY TAKEAWAYS:");
-    println!("• Use Array2::from_shape_fn() for procedural image generation");
+    println!("• Use Array2::fromshape_fn() for procedural image generation");
     println!("• Use Array2::from_elem() for solid colors");
     println!("• Basic math operations work element-wise on images");
     println!("• Always check image statistics to understand your data");
@@ -424,13 +424,13 @@ fn tutorial_4_edge_detection() -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn tutorial_5_shape_analysis() -> NdimageResult<()> {
+fn tutorial_5shape_analysis() -> NdimageResult<()> {
     println!("-------------------------------------------");
     println!("Learn morphological operations to analyze and modify object shapes.");
     println!();
 
     // Create test images with different shapes
-    let binary_image = create_binary_shapes_image(80, 80);
+    let binary_image = create_binaryshapes_image(80, 80);
 
     println!("🔬 WHAT IS MATHEMATICAL MORPHOLOGY?");
     println!("Morphology studies shapes using set theory operations.");
@@ -786,7 +786,7 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
 
     // Affine transformation
     println!("Affine transformation (combined operations):");
-    let affine_matrix = Array2::from_shape_vec(
+    let affine_matrix = Array2::fromshape_vec(
         (2, 3),
         vec![
             1.4, 0.3, 5.0, // Scale + shear + translation in X
@@ -897,7 +897,7 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
     let center_y = height as f64 / 2.0;
     let center_x = width as f64 / 2.0;
 
-    let coords = Array2::from_shape_fn((2, height * width), |(axis, idx)| {
+    let coords = Array2::fromshape_fn((2, height * width), |(axis, idx)| {
         let i = (idx / width) as f64;
         let j = (idx % width) as f64;
 
@@ -921,7 +921,7 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
         BoundaryMode::Reflect,
         None,
     )?;
-    let corrected_2d = corrected.into_shape((height, width))?;
+    let corrected_2d = corrected.intoshape((height, width))?;
 
     println!("   Applied barrel distortion correction using coordinate mapping");
     println!("   Use case: Lens distortion correction, complex warping");
@@ -1123,7 +1123,7 @@ fn create_circle_image(_height: usize, width: usize, radius: f64) -> Array2<f64>
     let center_y = _height as f64 / 2.0;
     let center_x = width as f64 / 2.0;
 
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let dy = i as f64 - center_y;
         let dx = j as f64 - center_x;
         let distance = (dx * dx + dy * dy).sqrt();
@@ -1141,7 +1141,7 @@ fn create_square_image(_height: usize, width: usize, size: usize) -> Array2<f64>
     let start_y = (_height - size) / 2;
     let start_x = (width - size) / 2;
 
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         if i >= start_y && i < start_y + size && j >= start_x && j < start_x + size {
             1.0
         } else {
@@ -1162,7 +1162,7 @@ fn compute_image_stats(_image: &Array2<f64>) -> (f64, f64, f64) {
 fn add_realistic_noise(_image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
     // Simple deterministic noise for reproducible examples
     _image
-        + &Array2::from_shape_fn(_image.dim(), |(i, j)| {
+        + &Array2::fromshape_fn(_image.dim(), |(i, j)| {
             let hash = ((i * 7 + j * 11) % 17) as f64 / 17.0;
             noise_level * (hash - 0.5) * 2.0
         })
@@ -1170,7 +1170,7 @@ fn add_realistic_noise(_image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_edge_test_image(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         // Create various edge patterns
         if i > _height / 2 && i < _height / 2 + 3 {
             1.0 // Horizontal line
@@ -1211,8 +1211,8 @@ fn roberts_cross_gradient(_image: &ArrayView2<f64>) -> NdimageResult<Array2<f64>
 }
 
 #[allow(dead_code)]
-fn create_binary_shapes_image(_height: usize, width: usize) -> Array2<u8> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+fn create_binaryshapes_image(_height: usize, width: usize) -> Array2<u8> {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         // Create several shapes
         let center1_y = _height / 4;
         let center1_x = width / 4;
@@ -1245,7 +1245,7 @@ where
 
 #[allow(dead_code)]
 fn create_multi_object_image(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         // Create multiple objects of different sizes and intensities
         let objects = [
             ((20, 20), 8.0, 0.8), // (center, radius, intensity)
@@ -1268,7 +1268,7 @@ fn create_multi_object_image(_height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_test_pattern_image(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1283,7 +1283,7 @@ fn create_test_pattern_image(_height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_complex_test_image(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1329,7 +1329,7 @@ fn create_watershed_markers(_distance_map: &Array2<f64>, threshold: f64) -> Arra
 #[allow(dead_code)]
 fn estimate_sharpness(_image: &Array2<f64>) -> f64 {
     // Simple sharpness estimate using Laplacian variance
-    let laplacian_kernel = Array2::from_shape_vec(
+    let laplacian_kernel = Array2::fromshape_vec(
         (3, 3),
         vec![0.0, -1.0, 0.0, -1.0, 4.0, -1.0, 0.0, -1.0, 0.0],
     )

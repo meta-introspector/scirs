@@ -331,7 +331,7 @@ impl MetaLearningModel {
             6 => TransformationType::VarianceThreshold,
             7 => TransformationType::QuantileTransformer,
             8 => TransformationType::BinaryEncoder,
-            9 => TransformationType::TargetEncoder_ =>, TransformationType::StandardScaler,
+            9 => TransformationType::TargetEncoder_ => TransformationType::StandardScaler,
         }
     }
 
@@ -1263,7 +1263,7 @@ impl AdvancedMetaLearningSystem {
             // Find nearest neighbor distance for random point
             let mut min_dist_u = f64::INFINITY;
             for row in x.rows() {
-                let dist = self.euclidean_distance_vec(&random_point..&row.to_vec());
+                let dist = self.euclidean_distance_vec(&random_point, &row.to_vec());
                 min_dist_u = min_dist_u.min(dist);
             }
             u_distances.push(min_dist_u);
@@ -1681,7 +1681,7 @@ impl AdvancedMetaLearningSystem {
                 let col_i = x.column(i);
                 let col_j = x.column(j);
 
-                if let Ok(corr) = self.quick_correlation(&col_i..&col_j) {
+                if let Ok(corr) = self.quick_correlation(&col_i, &col_j) {
                     if corr.abs() > threshold {
                         strong_connections += 1;
                     }

@@ -83,7 +83,7 @@ fn benchmark_and_visualize() {
 
             // CPU benchmark
             let cpu_start = Instant::now();
-            let _ = scirs2_fft::sparse, _fft::sparse_fft(
+            let _ = scirs2_fft::sparse_fft::sparse_fft(
                 &signal,
                 10, // Sparsity
                 Some(algorithm),
@@ -164,11 +164,11 @@ fn benchmark_and_visualize() {
     // Set layouts
     cpu_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("<b>CPU Execution Time</b>"))
-            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Signal Size")))
+            .title(Title::withtext("<b>CPU Execution Time</b>"))
+            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Signal Size")))
             .y_axis(
                 plotly::layout::Axis::new()
-                    .title(Title::with_text("Time (ms)"))
+                    .title(Title::withtext("Time (ms)"))
                     .type_(plotly::layout::AxisType::Log),
             ),
     );
@@ -176,20 +176,20 @@ fn benchmark_and_visualize() {
     if cuda_available {
         gpu_plot.set_layout(
             Layout::new()
-                .title(Title::with_text("<b>GPU Execution Time</b>"))
-                .x_axis(plotly::layout::Axis::new().title(Title::with_text("Signal Size")))
+                .title(Title::withtext("<b>GPU Execution Time</b>"))
+                .x_axis(plotly::layout::Axis::new().title(Title::withtext("Signal Size")))
                 .y_axis(
                     plotly::layout::Axis::new()
-                        .title(Title::with_text("Time (ms)"))
+                        .title(Title::withtext("Time (ms)"))
                         .type_(plotly::layout::AxisType::Log),
                 ),
         );
 
         speedup_plot.set_layout(
             Layout::new()
-                .title(Title::with_text("<b>GPU vs CPU Speedup</b>"))
-                .x_axis(plotly::layout::Axis::new().title(Title::with_text("Signal Size")))
-                .y_axis(plotly::layout::Axis::new().title(Title::with_text("Speedup (x)"))),
+                .title(Title::withtext("<b>GPU vs CPU Speedup</b>"))
+                .x_axis(plotly::layout::Axis::new().title(Title::withtext("Signal Size")))
+                .y_axis(plotly::layout::Axis::new().title(Title::withtext("Speedup (x)"))),
         );
     }
 
@@ -248,7 +248,7 @@ fn benchmark_accuracy() {
             }
 
             // Run sparse FFT
-            let result = scirs2_fft::sparse, _fft::sparse_fft(
+            let result = scirs2_fft::sparse_fft::sparse_fft(
                 &signal,
                 10, // Sparsity
                 Some(algorithm),
@@ -301,11 +301,11 @@ fn benchmark_accuracy() {
     // Set layout
     accuracy_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("<b>Algorithm Accuracy vs Noise Level</b>"))
-            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Noise Level (σ)")))
+            .title(Title::withtext("<b>Algorithm Accuracy vs Noise Level</b>"))
+            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Noise Level (σ)")))
             .y_axis(
                 plotly::layout::Axis::new()
-                    .title(Title::with_text("Accuracy"))
+                    .title(Title::withtext("Accuracy"))
                     .range(vec![0.0, 1.0]),
             ),
     );

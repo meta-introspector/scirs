@@ -4,7 +4,7 @@
 //! which are specialized for circular data (angles, directions, etc.).
 
 use ndarray::Array1;
-use scirs2_stats::distributions::{VonMises, WrappedCauchy};
+use scirs2_stats::distributions::circular::{VonMises, WrappedCauchy};
 use scirs2_stats::traits::CircularDistribution;
 use std::f64::consts::PI;
 

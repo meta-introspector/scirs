@@ -35,11 +35,11 @@ fn main() -> LinalgResult<()> {
         size, size
     );
 
-    let matrix = Array2::from_shape_fn((size, size), |(i, j)| ((i + j + 1) as f64 * 0.001).sin());
+    let matrix = Array2::fromshape_fn((size, size), |(i, j)| ((i + j + 1) as f64 * 0.001).sin());
 
-    let vector = Array1::from_shape_fn(size, |i| ((i + 1) as f64 * 0.001).cos());
+    let vector = Array1::fromshape_fn(size, |i| ((i + 1) as f64 * 0.001).cos());
 
-    let vector2 = Array1::from_shape_fn(size, |i| ((i + 1) as f64 * 0.001).tan());
+    let vector2 = Array1::fromshape_fn(size, |i| ((i + 1) as f64 * 0.001).tan());
 
     println!("✅ Test data created successfully");
     println!();

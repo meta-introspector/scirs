@@ -532,12 +532,12 @@ pub struct PerfUtils;
 impl PerfUtils {
     /// Estimate memory usage for an operation
     pub fn estimate_memory_usage(
-        input_shape: &[usize],
-        output_shape: &[usize],
+        inputshape: &[usize],
+        outputshape: &[usize],
         operation: &str,
     ) -> usize {
-        let input_size = input_shape.iter().product::<usize>() * std::mem::size_of::<f64>();
-        let output_size = output_shape.iter().product::<usize>() * std::mem::size_of::<f64>();
+        let input_size = inputshape.iter().product::<usize>() * std::mem::size_of::<f64>();
+        let output_size = outputshape.iter().product::<usize>() * std::mem::size_of::<f64>();
 
         let overhead = match operation {
             "pca" => input_size * 2,              // Covariance matrix + temporaries
@@ -659,7 +659,7 @@ mod tests {
     #[test]
     fn test_data_quality_score() {
         let good_data =
-            Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+            Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let quality = StatUtils::data_quality_score(&good_data.view()).unwrap();
         assert!(quality > 0.5); // Should have reasonable quality
 

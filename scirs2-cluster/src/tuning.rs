@@ -428,7 +428,7 @@ pub struct ExplorationStats {
 
 /// Main hyperparameter tuner
 pub struct AutoTuner<F: Float> {
-    config: TuningConfig_phantom: std::marker::PhantomData<F>,
+    config: TuningConfig, phantom: std::marker::PhantomData<F>,
 }
 
 impl<
@@ -1735,7 +1735,7 @@ where
                 length_scales: vec![1.0; parameter_names.len()],
                 signal_variance: 1.0,
                 noise_variance: 0.1,
-                kernel_type: KernelType::RBF { length_scale: 1.0 },
+                kernel_type: KernelType::RBF { length, scale: 1.0 },
             },
             noise_level: 0.1,
             current_best: f64::NEG_INFINITY,
@@ -1860,7 +1860,7 @@ where
     /// Optimize acquisition function to find next evaluation point
     fn optimize_acquisition_function(
         &self,
-        search_space: &SearchSpace_bayesian, _state: &BayesianState_acquisition_function: &AcquisitionFunction,
+        search_space: &SearchSpace_bayesian, _state: &BayesianState_acquisition, function: &AcquisitionFunction,
     ) -> Result<HashMap<String, f64>> {
         let mut best_acquisition = f64::NEG_INFINITY;
         let mut best_point = HashMap::new();
@@ -2229,7 +2229,7 @@ where
                             length_scales: vec![1.0; parameter_names.len()],
                             signal_variance: 1.0,
                             noise_variance: 0.1,
-                            kernel_type: KernelType::RBF { length_scale: 1.0 },
+                            kernel_type: KernelType::RBF { length, scale: 1.0 },
                         },
                         noise_level: 0.1,
                         current_best: f64::NEG_INFINITY,
@@ -2423,7 +2423,7 @@ where
 
                 // Crossover
                 let (mut child1, mut child2) = if rng.gen_range(0.0..1.0) < crossover_rate {
-                    self.crossover(&parent1..&parent2, search_space, &mut rng)?
+                    self.crossover(&parent1, &parent2, search_space, &mut rng)?
                 } else {
                     (parent1.clone(), parent2.clone())
                 };
@@ -2814,7 +2814,7 @@ where
     /// Optimize acquisition function to find next point
     fn optimize_acquisition_function(
         &self,
-        search_space: &SearchSpace_bayesian, _state: &BayesianState_acquisition_function: &AcquisitionFunction,
+        search_space: &SearchSpace_bayesian, _state: &BayesianState_acquisition, function: &AcquisitionFunction,
     ) -> Result<HashMap<String, f64>> {
         // Enhanced acquisition _function optimization
         let n_candidates = 1000;
@@ -3038,7 +3038,7 @@ where
     /// Enhanced acquisition function optimization with multiple strategies
     fn optimize_acquisition_function_enhanced(
         &self,
-        search_space: &SearchSpace_bayesian, _state: &BayesianState_acquisition_function: &AcquisitionFunction,
+        search_space: &SearchSpace_bayesian, _state: &BayesianState_acquisition, function: &AcquisitionFunction,
         iteration: usize,
     ) -> Result<HashMap<String, f64>> {
         let n_candidates = std::cmp::max(1000, 100 * search_space.parameters.len());
@@ -3474,7 +3474,7 @@ fn erf(x: f64) -> f64 {
 impl Default for TuningConfig {
     fn default() -> Self {
         Self {
-            strategy: SearchStrategy::RandomSearch { n_trials: 50 },
+            strategy: SearchStrategy::RandomSearch { n, trials: 50 },
             metric: EvaluationMetric::SilhouetteScore,
             cv_config: CrossValidationConfig {
                 n_folds: 5,
@@ -4563,7 +4563,7 @@ pub mod advanced_optimization {
         }
 
         fn select_next_point_and_fidelity(
-            &mut self, _search_space: &SearchSpace, _observations: &[(HashMap<String, f64>, f64, f64)], _config: &MultiFidelityConfig_iteration: usize,
+            &mut self, _search_space: &SearchSpace, _observations: &[(HashMap<String, f64>, f64, f64)], _config: &MultiFidelityConfig, iteration: usize,
         ) -> Result<(HashMap<String, f64>, f64)> {
             // Stub implementation
             Ok((HashMap::new(), 1.0))
@@ -4842,10 +4842,10 @@ pub mod neural_architecture_search {
             let mut rng = rand::rng();
 
             // Simple 2-layer network for hyperparameter generation
-            let w1 = Array2::from_shape_fn((input_dim, hidden_dim), |_| {
+            let w1 = Array2::fromshape_fn((input_dim, hidden_dim), |_| {
                 F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
-            let w2 = Array2::from_shape_fn((hidden_dim..self.search_space.len()), |_| {
+            let w2 = Array2::fromshape_fn((hidden_dim..self.search_space.len()), |_| {
                 F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
 
@@ -5836,7 +5836,7 @@ pub fn quick_algorithm_selection<F: Float + FromPrimitive + Send + Sync + Debug>
     data: ArrayView2<F>,
 ) -> Result<AlgorithmSelectionResult> {
     let config = TuningConfig {
-        strategy: SearchStrategy::RandomSearch { n_trials: 20 },
+        strategy: SearchStrategy::RandomSearch { n, trials: 20 },
         max_evaluations: 20,
         early_stopping: Some(EarlyStoppingConfig {
             patience: 5,

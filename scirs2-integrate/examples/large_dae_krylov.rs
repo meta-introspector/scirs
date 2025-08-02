@@ -320,13 +320,13 @@ fn create_solution_plot(
     }
 
     // Add color bar labels
-    root.draw_text(
+    root.drawtext(
         &format!("{:.3}", max_val),
         &("sans-serif", 15),
         (color_bar_x + 30, color_bar_y),
     )?;
 
-    root.draw_text(
+    root.drawtext(
         &format!("{:.3}", min_val),
         &("sans-serif", 15),
         (color_bar_x + 30, color_bar_y + color_bar_height),

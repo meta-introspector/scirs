@@ -110,7 +110,7 @@ impl ValidationConfig {
 /// use ndarray::Array2;
 /// use scirs2__cluster::input_validation::{validate_clustering_data, ValidationConfig};
 ///
-/// let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+/// let data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
 /// let config = ValidationConfig::for_kmeans();
 ///
 /// assert!(crate::validation::validate_clustering_data(data.view(), &config).is_ok());
@@ -173,7 +173,7 @@ pub fn validate_clustering_data<F: Float + FromPrimitive + Debug + PartialOrd>(
 
 /// Validate that all values in the data are finite
 #[allow(dead_code)]
-fn validate_finite_values<F: Float + Debug>(_data: ArrayView2<F>, prefix: &str) -> Result<()> {
+fn validate_finite_values<F: Float + Debug>(data: ArrayView2<F>, prefix: &str) -> Result<()> {
     for (i, row) in _data.axis_iter(Axis(0)).enumerate() {
         for (j, &value) in row.iter().enumerate() {
             if !value.is_finite() {
@@ -573,17 +573,17 @@ mod tests {
     #[test]
     fn test_validate_clustering_data() {
         // Valid data
-        let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let config = ValidationConfig::default();
         assert!(crate::validation::validate_clustering_data(data.view(), &config).is_ok());
 
         // Too few samples
-        let small_data = Array2::from_shape_vec((1, 3), vec![1.0, 2.0, 3.0]).unwrap();
+        let small_data = Array2::fromshape_vec((1, 3), vec![1.0, 2.0, 3.0]).unwrap();
         assert!(crate::validation::validate_clustering_data(small_data.view(), &config).is_err());
 
         // Non-finite values
         let invalid_data =
-            Array2::from_shape_vec((3, 2), vec![1.0, 2.0, f64::NAN, 4.0, 5.0, 6.0]).unwrap();
+            Array2::fromshape_vec((3, 2), vec![1.0, 2.0, f64::NAN, 4.0, 5.0, 6.0]).unwrap();
         assert!(crate::validation::validate_clustering_data(invalid_data.view(), &config).is_err());
     }
 
@@ -616,7 +616,7 @@ mod tests {
     #[test]
     fn test_check_duplicate_points() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let duplicates = check_duplicate_points(data.view(), 1e-10).unwrap();
         assert_eq!(duplicates.len(), 1); // Points 0 and 1 are identical
         assert_eq!(duplicates[0], (0, 1));
@@ -624,7 +624,7 @@ mod tests {
 
     #[test]
     fn test_suggest_clustering_algorithm() {
-        let data = Array2::from_shape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((100, 5), (0..500).map(|x| x as f64).collect()).unwrap();
         let suggestion = suggest_clustering_algorithm(data.view(), Some(3)).unwrap();
         assert!(!suggestion.is_empty());
         assert!(suggestion.contains("K-means") || suggestion.contains("recommendation"));

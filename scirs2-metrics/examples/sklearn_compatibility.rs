@@ -214,7 +214,7 @@ fn cohen_kappa_example() -> Result<()> {
 fn multilabel_confusion_matrix_example() -> Result<()> {
     // Create multilabel classification data
     // Each row is a sample, each column is a label (0 or 1)
-    let y_true = Array2::from_shape_vec(
+    let y_true = Array2::fromshape_vec(
         (5, 3),
         vec![
             1, 0, 1, // Sample 0: labels 0 and 2 are positive
@@ -226,7 +226,7 @@ fn multilabel_confusion_matrix_example() -> Result<()> {
     )
     .unwrap();
 
-    let y_pred = Array2::from_shape_vec(
+    let y_pred = Array2::fromshape_vec(
         (5, 3),
         vec![
             1, 0, 0, // Sample 0: only label 0 predicted
@@ -317,7 +317,7 @@ fn loss_functions_example() -> Result<()> {
     // Test hinge loss
     println!("\nHinge Loss:");
     let y_true_multiclass = Array1::from_vec(vec![0, 1, 2, 0, 1]);
-    let y_pred_scores = Array2::from_shape_vec(
+    let y_pred_scores = Array2::fromshape_vec(
         (5, 3),
         vec![
             0.8, 0.1, 0.1, // Sample 0: class 0 (correct)
@@ -462,9 +462,9 @@ fn weighted_metrics_example() -> Result<()> {
 
     // Demonstrate effect of weights on multilabel metrics
     println!("\n  Multilabel weighting example:");
-    let y_true_ml = Array2::from_shape_vec((4, 2), vec![1, 0, 0, 1, 1, 1, 0, 0]).unwrap();
+    let y_true_ml = Array2::fromshape_vec((4, 2), vec![1, 0, 0, 1, 1, 1, 0, 0]).unwrap();
 
-    let y_pred_ml = Array2::from_shape_vec(
+    let y_pred_ml = Array2::fromshape_vec(
         (4, 2),
         vec![
             1, 1, // FP for label 1

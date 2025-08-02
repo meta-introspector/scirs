@@ -1,13 +1,14 @@
-//! Empirical Mode Decomposition (EMD) and its variants
-//!
-//! This module provides implementations of Empirical Mode Decomposition (EMD)
-//! and related techniques for analyzing non-stationary and nonlinear signals.
-//! EMD decomposes a signal into a set of Intrinsic Mode Functions (IMFs),
-//! which represent different oscillatory modes embedded in the signal.
+use ndarray::s;
+// Empirical Mode Decomposition (EMD) and its variants
+//
+// This module provides implementations of Empirical Mode Decomposition (EMD)
+// and related techniques for analyzing non-stationary and nonlinear signals.
+// EMD decomposes a signal into a set of Intrinsic Mode Functions (IMFs),
+// which represent different oscillatory modes embedded in the signal.
 
-use crate::hilbert;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
+use crate::hilbert;
+use ndarray::{ Array1, Array2};
 use num_traits::{Float, NumCast};
 use rand::Rng;
 use std::cmp::max;
@@ -78,7 +79,7 @@ pub struct EmdResult {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::emd::{emd, EmdConfig};
+/// use scirs2_signal::emd::{emd, EmdConfig};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sum of two sinusoids)
@@ -105,7 +106,9 @@ where
 {
     // Validate input
     if _signal.is_empty() {
-        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
+        return Err(SignalError::ValueError(
+            "Input _signal is empty".to_string(),
+        ));
     }
 
     // Convert input to f64
@@ -692,7 +695,7 @@ fn interpolate_envelope(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::emd::{eemd, EmdConfig};
+/// use scirs2_signal::emd::{eemd, EmdConfig};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sum of two sinusoids)
@@ -855,7 +858,9 @@ pub fn hilbert_huang_spectrum(
 ) -> SignalResult<(Vec<f64>, Vec<f64>, Array2<f64>)> {
     // Validate input
     if emd_result.imfs.shape()[0] == 0 {
-        return Err(SignalError::ValueError("No IMFs in EMD _result".to_string()));
+        return Err(SignalError::ValueError(
+            "No IMFs in EMD _result".to_string(),
+        ));
     }
 
     if sample_rate <= 0.0 {
@@ -956,7 +961,7 @@ pub fn hilbert_huang_spectrum(
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_find_local_extrema() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

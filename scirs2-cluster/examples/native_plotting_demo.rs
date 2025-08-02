@@ -21,7 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("======================================");
 
     // Create sample clustering data with 3 well-separated clusters
-    let data = Array2::from_shape_vec((300, 2), generate_sample_data())?;
+    let data = Array2::fromshape_vec((300, 2), generate_sample_data())?;
 
     println!("Generated {} data points with 2 features", data.nrows());
 
@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn test_clustering_pipeline() {
-        let data = Array2::from_shape_vec((300, 2), generate_sample_data()).unwrap();
+        let data = Array2::fromshape_vec((300, 2), generate_sample_data()).unwrap();
         let standardized = standardize(data.view(), true).unwrap();
         let (centroids, labels) = kmeans(
             standardized.view(),

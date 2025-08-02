@@ -6,7 +6,6 @@ use crate::distributions::multivariate::normal::MultivariateNormal;
 use crate::error::StatsResult;
 use crate::sampling::SampleableDistribution;
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
-use statrs::statistics::Statistics;
 use std::fmt::Debug;
 
 /// Multivariate Lognormal distribution structure

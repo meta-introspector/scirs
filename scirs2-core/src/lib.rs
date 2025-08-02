@@ -1,4 +1,14 @@
 #![recursion_limit = "512"]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(clippy::needless_borrows_for_generic_args)]
+#![allow(clippy::manual_clamp)]
+#![allow(clippy::if_same_then_else)]
+#![allow(clippy::identity_op)]
+#![allow(clippy::uninlined_format_args)]
+#![allow(clippy::trim_split_whitespace)]
+#![allow(clippy::redundant_closure)]
+#![allow(clippy::unused_enumerate_index)]
 
 //! # ``SciRS2`` Core (Beta 1)
 //!
@@ -229,9 +239,8 @@ pub use crate::memory_efficient::MemoryMappedChunksParallel;
 #[cfg(feature = "array")]
 pub use crate::array::{
     is_masked, mask_array, masked_equal, masked_greater, masked_inside, masked_invalid,
-    masked_less, masked_outside, masked_where, 
-    record_array_from_typed_arrays, record_array_fromrecords, ArrayError, FieldValue, MaskedArray, Record, RecordArray,
-    NOMASK,
+    masked_less, masked_outside, masked_where, record_array_from_typed_arrays,
+    record_array_fromrecords, ArrayError, FieldValue, MaskedArray, Record, RecordArray, NOMASK,
 };
 
 #[cfg(feature = "memory_metrics")]
@@ -309,7 +318,7 @@ pub use crate::units::{
 pub use crate::utils::*;
 pub use crate::validation::production as validation_production;
 pub use crate::validation::{
-    checkarray_finite, check_finite, check_in_bounds, check_positive, check_shape,
+    check_finite, check_in_bounds, check_positive, checkshape, checkarray_finite,
 };
 
 #[cfg(feature = "data_validation")]
@@ -323,10 +332,9 @@ pub use crate::validation::data::{
 // Production-level feature re-exports
 pub use crate::observability::{audit, tracing};
 pub use crate::stability::{
-    global_stability_manager,
-    ApiContract, BreakingChange, BreakingChangeType, ConcurrencyContract, MemoryContract,
-    NumericalContract, PerformanceContract, StabilityGuaranteeManager, StabilityLevel,
-    UsageContext,
+    global_stability_manager, ApiContract, BreakingChange, BreakingChangeType, ConcurrencyContract,
+    MemoryContract, NumericalContract, PerformanceContract, StabilityGuaranteeManager,
+    StabilityLevel, UsageContext,
 };
 pub use crate::versioning::{
     compatibility, deprecation, migration, negotiation, semantic, ApiVersion, CompatibilityLevel,

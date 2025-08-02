@@ -472,7 +472,7 @@ fn bench_memory_usage(c: &mut Criterion) {
             |b, &n| {
                 b.iter(|| {
                     // Create a large linear ODE system: dy/dt = A*y
-                    let a_matrix = Array2::from_shape_fn((n, n), |(i, j)| {
+                    let a_matrix = Array2::fromshape_fn((n, n), |(i, j)| {
                         if i == j {
                             -1.0 // diagonal
                         } else if i.abs_diff(j) == 1 {

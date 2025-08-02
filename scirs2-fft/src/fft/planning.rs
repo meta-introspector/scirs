@@ -57,10 +57,10 @@ where
     T: NumCast + Copy + std::fmt::Debug + 'static,
 {
     // Get input array shape
-    let input_shape = input.shape();
+    let inputshape = input.shape();
 
     // Determine output shape
-    let output_shape = shape.unwrap_or((input_shape[0], input_shape[1]));
+    let outputshape = shape.unwrap_or((inputshape[0], inputshape[1]));
 
     // Determine axes to perform FFT on
     let axes = axes.unwrap_or((0, 1));
@@ -80,9 +80,9 @@ where
     let num_workers = workers.unwrap_or_else(|| num_threads().min(8));
 
     // Convert input array to complex numbers
-    let mut complex_input = Array2::<Complex64>::zeros((input_shape[0], input_shape[1]));
-    for i in 0..input_shape[0] {
-        for j in 0..input_shape[1] {
+    let mut complex_input = Array2::<Complex64>::zeros((inputshape[0], inputshape[1]));
+    for i in 0..inputshape[0] {
+        for j in 0..inputshape[1] {
             let val = input[[i, j]];
 
             // Try to convert to Complex64
@@ -99,10 +99,10 @@ where
     }
 
     // Pad or truncate to match output shape if necessary
-    let mut padded_input = if input_shape != [output_shape.0, output_shape.1] {
-        let mut padded = Array2::<Complex64>::zeros((output_shape.0, output_shape.1));
-        let copy_rows = std::cmp::min(input_shape[0], output_shape.0);
-        let copy_cols = std::cmp::min(input_shape[1], output_shape.1);
+    let mut padded_input = if inputshape != [outputshape.0, outputshape.1] {
+        let mut padded = Array2::<Complex64>::zeros((outputshape.0, outputshape.1));
+        let copy_rows = std::cmp::min(inputshape[0], outputshape.0);
+        let copy_cols = std::cmp::min(inputshape[1], outputshape.1);
 
         for i in 0..copy_rows {
             for j in 0..copy_cols {
@@ -118,7 +118,7 @@ where
     let mut planner = FftPlanner::new();
 
     // Perform FFT along each row in parallel
-    let row_fft = planner.plan_fft_forward(output_shape.1);
+    let row_fft = planner.plan_fft_forward(outputshape.1);
 
     if num_workers > 1 {
         padded_input
@@ -152,7 +152,7 @@ where
     }
 
     // Perform FFT along each column in parallel
-    let col_fft = planner.plan_fft_forward(output_shape.0);
+    let col_fft = planner.plan_fft_forward(outputshape.0);
 
     if num_workers > 1 {
         padded_input
@@ -187,7 +187,7 @@ where
 
     // Apply normalization if needed
     if norm_mode != NormMode::None {
-        let total_elements = output_shape.0 * output_shape.1;
+        let total_elements = outputshape.0 * outputshape.1;
         let scale = match norm_mode {
             NormMode::Backward => 1.0 / (total_elements as f64),
             NormMode::Ortho => 1.0 / (total_elements as f64).sqrt(),
@@ -206,7 +206,10 @@ where
 #[allow(dead_code)]
 pub fn fft2_parallel<T>(
     input: &Array2<T>,
-    shape: Option<(usize, usize)>, _axes: Option<(i32, i32)>, _norm: Option<&str>, _workers: Option<usize>,
+    shape: Option<(usize, usize)>,
+    _axes: Option<(i32, i32)>,
+    _norm: Option<&str>,
+    _workers: Option<usize>,
 ) -> FFTResult<Array2<Complex64>>
 where
     T: NumCast + Copy + std::fmt::Debug + 'static,
@@ -242,10 +245,10 @@ where
     T: NumCast + Copy + std::fmt::Debug + 'static,
 {
     // Get input array shape
-    let input_shape = input.shape();
+    let inputshape = input.shape();
 
     // Determine output shape
-    let output_shape = shape.unwrap_or((input_shape[0], input_shape[1]));
+    let outputshape = shape.unwrap_or((inputshape[0], inputshape[1]));
 
     // Determine axes to perform FFT on
     let axes = axes.unwrap_or((0, 1));
@@ -265,9 +268,9 @@ where
     let num_workers = workers.unwrap_or_else(|| num_threads().min(8));
 
     // Convert input to complex and copy to output shape
-    let mut complex_input = Array2::<Complex64>::zeros((input_shape[0], input_shape[1]));
-    for i in 0..input_shape[0] {
-        for j in 0..input_shape[1] {
+    let mut complex_input = Array2::<Complex64>::zeros((inputshape[0], inputshape[1]));
+    for i in 0..inputshape[0] {
+        for j in 0..inputshape[1] {
             let val = input[[i, j]];
 
             // Try to convert to Complex64
@@ -284,10 +287,10 @@ where
     }
 
     // Pad or truncate to match output shape if necessary
-    let mut padded_input = if input_shape != [output_shape.0, output_shape.1] {
-        let mut padded = Array2::<Complex64>::zeros((output_shape.0, output_shape.1));
-        let copy_rows = std::cmp::min(input_shape[0], output_shape.0);
-        let copy_cols = std::cmp::min(input_shape[1], output_shape.1);
+    let mut padded_input = if inputshape != [outputshape.0, outputshape.1] {
+        let mut padded = Array2::<Complex64>::zeros((outputshape.0, outputshape.1));
+        let copy_rows = std::cmp::min(inputshape[0], outputshape.0);
+        let copy_cols = std::cmp::min(inputshape[1], outputshape.1);
 
         for i in 0..copy_rows {
             for j in 0..copy_cols {
@@ -303,7 +306,7 @@ where
     let mut planner = FftPlanner::new();
 
     // Perform inverse FFT along each row in parallel
-    let row_ifft = planner.plan_fft_inverse(output_shape.1);
+    let row_ifft = planner.plan_fft_inverse(outputshape.1);
 
     if num_workers > 1 {
         padded_input
@@ -337,7 +340,7 @@ where
     }
 
     // Perform inverse FFT along each column in parallel
-    let col_ifft = planner.plan_fft_inverse(output_shape.0);
+    let col_ifft = planner.plan_fft_inverse(outputshape.0);
 
     if num_workers > 1 {
         padded_input
@@ -371,7 +374,7 @@ where
     }
 
     // Apply appropriate normalization
-    let total_elements = output_shape.0 * output_shape.1;
+    let total_elements = outputshape.0 * outputshape.1;
     let scale = match norm_mode {
         NormMode::Backward => 1.0 / (total_elements as f64),
         NormMode::Ortho => 1.0 / (total_elements as f64).sqrt(),
@@ -391,7 +394,10 @@ where
 #[allow(dead_code)]
 pub fn ifft2_parallel<T>(
     input: &Array2<T>,
-    shape: Option<(usize, usize)>, _axes: Option<(i32, i32)>, _norm: Option<&str>, _workers: Option<usize>,
+    shape: Option<(usize, usize)>,
+    _axes: Option<(i32, i32)>,
+    _norm: Option<&str>,
+    _workers: Option<usize>,
 ) -> FFTResult<Array2<Complex64>>
 where
     T: NumCast + Copy + std::fmt::Debug + 'static,

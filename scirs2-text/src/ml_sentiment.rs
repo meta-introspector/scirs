@@ -477,13 +477,13 @@ mod tests {
         analyzer.train(&dataset).unwrap();
 
         // Test multiple positive examples to avoid test flakiness
-        for positive_text in &[
+        for positivetext in &[
             "This is amazing!",
             "Absolutely wonderful experience",
             "Great product, loved it",
             "Fantastic results, highly recommend",
         ] {
-            let _result = analyzer.predict(positive_text).unwrap();
+            let _result = analyzer.predict(positivetext).unwrap();
             // Don't assert on the specific sentiment, as these simple models
             // can be unpredictable with limited training data
             // Just ensure no error is thrown

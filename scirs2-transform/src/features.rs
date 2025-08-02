@@ -1537,7 +1537,7 @@ mod tests {
 
     #[test]
     fn test_polynomial_features() {
-        let data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data = Array::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
 
         // Test with degree=2, interaction_only=false, include_bias=true
         let poly = PolynomialFeatures::new(2, false, true);
@@ -1584,7 +1584,7 @@ mod tests {
 
     #[test]
     fn test_binarize() {
-        let data = Array::from_shape_vec((2, 3), vec![1.0, -1.0, 2.0, 2.0, 0.0, -3.0]).unwrap();
+        let data = Array::fromshape_vec((2, 3), vec![1.0, -1.0, 2.0, 2.0, 0.0, -3.0]).unwrap();
 
         let binarized = binarize(&data, 0.0).unwrap();
 
@@ -1601,7 +1601,7 @@ mod tests {
 
     #[test]
     fn test_discretize_equal_width() {
-        let data = Array::from_shape_vec((3, 2), vec![0.0, 0.0, 3.0, 5.0, 6.0, 10.0]).unwrap();
+        let data = Array::fromshape_vec((3, 2), vec![0.0, 0.0, 3.0, 5.0, 6.0, 10.0]).unwrap();
 
         // Test with ordinal encoding
         let discretized = discretize_equal_width(&data, 2, "ordinal", 0).unwrap();
@@ -1644,7 +1644,7 @@ mod tests {
 
     #[test]
     fn test_log_transform() {
-        let data = Array::from_shape_vec((2, 2), vec![0.0, 1.0, 2.0, 3.0]).unwrap();
+        let data = Array::fromshape_vec((2, 2), vec![0.0, 1.0, 2.0, 3.0]).unwrap();
 
         let transformed = log_transform(&data, 1.0).unwrap();
 
@@ -1659,7 +1659,7 @@ mod tests {
     fn test_power_transformer_yeo_johnson() {
         // Test data that includes negative values (Yeo-Johnson can handle these)
         let data =
-            Array::from_shape_vec((4, 2), vec![1.0, -1.0, 2.0, 0.5, 3.0, -2.0, 0.1, 1.5]).unwrap();
+            Array::fromshape_vec((4, 2), vec![1.0, -1.0, 2.0, 0.5, 3.0, -2.0, 0.1, 1.5]).unwrap();
 
         let mut transformer = PowerTransformer::yeo_johnson(false);
 
@@ -1694,7 +1694,7 @@ mod tests {
     fn test_power_transformer_box_cox() {
         // Test data with strictly positive values (Box-Cox requirement)
         let data =
-            Array::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 0.5, 1.5, 2.5, 3.5]).unwrap();
+            Array::fromshape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 0.5, 1.5, 2.5, 3.5]).unwrap();
 
         let mut transformer = PowerTransformer::box_cox(false);
 
@@ -1718,7 +1718,7 @@ mod tests {
 
     #[test]
     fn test_power_transformer_standardized() {
-        let data = Array::from_shape_vec(
+        let data = Array::fromshape_vec(
             (5, 2),
             vec![1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0, 5.0, 6.0],
         )
@@ -1744,7 +1744,7 @@ mod tests {
     #[test]
     fn test_power_transformer_box_cox_negative_data() {
         // Test that Box-Cox fails with negative data
-        let data = Array::from_shape_vec((2, 2), vec![1.0, -1.0, 2.0, 3.0]).unwrap();
+        let data = Array::fromshape_vec((2, 2), vec![1.0, -1.0, 2.0, 3.0]).unwrap();
 
         let mut transformer = PowerTransformer::box_cox(false);
 
@@ -1754,7 +1754,7 @@ mod tests {
 
     #[test]
     fn test_power_transformer_fit_transform() {
-        let data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 
         let mut transformer = PowerTransformer::yeo_johnson(false);
 
@@ -1776,8 +1776,8 @@ mod tests {
 
     #[test]
     fn test_power_transformer_different_data_sizes() {
-        let train_data = Array::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        let test_data = Array::from_shape_vec((2, 2), vec![2.5, 3.5, 4.5, 5.5]).unwrap();
+        let train_data = Array::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let test_data = Array::fromshape_vec((2, 2), vec![2.5, 3.5, 4.5, 5.5]).unwrap();
 
         let mut transformer = PowerTransformer::yeo_johnson(false);
 
@@ -1800,8 +1800,8 @@ mod tests {
 
     #[test]
     fn test_power_transformer_mismatched_features() {
-        let train_data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let test_data = Array::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let train_data = Array::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let test_data = Array::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 
         let mut transformer = PowerTransformer::yeo_johnson(false);
         transformer.fit(&train_data).unwrap();
@@ -1812,7 +1812,7 @@ mod tests {
 
     #[test]
     fn test_power_transformer_not_fitted() {
-        let data = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data = Array::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         let transformer = PowerTransformer::yeo_johnson(false);
 
         // Should fail because transformer hasn't been fitted

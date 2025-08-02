@@ -109,7 +109,7 @@ fn generate_scale_free_graph(_num_nodes: usize, initial_edges: usize) -> Graph<u
                 let random_degree = rng.gen_range(0..degree_sum);
                 let mut cumulative_degree = 0;
 
-                for (&node..&degree) in &node_degrees {
+                for (&node, &degree) in &node_degrees {
                     cumulative_degree += degree;
                     if cumulative_degree > random_degree {
                         target = node;
@@ -278,7 +278,7 @@ fn generate_social_network(_num_nodes: usize) -> Graph<usize, f64> {
                 let source = rng.gen_range(cluster_start..cluster_end);
                 let target_cluster = rng.gen_range(0..cluster_id);
                 let target = rng.gen_range(
-                    target_cluster * CLUSTER_SIZE..(target_cluster + 1) * CLUSTER_SIZE..);
+                    target_cluster * CLUSTER_SIZE..(target_cluster + 1) * CLUSTER_SIZE);
                 let weight = rng.random::<f64>() * 0.3 + 0.2; // Weaker inter-cluster weights
                 let _ = graph.add_edge(source, target, weight);
             }

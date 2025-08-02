@@ -30,7 +30,7 @@
 //! use ndarray::Array2;
 //!
 //! // Create a distributed matrix
-//! let matrix = Array2::from_shape_fn((1000, 1000), |(i, j)| (i + j) as f64);
+//! let matrix = Array2::fromshape_fn((1000, 1000), |(i, j)| (i + j) as f64);
 //! let config = DistributedConfig::default().with_num_nodes(4);
 //! let dist_matrix = DistributedMatrix::from_local(matrix, config)?;
 //!
@@ -115,7 +115,7 @@ impl Default for DistributedConfig {
             distribution: DistributionStrategy::RowWise,
             block_size: 256,
             enable_simd: true,
-            threads_per_node: num, _cpus: get(),
+            threads_per_node: num_cpus::get(),
             comm_timeout_ms: 30000,
             fault_tolerance: false,
             memory_limit_bytes: None,
@@ -336,11 +336,11 @@ impl DistributedLinalgOps {
         b: &DistributedMatrix<T>,
     ) -> LinalgResult<DistributedMatrix<T>>
     where
-        T: num_traits: Float + Send + Sync + 'static,
+        T: num_traits:: Float + Send + Sync + 'static,
     {
         // Check matrix dimensions
-        let (m, k) = a.global_shape();
-        let (k2, n) = b.global_shape();
+        let (m, k) = a.globalshape();
+        let (k2, n) = b.globalshape();
         
         if k != k2 {
             return Err(LinalgError::DimensionError(format!(
@@ -354,7 +354,7 @@ impl DistributedLinalgOps {
 /// advanced communication optimization.
 pub struct AdvancedDistributedFramework<T>
 where
-    T: num_traits: Float + Send + Sync + 'static,
+    T: num_traits:: Float + Send + Sync + 'static,
 {
     /// Adaptive load balancer with machine learning
     adaptive_balancer: AdaptiveLoadBalancer,
@@ -1933,14 +1933,14 @@ pub enum RiskLevel {
         b: &DistributedMatrix<T>,
     ) -> LinalgResult<DistributedMatrix<T>>
     where
-        T: num_traits: Float + Send + Sync + 'static,
+        T: num_traits:: Float + Send + Sync + 'static,
     {
         // Check matrix dimensions
-        if a.global_shape() != b.global_shape() {
+        if a.globalshape() != b.globalshape() {
             return Err(LinalgError::DimensionError(format!(
                 "Matrix dimensions don't match for addition: {:?} vs {:?}",
-                a.global_shape(),
-                b.global_shape()
+                a.globalshape(),
+                b.globalshape()
             )));
         }
         
@@ -1953,7 +1953,7 @@ pub enum RiskLevel {
         matrix: &DistributedMatrix<T>,
     ) -> LinalgResult<DistributedMatrix<T>>
     where
-        T: num_traits: Float + Send + Sync + 'static,
+        T: num_traits:: Float + Send + Sync + 'static,
     {
         matrix.transpose()
     }
@@ -1964,7 +1964,7 @@ pub enum RiskLevel {
         b: &DistributedVector<T>,
     ) -> LinalgResult<DistributedVector<T>>
     where
-        T: num_traits: Float + Send + Sync + 'static,
+        T: num_traits:: Float + Send + Sync + 'static,
     {
         solvers::solve_linear_system(a, b)
     }
@@ -1974,7 +1974,7 @@ pub enum RiskLevel {
         matrix: &DistributedMatrix<T>,
     ) -> LinalgResult<(DistributedMatrix<T>, DistributedMatrix<T>)>
     where
-        T: num_traits: Float + Send + Sync + 'static,
+        T: num_traits:: Float + Send + Sync + 'static,
     {
         decomposition::lu_decomposition(matrix)
     }
@@ -1984,7 +1984,7 @@ pub enum RiskLevel {
         matrix: &DistributedMatrix<T>,
     ) -> LinalgResult<(DistributedMatrix<T>, DistributedMatrix<T>)>
     where
-        T: num_traits: Float + Send + Sync + 'static,
+        T: num_traits:: Float + Send + Sync + 'static,
     {
         decomposition::qr_decomposition(matrix)
     }

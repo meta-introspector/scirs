@@ -375,7 +375,9 @@ impl PerformanceHintRegistry {
     }
 
     /// Get optimization recommendations based on hints and statistics
-    pub fn get_optimization_recommendations(&self, function_name: &str
+    pub fn get_optimization_recommendations(
+        &self,
+        function_name: &str,
     ) -> CoreResult<Vec<OptimizationRecommendation>> {
         let hints = self.get_hint(function_name)?;
         let stats = self.get_stats(function_name)?;

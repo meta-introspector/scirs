@@ -281,7 +281,7 @@ where
 
 /// Compute K constant for terminal edges
 #[allow(dead_code)]
-fn compute_k_constant<T: Float>(_image: &ArrayView2<T>) -> f64 {
+fn compute_k_constant<T: Float>(image: &ArrayView2<T>) -> f64 {
     // K should be larger than any possible sum of edge weights
     let max_val = _image
         .iter()
@@ -349,7 +349,7 @@ fn compute_data_weights<T: Float>(
 
 /// Compute smoothness weight between neighboring pixels
 #[allow(dead_code)]
-fn compute_smoothness_weight<T: Float>(_val1: T, val2: T, lambda: f64, sigma: f64) -> f64 {
+fn compute_smoothness_weight<T: Float>(val1: T, val2: T, lambda: f64, sigma: f64) -> f64 {
     let diff = (_val1 - val2).to_f64().unwrap_or(0.0);
     let weight = lambda * (-diff * diff / (2.0 * sigma * sigma)).exp();
     weight

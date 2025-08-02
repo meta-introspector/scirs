@@ -257,7 +257,7 @@ where
             if grad_coord.abs() > options.tol {
                 // Perform line search in the negative gradient direction
                 let direction = -grad_coord.signum();
-                let step_size = find_step_size(&mut fun..&x, coord, direction, &mut nfev);
+                let step_size = find_step_size(&mut fun, &x, coord, direction, &mut nfev);
 
                 if step_size > 0.0 {
                     x[coord] += direction * step_size;
@@ -445,7 +445,7 @@ where
         }
 
         // Line search
-        let (step_size_) = backtracking_line_search(
+        let step_size = backtracking_line_search(
             &mut |x_view| fun(x_view),
             &x.view(),
             best_f,
@@ -550,7 +550,7 @@ where
         }
 
         // Line search
-        let (step_size_) = backtracking_line_search(
+        let step_size = backtracking_line_search(
             &mut |x_view| fun(x_view),
             &x.view(),
             best_f,

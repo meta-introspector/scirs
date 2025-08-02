@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Boundary conditions: u = 0 on outer boundaries");
 
     // Create an L-shaped domain
-    let mesh = create_l_shaped_mesh(20);
+    let mesh = create_lshaped_mesh(20);
 
     println!("Mesh generated with:");
     println!("  - {} nodes", mesh.points.len());
@@ -174,7 +174,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Create a mesh for an L-shaped domain
 /// The domain is [0,1]×[0,1] minus [0.5,1]×[0.5,1]
 #[allow(dead_code)]
-fn create_l_shaped_mesh(_divisions: usize) -> TriangularMesh {
+fn create_lshaped_mesh(_divisions: usize) -> TriangularMesh {
     let mut mesh = TriangularMesh::new();
 
     // Calculate step size

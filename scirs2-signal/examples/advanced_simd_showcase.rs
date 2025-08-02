@@ -1,12 +1,12 @@
-//! Advanced Enhanced SIMD Operations Showcase
-//!
-//! This example demonstrates the most impactful SIMD optimizations for signal processing,
-//! including FFT, STFT, Wavelet transforms, and resampling with comprehensive
-//! performance analysis and validation.
+// Advanced Enhanced SIMD Operations Showcase
+//
+// This example demonstrates the most impactful SIMD optimizations for signal processing,
+// including FFT, STFT, Wavelet transforms, and resampling with comprehensive
+// performance analysis and validation.
 
 use ndarray::{Array1, Array2};
-use num__complex::Complex64;
-use scirs2__signal::{
+use num_complex::Complex64;
+use scirs2_signal::{
     advanced_simd_dwt, advanced_simd_fft, advanced_simd_resample, advanced_simd_rfft,
     advanced_simd_stft, generate_simd_performance_report, AdvancedSimdConfig,
 };

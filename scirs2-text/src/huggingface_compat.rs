@@ -1065,16 +1065,16 @@ impl QuestionAnsweringPipeline {
         for span_len in 1..=8 {
             for start in 0..=(context_words.len().saturating_sub(span_len)) {
                 let end = start + span_len;
-                let span_text = context_words[start..end].join(" ").to_lowercase();
+                let spantext = context_words[start..end].join(" ").to_lowercase();
 
                 // Calculate relevance score
                 let mut score = 0.0;
                 for keyword in &question_keywords {
-                    if span_text.contains(keyword) {
+                    if spantext.contains(keyword) {
                         score += 1.0;
                     }
                     // Partial matches
-                    for span_word in span_text.split_whitespace() {
+                    for span_word in spantext.split_whitespace() {
                         if span_word.starts_with(keyword) || keyword.starts_with(span_word) {
                             score += 0.5;
                         }
@@ -1097,7 +1097,7 @@ impl QuestionAnsweringPipeline {
                     }
                 } else if question_lower.starts_with("when") {
                     // Prefer spans with numbers or time indicators
-                    if span_text.chars().any(|c| c.is_ascii_digit()) {
+                    if spantext.chars().any(|c| c.is_ascii_digit()) {
                         score *= 1.3;
                     }
                 } else if question_lower.starts_with("where") {
@@ -1106,7 +1106,7 @@ impl QuestionAnsweringPipeline {
                         ["in", "at", "on", "near", "city", "country", "state"];
                     if location_indicators
                         .iter()
-                        .any(|&loc| span_text.contains(loc))
+                        .any(|&loc| spantext.contains(loc))
                     {
                         score *= 1.3;
                     }
@@ -1758,7 +1758,7 @@ impl TextGenerationPipeline {
         };
 
         Ok(vec![TextGenerationResult {
-            generated_text: generated,
+            generatedtext: generated,
             score,
         }])
     }
@@ -1767,8 +1767,8 @@ impl TextGenerationPipeline {
 /// Text generation result
 #[derive(Debug, Clone)]
 pub struct TextGenerationResult {
-    /// Generated _text
-    pub generated_text: String,
+    /// Generated text
+    pub generatedtext: String,
     /// Generation score
     pub score: f64,
 }
@@ -1808,7 +1808,7 @@ impl SummarizationPipeline {
         };
 
         Ok(SummarizationResult {
-            summary_text: summary,
+            summarytext: summary,
             score: 0.7,
         })
     }
@@ -1817,8 +1817,8 @@ impl SummarizationPipeline {
 /// Summarization result
 #[derive(Debug, Clone)]
 pub struct SummarizationResult {
-    /// Summary _text
-    pub summary_text: String,
+    /// Summary text
+    pub summarytext: String,
     /// Summarization score
     pub score: f64,
 }
@@ -2018,7 +2018,7 @@ impl TranslationPipeline {
             }
         }
 
-        let translated_text = translated_words.join(" ");
+        let translatedtext = translated_words.join(" ");
 
         // Calculate translation quality score
         let original_word_count = words.len();
@@ -2040,7 +2040,7 @@ impl TranslationPipeline {
         let score = (0.5 + translation_ratio * 0.4).min(0.95);
 
         Ok(TranslationResult {
-            translation_text: translated_text,
+            translationtext: translatedtext,
             score,
         })
     }
@@ -2049,8 +2049,8 @@ impl TranslationPipeline {
 /// Translation result
 #[derive(Debug, Clone)]
 pub struct TranslationResult {
-    /// Translated _text
-    pub translation_text: String,
+    /// Translated text
+    pub translationtext: String,
     /// Translation score
     pub score: f64,
 }
@@ -2088,7 +2088,7 @@ impl TokenClassificationPipeline {
 
         // Get POS tags if available - use text tokenization and tagging
         let tokenizer = crate::tokenize::WhitespaceTokenizer::new();
-        let pos_tags = match pos_tagger.tag_text(text, &tokenizer) {
+        let pos_tags = match pos_tagger.tagtext(text, &tokenizer) {
             Ok(result) => Some(
                 result
                     .tags

@@ -296,7 +296,7 @@ mod tests {
     #[test]
     fn test_cophenet_simple() {
         // Create simple test data with clear hierarchical structure
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (4, 2),
             vec![
                 0.0, 0.0, // Point 0
@@ -344,7 +344,7 @@ mod tests {
     fn test_cophenet_perfect_hierarchy() {
         // Create data with perfect hierarchical structure
         // Two well-separated clusters with internal hierarchy
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (4, 1),
             vec![
                 0.0,  // Cluster 1, point A
@@ -381,7 +381,7 @@ mod tests {
     #[test]
     fn test_cophenet_identical_points() {
         // Edge case: some identical points
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (3, 2),
             vec![
                 0.0, 0.0, 0.0, 0.0, // Identical to first point
@@ -419,7 +419,7 @@ mod tests {
     #[test]
     fn test_inconsistent_basic() {
         // Test inconsistency calculation
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 10.0, 0.0, 11.0, 0.0],
         )
@@ -450,7 +450,7 @@ mod tests {
 
     #[test]
     fn test_inconsistent_with_depth() {
-        let data = Array2::from_shape_vec((4, 1), vec![0.0, 1.0, 2.0, 10.0]).unwrap();
+        let data = Array2::fromshape_vec((4, 1), vec![0.0, 1.0, 2.0, 10.0]).unwrap();
 
         let linkage_matrix =
             linkage(data.view(), LinkageMethod::Complete, Metric::Euclidean).unwrap();
@@ -474,7 +474,7 @@ mod tests {
 
     #[test]
     fn test_optimal_leaf_ordering() {
-        let data = Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 10.0, 10.0, 11.0, 11.0])
+        let data = Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 10.0, 10.0, 11.0, 11.0])
             .unwrap();
 
         let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
@@ -493,7 +493,7 @@ mod tests {
 
     #[test]
     fn test_dendrogram_conversion() {
-        let data = Array2::from_shape_vec((3, 1), vec![0.0, 5.0, 10.0]).unwrap();
+        let data = Array2::fromshape_vec((3, 1), vec![0.0, 5.0, 10.0]).unwrap();
 
         let linkage_matrix =
             linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
@@ -523,7 +523,7 @@ mod tests {
     #[test]
     fn test_cophenet_error_cases() {
         // Create valid test data first
-        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let data = Array2::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
         let linkage_matrix =
             linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
 
@@ -547,7 +547,7 @@ mod tests {
     #[test]
     fn test_find_lca_height() {
         // Test the internal LCA function indirectly through cophenet
-        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 10.0]).unwrap();
+        let data = Array2::fromshape_vec((3, 1), vec![0.0, 1.0, 10.0]).unwrap();
 
         let linkage_matrix =
             linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();

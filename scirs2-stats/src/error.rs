@@ -53,9 +53,9 @@ pub enum StatsError {
 
 // The #[from] attribute in the CoreError variant handles the conversion automatically
 
-// NOTE: rand_distr: uniform::Error API has changed, commenting out for now
+// NOTE: rand, distr: uniform::Error API has changed, commenting out for now
 // impl From<rand_distr::uniform::Error> for StatsError {
-//     fn from(_err: rand_distr: uniform::Error) -> Self {
+//     fn from(_err: rand, distr: uniform::Error) -> Self {
 //         StatsError::DistributionError(format!("Uniform distribution error: {}", _err))
 //     }
 // }
@@ -71,38 +71,38 @@ pub trait StatsErrorExt {
 
 impl StatsError {
     /// Create a computation error with context
-    pub fn computation<S: Into<String>>(_message: S) -> Self {
-        StatsError::ComputationError(_message.into())
+    pub fn computation<S: Into<String>>(message: S) -> Self {
+        StatsError::ComputationError(message.into())
     }
 
     /// Create a domain error with context
-    pub fn domain<S: Into<String>>(_message: S) -> Self {
-        StatsError::DomainError(_message.into())
+    pub fn domain<S: Into<String>>(message: S) -> Self {
+        StatsError::DomainError(message.into())
     }
 
     /// Create a dimension mismatch error with context
-    pub fn dimension_mismatch<S: Into<String>>(_message: S) -> Self {
-        StatsError::DimensionMismatch(_message.into())
+    pub fn dimension_mismatch<S: Into<String>>(message: S) -> Self {
+        StatsError::DimensionMismatch(message.into())
     }
 
     /// Create an invalid argument error with context
-    pub fn invalid_argument<S: Into<String>>(_message: S) -> Self {
-        StatsError::InvalidArgument(_message.into())
+    pub fn invalid_argument<S: Into<String>>(message: S) -> Self {
+        StatsError::InvalidArgument(message.into())
     }
 
     /// Create a not implemented error with context
-    pub fn not_implemented<S: Into<String>>(_message: S) -> Self {
-        StatsError::NotImplementedError(_message.into())
+    pub fn not_implemented<S: Into<String>>(message: S) -> Self {
+        StatsError::NotImplementedError(message.into())
     }
 
     /// Create an insufficient data error with context
-    pub fn insufficient_data<S: Into<String>>(_message: S) -> Self {
-        StatsError::InsufficientData(_message.into())
+    pub fn insufficient_data<S: Into<String>>(message: S) -> Self {
+        StatsError::InsufficientData(message.into())
     }
 
     /// Create an invalid input error with context
-    pub fn invalid_input<S: Into<String>>(_message: S) -> Self {
-        StatsError::InvalidInput(_message.into())
+    pub fn invalid_input<S: Into<String>>(message: S) -> Self {
+        StatsError::InvalidInput(message.into())
     }
 
     /// Add recovery suggestions based on error type

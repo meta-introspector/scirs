@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create model
     let model = ResNet::<f32>::resnet18(input_channels, num_classes)?;
     // Create dummy input (batch_size=1, channels=3, height=224, width=224)
-    let input = Array::from_shape_fn(IxDyn(&[1, input_channels, 224, 224]), |_| {
+    let input = Array::fromshape_fn(IxDyn(&[1, input_channels, 224, 224]), |_| {
         rand::random::<f32>()
     });
     println!("Input shape: {:?}", input.shape());
@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a custom ResNet configuration
     println!("\nCreating a custom ResNet model...");
     let custom_config = ResNetConfig {
-        block: scirs2_neural: models::ResNetBlock::Basic,
+        block: scirs2, neural: models::ResNetBlock::Basic,
         layers: vec![
             scirs2_neural::models::ResNetLayer {
                 blocks: 2,
@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let custom_model = ResNet::<f32>::new(custom_config)?;
     // Create dummy grayscale input (batch_size=1, channels=1, height=28, width=28)
-    let grayscale_input = Array::from_shape_fn(IxDyn(&[1, 1, 28, 28]), |_| rand::random::<f32>());
+    let grayscale_input = Array::fromshape_fn(IxDyn(&[1, 1, 28, 28]), |_| rand::random::<f32>());
     println!("Custom input shape: {:?}", grayscale_input.shape());
     let custom_output = custom_model.forward(&grayscale_input)?;
     println!("Custom output shape: {:?}", custom_output.shape());

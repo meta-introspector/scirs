@@ -188,24 +188,24 @@ where
     T: Copy + Default + Send + Sync,
 {
     /// Create new CUDA tensor
-    pub fn new(_shape: Vec<usize>, device_id: u32, context: &GpuContext) -> Result<Self> {
-        let size = _shape.iter().product::<usize>() * std::mem::size_of::<T>();
+    pub fn new(shape: Vec<usize>, device_id: u32, context: &GpuContext) -> Result<Self> {
+        let size = shape.iter().product::<usize>() * std::mem::size_of::<T>();
         let data = context.allocate_memory(size as u64, device_id)?;
-        let mut strides = vec![1; _shape.len()];
-        for i in (0.._shape.len().saturating_sub(1)).rev() {
-            strides[i] = strides[i + 1] * _shape[i + 1];
+        let mut strides = vec![1; shape.len()];
+        for i in (0..shape.len().saturating_sub(1)).rev() {
+            strides[i] = strides[i + 1] * shape[i + 1];
             data,
-            _shape,
+            shape,
             strides_phantom: std::marker::PhantomData,
-    /// Get tensor _shape
-    pub fn _shape(&self) -> &[usize] {
-        &self._shape
+    /// Get tensor shape
+    pub fn shape(&self) -> &[usize] {
+        &self.shape
     /// Get device ID
     pub fn device_id(&self) -> u32 {
         self.device_id
     /// Copy tensor to different device
     pub fn to_device(&self, target_device: u32, context: &GpuContext) -> Result<Self> {
-        let new_tensor = Self::new(self._shape.clone(), target_device, context)?;
+        let new_tensor = Self::new(self.shape.clone(), target_device, context)?;
         // In real implementation, would perform _device-to-_device copy
         Ok(new_tensor)
     }
@@ -350,18 +350,18 @@ impl NeuralOps {
         Ok(a.dot(b))
     /// Batch matrix multiplication for neural network layers
     pub fn batch_matrix_multiply(&self, a: &ArrayD<f32>, b: &ArrayD<f32>) -> Result<ArrayD<f32>> {
-        let a_shape = a.shape();
-        let b_shape = b.shape();
-        if a_shape.len() != 3 || b_shape.len() != 3 {
+        let ashape = a.shape();
+        let bshape = b.shape();
+        if ashape.len() != 3 || bshape.len() != 3 {
             return Err(Error::DimensionMismatch(
                 "Batch matrix multiply requires 3D arrays (batch, rows, cols)".to_string(),
-        let batch_size = a_shape[0];
-        let m = a_shape[1];
-        let _k = a_shape[2];
-        let n = b_shape[2];
-        if a_shape[0] != b_shape[0] || a_shape[2] != b_shape[1] {
+        let batch_size = ashape[0];
+        let m = ashape[1];
+        let _k = ashape[2];
+        let n = bshape[2];
+        if ashape[0] != bshape[0] || ashape[2] != bshape[1] {
                 "Batch matrix dimensions don't match: {:?} * {:?}",
-                a_shape, b_shape
+                ashape, bshape
         let mut result = Array::zeros((batch_size, m, n));
         // Process each batch
         for i in 0..batch_size {
@@ -406,13 +406,13 @@ impl NeuralOps {
         gamma: &Array1<f32>,
         beta: &Array1<f32>,
         epsilon: f32,
-        let input_shape = input.shape();
+        let inputshape = input.shape();
         let channels = mean.len();
         // Check that all parameter arrays have the same length
         if var.len() != channels || gamma.len() != channels || beta.len() != channels {
                 "All batch norm parameters must have the same length".to_string(),
         // Assume channel-last format (NHWC) - last dimension is channels
-        if input_shape[input_shape.len() - 1] != channels {
+        if inputshape[inputshape.len() - 1] != channels {
                 "Channel dimension mismatch in batch normalization".to_string(),
         let mut normalized = input.clone();
         // Apply normalization per channel
@@ -429,10 +429,10 @@ impl NeuralOps {
         Ok(normalized)
     /// Softmax activation function
     pub fn softmax_forward(&self, input: &ArrayD<f32>) -> Result<ArrayD<f32>> {
-        if input_shape.len() < 2 {
+        if inputshape.len() < 2 {
                 "Softmax requires at least 2D input (batch_size, features)".to_string(),
         let mut output = input.clone();
-        let _last_axis = input_shape.len() - 1;
+        let _last_axis = inputshape.len() - 1;
         // Apply softmax along the last axis (features)
         for mut row in output.axis_iter_mut(ndarray::Axis(0)) {
             // Find max for numerical stability
@@ -448,21 +448,21 @@ impl NeuralOps {
         kernel: &ArrayD<f32>,
         stride: (usize, usize),
         padding: (usize, usize),
-        let kernel_shape = kernel.shape();
+        let kernelshape = kernel.shape();
         // Check input format: (batch, channels, height, width)
-        if input_shape.len() != 4 || kernel_shape.len() != 4 {
+        if inputshape.len() != 4 || kernelshape.len() != 4 {
                 "Conv2D requires 4D input and kernel (batch, channels, height, width)".to_string(),
         let (batch_size, in_channels, in_height, in_width) = (
-            input_shape[0],
-            input_shape[1],
-            input_shape[2],
-            input_shape[3],
+            inputshape[0],
+            inputshape[1],
+            inputshape[2],
+            inputshape[3],
         );
         let (out_channels, kernel_in_channels, kernel_height, kernel_width) = (
-            kernel_shape[0],
-            kernel_shape[1],
-            kernel_shape[2],
-            kernel_shape[3],
+            kernelshape[0],
+            kernelshape[1],
+            kernelshape[2],
+            kernelshape[3],
         if in_channels != kernel_in_channels {
                 "Input and kernel channel dimensions must match".to_string(),
         // Calculate output dimensions
@@ -508,14 +508,14 @@ impl NeuralOps {
         T: Copy + Default + Send + Sync + std::ops::Add<Output = T> + std::ops::Mul<Output = T>,
                 "GPU context not available".to_string(),
         // Validate dimensions for matrix multiplication
-        if a_shape.len() != 2 || b_shape.len() != 2 {
+        if ashape.len() != 2 || bshape.len() != 2 {
                 "Matrix multiplication requires 2D tensors".to_string(),
-        if a_shape[1] != b_shape[0] {
+        if ashape[1] != bshape[0] {
                 "Matrix dimensions incompatible: {}x{} * {}x{}",
-                a_shape[0], a_shape[1], b_shape[0], b_shape[1]
-        let result_shape = vec![a_shape[0], b_shape[1]];
+                ashape[0], ashape[1], bshape[0], bshape[1]
+        let resultshape = vec![ashape[0], bshape[1]];
         let result = CudaTensor::new(
-            result_shape,
+            resultshape,
             a.device_id(),
             self.gpu_context.as_ref().unwrap(),
         )?;
@@ -537,10 +537,10 @@ impl NeuralOps {
         input: &CudaTensor<T>,
         kernel: &CudaTensor<T>,
                 "Conv2D requires 4D tensors (N, C, H, W)".to_string(),
-        let out_height = (input_shape[2] + 2 * padding.0 - kernel_shape[2]) / stride.0 + 1;
-        let out_width = (input_shape[3] + 2 * padding.1 - kernel_shape[3]) / stride.1 + 1;
-        let output_shape = vec![input_shape[0], kernel_shape[0], out_height, out_width];
-            output_shape,
+        let out_height = (inputshape[2] + 2 * padding.0 - kernelshape[2]) / stride.0 + 1;
+        let out_width = (inputshape[3] + 2 * padding.1 - kernelshape[3]) / stride.1 + 1;
+        let outputshape = vec![inputshape[0], kernelshape[0], out_height, out_width];
+            outputshape,
         // Simulate GPU convolution kernel (would use cuDNN in real implementation)
     /// Synchronize GPU operations
     pub fn synchronize(&self) -> Result<()> {

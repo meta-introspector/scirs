@@ -95,7 +95,7 @@ fn demonstrate_line_reading() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📄 Demonstrating Line-based Reading...");
 
     let temp_dir = tempdir()?;
-    let test_file = temp_dir.path().join("large_text.txt");
+    let test_file = temp_dir.path().join("largetext.txt");
 
     // Create a large text file with numbered lines
     println!("  📝 Creating test file with 10,000 lines...");

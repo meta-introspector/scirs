@@ -450,7 +450,7 @@ pub mod optimization {
         /// Create a new memory optimizer
         pub fn new(_config: MemoryOptimizationConfig, pool: Arc<GpuMemoryPool>) -> Self {
             Self {
-                _config,
+                config: _config,
                 pool,
                 optimization_stats: OptimizationStats::new(),
             }

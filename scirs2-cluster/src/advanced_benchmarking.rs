@@ -1124,7 +1124,7 @@ impl AdvancedBenchmark {
             }
             .to_string(),
             gpu_info: None, // Would detect GPU if available
-            cpu_cores: num, _cpus: get(),
+            cpu_cores: num_cpus::get(),
             cpu_frequency_mhz: None,
         }
     }

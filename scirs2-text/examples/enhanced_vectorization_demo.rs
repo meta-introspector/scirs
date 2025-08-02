@@ -3,7 +3,7 @@
 //! This example shows how to use the enhanced vectorizers with n-gram support,
 //! document frequency filtering, and advanced TF-IDF options.
 
-use scirs2__text::{
+use scirs2_text::{
     enhanced_vectorize::{EnhancedCountVectorizer, EnhancedTfidfVectorizer},
     preprocess::BasicTextCleaner,
     preprocess::TextCleaner,
@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Machine learning algorithms process textual data efficiently.",
         "Text processing and natural language understanding are important.",
         "Natural language processing is a field of artificial intelligence.",
-        "Deep learning models can understand complex _text patterns.",
+        "Deep learning models can understand complex text patterns.",
     ];
 
     // 1. Enhanced Count Vectorizer with Unigrams

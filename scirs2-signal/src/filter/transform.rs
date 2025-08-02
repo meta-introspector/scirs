@@ -1,16 +1,16 @@
-//! Filter transformation functions
-//!
-//! This module provides comprehensive transformation functions for converting between
-//! different filter representations including analog-to-digital transforms, frequency
-//! transformations, and conversions between zeros-poles-gain and transfer function forms.
+// Filter transformation functions
+//
+// This module provides comprehensive transformation functions for converting between
+// different filter representations including analog-to-digital transforms, frequency
+// transformations, and conversions between zeros-poles-gain and transfer function forms.
 
+use super::common::FilterCoefficients;
 use crate::error::{SignalError, SignalResult};
-use num__complex::Complex64;
+use crate::lti::design::tf;
+use crate::lti::{tf, TransferFunction};
+use num_complex::Complex64;
 use num_traits::Zero;
 use std::f64::consts::PI;
-use super::common::FilterCoefficients;
-use crate::lti::{tf, TransferFunction};
-use crate::lti::design::tf;
 
 #[allow(unused_imports)]
 /// Apply bilinear transform to convert analog filter to digital
@@ -33,7 +33,7 @@ use crate::lti::design::tf;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::transform::bilinear_transform;
+/// use scirs2_signal::filter::transform::bilinear_transform;
 ///
 /// // Convert simple analog integrator to digital
 /// let analog_poles = vec![Complex64::new(0.0, 0.0)];
@@ -96,7 +96,7 @@ pub fn bilinear_transform(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::transform::zpk_to_tf;
+/// use scirs2_signal::filter::transform::zpk_to_tf;
 ///
 /// // Convert simple first-order system
 /// let zeros = vec![];
@@ -210,7 +210,7 @@ pub fn zpk_to_tf(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::transform::tf_to_zpk;
+/// use scirs2_signal::filter::transform::tf_to_zpk;
 ///
 /// // Convert simple first-order transfer function
 /// let b = vec![1.0];

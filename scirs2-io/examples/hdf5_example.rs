@@ -148,7 +148,7 @@ fn compression_example() -> Result<(), Box<dyn std::error::Error>> {
     let mut file = HDF5File::create("compressed_data.h5")?;
 
     // Create large dataset
-    let large_data: Array2<f64> = Array2::from_shape_fn((1000, 500), |(i, j)| {
+    let large_data: Array2<f64> = Array2::fromshape_fn((1000, 500), |(i, j)| {
         (i as f64).sin() * (j as f64).cos() + 0.1 * rand::random::<f64>()
     });
 
@@ -249,7 +249,7 @@ fn scientific_data_example() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         // Temperature data (12 months x 10 years)
-        let temp_data: Array2<f64> = Array2::from_shape_fn((12, 10), |(month, year)| {
+        let temp_data: Array2<f64> = Array2::fromshape_fn((12, 10), |(month, year)| {
             15.0 + 10.0 * (2.0 * std::f64::consts::PI * month as f64 / 12.0).sin()
                 + 0.5 * year as f64
                 + rand::random::<f64>()
@@ -258,7 +258,7 @@ fn scientific_data_example() -> Result<(), Box<dyn std::error::Error>> {
         file.create_dataset_from_array("climate_data/temperature", &temp_data, None)?;
 
         // Precipitation data
-        let precip_data: Array2<f64> = Array2::from_shape_fn((12, 10), |(month, year)| {
+        let precip_data: Array2<f64> = Array2::fromshape_fn((12, 10), |(month, year)| {
             50.0 + 30.0 * (2.0 * std::f64::consts::PI * (month + 6) as f64 / 12.0).sin()
                 + 2.0 * year as f64
                 + 5.0 * rand::random::<f64>()
@@ -284,7 +284,7 @@ fn scientific_data_example() -> Result<(), Box<dyn std::error::Error>> {
 
         // Quality control flags
         let qc_flags: Array2<i64> =
-            Array2::from_shape_fn(
+            Array2::fromshape_fn(
                 (12, 10),
                 |(__)| if rand::random::<f64>() > 0.95 { 1 } else { 0 },
             );

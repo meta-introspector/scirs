@@ -183,11 +183,11 @@ impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> SelectionNetw
     pub fn new(_input_size: usize, hidden_size: usize, num_optimizers: usize) -> Self {
         let mut rng = scirs2_core::random::rng();
 
-        let input_weights = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let input_weights = Array2::fromshape_fn((hidden_size, _input_size), |_| {
             A::from(rng.random_f64()).unwrap() * A::from(0.1).unwrap() - A::from(0.05).unwrap()
         });
 
-        let output_weights = Array2::from_shape_fn((num_optimizers, hidden_size), |_| {
+        let output_weights = Array2::fromshape_fn((num_optimizers, hidden_size), |_| {
             A::from(rng.random_f64()).unwrap() * A::from(0.1).unwrap() - A::from(0.05).unwrap()
         });
 

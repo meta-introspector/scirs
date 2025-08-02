@@ -1,14 +1,14 @@
-//! Advanced wavelet denoising methods
-//!
-//! This module implements sophisticated denoising techniques including:
-//! - Translation Invariant Wavelet Denoising (Cycle Spinning)
-//! - Block thresholding
-//! - Bayesian wavelet denoising
-//! - Adaptive thresholding based on local statistics
-//! - Multiscale denoising with cross-scale dependencies
+// Advanced wavelet denoising methods
+//
+// This module implements sophisticated denoising techniques including:
+// - Translation Invariant Wavelet Denoising (Cycle Spinning)
+// - Block thresholding
+// - Bayesian wavelet denoising
+// - Adaptive thresholding based on local statistics
+// - Multiscale denoising with cross-scale dependencies
 
-use crate::denoise::{ThresholdMethod, threshold_coefficients};
-use crate::dwt::{DecompositionResult, Wavelet, wavedec, waverec};
+use crate::denoise::{threshold_coefficients, ThresholdMethod};
+use crate::dwt::{wavedec, waverec, DecompositionResult, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use crate::wpt::wp_decompose;
 use ndarray::Array1;
@@ -165,8 +165,7 @@ fn translation_invariant_denoise(
                 }
 
                 // Denoise shifted signal
-                let (denoised_shifted_) =
-                    standard_denoise(&shifted, config, noise_level).unwrap();
+                let (denoised_shifted_) = standard_denoise(&shifted, config, noise_level).unwrap();
 
                 // Inverse shift
                 let mut result = vec![0.0; n];
@@ -182,7 +181,7 @@ fn translation_invariant_denoise(
         let mut averaged = vec![0.0; n];
         for result in &results {
             for i in 0..n {
-                averaged[i] += result[i] / n_shifts  as f64;
+                averaged[i] += result[i] / n_shifts as f64;
             }
         }
 
@@ -211,7 +210,7 @@ fn translation_invariant_denoise(
 
             // Inverse shift and accumulate
             for i in 0..n {
-                accumulated[(i + shift) % n] += denoised_shifted[i] / n_shifts  as f64;
+                accumulated[(i + shift) % n] += denoised_shifted[i] / n_shifts as f64;
             }
         }
 
@@ -279,7 +278,7 @@ fn block_threshold_denoise(
 
         // Scale-dependent threshold
         let base_threshold = noise_level * (2.0 * (signal.len() as f64).ln()).sqrt();
-        let scale_factor = (level_idx + 1) as f64 / config._level  as f64;
+        let scale_factor = (level_idx + 1) as f64 / config._level as f64;
         let threshold = base_threshold * (1.0 + 0.5 * scale_factor);
         thresholds.push(threshold);
 
@@ -337,7 +336,7 @@ fn standard_denoise(
         // Adaptive threshold based on scale
         let threshold = if config.adaptive {
             // Scale-dependent threshold
-            let scale_factor = (level_idx + 1) as f64 / config._level  as f64;
+            let scale_factor = (level_idx + 1) as f64 / config._level as f64;
             base_threshold * (1.0 - 0.3 * scale_factor)
         } else {
             base_threshold
@@ -392,9 +391,9 @@ fn estimate_noise_level(_signal: &[f64], config: &AdvancedDenoiseConfig) -> Sign
             let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
             let detail = &coeffs.details[0];
 
-            let mean = detail.iter().sum::<f64>() / detail.len()  as f64;
+            let mean = detail.iter().sum::<f64>() / detail.len() as f64;
             let variance =
-                detail.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / detail.len()  as f64;
+                detail.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / detail.len() as f64;
 
             Ok(variance.sqrt())
         }
@@ -419,8 +418,8 @@ fn estimate_noise_level(_signal: &[f64], config: &AdvancedDenoiseConfig) -> Sign
 
             for i in 0.._signal.len() - window {
                 let chunk = &_signal[i..i + window];
-                let mean = chunk.iter().sum::<f64>() / window  as f64;
-                let var = chunk.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / window  as f64;
+                let mean = chunk.iter().sum::<f64>() / window as f64;
+                let var = chunk.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / window as f64;
                 variances.push(var);
             }
 
@@ -434,7 +433,7 @@ fn estimate_noise_level(_signal: &[f64], config: &AdvancedDenoiseConfig) -> Sign
 /// Estimate signal variance for Bayesian denoising
 #[allow(dead_code)]
 fn estimate_signal_variance(_coeffs: &[f64], noise_level: f64) -> f64 {
-    let n = _coeffs.len()  as f64;
+    let n = _coeffs.len() as f64;
     let empirical_var = _coeffs.iter().map(|&x| x * x).sum::<f64>() / n;
 
     // Estimate signal variance by removing noise contribution
@@ -459,8 +458,8 @@ fn estimate_snr_improvement(_original: &[f64], denoised: &[f64]) -> Option<f64> 
         .collect();
 
     // Compute power
-    let signal_power = denoised.iter().map(|&x| x * x).sum::<f64>() / denoised.len()  as f64;
-    let noise_power = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len()  as f64;
+    let signal_power = denoised.iter().map(|&x| x * x).sum::<f64>() / denoised.len() as f64;
+    let noise_power = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len() as f64;
 
     if noise_power > 0.0 {
         Some(10.0 * (signal_power / noise_power).log10())

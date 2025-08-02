@@ -588,7 +588,7 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for 
         create_basic_capabilities()
     }}
     
-    fn initialize(&mut self, _param_shape: &[usize]) -> Result<()> {{
+    fn initialize(&mut self, _paramshape: &[usize]) -> Result<()> {{
         Ok(())
     }}
     
@@ -835,7 +835,7 @@ macro_rules! create_optimizer_plugin {
         #[derive(Debug)]
         pub struct $name<A: Float> {
             config: OptimizerConfig,
-            state: OptimizerState_phantom: std::marker::PhantomData<A>,
+            state: OptimizerState, phantom: std::marker::PhantomData<A>,
         }
 
         impl<A: Float> $name<A> {
@@ -868,7 +868,7 @@ macro_rules! create_optimizer_plugin {
                 create_basic_capabilities()
             }
 
-            fn initialize(&mut self, _param_shape: &[usize]) -> Result<()> {
+            fn initialize(&mut self, _paramshape: &[usize]) -> Result<()> {
                 Ok(())
             }
 

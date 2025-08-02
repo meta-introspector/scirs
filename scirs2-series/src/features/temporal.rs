@@ -427,18 +427,18 @@ where
 /// * `ts_class2` - Time series from class 2  
 /// * `min_length` - Minimum shapelet length
 /// * `max_length` - Maximum shapelet length
-/// * `max_shapelets` - Maximum number of shapelets to return
+/// * `maxshapelets` - Maximum number of shapelets to return
 ///
 /// # Returns
 ///
 /// * Vector of discovered shapelets
 #[allow(dead_code)]
-pub fn extract_shapelets<F>(
+pub fn extractshapelets<F>(
     ts_class1: &[Array1<F>],
     ts_class2: &[Array1<F>],
     min_length: usize,
     max_length: usize,
-    max_shapelets: usize,
+    maxshapelets: usize,
 ) -> Result<Vec<ShapeletInfo<F>>>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -451,7 +451,7 @@ where
 
     let mut all_candidates = Vec::new();
 
-    // Generate candidate _shapelets from class 1
+    // Generate candidate shapelets from class 1
     for ts in ts_class1.iter() {
         for _length in min_length..=max_length.min(ts.len() / 2) {
             for start in 0..=(ts.len() - _length) {
@@ -459,7 +459,7 @@ where
 
                 // Calculate information gain
                 let info_gain =
-                    calculate_shapelet_information_gain(&shapelet, ts_class1, ts_class2)?;
+                    calculateshapelet_information_gain(&shapelet, ts_class1, ts_class2)?;
 
                 all_candidates.push(ShapeletInfo {
                     pattern: shapelet,
@@ -478,7 +478,7 @@ where
             .unwrap_or(std::cmp::Ordering::Equal)
     });
 
-    all_candidates.truncate(max_shapelets);
+    all_candidates.truncate(maxshapelets);
     Ok(all_candidates)
 }
 
@@ -488,7 +488,7 @@ where
 
 /// Calculate information gain for a shapelet candidate
 #[allow(dead_code)]
-fn calculate_shapelet_information_gain<F>(
+fn calculateshapelet_information_gain<F>(
     shapelet: &Array1<F>,
     ts_class1: &[Array1<F>],
     ts_class2: &[Array1<F>],
@@ -518,12 +518,12 @@ where
     let mut distances_class2 = Vec::new();
 
     for ts in ts_class1 {
-        let min_dist = find_min_distance_to_shapelet(ts, shapelet);
+        let min_dist = find_min_distance_toshapelet(ts, shapelet);
         distances_class1.push(min_dist);
     }
 
     for ts in ts_class2 {
-        let min_dist = find_min_distance_to_shapelet(ts, shapelet);
+        let min_dist = find_min_distance_toshapelet(ts, shapelet);
         distances_class2.push(min_dist);
     }
 
@@ -570,7 +570,7 @@ where
 
 /// Find minimum distance from a time series to a shapelet
 #[allow(dead_code)]
-fn find_min_distance_to_shapelet<F>(_ts: &Array1<F>, shapelet: &Array1<F>) -> F
+fn find_min_distance_toshapelet<F>(_ts: &Array1<F>, shapelet: &Array1<F>) -> F
 where
     F: Float + FromPrimitive,
 {

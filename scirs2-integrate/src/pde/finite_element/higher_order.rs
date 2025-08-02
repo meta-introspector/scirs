@@ -80,9 +80,9 @@ impl ShapeFunctions {
         let zeta = 1.0 - xi - eta; // Third barycentric coordinate
 
         match _element_type {
-            ElementType::Linear => Ok(Self::linear_shape_functions(xi, eta, zeta)),
-            ElementType::Quadratic => Ok(Self::quadratic_shape_functions(xi, eta, zeta)),
-            ElementType::Cubic => Ok(Self::cubic_shape_functions(xi, eta, zeta)),
+            ElementType::Linear => Ok(Self::linearshape_functions(xi, eta, zeta)),
+            ElementType::Quadratic => Ok(Self::quadraticshape_functions(xi, eta, zeta)),
+            ElementType::Cubic => Ok(Self::cubicshape_functions(xi, eta, zeta)),
         }
     }
 
@@ -96,14 +96,14 @@ impl ShapeFunctions {
         let zeta = 1.0 - xi - eta;
 
         match element_type {
-            ElementType::Linear => Ok(Self::linear_shape_derivatives(xi, eta, zeta)),
-            ElementType::Quadratic => Ok(Self::quadratic_shape_derivatives(xi, eta, zeta)),
-            ElementType::Cubic => Ok(Self::cubic_shape_derivatives(xi, eta, zeta)),
+            ElementType::Linear => Ok(Self::linearshape_derivatives(xi, eta, zeta)),
+            ElementType::Quadratic => Ok(Self::quadraticshape_derivatives(xi, eta, zeta)),
+            ElementType::Cubic => Ok(Self::cubicshape_derivatives(xi, eta, zeta)),
         }
     }
 
     /// Linear shape functions (P1)
-    fn linear_shape_functions(_xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
+    fn linearshape_functions(_xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
         Array1::from_vec(vec![
             zeta, // N1 = 1 - _xi - eta
             _xi,  // N2 = _xi
@@ -112,7 +112,7 @@ impl ShapeFunctions {
     }
 
     /// Linear shape function derivatives
-    fn linear_shape_derivatives(_xi: f64, _eta: f64, _zeta: f64) -> (Array1<f64>, Array1<f64>) {
+    fn linearshape_derivatives(_xi: f64, _eta: f64, _zeta: f64) -> (Array1<f64>, Array1<f64>) {
         let dxi = Array1::from_vec(vec![-1.0, 1.0, 0.0]);
         let deta = Array1::from_vec(vec![-1.0, 0.0, 1.0]);
         (dxi, deta)
@@ -120,7 +120,7 @@ impl ShapeFunctions {
 
     /// Quadratic shape functions (P2)
     /// Node ordering: 3 corners + 3 mid-edge nodes
-    fn quadratic_shape_functions(_xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
+    fn quadraticshape_functions(_xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
         Array1::from_vec(vec![
             zeta * (2.0 * zeta - 1.0), // N1: corner node 1
             _xi * (2.0 * _xi - 1.0),   // N2: corner node 2
@@ -132,7 +132,7 @@ impl ShapeFunctions {
     }
 
     /// Quadratic shape function derivatives
-    fn quadratic_shape_derivatives(_xi: f64, eta: f64, zeta: f64) -> (Array1<f64>, Array1<f64>) {
+    fn quadraticshape_derivatives(_xi: f64, eta: f64, zeta: f64) -> (Array1<f64>, Array1<f64>) {
         let dxi = Array1::from_vec(vec![
             1.0 - 4.0 * zeta,   // dN1/dxi
             4.0 * _xi - 1.0,    // dN2/dxi
@@ -156,7 +156,7 @@ impl ShapeFunctions {
 
     /// Cubic shape functions (P3)
     /// Node ordering: 3 corners + 6 edge nodes (2 per edge) + 1 internal node
-    fn cubic_shape_functions(_xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
+    fn cubicshape_functions(_xi: f64, eta: f64, zeta: f64) -> Array1<f64> {
         Array1::from_vec(vec![
             // Corner nodes
             zeta * (3.0 * zeta - 1.0) * (3.0 * zeta - 2.0) / 2.0, // N1
@@ -175,7 +175,7 @@ impl ShapeFunctions {
     }
 
     /// Cubic shape function derivatives
-    fn cubic_shape_derivatives(_xi: f64, eta: f64, zeta: f64) -> (Array1<f64>, Array1<f64>) {
+    fn cubicshape_derivatives(_xi: f64, eta: f64, zeta: f64) -> (Array1<f64>, Array1<f64>) {
         let dxi = Array1::from_vec(vec![
             // Corner nodes derivatives w.r.t _xi
             -(3.0 * zeta - 1.0) * (3.0 * zeta - 2.0) / 2.0
@@ -463,7 +463,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    fn test_linear_shape_functions() {
+    fn test_linearshape_functions() {
         // Test at corners of reference triangle
         let n = ShapeFunctions::evaluate(ElementType::Linear, 0.0, 0.0).unwrap();
         assert_relative_eq!(n[0], 1.0, epsilon = 1e-12);
@@ -487,7 +487,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_shape_functions() {
+    fn test_quadraticshape_functions() {
         // Test partition of unity at center
         let n = ShapeFunctions::evaluate(ElementType::Quadratic, 1.0 / 3.0, 1.0 / 3.0).unwrap();
         let sum: f64 = n.iter().sum();
@@ -502,7 +502,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cubic_shape_functions() {
+    fn test_cubicshape_functions() {
         // Test partition of unity at center
         let n = ShapeFunctions::evaluate(ElementType::Cubic, 1.0 / 3.0, 1.0 / 3.0).unwrap();
         let sum: f64 = n.iter().sum();

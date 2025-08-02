@@ -782,7 +782,7 @@ impl AdvancedVisualizer {
                     "neuromorphic_enabled": true
                 },
                 "cluster_plot": {
-                    "data_shape": [output.cluster_plot.data.nrows(), output.cluster_plot.data.ncols()],
+                    "datashape": [output.cluster_plot.data.nrows(), output.cluster_plot.data.ncols()],
                     "num_clusters": output.cluster_plot.centroids.nrows(),
                     "quantum_enhancement": output.cluster_plot.quantum_enhancement,
                     "confidence_levels": output.cluster_plot.confidence_levels
@@ -828,7 +828,7 @@ impl AdvancedVisualizer {
       "neuromorphic_enabled": true
     }},
     "cluster_plot": {{
-      "data_shape": [{}, {}],
+      "datashape": [{}, {}],
       "num_clusters": {},
       "quantum_enhancement": {}
     }},

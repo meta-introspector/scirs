@@ -406,7 +406,7 @@ impl ExternalClient {
             }
         }
 
-        let data = Array2::from_shape_vec((n_samples, data_cols), data_vec)
+        let data = Array2::fromshape_vec((n_samples, data_cols), data_vec)
             .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
         let target = target_vec.map(Array1::from_vec);

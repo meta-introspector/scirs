@@ -2,7 +2,7 @@ use ndarray::{Array1, Array2};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2__signal::higher_order::{
+use scirs2_signal::higher_order::{
 use std::f64::consts::PI;
     biamplitude, bicoherence, bispectrum, cumulative_bispectrum, detect_phase_coupling,
     skewness_spectrum, trispectrum,

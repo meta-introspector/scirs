@@ -266,7 +266,7 @@ pub struct EfficiencyMetrics {
 #[allow(dead_code)]
 pub fn fusion_processing<T>(
     image: ArrayView2<T>,
-    config: &AdvancedConfig_previous_state: Option<AdvancedState>,
+    config: &AdvancedConfig_previous, state: Option<AdvancedState>,
 ) -> NdimageResult<(Array2<T>, AdvancedState)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
@@ -1108,7 +1108,7 @@ fn extract_causal_features(
 
 #[allow(dead_code)]
 fn combine_dimensional_features(
-    _spatial: &[f64], _temporal: &[f64], _frequency: &[f64], _quantum: &[f64], _consciousness: &[f64], _causal: &[f64], _d: usize_t: usize, _c: usize_config: &AdvancedConfig,
+    _spatial: &[f64], _temporal: &[f64], _frequency: &[f64], _quantum: &[f64], _consciousness: &[f64], _causal: &[f64], _d: usize, t: usize, _c: usize, config: &AdvancedConfig,
 ) -> NdimageResult<f64> {
     Ok(0.0)
 }
@@ -1188,14 +1188,14 @@ fn apply_global_consciousness_coherence(
 
 #[allow(dead_code)]
 fn reorganize_network_structure(
-    _topology: &mut NetworkTopology_advanced_features: &Array5<f64>, _config: &AdvancedConfig,
+    _topology: &mut NetworkTopology_advanced, features: &Array5<f64>, _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn calculate_connection_input(
-    _source_node: &NetworkNode, _connection: &Connection_advanced_features: &Array5<f64>, _position: (usize, usize), _config: &AdvancedConfig,
+    _source_node: &NetworkNode, _connection: &Connection_advanced, features: &Array5<f64>, _position: (usize, usize), _config: &AdvancedConfig,
 ) -> NdimageResult<f64> {
     Ok(0.0)
 }
@@ -1257,21 +1257,21 @@ fn apply_activation_function(
 
 #[allow(dead_code)]
 fn update_node_state(
-    _node: &mut NetworkNode_output: f64, _advanced_features: &Array5<f64>, _position: (usize, usize), _config: &AdvancedConfig,
+    _node: &mut NetworkNode, output: f64, _advanced_features: &Array5<f64>, _position: (usize, usize), _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn apply_self_organization_learning(
-    _node: &mut NetworkNode_connections: &mut HashMap<usize, Vec<Connection>>, _node_id: usize, _config: &AdvancedConfig,
+    _node: &mut NetworkNode, connections: &mut HashMap<usize, Vec<Connection>>, _node_id: usize, _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn apply_self_organization_learning_safe(
-    _topology: &mut NetworkTopology_node_id: usize, _config: &AdvancedConfig,
+    _topology: &mut NetworkTopology_node, id: usize, _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     // Stub implementation to avoid borrowing issues
     Ok(())
@@ -1279,7 +1279,7 @@ fn apply_self_organization_learning_safe(
 
 #[allow(dead_code)]
 fn update_global_network_properties(
-    _topology: &mut NetworkTopology_config: &AdvancedConfig,
+    _topology: &mut NetworkTopology, config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
@@ -1795,15 +1795,15 @@ fn multi_scale_integration(
     let mut reconstruction = processed_pyramid[processed_pyramid.len() - 1].clone();
 
     for level_idx in (0..processed_pyramid.len() - 1).rev() {
-        let target_shape = processed_pyramid[level_idx].dim();
-        let mut upsampled = Array2::zeros(target_shape);
+        let targetshape = processed_pyramid[level_idx].dim();
+        let mut upsampled = Array2::zeros(targetshape);
 
         // Bilinear upsampling (simplified)
-        let scale_y = target_shape.0 as f64 / reconstruction.nrows() as f64;
-        let scale_x = target_shape.1 as f64 / reconstruction.ncols() as f64;
+        let scale_y = targetshape.0 as f64 / reconstruction.nrows() as f64;
+        let scale_x = targetshape.1 as f64 / reconstruction.ncols() as f64;
 
-        for y in 0..target_shape.0 {
-            for x in 0..target_shape.1 {
+        for y in 0..targetshape.0 {
+            for x in 0..targetshape.1 {
                 let src_y = (y as f64 / scale_y).floor() as usize;
                 let src_x = (x as f64 / scale_x).floor() as usize;
 
@@ -1818,8 +1818,8 @@ fn multi_scale_integration(
         let weight_coarse = 0.3;
         let weight_fine = 0.7;
 
-        for y in 0..target_shape.0 {
-            for x in 0..target_shape.1 {
+        for y in 0..targetshape.0 {
+            for x in 0..targetshape.1 {
                 reconstruction = upsampled.clone();
                 reconstruction[(y, x)] = weight_coarse * upsampled[(y, x)]
                     + weight_fine * processed_pyramid[level_idx][(y, x)];
@@ -3202,7 +3202,7 @@ fn calculate_memory_importance(_content: &Array2<f64>) -> NdimageResult<f64> {
 /// (For brevity, I'm showing the structure but not implementing all helpers)
 #[allow(dead_code)]
 fn consolidate_to_long_term_memory(
-    _trace: &MemoryTrace_long_term_memory: &mut HashMap<String, ConsolidatedMemory>,
+    _trace: &MemoryTrace_long_term, memory: &mut HashMap<String, ConsolidatedMemory>,
 ) -> NdimageResult<()> {
     // Implementation would consolidate _memory _trace into long-term storage
     Ok(())
@@ -3226,7 +3226,7 @@ fn apply_memory_fusion(
 
 #[allow(dead_code)]
 fn update_memory_attention(
-    _attention: &mut MemoryAttention_output: &Array2<f64>,
+    _attention: &mut MemoryAttention, output: &Array2<f64>,
 ) -> NdimageResult<()> {
     // Implementation would update _attention weights based on performance
     Ok(())
@@ -3234,7 +3234,7 @@ fn update_memory_attention(
 
 #[allow(dead_code)]
 fn apply_hierarchical_learning(
-    _input: &Array2<f64>, _hierarchical_learner: &mut HierarchicalLearner_advanced, _state: &AdvancedState_config: &AdvancedConfig,
+    _input: &Array2<f64>, _hierarchical_learner: &mut HierarchicalLearner_advanced, _state: &AdvancedState, config: &AdvancedConfig,
 ) -> NdimageResult<Array2<f64>> {
     // Implementation would apply hierarchical learning processing
     Ok(_input.clone()) // Simplified for now
@@ -3258,7 +3258,7 @@ fn apply_evolved_strategies(
 
 #[allow(dead_code)]
 fn perform_adaptive_memory_consolidation(
-    _consolidation: &mut AdaptiveMemoryConsolidation_output: &Array2<f64>, _task_context: &str,
+    _consolidation: &mut AdaptiveMemoryConsolidation, output: &Array2<f64>, _task_context: &str,
 ) -> NdimageResult<()> {
     // Implementation would perform memory _consolidation operations
     Ok(())
@@ -3266,7 +3266,7 @@ fn perform_adaptive_memory_consolidation(
 
 #[allow(dead_code)]
 fn update_meta_learning_performance(
-    _tracker: &mut MetaLearningTracker_output: &Array2<f64>, _task_context: &str,
+    _tracker: &mut MetaLearningTracker, output: &Array2<f64>, _task_context: &str,
 ) -> NdimageResult<()> {
     // Implementation would update performance tracking
     Ok(())
@@ -4213,7 +4213,7 @@ fn analyze_quantum_resource_state(
 
 #[allow(dead_code)]
 fn predict_quantum_workload(
-    _predictor: &QuantumLoadPredictor_workload: &WorkloadCharacteristics,
+    _predictor: &QuantumLoadPredictor, workload: &WorkloadCharacteristics,
 ) -> NdimageResult<Vec<f64>> {
     // Implementation would use quantum ML to predict future _workload
     Ok(vec![0.5; 10])
@@ -4221,7 +4221,7 @@ fn predict_quantum_workload(
 
 #[allow(dead_code)]
 fn quantum_optimize_resource_allocation(
-    _engine: &mut QuantumOptimizationEngine_current_state: &HashMap<String, f64>, _prediction: &[f64], _config: &AdvancedConfig,
+    _engine: &mut QuantumOptimizationEngine_current, state: &HashMap<String, f64>, _prediction: &[f64], _config: &AdvancedConfig,
 ) -> NdimageResult<QuantumResourceAllocation> {
     // Implementation would use quantum optimization algorithms
     Ok(QuantumResourceAllocation {
@@ -4234,7 +4234,7 @@ fn quantum_optimize_resource_allocation(
 
 #[allow(dead_code)]
 fn apply_quantum_load_balancing(
-    _balancer: &mut QuantumLoadBalancer_allocation: &QuantumResourceAllocation_entanglement, _graph: &ResourceEntanglementGraph,
+    _balancer: &mut QuantumLoadBalancer, allocation: &QuantumResourceAllocation_entanglement, _graph: &ResourceEntanglementGraph,
 ) -> NdimageResult<QuantumLoadBalancingDecision> {
     // Implementation would apply quantum load balancing strategies
     Ok(QuantumLoadBalancingDecision {
@@ -4260,7 +4260,7 @@ fn quantum_schedule_tasks(
 
 #[allow(dead_code)]
 fn update_quantum_entanglement_graph(
-    _graph: &mut ResourceEntanglementGraph_schedule: &QuantumTaskSchedule, _config: &AdvancedConfig,
+    _graph: &mut ResourceEntanglementGraph, schedule: &QuantumTaskSchedule, _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     // Implementation would update entanglement relationships
     Ok(())
@@ -4268,7 +4268,7 @@ fn update_quantum_entanglement_graph(
 
 #[allow(dead_code)]
 fn quantum_performance_monitoring(
-    _monitor: &mut QuantumPerformanceMonitor_schedule: &QuantumTaskSchedule_advanced, _state: &AdvancedState,
+    _monitor: &mut QuantumPerformanceMonitor, schedule: &QuantumTaskSchedule_advanced, _state: &AdvancedState,
 ) -> NdimageResult<QuantumMonitoringFeedback> {
     // Implementation would _monitor quantum performance in real-time
     Ok(QuantumMonitoringFeedback {
@@ -4290,7 +4290,7 @@ pub struct QuantumMonitoringFeedback {
 
 #[allow(dead_code)]
 fn apply_quantum_optimization_feedback(
-    _scheduler: &mut QuantumAwareResourceScheduler_feedback: &QuantumMonitoringFeedback, _config: &AdvancedConfig,
+    _scheduler: &mut QuantumAwareResourceScheduler, feedback: &QuantumMonitoringFeedback, _config: &AdvancedConfig,
 ) -> NdimageResult<()> {
     // Implementation would apply _feedback for continuous optimization
     Ok(())
@@ -4322,7 +4322,7 @@ mod tests {
     #[test]
     fn test_advanced_fusion_processing() {
         let image =
-            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+            Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
 
         let config = AdvancedConfig::default();
         let result = fusion_processing(image.view(), &config, None);
@@ -4336,7 +4336,7 @@ mod tests {
     #[test]
     fn test_extract_advanced_dimensional_features() {
         let image =
-            Array2::from_shape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6])
+            Array2::fromshape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6])
                 .unwrap();
 
         let config = AdvancedConfig::default();
@@ -4403,7 +4403,7 @@ mod tests {
     #[test]
     fn test_temporal_causality_analysis() {
         let image =
-            Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.0, 0.8, 0.3, 0.2, 0.6, 0.9, 0.1])
+            Array2::fromshape_vec((3, 3), vec![1.0, 0.5, 0.0, 0.8, 0.3, 0.2, 0.6, 0.9, 0.1])
                 .unwrap();
 
         let config = AdvancedConfig::default();
@@ -4419,9 +4419,9 @@ mod tests {
 
     #[test]
     fn test_meta_learning_adaptation() {
-        let consciousness = Array2::from_shape_vec((2, 2), vec![0.1, 0.3, 0.5, 0.7]).unwrap();
-        let neural = Array2::from_shape_vec((2, 2), vec![0.2, 0.4, 0.6, 0.8]).unwrap();
-        let causal = Array2::from_shape_vec((2, 2), vec![0.15, 0.35, 0.55, 0.75]).unwrap();
+        let consciousness = Array2::fromshape_vec((2, 2), vec![0.1, 0.3, 0.5, 0.7]).unwrap();
+        let neural = Array2::fromshape_vec((2, 2), vec![0.2, 0.4, 0.6, 0.8]).unwrap();
+        let causal = Array2::fromshape_vec((2, 2), vec![0.15, 0.35, 0.55, 0.75]).unwrap();
 
         let config = AdvancedConfig::default();
         let mut state = initialize_or_update_state(None, (2, 2), &config).unwrap();

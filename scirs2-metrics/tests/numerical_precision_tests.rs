@@ -200,7 +200,7 @@ fn test_wasserstein_distance_precision() {
 #[allow(dead_code)]
 fn test_clustering_metrics_precision() {
     // Create a simple 2D dataset with known clustering structure
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (6, 2),
         vec![
             1.0, 1.0, // Cluster 0

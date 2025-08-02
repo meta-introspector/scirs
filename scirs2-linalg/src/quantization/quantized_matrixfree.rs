@@ -1084,7 +1084,7 @@ mod tests {
                 .positive_definite();
 
         // Convert to a LinearOperator
-        let linear_op = quantized_to_linear_operator(&quantized_op);
+        let linear_op = quantized_to_linear_operator(&quantizedop);
 
         // Check that properties are preserved
         assert_eq!(linear_op.nrows(), quantized_op.nrows());

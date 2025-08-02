@@ -1117,7 +1117,7 @@ pub mod convolution {
     #[derive(Debug)]
     pub struct GpuConvolution<F: Float + Debug> {
         #[allow(dead_code)]
-        config: GpuConfig_phantom: std::marker::PhantomData<F>,
+        config: GpuConfig, phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + Debug + Clone> GpuConvolution<F> {
@@ -1308,7 +1308,7 @@ pub mod blas {
     #[derive(Debug)]
     pub struct GpuBLAS<F: Float + Debug> {
         #[allow(dead_code)]
-        config: GpuConfig_phantom: std::marker::PhantomData<F>,
+        config: GpuConfig, phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + Debug + Clone> GpuBLAS<F> {
@@ -1777,7 +1777,7 @@ pub mod blas {
             let col_matrix = self.im2col_transform(input, kernel_height, kernel_width, stride)?;
             let kernel_view = kernel.view();
             let kernel_matrix = kernel_view
-                .to_shape((1, kernel_height * kernel_width))
+                .toshape((1, kernel_height * kernel_width))
                 .unwrap();
 
             let mut output_matrix = Array2::zeros((1, output_height * output_width));
@@ -1793,7 +1793,7 @@ pub mod blas {
 
             // Reshape to output format
             Ok(output_matrix
-                .to_shape((output_height, output_width))
+                .toshape((output_height, output_width))
                 .unwrap()
                 .to_owned())
         }
@@ -2010,7 +2010,7 @@ pub mod algorithms {
             &self,
             batch: &[Array1<F>],
             forecast_steps: usize,
-            method: &ForecastMethod_stream_id: usize,
+            method: &ForecastMethod_stream, id: usize,
         ) -> Result<Vec<Array1<F>>> {
             // Advanced parallel processing using GPU-optimized algorithms
             match method {

@@ -121,7 +121,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Time: {:.3} ms", spectral_time.as_millis());
 
     // 4. GPU batch processing (if available)
-    if scirs2_fft::sparse_fft_gpu, _memory::is_cuda_available() {
+    if scirs2_fft::sparse_fft_gpu_memory::is_cuda_available() {
         println!("\n4. GPU Batch Processing (CUDA):");
         let start = Instant::now();
         let _config = BatchConfig {
@@ -197,8 +197,8 @@ fn process_signals_sequentially(
 // Verify that different processing methods give similar results
 #[allow(dead_code)]
 fn verify_results(
-    baseline_results: &[scirs2, _fft::sparse_fft::SparseFFTResult],
-    test_results: &[scirs2, _fft::sparse_fft::SparseFFTResult],
+    baseline_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
+    test_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
 ) {
     assert_eq!(
         baseline_results.len(),
@@ -251,9 +251,9 @@ fn verify_results(
 // Analyze results from different processing methods
 #[allow(dead_code)]
 fn analyze_results(
-    sequential_results: &[scirs2, _fft::sparse_fft::SparseFFTResult],
-    parallel_results: &[scirs2, _fft::sparse_fft::SparseFFTResult],
-    spectral_results: &[scirs2, _fft::sparse_fft::SparseFFTResult],
+    sequential_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
+    parallel_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
+    spectral_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
 ) {
     // Calculate average number of components found
     let seq_avg = sequential_results

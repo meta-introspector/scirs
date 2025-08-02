@@ -19,7 +19,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use scirs2__text::transformer::{TransformerModel, TransformerConfig};
+//! use scirs2_text::transformer::{TransformerModel, TransformerConfig};
 //!
 //! // Configure the transformer
 //! let config = TransformerConfig {
@@ -50,7 +50,7 @@
 //! ### Multi-Head Attention
 //!
 //! ```rust
-//! use scirs2__text::transformer::MultiHeadAttention;
+//! use scirs2_text::transformer::MultiHeadAttention;
 //! use ndarray::Array2;
 //!
 //! let d_model = 512;
@@ -65,7 +65,7 @@
 //! ### Positional Encoding
 //!
 //! ```rust
-//! use scirs2__text::transformer::PositionalEncoding;
+//! use scirs2_text::transformer::PositionalEncoding;
 //!
 //! let d_model = 512;
 //! let max_len = 1000;
@@ -80,7 +80,7 @@
 //! ### Complete Encoder
 //!
 //! ```rust
-//! use scirs2__text::transformer::{TransformerEncoder, TransformerConfig};
+//! use scirs2_text::transformer::{TransformerEncoder, TransformerConfig};
 //!
 //! let config = TransformerConfig {
 //!     d_model: 256,
@@ -101,7 +101,7 @@
 //! ### Custom Attention Patterns
 //!
 //! ```rust
-//! use scirs2__text::transformer::MultiHeadAttention;
+//! use scirs2_text::transformer::MultiHeadAttention;
 //! use ndarray::Array2;
 //!
 //! let mut attention = MultiHeadAttention::new(512, 8).unwrap();
@@ -124,7 +124,7 @@
 //! ### Layer-wise Learning Rate Decay
 //!
 //! ```rust
-//! use scirs2__text::transformer::TransformerModel;
+//! use scirs2_text::transformer::TransformerModel;
 //!
 //! // Apply different learning rates to different layers
 //! let mut model = TransformerModel::new(config).unwrap();
@@ -288,10 +288,10 @@ pub struct MultiHeadAttention {
 
 impl MultiHeadAttention {
     /// Create new multi-head attention layer
-    pub fn new(_d_model: usize, n_heads: usize) -> Result<Self> {
-        if _d_model % n_heads != 0 {
+    pub fn new(d_model: usize, n_heads: usize) -> Result<Self> {
+        if d_model % n_heads != 0 {
             return Err(TextError::InvalidInput(
-                "_d_model must be divisible by n_heads".to_string(),
+                "d_model must be divisible by n_heads".to_string(),
             ));
         }
 
@@ -301,13 +301,13 @@ impl MultiHeadAttention {
         let scale = (2.0 / d_model as f64).sqrt();
 
         let w_q =
-            Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
+            Array2::fromshape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
         let w_k =
-            Array2::from_shape_fn((d_model..d_model), |_| rand::rng().gen_range(-scale..scale));
+            Array2::fromshape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
         let w_v =
-            Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
+            Array2::fromshape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
         let w_o =
-            Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
+            Array2::fromshape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
 
         Ok(Self {
             d_model,
@@ -406,10 +406,10 @@ impl MultiHeadAttention {
 
     /// Reshape tensor for multi-head attention
     fn reshape_for_heads(&self, x: &Array2<f64>) -> Result<Array3<f64>> {
-        let (seq_len_d_model) = x.dim();
+        let (seq_len, _d_model) = x.dim();
         let reshaped = x
             .clone()
-            .into_shape_with_order((seq_len, self.n_heads, self.d_k))
+            .intoshape_with_order((seq_len, self.n_heads, self.d_k))
             .map_err(|e| TextError::InvalidInput(format!("Reshape error: {e}")))?;
 
         // Transpose to (n_heads, seq_len, d_k)
@@ -481,8 +481,8 @@ impl FeedForward {
     pub fn new(_d_model: usize, d_ff: usize) -> Self {
         let scale = (2.0 / _d_model as f64).sqrt();
 
-        let w1 = Array2::from_shape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale..scale));
-        let w2 = Array2::from_shape_fn((d_ff, _d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w1 = Array2::fromshape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale..scale));
+        let w2 = Array2::fromshape_fn((d_ff, _d_model), |_| rand::rng().gen_range(-scale..scale));
         let b1 = Array1::zeros(d_ff);
         let b2 = Array1::zeros(_d_model);
 
@@ -840,7 +840,7 @@ impl TokenEmbedding {
     /// Create new token embedding layer
     pub fn new(_vocab_size: usize, d_model: usize) -> Self {
         let scale = (1.0 / d_model as f64).sqrt();
-        let embeddings = Array2::from_shape_fn((_vocab_size, d_model), |_| {
+        let embeddings = Array2::fromshape_fn((_vocab_size, d_model), |_| {
             rand::rng().gen_range(-scale..scale)
         });
 

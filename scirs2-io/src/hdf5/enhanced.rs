@@ -148,7 +148,8 @@ impl EnhancedHDF5File {
     pub fn create_dataset_with_compression<A, D>(
         &mut self,
         path: &str,
-        array: &ArrayBase<A, D>, _data_type: ExtendedDataType,
+        array: &ArrayBase<A, D>,
+        _data_type: ExtendedDataType,
         options: DatasetOptions,
     ) -> Result<()>
     where
@@ -285,7 +286,7 @@ impl EnhancedHDF5File {
                 let f64_array = if array.len() > 0 {
                     let shape = array.shape().to_vec();
                     let data: Vec<f64> = array.iter().map(|x| x.clone().into()).collect();
-                    ArrayD::from_shape_vec(IxDyn(&shape), data)
+                    ArrayD::fromshape_vec(IxDyn(&shape), data)
                         .map_err(|e| IoError::FormatError(e.to_string()))?
                 } else {
                     ArrayD::zeros(IxDyn(array.shape()))
@@ -496,7 +497,8 @@ impl EnhancedHDF5File {
     /// Parallel dataset reading implementation
     fn read_dataset_parallel_impl(
         &self,
-        path: &str, _parallel_config: &ParallelConfig,
+        path: &str,
+        _parallel_config: &ParallelConfig,
     ) -> Result<ArrayD<f64>> {
         #[cfg(feature = "hdf5")]
         {
@@ -539,8 +541,8 @@ impl EnhancedHDF5File {
             let data: Vec<f64> = dataset
                 .read_raw()
                 .map_err(|e| IoError::FormatError(format!("Failed to read dataset: {e}")))?;
-            let ndarray_shape = IxDyn(&shape);
-            return ArrayD::from_shape_vec(ndarray_shape, data)
+            let ndarrayshape = IxDyn(&shape);
+            return ArrayD::fromshape_vec(ndarrayshape, data)
                 .map_err(|e| IoError::FormatError(e.to_string()));
         }
 
@@ -602,8 +604,8 @@ impl EnhancedHDF5File {
             full_data[start_element..start_element + data.len()].copy_from_slice(&data);
         }
 
-        let ndarray_shape = IxDyn(&shape);
-        ArrayD::from_shape_vec(ndarray_shape, full_data)
+        let ndarrayshape = IxDyn(&shape);
+        ArrayD::fromshape_vec(ndarrayshape, full_data)
             .map_err(|e| IoError::FormatError(e.to_string()))
     }
 
@@ -635,7 +637,8 @@ impl EnhancedHDF5File {
     /// Parallel datasets writing implementation
     fn write_datasets_parallel_impl(
         &mut self,
-        datasets: HashMap<String, (ArrayD<f64>, ExtendedDataType, DatasetOptions)>, _parallel_config: &ParallelConfig,
+        datasets: HashMap<String, (ArrayD<f64>, ExtendedDataType, DatasetOptions)>,
+        _parallel_config: &ParallelConfig,
     ) -> Result<()> {
         // For now, implement sequential writing with proper error handling
         // Full parallel writing would require more complex synchronization
@@ -763,8 +766,8 @@ mod tests {
 // Advanced HDF5 Enhancements
 //
 
-use std::collections::BTreeMap;
 use rand::seq::SliceRandom;
+use std::collections::BTreeMap;
 
 /// Scientific metadata attribute types
 #[derive(Debug, Clone)]

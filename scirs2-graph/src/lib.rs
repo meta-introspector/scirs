@@ -36,7 +36,7 @@
 
 // Temporarily commenting out OpenBLAS to fix build issues
 // extern crate blas;
-// extern crate openblas_src;
+// extern crate openblassrc;
 
 pub mod advanced;
 pub mod algorithms;

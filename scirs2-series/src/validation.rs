@@ -11,7 +11,7 @@ use statrs::statistics::Statistics;
 
 /// Validate that a value is positive
 #[allow(dead_code)]
-pub fn check_positive<F: Float + Display>(_value: F, name: &str) -> Result<()> {
+pub fn check_positive<F: Float + Display>(value: F, name: &str) -> Result<()> {
     if _value <= F::zero() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
@@ -23,7 +23,7 @@ pub fn check_positive<F: Float + Display>(_value: F, name: &str) -> Result<()> {
 
 /// Validate that a value is non-negative
 #[allow(dead_code)]
-pub fn check_non_negative<F: Float + Display>(_value: F, name: &str) -> Result<()> {
+pub fn check_non_negative<F: Float + Display>(value: F, name: &str) -> Result<()> {
     if _value < F::zero() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
@@ -35,7 +35,7 @@ pub fn check_non_negative<F: Float + Display>(_value: F, name: &str) -> Result<(
 
 /// Validate that a value is in range [0, 1]
 #[allow(dead_code)]
-pub fn check_probability<F: Float + Display>(_value: F, name: &str) -> Result<()> {
+pub fn check_probability<F: Float + Display>(value: F, name: &str) -> Result<()> {
     if _value < F::zero() || _value >, F::one() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
@@ -47,7 +47,7 @@ pub fn check_probability<F: Float + Display>(_value: F, name: &str) -> Result<()
 
 /// Validate that a value is in a given range
 #[allow(dead_code)]
-pub fn check_in_range<F: Float + Display>(_value: F, min: F, max: F, name: &str) -> Result<()> {
+pub fn check_in_range<F: Float + Display>(value: F, min: F, max: F, name: &str) -> Result<()> {
     if _value < min || _value > max {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
@@ -82,7 +82,7 @@ where
 #[allow(dead_code)]
 pub fn check_same_length<S1, S2, F>(
     arr1: &ArrayBase<S1, Ix1>,
-    arr2: &ArrayBase<S2, Ix1>, _name1: &str_name2: &str,
+    arr2: &ArrayBase<S2, Ix1>, _name1: &str, name2: &str,
 ) -> Result<()>
 where
     S1: Data<Elem = F>,

@@ -2188,7 +2188,7 @@ pub struct CoverageAnalysis<F: Float> {
 
 /// Compute entropy of probability distribution
 #[allow(dead_code)]
-pub fn compute_entropy<F: Float + num_traits::FromPrimitive>(_probabilities: &Array1<F>) -> F {
+pub fn compute_entropy<F: Float + num_traits::FromPrimitive>(probabilities: &Array1<F>) -> F {
     let mut entropy = F::zero();
     let eps = F::from(1e-15).unwrap();
 

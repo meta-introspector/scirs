@@ -6,7 +6,7 @@ mod tests {
 
     #[test]
     fn test_transpose_view() {
-        let data = Array2::from_shape_fn((3, 4), |(i, j)| i * 10 + j);
+        let data = Array2::fromshape_fn((3, 4), |(i, j)| i * 10 + j);
 
         // Create a transpose view
         let view = transpose_view(&data).unwrap();
@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn test_diagonal_view() {
-        let data = Array2::from_shape_fn((3, 3), |(i, j)| if i == j { i + 1 } else { 0 });
+        let data = Array2::fromshape_fn((3, 3), |(i, j)| if i == j { i + 1 } else { 0 });
 
         // Create a diagonal view
         let view = diagonal_view(&data).unwrap();
@@ -44,7 +44,7 @@ mod tests {
 
     #[test]
     fn test_diagonal_view_non_square() {
-        let data = Array2::from_shape_fn((3, 4), |(i, j)| i * 10 + j);
+        let data = Array2::fromshape_fn((3, 4), |(i, j)| i * 10 + j);
 
         // Try to create a diagonal view of a non-square matrix
         let result = diagonal_view(&data);
@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn test_empty_array_views() {
-        let empty: Array2<f64> = Array2::from_shape_fn((0, 0), |_| 0.0);
+        let empty: Array2<f64> = Array2::fromshape_fn((0, 0), |_| 0.0);
 
         // Try to create views of an empty array
         let transpose_result = transpose_view(&empty);
@@ -86,7 +86,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "not yet implemented")]
     fn test_view_as_unimplemented() {
-        let data = Array2::from_shape_fn((3, 4), |(i, j)| i as f64 * 10.0 + j as f64);
+        let data = Array2::fromshape_fn((3, 4), |(i, j)| i as f64 * 10.0 + j as f64);
 
         // This should panic with "not yet implemented"
         unsafe {

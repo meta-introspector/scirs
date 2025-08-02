@@ -3719,7 +3719,7 @@ impl<T: Float + Send + Sync> DynamicLearningSystem<T> {
 
     fn incremental_learn(&mut self, features: &Array1<T>, target: T) -> Result<()> {
         // Perform incremental learning on all available algorithms
-        let feature_matrix = Array2::from_shape_vec((1, features.len()), features.to_vec())
+        let feature_matrix = Array2::fromshape_vec((1, features.len()), features.to_vec())
             .map_err(|e| OptimError::ComputationError(format!("Shape error: {}", e)))?;
 
         for algorithm in &mut self.learning_algorithms {

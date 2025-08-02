@@ -28,7 +28,7 @@ use scirs2__optim::optimizers as optim_optimizers;
 /// sgd.update(&mut params, &grads).unwrap();
 pub struct SGD<F: Float + Debug> {
     /// Inner SGD optimizer from scirs2-optim
-    inner: optim_optimizers: SGD<F>,
+    inner: optim, optimizers: SGD<F>,
     /// Weight decay (L2 regularization)
     weight_decay: F,
 }
@@ -42,7 +42,7 @@ impl<F: Float + Debug> SGD<F> {
         let momentum_value = momentum.unwrap_or(F::zero());
         
         Self {
-            inner: optim_optimizers: SGD::new_with_config(
+            inner: optim, optimizers: SGD::new_with_config(
                 _learning_rate,
                 momentum_value,
                 F::zero() // No weight decay by default

@@ -779,7 +779,7 @@ fn merge_baseline_with_results(
 }
 
 #[allow(dead_code)]
-fn extract_numeric_value(_value: &serde_json: :Value) -> Option<f64> {
+fn extract_numeric_value(_value: &serde, json: Value) -> Option<f64> {
     match _value {
         serde_json::Value::Number(n) => n.as_f64(),
         serde_json::Value::Object(obj) => {
@@ -871,7 +871,7 @@ fn get_platform_info() -> PlatformInfo {
     PlatformInfo {
         os: std::env::consts::OS.to_string(),
         arch: std::env::consts::ARCH.to_string(),
-        cpu_cores: num, _cpus: get(),
+        cpu_cores: num_cpus::get(),
         rust_version: "stable".to_string(), // Simplified since RUSTC_VERSION env var not available
     }
 }

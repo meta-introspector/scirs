@@ -513,7 +513,7 @@ impl ParallelSort {
             data.par_sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         }
 
-        Array::from_shape_vec(array.raw_dim(), data).map_err(|_| ThreadPoolError::ExecutionFailed)
+        Array::fromshape_vec(array.raw_dim(), data).map_err(|_| ThreadPoolError::ExecutionFailed)
     }
 
     /// Parallel argsort (returns indices that would sort the array)
@@ -533,7 +533,7 @@ impl ParallelSort {
 
         let sorted_indices: Vec<usize> = indices.into_iter().map(|(idx, _)| idx).collect();
 
-        Array::from_shape_vec(array.raw_dim(), sorted_indices)
+        Array::fromshape_vec(array.raw_dim(), sorted_indices)
             .map_err(|_| ThreadPoolError::ExecutionFailed)
     }
 }
@@ -637,8 +637,8 @@ mod tests {
     fn test_parallel_element_wise_add() {
         let config = ParallelConfig::default();
 
-        let a = Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let b = Array::from_shape_vec(IxDyn(&[4]), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
+        let a = Array::fromshape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let b = Array::fromshape_vec(IxDyn(&[4]), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
 
         let result = ParallelElementWise::add(&a, &b, &config).unwrap();
         let expected = vec![6.0, 8.0, 10.0, 12.0];
@@ -650,7 +650,7 @@ mod tests {
     fn test_parallel_reduction_sum() {
         let config = ParallelConfig::default();
 
-        let a = Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let a = Array::fromshape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         let result = ParallelReduction::sum(&a, &config).unwrap();
 
         assert_eq!(result, 10.0);
@@ -660,8 +660,8 @@ mod tests {
     fn test_parallel_matrix_multiplication() {
         let config = ParallelConfig::default();
 
-        let a = Array::from_shape_vec(IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let b = Array::from_shape_vec(IxDyn(&[2, 2]), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
+        let a = Array::fromshape_vec(IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let b = Array::fromshape_vec(IxDyn(&[2, 2]), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
 
         let result = ParallelMatrix::matmul(&a, &b, &config).unwrap();
 
@@ -676,7 +676,7 @@ mod tests {
     fn test_parallel_transpose() {
         let config = ParallelConfig::default();
 
-        let a = Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let a = Array::fromshape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let result = ParallelMatrix::transpose(&a, &config).unwrap();
 
         assert_eq!(result.shape(), &[3, 2]);
@@ -692,7 +692,7 @@ mod tests {
     fn test_parallel_sort() {
         let config = ParallelConfig::default();
 
-        let a = Array::from_shape_vec((4,), vec![4.0, 1.0, 3.0, 2.0])
+        let a = Array::fromshape_vec((4,), vec![4.0, 1.0, 3.0, 2.0])
             .unwrap()
             .into_dyn();
         let result = ParallelSort::sort(&a, &config).unwrap();
@@ -704,7 +704,7 @@ mod tests {
     fn test_parallel_argsort() {
         let config = ParallelConfig::default();
 
-        let a = Array::from_shape_vec((4,), vec![4.0, 1.0, 3.0, 2.0])
+        let a = Array::fromshape_vec((4,), vec![4.0, 1.0, 3.0, 2.0])
             .unwrap()
             .into_dyn();
         let result = ParallelSort::argsort(&a, &config).unwrap();
@@ -716,10 +716,10 @@ mod tests {
     fn test_parallel_dispatcher() {
         let dispatcher = ParallelDispatcher::new();
 
-        let a = Array::from_shape_vec((3,), vec![1.0, 2.0, 3.0])
+        let a = Array::fromshape_vec((3,), vec![1.0, 2.0, 3.0])
             .unwrap()
             .into_dyn();
-        let b = Array::from_shape_vec((3,), vec![4.0, 5.0, 6.0])
+        let b = Array::fromshape_vec((3,), vec![4.0, 5.0, 6.0])
             .unwrap()
             .into_dyn();
 

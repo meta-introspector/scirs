@@ -1,9 +1,9 @@
 use plotly::common::Mode;
 use plotly::layout::Layout;
 use plotly::{Plot, Scatter};
-use scirs2__signal::dwt::Wavelet;
-use scirs2__signal::waveforms::chirp;
-use scirs2__signal::wpt::{get_level_coefficients, reconstruct_from_nodes, wp_decompose};
+use scirs2_signal::dwt::Wavelet;
+use scirs2_signal::waveforms::chirp;
+use scirs2_signal::wpt::{get_level_coefficients, reconstruct_from_nodes, wp_decompose};
 
 #[allow(dead_code)]
 fn main() {

@@ -1,4 +1,4 @@
-use scirs2__signal::window::{bartlett, hamming, hann};
+use scirs2_signal::window::{bartlett, hamming, hann};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

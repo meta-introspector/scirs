@@ -6,7 +6,7 @@ fn main() {
     let sd = SpatialDropout::new(0.0).unwrap(); // No dropout to test
 
     // Create a simple 4D tensor (batch, channels, height, width)
-    let features = Array::from_shape_fn((1, 2, 2, 2), |(b, c, h, w)| {
+    let features = Array::fromshape_fn((1, 2, 2, 2), |(b, c, h, w)| {
         println!("Creating element at ({}, {}, {}, {})", b, c, h, w);
         c as f64 + h as f64 + w as f64
     });

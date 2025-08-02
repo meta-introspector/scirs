@@ -145,8 +145,7 @@ impl MemoryPatternOptimizer {
     }
 
     /// Calculate NUMA-aware chunk distribution
-    pub fn threads(&self, total_elements: usize, num_threads: usize
-    ) -> Vec<(usize, usize)> {
+    pub fn threads(&self, total_elements: usize, num_threads: usize) -> Vec<(usize, usize)> {
         let mut chunks = Vec::new();
 
         if self.numa_nodes.len() <= 1 {
@@ -538,18 +537,24 @@ where
                 // Calculate NUMA-aware chunk distribution
                 let num_threads = crate::parallel_ops::get_num_threads();
                 let chunk_size = self.data.len() / num_threads.max(1);
-                let numa_chunks: Vec<_> = (0..num_threads).map(|i| {
-                    let start = i * chunk_size;
-                    let end = if i == num_threads - 1 { self.data.len() } else { (i + 1) * chunk_size };
-                    start..end
-                }).collect();
+                let numa_chunks: Vec<_> = (0..num_threads)
+                    .map(|i| {
+                        let start = i * chunk_size;
+                        let end = if i == num_threads - 1 {
+                            self.data.len()
+                        } else {
+                            (i + 1) * chunk_size
+                        };
+                        start..end
+                    })
+                    .collect();
                 let chunks = self.get_chunks();
 
                 let results: Vec<B> = numa_chunks
                     .into_par_iter()
                     .enumerate()
                     .map(|(i, _range)| {
-                        if 0 < chunks.len() {
+                        if !chunks.is_empty() {
                             f(&chunks[0])
                         } else {
                             // Handle edge case - this shouldn't happen but provide fallback
@@ -699,7 +704,8 @@ where
 
             let _elapsed = start_time.elapsed();
             let bandwidth_mbps = if std::time::Duration::from_secs(1).as_nanos() > 0 {
-                (chunk_size as u128 * 1000) / std::time::Duration::from_secs(1).as_nanos() // MB/s
+                (chunk_size as u128 * 1000) / std::time::Duration::from_secs(1).as_nanos()
+            // MB/s
             } else {
                 0
             } as usize;
@@ -896,7 +902,7 @@ where
     // In a real implementation, we would process each chunk separately and combine the results
 
     // Get a shallow copy of the array data
-    let result_shape = array.raw_dim().clone();
+    let resultshape = array.raw_dim().clone();
     let result = op(array);
 
     // Verify the result has the expected shape
@@ -942,7 +948,7 @@ where
     C: Clone,
     D: Dimension + Clone,
 {
-    validation::check_shapes_match(lhs.shape(), rhs.shape())?;
+    validation::checkshapes_match(lhs.shape(), rhs.shape())?;
     validation::check_not_empty(lhs)?;
 
     // If the arrays are small, just apply the operation directly

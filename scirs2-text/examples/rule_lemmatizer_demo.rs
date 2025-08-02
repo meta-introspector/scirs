@@ -3,7 +3,7 @@
 // This example demonstrates the usage of the RuleLemmatizer for lemmatizing text,
 // comparing it with the SimpleLemmatizer and traditional stemmers.
 
-use scirs2__text::{
+use scirs2_text::{
     PorterStemmer, PosTag, RuleLemmatizer, RuleLemmatizerBuilder, SimpleLemmatizer, Stemmer,
 };
 use std::collections::HashMap;

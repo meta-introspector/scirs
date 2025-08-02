@@ -50,7 +50,7 @@ pub enum FiniteDifferenceScheme {
 
 /// Finite difference gradient computer
 pub struct FiniteDifferenceComputer<F: Float> {
-    config: FiniteDifferenceConfig_phantom: std::marker::PhantomData<F>,
+    config: FiniteDifferenceConfig, phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> FiniteDifferenceComputer<F> {
@@ -96,8 +96,8 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     where
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
-        let input_shape = input.shape();
-        let n = input_shape.iter().product::<usize>();
+        let inputshape = input.shape();
+        let n = inputshape.iter().product::<usize>();
 
         // Create Hessian matrix (simplified - assumes flattened input)
         let mut hessian = Array::zeros(IxDyn(&[n, n]));
@@ -138,8 +138,8 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         };
 
         let f_x = function(input)?;
-        let input_shape = input.shape();
-        let mut gradient = Array::zeros(ndarray::IxDyn(&input_shape));
+        let inputshape = input.shape();
+        let mut gradient = Array::zeros(ndarray::IxDyn(&inputshape));
 
         // Compute partial derivatives
         for (i, input_perturbed) in self.create_perturbed_inputs(input, step).enumerate() {
@@ -153,10 +153,10 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         }
 
         let gradient_vec = gradient.into_raw_vec_and_offset().0;
-        let gradient_shape = input_shape.to_vec();
+        let gradientshape = inputshape.to_vec();
         Ok(Tensor::from_vec(
             gradient_vec,
-            gradient_shape,
+            gradientshape,
             input.graph(),
         ))
     }
@@ -172,8 +172,8 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     {
         let step = F::from(self.config.step_size).unwrap();
         let f_x = function(input)?;
-        let input_shape = input.shape();
-        let mut gradient = Array::zeros(ndarray::IxDyn(&input_shape));
+        let inputshape = input.shape();
+        let mut gradient = Array::zeros(ndarray::IxDyn(&inputshape));
 
         // Compute partial derivatives using backward differences
         for (i, input_perturbed) in self.create_perturbed_inputs(input, -step).enumerate() {
@@ -186,10 +186,10 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         }
 
         let gradient_vec = gradient.into_raw_vec_and_offset().0;
-        let gradient_shape = input_shape.to_vec();
+        let gradientshape = inputshape.to_vec();
         Ok(Tensor::from_vec(
             gradient_vec,
-            gradient_shape,
+            gradientshape,
             input.graph(),
         ))
     }
@@ -204,8 +204,8 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let step = F::from(self.config.step_size).unwrap();
-        let input_shape = input.shape();
-        let mut gradient = Array::zeros(ndarray::IxDyn(&input_shape));
+        let inputshape = input.shape();
+        let mut gradient = Array::zeros(ndarray::IxDyn(&inputshape));
 
         // Compute partial derivatives using central differences
         for (i, (input_plus, input_minus)) in self
@@ -223,10 +223,10 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         }
 
         let gradient_vec = gradient.into_raw_vec_and_offset().0;
-        let gradient_shape = input_shape.to_vec();
+        let gradientshape = inputshape.to_vec();
         Ok(Tensor::from_vec(
             gradient_vec,
-            gradient_shape,
+            gradientshape,
             input.graph(),
         ))
     }
@@ -241,11 +241,11 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
     {
         let step = F::from(self.config.step_size).unwrap();
-        let input_shape = input.shape();
-        let mut gradient = Array::zeros(ndarray::IxDyn(&input_shape));
+        let inputshape = input.shape();
+        let mut gradient = Array::zeros(ndarray::IxDyn(&inputshape));
 
         // Use 5-point stencil: (-2h, -h, 0, h, 2h)
-        for i in 0..input_shape.iter().product() {
+        for i in 0..inputshape.iter().product() {
             let (f_minus_2h, f_minus_h, f_plus_h, f_plus_2h) =
                 self.compute_five_point_stencil(&function, input, i, step)?;
 
@@ -261,10 +261,10 @@ impl<F: Float> FiniteDifferenceComputer<F> {
         }
 
         let gradient_vec = gradient.into_raw_vec_and_offset().0;
-        let gradient_shape = input_shape.to_vec();
+        let gradientshape = inputshape.to_vec();
         Ok(Tensor::from_vec(
             gradient_vec,
-            gradient_shape,
+            gradientshape,
             input.graph(),
         ))
     }
@@ -469,7 +469,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     #[allow(dead_code)]
     fn create_single_perturbation<'a>(
         &self,
-        input: &Tensor<'a, F>, _index: usize_delta: F,
+        input: &Tensor<'a, F>, _index: usize, delta: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with a single component perturbed
         let perturbed = *input;
@@ -480,7 +480,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     #[allow(dead_code)]
     fn create_double_perturbation<'a>(
         &self,
-        input: &Tensor<'a, F>, _i: usize_j: usize_delta, _i: F_delta_j: F,
+        input: &Tensor<'a, F>, _i: usize, j: usize_delta, _i: F_delta, j: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with two components perturbed
         let perturbed = *input;

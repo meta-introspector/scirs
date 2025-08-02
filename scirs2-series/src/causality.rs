@@ -1199,7 +1199,7 @@ mod tests {
                 .collect(),
         );
 
-        let x = Array2::from_shape_vec((n, 1), (0..n).map(|i| i as f64).collect()).unwrap();
+        let x = Array2::fromshape_vec((n, 1), (0..n).map(|i| i as f64).collect()).unwrap();
 
         let tester = CausalityTester::new();
         let result = tester

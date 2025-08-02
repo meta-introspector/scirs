@@ -5,7 +5,7 @@
 //!
 //! ag::run(|ctx| {
 //!    let a: ag::Tensor<f32> = T::zeros(&[4, 2], ctx).show();
-//!    let b: ag::Tensor<f32> = T::ones(&[2, 3], ctx).show_shape();
+//!    let b: ag::Tensor<f32> = T::ones(&[2, 3], ctx).showshape();
 //!    let c = T::matmul(a, b).show_prefixed("MatMul:");
 //!
 //!    c.eval( ctx);

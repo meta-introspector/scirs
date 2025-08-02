@@ -215,7 +215,7 @@ where
 /// use ndarray::Array2;
 /// use scirs2__ndimage::local_extrema;
 ///
-/// let data = Array2::<f64>::from_shape_vec((5, 5), (0..25).map(|x| x as f64).collect()).unwrap();
+/// let data = Array2::<f64>::fromshape_vec((5, 5), (0..25).map(|x| x as f64).collect()).unwrap();
 ///
 /// // Use 5x5 neighborhood
 /// let (minima, maxima) = local_extrema(&data, Some(&[5, 5]), Some("both")).unwrap();
@@ -603,7 +603,7 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 /// use scirs2__ndimage::{local_extrema, peak_widths, peak_prominences};
 ///
 /// // Generate test signal
-/// let signal = Array1::<f64>::from_shape_fn(50, |i| {
+/// let signal = Array1::<f64>::fromshape_fn(50, |i| {
 ///     let x = i as f64;
 ///     (-(x - 25.0).powi(2) / 10.0).exp() // Gaussian peak
 /// });

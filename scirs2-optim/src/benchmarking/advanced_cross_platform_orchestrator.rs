@@ -1918,8 +1918,8 @@ impl TestMatrixGenerator {
 impl ContainerManager {
     fn new(_config: ContainerConfig) -> Result<Self> {
         let runtime_interface: Box<dyn ContainerRuntime + Send + Sync> = match _config.runtime {
-            ContainerRuntime::Docker =>, Box::new(DockerRuntime::new()?),
-            ContainerRuntime::Podman =>, Box::new(PodmanRuntime::new()?, _ => return Err(OptimError::UnsupportedFeature("Container runtime not supported".to_string())),
+            ContainerRuntime::Docker => Box::new(DockerRuntime::new()?),
+            ContainerRuntime::Podman => Box::new(PodmanRuntime::new()?, _ => return Err(OptimError::UnsupportedFeature("Container runtime not supported".to_string())),
         };
 
         Ok(Self {

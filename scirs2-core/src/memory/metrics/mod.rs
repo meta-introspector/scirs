@@ -53,9 +53,9 @@ pub use profiler::{
 };
 pub use reporter::{format_bytes, format_duration};
 pub use snapshot::{
-    clear_snapshots, compare_snapshots, global_snapshot_manager, load_all_snapshots, save_all_snapshots,
-    take_snapshot, ComponentStatsDiff, MemorySnapshot, SnapshotComponentStats, SnapshotDiff,
-    SnapshotManager, SnapshotReport,
+    clear_snapshots, compare_snapshots, global_snapshot_manager, load_all_snapshots,
+    save_all_snapshots, take_snapshot, ComponentStatsDiff, MemorySnapshot, SnapshotComponentStats,
+    SnapshotDiff, SnapshotManager, SnapshotReport,
 };
 
 #[cfg(feature = "memory_visualization")]
@@ -212,7 +212,7 @@ where
     pub fn new(
         component_name: impl Into<String>,
         array: &'a ArrayBase<S, D>,
-        chunk_shape: &[usize],
+        chunkshape: &[usize],
     ) -> Self {
         Self {
             inner: ChunkProcessor::new(array, array.raw_dim()),
@@ -266,11 +266,13 @@ where
     S: Data<Elem = A>,
 {
     /// Create a new tracked 2D chunk processor
-    pub fn new(array: &'a ArrayBase<S, ndarray::Ix2>, chunk_shape: (usize, usize),
+    pub fn new(
+        array: &'a ArrayBase<S, ndarray::Ix2>,
+        chunkshape: (usize, usize),
         component_name: impl Into<String>,
     ) -> Self {
         Self {
-            inner: ChunkProcessor2D::new(array, chunk_shape),
+            inner: ChunkProcessor2D::new(array, chunkshape),
             component_name: component_name.into(),
         }
     }

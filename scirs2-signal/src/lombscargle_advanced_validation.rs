@@ -1,12 +1,12 @@
-//! Advanced-comprehensive validation suite for Lomb-Scargle periodogram implementations
-//!
-//! This module provides an extensive validation framework for Lomb-Scargle
-//! implementations with focus on:
-//! - SIMD operation correctness
-//! - Performance regression testing  
-//! - Cross-platform validation
-//! - Memory safety verification
-//! - Numerical accuracy under extreme conditions
+// Advanced-comprehensive validation suite for Lomb-Scargle periodogram implementations
+//
+// This module provides an extensive validation framework for Lomb-Scargle
+// implementations with focus on:
+// - SIMD operation correctness
+// - Performance regression testing  
+// - Cross-platform validation
+// - Memory safety verification
+// - Numerical accuracy under extreme conditions
 
 use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
@@ -177,7 +177,7 @@ impl Default for AdvancedValidationConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::lombscargle_advanced_validation::{run_advanced_validation, AdvancedValidationConfig};
+/// use scirs2_signal::lombscargle_advanced_validation::{run_advanced_validation, AdvancedValidationConfig};
 ///
 /// let config = AdvancedValidationConfig::default();
 /// let results = run_advanced_validation(&config).unwrap();
@@ -324,12 +324,12 @@ fn validate_accuracy_comprehensive(
     let dynamic_range_score = validate_dynamic_range_handling(config.tolerance)?;
 
     let max_relative_error = all_errors.iter().cloned().fold(0.0, f64::max);
-    let mean_relative_error = all_errors.iter().sum::<f64>() / all_errors.len().max(1)  as f64;
+    let mean_relative_error = all_errors.iter().sum::<f64>() / all_errors.len().max(1) as f64;
     let peak_frequency_accuracy = 1.0 - peak_errors.iter().cloned().fold(0.0, f64::max);
     let spectral_leakage_level =
-        spectral_leakage_levels.iter().sum::<f64>() / spectral_leakage_levels.len().max(1)  as f64;
+        spectral_leakage_levels.iter().sum::<f64>() / spectral_leakage_levels.len().max(1) as f64;
     let noise_floor_estimation =
-        noise_floors.iter().sum::<f64>() / noise_floors.len().max(1)  as f64;
+        noise_floors.iter().sum::<f64>() / noise_floors.len().max(1) as f64;
 
     Ok(AccuracyMetrics {
         max_relative_error,
@@ -493,7 +493,7 @@ fn validate_memory_usage_comprehensive(
     }
 
     let allocation_efficiency =
-        allocation_scores.iter().sum::<f64>() / allocation_scores.len()  as f64;
+        allocation_scores.iter().sum::<f64>() / allocation_scores.len() as f64;
     let cache_efficiency_score = measure_cache_efficiency()?;
 
     Ok(MemoryMetrics {
@@ -534,7 +534,9 @@ fn validate_cross_platform_consistency(
 /// Determine overall validation status from issues
 #[allow(dead_code)]
 fn determine_validation_status(_issues: &[ValidationIssue]) -> ValidationStatus {
-    let has_critical = _issues.iter().any(|i| i.severity == IssueSeverity::Critical);
+    let has_critical = _issues
+        .iter()
+        .any(|i| i.severity == IssueSeverity::Critical);
     let has_warnings = _issues.iter().any(|i| i.severity == IssueSeverity::Warning);
 
     if has_critical {
@@ -595,9 +597,18 @@ fn validate_pure_sinusoid_accuracy(
 
     // Compute Lomb-Scargle
     let frequencies = Array1::linspace(0.1, 50.0, 500);
-    let (_freqs, power) = lombscargle(times.as_slice().unwrap(), signal.as_slice().unwrap(), Some(frequencies.as_slice().unwrap()), None, None, None,
+    let (_freqs, power) = lombscargle(
+        times.as_slice().unwrap(),
+        signal.as_slice().unwrap(),
+        Some(frequencies.as_slice().unwrap()),
         None,
-        None, None, None)?;
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )?;
 
     // Find peak
     let peak_idx = power
@@ -668,9 +679,21 @@ fn benchmark_signal_size(_size: usize, iterations: usize) -> SignalResult<Benchm
 
     let start = Instant::now();
     for _ in 0..iterations {
-        let _ = lombscargle(t.as_slice().unwrap(), signal.as_slice().unwrap(), Some(frequencies.as_slice().unwrap()), None, None, None, None, None, None, None, Some(false))?;
+        let _ = lombscargle(
+            t.as_slice().unwrap(),
+            signal.as_slice().unwrap(),
+            Some(frequencies.as_slice().unwrap()),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(false),
+        )?;
     }
-    let avg_time = start.elapsed().as_secs_f64() * 1000.0 / iterations  as f64;
+    let avg_time = start.elapsed().as_secs_f64() * 1000.0 / iterations as f64;
 
     // Estimate memory usage (simplified)
     let memory_mb = (_size * 16 + frequencies.len() * 8) as f64 / (1024.0 * 1024.0);
@@ -756,8 +779,8 @@ fn calculate_scalability_factor(_execution_times: &HashMap<usize, f64>) -> f64 {
         return 1.0;
     }
 
-    let size1 = sizes[0]  as f64;
-    let size2 = sizes[sizes.len() - 1]  as f64;
+    let size1 = sizes[0] as f64;
+    let size2 = sizes[sizes.len() - 1] as f64;
     let time1 = execution_times[&(size1 as usize)];
     let time2 = execution_times[&(size2 as usize)];
 

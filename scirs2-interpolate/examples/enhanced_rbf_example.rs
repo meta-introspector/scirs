@@ -34,7 +34,7 @@ fn main() {
         }
     }
 
-    let points_array = Array2::from_shape_vec((n_points * n_points, 2), points).unwrap();
+    let points_array = Array2::fromshape_vec((n_points * n_points, 2), points).unwrap();
     let values_array = Array1::from_vec(values);
 
     // Create a standard RBF interpolator
@@ -56,7 +56,7 @@ fn main() {
     // Test interpolation at some points
     let test_points = vec![[0.5, 0.5], [1.5, -0.5], [-1.0, 1.0], [0.0, 0.0]];
 
-    let test_array = Array2::from_shape_vec(
+    let test_array = Array2::fromshape_vec(
         (test_points.len(), 2),
         test_points.iter().flat_map(|p| vec![p[0], p[1]]).collect(),
     )
@@ -136,7 +136,7 @@ fn main() {
         }
     }
 
-    let sparse_points_array = Array2::from_shape_vec((25, 2), sparse_points).unwrap();
+    let sparse_points_array = Array2::fromshape_vec((25, 2), sparse_points).unwrap();
     let sparse_values_array = Array1::from_vec(sparse_values);
 
     // Create interpolators with different kernels
@@ -163,7 +163,7 @@ fn main() {
         }
     }
 
-    let grid_array = Array2::from_shape_vec((n_grid * n_grid, 2), grid_points).unwrap();
+    let grid_array = Array2::fromshape_vec((n_grid * n_grid, 2), grid_points).unwrap();
 
     // Calculate exact values for comparison
     let mut exact_values = Vec::with_capacity(n_grid * n_grid);
@@ -221,7 +221,7 @@ fn main() {
         noisy_values.push(f + noise);
     }
 
-    let noisy_points_array = Array2::from_shape_vec((n_noisy..2), noisy_points).unwrap();
+    let noisy_points_array = Array2::fromshape_vec((n_noisy..2), noisy_points).unwrap();
     let noisy_values_array = Array1::from_vec(noisy_values);
 
     // Create interpolators with different strategies
@@ -236,7 +236,7 @@ fn main() {
     println!("Fast RBF:      {}", fast_rbf.description());
 
     // Test interpolation at specific points
-    let test_array = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
+    let test_array = Array2::fromshape_vec((1, 2), vec![0.5, 0.5]).unwrap();
 
     let auto_result = auto_rbf.interpolate(&test_array.view()).unwrap();
     let accurate_result = accurate_rbf.interpolate(&test_array.view()).unwrap();
@@ -291,7 +291,7 @@ fn main() {
         complex_values.push(global + medium + local + spike);
     }
 
-    let complex_points_array = Array2::from_shape_vec((n_complex..2), complex_points).unwrap();
+    let complex_points_array = Array2::fromshape_vec((n_complex..2), complex_points).unwrap();
     let complex_values_array = Array1::from_vec(complex_values);
 
     // Create single-scale and multi-scale interpolators

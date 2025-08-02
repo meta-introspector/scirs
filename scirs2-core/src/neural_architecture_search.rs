@@ -194,7 +194,7 @@ pub struct LayerParameters {
 #[derive(Debug, Clone)]
 pub struct GlobalConfig {
     /// Input shape
-    pub input_shape: Vec<usize>,
+    pub inputshape: Vec<usize>,
     /// Output shape/classes
     pub output_size: usize,
     /// Learning rate
@@ -480,7 +480,8 @@ pub struct NeuralArchitectureSearch {
 impl NeuralArchitectureSearch {
     /// Create a new Neural Architecture Search engine
     #[allow(clippy::too_many_arguments)]
-    pub fn new(search_space: SearchSpace,
+    pub fn new(
+        search_space: SearchSpace,
         strategy: NASStrategy,
         objectives: OptimizationObjectives,
         constraints: HardwareConstraints,
@@ -590,7 +591,7 @@ impl NeuralArchitectureSearch {
             id: format!("{}", hasher.finish()),
             layers,
             globalconfig: GlobalConfig {
-                input_shape: vec![224, 224, 3], // Default image size
+                inputshape: vec![224, 224, 3], // Default image size
                 output_size: 1000,              // ImageNet classes
                 learning_rate: 0.001,
                 batch_size: 32,

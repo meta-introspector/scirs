@@ -267,7 +267,7 @@ pub struct ShapeletConfig {
     /// Maximum shapelet length
     pub max_length: usize,
     /// Number of shapelets to discover
-    pub n_shapelets: usize,
+    pub nshapelets: usize,
     /// Discovery algorithm
     pub algorithm: ShapeletAlgorithm,
     /// Minimum information gain threshold
@@ -281,7 +281,7 @@ impl Default for ShapeletConfig {
         Self {
             min_length: 10,
             max_length: 50,
-            n_shapelets: 10,
+            nshapelets: 10,
             algorithm: ShapeletAlgorithm::Fast,
             min_info_gain: 0.01,
             random_seed: None,
@@ -709,7 +709,7 @@ impl TimeSeriesClusterer {
     /// # Returns
     ///
     /// Result containing discovered shapelets and their quality measures
-    pub fn discover_shapelets(
+    pub fn discovershapelets(
         &self,
         data: &Array2<f64>,
         labels: &Array1<usize>,
@@ -724,7 +724,7 @@ impl TimeSeriesClusterer {
             ));
         }
 
-        let mut candidate_shapelets = Vec::new();
+        let mut candidateshapelets = Vec::new();
 
         // Generate candidate shapelets
         for series_idx in 0..n_series {
@@ -743,7 +743,7 @@ impl TimeSeriesClusterer {
                         quality: 0.0,
                     };
 
-                    candidate_shapelets.push(shapelet);
+                    candidateshapelets.push(shapelet);
                 }
             }
         }
@@ -751,8 +751,8 @@ impl TimeSeriesClusterer {
         // Evaluate candidate shapelets
         let mut shapelet_scores = Vec::new();
 
-        for (idx, shapelet) in candidate_shapelets.iter().enumerate() {
-            let info_gain = self.compute_shapelet_information_gain(data, labels, shapelet)?;
+        for (idx, shapelet) in candidateshapelets.iter().enumerate() {
+            let info_gain = self.computeshapelet_information_gain(data, labels, shapelet)?;
 
             if info_gain >= config.min_info_gain {
                 shapelet_scores.push((idx, info_gain));
@@ -762,22 +762,22 @@ impl TimeSeriesClusterer {
         // Sort by information gain and select top shapelets
         shapelet_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-        let n_selected = config.n_shapelets.min(shapelet_scores.len());
-        let mut selected_shapelets = Vec::new();
+        let n_selected = config.nshapelets.min(shapelet_scores.len());
+        let mut selectedshapelets = Vec::new();
         let mut information_gains = Array1::zeros(n_selected);
 
         for i in 0..n_selected {
             let (shapelet_idx, info_gain) = shapelet_scores[i];
-            let mut shapelet = candidate_shapelets[shapelet_idx].clone();
+            let mut shapelet = candidateshapelets[shapelet_idx].clone();
             shapelet.information_gain = info_gain;
             shapelet.quality = info_gain; // Simple quality measure
 
-            selected_shapelets.push(shapelet);
+            selectedshapelets.push(shapelet);
             information_gains[i] = info_gain;
         }
 
         Ok(ShapeletResult {
-            shapelets: selected_shapelets,
+            shapelets: selectedshapelets,
             information_gains,
             algorithm: config.algorithm,
             n_series,
@@ -1244,7 +1244,7 @@ impl TimeSeriesClusterer {
         Ok(())
     }
 
-    fn compute_shapelet_information_gain(
+    fn computeshapelet_information_gain(
         &self,
         data: &Array2<f64>,
         labels: &Array1<usize>,
@@ -1256,7 +1256,7 @@ impl TimeSeriesClusterer {
         // Compute distances from each time series to the shapelet
         for i in 0..n_samples {
             let series = data.row(i).to_owned();
-            let min_distance = self.compute_min_distance_to_shapelet(&series, &shapelet.data)?;
+            let min_distance = self.compute_min_distance_toshapelet(&series, &shapelet.data)?;
             distances.push((min_distance, labels[i]));
         }
 
@@ -1301,7 +1301,7 @@ impl TimeSeriesClusterer {
         Ok(best_info_gain)
     }
 
-    fn compute_min_distance_to_shapelet(
+    fn compute_min_distance_toshapelet(
         &self,
         series: &Array1<f64>,
         shapelet: &Array1<f64>,
@@ -1449,7 +1449,7 @@ mod tests {
     }
 
     #[test]
-    fn test_discover_shapelets() {
+    fn test_discovershapelets() {
         // Create simple test data with discriminative patterns
         let mut data = Array2::zeros((4, 20));
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
@@ -1476,15 +1476,15 @@ mod tests {
         let config = ShapeletConfig {
             min_length: 3,
             max_length: 8,
-            n_shapelets: 5,
+            nshapelets: 5,
             ..Default::default()
         };
 
         let result = clusterer
-            .discover_shapelets(&data, &labels, &config)
+            .discovershapelets(&data, &labels, &config)
             .unwrap();
 
-        assert!(result.shapelets.len() <= config.n_shapelets);
+        assert!(result.shapelets.len() <= config.nshapelets);
         assert_eq!(result.information_gains.len(), result.shapelets.len());
         assert_eq!(result.n_series, 4);
 

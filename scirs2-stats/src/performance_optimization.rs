@@ -201,13 +201,13 @@ impl OptimizedLinearDiscriminantAnalysis {
         classes.dedup();
         let unique_classes = Array1::from_vec(classes);
         let _n_classes = unique_classes.len();
-        let (_n_samples_n_features) = x.dim();
+        let _n_samples_n_features = x.dim();
 
         // SIMD-optimized class means computation
         let class_means = self.compute_class_means_simd(x, y, &unique_classes)?;
 
         // SIMD-optimized scatter matrices
-        let (_sw_sb) = self.compute_scatter_matrices_simd(x, y, &unique_classes, &class_means)?;
+        let _sw_sb = self.compute_scatter_matrices_simd(x, y, &unique_classes, &class_means)?;
 
         // Use the regular LDA eigenvalue solver (already optimized)
         let _lda_temp = LinearDiscriminantAnalysis::new();
@@ -219,7 +219,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
     /// Parallel-optimized LDA fitting
     fn fit_parallel(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<LDAResult> {
-        let (_n_samples_n_features) = x.dim();
+        let _n_samples_n_features = x.dim();
 
         // Get unique classes
         let mut classes = y.to_vec();
@@ -232,8 +232,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         let class_means = self.compute_class_means_parallel(x, y, &unique_classes)?;
 
         // Parallel scatter matrix computation
-        let (_sw_sb) =
-            self.compute_scatter_matrices_parallel(x, y, &unique_classes, &class_means)?;
+        let _sw_sb = self.compute_scatter_matrices_parallel(x, y, &unique_classes, &class_means)?;
 
         // For now, use regular eigenvalue solver
         self.lda.fit(x, y)
@@ -559,7 +558,7 @@ impl OptimizedCanonicalCorrelationAnalysis {
         let (x_processed, y_processed) = self.center_and_scale_parallel(x, y)?;
 
         // Parallel covariance computation
-        let (_cxx_cyy_cxy) = self.compute_covariances_parallel(&x_processed, &y_processed)?;
+        let _cxx_cyy_cxy = self.compute_covariances_parallel(&x_processed, &y_processed)?;
 
         // Use regular CCA solver for eigenvalue problem (already optimized)
         self.cca.fit(x, y)

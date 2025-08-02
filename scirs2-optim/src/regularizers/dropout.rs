@@ -57,7 +57,7 @@ impl<A: Float + Debug> Dropout<A> {
     ///
     /// * `rate` - Dropout rate (0.0 to 1.0, fraction of units that are dropped)
     /// * `rng` - Random number generator
-    pub fn new<R: Rng>(_rate: A, rng: &mut R) -> Self {
+    pub fn new<R: Rng>(rate: A, rng: &mut R) -> Self {
         // Ensure _rate is between 0 and 1
         let rate = _rate.max(A::zero()).min(A::one());
 

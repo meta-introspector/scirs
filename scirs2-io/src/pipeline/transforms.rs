@@ -7,9 +7,9 @@ use super::*;
 use crate::error::Result;
 use ndarray::{s, Array1, Array2, Axis};
 use num_traits::{Float, FromPrimitive};
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::marker::PhantomData;
-use statrs::statistics::Statistics;
 
 /// Normalization transformer
 pub struct NormalizeTransform<T> {
@@ -143,30 +143,30 @@ where
 
 /// Reshape transformer
 pub struct ReshapeTransform {
-    new_shape: Vec<usize>,
+    newshape: Vec<usize>,
 }
 
 impl ReshapeTransform {
-    pub fn new(_shape: Vec<usize>) -> Self {
-        Self { new_shape: _shape }
+    pub fn new(shape: Vec<usize>) -> Self {
+        Self { newshape: shape }
     }
 }
 
 impl DataTransformer for ReshapeTransform {
     fn transform(&self, data: Box<dyn Any + Send + Sync>) -> Result<Box<dyn Any + Send + Sync>> {
         if let Ok(array) = data.downcast::<Array2<f64>>() {
-            let total_elements: usize = self.new_shape.iter().product();
+            let total_elements: usize = self.newshape.iter().product();
             if array.len() != total_elements {
                 return Err(IoError::Other(format!(
                     "Cannot reshape array of size {} to shape {:?}",
                     array.len(),
-                    self.new_shape
+                    self.newshape
                 )));
             }
 
             // Convert to 1D, then reshape
             let flat: Vec<f64> = array.into_iter().collect();
-            let reshaped = Array2::from_shape_vec((self.new_shape[0], self.new_shape[1]), flat)
+            let reshaped = Array2::fromshape_vec((self.newshape[0], self.newshape[1]), flat)
                 .map_err(|e| IoError::Other(e.to_string()))?;
 
             Ok(Box::new(reshaped) as Box<dyn Any + Send + Sync>)
@@ -178,7 +178,8 @@ impl DataTransformer for ReshapeTransform {
 
 /// Type conversion transformer
 pub struct TypeConvertTransform<From, To> {
-    _from: PhantomData<From>, _to: PhantomData<To>,
+    _from: PhantomData<From>,
+    _to: PhantomData<To>,
 }
 
 impl<From, To> Default for TypeConvertTransform<From, To> {
@@ -229,7 +230,10 @@ pub enum AggregationMethod {
 
 impl AggregateTransform {
     pub fn new(_method: AggregationMethod, axis: Option<Axis>) -> Self {
-        Self { method: _method, axis }
+        Self {
+            method: _method,
+            axis,
+        }
     }
 }
 
@@ -357,7 +361,9 @@ pub enum ImputationStrategy {
 
 impl ImputeTransform {
     pub fn new(_strategy: ImputationStrategy) -> Self {
-        Self { strategy: _strategy }
+        Self {
+            strategy: _strategy,
+        }
     }
 }
 
@@ -411,7 +417,10 @@ pub enum OutlierMethod {
 
 impl OutlierTransform {
     pub fn new(_method: OutlierMethod, threshold: f64) -> Self {
-        Self { method: _method, threshold }
+        Self {
+            method: _method,
+            threshold,
+        }
     }
 }
 
@@ -440,7 +449,7 @@ impl DataTransformer for OutlierTransform {
                     let n_cols = filtered[0].len();
                     let flat: Vec<f64> = filtered.into_iter().flatten().collect();
 
-                    let result = Array2::from_shape_vec((n_rows, n_cols), flat)
+                    let result = Array2::fromshape_vec((n_rows, n_cols), flat)
                         .map_err(|e| IoError::Other(e.to_string()))?;
 
                     Ok(Box::new(result) as Box<dyn Any + Send + Sync>)
@@ -478,7 +487,7 @@ impl DataTransformer for OutlierTransform {
                     let n_cols = filtered_rows[0].len();
                     let flat: Vec<f64> = filtered_rows.into_iter().flatten().collect();
 
-                    let result = Array2::from_shape_vec((n_rows, n_cols), flat)
+                    let result = Array2::fromshape_vec((n_rows, n_cols), flat)
                         .map_err(|e| IoError::Other(e.to_string()))?;
 
                     Ok(Box::new(result) as Box<dyn Any + Send + Sync>)
@@ -595,7 +604,9 @@ pub enum BinningStrategy {
 
 impl FeatureEngineeringTransform {
     pub fn new(_operations: Vec<FeatureOperation>) -> Self {
-        Self { operations: _operations }
+        Self {
+            operations: _operations,
+        }
     }
 }
 
@@ -703,7 +714,9 @@ pub enum TextOperation {
 
 impl TextProcessingTransform {
     pub fn new(_operations: Vec<TextOperation>) -> Self {
-        Self { operations: _operations }
+        Self {
+            operations: _operations,
+        }
     }
 }
 

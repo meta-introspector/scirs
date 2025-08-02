@@ -1,7 +1,7 @@
-//! Parallel convolution and correlation functions
-//!
-//! This module provides parallel implementations of convolution and correlation
-//! operations for improved performance on multi-core systems.
+// Parallel convolution and correlation functions
+//
+// This module provides parallel implementations of convolution and correlation
+// operations for improved performance on multi-core systems.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, ArrayView2};
@@ -12,8 +12,10 @@ use std::fmt::Debug;
 #[allow(unused_imports)]
 // Temporary replacement for par_iter_with_setup
 fn par_iter_with_setup<I, IT, S, F, R, RF, E>(
-    items: I, setup: S,
-    map_fn: F_reduce, _fn: RF,
+    items: I,
+    setup: S,
+    map_fn: F_reduce,
+    _fn: RF,
 ) -> Result<Vec<R>, E>
 where
     I: IntoIterator<Item = IT>,

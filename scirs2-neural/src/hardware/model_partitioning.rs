@@ -51,9 +51,9 @@ pub struct LayerProfile {
     /// Layer type
     pub layer_type: LayerType,
     /// Input shape
-    pub input_shape: Vec<usize>,
+    pub inputshape: Vec<usize>,
     /// Output shape
-    pub output_shape: Vec<usize>,
+    pub outputshape: Vec<usize>,
     /// Number of parameters
     pub parameters: usize,
     /// FLOPs required
@@ -155,7 +155,7 @@ impl ModelPartitioner {
                 2 => LayerType::LSTM { units: 256 },
                 3 => LayerType::Attention {
                     heads: 8,
-                    dims: 512_ =>, LayerType::Dense { units: 256 },
+                    dims: 512_ => LayerType::Dense { units: 256 },
             };
             let mut device_performance = HashMap::new();
             // Profile performance on each device
@@ -169,8 +169,8 @@ impl ModelPartitioner {
             profiles.push(LayerProfile {
                 layer_index: i,
                 layer_type,
-                input_shape: vec![1, 224, 224, 3], // Example input
-                output_shape: vec![1, 512],        // Example output
+                inputshape: vec![1, 224, 224, 3], // Example input
+                outputshape: vec![1, 512],        // Example output
                 parameters: 1000000,               // 1M parameters
                 flops: 2000000,                    // 2M FLOPs
                 memory_footprint: 4000000,         // 4MB
@@ -347,7 +347,7 @@ impl ModelPartitioner {
         // Simplified communication cost based on data transfer size
         if let Some(first_layer) = layer_indices.first() {
             if let Some(profile) = profiles.get(*first_layer) {
-                let transfer_size = profile.input_shape.iter().product::<usize>() * 4; // bytes
+                let transfer_size = profile.inputshape.iter().product::<usize>() * 4; // bytes
                 let bandwidth = 10e9; // 10 GB/s assumed
                 return transfer_size as f64 / bandwidth * 1e6; // microseconds
         0.0

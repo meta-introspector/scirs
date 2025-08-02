@@ -25,7 +25,7 @@ impl<F: Float + Debug + ScalarOperand> ModelCheckpoint<F> {
     /// # Arguments
     /// * `checkpoint_dir` - Directory to save checkpoints
     /// * `max_to_keep` - Maximum number of checkpoints to keep (0 means keep all)
-    pub fn new<P: AsRef<Path>>(_checkpoint_dir: P, max_to_keep: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(_checkpoint, dir: P, max_to_keep: usize) -> Result<Self> {
         // Create directory if it doesn't exist
         let _dir = _checkpoint_dir.as_ref();
         if !_dir.exists() {
@@ -45,7 +45,7 @@ impl<F: Float + Debug + ScalarOperand> ModelCheckpoint<F> {
     /// * `metrics` - Additional metrics to save
     pub fn save(
         &mut self,
-        epoch: usize_model: &impl Debug, _optimizer: &impl Debug,
+        epoch: usize, model: &impl Debug, _optimizer: &impl Debug,
         loss: F,
         metrics: Option<Vec<(String, F)>>,
     ) -> Result<PathBuf> {
@@ -91,7 +91,7 @@ impl<F: Float + Debug + ScalarOperand> ModelCheckpoint<F> {
     /// * `optimizer` - Optimizer to load state into
     pub fn load<P: AsRef<Path>>(
         &self,
-        checkpoint_path: P, _model: &mut impl Debug_optimizer: &mut impl Debug,
+        checkpoint_path: P, _model: &mut impl Debug, optimizer: &mut impl Debug,
     ) -> LoadResult<F> {
         let path = checkpoint_path.as_ref();
         println!("Loading checkpoint from {}", path.display());

@@ -8,7 +8,7 @@ use num_traits::Float;
 ///
 /// This function replaces the pattern `T::from(value).unwrap()` with proper error handling
 #[allow(dead_code)]
-pub fn safe_from<T: Float>(_value: f64, context: &str) -> SpatialResult<T> {
+pub fn safe_from<T: Float>(value: f64, context: &str) -> SpatialResult<T> {
     T::from(_value).ok_or_else(|| {
         SpatialError::ComputationError(format!(
             "Failed to convert {_value} to numeric type in {context}"
@@ -18,7 +18,7 @@ pub fn safe_from<T: Float>(_value: f64, context: &str) -> SpatialResult<T> {
 
 /// Safely convert usize to type T
 #[allow(dead_code)]
-pub fn safe_from_usize<T: Float>(_value: usize, context: &str) -> SpatialResult<T> {
+pub fn safe_from_usize<T: Float>(value: usize, context: &str) -> SpatialResult<T> {
     T::from(_value).ok_or_else(|| {
         SpatialError::ComputationError(format!(
             "Failed to convert usize {_value} to numeric type in {context}"
@@ -107,7 +107,7 @@ pub fn safe_last<'a, T>(_slice: &'a [T], context: &str) -> SpatialResult<&'a T> 
 
 /// Safely index into an array with bounds checking
 #[allow(dead_code)]
-pub fn safe_index<T: Clone>(_array: &[T], index: usize, context: &str) -> SpatialResult<T> {
+pub fn safe_index<T: Clone>(array: &[T], index: usize, context: &str) -> SpatialResult<T> {
     _array.get(index).cloned().ok_or_else(|| {
         SpatialError::ComputationError(format!(
             "Index {index} out of bounds for _array of length {} in {context}",

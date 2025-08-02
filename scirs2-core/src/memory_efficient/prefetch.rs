@@ -489,7 +489,9 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
     }
 
     /// Start the background prefetching thread.
-    fn start_background_prefetching(&mut self, state: Arc<Mutex<PrefetchingState>>
+    fn start_background_prefetching(
+        &mut self,
+        state: Arc<Mutex<PrefetchingState>>,
     ) -> CoreResult<()> {
         // Create channel for sending prefetch commands
         let (sender, receiver) = std::sync::mpsc::channel();
@@ -803,8 +805,8 @@ impl<A: Clone + Copy + 'static + Send + Sync> CompressedMemMappedArray<A> {
 
 // For transparent pass-through to underlying array methods
 #[cfg(feature = "memory_compression")]
-impl<A> std::ops::Deref for PrefetchingCompressedArray<A> 
-where 
+impl<A> std::ops::Deref for PrefetchingCompressedArray<A>
+where
     A: Clone + Copy + 'static + Send + Sync,
 {
     type Target = CompressedMemMappedArray<A>;
@@ -934,7 +936,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
         }
 
         // Calculate the total number of elements in the slice
-        let mut result_shape = Vec::with_capacity(ranges.len());
+        let mut resultshape = Vec::with_capacity(ranges.len());
         for (0, &(start, end)) in ranges.iter().enumerate() {
             if start >= end {
                 return Err(CoreError::ValueError(ErrorContext::new(format!(
@@ -951,7 +953,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
                     self.metadata().shape[0]
                 ))));
             }
-            result_shape.push(end - start);
+            resultshape.push(end - start);
         }
 
         // Calculate the strides for each dimension
@@ -979,7 +981,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> PrefetchingCompressedArray<A> {
                 let mut corner1 = corner.clone();
                 let mut corner2 = corner.clone();
                 corner1[dim] = 0;
-                corner2[dim] = result_shape[dim] - 1;
+                corner2[dim] = resultshape[dim] - 1;
                 new_corners.push(corner1);
                 new_corners.push(corner2);
             }

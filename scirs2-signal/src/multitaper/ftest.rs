@@ -1,13 +1,13 @@
-//! F-test for detecting harmonic line components in multitaper spectra
-//!
-//! This module implements the F-test for detecting periodic components in signals
-//! using the multitaper method. The F-test provides a statistical measure to
-//! identify spectral lines against a background continuum.
+// F-test for detecting harmonic line components in multitaper spectra
+//
+// This module implements the F-test for detecting periodic components in signals
+// using the multitaper method. The F-test provides a statistical measure to
+// identify spectral lines against a background continuum.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
-use num__complex::Complex64;
-use scirs2_core::validation::{check_positive, check_shape};
+use num_complex::Complex64;
+use scirs2_core::validation::{check_positive, checkshape};
 use statrs::distribution::{ContinuousCDF, FisherSnedecor};
 use statrs::statistics::Statistics;
 
@@ -41,8 +41,8 @@ pub fn multitaper_ftest(
     p_value: Option<f64>,
 ) -> SignalResult<(Array1<f64>, Array1<f64>, Array1<bool>)> {
     let (k, n_freq) = eigenspectra.dim();
-    check_shape(eigenspectra, (Some(k), None), "eigenspectra")?;
-    check_shape(eigenvalues, (k,), "eigenvalues")?;
+    checkshape(eigenspectra, (Some(k), None), "eigenspectra")?;
+    checkshape(eigenvalues, (k,), "eigenvalues")?;
 
     let p_threshold = p_value.unwrap_or(0.05);
     check_positive(p_threshold, "p_value")?;
@@ -314,7 +314,7 @@ pub fn harmonic_ftest(
 
         // Test each harmonic
         for h in 0..n_harmonics {
-            let harmonic_freq = fundamental * (h + 1)  as f64;
+            let harmonic_freq = fundamental * (h + 1) as f64;
 
             // Find closest frequency bin
             let mut closest_idx = 0;
@@ -339,7 +339,7 @@ pub fn harmonic_ftest(
         if valid_harmonics > 0 {
             // Combined significance using Fisher's method
             // -2 * sum(ln(p_i)) ~ chi-squared with 2k degrees of freedom
-            let avg_f = combined_f / valid_harmonics  as f64;
+            let avg_f = combined_f / valid_harmonics as f64;
 
             // Approximate combined p-_value
             let dof1 = 2.0;

@@ -53,7 +53,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
     ) -> Self {
         let n_params = initial_parameters.len();
         Self {
-            _parameters: initial_parameters,
+            parameters: initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),

@@ -1,21 +1,21 @@
-//! Comprehensive Performance Benchmarking Suite
-//!
-//! This module provides extensive benchmarking capabilities for scirs2-signal,
-//! comparing performance against SciPy and other reference implementations.
-//! It includes:
-//! - Micro-benchmarks for individual functions
-//! - Macro-benchmarks for complete workflows
-//! - Memory usage profiling
-//! - SIMD and parallel processing performance analysis
-//! - Regression testing for performance optimization
-//! - Detailed reporting and visualization
+// Comprehensive Performance Benchmarking Suite
+//
+// This module provides extensive benchmarking capabilities for scirs2-signal,
+// comparing performance against SciPy and other reference implementations.
+// It includes:
+// - Micro-benchmarks for individual functions
+// - Macro-benchmarks for complete workflows
+// - Memory usage profiling
+// - SIMD and parallel processing performance analysis
+// - Regression testing for performance optimization
+// - Detailed reporting and visualization
 
-use crate::dwt::{Wavelet, dwt_decompose};
+use crate::dwt::{dwt_decompose, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, butter_bandpass_bandstop, filtfilt, firwin};
 use crate::lombscargle::lombscargle;
-use crate::memory__optimized::{MemoryConfig, memory_optimized_fir_filter};
-use crate::simd_memory__optimization::{SimdMemoryConfig, simd_optimized_convolution};
+use crate::memory_optimized::{memory_optimized_fir_filter, MemoryConfig};
+use crate::simd_memory_optimization::{simd_optimized_convolution, SimdMemoryConfig};
 use crate::spectral::{periodogram, spectrogram, welch};
 use crate::wavelets::{cwt, morlet};
 use ndarray::Array1;
@@ -793,7 +793,7 @@ fn benchmark_audio_processing_workflow(
             .iter()
             .map(|row| row.iter().sum::<f64>() / row.len() as f64)
             .sum::<f64>()
-            / spec.len()  as f64;
+            / spec.len() as f64;
 
         vec![mean_power]
     })
@@ -903,14 +903,15 @@ where
 fn create_benchmark_result(
     name: String,
     size: usize,
-    execution_times: Vec<u64>, _config: &BenchmarkConfig,
+    execution_times: Vec<u64>,
+    _config: &BenchmarkConfig,
 ) -> BenchmarkResult {
-    let mean_time = execution_times.iter().sum::<u64>() as f64 / execution_times.len()  as f64;
+    let mean_time = execution_times.iter().sum::<u64>() as f64 / execution_times.len() as f64;
     let variance = execution_times
         .iter()
         .map(|&x| (x as f64 - mean_time).powi(2))
         .sum::<f64>()
-        / execution_times.len()  as f64;
+        / execution_times.len() as f64;
     let std_dev = variance.sqrt();
 
     let min_time = *execution_times.iter().min().unwrap_or(&0);
@@ -955,20 +956,20 @@ fn generate_test_signal(_size: usize, signal_type: &str) -> Array1<f64> {
     match signal_type {
         "mixed_frequencies" => (0.._size)
             .map(|i| {
-                let t = i as f64 / _size  as f64;
+                let t = i as f64 / _size as f64;
                 (2.0 * PI * 10.0 * t).sin() + 0.5 * (2.0 * PI * 50.0 * t).sin()
             })
             .collect(),
         "chirp" => (0.._size)
             .map(|i| {
-                let t = i as f64 / _size  as f64;
+                let t = i as f64 / _size as f64;
                 let freq = 1.0 + 20.0 * t;
                 (2.0 * PI * freq * t).sin()
             })
             .collect(),
         "transient" => (0.._size)
             .map(|i| {
-                let t = i as f64 / _size  as f64;
+                let t = i as f64 / _size as f64;
                 let center = 0.5;
                 let width = 0.1f64;
                 let envelope = (-(t - center).powi(2) / (2.0 * width.powi(2))).exp();
@@ -1016,7 +1017,7 @@ fn generate_test_signal(_size: usize, signal_type: &str) -> Array1<f64> {
             // Simulated digital communication signal
             (0.._size)
                 .map(|i| {
-                    let t = i  as f64;
+                    let t = i as f64;
                     let symbol_rate = 100.0;
                     let bit = if ((t / symbol_rate) as usize) % 2 == 0 {
                         1.0
@@ -1101,7 +1102,8 @@ fn gather_config_info() -> ConfigInfo {
             "AVX: {}, AVX2: {}, AVX512: {}",
             capabilities.simd_available, capabilities.avx2_available, capabilities.avx512_available
         ),
-        cpu_cores: num, _cpus: get(),
+        cpu_cores: num,
+        _cpus: get(),
         cache_sizes: vec![32768, 262144, 8388608], // L1: 32KB, L2: 256KB, L3: 8MB
         memory_bandwidth: 25.6,                    // GB/s
         optimizations: "Release with LTO".to_string(),
@@ -1125,8 +1127,8 @@ fn generate_benchmark_summary(_results: &[BenchmarkResult], total_time: f64) -> 
     // Find operations needing optimization (lowest throughput relative to size)
     let mut sorted_by_efficiency = _results.to_vec();
     sorted_by_efficiency.sort_by(|a, b| {
-        let eff_a = a.throughput / a.signal_size  as f64;
-        let eff_b = b.throughput / b.signal_size  as f64;
+        let eff_a = a.throughput / a.signal_size as f64;
+        let eff_b = b.throughput / b.signal_size as f64;
         eff_a.partial_cmp(&eff_b).unwrap()
     });
     let optimization_candidates = sorted_by_efficiency
@@ -1149,7 +1151,7 @@ fn generate_benchmark_summary(_results: &[BenchmarkResult], total_time: f64) -> 
 #[allow(dead_code)]
 fn generate_benchmark_reports(_suite: &BenchmarkSuite) -> SignalResult<()> {
     // Generate text report
-    generate_text_report(_suite)?;
+    generatetext_report(_suite)?;
 
     // Generate CSV report
     generate_csv_report(_suite)?;
@@ -1162,7 +1164,7 @@ fn generate_benchmark_reports(_suite: &BenchmarkSuite) -> SignalResult<()> {
 
 /// Generate human-readable text report
 #[allow(dead_code)]
-fn generate_text_report(_suite: &BenchmarkSuite) -> SignalResult<()> {
+fn generatetext_report(_suite: &BenchmarkSuite) -> SignalResult<()> {
     let report_path = format!("{}/benchmark_report.txt", _suite.config.output_dir);
     let mut file = File::create(&report_path)
         .map_err(|e| SignalError::ComputationError(format!("Cannot create report: {}", e)))?;
@@ -1187,7 +1189,11 @@ fn generate_text_report(_suite: &BenchmarkSuite) -> SignalResult<()> {
     writeln!(file, "")?;
 
     writeln!(file, "## Summary")?;
-    writeln!(file, "Total benchmarks: {}", _suite.summary.total_benchmarks)?;
+    writeln!(
+        file,
+        "Total benchmarks: {}",
+        _suite.summary.total_benchmarks
+    )?;
     writeln!(file, "Total time: {:.2}s", _suite.summary.total_time)?;
     writeln!(
         file,

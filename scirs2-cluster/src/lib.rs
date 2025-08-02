@@ -27,7 +27,7 @@
 //! use scirs2__cluster::preprocess::standardize;
 //!
 //! // Example data with two clusters
-//! let data = Array2::from_shape_vec((6, 2), vec![
+//! let data = Array2::fromshape_vec((6, 2), vec![
 //!     1.0, 2.0,
 //!     1.2, 1.8,
 //!     0.8, 1.9,

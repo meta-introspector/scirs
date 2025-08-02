@@ -881,7 +881,11 @@ impl AdvancedJitCompiler {
     }
 
     /// Compile a kernel with JIT optimization
-    pub fn compile_kernel(&self, name: &str, source_code: &str, hints: &[String],
+    pub fn compile_kernel(
+        &self,
+        name: &str,
+        source_code: &str,
+        hints: &[String],
     ) -> CoreResult<CompiledKernel> {
         let start_time = Instant::now();
 
@@ -1117,7 +1121,7 @@ impl AdvancedJitCompiler {
         self.execute_direct(function_ptr, input)
     }
 
-    fn execute_direct<T, R>(&self, function_ptr: usize, input: T) -> CoreResult<R> {
+    fn execute_direct<T, R>(&self, function_ptr: usize, _input: T) -> CoreResult<R> {
         // Enhanced implementation with safety checks and execution monitoring
         if function_ptr == 0 {
             return Err(CoreError::InvalidArgument(crate::error::ErrorContext::new(
@@ -1144,7 +1148,10 @@ impl AdvancedJitCompiler {
         )))
     }
 
-    fn record_kernel_execution(&self, kernel: &CompiledKernel, _execution_time: Duration,
+    fn record_kernel_execution(
+        &self,
+        kernel: &CompiledKernel,
+        _execution_time: Duration,
     ) -> CoreResult<()> {
         let mut profiler = self.profiler.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -1155,7 +1162,10 @@ impl AdvancedJitCompiler {
         profiler.record_execution(&kernel.name, _execution_time)
     }
 
-    fn update_runtime_statistics(&self, _kernel: &CompiledKernel, _execution_time: Duration,
+    fn update_runtime_statistics(
+        &self,
+        _kernel: &CompiledKernel,
+        _execution_time: Duration,
     ) -> CoreResult<()> {
         let optimizer = self.runtime_optimizer.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -1190,7 +1200,9 @@ impl AdvancedJitCompiler {
         Ok(vec![])
     }
 
-    fn apply_optimization(&self, candidate: &OptimizationCandidate,
+    fn apply_optimization(
+        &self,
+        candidate: &OptimizationCandidate,
     ) -> CoreResult<PerformanceImprovement> {
         // Simplified implementation
         Ok(PerformanceImprovement {
@@ -1207,21 +1219,31 @@ impl AdvancedJitCompiler {
             "Cache reconstruction not implemented".to_string(),
         )))
     }
-    
+
     /// Record kernel performance metrics
-    fn record_kernel_performance(&self, _kernel: &CompiledKernel, _execution_time: std::time::Duration) -> CoreResult<()> {
+    fn record_kernel_performance(
+        &self,
+        _kernel: &CompiledKernel,
+        _execution_time: std::time::Duration,
+    ) -> CoreResult<()> {
         // Simplified - just log the performance
         Ok(())
     }
-    
+
     /// Check for optimization opportunities
-    fn check_optimization_opportunities(&self, _kernel: &CompiledKernel) -> CoreResult<Vec<String>> {
+    fn check_optimization_opportunities(
+        &self,
+        _kernel: &CompiledKernel,
+    ) -> CoreResult<Vec<String>> {
         // Simplified - return empty optimizations
         Ok(vec![])
     }
-    
+
     /// Recompile kernel with optimizations
-    fn recompile_with_optimizations(&self, _candidate: &OptimizationCandidate) -> CoreResult<PerformanceImprovement> {
+    fn recompile_with_optimizations(
+        &self,
+        _candidate: &OptimizationCandidate,
+    ) -> CoreResult<PerformanceImprovement> {
         // Simplified implementation
         Ok(PerformanceImprovement {
             kernel_name: "optimized_kernel".to_string(),
@@ -1230,7 +1252,7 @@ impl AdvancedJitCompiler {
             new_performance: 1.1,
         })
     }
-    
+
     /// Create kernel from cached compilation
     fn create_kernel_from_cached(&self, _cached_data: &[u8]) -> CoreResult<CompiledKernel> {
         // Simplified implementation
@@ -1403,7 +1425,7 @@ impl LlvmCompilationEngine {
             },
         })
     }
-    
+
     /// Compile a module with optimizations
     pub fn compile_module(&self, _name: &str, _module_source: &str) -> CoreResult<CompiledModule> {
         // Simplified implementation - delegate to existing compile method
@@ -1476,7 +1498,10 @@ impl JitProfiler {
         Ok(())
     }
 
-    pub fn record_execution(&mut self, _kernel_name: &str, _execution_time: Duration,
+    pub fn record_execution(
+        &mut self,
+        _kernel_name: &str,
+        _execution_time: Duration,
     ) -> CoreResult<()> {
         // Simplified implementation
         Ok(())
@@ -1507,12 +1532,15 @@ impl RuntimeOptimizer {
         })
     }
 
-    pub fn record_execution(&mut self, _kernel_name: &str, _execution_time: Duration,
+    pub fn record_execution(
+        &mut self,
+        _kernel_name: &str,
+        _execution_time: Duration,
     ) -> CoreResult<()> {
         // Simplified implementation
         Ok(())
     }
-    
+
     /// Analyze performance metrics
     pub fn analyze_performance(&self) -> CoreResult<PerformanceAnalysis> {
         // Simplified implementation
@@ -2214,7 +2242,10 @@ impl NeuromorphicJitCompiler {
     }
 
     /// Compile spiking neural network to optimized code
-    pub fn compile_snn(&self, network: &NeuralNetwork, _time_step: f64,
+    pub fn compile_snn(
+        &self,
+        _network: &NeuralNetwork,
+        _time_step: f64,
     ) -> CoreResult<CompiledSNN> {
         // Generate optimized spike processing code
         let topology = NetworkTopology {
@@ -2421,7 +2452,7 @@ impl NeuromorphicJitCompiler {
 
         Ok(entropy)
     }
-    
+
     /// Calculate complexity (alias for calculate_pattern_complexity)
     fn calculate_complexity(&self, spike_times: &[f64]) -> CoreResult<f64> {
         self.calculate_pattern_complexity(spike_times)
@@ -2463,8 +2494,8 @@ impl NeuromorphicJitCompiler {
     /// Predict performance for optimized spike code
     fn predict_spike_performance(&self, code: &str) -> CoreResult<SpikePerformancePrediction> {
         // Simplified performance prediction
-        let code_complexity = code.len() as f64;
-        let baseline_performance = 1.0;
+        let _code_complexity = code.len() as f64;
+        let _baseline_performance = 1.0;
 
         // Estimate speedup based on code patterns
         let speedup_factor = if code.contains("regular_spikes") {

@@ -1,11 +1,11 @@
-//! Waveform generation functions
-//!
-//! This module provides functions for generating various types of waveforms,
-//! including sine waves, square waves, sawtooth waves, and chirp signals.
+// Waveform generation functions
+//
+// This module provides functions for generating various types of waveforms,
+// including sine waves, square waves, sawtooth waves, and chirp signals.
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
-use rand::{Rng, SeedableRng, rng, rngs::StdRng};
+use rand::{rng, rngs::StdRng, Rng, SeedableRng};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
@@ -28,7 +28,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::waveforms::chirp;
+/// use scirs2_signal::waveforms::chirp;
 ///
 /// // Generate a linear chirp
 /// let t = (0..100).map(|i| i as f64 / 100.0).collect::<Vec<_>>();
@@ -138,7 +138,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::waveforms::sawtooth;
+/// use scirs2_signal::waveforms::sawtooth;
 ///
 /// // Generate a basic sawtooth wave
 /// let t = (0..100).map(|i| i as f64 / 10.0).collect::<Vec<_>>();
@@ -207,7 +207,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::waveforms::square;
+/// use scirs2_signal::waveforms::square;
 ///
 /// // Generate a square wave with 50% duty cycle
 /// let t = (0..100).map(|i| i as f64 / 10.0).collect::<Vec<_>>();
@@ -280,7 +280,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::waveforms::gausspulse;
+/// use scirs2_signal::waveforms::gausspulse;
 ///
 /// // Generate a Gaussian pulse with 0.5 bandwidth
 /// let t = (0..100).map(|i| (i as f64 - 50.0) / 10.0).collect::<Vec<_>>();
@@ -294,7 +294,8 @@ pub fn gausspulse<T>(
     t: &[T],
     fc: f64,
     bw: f64,
-    bwr: Option<f64>, _tpr: bool,
+    bwr: Option<f64>,
+    _tpr: bool,
 ) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -351,7 +352,7 @@ where
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_chirp_linear() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -462,7 +463,7 @@ use approx::assert_relative_eq;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::waveforms::mls_sequence;
+/// use scirs2_signal::waveforms::mls_sequence;
 ///
 /// // Generate a 7-bit MLS (length 127)
 /// let mls = mls_sequence(7, None, None).unwrap();
@@ -590,7 +591,7 @@ pub fn prbs_sequence(
 
     for _ in 0..length {
         // Output LSB
-        let output = (state & 1)  as f64;
+        let output = (state & 1) as f64;
         sequence.push(output);
 
         // Calculate feedback

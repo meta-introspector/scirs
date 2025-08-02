@@ -783,8 +783,8 @@ impl EventDrivenProcessor {
     }
 
     /// Process events efficiently using sparse representation
-    fn process_events_sparse(&self, frame_shape: (usize, usize)) -> Array2<f32> {
-        let (height, width) = frame_shape;
+    fn process_events_sparse(&self, frameshape: (usize, usize)) -> Array2<f32> {
+        let (height, width) = frameshape;
         let mut processed_frame = Array2::zeros((height, width));
 
         // Process only active clusters
@@ -1246,7 +1246,7 @@ mod tests {
         let mut detector = NeuromorphicEdgeDetector::new(64);
 
         let frame = Frame {
-            data: Array2::from_shape_fn((8, 8), |(_y, x)| if x > 4 { 1.0 } else { 0.0 }),
+            data: Array2::fromshape_fn((8, 8), |(_y, x)| if x > 4 { 1.0 } else { 0.0 }),
             timestamp: Instant::now(),
             index: 0,
             metadata: Some(FrameMetadata {
@@ -1277,7 +1277,7 @@ mod tests {
         };
 
         let frame2 = Frame {
-            data: Array2::from_shape_fn((10, 10), |(y_x)| if y == 5 { 1.0 } else { 0.0 }),
+            data: Array2::fromshape_fn((10, 10), |(y_x)| if y == 5 { 1.0 } else { 0.0 }),
             timestamp: Instant::now(),
             index: 1,
             metadata: None,
@@ -1300,7 +1300,7 @@ mod tests {
         let mut pipeline = AdaptiveNeuromorphicPipeline::new(64);
 
         let frame = Frame {
-            data: Array2::from_shape_fn((8, 8), |(y, x)| (x + y) as f32 / 16.0),
+            data: Array2::fromshape_fn((8, 8), |(y, x)| (x + y) as f32 / 16.0),
             timestamp: Instant::now(),
             index: 0,
             metadata: None,

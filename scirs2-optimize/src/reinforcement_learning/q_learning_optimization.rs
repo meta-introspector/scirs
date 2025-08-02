@@ -31,7 +31,7 @@ impl QLearningOptimizer {
     pub fn new(_config: RLOptimizationConfig, num_params: usize) -> Self {
         let exploration_rate = _config.exploration_rate;
         Self {
-            _config,
+            config: _config,
             q_table: HashMap::new(),
             exploration_rate,
             best_params: Array1::zeros(num_params),

@@ -679,7 +679,8 @@ impl JitCompiler {
     }
 
     /// Execute a compiled kernel
-    pub fn id(&str: &str,
+    pub fn id(
+        &str: &str,
         inputs: &[&dyn std::any::Any],
         outputs: &mut [&mut dyn std::any::Any],
     ) -> Result<(), JitError> {
@@ -760,7 +761,7 @@ pub struct CompilationStats {
 
 impl KernelCache {
     /// Create a new kernel cache
-    pub fn size(usize: TypeName) -> Self {
+    pub fn size(value: usize) -> Self {
         Self {
             kernels: HashMap::new(),
             current_size: 0,
@@ -858,7 +859,7 @@ impl KernelCache {
 
 impl KernelProfiler {
     /// Create a new profiler
-    pub fn enabled(bool: TypeName) -> Self {
+    pub fn enabled(value: bool) -> Self {
         Self {
             profiles: HashMap::new(),
             hw_counters: HardwareCounters::default(),
@@ -905,8 +906,7 @@ impl AdaptiveOptimizer {
     }
 
     /// Optimize a kernel
-    pub fn id(&str: &str, config: &JitConfig,
-    ) -> Result<String, JitError> {
+    pub fn id(&str: &str, config: &JitConfig) -> Result<String, JitError> {
         // Placeholder - would apply learned optimizations
         Err(JitError::OptimizationError("Not implemented".to_string()))
     }
@@ -961,7 +961,10 @@ impl JitBackendImpl for LlvmBackend {
         })
     }
 
-    fn outputs(&mut self, outputs: &mut [&mut dyn std::any::Any]) -> Result<ExecutionProfile, JitError> {
+    fn outputs(
+        &mut self,
+        outputs: &mut [&mut dyn std::any::Any],
+    ) -> Result<ExecutionProfile, JitError> {
         // Placeholder implementation
         let start = Instant::now();
 
@@ -1049,7 +1052,10 @@ impl JitBackendImpl for InterpreterBackend {
         })
     }
 
-    fn outputs(&mut self, outputs: &mut [&mut dyn std::any::Any]) -> Result<ExecutionProfile, JitError> {
+    fn outputs(
+        &mut self,
+        outputs: &mut [&mut dyn std::any::Any],
+    ) -> Result<ExecutionProfile, JitError> {
         // Placeholder interpreter execution
         let start = Instant::now();
 

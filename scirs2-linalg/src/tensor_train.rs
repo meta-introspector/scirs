@@ -455,7 +455,7 @@ where
 
     // Start with the full tensor data
     let mut current_data = tensor.iter().cloned().collect::<Vec<_>>();
-    let mut _current_shape = shape.to_vec();
+    let mut _currentshape = shape.to_vec();
 
     // Left-to-right decomposition
     for k in 0..d - 1 {
@@ -514,7 +514,7 @@ where
         ranks.push(r_k);
         let s_vt = Array2::from_diag(&s_trunc).dot(&vt_trunc);
         current_data = s_vt.into_iter().collect();
-        _current_shape = vec![r_k]
+        _currentshape = vec![r_k]
             .into_iter()
             .chain(shape[k + 1..].iter().cloned())
             .collect();

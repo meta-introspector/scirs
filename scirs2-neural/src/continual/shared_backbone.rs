@@ -113,7 +113,7 @@ pub enum TaskType {
     /// Multi-label classification
     MultiLabel { num_labels: usize },
     /// Structured prediction
-    Structured { output_shape: Vec<usize> },
+    Structured { outputshape: Vec<usize> },
 impl TaskSpecificHead {
     /// Create a new task-specific head
     pub fn new(

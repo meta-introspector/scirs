@@ -35,20 +35,20 @@ impl LSTMCell {
         // Input gate weights
         let uniform = Uniform::new(-bound, bound).unwrap();
         let mut rng = rand::rng();
-        let w_ii = Array::from_shape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
-        let w_hi = Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
+        let w_ii = Array::fromshape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
+        let w_hi = Array::fromshape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_i = Array1::zeros(hidden_size);
         // Forget gate weights (initialize forget gate bias to 1 to avoid vanishing gradients early in training)
-        let w_if = Array::from_shape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
-        let w_hf = Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
+        let w_if = Array::fromshape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
+        let w_hf = Array::fromshape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_f = Array1::ones(hidden_size);
         // Cell gate weights
-        let w_ig = Array::from_shape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
-        let w_hg = Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
+        let w_ig = Array::fromshape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
+        let w_hg = Array::fromshape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_g = Array1::zeros(hidden_size);
         // Output gate weights
-        let w_io = Array::from_shape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
-        let w_ho = Array::from_shape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
+        let w_io = Array::fromshape_fn((hidden_size, _input_size), |_| uniform.sample(&mut rng));
+        let w_ho = Array::fromshape_fn((hidden_size, hidden_size), |_| uniform.sample(&mut rng));
         let b_o = Array1::zeros(hidden_size);
         LSTMCell {
             _input_size,
@@ -114,10 +114,10 @@ impl TimeSeriesAttention {
     fn new(_hidden_size: usize) -> Self {
         let bound = (6.0 / (_hidden_size + _hidden_size) as f32).sqrt();
         let w_query =
-            Array::from_shape_fn((_hidden_size, _hidden_size), |_| uniform.sample(&mut rng));
-        let w_key = Array::from_shape_fn((_hidden_size, _hidden_size), |_| uniform.sample(&mut rng));
+            Array::fromshape_fn((_hidden_size, _hidden_size), |_| uniform.sample(&mut rng));
+        let w_key = Array::fromshape_fn((_hidden_size, _hidden_size), |_| uniform.sample(&mut rng));
         let w_value =
-        let v_attention = Array::from_shape_fn(_hidden_size, |_| uniform.sample(&mut rng));
+        let v_attention = Array::fromshape_fn(_hidden_size, |_| uniform.sample(&mut rng));
         TimeSeriesAttention {
             w_query,
             w_key,
@@ -259,7 +259,7 @@ impl TimeSeriesForecaster {
         // Decoder initial state projection
         let bound_init = (6.0 / (hidden_size + hidden_size) as f32).sqrt();
         let uniform_init = Uniform::new(-bound_init, bound_init).unwrap();
-        let w_decoder_init = Array::from_shape_fn((hidden_size, hidden_size), |_| {
+        let w_decoder_init = Array::fromshape_fn((hidden_size, hidden_size), |_| {
             uniform_init.sample(&mut rng)
         });
         let b_decoder_init = Array1::zeros(hidden_size);
@@ -267,7 +267,7 @@ impl TimeSeriesForecaster {
         let bound_out = (6.0 / (hidden_size + output_size) as f32).sqrt();
         let uniform_out = Uniform::new(-bound_out, bound_out).unwrap();
         let w_out =
-            Array::from_shape_fn((output_size, hidden_size), |_| uniform_out.sample(&mut rng));
+            Array::fromshape_fn((output_size, hidden_size), |_| uniform_out.sample(&mut rng));
         let b_out = Array1::zeros(output_size);
         // Decoder LSTM cell
         let decoder_cell = LSTMCell::new(output_size, hidden_size, batch_size);

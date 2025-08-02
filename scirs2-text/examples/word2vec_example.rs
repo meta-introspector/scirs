@@ -1,5 +1,5 @@
 use ndarray::Array1;
-use scirs2__text::embeddings::{cosine_similarity, Word2Vec, Word2VecAlgorithm};
+use scirs2_text::embeddings::{cosine_similarity, Word2Vec, Word2VecAlgorithm};
 use std::time::Instant;
 
 #[allow(dead_code)]

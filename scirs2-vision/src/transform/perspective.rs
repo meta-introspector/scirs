@@ -82,7 +82,7 @@ pub struct RansacResult {
 impl PerspectiveTransform {
     /// Create a new perspective transformation matrix from raw data
     pub fn new(_data: [f64; 9]) -> Self {
-        let matrix = Array2::from_shape_vec((3, 3), _data.to_vec()).unwrap();
+        let matrix = Array2::fromshape_vec((3, 3), _data.to_vec()).unwrap();
         Self { matrix }
     }
 
@@ -92,8 +92,8 @@ impl PerspectiveTransform {
     }
 
     /// Compute a perspective transformation from point correspondences
-    pub fn from_points(_src_points: &[(f64, f64)], dst_points: &[(f64, f64)]) -> Result<Self> {
-        if _src_points.len() != dst_points.len() {
+    pub fn from_points(src_points: &[(f64, f64)], dst_points: &[(f64, f64)]) -> Result<Self> {
+        if src_points.len() != dst_points.len() {
             return Err(VisionError::InvalidParameter(
                 "Source and destination point sets must have the same length".to_string(),
             ));
@@ -142,7 +142,7 @@ impl PerspectiveTransform {
         let h = Self::compute_homography_from_system(&a)?;
 
         // Create homography matrix
-        let h_matrix = Array2::from_shape_vec((3, 3), h.to_vec())?;
+        let h_matrix = Array2::fromshape_vec((3, 3), h.to_vec())?;
 
         // Normalize so that h[2,2] = 1
         let norm_factor = h_matrix[[2, 2]];
@@ -169,8 +169,8 @@ impl PerspectiveTransform {
     /// # Returns
     ///
     /// * The perspective transformation
-    pub fn rect_to_quad(_src_rect: (f64, f64, f64, f64), dst_quad: [(f64, f64); 4]) -> Result<Self> {
-        let (x, y, width, height) = _src_rect;
+    pub fn rect_to_quad(src_rect: (f64, f64, f64, f64), dst_quad: [(f64, f64); 4]) -> Result<Self> {
+        let (x, y, width, height) = src_rect;
 
         let src_points = [
             (x, y),
@@ -192,7 +192,7 @@ impl PerspectiveTransform {
     /// # Returns
     ///
     /// * The perspective transformation
-    pub fn quad_to_rect(_src_quad: [(f64, f64); 4], dst_rect: (f64, f64, f64, f64)) -> Result<Self> {
+    pub fn quad_to_rect(src_quad: [(f64, f64); 4], dst_rect: (f64, f64, f64, f64)) -> Result<Self> {
         let (x, y, width, height) = dst_rect;
 
         let dst_points = [
@@ -202,7 +202,7 @@ impl PerspectiveTransform {
             (x, y + height),
         ];
 
-        Self::from_points(&_src_quad, &dst_points)
+        Self::from_points(&src_quad, &dst_points)
     }
 
     /// Get the inverse transformation
@@ -504,11 +504,11 @@ impl PerspectiveTransform {
             let sample = &sample_indices[0..4];
 
             // Extract sample _points
-            let sample_src: Vec<(f64, f64)> = sample.iter().map(|&i| src_points[i]).collect();
+            let samplesrc: Vec<(f64, f64)> = sample.iter().map(|&i| src_points[i]).collect();
             let sample_dst: Vec<(f64, f64)> = sample.iter().map(|&i| dst_points[i]).collect();
 
             // Estimate homography from sample
-            let transform = match Self::from_points(&sample_src, &sample_dst) {
+            let transform = match Self::from_points(&samplesrc, &sample_dst) {
                 Ok(t) => t,
                 Err(_) => continue, // Skip degenerate cases
             };
@@ -563,11 +563,11 @@ impl PerspectiveTransform {
         })?;
 
         // Refine the transformation using all inliers
-        let inlier_src: Vec<(f64, f64)> = best_inliers.iter().map(|&i| src_points[i]).collect();
+        let inliersrc: Vec<(f64, f64)> = best_inliers.iter().map(|&i| src_points[i]).collect();
         let inlier_dst: Vec<(f64, f64)> = best_inliers.iter().map(|&i| dst_points[i]).collect();
 
         let refined_transform =
-            Self::from_points(&inlier_src, &inlier_dst).unwrap_or(best_transform); // Fall back to unrefined if refinement fails
+            Self::from_points(&inliersrc, &inlier_dst).unwrap_or(best_transform); // Fall back to unrefined if refinement fails
 
         Ok(RansacResult {
             transform: refined_transform,
@@ -681,8 +681,8 @@ pub fn warp_perspective_simd(
             let src_x_coords: Vec<f64> = src_points.iter().map(|p| p.0).collect();
             let src_y_coords: Vec<f64> = src_points.iter().map(|p| p.1).collect();
 
-            let _src_x_arr = Array1::from_vec(src_x_coords);
-            let _src_y_arr = Array1::from_vec(src_y_coords);
+            let src_x_arr = Array1::from_vec(src_x_coords);
+            let src_y_arr = Array1::from_vec(src_y_coords);
 
             // Check bounds and apply border handling
             for (i, (src_x, src_y)) in src_points.iter().enumerate() {
@@ -1040,8 +1040,8 @@ pub fn modulo(a: f64, b: f64) -> f64 {
 /// Uses SIMD-accelerated edge detection and vectorized contour processing
 /// for 2-3x speedup compared to scalar quad detection algorithms.
 #[allow(dead_code)]
-pub fn detect_quad(_src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
-    detect_quad_simd(_src, threshold)
+pub fn detect_quad(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
+    detect_quad_simd(src, threshold)
 }
 
 /// SIMD-accelerated quadrilateral detection
@@ -1062,13 +1062,13 @@ pub fn detect_quad(_src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]
 ///
 /// * Result containing the detected quadrilateral as 4 points
 #[allow(dead_code)]
-pub fn detect_quad_simd(_src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
+pub fn detect_quad_simd(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
     use crate::feature::sobel_edges;
     use crate::preprocessing::gaussian_blur;
     use ndarray::Array2;
 
     // Convert to grayscale
-    let gray = _src.to_luma8();
+    let gray = src.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Convert to array for SIMD processing

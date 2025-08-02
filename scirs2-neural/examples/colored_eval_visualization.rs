@@ -43,9 +43,9 @@ fn main() -> Result<()> {
         stylize("1. CONFUSION MATRIX VISUALIZATION", Style::Bold)
     );
     // Generate random predictions and true labels
-    let y_true = Array::from_shape_fn(n_samples, |_| rng.random_range(0..n_classes));
+    let y_true = Array::fromshape_fn(n_samples, |_| rng.random_range(0..n_classes));
     // Create slightly correlated predictions (not completely random)
-    let y_pred = Array::from_shape_fn(n_samples, |i| {
+    let y_pred = Array::fromshape_fn(n_samples, |i| {
         if rng.random::<f32>() < 0.7 {
             // 70% chance of correct prediction
             y_true[i]
@@ -117,7 +117,7 @@ fn main() -> Result<()> {
     let feature_names = (0..n_features)
         .map(|i| format!("Feature_{i}"))
         .collect::<Vec<String>>();
-    let importance = Array1::from_shape_fn(n_features, |i| {
+    let importance = Array1::fromshape_fn(n_features, |i| {
         // Make some features more important than others
         let base = (n_features - i) as f32 / n_features as f32;
         base + 0.2 * rng.random::<f32>()
@@ -144,9 +144,9 @@ fn main() -> Result<()> {
     println!("\n{}", stylize("3. ROC CURVE VISUALIZATION", Style::Bold));
     // Generate binary classification data
     let n_binary = 200;
-    let y_true_binary = Array::from_shape_fn(n_binary, |_| rng.random_range(0..2));
+    let y_true_binary = Array::fromshape_fn(n_binary, |_| rng.random_range(0..2));
     // Generate scores with some predictive power
-    let y_scores = Array1::from_shape_fn(
+    let y_scores = Array1::fromshape_fn(
         n_binary..|i| {
             if y_true_binary[i] == 1 {
                 // Higher scores for positive class
@@ -174,14 +174,14 @@ fn main() -> Result<()> {
     // Generate learning curve data
     let n_points = 10;
     let n_cv = 5;
-    let train_sizes = Array1::from_shape_fn(n_points, |i| 50 + i * 50);
+    let train_sizes = Array1::fromshape_fn(n_points, |i| 50 + i * 50);
     // Generate training scores (decreasing with size due to overfitting)
-    let train_scores = Array2::from_shape_fn((n_points, n_cv), |(i, _)| {
+    let train_scores = Array2::fromshape_fn((n_points, n_cv), |(i, _)| {
         0.95 - 0.05 * (i as f32 / n_points as f32) + 0.03 * rng.random::<f32>()
     });
 
     // Generate validation scores (increasing with size)
-    let val_scores = Array2::from_shape_fn((n_points, n_cv), |(i, _)| {
+    let val_scores = Array2::fromshape_fn((n_points, n_cv), |(i, _)| {
         0.7 + 0.2 * (i as f32 / n_points as f32) + 0.05 * rng.random::<f32>()
     });
 

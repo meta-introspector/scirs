@@ -1,4 +1,4 @@
-use scirs2__text::{BpeConfig, BpeTokenizer, Result, Tokenizer};
+use scirs2_text::{BpeConfig, BpeTokenizer, Result, Tokenizer};
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
@@ -26,7 +26,7 @@ fn main() -> Result<()> {
             "<EOS>".to_string(),
         ],
         character_level: true, // Start with characters (not words)
-        lowercase: true,       // Convert all _text to lowercase
+        lowercase: true,       // Convert all text to lowercase
     });
 
     println!("Training BPE tokenizer on a small corpus...");
@@ -60,10 +60,10 @@ fn main() -> Result<()> {
     let mut new_tokenizer = BpeTokenizer::with_defaults();
     new_tokenizer.load_vocabulary(vocab_path)?;
 
-    let test_text = "Hello, demonstrating vocabulary loading!";
-    let tokens = new_tokenizer.tokenize(test_text)?;
+    let testtext = "Hello, demonstrating vocabulary loading!";
+    let tokens = new_tokenizer.tokenize(testtext)?;
     println!("\nTokenization after loading vocabulary:");
-    println!("Original: \"{test_text}\"");
+    println!("Original: \"{testtext}\"");
     println!("Tokenized: {tokens:?}");
 
     Ok(())

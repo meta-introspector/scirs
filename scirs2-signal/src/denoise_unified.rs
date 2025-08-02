@@ -1,13 +1,13 @@
-//! Unified denoising API
-//!
-//! This module provides a consistent, high-level interface to all denoising
-//! methods available in the scirs2-signal library. It allows users to easily
-//! switch between different denoising algorithms and compare their performance.
+// Unified denoising API
+//
+// This module provides a consistent, high-level interface to all denoising
+// methods available in the scirs2-signal library. It allows users to easily
+// switch between different denoising algorithms and compare their performance.
 
-use crate::denoise::{ThresholdMethod, ThresholdSelect, denoise_wavelet};
-use crate::denoise__advanced::{AdvancedDenoiseConfig, NoiseEstimation, advanced_denoise};
-use crate::denoise_cutting__edge::{DictionaryDenoiseConfig, denoise_dictionary_learning};
-use crate::denoise_super__advanced::{AdvancedAdvancedDenoisingConfig, advanced_advanced_denoise};
+use crate::denoise::{denoise_wavelet, ThresholdMethod, ThresholdSelect};
+use crate::denoise_advanced::{advanced_denoise, AdvancedDenoiseConfig, NoiseEstimation};
+use crate::denoise_cutting_edge::{denoise_dictionary_learning, DictionaryDenoiseConfig};
+use crate::denoise_super_advanced::{advanced_advanced_denoise, AdvancedAdvancedDenoisingConfig};
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
@@ -15,9 +15,8 @@ use serde::{Deserialize, Serialize};
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 
-
 #[allow(unused_imports)]
-use crate::denoise__enhanced::{
+use crate::denoise_enhanced::{
     denoise_median_1d, denoise_total_variation_1d, denoise_wiener_1d, WienerConfig,
 };
 // use std::f64::consts::PI;
@@ -154,9 +153,9 @@ pub struct QualityMetrics {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::denoise_unified::{denoise_unified, UnifiedDenoisingConfig, DenoisingMethod};
-/// use scirs2__signal::denoise::{ThresholdMethod, ThresholdSelect};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::denoise_unified::{denoise_unified, UnifiedDenoisingConfig, DenoisingMethod};
+/// use scirs2_signal::denoise::{ThresholdMethod, ThresholdSelect};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a noisy signal
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 1.5, 3.0, 2.5, 1.0]);
@@ -168,7 +167,7 @@ pub struct QualityMetrics {
 /// // Use advanced wavelet denoising
 /// let advanced_config = UnifiedDenoisingConfig {
 ///     method: DenoisingMethod::WaveletAdvanced {
-///         config: scirs2_signal: denoise_advanced: :AdvancedDenoiseConfig::default(),
+///         config: scirs2_signal: denoise, advanced: AdvancedDenoiseConfig::default(),
 ///     },
 ///     ..Default::default()
 /// };
@@ -892,7 +891,7 @@ mod tests {
         let b = vec![0.5, 0.5];
         // Create a simple test signal
         let n = 64;
-        let signal: Array1<f64> = Array1::from_shape_fn(n, |i| {
+        let signal: Array1<f64> = Array1::fromshape_fn(n, |i| {
             (2.0 * PI * i as f64 / n as f64 * 4.0).sin() + 0.1 * (i as f64 * 0.1).sin()
         });
 

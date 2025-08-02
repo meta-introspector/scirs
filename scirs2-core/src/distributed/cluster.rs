@@ -32,6 +32,7 @@ pub struct ClusterManager {
     event_log: Arc<Mutex<ClusterEventLog>>,
 }
 
+#[allow(dead_code)]
 impl ClusterManager {
     /// Create new cluster manager
     pub fn new(config: ClusterConfiguration) -> CoreResult<Self> {
@@ -128,7 +129,10 @@ impl ClusterManager {
         Ok(())
     }
 
-    fn node_discovery_loop(registry: &Arc<RwLock<NodeRegistry>>, config: &Arc<RwLock<ClusterConfiguration>>, event_log: &Arc<Mutex<ClusterEventLog>>,
+    fn node_discovery_loop(
+        registry: &Arc<RwLock<NodeRegistry>>,
+        config: &Arc<RwLock<ClusterConfiguration>>,
+        event_log: &Arc<Mutex<ClusterEventLog>>,
     ) -> CoreResult<()> {
         let config_read = config.read().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new("Failed to acquire config lock"))
@@ -162,11 +166,15 @@ impl ClusterManager {
                 NodeDiscoveryMethod::Multicast { group, port } => {
                     Self::multicast_discovery(group, *port)?
                 }
-                NodeDiscoveryMethod::DnsService { service_name: _service_name } => {
+                NodeDiscoveryMethod::DnsService {
+                    service_name: _service_name,
+                } => {
                     // Placeholder implementation
                     vec![]
                 }
-                NodeDiscoveryMethod::Consul { endpoint: _endpoint } => {
+                NodeDiscoveryMethod::Consul {
+                    endpoint: _endpoint,
+                } => {
                     // Placeholder implementation
                     vec![]
                 }
@@ -652,7 +660,10 @@ impl ClusterManager {
         Ok(discovered_nodes)
     }
 
-    fn health_monitoring_loop(health_monitor: &Arc<Mutex<HealthMonitor>>, registry: &Arc<RwLock<NodeRegistry>>, event_log: &Arc<Mutex<ClusterEventLog>>,
+    fn health_monitoring_loop(
+        health_monitor: &Arc<Mutex<HealthMonitor>>,
+        registry: &Arc<RwLock<NodeRegistry>>,
+        event_log: &Arc<Mutex<ClusterEventLog>>,
     ) -> CoreResult<()> {
         let nodes = {
             let registry_read = registry.read().map_err(|_| {
@@ -718,7 +729,10 @@ impl ClusterManager {
         Ok(())
     }
 
-    fn cluster_coordination_loop(cluster_state: &Arc<RwLock<ClusterState>>, registry: &Arc<RwLock<NodeRegistry>>, event_log: &Arc<Mutex<ClusterEventLog>>,
+    fn cluster_coordination_loop(
+        cluster_state: &Arc<RwLock<ClusterState>>,
+        registry: &Arc<RwLock<NodeRegistry>>,
+        event_log: &Arc<Mutex<ClusterEventLog>>,
     ) -> CoreResult<()> {
         let healthy_nodes = {
             let registry_read = registry.read().map_err(|_| {
@@ -1155,6 +1169,7 @@ impl Default for ResourceAllocator {
     }
 }
 
+#[allow(dead_code)]
 impl ResourceAllocator {
     pub fn new() -> Self {
         Self {
@@ -1396,9 +1411,13 @@ impl ResourceAllocator {
 
             for (task_id, allocation) in moveable_allocations {
                 // Find the best underloaded node for this allocation
-                if let Some((target_node, _)) =
-                    self.find_best_target_node(&allocation.allocated_resources, &underloaded_nodes.iter().map(|(node_id, load, _)| (node_id.clone(), *load)).collect::<Vec<_>>())?
-                {
+                if let Some((target_node, _)) = self.find_best_target_node(
+                    &allocation.allocated_resources,
+                    &underloaded_nodes
+                        .iter()
+                        .map(|(node_id, load, _)| (node_id.clone(), *load))
+                        .collect::<Vec<_>>(),
+                )? {
                     // Attempt to move the allocation
                     if self.attempt_allocation_migration(&task_id, &target_node)? {
                         rebalancing_actions += 1;
@@ -1524,7 +1543,9 @@ impl ResourceAllocator {
         combined_efficiency.min(1.0)
     }
 
-    fn try_consolidate_large_allocation(&self, _allocation: &ResourceAllocation,
+    fn try_consolidate_large_allocation(
+        &self,
+        _allocation: &ResourceAllocation,
     ) -> CoreResult<bool> {
         // Attempt to consolidate a multi-node allocation onto fewer nodes
         // For now, return false indicating no consolidation was possible
@@ -1535,15 +1556,16 @@ impl ResourceAllocator {
         Ok(false)
     }
 
-    fn try_optimize_medium_allocations(&self, _allocation: &ResourceAllocation,
+    fn try_optimize_medium_allocations(
+        &self,
+        _allocation: &ResourceAllocation,
     ) -> CoreResult<bool> {
         // Attempt to pair medium allocations efficiently
         // For now, return false indicating no pairing optimization was made
         Ok(false)
     }
 
-    fn try_pack_small_allocations(&self, _allocation: &ResourceAllocation,
-    ) -> CoreResult<bool> {
+    fn try_pack_small_allocations(&self, _allocation: &ResourceAllocation) -> CoreResult<bool> {
         // Attempt to pack small allocations tightly onto shared nodes
         // For now, return false indicating no packing optimization was made
         Ok(false)
@@ -1587,7 +1609,10 @@ impl ResourceAllocator {
             .collect()
     }
 
-    fn find_best_underloaded_node(&self, nodes: &[(String, f64, f64)], _required_capacity: f64,
+    fn find_best_underloaded_node(
+        &self,
+        nodes: &[(String, f64, f64)],
+        _required_capacity: f64,
     ) -> Option<(String, f64)> {
         // Find the best underloaded node to receive an allocation
         // For now, just return the most underloaded node
@@ -1596,8 +1621,7 @@ impl ResourceAllocator {
             .map(|(node_id, load, _capacity)| (node_id.clone(), *load))
     }
 
-    fn try_migrate_allocation(&self, _task_id: &TaskId, _target_node: &str,
-    ) -> CoreResult<bool> {
+    fn try_migrate_allocation(&self, _task_id: &TaskId, _target_node: &str) -> CoreResult<bool> {
         // Attempt to migrate an allocation to a different node
         // For now, return false indicating migration wasn't performed
         // In a real implementation, this would:
@@ -1607,8 +1631,7 @@ impl ResourceAllocator {
         Ok(false)
     }
 
-    fn try_spread_allocation(&self, _allocation: &ResourceAllocation,
-    ) -> CoreResult<bool> {
+    fn try_spread_allocation(&self, _allocation: &ResourceAllocation) -> CoreResult<bool> {
         // Attempt to spread a large allocation across multiple nodes
         // For now, return false indicating spreading wasn't performed
         Ok(false)
@@ -1618,32 +1641,56 @@ impl ResourceAllocator {
         &self.available_resources
     }
 
-    pub fn attempt_consolidation(&mut self, _task_id: &TaskId, _allocation: &ResourceAllocation) -> CoreResult<bool> {
+    pub fn attempt_consolidation(
+        &mut self,
+        _task_id: &TaskId,
+        _allocation: &ResourceAllocation,
+    ) -> CoreResult<bool> {
         // Placeholder implementation
         Ok(false)
     }
 
-    pub fn attempt_best_fit_pairing(&mut self, _task_id: &TaskId, _allocation: &ResourceAllocation) -> CoreResult<bool> {
+    pub fn attempt_best_fit_pairing(
+        &mut self,
+        _task_id: &TaskId,
+        _allocation: &ResourceAllocation,
+    ) -> CoreResult<bool> {
         // Placeholder implementation
         Ok(false)
     }
 
-    pub fn attempt_small_allocation_packing(&mut self, _task_id: &TaskId, _allocation: &ResourceAllocation) -> CoreResult<bool> {
+    pub fn attempt_small_allocation_packing(
+        &mut self,
+        _task_id: &TaskId,
+        _allocation: &ResourceAllocation,
+    ) -> CoreResult<bool> {
         // Placeholder implementation
         Ok(false)
     }
 
-    pub fn find_best_target_node(&mut self, _resources: &ComputeCapacity, _underloaded_nodes: &[(String, f64)]) -> CoreResult<Option<(String, f64)>> {
+    pub fn find_best_target_node(
+        &mut self,
+        _resources: &ComputeCapacity,
+        _underloaded_nodes: &[(String, f64)],
+    ) -> CoreResult<Option<(String, f64)>> {
         // Placeholder implementation
         Ok(None)
     }
 
-    pub fn attempt_allocation_migration(&mut self, _task_id: &TaskId, _to_node: &str) -> CoreResult<bool> {
+    pub fn attempt_allocation_migration(
+        &mut self,
+        _task_id: &TaskId,
+        _to_node: &str,
+    ) -> CoreResult<bool> {
         // Placeholder implementation
         Ok(false)
     }
 
-    pub fn attempt_allocation_spreading(&mut self, _task_id: &TaskId, _allocation: &ResourceAllocation) -> CoreResult<bool> {
+    pub fn attempt_allocation_spreading(
+        &mut self,
+        _task_id: &TaskId,
+        _allocation: &ResourceAllocation,
+    ) -> CoreResult<bool> {
         // Placeholder implementation
         Ok(false)
     }
@@ -1848,12 +1895,12 @@ impl ClusterTopology {
             address.ip().to_string().split('.').next().unwrap_or("0")
         )
     }
-    
+
     /// Update the topology model with new node information
     pub fn update_model(&mut self, nodes: &[NodeInfo]) {
         // Update the topology model based on new node information
         self.update(nodes);
-        
+
         // Additional model updates can be added here
         // For example, network latency measurements, bandwidth tests, etc.
     }

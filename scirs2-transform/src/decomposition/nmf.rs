@@ -567,7 +567,7 @@ mod tests {
     #[test]
     fn test_nmf_basic() {
         // Create non-negative data
-        let x = Array::from_shape_vec(
+        let x = Array::fromshape_vec(
             (6, 4),
             vec![
                 1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0, 4.0, 8.0, 12.0, 16.0,
@@ -616,7 +616,7 @@ mod tests {
 
     #[test]
     fn test_nmf_negative_input() {
-        let x = Array::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, -1.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+        let x = Array::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, -1.0, 5.0, 6.0, 7.0, 8.0, 9.0])
             .unwrap();
 
         let mut nmf = NMF::new(2);
@@ -633,7 +633,7 @@ mod tests {
     #[test]
     fn test_nmf_coordinate_descent() {
         // Create non-negative data
-        let x = Array::from_shape_vec(
+        let x = Array::fromshape_vec(
             (6, 4),
             vec![
                 1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0, 4.0, 8.0, 12.0, 16.0,

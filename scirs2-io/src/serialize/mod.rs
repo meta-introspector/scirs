@@ -47,9 +47,9 @@ pub enum SerializationFormat {
 ///
 /// ```no_run
 /// use ndarray::{Array2, IxDyn};
-/// use scirs2__io::serialize::{serialize_array, SerializationFormat};
+/// use scirs2_io::serialize::{serialize_array, SerializationFormat};
 ///
-/// let array = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+/// let array = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 /// let array_dyn = array.into_dyn();
 ///
 /// // Binary serialization (compact)
@@ -123,7 +123,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::{Array, IxDyn};
-/// use scirs2__io::serialize::{deserialize_array, SerializationFormat};
+/// use scirs2_io::serialize::{deserialize_array, SerializationFormat};
 ///
 /// // Binary deserialization
 /// let array = deserialize_array::<_, f64>("data.bin", SerializationFormat::Binary).unwrap();
@@ -151,7 +151,7 @@ where
     };
 
     // Convert back to ndarray
-    let array = Array::from_shape_vec(IxDyn(&serialized.metadata.shape), serialized.data)
+    let array = Array::fromshape_vec(IxDyn(&serialized.metadata.shape), serialized.data)
         .map_err(|e| IoError::FormatError(format!("Failed to reconstruct array: {}", e)))?;
 
     Ok(array)
@@ -196,10 +196,10 @@ pub struct SerializedArray<A> {
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2__io::serialize::{serialize_array_with_metadata, SerializationFormat};
+/// use scirs2_io::serialize::{serialize_array_with_metadata, SerializationFormat};
 /// use std::collections::HashMap;
 ///
-/// let array = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+/// let array = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 /// let array_dyn = array.into_dyn();
 ///
 /// // Create custom metadata
@@ -283,7 +283,7 @@ where
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2__io::serialize::{deserialize_array_with_metadata, SerializationFormat};
+/// use scirs2_io::serialize::{deserialize_array_with_metadata, SerializationFormat};
 ///
 /// // Deserialize array with metadata
 /// let (array, metadata) = deserialize_array_with_metadata::<_, f64>(
@@ -320,7 +320,7 @@ where
     let data = serialized.data;
 
     // Create ndarray
-    let array = Array::from_shape_vec(IxDyn(&shape), data)
+    let array = Array::fromshape_vec(IxDyn(&shape), data)
         .map_err(|e| IoError::FormatError(format!("Invalid shape: {:?}", e)))?;
 
     Ok((array, serialized.metadata.metadata))
@@ -342,7 +342,7 @@ where
 ///
 /// ```no_run
 /// use serde::{Serialize, Deserialize};
-/// use scirs2__io::serialize::{serialize_struct, SerializationFormat};
+/// use scirs2_io::serialize::{serialize_struct, SerializationFormat};
 ///
 /// #[derive(Serialize, Deserialize)]
 /// struct Person {
@@ -405,7 +405,7 @@ where
 ///
 /// ```no_run
 /// use serde::{Serialize, Deserialize};
-/// use scirs2__io::serialize::{deserialize_struct, SerializationFormat};
+/// use scirs2_io::serialize::{deserialize_struct, SerializationFormat};
 ///
 /// #[derive(Serialize, Deserialize)]
 /// struct Person {
@@ -506,7 +506,7 @@ impl<A> SparseMatrixCOO<A> {
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::serialize::{serialize_sparse_matrix, SparseMatrixCOO, SerializationFormat};
+/// use scirs2_io::serialize::{serialize_sparse_matrix, SparseMatrixCOO, SerializationFormat};
 ///
 /// // Create a sparse matrix
 /// let mut sparse = SparseMatrixCOO::<f64>::new(100, 100);
@@ -547,7 +547,7 @@ where
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::serialize::{deserialize_sparse_matrix, SerializationFormat};
+/// use scirs2_io::serialize::{deserialize_sparse_matrix, SerializationFormat};
 ///
 /// // Deserialize sparse matrix
 /// let sparse = deserialize_sparse_matrix::<_, f64>("sparse.json", SerializationFormat::JSON).unwrap();
@@ -981,7 +981,9 @@ where
 
 /// Convert Matrix Market format to enhanced sparse matrix
 #[allow(dead_code)]
-pub fn from_matrix_market<A>(_mm_matrix: &crate::matrix_market::MMSparseMatrix<A>) -> SparseMatrix<A>
+pub fn from_matrix_market<A>(
+    _mm_matrix: &crate::matrix_market::MMSparseMatrix<A>,
+) -> SparseMatrix<A>
 where
     A: Clone,
 {

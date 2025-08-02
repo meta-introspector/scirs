@@ -13,7 +13,7 @@ use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
@@ -26,11 +26,11 @@ pub fn calculate_kernel_size<T: Float + FromPrimitive>(
     truncate: Option<T>,
 ) -> NdimageResult<usize> {
     let truncate_val = truncate.unwrap_or_else(|| {
-        safe_f64, _to_float: :<T>(4.0)
+        safe_f64, _to_float: <T>(4.0)
             .unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::zero()))
     });
-    let size = safe_usize, _to_float: :<T>(1)?
-        + (sigma * truncate_val * safe_f64, _to_float: :<T>(2.0)?)
+    let size = safe_usize, _to_float: <T>(1)?
+        + (sigma * truncate_val * safe_f64, _to_float: <T>(2.0)?)
             .ceil()
             .to_usize()
             .ok_or_else(|| {
@@ -63,9 +63,9 @@ pub fn generate_gaussian_kernel<T: Float + FromPrimitive>(
     let half = kernel_size / 2;
     let mut kernel = Array::zeros(kernel_size);
     let sigma_sq = sigma * sigma;
-    let norm_factor = safe_f64, _to_float: :<T>(1.0)?
-        / (sigma * safe_f64, _to_float: :<T>(std::f64::consts::TAU.sqrt())?);
-    let exp_factor = safe_f64, _to_float: :<T>(-0.5)? / sigma_sq;
+    let norm_factor = safe_f64, _to_float: <T>(1.0)?
+        / (sigma * safe_f64, _to_float: <T>(std::f64::consts::TAU.sqrt())?);
+    let exp_factor = safe_f64, _to_float: <T>(-0.5)? / sigma_sq;
 
     let mut sum = T::zero();
     for (i, k) in kernel.iter_mut().enumerate() {
@@ -342,14 +342,14 @@ where
     }
 
     // Calculate new shape
-    let mut new_shape = Vec::with_capacity(input.ndim());
+    let mut newshape = Vec::with_capacity(input.ndim());
     for (dim, &(pad_before, pad_after)) in pad_width.iter().enumerate().take(input.ndim()) {
-        new_shape.push(input.shape()[dim] + pad_before + pad_after);
+        newshape.push(input.shape()[dim] + pad_before + pad_after);
     }
 
     // Create output array with default constant _value
     let const_val = constant_value.unwrap_or_else(|| T::zero());
-    let dimension = D::from_dimension(&ndarray::IxDyn(&new_shape)).map_err(|_| {
+    let dimension = D::from_dimension(&ndarray::IxDyn(&newshape)).map_err(|_| {
         NdimageError::DimensionError("Could not create dimension from shape".into())
     })?;
     let mut output = Array::<T, D>::from_elem(dimension, const_val);
@@ -743,7 +743,7 @@ where
 // We're not going to use this function as we've implemented a more specialized approach above
 #[allow(dead_code)]
 fn pad_along_axis<T, D>(
-    _output: &mut Array<T, D>, _input: &Array<T, D>, _axis: usize, _dest_idx: usize_src, _idx: usize,
+    _output: &mut Array<T, D>, _input: &Array<T, D>, _axis: usize, _dest_idx: usizesrc, _idx: usize,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -771,7 +771,7 @@ where
 pub fn get_window<T, D>(
     input: &Array<T, D>,
     center: &[usize],
-    window_size: &[usize], _mode: &BorderMode_constant_value: Option<T>,
+    window_size: &[usize], _mode: &BorderMode_constant, value: Option<T>,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -1662,7 +1662,7 @@ where
 #[allow(dead_code)]
 pub fn apply_window_function<T, D, F>(
     input: &Array<T, D>,
-    window_size: &[usize], _mode: &BorderMode_constant_value: Option<T>, _func: F,
+    window_size: &[usize], _mode: &BorderMode_constant, value: Option<T>, _func: F,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone,
@@ -1797,7 +1797,7 @@ mod tests {
     #[test]
     fn test_pad_array_constant_mode_2d() {
         // Create a simple 2D array
-        let array = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
+        let array = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
             .expect("Array2 creation should succeed for 2D test");
 
         // Apply constant padding
@@ -1829,7 +1829,7 @@ mod tests {
     fn test_copy_nd_array() {
         // Create a 3D source array
         let source =
-            Array3::<f64>::from_shape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+            Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
         let dest = Array3::<f64>::zeros((4, 4, 4));
 
         // Convert to dynamic dimensionality
@@ -1869,7 +1869,7 @@ mod tests {
     #[test]
     fn test_pad_array_3d() {
         // Create a 3D array (2x2x2)
-        let array = Array3::<f64>::from_shape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+        let array = Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
 
         // Test padding with constant mode
         let pad_width = vec![(1, 1), (1, 1), (1, 1)];
@@ -1899,7 +1899,7 @@ mod tests {
     #[test]
     fn test_pad_array_reflect_3d() {
         // Create a 3D array (2x2x2)
-        let array = Array3::<f64>::from_shape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+        let array = Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
 
         // Print array values for debugging
         println!("3D Array values for reflection test:");
@@ -1953,7 +1953,7 @@ mod tests {
     #[test]
     fn test_pad_array_wrap_3d() {
         // Create a 3D array (2x2x2)
-        let array = Array3::<f64>::from_shape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+        let array = Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
 
         // Print array values for debugging
         println!("3D Array values for wrap test:");
@@ -2007,7 +2007,7 @@ mod tests {
     #[test]
     fn test_pad_array_nearest_3d() {
         // Create a 3D array (2x2x2)
-        let array = Array3::<f64>::from_shape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
+        let array = Array3::<f64>::fromshape_fn((2, 2, 2), |(i, j, k)| (i * 4 + j * 2 + k) as f64);
 
         // Print array values for debugging
         println!("3D Array values for nearest test:");

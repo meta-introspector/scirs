@@ -4,7 +4,7 @@ pub(crate) struct AdaGradOp<F: Float> {
     pub(crate) lr: F,
 }
 
-impl<F: Float>, crate::op::Op<F> for AdaGradOp<F> {
+impl<F: Float> crate::op::Op<F> for AdaGradOp<F> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<F>) -> Result<(), crate::op::OpError> {
         // Clone the gradient to avoid borrow issues
         let grad = ctx.input(1).to_owned();

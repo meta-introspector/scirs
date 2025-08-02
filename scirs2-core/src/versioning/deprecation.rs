@@ -260,25 +260,28 @@ pub enum CommunicationChannel {
 }
 
 /// Helper function to create a deprecation timeline
-fn deprecation_timeline(version: &Version, replacement_version: Option<&Version>) -> DeprecationTimeline {
+fn deprecation_timeline(
+    version: &Version,
+    _replacement_version: Option<&Version>,
+) -> DeprecationTimeline {
     let now = chrono::Utc::now();
     let deprecated_date = now + chrono::Duration::days(30);
     let end_of_life = now + chrono::Duration::days(180);
     let removal_date = now + chrono::Duration::days(365);
-    
+
     let milestones = vec![
         DeprecationMilestone {
             date: deprecated_date,
-            description: format!("Version {} will be deprecated", version),
+            description: format!("Version {version} will be deprecated"),
             actions: vec!["Update to newer version".to_string()],
         },
         DeprecationMilestone {
             date: end_of_life,
-            description: format!("Version {} reaches end of life", version),
+            description: format!("Version {version} reaches end of life"),
             actions: vec!["Support will be discontinued".to_string()],
         },
     ];
-    
+
     DeprecationTimeline {
         announced: now,
         deprecated_date,
@@ -536,8 +539,12 @@ impl DeprecationManager {
                                     version: version.clone(),
                                     announcement_date: chrono::Utc::now(),
                                     timeline: deprecation_timeline(version, Some(&replacement)),
-                                    message: format!("Version {} is deprecated in favor of {}", version, replacement),
-                                    migration_instructions: Some(format!("Please migrate to version {}", replacement)),
+                                    message: format!(
+                                        "Version {version} is deprecated in favor of {replacement}"
+                                    ),
+                                    migration_instructions: Some(format!(
+                                        "Please migrate to version {replacement}"
+                                    )),
                                     support_contact: None,
                                     communication_channels: vec![],
                                 };
@@ -575,10 +582,13 @@ impl DeprecationManager {
                         version: version.clone(),
                         timeline: deprecation_timeline(version, None),
                         announcement_date: now,
-                        message: format!("Version {} deprecated due to maintenance burden", version),
-                        migration_instructions: Some(format!("Please upgrade to newer version")),
+                        message: format!("Version {version} deprecated due to maintenance burden"),
+                        migration_instructions: Some("Please upgrade to newer version".to_string()),
                         support_contact: Some("support@scirs.org".to_string()),
-                        communication_channels: vec![CommunicationChannel::Documentation, CommunicationChannel::Email],
+                        communication_channels: vec![
+                            CommunicationChannel::Documentation,
+                            CommunicationChannel::Email,
+                        ],
                     };
 
                     actions.push(MaintenanceAction::AutoDeprecation {
@@ -610,7 +620,9 @@ impl DeprecationManager {
     }
 
     /// Generate deprecation message
-    fn generate_deprecation_message(&self, version: &Version,
+    fn generate_deprecation_message(
+        &self,
+        version: &Version,
         reason: &DeprecationReason,
         replacement: Option<&Version>,
     ) -> String {
@@ -645,7 +657,9 @@ impl DeprecationManager {
     }
 
     /// Generate migration instructions
-    fn generate_migration_instructions(&self, current_version: &Version,
+    fn generate_migration_instructions(
+        &self,
+        _current_version: &Version,
         replacement: Option<&Version>,
     ) -> Option<String> {
         replacement.map(|replacement| {

@@ -66,7 +66,7 @@ impl FederatedServer {
         let aggregator: Box<dyn AggregationStrategy> = match _config.aggregation_strategy.as_str() {
             "fedavg" => Box::new(crate::federated::FedAvg::new()),
             "fedprox" => Box::new(crate::federated::FedProx::new(0.01)),
-            "fedyogi" => Box::new(crate::federated::FedYogi::new(), _ =>, Box::new(crate::federated::FedAvg::new()),
+            "fedyogi" => Box::new(crate::federated::FedYogi::new(), _ => Box::new(crate::federated::FedAvg::new()),
         };
         Ok(Self {
             config,

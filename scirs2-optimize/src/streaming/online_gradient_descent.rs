@@ -71,7 +71,7 @@ impl ByzantineFaultDetector {
             reputation_scores: HashMap::new(),
             suspicion_counters: HashMap::new(),
             deviation_history: HashMap::new(),
-            _fault_threshold,
+            fault_threshold: _fault_threshold,
             recovery_period: Duration::from_secs(300), // 5 minutes recovery
             last_detection_times: HashMap::new(),
         }
@@ -169,7 +169,7 @@ impl ConsensusVotingState {
             proposals: HashMap::new(),
             votes: HashMap::new(),
             voting_weights: HashMap::new(),
-            _consensus_threshold,
+            consensus_threshold: _consensus_threshold,
             round_timeout: Duration::from_millis(100),
             round_start: None,
         }
@@ -1016,7 +1016,7 @@ mod tests {
         let consensus = voting_state.check_consensus();
         assert!(consensus.is_some());
 
-        let (winner_id_) = consensus.unwrap();
+        let winner_id = consensus.unwrap();
         assert_eq!(winner_id, 1);
     }
 

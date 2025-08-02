@@ -571,7 +571,11 @@ impl WorkloadProfileBuilder {
     }
 
     /// Set parallelism profile
-    pub fn with_parallelism(mut self, parallelizable: bool, optimal_threads: Option<usize>) -> Self {
+    pub fn with_parallelism(
+        mut self,
+        parallelizable: bool,
+        optimal_threads: Option<usize>,
+    ) -> Self {
         self.parallelism_profile.parallelizable = parallelizable;
         self.parallelism_profile.optimal_threads = optimal_threads;
         self

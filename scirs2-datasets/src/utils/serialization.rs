@@ -70,7 +70,7 @@ where
     }
 
     let data = vec[2..].to_vec();
-    match Array2::from_shape_vec((nrows, ncols), data) {
+    match Array2::fromshape_vec((nrows, ncols), data) {
         Ok(array) => Ok(array),
         Err(_) => Err(serde::de::Error::custom("Failed to reshape array2")),
     }
@@ -232,7 +232,7 @@ mod tests {
         // For testing, we need to manually test the serialization functions
         // since they're designed to work with serde attributes
         let vec = [2.0, 3.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-        let reconstructed = Array2::from_shape_vec((2, 3), vec[2..].to_vec()).unwrap();
+        let reconstructed = Array2::fromshape_vec((2, 3), vec[2..].to_vec()).unwrap();
 
         assert_eq!(original, reconstructed);
     }
@@ -250,7 +250,7 @@ mod tests {
     fn test_invalid_array2_deserialization() {
         // Test with insufficient data
         let vec = [2.0, 3.0, 1.0]; // Claims 2x3 but only has 1 element
-        let result = Array2::from_shape_vec((2, 3), vec[2..].to_vec());
+        let result = Array2::fromshape_vec((2, 3), vec[2..].to_vec());
         assert!(result.is_err());
     }
 }

@@ -245,12 +245,12 @@ fn test_adaptive_search(
 
     let config = TuningConfig {
         strategy: SearchStrategy::AdaptiveSearch {
-            initial_strategy: Box::new(SearchStrategy::RandomSearch { n_trials: 15 }),
+            initial_strategy: Box::new(SearchStrategy::RandomSearch { n, trials: 15 }),
             adaptation_frequency: 10,
         },
         metric: EvaluationMetric::SilhouetteScore,
         cv_config: CrossValidationConfig {
-            strategy: CVStrategy::TimeSeriesSplit { n_splits: 5 },
+            strategy: CVStrategy::TimeSeriesSplit { n, splits: 5 },
             shuffle: false,
             random_seed: Some(42),
         },
@@ -459,7 +459,7 @@ fn generate_blob_clusters(_n_samples: usize, n_clusters: usize, std_dev: f64) ->
         }
     }
 
-    Array2::from_shape_vec((n_samples, 2), data).unwrap()
+    Array2::fromshape_vec((n_samples, 2), data).unwrap()
 }
 
 /// Generate moon-shaped clusters
@@ -483,7 +483,7 @@ fn generate_moon_clusters(_n_samples: usize) -> Array2<f64> {
         data.extend_from_slice(&[x2, y2]);
     }
 
-    Array2::from_shape_vec((n_samples, 2), data).unwrap()
+    Array2::fromshape_vec((n_samples, 2), data).unwrap()
 }
 
 /// Generate circle clusters
@@ -509,7 +509,7 @@ fn generate_circle_clusters(_n_samples: usize) -> Array2<f64> {
         data.extend_from_slice(&[x2, y2]);
     }
 
-    Array2::from_shape_vec((n_samples, 2), data).unwrap()
+    Array2::fromshape_vec((n_samples, 2), data).unwrap()
 }
 
 /// Generate anisotropic clusters
@@ -535,7 +535,7 @@ fn generate_anisotropic_clusters(_n_samples: usize, n_clusters: usize) -> Array2
         }
     }
 
-    Array2::from_shape_vec((n_samples, 2), data).unwrap()
+    Array2::fromshape_vec((n_samples, 2), data).unwrap()
 }
 
 /// Generate varied size clusters
@@ -556,7 +556,7 @@ fn generate_varied_size_clusters(_n_samples: usize) -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((data.len() / 2, 2), data).unwrap()
+    Array2::fromshape_vec((data.len() / 2, 2), data).unwrap()
 }
 
 /// Other utility functions (placeholders for actual implementations)

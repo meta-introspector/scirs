@@ -1,11 +1,12 @@
-//! SIMD Memory Optimization for Signal Processing
-//!
-//! This module provides advanced SIMD-accelerated memory optimizations for
-//! signal processing operations. It implements cache-friendly algorithms,
-//! vectorized operations, and memory-efficient data structures.
+use ndarray::s;
+// SIMD Memory Optimization for Signal Processing
+//
+// This module provides advanced SIMD-accelerated memory optimizations for
+// signal processing operations. It implements cache-friendly algorithms,
+// vectorized operations, and memory-efficient data structures.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2, s};
+use ndarray::{ Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
@@ -549,7 +550,8 @@ where
 /// SIMD-accelerated in-place FFT
 #[allow(dead_code)]
 fn simd_fft_inplace<T>(
-    _data: ArrayViewMut1<num_complex::Complex<T>>, _config: &SimdMemoryConfig,
+    _data: ArrayViewMut1<num_complex::Complex<T>>,
+    _config: &SimdMemoryConfig,
 ) -> SignalResult<()>
 where
     T: Float + NumCast + Send + Sync + std::fmt::Debug,
@@ -561,7 +563,7 @@ where
 
 /// Standard FFT fallback
 #[allow(dead_code)]
-fn standard_fft_inplace<T>(_data: ArrayViewMut1<num__complex::Complex<T>>) -> SignalResult<()>
+fn standard_fft_inplace<T>(_data: ArrayViewMut1<num_complex::Complex<T>>) -> SignalResult<()>
 where
     T: Float + NumCast + Send + Sync + std::fmt::Debug,
 {

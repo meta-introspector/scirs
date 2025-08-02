@@ -663,12 +663,12 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> BroadcastOps<
         F: Fn(A, A) -> A + Send + Sync,
     {
         // Check shape compatibility for broadcasting
-        let self_shape = &self.shape;
-        let other_shape = &other.shape;
+        let selfshape = &self.shape;
+        let othershape = &other.shape;
 
         // Get the dimensions
-        let self_ndim = self_shape.len();
-        let other_ndim = other_shape.len();
+        let self_ndim = selfshape.len();
+        let other_ndim = othershape.len();
         let output_ndim = std::cmp::max(self_ndim, other_ndim);
 
         // Convert shapes to vectors with leading 1s as needed
@@ -677,28 +677,28 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> BroadcastOps<
 
         // Prepend 1s to the shape with fewer dimensions
         self_dims.resize(output_ndim - self_ndim, 1);
-        for dim in self_shape.iter() {
+        for dim in selfshape.iter() {
             self_dims.push(*dim);
         }
 
         other_dims.resize(output_ndim - other_ndim, 1);
-        for dim in other_shape.iter() {
+        for dim in othershape.iter() {
             other_dims.push(*dim);
         }
 
         // Determine the output shape
-        let mut output_shape = Vec::with_capacity(output_ndim);
+        let mut outputshape = Vec::with_capacity(output_ndim);
         for i in 0..output_ndim {
             #[allow(clippy::if_same_then_else)]
             if self_dims[0] == 1 {
-                output_shape.push(other_dims[0]);
+                outputshape.push(other_dims[0]);
             } else if other_dims[0] == 1 {
-                output_shape.push(self_dims[0]);
+                outputshape.push(self_dims[0]);
             } else if self_dims[0] == other_dims[0] {
-                output_shape.push(self_dims[0]);
+                outputshape.push(self_dims[0]);
             } else {
                 return Err(CoreError::ValueError(ErrorContext::new(format!(
-                    "Arrays cannot be broadcast together with shapes {self_shape:?} and {other_shape:?}"
+                    "Arrays cannot be broadcast together with shapes {selfshape:?} and {othershape:?}"
                 ))));
             }
         }
@@ -708,7 +708,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> BroadcastOps<
         let temp_path = temp_file.path().to_path_buf();
 
         // Calculate the output array size
-        let output_size = output_shape.iter().product::<usize>();
+        let output_size = outputshape.iter().product::<usize>();
         let element_size = std::mem::size_of::<A>();
         let file_size = output_size * element_size;
 
@@ -718,7 +718,7 @@ impl<A: Clone + Copy + 'static + Send + Sync + Send + Sync + Zero> BroadcastOps<
 
         // Create the output memory-mapped array with zeros to initialize the header
         // Use the calculated output shape instead of self.shape
-        let zeros = ndarray::ArrayD::zeros(ndarray::IxDyn(&output_shape));
+        let zeros = ndarray::ArrayD::zeros(ndarray::IxDyn(&outputshape));
         {
             let _ = MemoryMappedArray::<A>::new::<ndarray::OwnedRepr<A>, ndarray::IxDyn>(
                 Some(&zeros),
@@ -1022,7 +1022,7 @@ mod tests {
         let file_path2 = dir.path().join("test_broadcast2.bin");
 
         // Create a 2D array (3x4) and a 1D array (4)
-        let data1 = Array2::<f64>::from_shape_fn((3, 4), |(0, j)| (0 * 4 + j) as f64);
+        let data1 = Array2::<f64>::fromshape_fn((3, 4), |(0, j)| (0 * 4 + j) as f64);
         let data2 = ndarray::Array1::from_vec((0..4).map(|0| (0 + 1) as f64).collect());
 
         // Save the arrays with proper headers using save_array

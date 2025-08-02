@@ -596,7 +596,7 @@ impl SceneUnderstandingEngine {
     }
 
     fn analyze_object_attributes(
-        &self_image: &ArrayView3<f32>, _detection: &DetectionResult_features: &Array2<f32>,
+        &self_image: &ArrayView3<f32>, _detection: &DetectionResult, features: &Array2<f32>,
     ) -> Result<HashMap<String, f32>> {
         Ok(HashMap::new()) // Placeholder
     }
@@ -620,7 +620,7 @@ impl SceneUnderstandingEngine {
     }
 
     fn apply_reasoning_rule(
-        &self_rule: &ReasoningRule, _objects: &[DetectedObject], _relationships: &[SpatialRelation]_scene_class: &str,
+        &self_rule: &ReasoningRule, _objects: &[DetectedObject], _relationships: &[SpatialRelation]_scene, class: &str,
     ) -> Result<Option<ReasoningResult>> {
         Ok(None) // Placeholder
     }
@@ -679,7 +679,7 @@ impl SpatialRelationshipAnalyzer {
     }
 
     fn analyze_pair(
-        &self_obj1: &DetectedObject, _obj2: &DetectedObject_id1: usize, _id2: usize,
+        &self_obj1: &DetectedObject, _obj2: &DetectedObject, id1: usize, _id2: usize,
     ) -> Result<Vec<SpatialRelation>> {
         Ok(Vec::new()) // Placeholder
     }
@@ -752,7 +752,7 @@ pub fn analyze_scene_with_reasoning(
 /// Apply contextual enhancement based on previous scene understanding
 #[allow(dead_code)]
 fn apply_contextual_enhancement(
-    current: &SceneAnalysisResult_previous: &SceneAnalysisResult,
+    current: &SceneAnalysisResult, previous: &SceneAnalysisResult,
 ) -> Result<SceneAnalysisResult> {
     // Placeholder for contextual enhancement logic
     Ok(current.clone())

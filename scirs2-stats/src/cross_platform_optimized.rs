@@ -611,9 +611,9 @@ impl AdvancedCrossPlatformTester {
             
             // Execute the test function (placeholder)
             let _result = match &test.test_function {
-                TestFunction::Mean(_) =>, F::from(0.0).unwrap(),
-                TestFunction::Variance(__) =>, F::from(1.0).unwrap(),
-                TestFunction::Custom(__) =>, F::from(0.0).unwrap(),
+                TestFunction::Mean(_) => F::from(0.0).unwrap(),
+                TestFunction::Variance(__) => F::from(1.0).unwrap(),
+                TestFunction::Custom(__) => F::from(0.0).unwrap(),
             };
             
             let iter_time = iter_start.elapsed();
@@ -664,9 +664,9 @@ impl AdvancedCrossPlatformTester {
         
         // Execute precision test and compare with expected result
         let actual_result = match &test.test_function {
-            TestFunction::Mean(_) =>, F::from(0.0).unwrap(),
-            TestFunction::Variance(__) =>, F::from(1.0).unwrap(),
-            TestFunction::Custom(__) =>, F::from(0.0).unwrap(),
+            TestFunction::Mean(_) => F::from(0.0).unwrap(),
+            TestFunction::Variance(__) => F::from(1.0).unwrap(),
+            TestFunction::Custom(__) => F::from(0.0).unwrap(),
         };
 
         let precision_error = if let Some(expected) = test.expected_result {
@@ -1818,7 +1818,7 @@ impl CrossPlatformRegressionDetector {
     }
 
     pub fn detect_regressions(
-        &self, _function_name: &str, _baseline: &ComprehensiveCrossPlatformResult_current: &ComprehensiveCrossPlatformResult,
+        &self, _function_name: &str, _baseline: &ComprehensiveCrossPlatformResult, current: &ComprehensiveCrossPlatformResult,
     ) -> StatsResult<CrossPlatformRegressionResult> {
         // Placeholder implementation
         Ok(CrossPlatformRegressionResult {

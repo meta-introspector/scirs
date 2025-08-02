@@ -339,7 +339,7 @@ impl LearnedKeypointDescriptor {
     pub fn new(_patch_size: usize, descriptor_size: usize) -> Self {
         // Initialize with random projection matrix (simplified)
         let weights =
-            Array2::from_shape_fn((descriptor_size, _patch_size * _patch_size), |(i, j)| {
+            Array2::fromshape_fn((descriptor_size, _patch_size * _patch_size), |(i, j)| {
                 // Simple deterministic "random" weights
                 ((i * 7 + j * 13) % 11) as f64 / 11.0 - 0.5
             });
@@ -438,11 +438,11 @@ impl SemanticFeatureExtractor {
         for &feature_type in feature_types {
             match feature_type {
                 "texture" => {
-                    let texture_features = self.extract_texture_features(image)?;
+                    let texture_features = self.extracttexture_features(image)?;
                     results.insert("texture".to_string(), texture_features);
                 }
                 "shape" => {
-                    let shape_features = self.extract_shape_features(image)?;
+                    let shape_features = self.extractshape_features(image)?;
                     results.insert("shape".to_string(), shape_features);
                 }
                 "color" => {
@@ -462,7 +462,7 @@ impl SemanticFeatureExtractor {
     }
 
     /// Extract texture features using Gabor-like filters
-    fn extract_texture_features<T>(&self, image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
+    fn extracttexture_features<T>(&self, image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
     where
         T: Float + FromPrimitive + Debug + Send + Sync + 'static,
     {
@@ -520,7 +520,7 @@ impl SemanticFeatureExtractor {
     }
 
     /// Extract shape features using morphological operations
-    fn extract_shape_features<T>(&self, image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
+    fn extractshape_features<T>(&self, image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
     where
         T: Float + FromPrimitive + Debug + Send + Sync + 'static,
     {

@@ -89,7 +89,7 @@ pub struct XLACompiler {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct XLAProgram {
     /// Program operations in HLO (High Level Operations) format
-    pub hlo_text: String,
+    pub hlotext: String,
     /// Input shapes and types
     pub input_specs: Vec<TensorSpec>,
     /// Output shapes and types
@@ -126,7 +126,7 @@ pub struct TPULayout {
     /// Dimension order for memory layout
     pub minor_to_major: Vec<usize>,
     /// Padding and alignment information
-    pub padded_shape: Vec<usize>,
+    pub paddedshape: Vec<usize>,
     /// Memory space (HBM, VMEM, etc.)
     pub memory_space: TPUMemorySpace,
 /// TPU memory spaces
@@ -300,7 +300,7 @@ pub struct TPUTask {
     /// Input tensors
     pub inputs: Vec<TPUTensor>,
     /// Expected output shapes
-    pub output_shapes: Vec<Vec<usize>>,
+    pub outputshapes: Vec<Vec<usize>>,
     /// Task priority
     pub priority: TaskPriority,
     /// Maximum execution time allowed
@@ -569,7 +569,7 @@ impl TPURuntime {
                 "2" => TPUGeneration::V2,
                 "3" => TPUGeneration::V3,
                 "4" => TPUGeneration::V4,
-                "5" => TPUGeneration::V5_ =>, TPUGeneration::Custom(format!("v{}", version)),
+                "5" => TPUGeneration::V5_ => TPUGeneration::Custom(format!("v{}", version)),
             };
             Ok((generation, cores))
             // Default fallback
@@ -642,7 +642,7 @@ impl TPURuntime {
             task_id: TaskId(self.generate_task_id()),
             kernel: compiled_kernel,
             inputs: tpu_inputs,
-            output_shapes: self.infer_output_shapes(operation, inputs)?,
+            outputshapes: self.infer_outputshapes(operation, inputs)?,
             priority: TaskPriority::Normal,
             timeout: Duration::from_secs(60),
             completion_callback: None,
@@ -679,7 +679,7 @@ impl TPURuntime {
         &self,
     ) -> Result<XLAProgram> {
         // Convert operation to HLO (High Level Operations) format
-        let hlo_text = self.generate_hlo_for_operation(operation, inputs)?;
+        let hlotext = self.generate_hlo_for_operation(operation, inputs)?;
         let input_specs = inputs
             .iter()
             .map(|input| {
@@ -691,7 +691,7 @@ impl TPURuntime {
             .collect();
         let output_specs = self.infer_output_specs(operation, inputs)?;
         Ok(XLAProgram {
-            hlo_text,
+            hlotext,
             input_specs,
             output_specs,
             program_id: self.generate_program_id(),
@@ -810,16 +810,16 @@ impl TPURuntime {
                 })
             .collect()
     /// Infer output shapes for operation
-    fn infer_output_shapes<F: Float + Debug>(
+    fn infer_outputshapes<F: Float + Debug>(
     ) -> Result<Vec<Vec<usize>>> {
                 if inputs.len() < 2 {
                     return Err(NeuralError::InvalidArgument(
                         "MatMul requires 2 inputs".to_string(),
                     ));
-                let a_shape = inputs[0].shape();
-                let b_shape = inputs[1].shape();
-                let m = if *transpose_a { a_shape[1] } else { a_shape[0] };
-                let n = if *transpose_b { b_shape[0] } else { b_shape[1] };
+                let ashape = inputs[0].shape();
+                let bshape = inputs[1].shape();
+                let m = if *transpose_a { ashape[1] } else { ashape[0] };
+                let n = if *transpose_b { bshape[0] } else { bshape[1] };
                 Ok(vec![vec![m, n]])
             TPUOperation::ElementWise { .. } => {
                 if inputs.is_empty() {
@@ -832,27 +832,27 @@ impl TPURuntime {
                 // Activation functions preserve input shape
                 axes, keep_dims, ..
                         "Reduction requires at least 1 input".to_string(),
-                let input_shape = inputs[0].shape();
-                let mut output_shape = input_shape.to_vec();
+                let inputshape = inputs[0].shape();
+                let mut outputshape = inputshape.to_vec();
                 // Remove or keep dimensions based on axes and keep_dims
                 if *keep_dims {
                     // Keep dimensions but set size to 1 for reduced axes
                     for &axis in axes {
-                        if axis < output_shape.len() {
-                            output_shape[axis] = 1;
+                        if axis < outputshape.len() {
+                            outputshape[axis] = 1;
                 } else {
                     // Remove dimensions in reverse order to avoid index issues
                     let mut sorted_axes = axes.clone();
                     sorted_axes.sort_unstable();
                     sorted_axes.reverse();
                     for &axis in &sorted_axes {
-                            output_shape.remove(axis);
-                Ok(vec![output_shape])
+                            outputshape.remove(axis);
+                Ok(vec![outputshape])
     /// Infer output specifications for operation
     fn infer_output_specs<F: Float + Debug>(
     ) -> Result<Vec<TensorSpec>> {
-        let output_shapes = self.infer_output_shapes(operation, inputs)?;
-        Ok(output_shapes
+        let outputshapes = self.infer_outputshapes(operation, inputs)?;
+        Ok(outputshapes
             .into_iter()
             .map(|shape| {
                     shape,
@@ -898,11 +898,11 @@ impl XLACompiler {
     /// Generate TPU binary code (simulated)
     fn generate_tpu_binary(&self, program: &XLAProgram) -> Result<Vec<u8>> {
         // Simulate binary generation based on HLO
-        let binary_size = program.hlo_text.len() * 4; // Rough estimate
+        let binary_size = program.hlotext.len() * 4; // Rough estimate
         Ok(vec![0u8; binary_size])
     /// Generate kernel metadata
     fn generate_kernel_metadata(&self, program: &XLAProgram) -> Result<TPUKernelMetadata> {
-        let estimated_flops = self.estimate_flops(&program.hlo_text)?;
+        let estimated_flops = self.estimate_flops(&program.hlotext)?;
         let estimated_execution_time = (estimated_flops / 1_000_000) as u64; // Rough estimate
         Ok(TPUKernelMetadata {
             name: program.program_id.clone(),
@@ -916,13 +916,13 @@ impl XLACompiler {
                     spec.shape.iter().product::<usize>() * 4 // 4 bytes per f32
                 .sum(),
     /// Estimate FLOPS from HLO text (simplified)
-    fn estimate_flops(&self, hlo_text: &str) -> Result<u64> {
+    fn estimate_flops(&self, hlotext: &str) -> Result<u64> {
         let mut flops = 0u64;
-        if hlo_text.contains("dot") {
+        if hlotext.contains("dot") {
             flops += 1_000_000; // Rough estimate for matrix multiplication
-        if hlo_text.contains("add") || hlo_text.contains("multiply") {
+        if hlotext.contains("add") || hlotext.contains("multiply") {
             flops += 100_000; // Rough estimate for element-wise ops
-        if hlo_text.contains("convolution") {
+        if hlotext.contains("convolution") {
             flops += 10_000_000; // Rough estimate for convolution
         Ok(flops.max(1000))
     /// Analyze memory requirements for program

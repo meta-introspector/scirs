@@ -1,8 +1,8 @@
-//! Spectral and frequency-domain interpolation methods
-//!
-//! This module provides frequency-domain interpolation algorithms including
-//! sinc interpolation, FFT-based spectral interpolation, automatic method selection,
-//! and comprehensive resampling utilities.
+// Spectral and frequency-domain interpolation methods
+//
+// This module provides frequency-domain interpolation algorithms including
+// sinc interpolation, FFT-based spectral interpolation, automatic method selection,
+// and comprehensive resampling utilities.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
@@ -31,7 +31,7 @@ use super::core::{find_nearest_valid_index, InterpolationConfig, InterpolationMe
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__signal::interpolate::spectral::sinc_interpolate;
+/// use scirs2_signal::interpolate::spectral::sinc_interpolate;
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 /// let result = sinc_interpolate(&signal, 0.4).unwrap();
@@ -142,7 +142,7 @@ pub fn sinc_interpolate(_signal: &Array1<f64>, cutoff_freq: f64) -> SignalResult
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__signal::interpolate::{spectral::spectral_interpolate, core::InterpolationConfig};
+/// use scirs2_signal::interpolate::{spectral::spectral_interpolate, core::InterpolationConfig};
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 /// let config = InterpolationConfig::default();
@@ -262,7 +262,7 @@ pub fn spectral_interpolate(
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__signal::interpolate::{spectral::auto_interpolate, core::InterpolationConfig};
+/// use scirs2_signal::interpolate::{spectral::auto_interpolate, core::InterpolationConfig};
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 /// let config = InterpolationConfig::default();
@@ -394,7 +394,6 @@ pub mod resampling {
     //
     // This module provides high-quality resampling algorithms based on windowed sinc
     // interpolation, polyphase filtering, and other advanced signal processing techniques.
-
 
     /// Configuration for high-quality resampling
     #[derive(Debug, Clone)]
@@ -572,7 +571,6 @@ pub mod polynomial {
     /// This module provides various polynomial interpolation techniques including
     /// Lagrange interpolation, Newton's method, Chebyshev interpolation, and
     /// least-squares polynomial fitting.
-
     use ndarray::{Array1, Array2};
     use scirs2_linalg::solve;
 
@@ -909,7 +907,7 @@ mod tests {
 
     #[test]
     fn test_polynomial_fit() {
-use super::polynomial::{polynomial_eval, polynomial_fit};
+        use super::polynomial::{polynomial_eval, polynomial_fit};
 
         let x = [0.0, 1.0, 2.0, 3.0];
         let y = [1.0, 2.0, 5.0, 10.0]; // Roughly y = x^2 + 1

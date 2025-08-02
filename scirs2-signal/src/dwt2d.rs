@@ -1,108 +1,108 @@
-//! Two-dimensional Discrete Wavelet Transform (DWT2D)
-//!
-//! This module provides implementations of the 2D Discrete Wavelet Transform,
-//! useful for image processing, compression, and multi-resolution analysis
-//! of 2D signals like images.
-//!
-//! # Performance Optimizations
-//!
-//! This implementation includes several optimizations for performance:
-//!
-//! 1. **Parallel Processing**: When compiled with the "parallel" feature,
-//!    row and column transforms can be computed in parallel using Rayon.
-//!
-//! 2. **Memory Efficiency**:
-//!    - Minimizes temporary allocations
-//!    - Uses ndarray views for zero-copy operations
-//!    - Implements cache-friendly traversal patterns
-//!
-//! 3. **Algorithm Optimizations**:
-//!    - Direct transform path for common wavelets (Haar, DB2, DB4)
-//!    - Optimized convolution for filter operations
-//!    - Efficient boundary handling
-//!
-//! ## Overview
-//!
-//! The 2D Discrete Wavelet Transform (DWT2D) extends the concept of 1D wavelet transforms
-//! to two-dimensional data. It is particularly useful for processing images and other 2D signals.
-//! By using separable filters, the 2D DWT applies 1D transforms first along rows and then along
-//! columns, decomposing the image into four subbands:
-//!
-//! - **LL (Approximation)**: Low-frequency content in both horizontal and vertical directions
-//! - **LH (Horizontal Detail)**: High-frequency in horizontal direction, low-frequency in vertical direction
-//! - **HL (Vertical Detail)**: Low-frequency in horizontal direction, high-frequency in vertical direction
-//! - **HH (Diagonal Detail)**: High-frequency content in both horizontal and vertical directions
-//!
-//! ## Applications
-//!
-//! The 2D DWT has numerous applications:
-//!
-//! - **Image Compression**: By thresholding small coefficients (as in JPEG2000)
-//! - **Image Denoising**: By thresholding coefficients below a noise threshold
-//! - **Feature Extraction**: Using wavelet coefficients as image features
-//! - **Texture Analysis**: Analyzing frequency content at different scales
-//! - **Edge Detection**: Using detail coefficients to detect edges
-//!
-//! ## Usage Examples
-//!
-//! Basic decomposition and reconstruction:
-//!
-//! ```
-//! use ndarray::Array2;
-//! use scirs2__signal::dwt::Wavelet;
-//! use scirs2__signal::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
-//!
-//! // Create a simple "image"
-//! let data = Array2::from_shape_vec((4, 4), vec![
-//!     1.0, 2.0, 3.0, 4.0,
-//!     5.0, 6.0, 7.0, 8.0,
-//!     9.0, 10.0, 11.0, 12.0,
-//!     13.0, 14.0, 15.0, 16.0
-//! ]).unwrap();
-//!
-//! // Decompose using Haar wavelet
-//! let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();
-//!
-//! // Reconstruct
-//! let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::Haar, None).unwrap();
-//! ```
-//!
-//! Multi-level decomposition:
-//!
-//! ```
-//! use ndarray::Array2;
-//! use scirs2__signal::dwt::Wavelet;
-//! use scirs2__signal::dwt2d::{wavedec2, waverec2};
-//!
-//! // Create a simple "image"
-//! let mut data = Array2::zeros((8, 8));
-//! for i in 0..8 {
-//!     for j in 0..8 {
-//!         data[[i, j]] = (i * j)  as f64;
-//!     }
-//! }
-//!
-//! // Multi-level decomposition
-//! let levels = 2;
-//! let coeffs = wavedec2(&data, Wavelet::DB(4), levels, None).unwrap();
-//!
-//! // Reconstruct from multi-level decomposition
-//! let reconstructed = waverec2(&coeffs, Wavelet::DB(4), None).unwrap();
-//! ```
+// Two-dimensional Discrete Wavelet Transform (DWT2D)
+//
+// This module provides implementations of the 2D Discrete Wavelet Transform,
+// useful for image processing, compression, and multi-resolution analysis
+// of 2D signals like images.
+//
+// # Performance Optimizations
+//
+// This implementation includes several optimizations for performance:
+//
+// 1. **Parallel Processing**: When compiled with the "parallel" feature,
+//    row and column transforms can be computed in parallel using Rayon.
+//
+// 2. **Memory Efficiency**:
+//    - Minimizes temporary allocations
+//    - Uses ndarray views for zero-copy operations
+//    - Implements cache-friendly traversal patterns
+//
+// 3. **Algorithm Optimizations**:
+//    - Direct transform path for common wavelets (Haar, DB2, DB4)
+//    - Optimized convolution for filter operations
+//    - Efficient boundary handling
+//
+// ## Overview
+//
+// The 2D Discrete Wavelet Transform (DWT2D) extends the concept of 1D wavelet transforms
+// to two-dimensional data. It is particularly useful for processing images and other 2D signals.
+// By using separable filters, the 2D DWT applies 1D transforms first along rows and then along
+// columns, decomposing the image into four subbands:
+//
+// - **LL (Approximation)**: Low-frequency content in both horizontal and vertical directions
+// - **LH (Horizontal Detail)**: High-frequency in horizontal direction, low-frequency in vertical direction
+// - **HL (Vertical Detail)**: Low-frequency in horizontal direction, high-frequency in vertical direction
+// - **HH (Diagonal Detail)**: High-frequency content in both horizontal and vertical directions
+//
+// ## Applications
+//
+// The 2D DWT has numerous applications:
+//
+// - **Image Compression**: By thresholding small coefficients (as in JPEG2000)
+// - **Image Denoising**: By thresholding coefficients below a noise threshold
+// - **Feature Extraction**: Using wavelet coefficients as image features
+// - **Texture Analysis**: Analyzing frequency content at different scales
+// - **Edge Detection**: Using detail coefficients to detect edges
+//
+// ## Usage Examples
+//
+// Basic decomposition and reconstruction:
+//
+// ```
+// use ndarray::Array2;
+// use scirs2_signal::dwt::Wavelet;
+// use scirs2_signal::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
+//
+// // Create a simple "image"
+// let data = Array2::fromshape_vec((4, 4), vec![
+//     1.0, 2.0, 3.0, 4.0,
+//     5.0, 6.0, 7.0, 8.0,
+//     9.0, 10.0, 11.0, 12.0,
+//     13.0, 14.0, 15.0, 16.0
+// ]).unwrap();
+//
+// // Decompose using Haar wavelet
+// let decomposition = dwt2d_decompose(&data, Wavelet::Haar, None).unwrap();
+//
+// // Reconstruct
+// let reconstructed = dwt2d_reconstruct(&decomposition, Wavelet::Haar, None).unwrap();
+// ```
+//
+// Multi-level decomposition:
+//
+// ```
+// use ndarray::Array2;
+// use scirs2_signal::dwt::Wavelet;
+// use scirs2_signal::dwt2d::{wavedec2, waverec2};
+//
+// // Create a simple "image"
+// let mut data = Array2::zeros((8, 8));
+// for i in 0..8 {
+//     for j in 0..8 {
+//         data[[i, j]] = (i * j)  as f64;
+//     }
+// }
+//
+// // Multi-level decomposition
+// let levels = 2;
+// let coeffs = wavedec2(&data, Wavelet::DB(4), levels, None).unwrap();
+//
+// // Reconstruct from multi-level decomposition
+// let reconstructed = waverec2(&coeffs, Wavelet::DB(4), None).unwrap();
+// ```
 
-use crate::dwt::{Wavelet, self};
+use crate::dwt::{self, Wavelet};
 use crate::error::{SignalError, SignalResult};
+use ndarray::s;
 use ndarray::Array2;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::check_positive;
+#[cfg(target_arch = "x86_64")]
+use std::arch::x86_64::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::time::Instant;
-use ndarray::{s};
-#[cfg(target_arch = "x86_64")]
-use std::arch::x86_64::*;
 
 #[allow(unused_imports)]
 /// Helper function for ceiling division (divide and round up)
@@ -217,7 +217,6 @@ fn simd_calculate_energy(_data: &[f64]) -> f64 {
 #[inline]
 #[allow(dead_code)]
 fn simd_energy_avx2(_data: &[f64]) -> f64 {
-
     let len = _data.len();
     let simd_len = len - (len % 4);
     let mut sum = 0.0;
@@ -351,8 +350,8 @@ type ColumnResult = (usize, Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>);
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::{dwt2d_decompose, Dwt2dResult};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{dwt2d_decompose, Dwt2dResult};
 ///
 /// // Create a simple 4x4 image with a gradient pattern
 /// let mut image = Array2::zeros((4, 4));
@@ -443,11 +442,11 @@ pub struct Dwt2dResult {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt2d::dwt2d_decompose;
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::dwt2d_decompose;
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a simple 4x4 "image"
-/// let data = Array2::from_shape_vec((4, 4), vec![
+/// let data = Array2::fromshape_vec((4, 4), vec![
 ///     1.0, 2.0, 3.0, 4.0,
 ///     5.0, 6.0, 7.0, 8.0,
 ///     9.0, 10.0, 11.0, 12.0,
@@ -468,8 +467,8 @@ pub struct Dwt2dResult {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt2d::dwt2d_decompose;
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::dwt2d_decompose;
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a simple 16x16 "image" (larger to avoid overflow issues)
 /// let mut data = Array2::zeros((16, 16));
@@ -771,11 +770,11 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::{dwt2d_decompose_optimized, Dwt2dConfig};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{dwt2d_decompose_optimized, Dwt2dConfig};
 ///
 /// // Create a sample image
-/// let data = Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64).collect()).unwrap();
+/// let data = Array2::fromshape_vec((8, 8), (0..64).map(|x| x as f64).collect()).unwrap();
 ///
 /// // Use optimized decomposition with default configuration
 /// let config = Dwt2dConfig::default();
@@ -1042,11 +1041,11 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a simple "image"
-/// let data = Array2::from_shape_vec((4, 4), vec![
+/// let data = Array2::fromshape_vec((4, 4), vec![
 ///     1.0, 2.0, 3.0, 4.0,
 ///     5.0, 6.0, 7.0, 8.0,
 ///     9.0, 10.0, 11.0, 12.0,
@@ -1067,8 +1066,8 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt2d::{dwt2d_decompose, dwt2d_reconstruct, Dwt2dResult};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{dwt2d_decompose, dwt2d_reconstruct, Dwt2dResult};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a sample image with gradient pattern
 /// let mut data = Array2::zeros((8, 8));
@@ -1105,7 +1104,8 @@ where
 #[allow(dead_code)]
 pub fn dwt2d_reconstruct(
     decomposition: &Dwt2dResult,
-    wavelet: Wavelet, mode: Option<&str>,
+    wavelet: Wavelet,
+    mode: Option<&str>,
 ) -> SignalResult<Array2<f64>> {
     // Extract components
     let ll = &decomposition.approx;
@@ -1312,8 +1312,8 @@ pub fn dwt2d_reconstruct(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt2d::wavedec2;
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::wavedec2;
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a simple 8x8 "image"
 /// let mut data = Array2::zeros((8, 8));
@@ -1339,8 +1339,8 @@ pub fn dwt2d_reconstruct(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt2d::wavedec2;
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::wavedec2;
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a larger image to accommodate longer filters
 /// let mut data = Array2::zeros((32, 32));
@@ -1448,8 +1448,8 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt2d::{wavedec2, waverec2};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{wavedec2, waverec2};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a simple 8x8 "image"
 /// let mut data = Array2::zeros((8, 8));
@@ -1473,8 +1473,8 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt2d::{wavedec2, waverec2, Dwt2dResult};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{wavedec2, waverec2, Dwt2dResult};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a simple 16x16 "image" with a pattern
 /// let mut data = Array2::zeros((16, 16));
@@ -1565,8 +1565,8 @@ pub enum ThresholdMethod {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::{dwt2d_decompose, dwt2d_reconstruct, threshold_dwt2d, ThresholdMethod};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{dwt2d_decompose, dwt2d_reconstruct, threshold_dwt2d, ThresholdMethod};
 ///
 /// // Create a sample "image"
 /// let mut data = Array2::zeros((8, 8));
@@ -1635,8 +1635,8 @@ pub fn threshold_dwt2d(_decomposition: &mut Dwt2dResult, threshold: f64, method:
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::{wavedec2, waverec2, threshold_wavedec2, ThresholdMethod};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{wavedec2, waverec2, threshold_wavedec2, ThresholdMethod};
 ///
 /// // Create a sample image
 /// let mut data = Array2::zeros((16, 16));
@@ -1719,8 +1719,8 @@ fn apply_threshold(x: f64, threshold: f64, method: ThresholdMethod) -> f64 {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::{dwt2d_decompose, calculate_energy};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{dwt2d_decompose, calculate_energy};
 ///
 /// // Create a sample image
 /// let mut data = Array2::zeros((8, 8));
@@ -1742,7 +1742,10 @@ fn apply_threshold(x: f64, threshold: f64, method: ThresholdMethod) -> f64 {
 /// assert!(energy_by_subband.approx > energy_by_subband.detail_d);
 /// ```
 #[allow(dead_code)]
-pub fn calculate_energy(_decomposition: &Dwt2dResult, include_approx: bool) -> (f64, WaveletEnergy) {
+pub fn calculate_energy(
+    _decomposition: &Dwt2dResult,
+    include_approx: bool,
+) -> (f64, WaveletEnergy) {
     // Calculate energy for each subband using SIMD-optimized functions
     let approx_energy = if include_approx {
         if let Some(approx_slice) = _decomposition._approx.as_slice() {
@@ -1817,8 +1820,8 @@ pub struct WaveletEnergy {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::{dwt2d_decompose, threshold_dwt2d, count_nonzeros, ThresholdMethod};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{dwt2d_decompose, threshold_dwt2d, count_nonzeros, ThresholdMethod};
 ///
 /// // Create a sample image
 /// let mut data = Array2::zeros((8, 8));
@@ -1844,7 +1847,10 @@ pub struct WaveletEnergy {
 /// assert!(after_total <= before_total);
 /// ```
 #[allow(dead_code)]
-pub fn count_nonzeros(_decomposition: &Dwt2dResult, include_approx: bool) -> (usize, WaveletCounts) {
+pub fn count_nonzeros(
+    _decomposition: &Dwt2dResult,
+    include_approx: bool,
+) -> (usize, WaveletCounts) {
     // Count non-zero coefficients in each subband
     let approx_count = if include_approx {
         _decomposition._approx.iter().filter(|&&x| x != 0.0).count()
@@ -1852,9 +1858,21 @@ pub fn count_nonzeros(_decomposition: &Dwt2dResult, include_approx: bool) -> (us
         0
     };
 
-    let detail_h_count = _decomposition.detail_h.iter().filter(|&&x| x != 0.0).count();
-    let detail_v_count = _decomposition.detail_v.iter().filter(|&&x| x != 0.0).count();
-    let detail_d_count = _decomposition.detail_d.iter().filter(|&&x| x != 0.0).count();
+    let detail_h_count = _decomposition
+        .detail_h
+        .iter()
+        .filter(|&&x| x != 0.0)
+        .count();
+    let detail_v_count = _decomposition
+        .detail_v
+        .iter()
+        .filter(|&&x| x != 0.0)
+        .count();
+    let detail_d_count = _decomposition
+        .detail_d
+        .iter()
+        .filter(|&&x| x != 0.0)
+        .count();
 
     // Calculate total count
     let total = approx_count + detail_h_count + detail_v_count + detail_d_count;
@@ -2097,9 +2115,9 @@ pub fn validate_dwt2d_comprehensive(
     }
 
     // Calculate averages
-    let avg_reconstruction_error = total_reconstruction_error / test_count  as f64;
-    let avg_energy_error = total_energy_error / test_count  as f64;
-    let avg_orthogonality_error = total_orthogonality_error / test_count  as f64;
+    let avg_reconstruction_error = total_reconstruction_error / test_count as f64;
+    let avg_energy_error = total_energy_error / test_count as f64;
+    let avg_orthogonality_error = total_orthogonality_error / test_count as f64;
 
     // Calculate overall score (0-100)
     let reconstruction_score =
@@ -2166,7 +2184,7 @@ fn calculate_correlation(a: &Array2<f64>, b: &Array2<f64>) -> f64 {
         return 0.0;
     }
 
-    let n = a.len()  as f64;
+    let n = a.len() as f64;
     if n < 2.0 {
         return 0.0;
     }
@@ -2278,10 +2296,14 @@ fn average_performance_metrics(_metrics: &[PerformanceMetrics2d]) -> Performance
         };
     }
 
-    let count = _metrics.len()  as f64;
+    let count = _metrics.len() as f64;
     PerformanceMetrics2d {
         total_time_ms: _metrics.iter().map(|m| m.total_time_ms).sum::<f64>() / count,
-        decomposition_time_ms: _metrics.iter().map(|m| m.decomposition_time_ms).sum::<f64>() / count,
+        decomposition_time_ms: _metrics
+            .iter()
+            .map(|m| m.decomposition_time_ms)
+            .sum::<f64>()
+            / count,
         reconstruction_time_ms: _metrics
             .iter()
             .map(|m| m.reconstruction_time_ms)
@@ -2441,11 +2463,11 @@ where
 
     // Perform remaining levels with progressive validation
     for level in 1..levels {
-        let prev_shape = decomposition.approx.shape();
+        let prevshape = decomposition.approx.shape();
         decomposition = dwt2d_decompose_adaptive(&decomposition.approx, wavelet, mode)?;
 
         // Validate this level
-        validate_decomposition_level(&decomposition, level + 1, prev_shape[0], prev_shape[1])?;
+        validate_decomposition_level(&decomposition, level + 1, prevshape[0], prevshape[1])?;
         result.push(decomposition.clone());
     }
 
@@ -2464,10 +2486,10 @@ fn validate_decomposition_level(
     input_cols: usize,
 ) -> SignalResult<()> {
     // Check that all subbands have the same shape
-    let approx_shape = decomp.approx.shape();
-    if decomp.detail_h.shape() != approx_shape
-        || decomp.detail_v.shape() != approx_shape
-        || decomp.detail_d.shape() != approx_shape
+    let approxshape = decomp.approx.shape();
+    if decomp.detail_h.shape() != approxshape
+        || decomp.detail_v.shape() != approxshape
+        || decomp.detail_d.shape() != approxshape
     {
         return Err(SignalError::ComputationError(format!(
             "Inconsistent subband shapes at level {}",
@@ -2479,10 +2501,10 @@ fn validate_decomposition_level(
     let expected_rows = div_ceil(input_rows, 2);
     let expected_cols = div_ceil(input_cols, 2);
 
-    if approx_shape[0] != expected_rows || approx_shape[1] != expected_cols {
+    if approxshape[0] != expected_rows || approxshape[1] != expected_cols {
         return Err(SignalError::ComputationError(format!(
             "Unexpected subband dimensions at level {}: got [{}, {}], expected [{}, {}]",
-            level, approx_shape[0], approx_shape[1], expected_rows, expected_cols
+            level, approxshape[0], approxshape[1], expected_rows, expected_cols
         )));
     }
 
@@ -2697,7 +2719,7 @@ pub fn calculate_psnr(_original: &Array2<f64>, reconstructed: &Array2<f64>) -> S
         return Err(SignalError::ValueError("Arrays are empty".to_string()));
     }
 
-    mse /= count  as f64;
+    mse /= count as f64;
 
     if mse == 0.0 {
         Ok(f64::INFINITY) // Perfect reconstruction
@@ -2761,7 +2783,7 @@ pub fn calculate_ssim(
             }
 
             // Calculate local statistics
-            let n = window1.len()  as f64;
+            let n = window1.len() as f64;
             let mean1 = window1.iter().sum::<f64>() / n;
             let mean2 = window2.iter().sum::<f64>() / n;
 
@@ -2801,7 +2823,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Create a simple 4x4 test image
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (4, 4),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,
@@ -2834,7 +2856,7 @@ mod tests {
         let mut data = Array2::zeros((8, 8));
         for i in 0..8 {
             for j in 0..8 {
-                data[[i, j]] = (i * 8 + j + 1)  as f64;
+                data[[i, j]] = (i * 8 + j + 1) as f64;
             }
         }
 
@@ -2860,7 +2882,7 @@ mod tests {
         let mut data = Array2::zeros((8, 8));
         for i in 0..8 {
             for j in 0..8 {
-                data[[i, j]] = (i * j)  as f64;
+                data[[i, j]] = (i * j) as f64;
             }
         }
 
@@ -2950,7 +2972,7 @@ mod tests {
         let mut data = Array2::zeros((4, 4));
         for i in 0..4 {
             for j in 0..4 {
-                data[[i, j]] = (i * j)  as f64;
+                data[[i, j]] = (i * j) as f64;
             }
         }
 
@@ -2987,7 +3009,7 @@ mod tests {
         let mut data = Array2::zeros((6, 6));
         for i in 0..6 {
             for j in 0..6 {
-                data[[i, j]] = (i * 6 + j + 1)  as f64;
+                data[[i, j]] = (i * 6 + j + 1) as f64;
             }
         }
 

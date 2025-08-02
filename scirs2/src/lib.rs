@@ -149,7 +149,7 @@ pub use scirs2_transform as transform;
 pub use scirs2_metrics as metrics;
 
 #[cfg(feature = "text")]
-pub use scirs2_text as text;
+pub use scirs2text as text;
 
 #[cfg(feature = "vision")]
 pub use scirs2_vision as vision;

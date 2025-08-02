@@ -1,14 +1,14 @@
-//! Real-time signal processing pipelines with zero-latency streaming
-//!
-//! This module provides infrastructure for real-time signal processing with minimal latency.
-//! It includes streaming data structures, zero-copy operations, and efficient buffering
-//! mechanisms for continuous signal processing applications.
+// Real-time signal processing pipelines with zero-latency streaming
+//
+// This module provides infrastructure for real-time signal processing with minimal latency.
+// It includes streaming data structures, zero-copy operations, and efficient buffering
+// mechanisms for continuous signal processing applications.
 
 use crate::error::{SignalError, SignalResult};
-use std::thread;
 use std::collections::VecDeque;
-use std::sync::{Arc, Mutex};
 use std::sync::atomic::Ordering;
+use std::sync::{Arc, Mutex};
+use std::thread;
 use std::time::{Duration, Instant};
 
 #[allow(unused_imports)]
@@ -120,7 +120,7 @@ pub trait RealtimeProcessor: Send + Sync {
     }
 
     /// Initialize processor with configuration
-    fn initialize(&mut self_config: &RealtimeConfig) -> SignalResult<()> {
+    fn initialize(&mut self, _config: &RealtimeConfig) -> SignalResult<()> {
         Ok(())
     }
 
@@ -206,7 +206,8 @@ pub struct StreamProcessor {
     input_buffer: CircularBuffer,
     output_buffer: CircularBuffer,
     stats: Arc<Mutex<RealtimeStats>>,
-    running: Arc<Mutex<bool>>, _process_thread: Option<thread::JoinHandle<()>>,
+    running: Arc<Mutex<bool>>,
+    _process_thread: Option<thread::JoinHandle<()>>,
 }
 
 impl StreamProcessor {
@@ -224,7 +225,8 @@ impl StreamProcessor {
             input_buffer,
             output_buffer,
             stats: Arc::new(Mutex::new(RealtimeStats::default())),
-            running: Arc::new(Mutex::new(false)), _process_thread: None,
+            running: Arc::new(Mutex::new(false)),
+            _process_thread: None,
         })
     }
 
@@ -450,7 +452,6 @@ impl LockFreeRingBuffer {
 
     /// Read data (non-blocking, returns actual samples read)
     pub fn read(&self, data: &mut [f64]) -> usize {
-
         let current_read = self.read_pos.load(Ordering::Acquire);
         let current_write = self.write_pos.load(Ordering::Acquire);
 
@@ -479,7 +480,6 @@ impl LockFreeRingBuffer {
 
     /// Get current fill level
     pub fn fill_level(&self) -> usize {
-
         let current_read = self.read_pos.load(Ordering::Acquire);
         let current_write = self.write_pos.load(Ordering::Acquire);
 

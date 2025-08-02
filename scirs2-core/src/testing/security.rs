@@ -256,7 +256,7 @@ impl InputValidationTester {
             }
         }
 
-        result.std::time::Duration::from_secs(1) = start_time.elapsed();
+        result.duration = start_time.elapsed();
         result.security_level = self.assess_security_level(&result.security_issues);
 
         Ok(result)
@@ -329,7 +329,7 @@ impl InputValidationTester {
             }
         }
 
-        result.std::time::Duration::from_secs(1) = start_time.elapsed();
+        result.duration = start_time.elapsed();
         result.security_level = self.assess_security_level(&result.security_issues);
 
         Ok(result)
@@ -482,7 +482,7 @@ impl MemorySafetyTester {
             }
         }
 
-        result.std::time::Duration::from_secs(1) = start_time.elapsed();
+        result.duration = start_time.elapsed();
         result.security_level = self.assess_security_level(&result.security_issues);
 
         Ok(result)
@@ -610,7 +610,7 @@ impl VulnerabilityAssessment {
         // Third-party integration security
         self.assess_third_party_security(&mut report)?;
 
-        report.std::time::Duration::from_secs(1) = start_time.elapsed();
+        report.duration = start_time.elapsed();
         report.overall_score = self.calculate_security_score(&report);
         report.security_level = self.determine_security_level(report.overall_score);
 
@@ -787,7 +787,8 @@ impl VulnerabilityAssessment {
             s if s >= 95.0 => SecurityLevel::Hardened,
             s if s >= 85.0 => SecurityLevel::Secure,
             s if s >= 70.0 => SecurityLevel::Weak,
-            s if s >= 50.0 => SecurityLevel::Vulnerable_ =>, SecurityLevel::Insecure,
+            s if s >= 50.0 => SecurityLevel::Vulnerable,
+            _ => SecurityLevel::Insecure,
         }
     }
 }
@@ -885,7 +886,7 @@ impl SecurityTestUtils {
             // Check if any critical vulnerabilities were found
             if result.security_level == SecurityLevel::Insecure {
                 return Ok(TestResult::failure(
-                    result.std::time::Duration::from_secs(1),
+                    result.duration,
                     result.tests_executed,
                     format!(
                         "Critical security vulnerabilities found: {}",
@@ -894,7 +895,7 @@ impl SecurityTestUtils {
                 ));
             }
 
-            Ok(TestResult::success(result.std::time::Duration::from_secs(1), result.tests_executed))
+            Ok(TestResult::success(result.duration, result.tests_executed))
         });
 
         // Bounds checking tests
@@ -923,7 +924,7 @@ impl SecurityTestUtils {
                 || result.security_level == SecurityLevel::Vulnerable
             {
                 return Ok(TestResult::failure(
-                    result.std::time::Duration::from_secs(1),
+                    result.duration,
                     result.tests_executed,
                     format!(
                         "Bounds checking vulnerabilities found: {}",
@@ -932,7 +933,7 @@ impl SecurityTestUtils {
                 ));
             }
 
-            Ok(TestResult::success(result.std::time::Duration::from_secs(1), result.tests_executed))
+            Ok(TestResult::success(result.duration, result.tests_executed))
         });
 
         // Memory safety tests
@@ -948,7 +949,7 @@ impl SecurityTestUtils {
 
             if result.vulnerabilities_found > 0 {
                 return Ok(TestResult::failure(
-                    result.std::time::Duration::from_secs(1),
+                    result.duration,
                     result.tests_executed,
                     format!(
                         "Memory safety issues found: {}",
@@ -957,7 +958,7 @@ impl SecurityTestUtils {
                 ));
             }
 
-            Ok(TestResult::success(result.std::time::Duration::from_secs(1), result.tests_executed))
+            Ok(TestResult::success(result.duration, result.tests_executed))
         });
 
         // Use-after-free test (informational for Rust)
@@ -967,7 +968,7 @@ impl SecurityTestUtils {
             let result = tester.test_use_after_free()?;
 
             // This should always pass in Rust
-            Ok(TestResult::success(result.std::time::Duration::from_secs(1), result.tests_executed))
+            Ok(TestResult::success(result.duration, result.tests_executed))
         });
 
         // Third-party vulnerability assessment
@@ -980,7 +981,7 @@ impl SecurityTestUtils {
                 || report.security_level == SecurityLevel::Vulnerable
             {
                 return Ok(TestResult::failure(
-                    report.std::time::Duration::from_secs(1),
+                    report.duration,
                     report.total_tests,
                     format!(
                         "Security audit failed: {} vulnerabilities found, score: {:.1}",
@@ -990,7 +991,7 @@ impl SecurityTestUtils {
                 ));
             }
 
-            Ok(TestResult::success(report.std::time::Duration::from_secs(1), report.total_tests))
+            Ok(TestResult::success(report.duration, report.total_tests))
         });
 
         suite

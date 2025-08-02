@@ -1,14 +1,14 @@
-//! Advanced-enhanced system identification with machine learning and real-time capabilities
-//!
-//! This module provides cutting-edge system identification techniques combining:
-//! - Deep learning-based nonlinear system identification
-//! - Real-time adaptive parameter tracking with Kalman filtering
-//! - SIMD-accelerated optimization algorithms for large-scale systems
-//! - Multi-objective optimization with Pareto-optimal model selection
-//! - Uncertainty quantification using Bayesian methods
-//! - Robust identification for time-varying and noisy systems
-//! - GPU-accelerated neural network-based identification
-//! - Distributed identification for large-scale networked systems
+// Advanced-enhanced system identification with machine learning and real-time capabilities
+//
+// This module provides cutting-edge system identification techniques combining:
+// - Deep learning-based nonlinear system identification
+// - Real-time adaptive parameter tracking with Kalman filtering
+// - SIMD-accelerated optimization algorithms for large-scale systems
+// - Multi-objective optimization with Pareto-optimal model selection
+// - Uncertainty quantification using Bayesian methods
+// - Robust identification for time-varying and noisy systems
+// - GPU-accelerated neural network-based identification
+// - Distributed identification for large-scale networked systems
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, Array3};
@@ -20,7 +20,7 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 
 #[allow(unused_imports)]
-use crate::sysid__enhanced::{
+use crate::sysid_enhanced::{
     ComputationalDiagnostics, EnhancedSysIdResult, IdentificationMethod, ModelValidationMetrics,
     ParameterEstimate, SystemModel,
 };
@@ -755,7 +755,7 @@ impl Default for AdvancedEnhancedSysIdConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::sysid_advanced_enhanced::{advanced_enhanced_system_identification, AdvancedEnhancedSysIdConfig};
+/// use scirs2_signal::sysid_advanced_enhanced::{advanced_enhanced_system_identification, AdvancedEnhancedSysIdConfig};
 /// use ndarray::Array1;
 ///
 ///
@@ -1216,7 +1216,8 @@ impl RealTimeTracker {
     }
 
     fn handle_system_change(
-        &mut self_update: &ParameterUpdate, _config: &RealTimeConfig,
+        &mut self_update: &ParameterUpdate,
+        _config: &RealTimeConfig,
     ) -> SignalResult<()> {
         // Increase learning rates temporarily
         self.learning_rates *= 2.0;
@@ -1253,7 +1254,8 @@ fn validate_identification_signals(_input: &Array1<f64>, output: &Array1<f64>) -
 
 #[allow(dead_code)]
 fn search_optimal_architecture(
-    _input: &Array1<f64>, _output: &Array1<f64>,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
 ) -> SignalResult<NetworkArchitecture> {
     // Neural architecture search (simplified)
     Ok(NetworkArchitecture {
@@ -1266,8 +1268,11 @@ fn search_optimal_architecture(
 
 #[allow(dead_code)]
 fn train_feedforward_network(
-    _input: &Array1<f64>, _output: &Array1<f64>,
-    architecture: &NetworkArchitecture, _config: &NeuralNetworkConfig, _simd_enabled: bool,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
+    architecture: &NetworkArchitecture,
+    _config: &NeuralNetworkConfig,
+    _simd_enabled: bool,
 ) -> SignalResult<FeedforwardNetwork> {
     // Train neural network (simplified)
     let mut weights = Vec::new();
@@ -1308,7 +1313,10 @@ fn train_feedforward_network(
 
 #[allow(dead_code)]
 fn perform_bayesian_estimation(
-    _input: &Array1<f64>, _output: &Array1<f64>, _config: &UncertaintyConfig, _simd_enabled: bool,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
+    _config: &UncertaintyConfig,
+    _simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Bayesian parameter estimation (simplified)
     Ok(SystemModel::ARX {
@@ -1320,7 +1328,9 @@ fn perform_bayesian_estimation(
 
 #[allow(dead_code)]
 fn train_gaussian_process(
-    _input: &Array1<f64>, _output: &Array1<f64>, _simd_enabled: bool,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
+    _simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Gaussian process training (simplified)
     Ok(SystemModel::ARX {
@@ -1332,7 +1342,10 @@ fn train_gaussian_process(
 
 #[allow(dead_code)]
 fn train_physics_informed_network(
-    _input: &Array1<f64>, _output: &Array1<f64>, _config: &NeuralNetworkConfig, _simd_enabled: bool,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
+    _config: &NeuralNetworkConfig,
+    _simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Physics-informed neural network training (simplified)
     Ok(SystemModel::ARX {
@@ -1344,7 +1357,8 @@ fn train_physics_informed_network(
 
 #[allow(dead_code)]
 fn build_model_ensemble(
-    models: Vec<WeightedModel>, _config: &EnsembleConfig,
+    models: Vec<WeightedModel>,
+    _config: &EnsembleConfig,
 ) -> SignalResult<ModelEnsemble> {
     let selection_criteria = ModelSelectionCriteria {
         multi_objective_scores: HashMap::new(),
@@ -1384,7 +1398,10 @@ fn build_single_model_ensemble(_models: Vec<WeightedModel>) -> SignalResult<Mode
 
 #[allow(dead_code)]
 fn initialize_real_time_tracker(
-    _input: &Array1<f64>, _output: &Array1<f64>, _ensemble: &ModelEnsemble, _config: &RealTimeConfig,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
+    _ensemble: &ModelEnsemble,
+    _config: &RealTimeConfig,
 ) -> SignalResult<RealTimeTracker> {
     // Initialize real-time tracker with _ensemble model
     Ok(RealTimeTracker::default())
@@ -1392,7 +1409,8 @@ fn initialize_real_time_tracker(
 
 #[allow(dead_code)]
 fn perform_uncertainty_quantification(
-    _ensemble: &ModelEnsemble, _config: &UncertaintyConfig,
+    _ensemble: &ModelEnsemble,
+    _config: &UncertaintyConfig,
 ) -> SignalResult<UncertaintyAnalysis> {
     // Perform uncertainty quantification (simplified)
     Ok(UncertaintyAnalysis::default())

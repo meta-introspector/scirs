@@ -85,7 +85,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     /// use scirs2__interpolate::advanced::kriging::{KrigingInterpolator, CovarianceFunction};
     ///
     /// // Create 2D points
-    /// let points = Array2::from_shape_vec((5, 2), vec![
+    /// let points = Array2::fromshape_vec((5, 2), vec![
     ///     0.0f64, 0.0,
     ///     1.0, 0.0,
     ///     0.0, 1.0,
@@ -108,7 +108,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
     /// ).unwrap();
     ///
     /// // Interpolate at a new point
-    /// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
+    /// let test_point = Array2::fromshape_vec((1, 2), vec![0.25, 0.25]).unwrap();
     /// let result = interp.predict(&test_point.view()).unwrap();
     /// println!("Interpolated value at (0.25, 0.25): {}", result.value[0]);
     /// println!("Prediction variance: {}", result.variance[0]);
@@ -440,7 +440,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
 /// use scirs2__interpolate::advanced::kriging::{make_kriging_interpolator, CovarianceFunction};
 ///
 /// // Create 2D points
-/// let points = Array2::from_shape_vec((5, 2), vec![
+/// let points = Array2::fromshape_vec((5, 2), vec![
 ///     0.0f64, 0.0,
 ///     1.0, 0.0,
 ///     0.0, 1.0,
@@ -463,7 +463,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
 /// ).unwrap();
 ///
 /// // Interpolate at a new point
-/// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
+/// let test_point = Array2::fromshape_vec((1, 2), vec![0.25, 0.25]).unwrap();
 /// let result = interp.predict(&test_point.view()).unwrap();
 /// println!("Interpolated value at (0.25, 0.25): {}", result.value[0]);
 /// println!("Prediction variance: {}", result.variance[0]);
@@ -498,7 +498,7 @@ mod tests {
     #[test]
     fn test_kriging_interpolator_exact() {
         // Create 2D points
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -534,7 +534,7 @@ mod tests {
     #[test]
     fn test_kriging_interpolator_prediction() {
         // Simple 1D case: y = x²
-        let points = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
+        let points = Array2::fromshape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
         let values = array![0.0, 1.0, 4.0, 9.0, 16.0];
 
         let interp = KrigingInterpolator::new(
@@ -549,7 +549,7 @@ mod tests {
         .unwrap();
 
         // Test at some intermediate points
-        let test_points = Array2::from_shape_vec((3, 1), vec![0.5, 1.5, 3.5]).unwrap();
+        let test_points = Array2::fromshape_vec((3, 1), vec![0.5, 1.5, 3.5]).unwrap();
         let expected = array![0.25, 2.25, 12.25]; // x²
 
         let result = interp.predict(&test_points.view()).unwrap();
@@ -650,7 +650,7 @@ mod tests {
     fn test_make_kriging_interpolator() {
         // Create 2D points
         let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         // Create values at those points (z = x + y)
         let values = array![0.0, 1.0, 1.0, 2.0];
@@ -668,7 +668,7 @@ mod tests {
         .unwrap();
 
         // Test at a point (0.5, 0.5) which should be interpolated to 1.0
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
+        let test_point = Array2::fromshape_vec((1, 2), vec![0.5, 0.5]).unwrap();
         let result = interp.predict(&test_point.view()).unwrap();
 
         // Using a larger epsilon for our simplified algorithm

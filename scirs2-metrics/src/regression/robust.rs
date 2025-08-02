@@ -6,7 +6,7 @@
 use ndarray::{Array1, ArrayBase, Data, Dimension};
 use num_traits::{Float, FromPrimitive, NumCast};
 
-use super::{check_non_negative, check_positive, check_same_shape};
+use super::{check_non_negative, check_positive, check_sameshape};
 use crate::error::{MetricsError, Result};
 
 /// Calculates the mean Poisson deviance
@@ -51,7 +51,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     // Check that all values are non-negative
     check_non_negative::<F, S1, S2, D1, D2>(y_true, y_pred)?;
@@ -120,7 +120,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     // Check that all values are strictly positive
     check_positive::<F, S1, S2, D1, D2>(y_true, y_pred)?;
@@ -183,7 +183,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     if power.abs() < F::epsilon() {
         // Gaussian case (power = 0) -> use mean squared error
@@ -293,7 +293,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     // Check quantile is between 0 and 1
     if quantile <= F::zero() || quantile >= F::one() {
@@ -400,7 +400,7 @@ where
         None => match method {
             "huber" => F::from(1.345).unwrap(),
             "bisquare" => F::from(4.685).unwrap(),
-            "cauchy" => F::from(2.385).unwrap(, _ =>, F::from(1.345).unwrap(), // Default to huber
+            "cauchy" => F::from(2.385).unwrap(, _ => F::from(1.345).unwrap(), // Default to huber
         },
     };
 
@@ -482,7 +482,7 @@ where
     D3: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     let n_samples = y_true.len();
 
@@ -562,7 +562,7 @@ where
     D3: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     let n_samples = y_true.len();
 
@@ -664,7 +664,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     let n_samples = y_true.len();
 

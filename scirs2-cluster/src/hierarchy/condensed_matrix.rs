@@ -30,7 +30,7 @@ use crate::error::{ClusteringError, Result};
 /// use ndarray::Array2;
 /// use scirs2__cluster::hierarchy::condensed_matrix::square_to_condensed;
 ///
-/// let square = Array2::from_shape_vec((3, 3), vec![
+/// let square = Array2::fromshape_vec((3, 3), vec![
 ///     0.0, 1.0, 2.0,
 ///     1.0, 0.0, 3.0,
 ///     2.0, 3.0, 0.0,
@@ -380,7 +380,7 @@ mod tests {
 
     #[test]
     fn test_square_to_condensed() {
-        let square = Array2::from_shape_vec(
+        let square = Array2::fromshape_vec(
             (4, 4),
             vec![
                 0.0, 1.0, 2.0, 3.0, 1.0, 0.0, 4.0, 5.0, 2.0, 4.0, 0.0, 6.0, 3.0, 5.0, 6.0, 0.0,
@@ -397,7 +397,7 @@ mod tests {
         let condensed = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
         let square = condensed_to_square(condensed.view()).unwrap();
 
-        let expected = Array2::from_shape_vec(
+        let expected = Array2::fromshape_vec(
             (4, 4),
             vec![
                 0.0, 1.0, 2.0, 3.0, 1.0, 0.0, 4.0, 5.0, 2.0, 4.0, 0.0, 6.0, 3.0, 5.0, 6.0, 0.0,
@@ -411,7 +411,7 @@ mod tests {
     #[test]
     fn test_round_trip_conversion() {
         let original =
-            Array2::from_shape_vec((3, 3), vec![0.0, 1.5, 2.5, 1.5, 0.0, 3.5, 2.5, 3.5, 0.0])
+            Array2::fromshape_vec((3, 3), vec![0.0, 1.5, 2.5, 1.5, 0.0, 3.5, 2.5, 3.5, 0.0])
                 .unwrap();
 
         let condensed = square_to_condensed(original.view()).unwrap();
@@ -478,11 +478,11 @@ mod tests {
     fn test_error_cases() {
         // Non-square matrix
         let non_square =
-            Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+            Array2::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         assert!(square_to_condensed(non_square.view()).is_err());
 
         // Too small matrix
-        let too_small = Array2::from_shape_vec((1, 1), vec![0.0]).unwrap();
+        let too_small = Array2::fromshape_vec((1, 1), vec![0.0]).unwrap();
         assert!(square_to_condensed(too_small.view()).is_err());
 
         // Out of bounds point indices

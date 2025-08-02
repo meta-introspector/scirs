@@ -1605,11 +1605,11 @@ impl AdvancedDistributedCoordinator {
     pub fn new(_config: AdvancedClusterConfig) -> Result<Self> {
         let consensus: Box<dyn ConsensusManager + Send + Sync> =
             match _config.consensus_config.algorithm {
-                ConsensusAlgorithm::Raft =>, Box::new(RaftConsensus::new(
+                ConsensusAlgorithm::Raft => Box::new(RaftConsensus::new(
                     "coordinator".to_string(),
                     _config.consensus_config.clone(),
                 )?),
-                ConsensusAlgorithm::Pbft =>, Box::new(PbftConsensus::new(
+                ConsensusAlgorithm::Pbft => Box::new(PbftConsensus::new(
                     "coordinator".to_string(),
                     vec![
                         "coordinator".to_string(),
@@ -1618,12 +1618,12 @@ impl AdvancedDistributedCoordinator {
                         "node3".to_string(),
                     ],
                 )?),
-                ConsensusAlgorithm::ProofOfStake =>, Box::new(ProofOfStakeConsensus::new(
+                ConsensusAlgorithm::ProofOfStake => Box::new(ProofOfStakeConsensus::new(
                     "coordinator".to_string(),
                     1000, // stake amount
                     100,  // minimum stake
                 )?),
-                ConsensusAlgorithm::SimpleMajority =>, Box::new(SimpleMajorityConsensus::new(
+                ConsensusAlgorithm::SimpleMajority => Box::new(SimpleMajorityConsensus::new(
                     "coordinator".to_string(),
                     vec![
                         "coordinator".to_string(),
@@ -2601,8 +2601,8 @@ impl ConsensusManager for PbftConsensus {
         for node in &self.node_list {
             let state = if node == &self.node_id {
                 match self.node_state {
-                    PbftNodeState::Normal =>, NodeState::Leader, // Simplified
-                    PbftNodeState::ViewChange => NodeState::Candidate_ =>, NodeState::Follower,
+                    PbftNodeState::Normal => NodeState::Leader, // Simplified
+                    PbftNodeState::ViewChange => NodeState::Candidate_ => NodeState::Follower,
                 }
             } else {
                 NodeState::Follower
@@ -3433,7 +3433,7 @@ impl ConsensusManager for SimpleMajorityConsensus {
                         NodeState::Follower
                     }
                 }
-                Some(NodeHealthStatus::Degraded) => NodeState::Candidate_ =>, NodeState::Follower,
+                Some(NodeHealthStatus::Degraded) => NodeState::Candidate_ => NodeState::Follower,
             };
             node_states.insert(node.clone(), state);
         }
@@ -4532,9 +4532,9 @@ impl DistributedClusterOrchestrator {
     ) -> Result<DataDistribution> {
         // Implement data distribution strategy based on job requirements and node capabilities
         let strategy = match job.job_type {
-            JobType::Classification | JobType::Regression =>, DataDistributionStrategy::ByBatch,
-            JobType::Clustering =>, DataDistributionStrategy::ByFeature,
-            JobType::CrossValidation => DataDistributionStrategy::ByFold_ =>, DataDistributionStrategy::ByBatch,
+            JobType::Classification | JobType::Regression => DataDistributionStrategy::ByBatch,
+            JobType::Clustering => DataDistributionStrategy::ByFeature,
+            JobType::CrossValidation => DataDistributionStrategy::ByFold_ => DataDistributionStrategy::ByBatch,
         };
 
         Ok(DataDistribution {

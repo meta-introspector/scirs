@@ -50,9 +50,9 @@ pub struct OperationNode<T> {
     /// Operation type
     pub op_type: GpuOperationType,
     /// Input tensor shapes
-    pub input_shapes: Vec<TensorShape>,
+    pub inputshapes: Vec<TensorShape>,
     /// Output tensor shape
-    pub output_shape: TensorShape,
+    pub outputshape: TensorShape,
     /// Memory requirements
     pub memory_requirements: MemoryRequirements,
     /// Execution cost estimate
@@ -732,7 +732,7 @@ pub struct TensorCoreOperation<T> {
     /// Operation type
     pub operation_type: TensorCoreOpType,
     /// Input tensor shapes
-    pub input_shapes: Vec<TensorShape>,
+    pub inputshapes: Vec<TensorShape>,
     /// Input tensors
     pub inputs: Vec<Array2<T>>,
     /// Output tensor
@@ -825,12 +825,12 @@ where
         &self,
         op_type: GpuOperationType,
         inputs: &[ArrayView2<T>],
-        output_shape: TensorShape,
+        outputshape: TensorShape,
     ) -> LinalgResult<usize> {
         let mut graph = self.operation_graph.write()
             .map_err(|_| LinalgError::InvalidInput("Failed to acquire graph lock".to_string()))?;
         
-        let op_id = graph.add_operation(op_type, inputs, output_shape)?;
+        let op_id = graph.add_operation(op_type, inputs, outputshape)?;
         
         // Trigger fusion analysis if graph has sufficient operations
         if graph.nodes.len() >= 3 {
@@ -900,24 +900,24 @@ impl<T> OperationDependencyGraph<T> {
         &mut self,
         op_type: GpuOperationType,
         inputs: &[ArrayView2<T>],
-        output_shape: TensorShape,
+        outputshape: TensorShape,
     ) -> LinalgResult<usize> {
         let id = self.nodes.len();
         
         // Create input shapes from array views
-        let input_shapes: Vec<TensorShape> = inputs.iter()
+        let inputshapes: Vec<TensorShape> = inputs.iter()
             .map(|arr| TensorShape {
-                dimensions: arr._shape().to_vec(),
+                dimensions: arr.shape().to_vec(),
                 element_type: ElementType::F32, // Simplified for now
                 memory_layout: MemoryLayout::RowMajor,
             })
             .collect();
         
         // Estimate memory requirements
-        let total_input_size: usize = input_shapes.iter()
-            .map(|_shape| _shape.dimensions.iter().product::<usize>() * 4) // 4 bytes per f32
+        let total_input_size: usize = inputshapes.iter()
+            .map(|shape| shape.dimensions.iter().product::<usize>() * 4) // 4 bytes per f32
             .sum();
-        let output_size = output_shape.dimensions.iter().product::<usize>() * 4;
+        let output_size = outputshape.dimensions.iter().product::<usize>() * 4;
         
         let memory_requirements = MemoryRequirements {
             input_memory: total_input_size,
@@ -929,8 +929,8 @@ impl<T> OperationDependencyGraph<T> {
         let node = OperationNode {
             id,
             op_type,
-            input_shapes,
-            output_shape,
+            inputshapes,
+            outputshape,
             memory_requirements,
             cost_estimate: 1.0, // Simplified
             kernel_spec: KernelSpecification {
@@ -998,13 +998,13 @@ impl KernelFusionEngine {
     
     fn estimate_performance_benefit<T>(&self, op1: &OperationNode<T>, op2: &OperationNode<T>) -> f64 {
         // Simplified performance benefit estimation
-        let memory_transfer_saved = op1.output_shape.dimensions.iter().product::<usize>() as f64 * 4.0;
+        let memory_transfer_saved = op1.outputshape.dimensions.iter().product::<usize>() as f64 * 4.0;
         memory_transfer_saved / 1e9 // Benefit in GB/s saved
     }
     
     fn estimate_memory_savings<T>(&self, op1: &OperationNode<T>, op2: &OperationNode<T>) -> usize {
         // Memory saved by not storing intermediate result
-        op1.output_shape.dimensions.iter().product::<usize>() * 4
+        op1.outputshape.dimensions.iter().product::<usize>() * 4
     }
 }
 
@@ -1359,7 +1359,7 @@ impl<T> AdvancedGpuTensorCoreScheduler<T> {
         // Estimate based on operation type and matrix dimensions
         match operation.operation_type {
             GpuOperationType::MatrixMultiplication => {
-                let dims = &operation.input_shapes[0].dimensions;
+                let dims = &operation.inputshapes[0].dimensions;
                 if dims.len() >= 2 {
                     (dims[0] * dims[1]) as f64 / 1e6 // Normalize to millions of operations
                 } else {
@@ -1374,7 +1374,7 @@ impl<T> AdvancedGpuTensorCoreScheduler<T> {
     
     /// Calculate memory bandwidth requirement
     fn calculate_memory_requirement(&self, operation: &TensorCoreOperation<T>) -> f64 {
-        let total_elements: usize = operation.input_shapes.iter()
+        let total_elements: usize = operation.inputshapes.iter()
             .map(|shape| shape.dimensions.iter().product::<usize>())
             .sum();
         
@@ -1387,7 +1387,7 @@ impl<T> AdvancedGpuTensorCoreScheduler<T> {
         match operation.operation_type {
             GpuOperationType::MatrixMultiplication => {
                 // Check if dimensions are multiples of 16 (optimal for tensor cores)
-                let dims = &operation.input_shapes[0].dimensions;
+                let dims = &operation.inputshapes[0].dimensions;
                 if dims.len() >= 2 && dims[0] % 16 == 0 && dims[1] % 16 == 0 {
                     0.95
                 } else {
@@ -1621,7 +1621,7 @@ mod tests {
     fn test_operation_submission() {
         let fusion_engine = AdvancedGpuKernelFusion::<f32>::new().unwrap();
         let input = Array2::zeros((10, 10));
-        let output_shape = TensorShape {
+        let outputshape = TensorShape {
             dimensions: vec![10, 10],
             element_type: ElementType::F32,
             memory_layout: MemoryLayout::RowMajor,
@@ -1630,7 +1630,7 @@ mod tests {
         let result = fusion_engine.submit_operation(
             GpuOperationType::MatrixMultiplication,
             &[input.view()],
-            output_shape,
+            outputshape,
         );
         
         assert!(result.is_ok());
@@ -1643,7 +1643,7 @@ mod tests {
         
         // Submit multiple operations
         let input = Array2::zeros((10, 10));
-        let output_shape = TensorShape {
+        let outputshape = TensorShape {
             dimensions: vec![10, 10],
             element_type: ElementType::F32,
             memory_layout: MemoryLayout::RowMajor,
@@ -1652,17 +1652,17 @@ mod tests {
         let _ = fusion_engine.submit_operation(
             GpuOperationType::MatrixMultiplication,
             &[input.view()],
-            output_shape.clone(),
+            outputshape.clone(),
         );
         let _ = fusion_engine.submit_operation(
             GpuOperationType::MatrixAddition,
             &[input.view()],
-            output_shape.clone(),
+            outputshape.clone(),
         );
         let _ = fusion_engine.submit_operation(
             GpuOperationType::ElementwiseMultiplication,
             &[input.view()],
-            output_shape,
+            outputshape,
         );
         
         let result = fusion_engine.analyze_fusion_opportunities();
@@ -1688,7 +1688,7 @@ mod tests {
         let operation = TensorCoreOperation {
             id: 0,
             operation_type: TensorCoreOpType::MatrixMultiplication,
-            input_shapes: vec![TensorShape {
+            inputshapes: vec![TensorShape {
                 dimensions: vec![10, 10],
                 element_type: ElementType::F32,
                 memory_layout: MemoryLayout::RowMajor,

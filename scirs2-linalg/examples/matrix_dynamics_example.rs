@@ -359,7 +359,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (n, description) in matrix_sizes {
         // Create test matrix (sparse structure for large systems)
-        let test_matrix = Array2::from_shape_fn((n, n), |(i, j)| {
+        let test_matrix = Array2::fromshape_fn((n, n), |(i, j)| {
             if i == j {
                 -1.0 // Stable diagonal
             } else if (i as i32 - j as i32).abs() == 1 {
@@ -369,7 +369,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         });
 
-        let test_vector = Array2::from_shape_fn((n, 1), |(i_)| (i_ as f64 + 1.0) / n as f64);
+        let test_vector = Array2::fromshape_fn((n, 1), |(i_)| (i_ as f64 + 1.0) / n as f64);
         let test_time = 1.0;
 
         let start_time = Instant::now();

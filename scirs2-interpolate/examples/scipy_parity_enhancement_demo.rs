@@ -151,7 +151,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Analyze parity enhancement results in detail
 #[allow(dead_code)]
-fn analyze_parity_results(_report: &scirs2_interpolate: :SciPyParityReport) {
+fn analyze_parity_results(_report: &scirs2, interpolate: SciPyParityReport) {
     println!("Detailed Parity Analysis:");
 
     // Overall statistics
@@ -212,7 +212,7 @@ fn analyze_parity_results(_report: &scirs2_interpolate: :SciPyParityReport) {
 
 /// Analyze feature gaps by priority level
 #[allow(dead_code)]
-fn analyze_gaps_by_priority(_report: &scirs2_interpolate: :SciPyParityReport) {
+fn analyze_gaps_by_priority(_report: &scirs2, interpolate: SciPyParityReport) {
     use std::collections::HashMap;
 
     let mut priority_stats: HashMap<String, (usize, usize, usize)> = HashMap::new();
@@ -258,7 +258,7 @@ fn analyze_gaps_by_priority(_report: &scirs2_interpolate: :SciPyParityReport) {
 
 /// Track implementation progress for active features
 #[allow(dead_code)]
-fn track_implementation_progress(_report: &scirs2_interpolate: :SciPyParityReport) {
+fn track_implementation_progress(_report: &scirs2, interpolate: SciPyParityReport) {
     println!("Implementation Progress:");
 
     if _report.implementation_progress.is_empty() {
@@ -310,7 +310,7 @@ fn track_implementation_progress(_report: &scirs2_interpolate: :SciPyParityRepor
 
 /// Analyze compatibility test results
 #[allow(dead_code)]
-fn analyze_compatibility_results(_report: &scirs2_interpolate: :SciPyParityReport) {
+fn analyze_compatibility_results(_report: &scirs2, interpolate: SciPyParityReport) {
     println!("Compatibility Test Results:");
 
     if _report.compatibility_results.is_empty() {
@@ -399,7 +399,7 @@ fn analyze_compatibility_results(_report: &scirs2_interpolate: :SciPyParityRepor
 
 /// Analyze performance comparison results
 #[allow(dead_code)]
-fn analyze_performance_comparisons(_report: &scirs2_interpolate: :SciPyParityReport) {
+fn analyze_performance_comparisons(_report: &scirs2, interpolate: SciPyParityReport) {
     println!("Performance Comparison Results:");
 
     if _report.performance_comparisons.is_empty() {
@@ -504,7 +504,7 @@ fn analyze_performance_comparisons(_report: &scirs2_interpolate: :SciPyParityRep
 
 /// Provide actionable plan for completing SciPy parity
 #[allow(dead_code)]
-fn provide_parity_action_plan(_report: &scirs2_interpolate: :SciPyParityReport) {
+fn provide_parity_action_plan(_report: &scirs2, interpolate: SciPyParityReport) {
     match _report.readiness {
         ParityReadiness::Ready => {
             println!("✅ SCIPY PARITY READY FOR STABLE RELEASE");

@@ -6,7 +6,6 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
-use statrs::statistics::Statistics;
 use std::collections::VecDeque;
 use std::sync::Arc;
 
@@ -687,7 +686,7 @@ mod tests {
     fn test_zero_copy_rolling() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let results =
-            zero_copy::rolling_stats_zerocopy(&data.view(), 3, |window| Ok(window.mean())).unwrap();
+            zero_copy::rolling_stats_zerocopy(&data.view(), 3, |window| Ok(window.mean().unwrap())).unwrap();
 
         assert_eq!(results.len(), 3);
         assert_relative_eq!(results[0], 2.0, epsilon = 1e-10);

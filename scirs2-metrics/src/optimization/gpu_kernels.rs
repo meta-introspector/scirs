@@ -445,7 +445,7 @@ impl GpuRuntime for CudaRuntime {
     }
 
     fn copy_to_device(
-        &self_host_ptr: *const f32_device_ptr: usize, _size: usize,
+        &self_host_ptr: *const f32_device, ptr: usize, _size: usize,
     ) -> Result<()> {
         // Would use cudaMemcpy
         Ok(())
@@ -532,7 +532,7 @@ impl GpuRuntime for MetalRuntime {
     }
 
     fn copy_to_device(
-        &self_host_ptr: *const f32_device_ptr: usize, _size: usize,
+        &self_host_ptr: *const f32_device, ptr: usize, _size: usize,
     ) -> Result<()> {
         // Would use MTLBuffer contents
         Ok(())
@@ -600,7 +600,7 @@ impl GpuRuntime for VulkanRuntime {
     }
 
     fn copy_to_device(
-        &self_host_ptr: *const f32_device_ptr: usize, _size: usize,
+        &self_host_ptr: *const f32_device, ptr: usize, _size: usize,
     ) -> Result<()> {
         // Would use staging buffer and vkCmdCopyBuffer
         Ok(())
@@ -649,7 +649,7 @@ impl GpuRuntime for OpenClRuntime {
     }
 
     fn copy_to_device(
-        &self_host_ptr: *const f32_device_ptr: usize, _size: usize,
+        &self_host_ptr: *const f32_device, ptr: usize, _size: usize,
     ) -> Result<()> {
         // Would use clEnqueueWriteBuffer
         Ok(())

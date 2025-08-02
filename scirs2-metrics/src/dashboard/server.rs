@@ -15,7 +15,7 @@ use tokio::sync::RwLock;
 /// HTTP response builder
 struct HttpResponse {
     status_code: u16,
-    status_text: &'static str,
+    statustext: &'static str,
     headers: Vec<(String, String)>,
     body: Vec<u8>,
 }
@@ -25,7 +25,7 @@ impl HttpResponse {
     fn ok() -> Self {
         Self {
             status_code: 200,
-            status_text: "OK",
+            statustext: "OK",
             headers: vec![],
             body: vec![],
         }
@@ -35,7 +35,7 @@ impl HttpResponse {
     fn not_found() -> Self {
         Self {
             status_code: 404,
-            status_text: "Not Found",
+            statustext: "Not Found",
             headers: vec![],
             body: b"404 Not Found".to_vec(),
         }
@@ -45,7 +45,7 @@ impl HttpResponse {
     fn internal_error() -> Self {
         Self {
             status_code: 500,
-            status_text: "Internal Server Error",
+            statustext: "Internal Server Error",
             headers: vec![],
             body: b"500 Internal Server Error".to_vec(),
         }
@@ -66,7 +66,7 @@ impl HttpResponse {
 
     /// Convert to HTTP response bytes
     fn into_bytes(self) -> Vec<u8> {
-        let mut response = format!("HTTP/1.1 {} {}\r\n", self.status_code, self.status_text);
+        let mut response = format!("HTTP/1.1 {} {}\r\n", self.status_code, self.statustext);
 
         // Add content length header
         response.push_str(&format!("Content-Length: {}\r\n", self.body.len()));

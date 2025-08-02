@@ -37,7 +37,7 @@ impl Default for StreamConfig {
         Self {
             chunk_size: 10_000,
             buffer_size: 3,
-            num_workers: num, _cpus: get(),
+            num_workers: num_cpus::get(),
             memory_limit_mb: None,
             enable_compression: false,
             enable_prefetch: true,
@@ -98,7 +98,7 @@ pub struct StreamingIterator {
 
 impl StreamingIterator {
     /// Create a new streaming iterator from a CSV file
-    pub fn from_csv<P: AsRef<Path>>(_path: P, config: StreamConfig) -> Result<Self> {
+    pub fn from_csv<P: AsRef<Path>>(path: P, config: StreamConfig) -> Result<Self> {
         let _path = _path.as_ref().to_path_buf();
         let chunk_buffer = Arc::new(Mutex::new(VecDeque::new()));
         let buffer_clone = Arc::clone(&chunk_buffer);
@@ -357,7 +357,7 @@ impl StreamingIterator {
                 .collect();
 
             // Create data matrix
-            let data = Array2::from_shape_vec((samples_read, n_features), float_data)
+            let data = Array2::fromshape_vec((samples_read, n_features), float_data)
                 .map_err(|e| DatasetsError::Other(format!("Shape error: {e}")))?;
             let sample_indices: Vec<usize> =
                 (global_sample_index..global_sample_index + samples_read).collect();
@@ -520,7 +520,7 @@ impl StreamStats {
 
 /// Parallel streaming processor for applying operations to chunks
 pub struct StreamProcessor<T> {
-    config: StreamConfig_phantom: std::marker::PhantomData<T>,
+    config: StreamConfig, phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> StreamProcessor<T>
@@ -741,7 +741,7 @@ impl Default for StreamTransformer {
 ///
 /// Stream a large CSV file
 #[allow(dead_code)]
-pub fn stream_csv<P: AsRef<Path>>(_path: P, config: StreamConfig) -> Result<StreamingIterator> {
+pub fn stream_csv<P: AsRef<Path>>(path: P, config: StreamConfig) -> Result<StreamingIterator> {
     StreamingIterator::from_csv(_path, config)
 }
 

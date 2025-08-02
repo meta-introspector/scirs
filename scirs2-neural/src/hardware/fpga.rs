@@ -94,8 +94,8 @@ impl FPGADevice {
             return Err(crate::error::NeuralError::InvalidState(
                 "Bitstream not loaded".to_string(),
         // Simulate kernel execution
-        let output_shape = kernel.compute_output_shape(input.shape());
-        let mut output = Array2::zeros(output_shape);
+        let outputshape = kernel.compute_outputshape(input.shape());
+        let mut output = Array2::zeros(outputshape);
         // Placeholder computation
         match &kernel.operation {
             FPGAOperation::MatMul { .. } => {
@@ -173,14 +173,14 @@ impl FPGAKernel {
                 resource_estimate, ..
             } => resource_estimate.clone(),
     /// Compute output shape
-    fn compute_output_shape(&self, input_shape: &[usize]) -> (usize, usize) {
+    fn compute_outputshape(&self, inputshape: &[usize]) -> (usize, usize) {
             FPGAOperation::MatMul { m, n, .. } => (*m, *n),
                 stride,
                 padding,
-                let h = (input_shape[0] + 2 * padding - kernel_size) / stride + 1;
-                let w = (input_shape[1] + 2 * padding - kernel_size) / stride + 1;
+                let h = (inputshape[0] + 2 * padding - kernel_size) / stride + 1;
+                let w = (inputshape[1] + 2 * padding - kernel_size) / stride + 1;
                 (h * w, *out_channels)
-            FPGAOperation::Custom { output_shape, .. } => *output_shape,
+            FPGAOperation::Custom { outputshape, .. } => *outputshape,
     /// Optimize kernel for specific FPGA
     pub fn optimize_for_device(&mut self, device: &FPGADevice) -> Result<()> {
         // Adjust parallelism based on available resources
@@ -209,7 +209,7 @@ pub enum FPGAOperation {
         description: String,
         compute_function: String,
         resource_estimate: ResourceAllocation,
-        output_shape: (usize, usize),
+        outputshape: (usize, usize),
 /// Resource allocation
 #[derive(Debug, Clone, Default)]
 pub struct ResourceAllocation {
@@ -462,8 +462,8 @@ impl ResourceScheduler {
             self.executing_tasks.push(executing_task);
             // For simulation, complete immediately
             let duration = std::time::Duration::from_millis(50);
-            let output_shape = task.kernel.compute_output_shape(&[32, 32]);
-            let output = Array2::zeros(output_shape);
+            let outputshape = task.kernel.compute_outputshape(&[32, 32]);
+            let output = Array2::zeros(outputshape);
             Ok(Some(TaskResult {
                 task_id: task.id,
                 output,

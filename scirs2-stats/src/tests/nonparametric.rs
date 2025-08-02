@@ -260,7 +260,7 @@ where
     }
 
     // Sort the values
-    all_values.sort_by(|(a_), (b_)| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
+    all_values.sort_by(|a_, b_| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
 
     // Assign ranks, handling ties
     let n = all_values.len();
@@ -444,7 +444,7 @@ where
     }
 
     // Sort all values
-    all_values.sort_by(|(a_), (b_)| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
+    all_values.sort_by(|a_, b_| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
 
     // Assign ranks, handling ties
     let n = all_values.len();
@@ -592,7 +592,7 @@ where
         }
 
         // Sort by value
-        row_data.sort_by(|(a_), (b_)| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
+        row_data.sort_by(|a_, b_| a_.partial_cmp(b_).unwrap_or(Ordering::Equal));
 
         // Assign ranks, handling ties
         let mut rank_idx = 0;

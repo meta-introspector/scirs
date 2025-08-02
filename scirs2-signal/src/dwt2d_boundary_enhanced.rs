@@ -1,21 +1,22 @@
-//! Enhanced boundary handling for 2D Discrete Wavelet Transform
-//!
-//! This module provides sophisticated boundary handling techniques specifically
-//! designed for 2D wavelet transforms. While the basic dwt2d module relies on
-//! 1D boundary extension, this enhanced version provides:
-//!
-//! - Specialized 2D boundary extension methods
-//! - Improved edge preservation for image processing
-//! - Anisotropic boundary handling for rectangular data
-//! - Periodic boundary conditions for seamless tiling
-//! - Adaptive boundary selection based on local image characteristics
-//! - Minimal artifacts at image borders
-//! - Support for non-separable 2D wavelets (future extension)
+use ndarray::s;
+// Enhanced boundary handling for 2D Discrete Wavelet Transform
+//
+// This module provides sophisticated boundary handling techniques specifically
+// designed for 2D wavelet transforms. While the basic dwt2d module relies on
+// 1D boundary extension, this enhanced version provides:
+//
+// - Specialized 2D boundary extension methods
+// - Improved edge preservation for image processing
+// - Anisotropic boundary handling for rectangular data
+// - Periodic boundary conditions for seamless tiling
+// - Adaptive boundary selection based on local image characteristics
+// - Minimal artifacts at image borders
+// - Support for non-separable 2D wavelets (future extension)
 
 use crate::dwt::Wavelet;
 use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, s};
+use ndarray::{ Array2};
 use num_traits::{Float, NumCast, Zero};
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -171,7 +172,7 @@ pub struct EnhancedDWT2DDecomposition {
 #[derive(Debug, Clone)]
 pub struct BoundaryInfo2D {
     /// Original image dimensions
-    pub original_shape: (usize, usize),
+    pub originalshape: (usize, usize),
     /// Extension information for each subband
     pub extension_info: HashMap<String, ExtensionInfo>,
     /// Boundary artifact measures
@@ -182,7 +183,7 @@ pub struct BoundaryInfo2D {
 #[derive(Debug, Clone)]
 pub struct ExtensionInfo {
     /// Extended dimensions
-    pub extended_shape: (usize, usize),
+    pub extendedshape: (usize, usize),
     /// Extension mode used
     pub mode_used: BoundaryMode2D,
     /// Extension length in each direction
@@ -306,10 +307,10 @@ pub fn dwt2d_reconstruct_enhanced(
     let extended_reconstruction = dwt2d_reconstruct(&dwt_result, wavelet, Some(boundary_mode_str))?;
 
     // Extract original region with boundary correction
-    let original_shape = enhanced_decomp.boundary_info.original_shape;
+    let originalshape = enhanced_decomp.boundary_info.originalshape;
     let corrected_image = extract_and_correct_boundaries(
         &extended_reconstruction,
-        original_shape,
+        originalshape,
         &enhanced_decomp.boundary_info,
         &enhanced_decomp.config,
     )?;
@@ -869,7 +870,8 @@ where
 fn extend_min_phase_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
-    ext_cols: usize, _wavelet: Wavelet,
+    ext_cols: usize,
+    _wavelet: Wavelet,
 ) -> SignalResult<Array2<T>>
 where
     T: Float + NumCast + Debug + Zero + Copy,
@@ -884,7 +886,8 @@ where
 fn extend_biorthogonal_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
-    ext_cols: usize, _wavelet: Wavelet,
+    ext_cols: usize,
+    _wavelet: Wavelet,
 ) -> SignalResult<Array2<T>>
 where
     T: Float + NumCast + Debug + Zero + Copy,
@@ -1003,7 +1006,7 @@ where
 
             if min_dist < width {
                 // Apply cosine tapering
-                let t = min_dist as f64 / width  as f64;
+                let t = min_dist as f64 / width as f64;
                 let taper = 0.5 * (1.0 - (std::f64::consts::PI * t).cos());
                 weight = T::from(taper).unwrap_or(T::zero());
             }
@@ -1035,7 +1038,7 @@ fn get_wavelet_filter_length(_wavelet: Wavelet) -> usize {
         Wavelet::BiorNrNd { nr, nd } => 2 * (nr.max(nd) + 1),
         Wavelet::Coif(n) | Wavelet::Coiflet(n) => 6 * n,
         Wavelet::Sym(n) => 2 * n, // Default conservative estimate
-        _ => 8, // Default conservative estimate
+        _ => 8,                   // Default conservative estimate
     }
 }
 
@@ -1049,19 +1052,19 @@ fn create_boundary_info<T>(
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
-    let original_shape = original.dim();
-    let extended_shape = extended.dim();
+    let originalshape = original.dim();
+    let extendedshape = extended.dim();
 
     let mut extension_info = HashMap::new();
 
     // Calculate extension lengths
-    let ext_rows = (extended_shape.0 - original_shape.0) / 2;
-    let ext_cols = (extended_shape.1 - original_shape.1) / 2;
+    let ext_rows = (extendedshape.0 - originalshape.0) / 2;
+    let ext_cols = (extendedshape.1 - originalshape.1) / 2;
 
     extension_info.insert(
         "main".to_string(),
         ExtensionInfo {
-            extended_shape,
+            extendedshape,
             mode_used: config.mode,
             extension_lengths: (ext_rows, ext_rows, ext_cols, ext_cols),
         },
@@ -1076,7 +1079,7 @@ where
     };
 
     Ok(BoundaryInfo2D {
-        original_shape,
+        originalshape,
         extension_info,
         artifact_measures,
     })
@@ -1085,7 +1088,8 @@ where
 /// Compute boundary quality metrics
 #[allow(dead_code)]
 fn compute_boundary_quality<T>(
-    _decomposition: &DWT2DDecomposition, _boundary_info: &BoundaryInfo2D,
+    _decomposition: &DWT2DDecomposition,
+    _boundary_info: &BoundaryInfo2D,
 ) -> SignalResult<BoundaryQualityMetrics>
 where
     T: Float + NumCast + Debug + Zero + Copy,
@@ -1103,23 +1107,24 @@ where
 #[allow(dead_code)]
 fn extract_and_correct_boundaries<T>(
     extended_data: &Array2<T>,
-    original_shape: (usize, usize),
-    boundary_info: &BoundaryInfo2D, _config: &BoundaryConfig2D,
+    originalshape: (usize, usize),
+    boundary_info: &BoundaryInfo2D,
+    _config: &BoundaryConfig2D,
 ) -> SignalResult<Array2<T>>
 where
     T: Float + NumCast + Debug + Zero + Copy,
 {
-    let extended_shape = extended_data.dim();
+    let extendedshape = extended_data.dim();
 
     // Calculate crop region
-    let ext_rows = (extended_shape.0 - original_shape.0) / 2;
-    let ext_cols = (extended_shape.1 - original_shape.1) / 2;
+    let ext_rows = (extendedshape.0 - originalshape.0) / 2;
+    let ext_cols = (extendedshape.1 - originalshape.1) / 2;
 
     // Extract original region
     let cropped = extended_data
         .slice(s![
-            ext_rows..ext_rows + original_shape.0,
-            ext_cols..ext_cols + original_shape.1
+            ext_rows..ext_rows + originalshape.0,
+            ext_cols..ext_cols + originalshape.1
         ])
         .to_owned();
 
@@ -1137,7 +1142,10 @@ pub fn generate_boundary_report(_decomp: &EnhancedDWT2DDecomposition) -> String 
 
     report.push_str("## Configuration\n");
     report.push_str(&format!("- Boundary Mode: {:?}\n", _decomp.config.mode));
-    report.push_str(&format!("- Anisotropic: {:?}\n", _decomp.config.anisotropic));
+    report.push_str(&format!(
+        "- Anisotropic: {:?}\n",
+        _decomp.config.anisotropic
+    ));
 
     report.push_str("\n## Quality Metrics\n");
     report.push_str(&format!(
@@ -1203,7 +1211,7 @@ fn example_enhanced_boundary_usage() -> SignalResult<()> {
     let mut data = Array2::zeros((32, 32));
     for i in 0..32 {
         for j in 0..32 {
-            data[[i, j]] = ((i as f64 * 0.2).sin() * (j as f64 * 0.3).cos() * 100.0)  as f64;
+            data[[i, j]] = ((i as f64 * 0.2).sin() * (j as f64 * 0.3).cos() * 100.0) as f64;
         }
     }
 
@@ -1241,7 +1249,7 @@ fn example_enhanced_boundary_usage() -> SignalResult<()> {
             error += (data[[i, j]] - reconstructed[[i, j]]).abs();
         }
     }
-    error /= (32 * 32)  as f64;
+    error /= (32 * 32) as f64;
 
     println!("Mean absolute reconstruction error: {:.2e}", error);
 

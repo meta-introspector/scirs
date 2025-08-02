@@ -1,9 +1,9 @@
-//! Enhanced multitaper validation example
-//!
-//! This example demonstrates the comprehensive validation suite for multitaper
-//! spectral estimation, including SciPy reference comparison and Advanced enhancements.
+// Enhanced multitaper validation example
+//
+// This example demonstrates the comprehensive validation suite for multitaper
+// spectral estimation, including SciPy reference comparison and Advanced enhancements.
 
-use scirs2__signal::{
+use scirs2_signal::{
     generate_multitaper_validation_report, run_scipy_multitaper_validation,
     EnhancedTestSignalConfig, TestSignalType,
 };

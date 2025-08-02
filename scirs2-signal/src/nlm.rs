@@ -1,42 +1,43 @@
-//! Non-Local Means denoising module
-//!
-//! This module implements Non-Local Means (NLM) denoising techniques for signal and image
-//! processing. NLM leverages the redundancy in signals by comparing patches rather than individual
-//! points, allowing for better detail preservation than traditional filters.
-//!
-//! The implementation includes:
-//! - 1D Non-Local Means for signals
-//! - 2D Non-Local Means for images
-//! - Fast approximations for efficient computation
-//! - Block-matching variants for improved performance
-//!
-//! # Example
-//! ```
-//! use ndarray::{Array1, Array2};
-//! use scirs2__signal::nlm::{nlm_denoise_1d, nlm_denoise_2d, NlmConfig};
-//! use rand::Rng;
-//!
-//! // Create a test signal
-//! let n = 500;
-//! let mut clean_signal = Array1::zeros(n);
-//! for i in 100..400 {
-//!     clean_signal[i] = 1.0;
-//! }
-//!
-//! // Add noise
-//! let mut rng = rand::rng();
-//! let mut noisy_signal = clean_signal.clone();
-//! for i in 0..n {
-//!     noisy_signal[i] += 0.2 * rng.random_range(-1.0..1.0);
-//! }
-//!
-//! // Apply Non-Local Means denoising
-//! let config = NlmConfig::default();
-//! let denoised = nlm_denoise_1d(&noisy_signal..&config).unwrap();
-//! ```
+use ndarray::s;
+// Non-Local Means denoising module
+//
+// This module implements Non-Local Means (NLM) denoising techniques for signal and image
+// processing. NLM leverages the redundancy in signals by comparing patches rather than individual
+// points, allowing for better detail preservation than traditional filters.
+//
+// The implementation includes:
+// - 1D Non-Local Means for signals
+// - 2D Non-Local Means for images
+// - Fast approximations for efficient computation
+// - Block-matching variants for improved performance
+//
+// # Example
+// ```
+// use ndarray::{Array1, Array2};
+// use scirs2_signal::nlm::{nlm_denoise_1d, nlm_denoise_2d, NlmConfig};
+// use rand::Rng;
+//
+// // Create a test signal
+// let n = 500;
+// let mut clean_signal = Array1::zeros(n);
+// for i in 100..400 {
+//     clean_signal[i] = 1.0;
+// }
+//
+// // Add noise
+// let mut rng = rand::rng();
+// let mut noisy_signal = clean_signal.clone();
+// for i in 0..n {
+//     noisy_signal[i] += 0.2 * rng.random_range(-1.0..1.0);
+// }
+//
+// // Apply Non-Local Means denoising
+// let config = NlmConfig::default();
+// let denoised = nlm_denoise_1d(&noisy_signal, &config).unwrap();
+// ```
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Array3, Axis, s};
+use ndarray::{ Array1, Array2, Array3, Axis};
 use rand::Rng;
 use std::cmp;
 use std::f64::consts::PI;
@@ -96,7 +97,7 @@ impl Default for NlmConfig {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::nlm::{nlm_denoise_1d, NlmConfig};
+/// use scirs2_signal::nlm::{nlm_denoise_1d, NlmConfig};
 ///
 /// let signal = Array1::from_vec(vec![1.2, 2.3, 3.1, 2.2, 1.3, 0.2, -0.3, -1.1]);
 /// let config = NlmConfig::default();
@@ -261,9 +262,9 @@ pub fn nlm_denoise_1d(_signal: &Array1<f64>, config: &NlmConfig) -> SignalResult
 /// # Example
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::nlm::{nlm_denoise_2d, NlmConfig};
+/// use scirs2_signal::nlm::{nlm_denoise_2d, NlmConfig};
 ///
-/// let image = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
+/// let image = Array2::fromshape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
 /// let config = NlmConfig::default();
 /// let denoised = nlm_denoise_2d(&image, &config).unwrap();
 /// ```
@@ -913,7 +914,7 @@ fn pad_image_2d(_image: &Array2<f64>, pad_size: usize) -> Array2<f64> {
     for i in 0..height + 2 * pad_size {
         for j in 0..pad_size {
             // Handle corner cases
-            let _src_i = if i < pad_size {
+            let src_i = if i < pad_size {
                 i.min(pad_size - 1)
             } else if i >= height + pad_size {
                 height - 1 - (i - (height + pad_size)).min(height - 1)

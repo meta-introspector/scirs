@@ -861,7 +861,7 @@ fn add_ridge_regularization(_matrix: &mut Array2<f64>, lambda: f64) {
     /// Generate UX recommendations
     fn generate_ux_recommendations(
         &self,
-        error: &StatsError_diagnostics: &IntelligentDiagnostics,
+        error: &StatsError, diagnostics: &IntelligentDiagnostics,
     ) -> UXRecommendations {
         UXRecommendations {
             message_improvements: vec![

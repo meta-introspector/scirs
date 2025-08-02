@@ -418,7 +418,7 @@ where
     // Initialize synaptic weights randomly
     let mut rng = rand::rng();
     let mut learned_filter =
-        Array2::from_shape_fn(filter_size, |_| (rng.random_range::<f64>(-0.1..0.1)));
+        Array2::fromshape_fn(filter_size, |_| (rng.random_range::<f64>(-0.1..0.1)));
 
     let mut pre_synaptic_traces = Array2::zeros(filter_size);
     let mut post_synaptic_trace = 0.0;
@@ -769,7 +769,7 @@ fn apply_event_kernel(
 
 #[allow(dead_code)]
 fn initialize_reservoir(
-    reservoir_size: usize, _height: usize_width: usize,
+    reservoir_size: usize, _height: usize, width: usize,
     config: &NeuromorphicConfig,
 ) -> NdimageResult<Array1<SpikingNeuron>> {
     let mut reservoir = Array1::from_elem(reservoir_size, SpikingNeuron::default());
@@ -846,9 +846,9 @@ fn capture_reservoir_state(_reservoir: &Array1<SpikingNeuron>) -> NdimageResult<
 #[allow(dead_code)]
 fn readout_from_liquid_states(
     liquid_states: &[Array1<f64>],
-    output_shape: (usize, usize), _config: &NeuromorphicConfig,
+    outputshape: (usize, usize), _config: &NeuromorphicConfig,
 ) -> NdimageResult<Array2<f64>> {
-    let (height, width) = output_shape;
+    let (height, width) = outputshape;
     let mut output = Array2::zeros((height, width));
 
     if liquid_states.is_empty() {
@@ -965,11 +965,11 @@ mod tests {
     #[test]
     fn test_event_driven_processing() {
         let current =
-            Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 0.0, 1.0, 0.5, 1.0, 0.0, 1.0, 0.0])
+            Array2::fromshape_vec((3, 3), vec![0.0, 1.0, 0.0, 1.0, 0.5, 1.0, 0.0, 1.0, 0.0])
                 .unwrap();
 
         let previous =
-            Array2::from_shape_vec((3, 3), vec![0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0])
+            Array2::fromshape_vec((3, 3), vec![0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0])
                 .unwrap();
 
         let config = NeuromorphicConfig::default();
@@ -983,7 +983,7 @@ mod tests {
     #[test]
     fn test_homeostatic_adaptive_filter() {
         let image =
-            Array2::from_shape_vec((5, 5), (0..25).map(|x| x as f64 / 25.0).collect()).unwrap();
+            Array2::fromshape_vec((5, 5), (0..25).map(|x| x as f64 / 25.0).collect()).unwrap();
 
         let config = NeuromorphicConfig::default();
         let result = homeostatic_adaptive_filter(image.view(), &config, 5).unwrap();
@@ -995,9 +995,9 @@ mod tests {
     #[test]
     fn test_temporal_coding_feature_extraction() {
         let image =
-            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+            Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
 
-        let edge_detector = Array2::from_shape_vec(
+        let edge_detector = Array2::fromshape_vec(
             (3, 3),
             vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
         )
@@ -1016,7 +1016,7 @@ mod tests {
     #[test]
     fn test_stdp_unsupervised_learning() {
         let training_image =
-            Array2::from_shape_vec((6, 6), (0..36).map(|x| x as f64 / 36.0).collect()).unwrap();
+            Array2::fromshape_vec((6, 6), (0..36).map(|x| x as f64 / 36.0).collect()).unwrap();
         let training_images = vec![training_image.view()];
 
         let config = NeuromorphicConfig::default();

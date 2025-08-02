@@ -1008,7 +1008,7 @@ impl<
             return self.softmax(logits);
         }
 
-        let gumbel_noise: Array1<T> = Array1::from_shape_fn(logits.len(), |_| {
+        let gumbel_noise: Array1<T> = Array1::fromshape_fn(logits.len(), |_| {
             let u = rand::random::<f64>();
             T::from(-(-u.ln()).ln()).unwrap()
         });
@@ -1122,7 +1122,7 @@ impl<
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<()> {
         // Initialize architecture weights with small random values
         self.architecture_weights =
-            Array3::from_shape_fn(self.architecture_weights.raw_dim(), |_| {
+            Array3::fromshape_fn(self.architecture_weights.raw_dim(), |_| {
                 T::from(rand::random::<f64>() * 0.1 - 0.05).unwrap()
             });
         Ok(())
@@ -1742,7 +1742,7 @@ impl<T: Float + Default + Clone + 'static> PredictorLayer<T> {
         let fan_out = self.weights.nrows() as f64;
         let scale = (6.0 / (fan_in + fan_out)).sqrt();
 
-        self.weights = Array2::from_shape_fn(self.weights.raw_dim(), |_| {
+        self.weights = Array2::fromshape_fn(self.weights.raw_dim(), |_| {
             T::from(rand::random::<f64>() * scale * 2.0 - scale).unwrap()
         });
 

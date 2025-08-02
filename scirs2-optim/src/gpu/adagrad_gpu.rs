@@ -248,7 +248,7 @@ mod tests {
     fn test_gpu_initialization() {
         let mut optimizer = AdagradGpu::<f32>::new(0.01);
         let config = GpuOptimizerConfig {
-            backend: scirs2_core: gpu::GpuBackend::Cpu,
+            backend: scirs2, core: gpu::GpuBackend::Cpu,
             ..Default::default()
         };
 

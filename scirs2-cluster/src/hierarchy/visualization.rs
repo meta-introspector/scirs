@@ -114,7 +114,7 @@ pub struct NodeMarkerStyle {
     /// Show markers at leaf nodes
     pub show_leaf_nodes: bool,
     /// Marker shape
-    pub marker_shape: MarkerShape,
+    pub markershape: MarkerShape,
     /// Marker size
     pub marker_size: f32,
     /// Marker color
@@ -201,7 +201,7 @@ impl Default for NodeMarkerStyle {
         Self {
             show_internal_nodes: false,
             show_leaf_nodes: true,
-            marker_shape: MarkerShape::Circle,
+            markershape: MarkerShape::Circle,
             marker_size: 4.0,
             marker_color: "#333333".to_string(),
         }
@@ -672,7 +672,7 @@ fn assign_branch_colors<F: Float>(
 
 /// Create legend for the dendrogram
 #[allow(dead_code)]
-fn create_legend<F: Float>(_config: &DendrogramConfig<F>, threshold: F) -> Vec<LegendEntry> {
+fn create_legend<F: Float>(config: &DendrogramConfig<F>, threshold: F) -> Vec<LegendEntry> {
     vec![
         LegendEntry {
             color: _config.color_threshold.above_color.clone(),
@@ -711,7 +711,7 @@ fn calculate_auto_threshold<F: Float + FromPrimitive + PartialOrd>(
 
 /// Calculate plot bounds
 #[allow(dead_code)]
-fn calculate_plot_bounds<F: Float>(_branches: &[Branch<F>], leaves: &[Leaf]) -> (F, F, F, F) {
+fn calculate_plot_bounds<F: Float>(branches: &[Branch<F>], leaves: &[Leaf]) -> (F, F, F, F) {
     let mut min_x = F::infinity();
     let mut max_x = F::neg_infinity();
     let mut min_y = F::infinity();
@@ -854,7 +854,7 @@ mod tests {
     #[test]
     fn test_create_dendrogram_plot() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
 
         let linkage_matrix = linkage(data.view(), LinkageMethod::Ward, Metric::Euclidean).unwrap();
         let config = DendrogramConfig::default();
@@ -874,7 +874,7 @@ mod tests {
 
     #[test]
     fn test_color_threshold_auto() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
@@ -914,7 +914,7 @@ mod tests {
 
     #[test]
     fn test_dendrogram_orientations() {
-        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0]).unwrap();
+        let data = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0]).unwrap();
 
         let linkage_matrix =
             linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
@@ -942,7 +942,7 @@ mod tests {
 
     #[test]
     fn test_custom_labels() {
-        let data = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
+        let data = Array2::fromshape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
 
         let linkage_matrix =
             linkage(data.view(), LinkageMethod::Single, Metric::Euclidean).unwrap();
@@ -1695,7 +1695,7 @@ pub mod export {
     }
 
     /// Export to SVG format
-    fn export_to_svg<F: Float + FromPrimitive + Debug>(_plot: &DendrogramPlot<F>) -> Result<String> {
+    fn export_to_svg<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
         let config = &_plot.config;
         let mut svg = String::new();
         let (min_x, max_x, min_y, max_y) = _plot.bounds;
@@ -1833,7 +1833,7 @@ pub mod export {
         // Add node markers
         if config.styling.node_markers.show_leaf_nodes {
             for leaf in &_plot.leaves {
-                let marker_svg = match config.styling.node_markers.marker_shape {
+                let marker_svg = match config.styling.node_markers.markershape {
                     MarkerShape::Circle => format!(
                         "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" fill=\"{}\"/>\n",
                         leaf.position.0,
@@ -2012,7 +2012,7 @@ pub mod export {
     }
 
     /// Export to DOT format for Graphviz
-    fn export_to_dot<F: Float + FromPrimitive + Debug>(_plot: &DendrogramPlot<F>) -> Result<String> {
+    fn export_to_dot<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
         let mut dot = String::new();
         dot.push_str("digraph dendrogram {\n");
         dot.push_str("  rankdir=TB;\n");
@@ -2036,7 +2036,7 @@ pub mod export {
     }
 
     /// Export to CSV format
-    fn export_to_csv<F: Float + FromPrimitive + Debug>(_plot: &DendrogramPlot<F>) -> Result<String> {
+    fn export_to_csv<F: Float + FromPrimitive + Debug>(plot: &DendrogramPlot<F>) -> Result<String> {
         let mut csv = String::new();
         csv.push_str("type,start_x,start_y,end_x,end_y,height,cluster_id,label\n");
 

@@ -374,7 +374,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     }
 
     /// QAOA parameter optimization
-    fn optimize_parameters(&mut self..data: ArrayView2<F>) -> Result<()> {
+    fn optimize_parameters(&mut self, data: ArrayView2<F>) -> Result<()> {
         let mut best_energy = f64::INFINITY;
         let mut best_gamma = self.gamma_params.clone();
         let mut best_beta = self.beta_params.clone();
@@ -710,7 +710,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     }
 
     /// Build the clustering Hamiltonian
-    fn build_clustering_hamiltonian(&mut self..data: ArrayView2<F>) -> Result<()> {
+    fn build_clustering_hamiltonian(&mut self, data: ArrayView2<F>) -> Result<()> {
         let n_samples = data.nrows();
         let hamiltonian_size = 1 << self.n_qubits;
         self.hamiltonian = Array2::zeros((hamiltonian_size, hamiltonian_size));
@@ -895,7 +895,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
         &self,
         state: &mut Array1<f64>,
         qubit: usize,
-        rx: f64_ry: f64, _rz: f64,
+        rx: f64, ry: f64, _rz: f64,
     ) -> Result<()> {
         // Simplified rotation application (would be more complex in practice)
         let n_states = state.len();
@@ -1481,7 +1481,7 @@ mod tests {
     #[test]
     fn test_small_qaoa_clustering() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
 
         let result = qaoa_clustering(data.view(), 2);
         assert!(result.is_ok());
@@ -1524,7 +1524,7 @@ mod tests {
     #[test]
     fn test_small_quantum_annealing_clustering() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
 
         let result = quantum_annealing_clustering(data.view(), 2);
         assert!(result.is_ok());
@@ -1536,7 +1536,7 @@ mod tests {
 
     #[test]
     fn test_quantum_annealing_with_custom_config() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )

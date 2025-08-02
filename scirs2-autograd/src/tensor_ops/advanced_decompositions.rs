@@ -27,7 +27,8 @@ impl<F: Float> Op<F> for SVDJacobiExtractOp {
         match self.component {
             0 => "SVDJacobiExtractU",
             1 => "SVDJacobiExtractS",
-            2 => "SVDJacobiExtractVt"_ => "SVDJacobiExtractUnknown",
+            2 => "SVDJacobiExtractVt",
+            _ => "SVDJacobiExtractUnknown",
         }
     }
 
@@ -97,7 +98,8 @@ impl<F: Float> Op<F> for RandomizedSVDExtractOp {
         match self.component {
             0 => "RandomizedSVDExtractU",
             1 => "RandomizedSVDExtractS",
-            2 => "RandomizedSVDExtractVt"_ => "RandomizedSVDExtractUnknown",
+            2 => "RandomizedSVDExtractVt",
+            _ => "RandomizedSVDExtractUnknown",
         }
     }
 
@@ -158,7 +160,8 @@ impl<F: Float> Op<F> for GeneralizedEigenExtractOp {
     fn name(&self) -> &'static str {
         match self.component {
             0 => "GeneralizedEigenExtractValues",
-            1 => "GeneralizedEigenExtractVectors"_ => "GeneralizedEigenExtractUnknown",
+            1 => "GeneralizedEigenExtractVectors",
+            _ => "GeneralizedEigenExtractUnknown",
         }
     }
 
@@ -230,7 +233,8 @@ impl<F: Float> Op<F> for QRPivotExtractOp {
         match self.component {
             0 => "QRPivotExtractQ",
             1 => "QRPivotExtractR",
-            2 => "QRPivotExtractP"_ => "QRPivotExtractUnknown",
+            2 => "QRPivotExtractP",
+            _ => "QRPivotExtractUnknown",
         }
     }
 

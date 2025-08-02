@@ -12,8 +12,8 @@ use scirs2__datasets::{
     utils::{k_fold_split, train_test_split},
     BenchmarkRunner, MLPipeline, RealWorldConfig,
 };
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -62,7 +62,8 @@ fn demonstrate_dataset_catalog() {
                 time_series.push(dataset)
             }
             "diabetes_readmission" | "heart_disease" => healthcare.push(dataset),
-            "credit_card_fraud" | "loan_default" => financial.push(dataset, _ => {}
+            "credit_card_fraud" | "loan_default" => financial.push(dataset),
+            _ => {}
         }
     }
 

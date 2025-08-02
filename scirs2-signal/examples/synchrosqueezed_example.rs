@@ -2,8 +2,8 @@ use ndarray::{Array, Array1, Array2};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2__signal::sswt::{self, SynchroCwtConfig, SynchroCwtResult};
-use scirs2__signal::wavelets;
+use scirs2_signal::sswt::{self, SynchroCwtConfig, SynchroCwtResult};
+use scirs2_signal::wavelets;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

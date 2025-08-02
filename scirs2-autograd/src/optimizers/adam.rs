@@ -90,10 +90,10 @@ impl<F: Float> Adam<F> {
                     .get_array_by_id(vid)
                     .expect("variable array not found")
                     .borrow();
-                let var_shape = target_var.shape();
+                let varshape = target_var.shape();
                 (
-                    crate::ndarray_ext::zeros(var_shape),
-                    crate::ndarray_ext::zeros(var_shape),
+                    crate::ndarray_ext::zeros(varshape),
+                    crate::ndarray_ext::zeros(varshape),
                     crate::ndarray_ext::from_scalar(F::one()),
                 )
             };
@@ -153,7 +153,7 @@ impl<F: Float> Optimizer<F> for Adam<F> {
             eprintln!("Created AdamOp with all 5 inputs");
 
             // Add the updated parameter to the result
-            ret.push(adam_op);
+            ret.push(adamop);
         }
         ret
     }

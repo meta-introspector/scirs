@@ -110,7 +110,7 @@ impl EnhancedMatFile {
     }
 
     /// Check if a file is in v7.3 format
-    pub fn is_v73_file<P: AsRef<Path>>(self_path: &P) -> Result<bool> {
+    pub fn is_v73_file<P: AsRef<Path>>(self, path: &P) -> Result<bool> {
         // Try to read as HDF5 file
         #[cfg(feature = "hdf5")]
         {
@@ -141,7 +141,7 @@ impl EnhancedMatFile {
 
     /// Write variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
-    fn write_v73<P: AsRef<Path>>(self_path: &P, _vars: &HashMap<String, MatType>) -> Result<()> {
+    fn write_v73<P: AsRef<Path>>(self, path: &P, _vars: &HashMap<String, MatType>) -> Result<()> {
         Err(IoError::Other(
             "MAT v7.3 format requires HDF5 feature".to_string(),
         ))
@@ -165,7 +165,7 @@ impl EnhancedMatFile {
 
     /// Read variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
-    fn read_v73<P: AsRef<Path>>(self_path: &P) -> Result<HashMap<String, MatType>> {
+    fn read_v73<P: AsRef<Path>>(self, path: &P) -> Result<HashMap<String, MatType>> {
         Err(IoError::Other(
             "MAT v7.3 format requires HDF5 feature".to_string(),
         ))
@@ -682,8 +682,9 @@ pub fn create_complex_array(_real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<Mat
     }
 
     // Create a complex array by combining _real and imaginary parts
-    let _complex_array =
-        ArrayD::from_shape_fn(_real.raw_dim(), |idx| Complex64::new(_real[&idx], imag[&idx]));
+    let _complex_array = ArrayD::fromshape_fn(_real.raw_dim(), |idx| {
+        Complex64::new(_real[&idx], imag[&idx])
+    });
 
     // For now, store as a struct with _real and imag fields
     // This is how MATLAB v7.3 stores complex data internally
@@ -721,7 +722,7 @@ impl MatV73Features {
         let mut file = HDF5File::create(path)?;
 
         let mut options = DatasetOptions::default();
-        options.chunk_shape = Some(chunk_size.to_vec());
+        options.chunkshape = Some(chunk_size.to_vec());
         options.compression = Some(CompressionOptions {
             algorithm: "gzip".to_string(),
             level: Some(6),
@@ -730,7 +731,7 @@ impl MatV73Features {
         // Create an empty dataset with the specified shape
         let total_elements: usize = shape.iter().product();
         let zeros = vec![0.0f64; total_elements];
-        let array = ArrayD::from_shape_vec(IxDyn(shape), zeros)
+        let array = ArrayD::fromshape_vec(IxDyn(shape), zeros)
             .map_err(|e| IoError::Other(e.to_string()))?;
 
         file.create_dataset_from_array(name, &array, Some(options))?;
@@ -898,11 +899,11 @@ impl MatV73Sparse {
         let (row_indices, col_ptrs, values) = (csc.row_indices, csc.col_ptrs, csc.values);
 
         // Write components
-        let row_array = ArrayD::from_shape_vec(vec![row_indices.len()], row_indices)
+        let row_array = ArrayD::fromshape_vec(vec![row_indices.len()], row_indices)
             .map_err(|e| IoError::Other(e.to_string()))?;
-        let col_array = ArrayD::from_shape_vec(vec![col_ptrs.len()], col_ptrs)
+        let col_array = ArrayD::fromshape_vec(vec![col_ptrs.len()], col_ptrs)
             .map_err(|e| IoError::Other(e.to_string()))?;
-        let data_array = ArrayD::from_shape_vec(vec![values.len()], values)
+        let data_array = ArrayD::fromshape_vec(vec![values.len()], values)
             .map_err(|e| IoError::Other(e.to_string()))?;
 
         file.create_dataset_from_array(&row_path, &row_array, None)?;
@@ -915,7 +916,10 @@ impl MatV73Sparse {
 
     /// Read a sparse matrix from v7.3 format
     #[cfg(feature = "hdf5")]
-    pub fn read_sparse<P: AsRef<Path>>(_path: P, name: &str) -> Result<crate::sparse::SparseMatrix> {
+    pub fn read_sparse<P: AsRef<Path>>(
+        _path: P,
+        name: &str,
+    ) -> Result<crate::sparse::SparseMatrix> {
         let file = HDF5File::open(_path, FileMode::ReadOnly)?;
 
         // Read sparse matrix metadata

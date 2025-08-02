@@ -20,7 +20,7 @@
 //! use scirs2__series::dimensionality_reduction::{PCAConfig, apply_pca};
 //!
 //! // Create sample time series data matrix (n_series × n_timepoints)
-//! let data = Array2::from_shape_vec((5, 100), (0..500).map(|x| x as f64).collect()).unwrap();
+//! let data = Array2::fromshape_vec((5, 100), (0..500).map(|x| x as f64).collect()).unwrap();
 //!
 //! // Configure PCA
 //! let config = PCAConfig {
@@ -339,7 +339,7 @@ pub struct SymbolicApproximationResult {
 /// use ndarray::Array2;
 /// use scirs2__series::dimensionality_reduction::{PCAConfig, apply_pca};
 ///
-/// let data = Array2::from_shape_vec((10, 50), (0..500).map(|x| x as f64).collect()).unwrap();
+/// let data = Array2::fromshape_vec((10, 50), (0..500).map(|x| x as f64).collect()).unwrap();
 /// let config = PCAConfig::default();
 /// let result = apply_pca(&data, &config).unwrap();
 /// ```
@@ -720,7 +720,7 @@ where
 
     // For demonstration, we'll create mock eigenvalues and eigenvectors
     // In a real implementation, this would use proper numerical libraries
-    let eigenvalues = Array1::from_shape_fn(n, |i| {
+    let eigenvalues = Array1::fromshape_fn(n, |i| {
         F::from(n - i).unwrap() // Decreasing eigenvalues
     });
 
@@ -747,8 +747,8 @@ where
             .unwrap_or(std::cmp::Ordering::Equal)
     });
 
-    let sorted_eigenvalues = Array1::from_shape_fn(n, |i| eigenvalues[indices[i]]);
-    let sorted_eigenvectors = Array2::from_shape_fn((eigenvectors.nrows(), n), |(i, j)| {
+    let sorted_eigenvalues = Array1::fromshape_fn(n, |i| eigenvalues[indices[i]]);
+    let sorted_eigenvectors = Array2::fromshape_fn((eigenvectors.nrows(), n), |(i, j)| {
         eigenvectors[(i, indices[j])]
     });
 
@@ -1385,7 +1385,7 @@ mod tests {
 
     #[test]
     fn test_pca_basic() {
-        let data = Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
         let config = PCAConfig::default();
 
         let result = apply_pca(&data, &config).unwrap();
@@ -1397,7 +1397,7 @@ mod tests {
 
     #[test]
     fn test_pca_configuration() {
-        let data = Array2::from_shape_vec((20, 10), (0..200).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((20, 10), (0..200).map(|x| x as f64).collect()).unwrap();
 
         let config = PCAConfig {
             n_components: Some(3),
@@ -1416,7 +1416,7 @@ mod tests {
     #[test]
     fn test_functional_pca_basic() {
         let functional_data =
-            Array2::from_shape_vec((5, 20), (0..100).map(|x| (x as f64 * 0.1).sin()).collect())
+            Array2::fromshape_vec((5, 20), (0..100).map(|x| (x as f64 * 0.1).sin()).collect())
                 .unwrap();
 
         let config = FunctionalPCAConfig::default();
@@ -1442,7 +1442,7 @@ mod tests {
 
     #[test]
     fn test_symbolic_approximation_sax() {
-        let time_series = Array1::from_shape_fn(100, |i| (i as f64 * 0.1).sin());
+        let time_series = Array1::fromshape_fn(100, |i| (i as f64 * 0.1).sin());
         let config = SymbolicApproximationConfig::default();
 
         let result = apply_symbolic_approximation(&time_series, &config).unwrap();
@@ -1454,7 +1454,7 @@ mod tests {
     #[test]
     fn test_pca_edge_cases() {
         // Test with minimal data
-        let data = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         let config = PCAConfig::default();
 
         let result = apply_pca(&data, &config).unwrap();

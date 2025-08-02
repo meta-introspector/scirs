@@ -300,8 +300,8 @@ fn get_exporter(_format: VisualizationFormat) -> Box<dyn VisualizationExporter> 
         VisualizationFormat::VegaLite => Box::new(VegaLiteExporter),
         VisualizationFormat::D3Json => Box::new(PlotlyExporter), // Placeholder
         VisualizationFormat::BokehJson => Box::new(PlotlyExporter), // Placeholder
-        VisualizationFormat::Svg => Box::new(PlotlyExporter), // Placeholder
-        VisualizationFormat::Html => Box::new(PlotlyExporter), // Placeholder
+        VisualizationFormat::Svg => Box::new(PlotlyExporter),    // Placeholder
+        VisualizationFormat::Html => Box::new(PlotlyExporter),   // Placeholder
     }
 }
 
@@ -1341,7 +1341,10 @@ pub mod external {
 
     impl PlotlyCloud {
         pub fn new(_api_key: String, username: String) -> Self {
-            Self { api_key: _api_key, username }
+            Self {
+                api_key: _api_key,
+                username,
+            }
         }
 
         /// Upload visualization to Plotly cloud

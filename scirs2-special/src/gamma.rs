@@ -2077,15 +2077,15 @@ fn enhanced_log_sin_pi_x<F: Float + FromPrimitive>(x: F) -> F {
 
 /// Enhanced sign computation for reflection formula with extreme values
 #[allow(dead_code)]
-fn enhanced_reflection_sign<F: Float + FromPrimitive>(_x_f64: f64) -> F {
+fn enhanced_reflection_sign<F: Float + FromPrimitive>(x_f64: f64) -> F {
     // For the reflection formula Γ(x) = π / (sin(πx) * Γ(1-x))
     // The sign depends on both sin(πx) and the parity
 
-    let x_floor = _x_f64.floor();
+    let x_floor = x_f64.floor();
     let _n = x_floor as i32;
 
     // sin(πx) has the same sign as sin(π(x - floor(x)))
-    let fractional_part = _x_f64 - x_floor;
+    let fractional_part = x_f64 - x_floor;
 
     if fractional_part == 0.0 {
         // x is an integer, sin(πx) = 0, return NaN indicator

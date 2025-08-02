@@ -186,7 +186,8 @@ impl CloudClient {
             )),
             CloudProvider::Azure => {
                 let account_name = match &self.config.credentials {
-                    CloudCredentials::AzureKey { account_name, .. } => account_name_ => {
+                    CloudCredentials::AzureKey { account_name, .. } => account_name,
+                    _ => {
                         return Err(DatasetsError::InvalidFormat(
                             "Azure requires account name in credentials".to_string(),
                         ))
@@ -283,7 +284,7 @@ impl CloudClient {
             DatasetsError::LoadingError(format!("Failed to read key _file {key_file}: {e}"))
         })?;
 
-        let service_account: serde, _json: Value = serde_json::from_str(&key_data)
+        let service_account: serde_json::Value = serde_json::from_str(&key_data)
             .map_err(|e| DatasetsError::SerdeError(format!("Invalid service account JSON: {e}")))?;
 
         // Extract required fields
@@ -570,7 +571,8 @@ impl CloudClient {
 
     fn list_azure_objects(&self, prefix: Option<&str>) -> Result<Vec<String>> {
         let account_name = match &self.config.credentials {
-            CloudCredentials::AzureKey { account_name, .. } => account_name_ => {
+            CloudCredentials::AzureKey { account_name, .. } => account_name,
+            _ => {
                 return Err(DatasetsError::InvalidFormat(
                     "Azure requires account name".to_string(),
                 ))
@@ -892,7 +894,8 @@ pub mod presets {
     pub fn gcs_client(_bucket: &str, key_file: &str) -> Result<CloudClient> {
         let config = CloudConfig {
             provider: CloudProvider::GCS,
-            region: None_bucket: _bucket.to_string(),
+            region: None,
+            bucket: _bucket.to_string(),
             credentials: CloudCredentials::ServiceAccount {
                 key_file: key_file.to_string(),
             },
@@ -954,7 +957,8 @@ pub mod presets {
     /// Create an anonymous S3 client for public buckets
     pub fn public_s3_client(_region: &str, bucket: &str) -> Result<CloudClient> {
         let config = CloudConfig {
-            provider: CloudProvider::S3_region: Some(_region.to_string()),
+            provider: CloudProvider::S3,
+            region: Some(_region.to_string()),
             bucket: bucket.to_string(),
             credentials: CloudCredentials::Anonymous,
             endpoint: None,

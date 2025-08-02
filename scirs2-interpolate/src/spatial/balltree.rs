@@ -53,7 +53,7 @@ struct BallNode<F: Float> {
 /// use scirs2__interpolate::spatial::balltree::BallTree;
 ///
 /// // Create sample 3D points
-/// let points = Array2::from_shape_vec((5, 3), vec![
+/// let points = Array2::fromshape_vec((5, 3), vec![
 ///     0.0, 0.0, 0.0,
 ///     1.0, 0.0, 0.0,
 ///     0.0, 1.0, 0.0,
@@ -1026,7 +1026,7 @@ where
 
 /// Compute the centroid (center) of a set of points
 #[allow(dead_code)]
-fn compute_centroid<F: Float + FromPrimitive>(_points: &Array2<F>, indices: &[usize]) -> Vec<F> {
+fn compute_centroid<F: Float + FromPrimitive>(points: &Array2<F>, indices: &[usize]) -> Vec<F> {
     let n_points = indices.len();
     let n_dims = _points.shape()[1];
 
@@ -1055,7 +1055,7 @@ fn compute_centroid<F: Float + FromPrimitive>(_points: &Array2<F>, indices: &[us
 
 /// Compute the radius of a ball containing all points
 #[allow(dead_code)]
-fn compute_radius<F: Float>(_points: &Array2<F>, indices: &[usize], center: &[F]) -> F {
+fn compute_radius<F: Float>(points: &Array2<F>, indices: &[usize], center: &[F]) -> F {
     let n_points = indices.len();
 
     if n_points == 0 {
@@ -1079,7 +1079,7 @@ fn compute_radius<F: Float>(_points: &Array2<F>, indices: &[usize], center: &[F]
 
 /// Find the dimension with the largest spread of values
 #[allow(dead_code)]
-fn find_max_spread_dimension<F: Float>(_points: &Array2<F>, indices: &[usize]) -> (usize, F) {
+fn find_max_spread_dimension<F: Float>(points: &Array2<F>, indices: &[usize]) -> (usize, F) {
     let n_points = indices.len();
     let n_dims = _points.shape()[1];
 

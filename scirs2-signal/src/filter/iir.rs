@@ -1,13 +1,13 @@
-//! IIR (Infinite Impulse Response) filter design functions
-//!
-//! This module provides comprehensive IIR filter design capabilities including
-//! classic analog filter prototypes (Butterworth, Chebyshev, Elliptic, Bessel)
-//! and specialized IIR design methods. All filters use the bilinear transform
-//! for analog-to-digital conversion.
+// IIR (Infinite Impulse Response) filter design functions
+//
+// This module provides comprehensive IIR filter design capabilities including
+// classic analog filter prototypes (Butterworth, Chebyshev, Elliptic, Bessel)
+// and specialized IIR design methods. All filters use the bilinear transform
+// for analog-to-digital conversion.
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::TransferFunction;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use std::f64::consts::PI;
 use std::fmt::Debug;
@@ -19,12 +19,12 @@ pub enum Either<A, B> {
     Left(A),
     Right(B),
 }
-use crate::lti::design::tf as design_tf;
 use super::common::{
     math::{add_digital_zeros, bilinear_pole_transform, butterworth_poles, prewarp_frequency},
     validation::{convert_filter_type, validate_cutoff_frequency, validate_order},
     FilterCoefficients, FilterType, FilterTypeParam,
 };
+use crate::lti::design::tf as design_tf;
 /// Butterworth filter design
 ///
 /// Designs a digital Butterworth filter with maximally flat frequency response
@@ -45,8 +45,8 @@ use super::common::{
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::iir::butter;
-/// use scirs2__signal::filter::FilterType;
+/// use scirs2_signal::filter::iir::butter;
+/// use scirs2_signal::filter::FilterType;
 ///
 /// // Design a 4th order lowpass Butterworth filter with cutoff at 0.2 times Nyquist
 /// let (b, a) = butter(4, 0.2, FilterType::Lowpass).unwrap();
@@ -139,8 +139,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::iir::butter_bandpass_bandstop;
-/// use scirs2__signal::filter::FilterType;
+/// use scirs2_signal::filter::iir::butter_bandpass_bandstop;
+/// use scirs2_signal::filter::FilterType;
 ///
 /// // Design a 4th order bandpass Butterworth filter from 0.1 to 0.4 times Nyquist
 /// let (b, a) = butter_bandpass_bandstop(4, 0.1, 0.4, FilterType::Bandpass).unwrap();
@@ -259,7 +259,7 @@ pub fn butter_bandpass_bandstop(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::iir::cheby1;
+/// use scirs2_signal::filter::iir::cheby1;
 ///
 /// // Design a 4th order Chebyshev I lowpass filter with 0.5 dB ripple
 /// let (b, a) = cheby1(4, 0.5, 0.3, "lowpass").unwrap();
@@ -289,7 +289,7 @@ where
 
     // Calculate Chebyshev Type I analog prototype poles
     let mut poles = Vec::with_capacity(order);
-    let a = ((1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0) as f64).sqrt()).ln() / order  as f64;
+    let a = ((1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0) as f64).sqrt()).ln() / order as f64;
 
     for k in 0..order {
         let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64);
@@ -356,8 +356,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::iir::cheby1_bandpass_bandstop;
-/// use scirs2__signal::filter::FilterType;
+/// use scirs2_signal::filter::iir::cheby1_bandpass_bandstop;
+/// use scirs2_signal::filter::FilterType;
 ///
 /// // Design a 2nd order Chebyshev I bandpass filter (4 poles total)
 /// let (b, a) = cheby1_bandpass_bandstop(2, 0.5, 0.2, 0.6, FilterType::Bandpass).unwrap();
@@ -401,7 +401,7 @@ where
 
     // Calculate Chebyshev Type I analog prototype poles
     let mut prototype_poles = Vec::with_capacity(order);
-    let a = ((1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0) as f64).sqrt()).ln() / order  as f64;
+    let a = ((1.0 / epsilon + (1.0 / epsilon / epsilon + 1.0) as f64).sqrt()).ln() / order as f64;
 
     for k in 0..order {
         let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64);
@@ -497,7 +497,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::iir::cheby2;
+/// use scirs2_signal::filter::iir::cheby2;
 ///
 /// // Design a 4th order Chebyshev II lowpass filter with 40 dB stopband attenuation
 /// let (b, a) = cheby2(4, 40.0, 0.3, "lowpass").unwrap();
@@ -539,7 +539,7 @@ where
     let mut zeros = Vec::with_capacity(order);
 
     // Calculate the parameter related to ripple
-    let a = ((epsilon + (epsilon * epsilon + 1.0) as f64).sqrt()).ln() / order  as f64;
+    let a = ((epsilon + (epsilon * epsilon + 1.0) as f64).sqrt()).ln() / order as f64;
 
     // Generate poles for Type II (inverse Chebyshev)
     for k in 0..order {
@@ -622,7 +622,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::iir::ellip;
+/// use scirs2_signal::filter::iir::ellip;
 ///
 /// // Design a 4th order elliptic lowpass filter with 0.5 dB ripple and 40 dB stopband attenuation
 /// let (b, a) = ellip(4, 0.5, 40.0, 0.3, "lowpass").unwrap();
@@ -682,7 +682,7 @@ where
     let mut zeros = Vec::with_capacity(order);
 
     // Generate poles similar to Chebyshev but with adjustments for elliptic characteristics
-    let a = (1.0 / epsilon_p).asinh() / order  as f64;
+    let a = (1.0 / epsilon_p).asinh() / order as f64;
 
     for k in 0..order {
         let theta = std::f64::consts::PI * (2.0 * k as f64 + 1.0) / (2.0 * order as f64);
@@ -764,7 +764,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::iir::bessel;
+/// use scirs2_signal::filter::iir::bessel;
 ///
 /// // Design a 4th order Bessel lowpass filter
 /// let (b, a) = bessel(4, 0.3, "lowpass").unwrap();

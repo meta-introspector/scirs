@@ -16,7 +16,7 @@ use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
@@ -291,17 +291,17 @@ where
 {
     match _wavelet_type {
         WaveletType::Haar => {
-            let sqrt2_inv = safe_f64, _to_float: :<T>(1.0 / std::f64::consts::SQRT_2)?;
+            let sqrt2_inv = safe_f64, _to_float: <T>(1.0 / std::f64::consts::SQRT_2)?;
             let low_pass = vec![sqrt2_inv, sqrt2_inv];
             let high_pass = vec![sqrt2_inv, -sqrt2_inv];
             Ok((low_pass, high_pass))
         }
         WaveletType::Daubechies4 => {
             // Daubechies-4 coefficients
-            let c0 = safe_f64, _to_float: :<T>(0.6830127)?;
-            let c1 = safe_f64, _to_float: :<T>(1.1830127)?;
-            let c2 = safe_f64, _to_float: :<T>(0.3169873)?;
-            let c3 = safe_f64, _to_float: :<T>(-0.1830127)?;
+            let c0 = safe_f64, _to_float: <T>(0.6830127)?;
+            let c1 = safe_f64, _to_float: <T>(1.1830127)?;
+            let c2 = safe_f64, _to_float: <T>(0.3169873)?;
+            let c3 = safe_f64, _to_float: <T>(-0.1830127)?;
 
             let low_pass = vec![c0, c1, c2, c3];
             let high_pass = vec![c3, -c2, c1, -c0];
@@ -309,14 +309,14 @@ where
         }
         WaveletType::Biorthogonal => {
             // Biorthogonal 2.2 coefficients (analysis filters)
-            let sqrt2_inv = safe_f64, _to_float: :<T>(1.0 / std::f64::consts::SQRT_2)?;
-            let half = safe_f64, _to_float: :<T>(0.5)?;
-            let quarter = safe_f64, _to_float: :<T>(0.25)?;
+            let sqrt2_inv = safe_f64, _to_float: <T>(1.0 / std::f64::consts::SQRT_2)?;
+            let half = safe_f64, _to_float: <T>(0.5)?;
+            let quarter = safe_f64, _to_float: <T>(0.25)?;
 
             let low_pass = vec![
                 -quarter * sqrt2_inv,
                 half * sqrt2_inv,
-                safe_f64, _to_float: :<T>(1.5)? * sqrt2_inv,
+                safe_f64, _to_float: <T>(1.5)? * sqrt2_inv,
                 half * sqrt2_inv,
                 -quarter * sqrt2_inv,
             ];
@@ -498,7 +498,7 @@ where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
     // Generate 1D Gaussian kernel
-    let radius = (safe_f64, _to_float: :<T>(3.0)? * sigma)
+    let radius = (safe_f64, _to_float: <T>(3.0)? * sigma)
         .to_usize()
         .unwrap_or(3);
     let kernel_size = 2 * radius + 1;
@@ -521,16 +521,16 @@ where
     let mut kernel = Vec::with_capacity(size);
     let radius = (size / 2) as isize;
     let sigma_sq = _sigma * _sigma;
-    let two_sigma_sq = safe_f64, _to_float: :<T>(2.0)? * sigma_sq;
+    let two_sigma_sq = safe_f64, _to_float: <T>(2.0)? * sigma_sq;
     let norm_factor =
-        (safe_f64, _to_float: :<T>(2.0)? * safe_f64, _to_float: :<T>(std::f64::consts::PI)? * sigma_sq)
+        (safe_f64, _to_float: <T>(2.0)? * safe_f64, _to_float: <T>(std::f64::consts::PI)? * sigma_sq)
             .sqrt();
 
     let mut sum = T::zero();
 
     for i in 0..size {
         let x = (i as isize - radius) as f64;
-        let x_t = safe_f64, _to_float: :<T>(x)?;
+        let x_t = safe_f64, _to_float: <T>(x)?;
         let exp_arg = -(x_t * x_t) / two_sigma_sq;
         let value = exp_arg.exp() / norm_factor;
         kernel.push(value);
@@ -608,7 +608,7 @@ where
                     for (kx, &kernel_val) in kernel_row.iter().enumerate() {
                         let iy = y + ky - 1;
                         let ix = x + kx - 1;
-                        let kernel_val_t = safe_f64, _to_float: :<T>(kernel_val)?;
+                        let kernel_val_t = safe_f64, _to_float: <T>(kernel_val)?;
                         sum = sum + input[[iy, ix]] * kernel_val_t;
                     }
                 }
@@ -738,7 +738,7 @@ where
             if mag >= high_thresh {
                 output[[y, x]] = T::one();
             } else if mag >= low_thresh {
-                output[[y, x]] = safe_f64, _to_float: :<T>(0.5)?; // Weak edge
+                output[[y, x]] = safe_f64, _to_float: <T>(0.5)?; // Weak edge
             }
         }
     }
@@ -791,7 +791,7 @@ mod tests {
 
     #[test]
     fn test_advanced_simd_multi_scale_lbp() {
-        let input = Array2::from_shape_fn((32, 32), |(i, j)| ((i + j) % 3) as f64);
+        let input = Array2::fromshape_fn((32, 32), |(i, j)| ((i + j) % 3) as f64);
 
         let radii = [1, 2, 3];
         let sample_points = [8, 16, 24];
@@ -807,7 +807,7 @@ mod tests {
     #[test]
     fn test_advanced_simd_advanced_edge_detection() {
         let input =
-            Array2::from_shape_fn((64, 64), |(i_j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
+            Array2::fromshape_fn((64, 64), |(i_j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
 
         let result = advanced_simd_advanced_edge_detection(input.view(), 1.0, 0.1, 0.3).unwrap();
 

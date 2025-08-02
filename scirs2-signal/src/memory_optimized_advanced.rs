@@ -1,18 +1,18 @@
-//! Advanced memory optimization for large signal processing
-//!
-//! This module provides next-generation memory management strategies for processing
-//! extremely large signals efficiently with minimal memory footprint.
-//!
-//! Key features:
-//! - Streaming processing with configurable buffer sizes
-//! - Memory pool management for reduced allocations
-//! - Out-of-core processing for signals larger than RAM
-//! - Cache-efficient algorithm implementations
-//! - Memory usage monitoring and adaptive thresholds
-//! - Zero-copy operations where possible
+// Advanced memory optimization for large signal processing
+//
+// This module provides next-generation memory management strategies for processing
+// extremely large signals efficiently with minimal memory footprint.
+//
+// Key features:
+// - Streaming processing with configurable buffer sizes
+// - Memory pool management for reduced allocations
+// - Out-of-core processing for signals larger than RAM
+// - Cache-efficient algorithm implementations
+// - Memory usage monitoring and adaptive thresholds
+// - Zero-copy operations where possible
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, arr2};
+use ndarray::{arr2, Array1, Array2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
@@ -378,7 +378,7 @@ fn simple_dft(_input: &[num_complex::Complex<f64>]) -> Vec<num_complex::Complex<
 
     for k in 0..n {
         for (j, &x_j) in _input.iter().enumerate() {
-            let angle = -2.0 * std::f64::consts::PI * (k * j) as f64 / n  as f64;
+            let angle = -2.0 * std::f64::consts::PI * (k * j) as f64 / n as f64;
             let twiddle = num_complex::Complex::new(angle.cos(), angle.sin());
             output[k] += x_j * twiddle;
         }

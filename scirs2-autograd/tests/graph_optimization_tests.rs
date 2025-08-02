@@ -55,7 +55,7 @@ mod visualization_tests {
     #[test]
     fn test_visualization_config_options() {
         let mut config = VisualizationConfig::default();
-        assert!(config.show_shapes);
+        assert!(config.showshapes);
         assert!(config.show_operations);
         assert!(!config.show_gradients);
 
@@ -82,7 +82,7 @@ mod visualization_tests {
         // Test that these functions exist (compilation test)
         // With a proper graph, these would work:
         // let _dot_result = ag::visualization::visualize_graph_dot(graph);
-        // let _text_result = ag::visualization::visualize_graph_text(graph);
+        // let text_result = ag::visualization::visualize_graphtext(graph);
         // let _json_result = ag::visualization::visualize_graph_json(graph);
         // let _mermaid_result = ag::visualization::visualize_graph_mermaid(graph);
         // let _stats_result = ag::visualization::print_graph_stats(graph);
@@ -269,7 +269,7 @@ mod integration_tests {
         };
 
         let vis_config = VisualizationConfig {
-            show_shapes: true,
+            showshapes: true,
             show_operations: true,
             show_gradients: true,
             max_nodes: Some(200),
@@ -382,7 +382,7 @@ mod integration_tests {
 
         // 2. Create visualization tools
         let visualizer = GraphVisualizer::<f32>::with_config(VisualizationConfig {
-            show_shapes: true,
+            showshapes: true,
             show_operations: true,
             show_gradients: true,
             format: OutputFormat::Json,
@@ -414,7 +414,7 @@ mod advanced_feature_integration_tests {
         // Test that custom activations work with the optimization system
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 1.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![-1.0, 0.0, 1.0]).unwrap(),
                 ctx,
             );
 
@@ -433,11 +433,11 @@ mod advanced_feature_integration_tests {
         ag::run(|ctx: &mut ag::Context<f32>| {
             // Test SIMD operations
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
                 ctx,
             );
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![2.0, 3.0, 4.0, 5.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[4]), vec![2.0, 3.0, 4.0, 5.0]).unwrap(),
                 ctx,
             );
 
@@ -459,7 +459,7 @@ mod advanced_feature_integration_tests {
     fn test_graph_enhancements_with_visualization() {
         ag::run(|ctx: &mut ag::Context<f32>| {
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
                 ctx,
             );
 
@@ -469,13 +469,13 @@ mod advanced_feature_integration_tests {
 
             // Test conditional operations
             let condition =
-                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
+                T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
             let true_branch = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap(),
                 ctx,
             );
             let false_branch = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![30.0, 40.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![30.0, 40.0]).unwrap(),
                 ctx,
             );
 
@@ -501,7 +501,7 @@ mod advanced_feature_integration_tests {
             let efficient_ones = T::efficient_ones(&[10, 10], ctx);
 
             // Test efficient operations
-            let reshaped = T::efficient_reshape_with_shape(&efficient_zeros, &[100]);
+            let reshaped = T::efficient_reshape_withshape(&efficient_zeros, &[100]);
 
             // Test slice operations
             let slices = vec![T::SliceRange::new(Some(0), Some(50), Some(1))];
@@ -536,7 +536,7 @@ mod advanced_feature_integration_tests {
             let optimized = T::inplace_add(&scaled, &input);
 
             // 5. Use efficient reshape
-            let reshaped = T::efficient_reshape_with_shape(&optimized, &[2048]);
+            let reshaped = T::efficient_reshape_withshape(&optimized, &[2048]);
 
             // 6. Apply caching
             let cached = T::cached_op(&reshaped, "identity");

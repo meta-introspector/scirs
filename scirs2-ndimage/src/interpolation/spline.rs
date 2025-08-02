@@ -9,7 +9,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// B-spline poles for different orders
 /// Based on the theory of B-spline interpolation
 #[allow(dead_code)]
-fn get_spline_poles<T: Float + FromPrimitive>(_order: usize) -> Vec<T> {
+fn get_spline_poles<T: Float + FromPrimitive>(order: usize) -> Vec<T> {
     match _order {
         0 | 1 => vec![], // No poles for constant or linear
         2 => {
@@ -64,7 +64,7 @@ fn get_initial_causal_coefficient<T: Float + FromPrimitive>(
 
 /// Compute initial anti-causal coefficient for B-spline filtering
 #[allow(dead_code)]
-fn get_initial_anti_causal_coefficient<T: Float + FromPrimitive>(_coeffs: &[T], pole: T) -> T {
+fn get_initial_anti_causal_coefficient<T: Float + FromPrimitive>(coeffs: &[T], pole: T) -> T {
     let n = _coeffs.len();
     if n < 2 {
         return T::zero();
@@ -76,7 +76,7 @@ fn get_initial_anti_causal_coefficient<T: Float + FromPrimitive>(_coeffs: &[T], 
 
 /// Apply causal filtering (forward pass)
 #[allow(dead_code)]
-fn apply_causal_filter<T: Float + FromPrimitive>(_coeffs: &mut [T], pole: T, initial_coeff: T) {
+fn apply_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T, initial_coeff: T) {
     if _coeffs.is_empty() {
         return;
     }
@@ -90,7 +90,7 @@ fn apply_causal_filter<T: Float + FromPrimitive>(_coeffs: &mut [T], pole: T, ini
 
 /// Apply anti-causal filtering (backward pass)
 #[allow(dead_code)]
-fn apply_anti_causal_filter<T: Float + FromPrimitive>(_coeffs: &mut [T], pole: T, initial_coeff: T) {
+fn apply_anti_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T, initial_coeff: T) {
     if _coeffs.is_empty() {
         return;
     }

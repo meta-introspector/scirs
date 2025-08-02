@@ -229,17 +229,17 @@ fn submit_sample_jobs(
         let priority = match i % 4 {
             0 => JobPriority::Critical,
             1 => JobPriority::High,
-            2 => JobPriority::Normal_ =>, JobPriority::Low,
+            2 => JobPriority::Normal_ => JobPriority::Low,
         };
 
         let mut parameters = HashMap::new();
         parameters.insert(
             "window_size".to_string(),
-            serde_json::Value::Number(serde, _json::Number::from(10)),
+            serde_json::Value::Number(serde_json::Number::from(10)),
         );
         parameters.insert(
             "threshold".to_string(),
-            serde_json::Value::Number(serde, _json::Number::from_f64(2.5).unwrap()),
+            serde_json::Value::Number(serde_json::Number::from_f64(2.5).unwrap()),
         );
 
         let job = CloudTimeSeriesJob {

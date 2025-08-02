@@ -1,21 +1,21 @@
-//! Wavelet Packet Transform (WPT)
-//!
-//! This module provides implementations of the Wavelet Packet Transform (WPT).
-//! Unlike the standard Discrete Wavelet Transform (DWT) which only decomposes
-//! the approximation coefficients at each level, the WPT decomposes both
-//! approximation and detail coefficients, resulting in a full binary tree
-//! of subbands.
-//!
-//! The WPT is particularly useful for applications such as:
-//! * Advanced signal analysis with better frequency resolution
-//! * Adaptive signal denoising
-//! * Feature extraction with custom subband selection
-//! * Signal compression with best basis selection
-//! * Pattern recognition with improved time-frequency localization
+// Wavelet Packet Transform (WPT)
+//
+// This module provides implementations of the Wavelet Packet Transform (WPT).
+// Unlike the standard Discrete Wavelet Transform (DWT) which only decomposes
+// the approximation coefficients at each level, the WPT decomposes both
+// approximation and detail coefficients, resulting in a full binary tree
+// of subbands.
+//
+// The WPT is particularly useful for applications such as:
+// * Advanced signal analysis with better frequency resolution
+// * Adaptive signal denoising
+// * Feature extraction with custom subband selection
+// * Signal compression with best basis selection
+// * Pattern recognition with improved time-frequency localization
 
-use approx::assert_abs_diff_eq;
-use crate::dwt::{Wavelet, dwt_decompose, dwt_reconstruct};
+use crate::dwt::{dwt_decompose, dwt_reconstruct, Wavelet};
 use crate::error::{SignalError, SignalResult};
+use approx::assert_abs_diff_eq;
 use num_traits::{Float, NumCast};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -531,7 +531,7 @@ impl WaveletPacketTree {
                         .collect();
 
                     let max_error = errors.iter().fold(0.0, |a, &b| a.max(b));
-                    let mean_error = errors.iter().sum::<f64>() / errors.len()  as f64;
+                    let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;
 
                     max_reconstruction_error = max_reconstruction_error.max(max_error);
                     mean_reconstruction_error = mean_reconstruction_error.max(mean_error);
@@ -657,8 +657,8 @@ impl WaveletPacketTree {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::wpt::wp_decompose;
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::wpt::wp_decompose;
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -710,8 +710,8 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::wpt::{wp_decompose, get_level_coefficients};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::wpt::{wp_decompose, get_level_coefficients};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -750,8 +750,8 @@ pub fn get_level_coefficients(_tree: &WaveletPacketTree, level: usize) -> Vec<Ve
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::wpt::{wp_decompose, reconstruct_from_nodes};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::wpt::{wp_decompose, reconstruct_from_nodes};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Create a simple signal with power-of-2 length
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -780,7 +780,7 @@ pub fn reconstruct_from_nodes(
 
 #[cfg(test)]
 mod tests {
-use approx::{assert_relative_eq};
+    use approx::assert_relative_eq;
     #[test]
     fn test_wavelet_packet_path() {
         // Create some test nodes

@@ -1,7 +1,7 @@
-//! Peak detection and analysis
-//!
-//! This module provides functions for finding peaks in signals and analyzing their
-//! properties, such as prominence and width.
+// Peak detection and analysis
+//
+// This module provides functions for finding peaks in signals and analyzing their
+// properties, such as prominence and width.
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
@@ -28,7 +28,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::peak::find_peaks;
+/// use scirs2_signal::peak::find_peaks;
 ///
 /// // Create a signal with some peaks
 /// let signal = vec![0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 2.0, 0.0, 1.0];
@@ -198,7 +198,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::peak::{find_peaks, peak_prominences};
+/// use scirs2_signal::peak::{find_peaks, peak_prominences};
 ///
 /// // Create a signal with some peaks
 /// let signal = vec![0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 2.0, 0.0, 1.0];
@@ -311,7 +311,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::peak::{find_peaks, peak_widths};
+/// use scirs2_signal::peak::{find_peaks, peak_widths};
 ///
 /// // Create a signal with some peaks
 /// let signal = vec![0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 2.0, 0.0, 1.0];
@@ -444,7 +444,7 @@ where
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_find_peaks_basic() {
         // Simple signal with clear peaks

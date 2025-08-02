@@ -1,11 +1,12 @@
-//! Joint Blind Source Separation and Joint Diagonalization
-//!
-//! This module implements Joint BSS techniques for multi-dataset blind source separation.
+use ndarray::s;
+// Joint Blind Source Separation and Joint Diagonalization
+//
+// This module implements Joint BSS techniques for multi-dataset blind source separation.
 
-use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, Axis, s};
-use scirs2_linalg::{eigh, svd};
 use super::{BssConfig, JadeMultiResult};
+use crate::error::{SignalError, SignalResult};
+use ndarray::{ Array2, Axis};
+use scirs2_linalg::{eigh, svd};
 
 #[allow(unused_imports)]
 /// Apply Joint Blind Source Separation (JBSS) to separate mixed signals from multiple datasets
@@ -24,7 +25,8 @@ use super::{BssConfig, JadeMultiResult};
 #[allow(dead_code)]
 pub fn joint_bss(
     datasets: &[Array2<f64>],
-    n_components: usize, _config: &BssConfig,
+    n_components: usize,
+    _config: &BssConfig,
 ) -> SignalResult<JadeMultiResult> {
     if datasets.is_empty() {
         return Err(SignalError::ValueError("No datasets provided".to_string()));
@@ -111,8 +113,8 @@ pub fn joint_bss(
         extracted_sources.push(sources);
 
         // Calculate mixing matrix (pseudoinverse of unmixing)
-        let (u, s, vt) = match svd(&unmixing.view(), false, None) {
-            Ok((u, s, vt)) => (u, s, vt),
+        let (u, vt) = match svd(&unmixing.view(), false, None) {
+            Ok((u, vt)) => (u, vt),
             Err(_) => {
                 return Err(SignalError::ComputationError(
                     "Failed to compute SVD of unmixing matrix".to_string(),
@@ -260,8 +262,8 @@ pub fn joint_diagonalization(
     let sources = w.dot(&centered);
 
     // Calculate mixing matrix (pseudoinverse of w)
-    let (u, s, vt) = match svd(&w.view(), false, None) {
-        Ok((u, s, vt)) => (u, s, vt),
+    let (u, vt) = match svd(&w.view(), false, None) {
+        Ok((u, vt)) => (u, vt),
         Err(_) => {
             return Err(SignalError::ComputationError(
                 "Failed to compute SVD of unmixing matrix".to_string(),

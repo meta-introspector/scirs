@@ -312,7 +312,8 @@ fn run_sklearn_toy_dataset_comparison() {
                     "boston" => load_boston().map(|_| ()),
                     "digits" => load_digits().map(|_| ()),
                     "wine" => load_wine(false).map(|_| ()),
-                    "breast_cancer" => load_breast_cancer().map(|_| (), _ => Ok(()),
+                    "breast_cancer" => load_breast_cancer().map(|_| ()),
+                    _ => Ok(()),
                 };
                 let scirs2_time = scirs2_start.elapsed().as_secs_f64();
 
@@ -361,7 +362,8 @@ fn run_sklearn_generation_comparison() {
             "regression" => (
                 &format!("from sklearn.datasets import make_regression; make_regression(n_samples={n_samples}, n_features={n_features}, random_state=42)"),
                 Box::new(move || make_regression(n_samples, n_features, 3, 0.1, Some(42)))
-            , _ => continue,
+            ),
+            _ => continue,
         };
 
         // Time Python execution

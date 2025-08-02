@@ -9,7 +9,6 @@ use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{Distribution, StudentT as RandStudentT};
-use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 
 /// Student's t distribution structure

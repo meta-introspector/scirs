@@ -5,7 +5,6 @@
 
 use crate::gpu::{GpuBackend, GpuError};
 use std::process::Command;
-use std::str::FromStr;
 
 #[cfg(target_os = "macos")]
 use serde_json;
@@ -283,6 +282,10 @@ fn detect_metal_devices() -> Result<Vec<GpuInfo>, GpuError> {
                     .get("SPDisplaysDataType")
                     .and_then(|v| v.as_array())
                 {
+                    // Pre-compile regex outside loop for performance
+                    #[cfg(feature = "validation")]
+                    let vram_regex = regex::Regex::new(r"(\d+)\s*(GB|MB)").ok();
+                    
                     for display in displays {
                         // Extract GPU information from each display
                         if let Some(model) = display.get("sppci_model").and_then(|v| v.as_str()) {
@@ -302,8 +305,8 @@ fn detect_metal_devices() -> Result<Vec<GpuInfo>, GpuError> {
                             {
                                 // Parse VRAM string like "8 GB" or "8192 MB"
                                 #[cfg(feature = "validation")]
-                                if let Some(captures) = regex::Regex::new(r"(\d+)\s*(GB|MB)")
-                                    .ok()
+                                if let Some(captures) = vram_regex
+                                    .as_ref()
                                     .and_then(|re| re.captures(vram_str))
                                 {
                                     if let (Some(value), Some(unit)) =
@@ -467,7 +470,7 @@ pub fn check_backend_installation(backend: GpuBackend) -> Result<bool, GpuError>
                     // Also try rocm-smi as an alternative check
                     match Command::new("rocm-smi").arg("--version").output() {
                         Ok(output) if output.status.success() => Ok(true),
-                _ => Ok(false),
+                        _ => Ok(false),
                     }
                 }
             }
@@ -510,7 +513,8 @@ pub fn get_device_info(backend: GpuBackend, device_id: usize) -> Result<GpuInfo,
         .nth(device_id)
         .ok_or_else(|| {
             GpuError::InvalidParameter(format!(
-                "Device {device_id} not found for backend {:?}", backend
+                "Device {device_id} not found for backend {:?}",
+                backend
             ))
         })
 }

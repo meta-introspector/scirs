@@ -340,7 +340,7 @@ impl RecordArray {
                 name
             )));
         }
-        
+
         let mut values = Vec::with_capacity(self.records.len());
         for record in &self.records {
             if let Some(value) = record.get_field(name) {
@@ -352,7 +352,7 @@ impl RecordArray {
                 )));
             }
         }
-        
+
         Ok(values)
     }
 
@@ -382,9 +382,7 @@ impl RecordArray {
     /// Panics if a record doesn't have the field that should exist based on validation.
     pub fn get_field(&self, name: &str) -> Result<Vec<FieldValue>, ArrayError> {
         if !self.field_indices.contains_key(name) {
-            return Err(ArrayError::ValueError(format!(
-                "Field '{name}' not found"
-            )));
+            return Err(ArrayError::ValueError(format!("Field '{name}' not found")));
         }
 
         let values = self
@@ -537,14 +535,15 @@ impl RecordArray {
     ///
     /// # Errors
     /// Returns `ArrayError::ValueError` if the field name is not found or record index is out of bounds.
-    pub fn name_5(&mut self, name: &str, record_idx: usize,
+    pub fn name_5(
+        &mut self,
+        name: &str,
+        record_idx: usize,
         value: FieldValue,
     ) -> Result<(), ArrayError> {
         // First check if field exists
         if !self.field_indices.contains_key(name) {
-            return Err(ArrayError::ValueError(format!(
-                "Field '{name}' not found"
-            )));
+            return Err(ArrayError::ValueError(format!("Field '{name}' not found")));
         }
 
         // Then get record and set the field
@@ -560,9 +559,7 @@ impl RecordArray {
     ///
     /// # Errors
     /// Returns `ArrayError::ValueError` if the field already exists or the number of values doesn't match the number of records.
-    pub fn name_6(&mut self, name: &str,
-        values: Vec<FieldValue>,
-    ) -> Result<(), ArrayError> {
+    pub fn name_6(&mut self, name: &str, values: Vec<FieldValue>) -> Result<(), ArrayError> {
         // Check if field already exists
         if self.field_indices.contains_key(name) {
             return Err(ArrayError::ValueError(format!(
@@ -599,9 +596,7 @@ impl RecordArray {
     pub fn name_7(&mut self, name: &str) -> Result<(), ArrayError> {
         // Check if field exists
         if !self.field_indices.contains_key(name) {
-            return Err(ArrayError::ValueError(format!(
-                "Field '{name}' not found"
-            )));
+            return Err(ArrayError::ValueError(format!("Field '{name}' not found")));
         }
 
         // Remove field from each record
@@ -733,9 +728,7 @@ impl RecordArray {
     {
         // Check if field exists
         if !self.field_indices.contains_key(name) {
-            return Err(ArrayError::ValueError(format!(
-                "Field '{name}' not found"
-            )));
+            return Err(ArrayError::ValueError(format!("Field '{name}' not found")));
         }
 
         // Get all values for the field
@@ -866,9 +859,7 @@ impl fmt::Display for RecordArray {
 /// # Errors
 /// Returns `ArrayError::ValueError` if field names don't match arrays count or arrays have different lengths.
 #[allow(dead_code)]
-pub fn from_arrays(names: &[&str],
-    arrays: &[Vec<FieldValue>],
-) -> Result<RecordArray, ArrayError> {
+pub fn from_arrays(names: &[&str], arrays: &[Vec<FieldValue>]) -> Result<RecordArray, ArrayError> {
     if names.len() != arrays.len() {
         return Err(ArrayError::ValueError(format!(
             "Number of field _names ({}) must match number of arrays ({})",

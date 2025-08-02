@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod dwt_haar_tests {
     use approx::assert_relative_eq;
-    use scirs2__signal::dwt::{dwt_decompose, dwt_reconstruct, wavedec, waverec, Wavelet};
+    use scirs2_signal::dwt::{dwt_decompose, dwt_reconstruct, wavedec, waverec, Wavelet};
 
     #[test]
     fn test_haar_filters() {

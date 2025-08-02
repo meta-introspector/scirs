@@ -180,7 +180,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
     pub fn new() -> Self {
         Self {
             optimization_config: OptimizationConfig::default(),
-            memory_strategy: MemoryStrategy::Adaptive { threshold_mb: 1024 },
+            memory_strategy: MemoryStrategy::Adaptive { threshold, mb: 1024 },
             adaptive_config: AdaptiveConfig::default(),
             performance_tracker: Arc::new(RwLock::new(PerformanceTracker::default())),
             resource_monitor: ResourceMonitor::new(),
@@ -451,7 +451,7 @@ impl<F: Float + Debug + ScalarOperand> AdvancedCoordinator<F> {
         Ok(available_samples.min(input.shape()[0]).max(1))
     /// Perform mixed precision training step
     fn mixed_precision_step<M: Model<F>>(
-        _model: &mut M_input: &ArrayD<F>, _target: &ArrayD<F>,
+        _model: &mut M, input: &ArrayD<F>, _target: &ArrayD<F>,
         // Implementation would perform mixed precision training
         // using FP16 for forward pass and FP32 for backward pass
         Ok(F::from(0.5).unwrap())
@@ -706,7 +706,7 @@ impl<F: Float + Debug + ScalarOperand> IntelligentCache<F> {
         let activation_cache_key = format!("{}_activations", layer_name);
         if !self.activation_cache.contains_key(&activation_cache_key) {
             // Create placeholder tensors for common shapes
-            let common_shapes = vec![
+            let commonshapes = vec![
                 vec![32, 512],  // Common batch x feature size
                 vec![64, 256],  // Alternative batch x feature size
                 vec![16, 1024], // Large feature size
@@ -726,11 +726,11 @@ impl<F: Float + Debug + ScalarOperand> IntelligentCache<F> {
         let gradient_cache_key = format!("{}_gradients", layer_name);
         if !self.gradient_cache.contains_key(&gradient_cache_key) {
             // Gradients typically have same shape as weights/activations
-            let grad_shape = if layer_name.contains("Dense") {
+            let gradshape = if layer_name.contains("Dense") {
                 vec![512, 256] // weight matrix shape
                 vec![64, 32, 3, 3] // filter shape: out_channels x in_channels x h x w
                 vec![256] // bias vector
-            let prealloc_grad = ArrayD::zeros(grad_shape);
+            let prealloc_grad = ArrayD::zeros(gradshape);
             self.gradient_cache
                 .insert(gradient_cache_key, prealloc_grad);
         // Pre-allocate model state cache for this layer type
@@ -858,8 +858,8 @@ impl<F: Float + Debug + ScalarOperand> MetaLearningSystem<F> {
         self.total_adaptations += 1;
         // Analyze input/target patterns and adapt meta-learning strategies
         // Extract task characteristics from input and target
-        let input_shape = input.shape();
-        let target_shape = target.shape();
+        let inputshape = input.shape();
+        let targetshape = target.shape();
         // Calculate input statistics for task characterization
         let input_mean = input
             .mean()
@@ -874,24 +874,24 @@ impl<F: Float + Debug + ScalarOperand> MetaLearningSystem<F> {
                 / input.len() as f64;
             variance.sqrt()
         // Determine task type based on input/target characteristics
-        let task_type = if input_shape.len() == 4 {
+        let task_type = if inputshape.len() == 4 {
             // Batch x Channels x Height x Width
             "computer_vision"
-        } else if input_shape.len() == 3 {
+        } else if inputshape.len() == 3 {
             // Batch x Sequence x Features
             "sequence_modeling"
-        } else if target_shape.last().unwrap_or(&1) > &1 {
+        } else if targetshape.last().unwrap_or(&1) > &1 {
             // Multi-class classification
             "classification"
             // Regression or binary classification
             "regression"
         // Update task features for similarity matching
         self.current_task_features = vec![
-            input_shape.len() as f64,  // Dimensionality
+            inputshape.len() as f64,  // Dimensionality
             input.len() as f64,        // Total size
             input_mean,                // Input mean
             input_std,                 // Input std
-            target_shape.len() as f64, // Target dimensionality
+            targetshape.len() as f64, // Target dimensionality
             target.len() as f64,       // Target size
         ];
         // Find similar tasks in knowledge base

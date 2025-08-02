@@ -747,9 +747,9 @@ mod tests {
     fn test_segmentation_evaluation() {
         let metrics = SegmentationMetrics::new();
 
-        let y_true = Array2::from_shape_vec((3, 3), vec![0, 0, 1, 0, 1, 1, 1, 1, 1]).unwrap();
+        let y_true = Array2::fromshape_vec((3, 3), vec![0, 0, 1, 0, 1, 1, 1, 1, 1]).unwrap();
 
-        let y_pred = Array2::from_shape_vec((3, 3), vec![0, 0, 1, 0, 0, 1, 1, 1, 1]).unwrap();
+        let y_pred = Array2::fromshape_vec((3, 3), vec![0, 0, 1, 0, 0, 1, 1, 1, 1]).unwrap();
 
         let results = metrics.evaluate_segmentation(&y_true, &y_pred).unwrap();
 

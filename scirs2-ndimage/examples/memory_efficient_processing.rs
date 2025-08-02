@@ -133,7 +133,7 @@ fn example_3_chunked_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("------------------------------------");
 
     // Create a test image
-    let image = Array2::<f64>::from_shape_fn((1500, 1500), |(i, j)| {
+    let image = Array2::<f64>::fromshape_fn((1500, 1500), |(i, j)| {
         ((i as f64 * 0.01).sin() + (j as f64 * 0.01).cos()) * 100.0
     });
 
@@ -179,11 +179,11 @@ fn example_4_image_sequence_processing() -> Result<(), Box<dyn std::error::Error
 
     // Simulate processing a sequence of images (e.g., video frames)
     let num_frames = 100;
-    let frame_shape = (512, 512);
+    let frameshape = (512, 512);
 
     println!(
         "Processing {} frames of size {:?}...",
-        num_frames, frame_shape
+        num_frames, frameshape
     );
 
     // Create temporary storage for the sequence
@@ -191,8 +191,8 @@ fn example_4_image_sequence_processing() -> Result<(), Box<dyn std::error::Error
     let sequence_path = temp_dir.path().join("sequence.bin");
 
     // Calculate total size for the sequence
-    let total_shape = vec![num_frames, frame_shape.0, frame_shape.1];
-    let sequence_array = Array3::<f32>::zeros((num_frames, frame_shape.0, frame_shape.1));
+    let totalshape = vec![num_frames, frameshape.0, frameshape.1];
+    let sequence_array = Array3::<f32>::zeros((num_frames, frameshape.0, frameshape.1));
 
     // Save as memory-mapped sequence
     let sequence_mmap = save_image_mmap(&sequence_array.view(), &sequence_path, 0)?;
@@ -201,7 +201,7 @@ fn example_4_image_sequence_processing() -> Result<(), Box<dyn std::error::Error
     // Process each frame without loading entire sequence
     let processed_frames = process_mmap_chunks(
         &sequence_mmap,
-        ChunkingStrategy::Fixed(frame_shape.0 * frame_shape.1), // One frame per chunk
+        ChunkingStrategy::Fixed(frameshape.0 * frameshape.1), // One frame per chunk
         |frame_data, frame_idx| {
             // Simulate frame processing
             let frame_mean: f32 = frame_data.iter().sum::<f32>() / frame_data.len() as f32;
@@ -231,7 +231,7 @@ fn example_5_filter_pipeline() -> Result<(), Box<dyn std::error::Error>> {
     println!("-------------------------------------------");
 
     // Create a test image
-    let image = Array2::<f64>::from_shape_fn((800, 800), |(i, j)| {
+    let image = Array2::<f64>::fromshape_fn((800, 800), |(i, j)| {
         let x = i as f64 - 400.0;
         let y = j as f64 - 400.0;
         let r = (x * x + y * y).sqrt();
@@ -262,7 +262,7 @@ fn example_5_filter_pipeline() -> Result<(), Box<dyn std::error::Error>> {
     // Step 3: Final Gaussian smoothing
     println!("  3. Applying final smoothing...");
     let kernel =
-        Array2::<f64>::from_shape_fn((3, 3), |(i, j)| if i == 1 && j == 1 { 0.5 } else { 0.0625 });
+        Array2::<f64>::fromshape_fn((3, 3), |(i, j)| if i == 1 && j == 1 { 0.5 } else { 0.0625 });
     let final_result = convolve_chunked_v2(&step2, &kernel, BorderMode::Constant, Some(config))?;
 
     println!("  ✓ Pipeline completed");

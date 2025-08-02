@@ -374,7 +374,7 @@ impl WasmNeuralForecaster {
     #[wasm_bindgen]
     pub fn train(
         &mut self,
-        data: &TimeSeriesData_epochs: usize, _learning_rate: f64,
+        data: &TimeSeriesData, epochs: usize, _learning_rate: f64,
     ) -> std::result::Result<(), JsValue> {
         if let Some(forecaster) = &mut self.forecaster {
             let arr = Array1::from_vec(data.values.clone());
@@ -513,7 +513,7 @@ impl WasmAutoARIMA {
         let (model, params) = js_result!(crate::arima_models::auto_arima(&arr, &options))?;
 
         let config = ArimaConfig {
-            _p: params.pdq.0_d: params.pdq.1,
+            _p: params.pdq.0, d: params.pdq.1,
             _q: params.pdq.2,
             seasonal_p: params.seasonal_pdq.0,
             seasonal_d: params.seasonal_pdq.1,

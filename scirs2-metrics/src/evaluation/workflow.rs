@@ -460,7 +460,7 @@ impl<X, Y> BatchEvaluator<X, Y> {
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
 pub fn learning_curve<X, Y, F>(
-    _model_evaluator: F_x, _train: &X_y_train: &Y_x, _test: &X_y_test: &Y,
+    _model_evaluator: F_x, _train: &X_y, train: &Y_x, _test: &X_y, test: &Y,
     train_sizes_ratio: &[f64], _metric: &str,
     n_splits: usize, _random_seed: Option<u64>,
 ) -> Result<(Vec<usize>, Vec<f64>, Vec<f64>)>
@@ -695,7 +695,7 @@ mod tests {
         assert_eq!(ranks, vec!["model1", "model2"]);
 
         // Generate report (we don't check the content, just that it doesn't panic)
-        let _report_text = report.generate_report();
+        let _reporttext = report.generate_report();
     }
 
     #[test]

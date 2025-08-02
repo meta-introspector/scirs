@@ -2270,7 +2270,7 @@ impl AdvancedAdvancedMPIManager {
     }
 
     fn predict_optimal_process_count(
-        &self_workload: &WorkloadAnalysis, _state: &SystemState_targets: &PerformanceTargets,
+        &self_workload: &WorkloadAnalysis, _state: &SystemState, targets: &PerformanceTargets,
     ) -> LinalgResult<u32> {
         // Implementation would use ML models to predict optimal process count
         Ok(4) // Simplified

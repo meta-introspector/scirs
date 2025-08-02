@@ -108,9 +108,9 @@ pub struct WordCloud {
 
 impl WordCloud {
     /// Create new word cloud from text
-    pub fn from_text(_text: &str, config: VisualizationConfig) -> Result<Self> {
+    pub fn fromtext(text: &str, config: VisualizationConfig) -> Result<Self> {
         let mut vectorizer = CountVectorizer::new(false);
-        let documents = vec![_text];
+        let documents = vec![text];
         let matrix = vectorizer.fit_transform(&documents)?;
 
         let vocabulary_map = vectorizer.vocabulary_map();

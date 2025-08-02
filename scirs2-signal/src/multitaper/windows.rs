@@ -1,7 +1,8 @@
-//! DPSS (Slepian) window generation for multitaper spectral estimation.
+use ndarray::s;
+// DPSS (Slepian) window generation for multitaper spectral estimation.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
+use ndarray::{ Array1, Array2};
 use std::f64::consts::PI;
 
 #[allow(unused_imports)]
@@ -25,7 +26,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::multitaper::dpss;
+/// use scirs2_signal::multitaper::dpss;
 ///
 /// // Compute 4 DPSS tapers of length 64 with time-bandwidth product of 4
 /// let result = dpss(64, 4.0, 4, true).unwrap();

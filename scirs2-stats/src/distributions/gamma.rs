@@ -7,9 +7,7 @@ use crate::sampling::SampleableDistribution;
 use crate::traits::{ContinuousCDF, ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
-use rand::rng;
 use rand_distr::{Distribution, Gamma as RandGamma};
-use statrs::statistics::Statistics;
 use std::fmt::Debug;
 
 /// Gamma distribution structure
@@ -61,7 +59,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
         let shape_f64 = <f64 as NumCast>::from(shape).unwrap();
         let scale_f64 = <f64 as NumCast>::from(scale).unwrap();
 
-        // rand_distr uses _shape and rate (= 1/scale)
+        // rand_distr uses shape and rate (= 1/scale)
         match RandGamma::new(shape_f64, 1.0 / scale_f64) {
             Ok(rand_distr) => Ok(Gamma {
                 shape,
@@ -113,10 +111,10 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
         let one = F::one();
 
         // Calculate gamma function for the shape parameter
-        let gamma_shape = gamma_fn(self.shape);
+        let gammashape = gamma_fn(self.shape);
 
         // Calculate the coefficient term
-        let coef = one / (self.scale.powf(self.shape) * gamma_shape);
+        let coef = one / (self.scale.powf(self.shape) * gammashape);
 
         // Calculate the variable part of the formula
         let x_term = x_adj.powf(self.shape - one);
@@ -304,7 +302,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     pub fn rvs_vec(&self, size: usize) -> StatsResult<Vec<F>> {
         // For small sample sizes, use the serial implementation
         if size < 1000 {
-            let mut rng = rng();
+            let mut rng = rand::rng();
             let mut samples = Vec::with_capacity(size);
 
             for _ in 0..size {
@@ -328,7 +326,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
 
         // Generate samples in parallel
         let samples = parallel_map(&indices, move |_| {
-            let mut rng = rng();
+            let mut rng = rand::rng();
             let rand_distr = RandGamma::new(shape_f64, 1.0 / scale_f64).unwrap();
             let sample = rand_distr.sample(&mut rng);
             F::from(sample).unwrap() + loc
@@ -550,10 +548,10 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Sci
         let scale = self.scale;
 
         // Approximate ln(Gamma(shape)) using Stirling's approximation
-        let ln_gamma_shape = gamma_fn(shape).ln();
+        let ln_gammashape = gamma_fn(shape).ln();
 
         // Approximate digamma function
-        let digamma_shape = if shape > F::from(8.0).unwrap() {
+        let digammashape = if shape > F::from(8.0).unwrap() {
             // For large shape, digamma(x) ≈ ln(x) - 1/(2x)
             shape.ln() - F::one() / (F::from(2.0).unwrap() * shape)
         } else {
@@ -562,7 +560,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Sci
             shape.ln() - F::one() / (shape * F::from(2.0).unwrap())
         };
 
-        shape + scale.ln() + ln_gamma_shape + (F::one() - shape) * digamma_shape
+        shape + scale.ln() + ln_gammashape + (F::one() - shape) * digammashape
     }
 }
 

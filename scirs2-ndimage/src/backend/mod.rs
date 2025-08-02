@@ -99,7 +99,7 @@ where
     fn execute_gpu(&self, input: &ArrayView<T, D>, backend: Backend) -> NdimageResult<Array<T, D>>;
 
     /// Get estimated memory requirements
-    fn memory_requirement(&self, input_shape: &[usize]) -> usize;
+    fn memory_requirement(&self, inputshape: &[usize]) -> usize;
 
     /// Check if this operation benefits from GPU acceleration
     fn benefits_from_gpu(&self, array_size: usize) -> bool {
@@ -271,8 +271,8 @@ where
         }
     }
 
-    fn memory_requirement(&self, input_shape: &[usize]) -> usize {
-        let elements: usize = input_shape.iter().product();
+    fn memory_requirement(&self, inputshape: &[usize]) -> usize {
+        let elements: usize = inputshape.iter().product();
         // Input + output + temporary buffers
         elements * std::mem::size_of::<T>() * 3
     }

@@ -5,10 +5,8 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
-use rand::rng;
 use rand_distr::{Binomial as RandBinomial, Distribution};
 use statrs::function::gamma::ln_gamma;
-use statrs::statistics::Statistics;
 
 /// Binomial distribution structure
 ///
@@ -302,7 +300,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// assert_eq!(samples.len(), 5);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {

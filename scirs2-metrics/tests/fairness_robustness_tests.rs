@@ -14,7 +14,7 @@ fn test_performance_invariance() {
     let y_pred = array![0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0];
 
     // Two protected attributes: gender and age
-    let protected_groups = Array2::from_shape_vec(
+    let protected_groups = Array2::fromshape_vec(
         (8, 2),
         vec![
             // Gender (0=male, 1=female), Age (0=young, 1=old)

@@ -1,60 +1,60 @@
-//! Streaming Short-Time Fourier Transform (STFT)
-//!
-//! This module provides streaming STFT computation for real-time signal processing
-//! applications. It allows processing of continuous data streams with bounded
-//! latency and memory usage.
-//!
-//! ## Features
-//!
-//! - **Real-time Processing**: Low-latency streaming STFT computation
-//! - **Configurable Overlap**: Support for different overlap ratios
-//! - **Memory Efficient**: Fixed memory usage independent of stream length
-//! - **Multiple Windows**: Support for various window functions
-//! - **Bounded Latency**: Predictable processing delay
-//! - **Frame-by-Frame**: Process data in small chunks
-//!
-//! ## Use Cases
-//!
-//! - Real-time audio processing
-//! - Online spectral analysis
-//! - Streaming signal classification
-//! - Live audio effects processing
-//! - Continuous monitoring systems
-//!
-//! ## Example Usage
-//!
-//! ```rust
-//! use ndarray::Array1;
-//! use scirs2__signal::streaming_stft::{StreamingStft, StreamingStftConfig};
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!
-//! // Configure streaming STFT
-//! let config = StreamingStftConfig {
-//!     frame_length: 512,
-//!     hop_length: 256,
-//!     window: WindowType::Hann.to_string(),
-//!     ..Default::default()
-//! };
-//!
-//! let mut streaming_stft = StreamingStft::new(config)?;
-//!
-//! // Process streaming data
-//! let input_frame = Array1::from_vec(vec![0.0; 256]);
-//! if let Some(spectrum) = streaming_stft.process_frame(&input_frame)? {
-//!     println!("Got spectrum with {} frequency bins", spectrum.len());
-//! }
-//! # Ok(())
-//! # }
-//! ```
+// Streaming Short-Time Fourier Transform (STFT)
+//
+// This module provides streaming STFT computation for real-time signal processing
+// applications. It allows processing of continuous data streams with bounded
+// latency and memory usage.
+//
+// ## Features
+//
+// - **Real-time Processing**: Low-latency streaming STFT computation
+// - **Configurable Overlap**: Support for different overlap ratios
+// - **Memory Efficient**: Fixed memory usage independent of stream length
+// - **Multiple Windows**: Support for various window functions
+// - **Bounded Latency**: Predictable processing delay
+// - **Frame-by-Frame**: Process data in small chunks
+//
+// ## Use Cases
+//
+// - Real-time audio processing
+// - Online spectral analysis
+// - Streaming signal classification
+// - Live audio effects processing
+// - Continuous monitoring systems
+//
+// ## Example Usage
+//
+// ```rust
+// use ndarray::Array1;
+// use scirs2_signal::streaming_stft::{StreamingStft, StreamingStftConfig};
+// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//
+// // Configure streaming STFT
+// let config = StreamingStftConfig {
+//     frame_length: 512,
+//     hop_length: 256,
+//     window: WindowType::Hann.to_string(),
+//     ..Default::default()
+// };
+//
+// let mut streaming_stft = StreamingStft::new(config)?;
+//
+// // Process streaming data
+// let input_frame = Array1::from_vec(vec![0.0; 256]);
+// if let Some(spectrum) = streaming_stft.process_frame(&input_frame)? {
+//     println!("Got spectrum with {} frequency bins", spectrum.len());
+// }
+// # Ok(())
+// # }
+// ```
 
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle__enhanced::WindowType;
+use crate::lombscargle_enhanced::WindowType;
 use crate::window::get_window;
+use ndarray::s;
 use ndarray::Array1;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::collections::VecDeque;
 use std::f64::consts::PI;
-use ndarray::{s};
 
 #[allow(unused_imports)]
 /// Configuration for streaming STFT

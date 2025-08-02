@@ -9,7 +9,7 @@ use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function for safe conversion from usize to float
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
@@ -17,7 +17,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult
 
 /// Helper function for safe conversion from float to usize
 #[allow(dead_code)]
-fn safe_float_to_usize<T: Float>(_value: T) -> NdimageResult<usize> {
+fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     _value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert float _value to usize"))
     })
@@ -205,19 +205,19 @@ where
         .collect();
 
     // Apply boundary conditions and check bounds
-    let input_shape = input.shape();
+    let inputshape = input.shape();
     let bounded_coords: Vec<usize> = int_coords
         .iter()
         .enumerate()
         .map(|(i, &coord)| {
-            let dim_size = input_shape[i] as isize;
+            let dim_size = inputshape[i] as isize;
             apply_boundary_condition(coord, dim_size, boundary)
         })
         .collect();
 
     // Check if coordinates are valid (within bounds after boundary handling)
     for (i, &coord) in bounded_coords.iter().enumerate() {
-        if coord >= input_shape[i] {
+        if coord >= inputshape[i] {
             return const_val; // Out of bounds, return constant value
         }
     }

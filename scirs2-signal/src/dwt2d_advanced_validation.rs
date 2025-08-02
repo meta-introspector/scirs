@@ -1,11 +1,11 @@
-//! Advanced-comprehensive 2D wavelet transform validation in Advanced mode
-//!
-//! This module provides the most thorough validation possible for 2D wavelet
-//! transforms, covering all aspects from mathematical correctness to performance
-//! optimization and numerical stability.
+// Advanced-comprehensive 2D wavelet transform validation in Advanced mode
+//
+// This module provides the most thorough validation possible for 2D wavelet
+// transforms, covering all aspects from mathematical correctness to performance
+// optimization and numerical stability.
 
-use crate::error::SignalResult;
 use crate::dwt::Wavelet;
+use crate::error::SignalResult;
 use ndarray::Array2;
 use rand::{Rng, SeedableRng};
 use std::collections::HashMap;
@@ -553,7 +553,7 @@ fn validate_perfect_reconstruction(
         }
     }
 
-    let mean_error = errors.iter().sum::<f64>() / errors.len()  as f64;
+    let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;
     let snr_improvement = -20.0 * (mean_error + 1e-15).log10();
     let perfect_reconstruction = max_error < config.tolerance;
 
@@ -570,7 +570,8 @@ fn validate_perfect_reconstruction(
 
 #[allow(dead_code)]
 fn validate_orthogonality(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<OrthogonalityValidationResult> {
     // Placeholder implementation
     Ok(OrthogonalityValidationResult {
@@ -584,7 +585,8 @@ fn validate_orthogonality(
 
 #[allow(dead_code)]
 fn validate_energy_conservation(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<EnergyConservationResult> {
     // Placeholder implementation
     Ok(EnergyConservationResult {
@@ -597,7 +599,8 @@ fn validate_energy_conservation(
 
 #[allow(dead_code)]
 fn validate_boundary_conditions(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<BoundaryValidationResult> {
     // Placeholder implementation
     Ok(BoundaryValidationResult {
@@ -611,7 +614,8 @@ fn validate_boundary_conditions(
 
 #[allow(dead_code)]
 fn validate_multilevel_decomposition(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<MultilevelValidationResult> {
     // Placeholder implementation
     Ok(MultilevelValidationResult {
@@ -624,7 +628,8 @@ fn validate_multilevel_decomposition(
 
 #[allow(dead_code)]
 fn validate_denoising_performance(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<DenoisingValidationResult> {
     // Placeholder implementation
     Ok(DenoisingValidationResult {
@@ -640,7 +645,8 @@ fn validate_denoising_performance(
 
 #[allow(dead_code)]
 fn validate_compression_performance(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<CompressionValidationResult> {
     // Placeholder implementation
     Ok(CompressionValidationResult {
@@ -654,7 +660,8 @@ fn validate_compression_performance(
 
 #[allow(dead_code)]
 fn validate_numerical_stability(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<StabilityValidationResult> {
     // Placeholder implementation
     Ok(StabilityValidationResult {
@@ -673,7 +680,8 @@ fn validate_numerical_stability(
 
 #[allow(dead_code)]
 fn analyze_performance(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<PerformanceAnalysisResult> {
     // Placeholder implementation
     Ok(PerformanceAnalysisResult {
@@ -692,7 +700,8 @@ fn analyze_performance(
 
 #[allow(dead_code)]
 fn validate_simd_optimizations(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<SimdOptimizationResult> {
     // Placeholder implementation
     Ok(SimdOptimizationResult {
@@ -705,7 +714,8 @@ fn validate_simd_optimizations(
 
 #[allow(dead_code)]
 fn analyze_memory_usage(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<MemoryAnalysisResult> {
     // Placeholder implementation
     Ok(MemoryAnalysisResult {
@@ -718,7 +728,8 @@ fn analyze_memory_usage(
 
 #[allow(dead_code)]
 fn validate_consistency(
-    config: &Dwt2dadvancedConfig, rng: &mut rand::chacha::ChaCha8Rng,
+    config: &Dwt2dadvancedConfig,
+    rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ConsistencyAnalysisResult> {
     // Placeholder implementation
     Ok(ConsistencyAnalysisResult {
@@ -760,7 +771,10 @@ fn generate_test_image(
 
 #[allow(dead_code)]
 fn simulate_reconstruction_test(
-    image: &Array2<f64>, _wavelet: &str, _level: usize, _boundary: &str,
+    image: &Array2<f64>,
+    _wavelet: &str,
+    _level: usize,
+    _boundary: &str,
 ) -> SignalResult<f64> {
     // Simulate perfect reconstruction test
     // In real implementation, this would perform actual DWT and IDWT
@@ -865,7 +879,9 @@ pub fn generate_dwt2d_comprehensive_report(_result: &Dwt2dadvancedResult) -> Str
     report.push_str("# Advanced-comprehensive 2D Wavelet Transform Validation Report\n\n");
 
     report.push_str(&format!(
-        "## Overall Score: {:.1}%\n\n", _result.overall_score));
+        "## Overall Score: {:.1}%\n\n",
+        _result.overall_score
+    ));
 
     report.push_str("## Validation Results Summary\n\n");
 

@@ -820,8 +820,8 @@ impl<T: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<T> for 
         self.capabilities.clone()
     }}
     
-    fn initialize(&mut self, param_shape: &[usize]) -> Result<()> {{
-        // Initialize state based on parameter _shape
+    fn initialize(&mut self, paramshape: &[usize]) -> Result<()> {{
+        // Initialize state based on parameter shape
         Ok(())
     }}
     
@@ -1028,7 +1028,7 @@ impl CodeGenerator for TestSuiteGenerator {
 }
 
 impl TestSuiteGenerator {
-    fn generate_test_code(&self, name: &str_config: &TemplateGeneratorConfig) -> Result<String> {
+    fn generate_test_code(&self, name: &str, config: &TemplateGeneratorConfig) -> Result<String> {
         let content = format!(
             r#"//! Integration tests for {} optimizer
 //!
@@ -1188,7 +1188,7 @@ fn test_{}_performance_characteristics() {{
         Ok(content)
     }
     
-    fn generate_benchmark_code(&self, name: &str_config: &TemplateGeneratorConfig) -> Result<String> {
+    fn generate_benchmark_code(&self, name: &str, config: &TemplateGeneratorConfig) -> Result<String> {
         let content = format!(
             r#"//! Benchmarks for {} optimizer
 //!
@@ -1439,7 +1439,7 @@ Licensed under the MIT License. See [LICENSE](LICENSE) for details.
         Ok(content)
     }
     
-    fn generate_lib_docs(&self, name: &str_config: &TemplateGeneratorConfig) -> Result<String> {
+    fn generate_lib_docs(&self, name: &str, config: &TemplateGeneratorConfig) -> Result<String> {
         let content = format!(
             r#"# {} Optimizer Library Documentation
 

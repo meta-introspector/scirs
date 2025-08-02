@@ -141,13 +141,13 @@ pub fn matmul<F: Float + Debug + Send + Sync + 'static>(
         ));
     }
 
-    let a_shape = a.shape();
-    let b_shape = b.shape();
+    let ashape = a.shape();
+    let bshape = b.shape();
 
-    if a_shape[a_shape.len() - 1] != b_shape[b_shape.len() - 2] {
+    if ashape[ashape.len() - 1] != bshape[bshape.len() - 2] {
         return Err(AutogradError::ShapeMismatch(format!(
             "Matrix multiplication dimension mismatch: {:?} and {:?}",
-            a_shape, b_shape
+            ashape, bshape
         )));
     }
 
@@ -358,7 +358,7 @@ pub fn reshape<F: Float + Debug + Send + Sync + 'static>(
     }
 
     // Perform the reshape
-    let result_data = match x.data.clone().into_shape_with_order(shape) {
+    let result_data = match x.data.clone().intoshape_with_order(shape) {
         Ok(reshaped) => reshaped.into_dyn(),
         Err(e) => {
             return Err(AutogradError::OperationError(format!(
@@ -372,10 +372,10 @@ pub fn reshape<F: Float + Debug + Send + Sync + 'static>(
     // since it's just a view of the same data
     if x.requires_grad {
         // Create a backward function that reshapes gradients back to original shape
-        let original_shape = x.shape().to_vec();
+        let originalshape = x.shape().to_vec();
         let backward = Box::new(move |grad: Array<F, IxDyn>| -> Result<Array<F, IxDyn>> {
-            // Use to_shape instead of into_shape to avoid FnOnce issues
-            match grad.clone().into_shape_with_order(original_shape.clone()) {
+            // Use toshape instead of intoshape to avoid FnOnce issues
+            match grad.clone().intoshape_with_order(originalshape.clone()) {
                 Ok(reshaped_grad) => Ok(reshaped_grad),
                 Err(e) => Err(AutogradError::OperationError(format!(
                     "Gradient reshape error: {}",
@@ -669,8 +669,8 @@ pub fn cat<F: Float + Debug + Send + Sync + 'static>(
     }
 
     // Check dimension compatibility
-    let ref_shape = tensors[0].shape();
-    let ndim = ref_shape.len();
+    let refshape = tensors[0].shape();
+    let ndim = refshape.len();
 
     if dim >= ndim {
         return Err(AutogradError::ShapeMismatch(format!(
@@ -689,11 +689,11 @@ pub fn cat<F: Float + Debug + Send + Sync + 'static>(
             )));
         }
 
-        for (j, (&s1, &s2)) in ref_shape.iter().zip(shape.iter()).enumerate() {
+        for (j, (&s1, &s2)) in refshape.iter().zip(shape.iter()).enumerate() {
             if j != dim && s1 != s2 {
                 return Err(AutogradError::ShapeMismatch(format!(
                     "Incompatible shapes for concatenation: {:?} and {:?} at dimension {}",
-                    ref_shape, shape, j
+                    refshape, shape, j
                 )));
             }
         }
@@ -701,11 +701,11 @@ pub fn cat<F: Float + Debug + Send + Sync + 'static>(
 
     // Implement concatenation along the specified dimension
     // First, we'll create a new shape for the result tensor
-    let mut result_shape = ref_shape.to_vec();
-    result_shape[dim] = tensors.iter().map(|t| t.shape()[dim]).sum();
+    let mut resultshape = refshape.to_vec();
+    resultshape[dim] = tensors.iter().map(|t| t.shape()[dim]).sum();
     
     // Create an empty array with the new shape
-    let mut result_data = Array::<F, IxDyn>::zeros(result_shape.clone());
+    let mut result_data = Array::<F, IxDyn>::zeros(resultshape.clone());
     
     // Now fill the result by copying each tensor into the appropriate slice
     let mut offset = 0;
@@ -745,18 +745,18 @@ pub fn cat<F: Float + Debug + Send + Sync + 'static>(
             total_dim_size += tensor.shape()[dim];
 
             if tensor.requires_grad {
-                let _tensor_shape = tensor.shape();
+                let _tensorshape = tensor.shape();
                 let _dim_clone = dim;
 
                 backward_fns.push(Some(Box::new(
                     move |grad: Array<F, IxDyn>| -> Result<Array<F, IxDyn>> {
                         // Extract the appropriate slice of the gradient for this tensor
-                        let tensor_shape = _tensor_shape.clone();
+                        let tensorshape = _tensorshape.clone();
                         let dim = _dim_clone;
                         let offset = offset; // Capture from outer scope
                         
                         // Get the size of this tensor along the concatenation dimension
-                        let size_along_dim = tensor_shape[dim];
+                        let size_along_dim = tensorshape[dim];
                         
                         // Create a slice of the gradient corresponding to this tensor
                         let mut indices: Vec<ndarray::SliceInfo<_, ndarray::SliceArg>> = 

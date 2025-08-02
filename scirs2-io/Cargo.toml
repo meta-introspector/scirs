@@ -96,7 +96,8 @@ mysql = ["dep:sqlx", "async"]
 duckdb = ["dep:duckdb"]
 mongodb = ["dep:mongodb", "async"]
 redis = ["dep:redis"]
-database = ["sqlite", "postgres", "mysql", "duckdb"]
+database = ["sqlite", "postgres", "mysql"]
+database-full = ["database", "duckdb"]  # Includes DuckDB (requires compatible Arrow/chrono versions)
 # Real-time streaming features
 websocket = ["dep:tokio-tungstenite", "async"]
 mqtt = ["dep:rumqttc", "async"]
@@ -104,6 +105,7 @@ sse = ["dep:eventsource-client", "async", "reqwest"]
 grpc = ["dep:tonic", "dep:prost", "async"]
 realtime = ["websocket", "mqtt", "sse", "grpc"]
 all = ["csv", "compression", "validation", "hdf5", "async", "reqwest", "aws-sdk-s3", "google-cloud-storage", "azure-storage-blobs", "gpu", "exif", "database", "mongodb", "redis", "realtime"]
+all-experimental = ["all", "duckdb"]  # Includes experimental features (may have dependency conflicts)
 
 [[example]]
 name = "hdf5_example"

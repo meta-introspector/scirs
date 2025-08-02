@@ -556,7 +556,7 @@ pub struct BirchStatistics<F: Float> {
 /// use ndarray::Array2;
 /// use scirs2__cluster::birch::{birch, BirchOptions};
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![
+/// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -620,7 +620,7 @@ mod tests {
 
     #[test]
     fn test_birch_simple() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )

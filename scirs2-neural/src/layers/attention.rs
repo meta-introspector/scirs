@@ -142,7 +142,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
     /// * `rng` - Random number generator for weight initialization
     /// # Returns
     /// * A new multi-head attention layer
-    pub fn new<R: Rng>(_d_model: usize, config: AttentionConfig, rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(_d, model: usize, config: AttentionConfig, rng: &mut R) -> Result<Self> {
         // Verify configuration
         if _d_model % config.num_heads != 0 {
             return Err(NeuralError::InvalidArchitecture(format!(
@@ -211,15 +211,15 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
         input: &ArrayView<F, IxDyn>,
         projection_type: &str,
     ) -> Result<Array<F, IxDyn>> {
-        let input_shape = input.shape();
+        let inputshape = input.shape();
         if input.ndim() != 3 {
             return Err(NeuralError::InferenceError(format!(
                 "Expected 3D input tensor for {} projection, got {}D",
                 projection_type,
                 input.ndim()
-        let batch_size = input_shape[0];
-        let seq_len = input_shape[1];
-        let d_model = input_shape[2];
+        let batch_size = inputshape[0];
+        let seq_len = inputshape[1];
+        let d_model = inputshape[2];
         if d_model != self.d_model {
                 "Expected input dimension {} for {} projection, got {}",
                 self.d_model, projection_type, d_model
@@ -242,11 +242,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
         key: &ArrayView<F, IxDyn>,
         attention_scores: &mut Array<F, IxDyn>,
     ) -> Result<()> {
-        let q_shape = query.shape();
-        let batch_size = q_shape[0];
-        let seq_len_q = q_shape[1];
-        let num_heads = q_shape[2];
-        let head_dim = q_shape[3];
+        let qshape = query.shape();
+        let batch_size = qshape[0];
+        let seq_len_q = qshape[1];
+        let num_heads = qshape[2];
+        let head_dim = qshape[3];
         let seq_len_k = key.shape()[1];
         // Use sequential processing to avoid mutable borrow issues in parallel closures
         for b in 0..batch_size {
@@ -304,21 +304,21 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
         value: &ArrayView<F, IxDyn>,
     ) -> Result<(Array<F, IxDyn>, Array<F, IxDyn>)> {
         // Extract dimensions
-        let k_shape = key.shape();
-        let v_shape = value.shape();
+        let kshape = key.shape();
+        let vshape = value.shape();
         if query.ndim() != 4 || key.ndim() != 4 || value.ndim() != 4 {
             return Err(NeuralError::InferenceError(
                 "Query, key, and value must be 4D tensors [batch, seq_len, heads, dim]".to_string(),
             ));
-        let seq_len_k = k_shape[1];
-        let seq_len_v = v_shape[1];
+        let seq_len_k = kshape[1];
+        let seq_len_v = vshape[1];
         // Check dimensions
         if seq_len_k != seq_len_v {
                 "Key and value sequence lengths must match: {} vs {}",
                 seq_len_k, seq_len_v
-        if k_shape[2] != num_heads || v_shape[2] != num_heads {
+        if kshape[2] != num_heads || vshape[2] != num_heads {
                 "Number of heads must match for query, key, and value".to_string(),
-        if k_shape[3] != head_dim || v_shape[3] != head_dim {
+        if kshape[3] != head_dim || vshape[3] != head_dim {
                 "Head dimensions must match for query, key, and value".to_string(),
         // Transpose key for matrix multiplication: [batch, seq_k, heads, dim] -> [batch, heads, dim, seq_k]
         // We need to create a new array with the axes rearranged
@@ -448,8 +448,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         // Reshape input if necessary
         let input_view = if input.ndim() > 3 {
             // Flatten all dimensions except the last one into batch
-            let flat_batch_size = input_shape.iter().take(input.ndim() - 2).product();
-            let features = input_shape[input.ndim() - 1];
+            let flat_batch_size = inputshape.iter().take(input.ndim() - 2).product();
+            let features = inputshape[input.ndim() - 1];
             // Create a new owned array to avoid borrowing issues
             let reshaped = input
                 .clone()
@@ -504,10 +504,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                     output[[b, i, j]] = sum;
         // Reshape output to match input shape if necessary
         if input.ndim() > 3 {
-            let mut output_shape = input_shape.to_vec();
-            output_shape[input.ndim() - 1] = self.d_model;
+            let mut outputshape = inputshape.to_vec();
+            outputshape[input.ndim() - 1] = self.d_model;
             output
-                .into_shape_with_order(IxDyn(&output_shape))
+                .into_shape_with_order(IxDyn(&outputshape))
                     NeuralError::InferenceError(format!("Failed to reshape output: {}", e))
             Ok(output)
     fn backward(
@@ -522,7 +522,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         let cached_input = input_ref.as_ref().unwrap();
         let (q_proj, k_proj, v_proj) = projections_ref.as_ref().unwrap().clone();
         let attention_weights = attn_weights_ref.as_ref().unwrap();
-        let input_shape = cached_input.shape();
+        let inputshape = cached_input.shape();
         // Reshape grad_output if necessary to match expected shape [batch, seq, d_model]
         let reshaped_grad_output = if grad_output.ndim() > 3 {
             grad_output
@@ -674,7 +674,7 @@ mod tests {
     use rand::rngs::SmallRng;
     use rand::SeedableRng;
     #[test]
-    fn test_multi_head_attention_shape() {
+    fn test_multi_head_attentionshape() {
         // Set up MHA with 2 heads
         let mut rng = rand::rng();
         let config = AttentionConfig {

@@ -317,7 +317,7 @@ fn parallel_processing_examples() -> LinalgResult<()> {
 
     // Parallel vector operations
     println!("\n🔹 Parallel Vector Operations");
-    let y = Array1::from_shape_fn(size, |i| (i as f64 + 1.0).sqrt());
+    let y = Array1::fromshape_fn(size, |i| (i as f64 + 1.0).sqrt());
 
     let dot_result = algorithms::vector_ops::parallel_dot(&x.view(), &y.view(), &config)?;
     let dot_reference = x

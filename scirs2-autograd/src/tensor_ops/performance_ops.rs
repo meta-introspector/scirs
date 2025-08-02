@@ -88,7 +88,7 @@ impl<F: Float> Op<F> for SimdUnaryOp {
         let input = ctx.input(0);
 
         let result = match self.operation {
-            SimdUnaryOperation::ReLU => input.mapv(|x| if x >, F::zero() { x } else { F::zero() }),
+            SimdUnaryOperation::ReLU => input.mapv(|x| if x > F::zero() { x } else { F::zero() }),
             SimdUnaryOperation::Sigmoid => input.mapv(|x| F::one() / (F::one() + (-x).exp())),
         };
 
@@ -184,7 +184,7 @@ pub fn is_parallel_enabled() -> bool {
 
 /// SIMD-optimized element-wise addition
 #[allow(dead_code)]
-pub fn simd_add<'g, F: Float>(_left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn simd_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _left.graph();
     Tensor::builder(g)
         .append_input(_left, false)
@@ -196,7 +196,7 @@ pub fn simd_add<'g, F: Float>(_left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> T
 
 /// SIMD-optimized element-wise multiplication
 #[allow(dead_code)]
-pub fn simd_mul<'g, F: Float>(_left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn simd_mul<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _left.graph();
     Tensor::builder(g)
         .append_input(_left, false)
@@ -208,7 +208,7 @@ pub fn simd_mul<'g, F: Float>(_left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> T
 
 /// SIMD-optimized ReLU activation
 #[allow(dead_code)]
-pub fn simd_relu<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn simd_relu<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
@@ -219,7 +219,7 @@ pub fn simd_relu<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 
 /// SIMD-optimized sigmoid activation
 #[allow(dead_code)]
-pub fn simd_sigmoid<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn simd_sigmoid<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)

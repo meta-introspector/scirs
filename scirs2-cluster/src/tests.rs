@@ -9,7 +9,7 @@ mod test {
     #[test]
     fn test_whiten() {
         let data: Array2<f64> =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
 
         let whitened = whiten(&data).unwrap();
 
@@ -28,7 +28,7 @@ mod test {
     #[test]
     fn test_kmeans2_all_init_methods() {
         let data =
-            Array2::from_shape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
+            Array2::fromshape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
 
         let init_methods = vec![
             MinitMethod::Random,
@@ -58,7 +58,7 @@ mod test {
     #[test]
     fn test_kmeans2_empty_cluster_handling() {
         // Create data that will likely result in empty clusters
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![
                 0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 10.0, 10.0, 10.1, 10.1, 10.2, 10.2,

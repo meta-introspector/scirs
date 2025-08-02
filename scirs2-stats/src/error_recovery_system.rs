@@ -477,7 +477,7 @@ impl ErrorRecoverySystem {
 
     /// Detect SIMD capabilities
     fn detect_simd_capabilities(&self) -> Vec<String> {
-        let mut capabilities = Vec::new();
+        let capabilities = Vec::new();
 
         #[cfg(target_arch = "x86_64")]
         {
@@ -586,7 +586,7 @@ impl ErrorRecoverySystem {
                 preprocessing_steps: vec![PreprocessingStep {
                     name: "Array reshape".to_string(),
                     description: "Reshape arrays to compatible dimensions".to_string(),
-                    code_example: "array.into_shape((new_rows, new_cols))".to_string(),
+                    code_example: "array.intoshape((new_rows, new_cols))".to_string(),
                     expected_impact: "Arrays will have compatible dimensions".to_string(),
                 }],
             },

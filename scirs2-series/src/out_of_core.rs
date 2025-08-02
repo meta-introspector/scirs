@@ -68,7 +68,7 @@ impl Default for ProcessingConfig {
             overlap: 1_000,
             parallel_processing: true,
             max_memory_usage: 1_073_741_824, // 1 GB
-            num_threads: num, _cpus: get(),
+            num_threads: num_cpus::get(),
             buffer_size: 8192,
             report_progress: true,
         }
@@ -268,7 +268,7 @@ pub struct MmapTimeSeriesReader {
 
 impl MmapTimeSeriesReader {
     /// Create new memory-mapped reader for binary f64 data
-    pub fn new<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {e}")))?;
 
@@ -360,7 +360,7 @@ pub struct CsvTimeSeriesReader {
 
 impl CsvTimeSeriesReader {
     /// Create new CSV reader
-    pub fn new<P: AsRef<Path>>(_path: P, column_index: usize, has_header: bool) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, column_index: usize, has_header: bool) -> Result<Self> {
         let file_path = _path.as_ref().to_path_buf();
 
         if !file_path.exists() {

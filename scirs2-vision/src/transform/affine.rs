@@ -17,7 +17,7 @@ pub struct AffineTransform {
 impl AffineTransform {
     /// Create a new affine transformation matrix from raw data
     pub fn new(a: f64, b: f64, c: f64, d: f64, e: f64, f: f64) -> Self {
-        let matrix = Array2::from_shape_vec((2, 3), vec![a, b, c, d, e, f]).unwrap();
+        let matrix = Array2::fromshape_vec((2, 3), vec![a, b, c, d, e, f]).unwrap();
         Self { matrix }
     }
 
@@ -172,9 +172,9 @@ pub enum BorderMode {
 
 /// Sample a pixel from an image using bilinear interpolation
 #[allow(dead_code)]
-fn sample_pixel(_src: &DynamicImage, x: f64, y: f64, border_mode: BorderMode) -> Option<Rgba<u8>> {
-    let width = _src.width() as f64;
-    let height = _src.height() as f64;
+fn sample_pixel(src: &DynamicImage, x: f64, y: f64, border_mode: BorderMode) -> Option<Rgba<u8>> {
+    let width = src.width() as f64;
+    let height = src.height() as f64;
 
     // Handle border cases
     let (x_adj, y_adj) = match border_mode {
@@ -225,16 +225,16 @@ fn sample_pixel(_src: &DynamicImage, x: f64, y: f64, border_mode: BorderMode) ->
     // Bilinear interpolation
     let x0 = x_adj.floor() as u32;
     let y0 = y_adj.floor() as u32;
-    let x1 = (x0 + 1).min(_src.width() - 1);
-    let y1 = (y0 + 1).min(_src.height() - 1);
+    let x1 = (x0 + 1).min(src.width() - 1);
+    let y1 = (y0 + 1).min(src.height() - 1);
 
     let sx = x_adj - x0 as f64;
     let sy = y_adj - y0 as f64;
 
-    let p00 = _src.get_pixel(x0, y0).to_rgba();
-    let p01 = _src.get_pixel(x0, y1).to_rgba();
-    let p10 = _src.get_pixel(x1, y0).to_rgba();
-    let p11 = _src.get_pixel(x1, y1).to_rgba();
+    let p00 = src.get_pixel(x0, y0).to_rgba();
+    let p01 = src.get_pixel(x0, y1).to_rgba();
+    let p10 = src.get_pixel(x1, y0).to_rgba();
+    let p11 = src.get_pixel(x1, y1).to_rgba();
 
     // Interpolate
     let mut result = [0u8; 4];

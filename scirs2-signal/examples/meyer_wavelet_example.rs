@@ -1,7 +1,7 @@
 use plotly::common::Mode;
 use plotly::{Plot, Scatter};
-use scirs2__signal::dwt::{wavedec, waverec, Wavelet};
-use scirs2__signal::waveforms::chirp;
+use scirs2_signal::dwt::{wavedec, waverec, Wavelet};
+use scirs2_signal::waveforms::chirp;
 
 #[allow(dead_code)]
 fn main() {

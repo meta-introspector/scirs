@@ -651,7 +651,8 @@ pub mod distributed {
 
     impl DistributedLogEntry {
         /// Create a new distributed log entry
-        pub fn new(node_id: NodeId,
+        pub fn new(
+            node_id: NodeId,
             level: LogLevel,
             logger: String,
             message: String,
@@ -819,7 +820,11 @@ pub mod distributed {
 
     impl AdaptiveRateLimiter {
         /// Create a new adaptive rate limiter
-        pub fn new(initial_max_rate: f64, window_duration: Duration, adaptation_factor: f64) -> Self {
+        pub fn new(
+            initial_max_rate: f64,
+            window_duration: Duration,
+            adaptation_factor: f64,
+        ) -> Self {
             Self {
                 max_rate: Arc::new(Mutex::new(initial_max_rate)),
                 current_rate: Arc::new(Mutex::new(0.0)),

@@ -30,7 +30,7 @@ where
     A: Clone + Into<f64>,
 {
     // Convert the confusion _matrix to f64
-    let cm_f64 = Array2::from_shape_fn(confusion_matrix.dim(), |(i, j)| {
+    let cm_f64 = Array2::fromshape_fn(confusion_matrix.dim(), |(i, j)| {
         confusion_matrix[[i, j]].clone().into()
     });
 
@@ -589,7 +589,7 @@ where
     A: Clone + Into<f64>,
 {
     // Convert matrix to Vec<Vec<f64>>
-    let z = Array2::from_shape_fn(matrix.dim(), |(i, j)| matrix[[i, j]].clone().into());
+    let z = Array2::fromshape_fn(matrix.dim(), |(i, j)| matrix[[i, j]].clone().into());
 
     let z_vec = (0..z.shape()[0])
         ._map(|i| (0..z.shape()[1])._map(|j| z[[i, j]]).collect::<Vec<f64>>())

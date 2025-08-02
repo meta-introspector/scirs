@@ -1,21 +1,22 @@
-//! Advanced-advanced adaptive denoising with multi-algorithm fusion
-//!
-//! This module provides state-of-the-art adaptive denoising algorithms that:
-//! - Automatically select optimal denoising parameters based on signal characteristics
-//! - Combine multiple denoising approaches (wavelet, NLM, total variation, Wiener)
-//! - Use machine learning-inspired techniques for noise parameter estimation
-//! - Provide real-time denoising capability with SIMD acceleration
-//! - Preserve signal features while maximally reducing noise
+use ndarray::s;
+// Advanced-advanced adaptive denoising with multi-algorithm fusion
+//
+// This module provides state-of-the-art adaptive denoising algorithms that:
+// - Automatically select optimal denoising parameters based on signal characteristics
+// - Combine multiple denoising approaches (wavelet, NLM, total variation, Wiener)
+// - Use machine learning-inspired techniques for noise parameter estimation
+// - Provide real-time denoising capability with SIMD acceleration
+// - Preserve signal features while maximally reducing noise
 
-use crate::denoise__enhanced::{TotalVariationConfig, denoise_total_variation_1d};
-use crate::dwt::{Wavelet, dwt_decompose, dwt_reconstruct};
+use crate::denoise_enhanced::{denoise_total_variation_1d, TotalVariationConfig};
+use crate::dwt::{dwt_decompose, dwt_reconstruct, Wavelet};
 use crate::error::{SignalError, SignalResult};
-use crate::nlm::{NlmConfig, nlm_denoise_1d};
+use crate::nlm::{nlm_denoise_1d, NlmConfig};
 use crate::wiener::wiener_filter;
-use ndarray::{Array1, s};
+use ndarray::{ Array1};
 use num_traits::{Float, NumCast};
-use rand::Rng;
 use rand::prelude::*;
+use rand::Rng;
 use scirs2_core::validation::check_finite;
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
@@ -320,7 +321,8 @@ enum ProcessingMode {
 /// Analyze signal characteristics for adaptive parameter selection
 #[allow(dead_code)]
 fn analyze_signal_characteristics(
-    signal: &Array1<f64>, _config: &AdaptiveDenoisingConfig,
+    signal: &Array1<f64>,
+    _config: &AdaptiveDenoisingConfig,
 ) -> SignalResult<SignalAnalysis> {
     let n = signal.len();
 
@@ -332,7 +334,7 @@ fn analyze_signal_characteristics(
     for i in 1..n {
         edge_content += (signal[i] - signal[i - 1]).abs();
     }
-    edge_content /= (n - 1)  as f64;
+    edge_content /= (n - 1) as f64;
 
     // Local variation
     let mut local_variation = 0.0;
@@ -342,7 +344,7 @@ fn analyze_signal_characteristics(
         let var = local_var.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / 3.0;
         local_variation += var;
     }
-    local_variation /= (n - 2)  as f64;
+    local_variation /= (n - 2) as f64;
 
     // Wavelet sparsity analysis
     let wavelet_sparsity = if n >= 32 {
@@ -462,7 +464,7 @@ fn estimate_local_noise_variance(
 
         // Calculate local variance
         let mean = window.mean().unwrap_or(0.0);
-        let var = window.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / window.len()  as f64;
+        let var = window.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / window.len() as f64;
 
         // Only include if this appears to be a smooth region (low gradient)
         let mut max_gradient = 0.0;
@@ -689,7 +691,8 @@ fn apply_single_algorithm_denoising(
 fn apply_single_denoising_algorithm(
     signal: &Array1<f64>,
     algorithm: DenoisingAlgorithm,
-    strategy: &DenoisingStrategy, config: &AdaptiveDenoisingConfig,
+    strategy: &DenoisingStrategy,
+    config: &AdaptiveDenoisingConfig,
 ) -> SignalResult<Array1<f64>> {
     match algorithm {
         DenoisingAlgorithm::WaveletAdaptive => apply_adaptive_wavelet_denoising(signal, strategy),
@@ -805,7 +808,7 @@ fn apply_simple_smoothing(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
         for j in (i - window_size / 2)..=(i + window_size / 2) {
             sum += _signal[j];
         }
-        smoothed[i] = sum / window_size  as f64;
+        smoothed[i] = sum / window_size as f64;
     }
 
     Ok(smoothed)
@@ -827,7 +830,8 @@ fn soft_threshold(x: f64, threshold: f64) -> f64 {
 #[allow(dead_code)]
 fn validate_and_postprocess(
     original: &Array1<f64>,
-    denoised: &Array1<f64>, _config: &AdaptiveDenoisingConfig,
+    denoised: &Array1<f64>,
+    _config: &AdaptiveDenoisingConfig,
 ) -> SignalResult<Array1<f64>> {
     // Basic validation
     if original.len() != denoised.len() {
@@ -874,7 +878,7 @@ fn compute_quality_metrics(
     denoised: &Array1<f64>,
     noise_variance: f64,
 ) -> SignalResult<QualityMetrics> {
-    let _n = original.len()  as f64;
+    let _n = original.len() as f64;
 
     // Signal preservation (based on correlation)
     let signal_preservation = calculate_correlation(original, denoised) * 100.0;
@@ -910,7 +914,7 @@ fn compute_quality_metrics(
 /// Calculate correlation between two signals
 #[allow(dead_code)]
 fn calculate_correlation(x: &Array1<f64>, y: &Array1<f64>) -> f64 {
-    let _n = x.len()  as f64;
+    let _n = x.len() as f64;
     let mean_x = x.mean().unwrap_or(0.0);
     let mean_y = y.mean().unwrap_or(0.0);
 
@@ -1002,7 +1006,11 @@ fn estimate_wavelet_sparsity(_signal: &Array1<f64>) -> SignalResult<f64> {
             }
 
             // Calculate sparsity as fraction of small coefficients
-            let threshold = 0.01 * all_coeffs.iter().map(|&x: &f64| x.abs()).fold(0.0, f64::max);
+            let threshold = 0.01
+                * all_coeffs
+                    .iter()
+                    .map(|&x: &f64| x.abs())
+                    .fold(0.0, f64::max);
             let small_coeffs = all_coeffs.iter().filter(|&&x| x.abs() < threshold).count();
 
             Ok(small_coeffs as f64 / all_coeffs.len() as f64)
@@ -1034,7 +1042,7 @@ fn estimate_oscillatory_content(_signal: &Array1<f64>) -> SignalResult<f64> {
         }
     }
 
-    let oscillatory_score = (zero_crossings + extrema_count) as f64 / _signal.len()  as f64;
+    let oscillatory_score = (zero_crossings + extrema_count) as f64 / _signal.len() as f64;
     Ok(oscillatory_score.min(1.0))
 }
 
@@ -1048,7 +1056,7 @@ fn estimate_effective_bandwidth(_signal: &Array1<f64>) -> SignalResult<f64> {
         high_freq_content += (_signal[i] - _signal[i - 1]).abs();
     }
 
-    high_freq_content /= (_signal.len() - 1)  as f64;
+    high_freq_content /= (_signal.len() - 1) as f64;
 
     // Normalize to [0, 1] range
     let bandwidth = (high_freq_content * 10.0).min(1.0);

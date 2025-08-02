@@ -181,7 +181,7 @@ fn main() {
 
 /// Print a concise summary of a dataset
 #[allow(dead_code)]
-fn print_dataset_summary(_dataset: &scirs2_datasets: :Dataset, name: &str) {
+fn print_dataset_summary(_dataset: &scirs2_datasets::Dataset, name: &str) {
     let n_classes = if let Some(target) = &_dataset.target {
         let unique_labels: std::collections::HashSet<_> =
             target.iter().map(|&x| x as i32).collect();

@@ -1,8 +1,8 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use scirs2__signal::dwt::{dwt_decompose, dwt_reconstruct, wavedec, waverec, Wavelet};
-use scirs2__signal::swt::{iswt, swt, swt_decompose, swt_reconstruct};
-use scirs2__signal::waveforms::chirp;
-use scirs2__signal::wpt::{reconstruct_from_nodes, wp_decompose};
+use scirs2_signal::dwt::{dwt_decompose, dwt_reconstruct, wavedec, waverec, Wavelet};
+use scirs2_signal::swt::{iswt, swt, swt_decompose, swt_reconstruct};
+use scirs2_signal::waveforms::chirp;
+use scirs2_signal::wpt::{reconstruct_from_nodes, wp_decompose};
 use std::time::Duration;
 
 #[allow(dead_code)]

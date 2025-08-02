@@ -605,16 +605,16 @@ fn create_mock_advanced_features(_image: &Array2<f64>, config: &AdvancedConfig) 
 }
 
 #[allow(dead_code)]
-fn create_mock_advanced_state(_shape: (usize, usize), config: &AdvancedConfig) -> AdvancedState {
+fn create_mock_advanced_state(shape: (usize, usize), config: &AdvancedConfig) -> AdvancedState {
     // Create a simplified mock state for demonstration
     let mut state = AdvancedState {
-        consciousness_amplitudes: Array3::zeros((_shape.0, _shape.1, config.consciousness_depth)),
+        consciousness_amplitudes: Array3::zeros((shape.0, shape.1, config.consciousness_depth)),
         meta_parameters: Array2::zeros((config.advanced_dimensions, config.temporal_window)),
         network_topology: std::sync::Arc::new(std::sync::RwLock::new(
             scirs2_ndimage::fusion, _core::NetworkTopology {
                 connections: HashMap::new(),
                 nodes: Vec::new(),
-                global_properties: scirs2, _ndimage: fusion_core: :NetworkProperties {
+                global_properties: scirs2, _ndimage: fusion, core: NetworkProperties {
                     coherence: 0.8,
                     self_organization_index: 0.7,
                     consciousness_emergence: 0.6,
@@ -624,15 +624,15 @@ fn create_mock_advanced_state(_shape: (usize, usize), config: &AdvancedConfig) -
         )),
         temporal_memory: std::collections::VecDeque::new(),
         causal_graph: std::collections::BTreeMap::new(),
-        advanced_features: Array3::zeros((_shape.0, _shape.1, config.advanced_dimensions)),
-        resource_allocation: scirs2, _ndimage: fusion_core: :ResourceState {
+        advanced_features: Array3::zeros((shape.0, shape.1, config.advanced_dimensions)),
+        resource_allocation: scirs2, _ndimage: fusion, core: ResourceState {
             cpu_allocation: vec![0.7; num, _cpus::get()],
             memory_allocation: 0.6,
             gpu_allocation: Some(0.8),
             quantum_allocation: Some(0.5),
             allocation_history: std::collections::VecDeque::new(),
         },
-        efficiency_metrics: scirs2, _ndimage: fusion_core: :EfficiencyMetrics {
+        efficiency_metrics: scirs2, _ndimage: fusion, core: EfficiencyMetrics {
             ops_per_second: 10000.0,
             memory_efficiency: 0.85,
             energy_efficiency: 0.75,
@@ -648,13 +648,13 @@ fn create_mock_advanced_state(_shape: (usize, usize), config: &AdvancedConfig) -
 }
 
 #[allow(dead_code)]
-fn create_mock_response(_shape: (usize, usize)) -> Array2<f64> {
-    let mut response = Array2::zeros(_shape);
+fn create_mock_response(shape: (usize, usize)) -> Array2<f64> {
+    let mut response = Array2::zeros(shape);
 
-    for y in 0.._shape.0 {
-        for x in 0.._shape.1 {
-            let fx = x as f64 / _shape.1 as f64;
-            let fy = y as f64 / _shape.0 as f64;
+    for y in 0..shape.0 {
+        for x in 0..shape.1 {
+            let fx = x as f64 / shape.1 as f64;
+            let fy = y as f64 / shape.0 as f64;
             response[(y, x)] = (fx + fy) / 2.0;
         }
     }
@@ -683,7 +683,7 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
         task_types,
         intensity_pattern: vec![0.5, 0.7, 0.9, 0.8, 0.6, 0.4, 0.3, 0.5, 0.8, 0.9],
         dependencies: vec![("task1".to_string(), "task2".to_string())],
-        performance_requirements: scirs2, _ndimage: fusion_core: :PerformanceRequirements {
+        performance_requirements: scirs2, _ndimage: fusion, core: PerformanceRequirements {
             max_latency: 100.0,
             min_throughput: 1000.0,
             accuracy_requirement: 0.95,

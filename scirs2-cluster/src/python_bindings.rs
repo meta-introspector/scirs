@@ -185,7 +185,8 @@ impl PyKMeans {
                 "tol" => self.tol = value.extract()?,
                 "random_state" => self.random_state = value.extract()?,
                 "n_init" => self.n_init = value.extract()?,
-                "init" => self.init = value.extract()?_ => {
+                "init" => self.init = value.extract()?,
+                _ => {
                     return Err(PyValueError::new_err(format!(
                         "Unknown parameter: {}",
                         key_str
@@ -257,7 +258,8 @@ impl PyKMeans {
         }
 
         match (best_centers, best_labels) {
-            (Some(centers), Some(labels)) => Ok((centers, labels, best_inertia, best_n_iter), _ => Err(ClusteringError::ComputationError(
+            (Some(centers), Some(labels)) => Ok((centers, labels, best_inertia, best_n_iter)),
+            _ => Err(ClusteringError::ComputationError(
                 "K-means failed to converge in any initialization".to_string(),
             )),
         }
@@ -385,7 +387,8 @@ impl PyAgglomerativeClustering {
             "ward" => LinkageMethod::Ward,
             "complete" => LinkageMethod::Complete,
             "average" => LinkageMethod::Average,
-            "single" => LinkageMethod::Single_ => {
+            "single" => LinkageMethod::Single,
+            _ => {
                 return Err(PyValueError::new_err(format!(
                     "Unknown linkage: {}",
                     self.linkage
@@ -396,7 +399,8 @@ impl PyAgglomerativeClustering {
         let distance_metric = match self.metric.as_str() {
             "euclidean" => Metric::Euclidean,
             "manhattan" => Metric::Manhattan,
-            "cosine" => Metric::Cosine_ => {
+            "cosine" => Metric::Cosine,
+            _ => {
                 return Err(PyValueError::new_err(format!(
                     "Unknown metric: {}",
                     self.metric
@@ -592,7 +596,8 @@ impl PySpectralClustering {
         let affinity_mode = match self.affinity.as_str() {
             "rbf" => AffinityMode::Rbf(self.gamma.unwrap_or(1.0)),
             "nearest_neighbors" => AffinityMode::NearestNeighbors(10),
-            "precomputed" => AffinityMode::Precomputed_ => {
+            "precomputed" => AffinityMode::Precomputed,
+            _ => {
                 return Err(PyValueError::new_err(format!(
                     "Unknown affinity: {}",
                     self.affinity
@@ -817,7 +822,8 @@ impl PyGaussianMixture {
             "full" => CovarianceType::Full,
             "tied" => CovarianceType::Tied,
             "diag" => CovarianceType::Diagonal,
-            "spherical" => CovarianceType::Spherical_ => {
+            "spherical" => CovarianceType::Spherical,
+            _ => {
                 return Err(PyValueError::new_err(format!(
                     "Unknown covariance_type: {}",
                     self.covariance_type

@@ -22,7 +22,7 @@
 //! use ndarray::Array2;
 //!
 //! // Create a sparse matrix from a dense array
-//! let dense = Array2::from_shape_vec((3, 3), vec![
+//! let dense = Array2::fromshape_vec((3, 3), vec![
 //!     1.0, 0.0, 2.0,
 //!     0.0, 3.0, 0.0,
 //!     4.0, 0.0, 5.0
@@ -268,7 +268,10 @@ where
         triplets.sort_by(|a, b| a.0.cmp(&b.0).then(a.1.cmp(&b.1)));
 
         // Extract values and column indices
-        let values: Vec<T> = triplets.iter().map(|(_row, _col, val)| (*val).clone()).collect();
+        let values: Vec<T> = triplets
+            .iter()
+            .map(|(_row, _col, val)| (*val).clone())
+            .collect();
         let col_indices: Vec<usize> = triplets.iter().map(|(_, col, _)| *col).collect();
 
         Ok(SparseMatrixCSR {
@@ -322,7 +325,10 @@ where
         triplets.sort_by(|a, b| a.1.cmp(&b.1).then(a.0.cmp(&b.0)));
 
         // Extract values and row indices
-        let values: Vec<T> = triplets.iter().map(|(_row, _col, val)| (*val).clone()).collect();
+        let values: Vec<T> = triplets
+            .iter()
+            .map(|(_row, _col, val)| (*val).clone())
+            .collect();
         let row_indices: Vec<usize> = triplets.iter().map(|(row, _col, _val)| *row).collect();
 
         Ok(SparseMatrixCSC {
@@ -475,7 +481,7 @@ where
 
 impl SparseMatrix<f64> {
     /// Load a sparse matrix from a Matrix Market file
-    pub fn load_matrix_market<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn load_matrix_market<P: AsRef<Path>>(path: P) -> Result<Self> {
         let mm_matrix = crate::matrix_market::read_sparse_matrix(_path)?;
         Ok(Self::from_matrix_market(&mm_matrix))
     }

@@ -143,7 +143,12 @@ impl WorkloadCharacteristics {
     }
 
     /// Create characteristics for a convolution workload
-    pub fn size(batch_size: usize, channels: usize, height: usize, width: usize, kernel_size: usize,
+    pub fn size(
+        batch_size: usize,
+        channels: usize,
+        height: usize,
+        width: usize,
+        kernel_size: usize,
     ) -> Self {
         let input_size = batch_size * channels * height * width;
         let output_size = batch_size * channels * height * width; // Simplified
@@ -409,7 +414,10 @@ impl HeterogeneousScheduler {
     }
 
     /// Optimize execution strategy based on historical performance
-    pub fn optimize_strategy(&self, workload: &WorkloadCharacteristics, current_strategy: ExecutionStrategy
+    pub fn optimize_strategy(
+        &self,
+        workload: &WorkloadCharacteristics,
+        current_strategy: ExecutionStrategy,
     ) -> ExecutionStrategy {
         let key = format!(
             "{workload_type:?}_{problem_size}",

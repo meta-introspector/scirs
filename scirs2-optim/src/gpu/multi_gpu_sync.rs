@@ -851,8 +851,8 @@ impl MultiGpuCommunicator {
 
     fn get_data_type<T: Float>() -> DataType {
         match std::any::TypeId::of::<T>() {
-            id if id == std::any::TypeId::of::<f32>() =>, DataType::Float32,
-            id if id == std::any::TypeId::of::<f64>() =>, DataType::Float32, // Treat f64 as f32
+            id if id == std::any::TypeId::of::<f32>() => DataType::Float32,
+            id if id == std::any::TypeId::of::<f64>() => DataType::Float32, // Treat f64 as f32
             _ => DataType::Float32,                                         // Default
         }
     }
@@ -937,8 +937,8 @@ impl MultiGpuCommunicator {
     fn estimate_operation_duration(&self, op_type: CommOpType, num_tensors: usize) -> Duration {
         // Estimate based on historical data and operation complexity
         let base_latency = match op_type {
-            CommOpType::AllReduce =>, Duration::from_micros(100),
-            CommOpType::Broadcast => Duration::from_micros(50, _ =>, Duration::from_micros(75),
+            CommOpType::AllReduce => Duration::from_micros(100),
+            CommOpType::Broadcast => Duration::from_micros(50, _ => Duration::from_micros(75),
         };
 
         base_latency * num_tensors as u32
@@ -1419,9 +1419,9 @@ impl MultiGpuCommunicator {
     /// Get optimal synchronization strategy based on topology and performance
     pub fn get_optimal_sync_strategy(&self) -> SyncStrategy {
         match self.topology.topology_type {
-            TopologyType::FullyConnected if self.devices.len() <= 8 =>, SyncStrategy::AllReduceTree,
-            TopologyType::Ring | TopologyType::Custom =>, SyncStrategy::AllReduceRing,
-            TopologyType::Hierarchical =>, SyncStrategy::Hierarchical_ => {
+            TopologyType::FullyConnected if self.devices.len() <= 8 => SyncStrategy::AllReduceTree,
+            TopologyType::Ring | TopologyType::Custom => SyncStrategy::AllReduceRing,
+            TopologyType::Hierarchical => SyncStrategy::Hierarchical_ => {
                 if self.config.enable_overlap {
                     SyncStrategy::AsyncBounded { max_staleness: 2 }
                 } else {

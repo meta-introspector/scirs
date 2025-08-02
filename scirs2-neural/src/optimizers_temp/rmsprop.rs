@@ -27,7 +27,7 @@ use scirs2__optim::optimizers as optim_optimizers;
 /// rmsprop.update(&mut params, &grads).unwrap();
 pub struct RMSprop<F: Float + Debug> {
     /// Inner RMSprop optimizer from scirs2-optim
-    inner: optim_optimizers: RMSprop<F>,
+    inner: optim, optimizers: RMSprop<F>,
     /// Weight decay (L2 regularization)
     weight_decay: F,
 }
@@ -43,7 +43,7 @@ impl<F: Float + Debug> RMSprop<F> {
         let weight_decay = F::zero();
         
         Self {
-            inner: optim_optimizers: RMSprop::new_with_config(
+            inner: optim, optimizers: RMSprop::new_with_config(
                 _learning_rate,
                 rho,
                 epsilon,

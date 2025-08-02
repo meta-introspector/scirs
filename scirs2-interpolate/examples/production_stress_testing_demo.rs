@@ -137,7 +137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Analyze stress test results in detail
 #[allow(dead_code)]
-fn analyze_stress_test_results(_report: &scirs2_interpolate: :StressTestReport) {
+fn analyze_stress_test_results(_report: &scirs2, interpolate: StressTestReport) {
     println!("Detailed Analysis:");
 
     // Performance analysis
@@ -211,7 +211,7 @@ fn analyze_stress_test_results(_report: &scirs2_interpolate: :StressTestReport) 
 
 /// Analyze results by test category
 #[allow(dead_code)]
-fn analyze_by_category(_report: &scirs2_interpolate: :StressTestReport) {
+fn analyze_by_category(_report: &scirs2, interpolate: StressTestReport) {
     use scirs2__interpolate::StressTestCategory;
     use std::collections::HashMap;
 
@@ -250,7 +250,7 @@ fn analyze_by_category(_report: &scirs2_interpolate: :StressTestReport) {
 
 /// Provide production deployment guidance
 #[allow(dead_code)]
-fn provide_deployment_guidance(_report: &scirs2_interpolate: :StressTestReport) {
+fn provide_deployment_guidance(_report: &scirs2, interpolate: StressTestReport) {
     match _report.production_readiness {
         ProductionReadiness::Ready => {
             println!("✅ READY FOR PRODUCTION DEPLOYMENT");

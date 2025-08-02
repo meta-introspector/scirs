@@ -90,7 +90,7 @@ impl StreamPipeline {
         Self {
             stages: Vec::new(),
             buffer_size: 10,
-            num_threads: num, _cpus: get(),
+            num_threads: num_cpus::get(),
             metrics: Arc::new(Mutex::new(PipelineMetrics::default())),
         }
     }
@@ -1070,7 +1070,7 @@ impl VideoStreamReader {
                         if self.frame_count < files.len() {
                             // In a real implementation, we would load the image here
                             // For now, generate a frame with noise to simulate image data
-                            let frame_data = Array2::from_shape_fn(
+                            let frame_data = Array2::fromshape_fn(
                                 (self.height as usize, self.width as usize),
                                 |_| rand::random::<f32>(),
                             );
@@ -1100,7 +1100,7 @@ impl VideoStreamReader {
                     // Generate synthetic frame
                     if self.frame_count < 100 {
                         let frame = Frame {
-                            data: Array2::from_shape_fn(
+                            data: Array2::fromshape_fn(
                                 (self.height as usize, self.width as usize),
                                 |(y, x)| {
                                     // Create a moving pattern
@@ -2099,7 +2099,7 @@ impl AdvancedStreamPipeline {
         Self {
             stages: Vec::new(),
             buffer_size: 10,
-            num_threads: num, _cpus: get(),
+            num_threads: num_cpus::get(),
             metrics: Arc::new(Mutex::new(PipelineMetrics::default())),
             frame_pool: Arc::new(Mutex::new(FramePool::new())),
             memory_profiler: Arc::new(Mutex::new(MemoryProfiler::new())),
@@ -2510,7 +2510,7 @@ mod tests {
         );
 
         let frame = Frame {
-            data: Array2::from_shape_fn((50, 50), |(y, x)| (x + y) as f32 / 100.0),
+            data: Array2::fromshape_fn((50, 50), |(y, x)| (x + y) as f32 / 100.0),
             timestamp: Instant::now(),
             index: 0,
             metadata: Some(FrameMetadata {
@@ -2531,7 +2531,7 @@ mod tests {
     #[test]
     fn test_simd_stages() {
         let frame = Frame {
-            data: Array2::from_shape_fn((100, 100), |(y, x)| (x + y) as f32 / 200.0),
+            data: Array2::fromshape_fn((100, 100), |(y, x)| (x + y) as f32 / 200.0),
             timestamp: Instant::now(),
             index: 0,
             metadata: None,

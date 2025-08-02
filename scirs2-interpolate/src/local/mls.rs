@@ -63,7 +63,7 @@ pub enum PolynomialBasis {
 /// use scirs2__interpolate::local::mls::{MovingLeastSquares, WeightFunction, PolynomialBasis};
 ///
 /// // Create some 2D scattered data
-/// let points = Array2::from_shape_vec((5, 2), vec![
+/// let points = Array2::fromshape_vec((5, 2), vec![
 ///     0.0, 0.0,
 ///     1.0, 0.0,
 ///     0.0, 1.0,
@@ -298,7 +298,7 @@ where
 
         // Filter out points with zero weight (if using compactly supported weight function)
         let effective_radius = match self.weight_fn {
-            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.bandwidth_ =>, F::infinity(),
+            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.bandwidth_ => F::infinity(),
         };
 
         let mut indices = Vec::new();
@@ -356,7 +356,7 @@ where
                         F::zero()
                     }
                 }
-                WeightFunction::InverseDistance =>, F::one() / (self.epsilon + r * r),
+                WeightFunction::InverseDistance => F::one() / (self.epsilon + r * r),
                 WeightFunction::CubicSpline => {
                     if r < F::from_f64(1.0 / 3.0).unwrap() {
                         let r2 = r * r;
@@ -607,7 +607,7 @@ mod tests {
     fn test_mls_constant_basis() {
         // Simple test with 2D data and constant basis
         let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         // Simple plane: z = x + y
         let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
@@ -632,7 +632,7 @@ mod tests {
     fn test_mls_linear_basis() {
         // Simple test with 2D data and linear basis
         let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         // Simple plane: z = x + y
         let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
@@ -647,7 +647,7 @@ mod tests {
         .unwrap();
 
         // With linear basis, should be able to reproduce the plane equation
-        let test_points = Array2::from_shape_vec(
+        let test_points = Array2::fromshape_vec(
             (5, 2),
             vec![
                 0.5, 0.5, // Should be exactly 1.0
@@ -671,7 +671,7 @@ mod tests {
     #[test]
     fn test_different_weight_functions() {
         // Simple test with 2D data - well-spaced points to avoid singularities
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (6, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.3, 0.3, 0.7, 0.7],
         )

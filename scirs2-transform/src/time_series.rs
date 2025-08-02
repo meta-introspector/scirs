@@ -602,7 +602,7 @@ mod tests {
             let t = i as f64 / n as f64 * 4.0 * std::f64::consts::PI;
             signal.push((t).sin() + 0.5 * (2.0 * t).sin());
         }
-        let x = Array::from_shape_vec((1, n), signal).unwrap();
+        let x = Array::fromshape_vec((1, n), signal).unwrap();
 
         let fourier = FourierFeatures::new(10);
         let features = fourier.transform(&x).unwrap();
@@ -632,7 +632,7 @@ mod tests {
     #[test]
     fn test_wavelet_features() {
         let x = Array::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-        let x_2d = x.clone().into_shape_with_order((1, 8)).unwrap();
+        let x_2d = x.clone().intoshape_with_order((1, 8)).unwrap();
 
         let wavelet = WaveletFeatures::new("db1", 2);
         let features = wavelet.transform(&x_2d).unwrap();

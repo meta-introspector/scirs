@@ -75,7 +75,7 @@ where
 
     match odd_degree_count {
         0 => EulerianType::Circuit,
-        2 => EulerianType::Path_ =>, EulerianType::None,
+        2 => EulerianType::Path_ => EulerianType::None,
     }
 }
 

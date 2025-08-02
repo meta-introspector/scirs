@@ -788,7 +788,7 @@ impl CacheOptimizedOperations {
     }
     
     #[cfg(not(target_arch = "x86_64"))]
-    fn prefetch_memory(&self_ptr: *const f32_offset: usize) {
+    fn prefetch_memory(&self_ptr: *const f32, offset: usize) {
         // No-op for non-x86 platforms
     }
 }

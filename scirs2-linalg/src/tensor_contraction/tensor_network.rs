@@ -258,12 +258,12 @@ where
         }
 
         // Compute shapes of the result tensor
-        let mut result_shape = Vec::new();
-        result_shape.extend_from_slice(self.data.shape());
-        result_shape.extend_from_slice(other.data.shape());
+        let mut resultshape = Vec::new();
+        resultshape.extend_from_slice(self.data.shape());
+        resultshape.extend_from_slice(other.data.shape());
 
         // Create result tensor
-        let mut result_data = ArrayD::zeros(IxDyn(&result_shape));
+        let mut result_data = ArrayD::zeros(IxDyn(&resultshape));
 
         // Compute outer product
         for self_idx in ndarray::indices(self.data.shape()) {
@@ -337,18 +337,18 @@ where
         }
 
         // Determine the shape of the result tensor
-        let mut result_shape = Vec::new();
+        let mut resultshape = Vec::new();
         let mut result_indices = Vec::new();
 
         for (i, idx) in self.indices.iter().enumerate() {
             if i != pos1 && i != pos2 {
-                result_shape.push(self.data.shape()[i]);
+                resultshape.push(self.data.shape()[i]);
                 result_indices.push(idx.clone());
             }
         }
 
         // Create result tensor
-        let mut result_data = ArrayD::zeros(IxDyn(&result_shape));
+        let mut result_data = ArrayD::zeros(IxDyn(&resultshape));
 
         // Perform trace operation
         // Note: This is a naive implementation for clarity; more efficient implementations exist
@@ -430,12 +430,12 @@ where
         }
 
         // Create a new shape with the dummy dimension added
-        let mut new_shape = self.data.shape().to_vec();
-        new_shape.insert(position, 1);
+        let mut newshape = self.data.shape().to_vec();
+        newshape.insert(position, 1);
 
         // Reshape the data to add the dummy dimension
         let mut new_data = self.data.clone();
-        new_data = new_data.into_shape_with_order(new_shape).map_err(|e| {
+        new_data = new_data.into_shape_with_order(newshape).map_err(|e| {
             LinalgError::ComputationError(format!("Failed to reshape tensor: {}", e))
         })?;
 

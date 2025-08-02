@@ -14,7 +14,7 @@
 use crate::error::StatsResult;
 use ndarray::{Array1, Array2, Array3};
 use num_traits::{Float, NumCast};
-use rand::{rng, Rng};
+use rand::Rng;
 use rand_distr::{Distribution, Normal};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::marker::PhantomData;

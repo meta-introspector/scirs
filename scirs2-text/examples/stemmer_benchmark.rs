@@ -1,4 +1,4 @@
-use scirs2__text::{LancasterStemmer, PorterStemmer, SnowballStemmer, Stemmer};
+use scirs2_text::{LancasterStemmer, PorterStemmer, SnowballStemmer, Stemmer};
 use std::error::Error;
 use std::time::{Duration, Instant};
 

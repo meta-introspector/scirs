@@ -1,18 +1,18 @@
-//! Advanced-comprehensive validation suite for Wavelet Packet Transform implementations
-//!
-//! This module provides the most advanced validation framework for WPT with:
-//! - SIMD operation correctness verification across platforms
-//! - Statistical significance testing for basis selection algorithms
-//! - Memory safety and performance regression detection
-//! - Cross-platform numerical consistency validation
-//! - Advanced mathematical property verification (tight frames, perfect reconstruction)
-//! - Machine learning-based anomaly detection in coefficient patterns
-//! - Real-time processing validation with quality guarantees
+// Advanced-comprehensive validation suite for Wavelet Packet Transform implementations
+//
+// This module provides the most advanced validation framework for WPT with:
+// - SIMD operation correctness verification across platforms
+// - Statistical significance testing for basis selection algorithms
+// - Memory safety and performance regression detection
+// - Cross-platform numerical consistency validation
+// - Advanced mathematical property verification (tight frames, perfect reconstruction)
+// - Machine learning-based anomaly detection in coefficient patterns
+// - Real-time processing validation with quality guarantees
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::wpt::{WaveletPacketTree, reconstruct_from_nodes, wp_decompose};
-use crate::wpt__validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
+use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
+use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use rand::Rng;
@@ -858,7 +858,7 @@ impl Default for AdvancedWptValidationConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::wpt_advanced_validation::{run_advanced_wpt_validation, AdvancedWptValidationConfig};
+/// use scirs2_signal::wpt_advanced_validation::{run_advanced_wpt_validation, AdvancedWptValidationConfig};
 ///
 /// let config = AdvancedWptValidationConfig::default();
 /// let results = run_advanced_wpt_validation(&config).unwrap();
@@ -2042,7 +2042,7 @@ fn calculate_coefficient_energy(_tree: &WaveletPacketTree) -> SignalResult<f64> 
 fn calculate_subband_energy_distribution(_tree: &WaveletPacketTree) -> SignalResult<Array1<f64>> {
     // Placeholder - would calculate energy in each subband
     let num_subbands = 10;
-    let distribution = Array1::ones(num_subbands) / num_subbands  as f64;
+    let distribution = Array1::ones(num_subbands) / num_subbands as f64;
     Ok(distribution)
 }
 
@@ -2091,12 +2091,12 @@ fn analyze_basis_selection_consistency(
     }
 
     let multi_run_consistency =
-        consistency_scores.iter().sum::<f64>() / consistency_scores.len()  as f64;
+        consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
     let noise_stability =
-        noise_stability_scores.iter().sum::<f64>() / noise_stability_scores.len()  as f64;
+        noise_stability_scores.iter().sum::<f64>() / noise_stability_scores.len() as f64;
     let initial_condition_sensitivity =
-        sensitivity_scores.iter().sum::<f64>() / sensitivity_scores.len()  as f64;
-    let selection_entropy = entropy_values.iter().sum::<f64>() / entropy_values.len()  as f64;
+        sensitivity_scores.iter().sum::<f64>() / sensitivity_scores.len() as f64;
+    let selection_entropy = entropy_values.iter().sum::<f64>() / entropy_values.len() as f64;
 
     Ok(BasisSelectionConsistency {
         multi_run_consistency,
@@ -2277,7 +2277,7 @@ fn generate_test_signal(_config: &TestSignalConfig) -> SignalResult<Array1<f64>>
             let f1 = _config.parameters.get("f1").unwrap_or(&0.4);
             let amplitude = _config.parameters.get("amplitude").unwrap_or(&1.0);
             for (i, &ti) in t.iter().enumerate() {
-                let freq = f0 + (f1 - f0) * ti / length  as f64;
+                let freq = f0 + (f1 - f0) * ti / length as f64;
                 signal[i] = amplitude * (2.0 * PI * freq * ti).sin();
             }
         }
@@ -2530,7 +2530,8 @@ fn calculate_reconstruction_error(
 
 #[allow(dead_code)]
 fn analyze_frequency_domain_reconstruction(
-    _original: &Array1<f64>, _reconstructed: &Array1<f64>,
+    _original: &Array1<f64>,
+    _reconstructed: &Array1<f64>,
 ) -> SignalResult<f64> {
     // TODO: Implement frequency domain reconstruction analysis using FFT
     Ok(0.0)
@@ -2538,7 +2539,9 @@ fn analyze_frequency_domain_reconstruction(
 
 #[allow(dead_code)]
 fn analyze_frequency_band_errors(
-    _original: &Array1<f64>, _reconstructed: &Array1<f64>, _num_bands: usize,
+    _original: &Array1<f64>,
+    _reconstructed: &Array1<f64>,
+    _num_bands: usize,
 ) -> SignalResult<Array1<f64>> {
     // TODO: Implement frequency band error analysis
     Ok(Array1::zeros(10))
@@ -2621,7 +2624,8 @@ fn wp_decompose_scalar(
 
 #[allow(dead_code)]
 fn compare_wpt_coefficients(
-    _simd_tree: &crate::wpt::WaveletPacketTree_scalar, _tree: &crate::wpt::WaveletPacketTree,
+    _simd_tree: &crate::wpt::WaveletPacketTree_scalar,
+    _tree: &crate::wpt::WaveletPacketTree,
 ) -> SignalResult<f64> {
     // TODO: Implement coefficient comparison between different WPT trees
     Ok(0.0)

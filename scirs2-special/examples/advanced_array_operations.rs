@@ -53,7 +53,7 @@ async fn demo_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("Gamma(input): {:?}", result_1d);
 
     // 2D gamma function
-    let input_2d = Array::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])?;
+    let input_2d = Array::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])?;
     println!("\nInput 2D array:\n{:?}", input_2d);
 
     let result_2d = convenience::gamma_2d(&input_2d).await?;

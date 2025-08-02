@@ -276,18 +276,18 @@ impl DistributedFFT {
         // For testing purposes with a single node, we can reshape directly
         if self.config.node_count == 1 || self.config.rank == 0 {
             // Ensure we're not exceeding the test size limits
-            let limited_shape: Vec<usize> = output_dim
+            let limitedshape: Vec<usize> = output_dim
                 .iter()
                 .map(|&d| d.min(self.config.max_local_size))
                 .collect();
 
             // Create output array with the right shape
-            let mut output = ArrayD::zeros(IxDyn(&limited_shape));
+            let mut output = ArrayD::zeros(IxDyn(&limitedshape));
 
             // If shapes match, we can just copy
-            if output_dim.len() == limited_shape.len() {
+            if output_dim.len() == limitedshape.len() {
                 let mut all_match = true;
-                for (a, b) in output_dim.iter().zip(limited_shape.iter()) {
+                for (a, b) in output_dim.iter().zip(limitedshape.iter()) {
                     if a != b {
                         all_match = false;
                         break;
@@ -369,11 +369,11 @@ impl DistributedFFT {
         let actual_end = my_end.min(my_start + max_size);
 
         // Calculate my slab's shape
-        let mut my_shape: Vec<usize> = shape.to_vec();
-        my_shape[0] = actual_end - my_start;
+        let mut myshape: Vec<usize> = shape.to_vec();
+        myshape[0] = actual_end - my_start;
 
         // Create output array
-        let mut output = ArrayD::zeros(IxDyn(my_shape.as_slice()));
+        let mut output = ArrayD::zeros(IxDyn(myshape.as_slice()));
 
         // Copy my portion of the _data using dynamic indexing
         if input.ndim() == 1 {
@@ -491,12 +491,12 @@ impl DistributedFFT {
         let actual_end_col = my_end_col.min(my_start_col + max_size);
 
         // Calculate my pencil's shape
-        let mut my_shape: Vec<usize> = shape.to_vec();
-        my_shape[0] = actual_end_row - my_start_row;
-        my_shape[1] = actual_end_col - my_start_col;
+        let mut myshape: Vec<usize> = shape.to_vec();
+        myshape[0] = actual_end_row - my_start_row;
+        myshape[1] = actual_end_col - my_start_col;
 
         // Create output array
-        let mut output = ArrayD::zeros(IxDyn(my_shape.as_slice()));
+        let mut output = ArrayD::zeros(IxDyn(myshape.as_slice()));
 
         // Copy my portion of the _data using dynamic indexing
         if input.ndim() == 2 {
@@ -613,13 +613,13 @@ impl DistributedFFT {
         let actual_end_col = my_end_col.min(my_start_col + max_size);
 
         // Calculate my volume's shape
-        let mut my_shape: Vec<usize> = shape.to_vec();
-        my_shape[0] = actual_end_plane - my_start_plane;
-        my_shape[1] = actual_end_row - my_start_row;
-        my_shape[2] = actual_end_col - my_start_col;
+        let mut myshape: Vec<usize> = shape.to_vec();
+        myshape[0] = actual_end_plane - my_start_plane;
+        myshape[1] = actual_end_row - my_start_row;
+        myshape[2] = actual_end_col - my_start_col;
 
         // Create output array
-        let mut output = ArrayD::zeros(IxDyn(my_shape.as_slice()));
+        let mut output = ArrayD::zeros(IxDyn(myshape.as_slice()));
 
         // Copy my portion of the _data using dynamic indexing
         if input.ndim() == 3 {
@@ -732,7 +732,7 @@ impl BasicCommunicator {
 }
 
 impl Communicator for BasicCommunicator {
-    fn send(&self, data: &[Complex64], dest: usize_tag: usize) -> FFTResult<()> {
+    fn send(&self, data: &[Complex64], dest: usize) -> FFTResult<()> {
         if dest >= self.size {
             return Err(FFTError::ValueError(format!(
                 "Invalid destination rank: {} (size: {})",
@@ -749,7 +749,7 @@ impl Communicator for BasicCommunicator {
         Ok(())
     }
 
-    fn recv(&self, src: usize_tag: usize, size: usize) -> FFTResult<Vec<Complex64>> {
+    fn recv(&self, src: usize, size: usize) -> FFTResult<Vec<Complex64>> {
         if src >= self.size {
             return Err(FFTError::ValueError(format!(
                 "Invalid source rank: {} (size: {})",
@@ -798,7 +798,7 @@ impl MockCommunicator {
 }
 
 impl Communicator for MockCommunicator {
-    fn send(&self_data: &[Complex64], dest: usize_tag: usize) -> FFTResult<()> {
+    fn send(&self, data: &[Complex64], dest: usize) -> FFTResult<()> {
         if dest >= self.size {
             return Err(FFTError::ValueError(format!(
                 "Invalid destination rank: {} (size: {})",
@@ -810,7 +810,7 @@ impl Communicator for MockCommunicator {
         Ok(())
     }
 
-    fn recv(&self, src: usize_tag: usize, size: usize) -> FFTResult<Vec<Complex64>> {
+    fn recv(&self, src: usize, size: usize) -> FFTResult<Vec<Complex64>> {
         if src >= self.size {
             return Err(FFTError::ValueError(format!(
                 "Invalid source rank: {} (size: {})",

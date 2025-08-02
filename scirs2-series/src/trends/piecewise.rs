@@ -242,10 +242,10 @@ where
         .unwrap_or_else(|| {
             // Default penalty based on criterion
             match options.criterion {
-                BreakpointCriterion::AIC =>, F::from_f64(2.0).unwrap(),
-                BreakpointCriterion::BIC =>, F::from_f64((n as f64).ln()).unwrap(),
-                BreakpointCriterion::ModifiedBIC =>, F::from_f64((n as f64).ln().powf(1.5)).unwrap(),
-                BreakpointCriterion::RSS =>, F::from_f64(15.0).unwrap(), // Arbitrary default
+                BreakpointCriterion::AIC => F::from_f64(2.0).unwrap(),
+                BreakpointCriterion::BIC => F::from_f64((n as f64).ln()).unwrap(),
+                BreakpointCriterion::ModifiedBIC => F::from_f64((n as f64).ln().powf(1.5)).unwrap(),
+                BreakpointCriterion::RSS => F::from_f64(15.0).unwrap(), // Arbitrary default
             }
         });
 

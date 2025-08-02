@@ -110,8 +110,8 @@ impl<F: Float + Debug + ScalarOperand + Display + FromPrimitive + Send + Sync>
             .map(|es_config| EarlyStoppingState {
                 config: es_config.clone(),
                 best_value: match es_config.mode {
-                    EarlyStoppingMode::Min =>, F::infinity(),
-                    EarlyStoppingMode::Max =>, F::neg_infinity(),
+                    EarlyStoppingMode::Min => F::infinity(),
+                    EarlyStoppingMode::Max => F::neg_infinity(),
                 },
                 wait: 0,
                 best_weights: None,
@@ -210,8 +210,8 @@ impl<F: Float + Debug + ScalarOperand + Display + FromPrimitive + Send + Sync>
     pub fn reset_early_stopping(&mut self) {
         if let Some(ref mut es_state) = self.early_stopping {
             es_state.best_value = match es_state.config.mode {
-                EarlyStoppingMode::Min =>, F::infinity(),
-                EarlyStoppingMode::Max =>, F::neg_infinity(),
+                EarlyStoppingMode::Min => F::infinity(),
+                EarlyStoppingMode::Max => F::neg_infinity(),
             es_state.wait = 0;
             es_state.best_weights = None;
             es_state.stopped_epoch = None;

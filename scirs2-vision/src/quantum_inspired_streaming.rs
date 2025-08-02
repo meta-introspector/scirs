@@ -852,7 +852,7 @@ impl QuantumSuperpositionStage {
         }
 
         // Create interference pattern
-        let interference_pattern = Array1::from_shape_fn(num_variants, |i| {
+        let interference_pattern = Array1::fromshape_fn(num_variants, |i| {
             (i as f64 * std::f64::consts::PI / num_variants as f64).cos()
         });
 
@@ -1060,7 +1060,7 @@ mod tests {
         let mut annealing_stage = QuantumAnnealingStage::new(params);
 
         let frame = Frame {
-            data: Array2::from_shape_fn((10, 10), |(y, x)| (x + y) as f32 / 20.0),
+            data: Array2::fromshape_fn((10, 10), |(y, x)| (x + y) as f32 / 20.0),
             timestamp: Instant::now(),
             index: 0,
             metadata: Some(FrameMetadata {
@@ -1080,7 +1080,7 @@ mod tests {
         let mut entanglement_stage = QuantumEntanglementStage::new(6, 0.1);
 
         let frame = Frame {
-            data: Array2::from_shape_fn((20, 20), |(y, x)| (x as f32 + y as f32) / 40.0),
+            data: Array2::fromshape_fn((20, 20), |(y, x)| (x as f32 + y as f32) / 40.0),
             timestamp: Instant::now(),
             index: 0,
             metadata: None,
@@ -1095,7 +1095,7 @@ mod tests {
         let mut superposition_stage = QuantumSuperpositionStage::new(4);
 
         let frame = Frame {
-            data: Array2::from_shape_fn((15, 15), |(y, x)| ((x * y) as f32).sin()),
+            data: Array2::fromshape_fn((15, 15), |(y, x)| ((x * y) as f32).sin()),
             timestamp: Instant::now(),
             index: 0,
             metadata: None,
@@ -1115,7 +1115,7 @@ mod tests {
         let mut processor = QuantumStreamProcessor::new(stage_names);
 
         let frame = Frame {
-            data: Array2::from_shape_fn((8, 8), |(y, x)| (x + y) as f32 / 16.0),
+            data: Array2::fromshape_fn((8, 8), |(y, x)| (x + y) as f32 / 16.0),
             timestamp: Instant::now(),
             index: 0,
             metadata: None,

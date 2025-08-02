@@ -530,7 +530,11 @@ impl SystemInfo for DefaultSystemInfo {
         #[cfg(not(feature = "sysinfo"))]
         {
             // Without sysinfo, use getloadavg() if on Unix-like
-            #[cfg(all(target_family = "unix", feature = "memory_compression", feature = "cross_platform"))]
+            #[cfg(all(
+                target_family = "unix",
+                feature = "memory_compression",
+                feature = "cross_platform"
+            ))]
             {
                 let mut loadavg = [0.0, 0.0, 0.0];
                 if unsafe { libc::getloadavg(loadavg.as_mut_ptr(), 3) } == 3 {
@@ -697,7 +701,11 @@ impl ResourceAwarePrefetcher {
     }
 
     /// Record performance data from prefetching.
-    pub fn record_prefetch_performance(&mut self, is_prefetched: bool, latency_ns: f64, prefetch_stats: &PrefetchStats,
+    pub fn record_prefetch_performance(
+        &mut self,
+        is_prefetched: bool,
+        latency_ns: f64,
+        prefetch_stats: &PrefetchStats,
     ) {
         if let Ok(mut stats) = self.performance_stats.lock() {
             // Update overall stats
@@ -813,7 +821,7 @@ impl ResourceAwarePrefetchingConfig {
     /// Create a new resource-aware prefetching configuration.
     pub fn config(baseconfig: PrefetchConfig, resource_config: ResourceAwareConfig) -> Self {
         Self {
-            baseconfig: baseconfig,
+            baseconfig,
             resourceconfig: resource_config,
         }
     }
@@ -852,13 +860,13 @@ mod tests {
     }
 
     impl MockSystemInfo {
-        fn bytes(u64: TypeName) -> Self {
+        fn bytes(value: u64) -> Self {
             Self {
-                cpu_usage: _cpu,
-                memory_used: mem_used,
-                memory_available: mem_avail,
-                io_ops,
-                io_bytes,
+                cpu_usage: 0.0,
+                memory_used: value,
+                memory_available: 1024 * 1024 * 1024, // 1GB default
+                io_ops: 0,
+                io_bytes: 0,
             }
         }
     }

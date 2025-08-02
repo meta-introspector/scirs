@@ -242,7 +242,7 @@ where
             .into()
     } else {
         whiten_simd_sequential(_obs)?
-            .into_shape((n_samples, n_features))
+            .intoshape((n_samples, n_features))
             .unwrap();
         return whiten_simd_sequential(_obs);
     };
@@ -850,7 +850,7 @@ mod tests {
     #[test]
     fn test_whiten_simd() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
 
         let whitened = whiten_simd(&data, None).unwrap();
 
@@ -865,9 +865,9 @@ mod tests {
     #[test]
     fn test_vq_simd() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
+        let centroids = Array2::fromshape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
 
         let (labels, distances) = vq_simd(data.view(), centroids.view(), None).unwrap();
 
@@ -883,7 +883,7 @@ mod tests {
     #[test]
     fn test_compute_centroids_simd() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
@@ -903,9 +903,9 @@ mod tests {
     #[test]
     fn test_calculate_distortion_simd() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.5, 1.0]).unwrap();
+        let centroids = Array2::fromshape_vec((2, 2), vec![0.5, 0.0, 0.5, 1.0]).unwrap();
 
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 

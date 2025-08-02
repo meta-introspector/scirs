@@ -155,7 +155,7 @@ where
                         F::zero()
                     }
                 }
-                WeightFunction::Cauchy =>, F::one() / (F::one() + scaled_u * scaled_u),
+                WeightFunction::Cauchy => F::one() / (F::one() + scaled_u * scaled_u),
             }
         })
         .collect();

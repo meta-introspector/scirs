@@ -37,7 +37,7 @@
 //! use scirs2__interpolate::spatial::kdtree::KdTree;
 //!
 //! // Create sample 2D points
-//! let points = Array2::from_shape_vec((5, 2), vec![
+//! let points = Array2::fromshape_vec((5, 2), vec![
 //!     0.0, 0.0,
 //!     1.0, 0.0,
 //!     0.0, 1.0,

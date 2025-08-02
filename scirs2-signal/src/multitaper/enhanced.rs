@@ -1,19 +1,20 @@
-//! Enhanced multitaper spectral estimation with SIMD and parallel processing
-//!
-//! This module provides high-performance implementations of multitaper spectral
-//! estimation using scirs2-core's SIMD and parallel processing capabilities.
-//!
-//! Key improvements in this version:
-//! - Enhanced numerical stability in adaptive weighting
-//! - Better convergence detection and error handling
-//! - Improved memory efficiency for large signals
-//! - More robust confidence interval computation
-//! - Better parameter validation and edge case handling
+// Enhanced multitaper spectral estimation with SIMD and parallel processing
+//
+// This module provides high-performance implementations of multitaper spectral
+// estimation using scirs2-core's SIMD and parallel processing capabilities.
+//
+// Key improvements in this version:
+// - Enhanced numerical stability in adaptive weighting
+// - Better convergence detection and error handling
+// - Improved memory efficiency for large signals
+// - More robust confidence interval computation
+// - Better parameter validation and edge case handling
 
+use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
-use crate::simd__advanced::{SimdConfig, simd_apply_window};
+use crate::simd_advanced::simd_apply_window;
 use ndarray::{Array1, Array2, ArrayView1};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rand::Rng;
 use rustfft::FftPlanner;
@@ -24,7 +25,6 @@ use statrs::distribution::{ChiSquared, ContinuousCDF};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::Arc;
-use super::windows::dpss;
 
 #[allow(unused_imports)]
 /// Enhanced multitaper PSD result with additional statistics
@@ -106,7 +106,7 @@ impl Default for MultitaperConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::multitaper::enhanced::{enhanced_pmtm, MultitaperConfig};
+/// use scirs2_signal::multitaper::enhanced::{enhanced_pmtm, MultitaperConfig};
 ///
 ///
 /// // Generate test signal
@@ -567,7 +567,7 @@ fn try_basic_simd_tapering(
     tapered: &mut [f64],
 ) -> SignalResult<()> {
     let signal_view = ArrayView1::from(signal);
-    let _tapered_view = ArrayView1::from_shape(signal.len(), tapered)
+    let _tapered_view = ArrayView1::fromshape(signal.len(), tapered)
         .map_err(|e| SignalError::ComputationError(format!("Shape error: {}", e)))?;
 
     let result = f64::simd_mul(&signal_view, taper);
@@ -966,7 +966,7 @@ fn combine_spectra_adaptive(
             } else {
                 // Fallback to equal weights
                 for i in 0..k {
-                    weights[[i, j]] = 1.0 / k  as f64;
+                    weights[[i, j]] = 1.0 / k as f64;
                 }
             }
         }
@@ -989,7 +989,7 @@ fn combine_spectra_adaptive(
                 ((old - new) / denominator).abs()
             })
             .sum::<f64>()
-            / n_freqs  as f64;
+            / n_freqs as f64;
 
         // RMS change for stability assessment
         let rms_change = (old_psd
@@ -1131,7 +1131,7 @@ fn compute_confidence_intervals(
     eigenvalues: &Array1<f64>,
     confidence_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
-    let _k = spectra.nrows()  as f64;
+    let _k = spectra.nrows() as f64;
     // Enhanced DOF calculation using effective number of tapers
     let effective_k = compute_effective_dof(eigenvalues) / 2.0;
     let dof = 2.0 * effective_k; // More accurate degrees of freedom
@@ -1241,7 +1241,7 @@ fn compute_pmtm_chunked(
         (k_) if k > 30 => 30_000, // Many tapers require smaller chunks
         (k, complexity) if k > 15 && complexity > 2.0 => 40_000, // Complex signals need more care
         (k_) if k > 10 => 60_000, // Moderate number of tapers
-        _ => 100_000,               // Standard case
+        _ => 100_000,             // Standard case
     };
 
     let chunk_size = ((base_chunk_size as f64 * memory_factor) as usize)
@@ -1438,8 +1438,8 @@ fn estimate_signal_complexity(_signal: &[f64]) -> f64 {
     }
 
     // Calculate basic statistics
-    let mean = _signal.iter().sum::<f64>() / _signal.len()  as f64;
-    let variance = _signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _signal.len()  as f64;
+    let mean = _signal.iter().sum::<f64>() / _signal.len() as f64;
+    let variance = _signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _signal.len() as f64;
     let std_dev = variance.sqrt();
 
     if std_dev < 1e-12 {
@@ -1456,7 +1456,7 @@ fn estimate_signal_complexity(_signal: &[f64]) -> f64 {
     for window in _signal.windows(2) {
         high_freq_energy += (window[1] - window[0]).powi(2);
     }
-    high_freq_energy /= _signal.len()  as f64;
+    high_freq_energy /= _signal.len() as f64;
     let high_freq_ratio = high_freq_energy / variance.max(1e-12);
 
     // Combine factors for complexity score

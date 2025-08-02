@@ -150,7 +150,7 @@ fn generate_clustered_data(_n_samples: usize, n_features: usize, n_clusters: usi
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::fromshape_vec((n_samples, n_features), data).unwrap()
 }
 
 #[allow(dead_code)]

@@ -693,7 +693,7 @@ where
             block_size,
             _method,
             n_samples,
-            seed: None_phantom: PhantomData,
+            seed: None, phantom: PhantomData,
         }
     }
 
@@ -893,7 +893,7 @@ mod tests {
     #[test]
     fn test_variational_sparse_gp() {
         // Generate simple test data
-        let x_train = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
+        let x_train = Array2::fromshape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
         let y_train = Array1::from(vec![0.0, 1.0, 4.0, 9.0, 16.0]); // y = x^2
 
         // Create kernel parameters
@@ -904,7 +904,7 @@ mod tests {
         };
 
         // Create sparse GP with 3 inducing points
-        let inducing_points = Array2::from_shape_vec((3, 1), vec![0.0, 2.0, 4.0]).unwrap();
+        let inducing_points = Array2::fromshape_vec((3, 1), vec![0.0, 2.0, 4.0]).unwrap();
         let mut sparse_gp = VariationalSparseGP::new(
             inducing_points,
             kernel_params,
@@ -916,7 +916,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Make predictions
-        let x_test = Array2::from_shape_vec((3, 1), vec![0.5, 1.5, 2.5]).unwrap();
+        let x_test = Array2::fromshape_vec((3, 1), vec![0.5, 1.5, 2.5]).unwrap();
         let (mean, variance) = sparse_gp.predict(&x_test.view()).unwrap();
 
         // Check that predictions are reasonable
@@ -1211,7 +1211,7 @@ where
                 y_boot[i] = y[idx];
             }
 
-            let pred = interpolator(&x_boot.view()..&y_boot.view(), x_new)?;
+            let pred = interpolator(&x_boot.view(), &y_boot.view(), x_new)?;
             bootstrap_results.row_mut(b).assign(&pred);
         }
 

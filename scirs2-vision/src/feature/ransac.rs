@@ -226,7 +226,7 @@ pub struct Homography {
 impl Homography {
     /// Create a new homography matrix from raw data
     pub fn new(_matrix_data: &[f64; 9]) -> Self {
-        let matrix = Array2::from_shape_vec((3, 3), _matrix_data.to_vec()).unwrap();
+        let matrix = Array2::fromshape_vec((3, 3), _matrix_data.to_vec()).unwrap();
         let inverse = match Self::invert_matrix(&matrix) {
             Ok(inv) => inv,
             Err(_) => Array2::eye(3),

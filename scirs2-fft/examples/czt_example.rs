@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Convert results to magnitude spectrum
     let czt_mag: Array1<f64> = czt_result
         .view()
-        .into_shape_with_order(n)?
+        .intoshape_with_order(n)?
         .mapv(|c| c.norm());
     let fft_mag: Vec<f64> = fft_result.iter().map(|c| c.norm()).collect();
 
@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let zoom_result = zoom_fft(&signal, m, f0, f1, Some(4.0))?;
     let zoom_mag: Array1<f64> = zoom_result
         .view()
-        .into_shape_with_order(32)?
+        .intoshape_with_order(32)?
         .mapv(|c| c.norm());
 
     // Create frequency axis for zoom FFT
@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let czt_spiral = czt(&signal, Some(128), Some(w), Some(a), None)?;
     let spiral_mag: Array1<f64> = czt_spiral
         .view()
-        .into_shape_with_order(m)?
+        .intoshape_with_order(m)?
         .mapv(|c| c.norm());
 
     // Get the actual points on the spiral

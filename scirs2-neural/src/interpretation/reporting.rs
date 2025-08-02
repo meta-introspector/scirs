@@ -17,7 +17,7 @@ use statrs::statistics::Statistics;
 #[derive(Debug, Clone)]
 pub struct InterpretationReport<F: Float + Debug> {
     /// Shape of the input being analyzed
-    pub input_shape: IxDyn,
+    pub inputshape: IxDyn,
     /// Target class for the analysis (if applicable)
     pub target_class: Option<usize>,
     /// Attribution results from different methods
@@ -147,7 +147,7 @@ pub fn generate_basic_report<F>(
         attribution_stats.insert(method_name.clone(), stats);
     let interpretation_summary = super::analysis::generate_interpretation_summary(&attributions);
     Ok(InterpretationReport {
-        input_shape: input.raw_dim(),
+        inputshape: input.raw_dim(),
         target_class,
         attributions,
         attribution_statistics: attribution_stats,
@@ -273,7 +273,7 @@ fn export_to_json<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<S
     // Build JSON object with report data
     let mut json_obj = Map::new();
     // Basic report information
-    json_obj.insert("input_shape".to_string(), json!(report.basic_report.input_shape));
+    json_obj.insert("inputshape".to_string(), json!(report.basic_report.inputshape));
     json_obj.insert("target_class".to_string(), json!(report.basic_report.target_class));
     // Attribution methods (convert to string list)
     let attribution_methods: Vec<String> = report.basic_report.attributions
@@ -337,7 +337,7 @@ fn export_to_csv<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<St
     let mut csv_content = String::new();
     // Header for method confidence data
     csv_content.push_str("section,key,value\n");
-    csv_content.push_str(&format!("basic_info,input_shape,\"{:?}\"\n", report.basic_report.input_shape));
+    csv_content.push_str(&format!("basic_info,inputshape,\"{:?}\"\n", report.basic_report.inputshape));
         csv_content.push_str(&format!("basic_info,target_class,{target_class}\n"));
     let num_methods = report.basic_report.attributions.len();
     csv_content.push_str(&format!("basic_info,num_attribution_methods,{}\n", num_methods));
@@ -382,7 +382,7 @@ fn export_to_yaml<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<S
     use serde_yaml;
     // Reuse the JSON structure but serialize to YAML
     let mut yaml_obj = Map::new();
-    yaml_obj.insert("input_shape".to_string(), json!(report.basic_report.input_shape));
+    yaml_obj.insert("inputshape".to_string(), json!(report.basic_report.inputshape));
     yaml_obj.insert("target_class".to_string(), json!(report.basic_report.target_class));
     yaml_obj.insert("attribution_method".to_string(), json!(format!("{:?}", report.basic_report.attribution_method)));
     yaml_obj.insert("concept_activations".to_string(), json!(report.concept_activations));
@@ -406,7 +406,7 @@ fn export_to_xml<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<St
     xml_content.push_str("<interpretation_report>\n");
     // Basic information
     xml_content.push_str("  <basic_info>\n");
-    xml_content.push_str(&format!("    <input_shape>{:?}</input_shape>\n", report.basic_report.input_shape));
+    xml_content.push_str(&format!("    <inputshape>{:?}</inputshape>\n", report.basic_report.inputshape));
         xml_content.push_str(&format!("    <target_class>{}</target_class>\n", target_class));
     xml_content.push_str(&format!("    <attribution_method>{:?}</attribution_method>\n", report.basic_report.attribution_method));
     xml_content.push_str("  </basic_info>\n");
@@ -433,7 +433,7 @@ fn export_to_xml<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<St
 fn export_to_toml<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<String>
     let mut toml_content = String::new();
     toml_content.push_str("[basic_info]\n");
-    toml_content.push_str(&format!("input_shape = \"{:?}\"\n", report.basic_report.input_shape));
+    toml_content.push_str(&format!("inputshape = \"{:?}\"\n", report.basic_report.inputshape));
         toml_content.push_str(&format!("target_class = {}\n", target_class));
     toml_content.push_str(&format!("attribution_method = \"{:?}\"\n", report.basic_report.attribution_method));
     toml_content.push_str("\n");
@@ -456,7 +456,7 @@ impl<F: Float + Debug> + std::fmt::Display for InterpretationReport<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Interpretation Report")?;
         writeln!(f, "===================")?;
-        writeln!(f, "Input shape: {:?}", self.input_shape)?;
+        writeln!(f, "Input shape: {:?}", self.inputshape)?;
         if let Some(class) = self.target_class {
             writeln!(f, "Target class: {}", class)?;
         writeln!(f, "Attribution methods: {}", self.attributions.len())?;
@@ -556,7 +556,7 @@ mod tests {
                 total_negative_attribution: -5.0,
             },
         let report = InterpretationReport {
-            input_shape: Array::<f64>::ones((3, 32, 32)).into_dyn().raw_dim(),
+            inputshape: Array::<f64>::ones((3, 32, 32)).into_dyn().raw_dim(),
             target_class: Some(1),
             attributions: HashMap::new(),
             attribution_statistics: attribution_stats,

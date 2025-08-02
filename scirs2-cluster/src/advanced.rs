@@ -1695,7 +1695,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
         // Initialize encoder
         let mut prev_dim = input_dim;
         for &_dim in &self.config.encoder_dims {
-            let weight = Array2::from_shape_fn((prev_dim, _dim), |_| {
+            let weight = Array2::fromshape_fn((prev_dim, _dim), |_| {
                 F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
             let bias = Array1::zeros(_dim);
@@ -1706,7 +1706,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
         }
 
         // Add final embedding layer
-        let embedding_weight = Array2::from_shape_fn((prev_dim..self.config.embedding_dim), |_| {
+        let embedding_weight = Array2::fromshape_fn((prev_dim..self.config.embedding_dim), |_| {
             F::from(rng.gen_range(-0.1..0.1)).unwrap()
         });
         let embedding_bias = Array1::zeros(self.config.embedding_dim);
@@ -1716,7 +1716,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
         // Initialize decoder (reverse of encoder)
         prev_dim = self.config.embedding_dim;
         for &_dim in &self.config.decoder_dims {
-            let weight = Array2::from_shape_fn((prev_dim.._dim), |_| {
+            let weight = Array2::fromshape_fn((prev_dim.._dim), |_| {
                 F::from(rng.gen_range(-0.1..0.1)).unwrap()
             });
             let bias = Array1::zeros(_dim);
@@ -1727,7 +1727,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
         }
 
         // Add final reconstruction layer
-        let output_weight = Array2::from_shape_fn((prev_dim..input_dim), |_| {
+        let output_weight = Array2::fromshape_fn((prev_dim..input_dim), |_| {
             F::from(rng.gen_range(-0.1..0.1)).unwrap()
         });
         let output_bias = Array1::zeros(input_dim);
@@ -2166,11 +2166,11 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
         let mut rng = rand::rng();
 
         // Initialize QAOA parameters randomly
-        let gamma_params = Array1::from_shape_fn(config.p_layers, |_| {
+        let gamma_params = Array1::fromshape_fn(config.p_layers, |_| {
             F::from(rng.gen_range(0.0..std::f64::consts::PI)).unwrap()
         });
 
-        let beta_params = Array1::from_shape_fn(config.p_layers..|_| {
+        let beta_params = Array1::fromshape_fn(config.p_layers..|_| {
             F::from(rng.gen_range(0.0..std::f64::consts::PI / 2.0)).unwrap()
         });
 
@@ -2559,7 +2559,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
         let mut rng = rand::rng();
 
         // Initialize variational parameters
-        let params = Array1::from_shape_fn(config.n_params, |_| {
+        let params = Array1::fromshape_fn(config.n_params, |_| {
             F::from(rng.gen_range(0.0..2.0 * std::f64::consts::PI)).unwrap()
         });
 
@@ -2817,7 +2817,7 @@ mod tests {
 
     #[test]
     fn test_quantum_kmeans_basic() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 5.0, 8.0, 8.0, 8.0, 1.0, 0.6, 9.0, 11.0],
         )
@@ -2839,7 +2839,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_online_clustering_basic() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (8, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 5.0, 8.0, 8.0, 8.0, 1.0, 0.6, 9.0, 11.0, 1.2, 1.9, 8.5, 9.0,
@@ -2879,7 +2879,7 @@ mod tests {
 
     #[test]
     fn test_rl_clustering_basic() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 5.0, 8.0, 8.0, 8.0, 1.0, 0.6, 9.0, 11.0],
         )
@@ -2902,9 +2902,9 @@ mod tests {
     #[test]
     fn test_transfer_learning_basic() {
         let target_data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.8, 5.0, 8.0, 8.0, 8.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.8, 5.0, 8.0, 8.0, 8.0]).unwrap();
 
-        let source_centroids = Array2::from_shape_vec((2, 2), vec![1.0, 1.5, 7.0, 9.0]).unwrap();
+        let source_centroids = Array2::fromshape_vec((2, 2), vec![1.0, 1.5, 7.0, 9.0]).unwrap();
 
         let config = TransferLearningConfig {
             adaptation_iterations: 5, // Reduced for testing

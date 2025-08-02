@@ -70,15 +70,15 @@ where
     }
 
     /// Create a new zero banded array
-    pub fn zeros(_shape: (usize, usize), kl: usize, ku: usize) -> Self {
+    pub fn zeros(shape: (usize, usize), kl: usize, ku: usize) -> Self {
         let bands = kl + ku + 1;
-        let data = Array2::zeros((bands, _shape.0));
+        let data = Array2::zeros((bands, shape.0));
 
         Self {
             data,
             kl,
             ku,
-            shape: _shape,
+            shape: shape,
         }
     }
 
@@ -898,7 +898,7 @@ mod tests {
 
     #[test]
     fn test_banded_array_creation() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (3, 4),
             vec![
                 0.0, 1.0, 2.0, 3.0, // Upper diagonal

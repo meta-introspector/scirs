@@ -263,7 +263,8 @@ impl ThresholdAnalyzer {
                     (1.0, 1.0) => tp += 1,
                     (0.0, 1.0) => fp += 1,
                     (0.0, 0.0) => tn += 1,
-                    (1.0, 0.0) => fn_ += 1_ => {
+                    (1.0, 0.0) => fn_ += 1,
+                    _ => {
                         return Err(MetricsError::InvalidArgument(format!(
                             "Invalid true value: {true_val}"
                         )));
@@ -554,7 +555,8 @@ impl ThresholdAnalyzer {
             "mcc" => metrics.iter().map(|m| m.mcc).collect(),
             "kappa" => metrics.iter().map(|m| m.kappa).collect(),
             "youdens_j" | "j" => metrics.iter().map(|m| m.youdens_j).collect(),
-            "balanced_accuracy" => metrics.iter().map(|m| m.balanced_accuracy).collect(, _ => {
+            "balanced_accuracy" => metrics.iter().map(|m| m.balanced_accuracy).collect(),
+            _ => {
                 return Err(MetricsError::InvalidArgument(format!(
                     "Unknown metric: {metric_name}"
                 )))

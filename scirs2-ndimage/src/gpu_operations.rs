@@ -405,7 +405,7 @@ impl GpuOperations {
         &self,
         input: ArrayView2<T>, _kernel: ArrayView2<T>,
         kernel_source: &str,
-        backend: Backend_mode: BoundaryMode,
+        backend: Backend, mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync,
@@ -421,7 +421,7 @@ impl GpuOperations {
         &self,
         input: ArrayView2<T>, _structuring_element: ArrayView2<bool>,
         kernel_source: &str,
-        backend: Backend_mode: BoundaryMode, _operation: MorphologyOperation,
+        backend: Backend, mode: BoundaryMode, _operation: MorphologyOperation,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
@@ -441,7 +441,7 @@ impl GpuOperations {
         &self,
         input: ArrayView2<T>, _sigma: (f64, f64),
         kernel_source: &str,
-        backend: Backend_mode: BoundaryMode,
+        backend: Backend, mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync,

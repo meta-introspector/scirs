@@ -222,7 +222,7 @@ fn create_model() -> Sequential {
     let mut model = Sequential::new("SimpleModel", Vec::new());
 
     // Add layers
-    model.add_layer(Box::new(Conv2D::with_shape(
+    model.add_layer(Box::new(Conv2D::withshape(
         "conv1",
         3,
         3, // Filter size
@@ -241,7 +241,7 @@ fn create_model() -> Sequential {
         (0, 0), // Padding
     )));
 
-    model.add_layer(Box::new(Conv2D::with_shape(
+    model.add_layer(Box::new(Conv2D::withshape(
         "conv2",
         3,
         3, // Filter size
@@ -260,7 +260,7 @@ fn create_model() -> Sequential {
         (0, 0), // Padding
     )));
 
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::withshape(
         "fc1",
         32 * 6 * 6, // Input features (assuming input size is 28x28)
         128,        // Output features
@@ -268,7 +268,7 @@ fn create_model() -> Sequential {
         Some(ActivationFunc::ReLU),
     )));
 
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::withshape(
         "fc_out", 128,  // Input features
         10,   // Output features
         true, // With bias
@@ -287,7 +287,7 @@ fn create_dataset() -> (InMemoryDataset, InMemoryDataset) {
     let num_classes = 10;
 
     // Generate random inputs
-    let inputs = Array2::<f64>::from_shape_fn((num_samples, num_features), |_| {
+    let inputs = Array2::<f64>::fromshape_fn((num_samples, num_features), |_| {
         rand::random::<f64>() * 2.0.saturating_sub(1).0
     });
 

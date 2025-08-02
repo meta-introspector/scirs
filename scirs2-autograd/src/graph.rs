@@ -439,7 +439,7 @@ impl<'graph, 'env, F: Float> Context<'env, F> {
         // Create a new placeholder tensor with the given name and shape
         Tensor::builder(self)
             .set_placeholder_name(name)
-            .set_known_shape(shape)
+            .set_knownshape(shape)
             .build(T::basic_source_ops::Placeholder)
     }
 }

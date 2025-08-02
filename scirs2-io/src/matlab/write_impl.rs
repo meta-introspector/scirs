@@ -26,7 +26,7 @@ const MI_UINT64: i32 = 13;
 
 /// Write MAT file header (simplified version)
 #[allow(dead_code)]
-pub fn write_mat_header<W: Write>(_writer: &mut W) -> Result<()> {
+pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
     // Write "MATLAB" magic string
     _writer
         .write_all(b"MATLAB")
@@ -42,9 +42,9 @@ pub fn write_mat_header<W: Write>(_writer: &mut W) -> Result<()> {
         .map_err(|e| IoError::FileError(format!("Failed to write description: {e}")))?;
 
     // Calculate padding needed to reach position 124 (subsystem data offset at 124-128)
-    let header_text_target = 124;
+    let headertext_target = 124;
     let already_written = 6 + description_len; // "MATLAB" (6 bytes) + description
-    let padding_needed = header_text_target - already_written;
+    let padding_needed = headertext_target - already_written;
 
     // Write padding (spaces or nulls)
     if padding_needed > 0 {
@@ -218,7 +218,7 @@ fn write_matrix_header_content<W: Write + Seek>(
 
 /// Write double precision data
 #[allow(dead_code)]
-fn write_double_data<W: Write>(_writer: &mut W, array: &ArrayD<f64>) -> Result<()> {
+fn write_double_data<W: Write>(writer: &mut W, array: &ArrayD<f64>) -> Result<()> {
     let data_size = (array.len() * 8) as i32;
     _writer
         .write_i32::<LittleEndian>(MI_DOUBLE)
@@ -246,7 +246,7 @@ fn write_double_data<W: Write>(_writer: &mut W, array: &ArrayD<f64>) -> Result<(
 
 /// Write single precision data
 #[allow(dead_code)]
-fn write_single_data<W: Write>(_writer: &mut W, array: &ArrayD<f32>) -> Result<()> {
+fn write_single_data<W: Write>(writer: &mut W, array: &ArrayD<f32>) -> Result<()> {
     let data_size = (array.len() * 4) as i32;
     _writer
         .write_i32::<LittleEndian>(MI_SINGLE)
@@ -274,7 +274,7 @@ fn write_single_data<W: Write>(_writer: &mut W, array: &ArrayD<f32>) -> Result<(
 
 /// Write int32 data
 #[allow(dead_code)]
-fn write_int32_data<W: Write>(_writer: &mut W, array: &ArrayD<i32>) -> Result<()> {
+fn write_int32_data<W: Write>(writer: &mut W, array: &ArrayD<i32>) -> Result<()> {
     let data_size = (array.len() * 4) as i32;
     _writer
         .write_i32::<LittleEndian>(MI_INT32)
@@ -302,7 +302,7 @@ fn write_int32_data<W: Write>(_writer: &mut W, array: &ArrayD<i32>) -> Result<()
 
 /// Write logical data (as uint8)
 #[allow(dead_code)]
-fn write_logical_data<W: Write>(_writer: &mut W, array: &ArrayD<bool>) -> Result<()> {
+fn write_logical_data<W: Write>(writer: &mut W, array: &ArrayD<bool>) -> Result<()> {
     let data_size = array.len() as i32;
     _writer
         .write_i32::<LittleEndian>(MI_UINT8)

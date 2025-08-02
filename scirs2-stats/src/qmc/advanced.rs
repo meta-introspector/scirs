@@ -687,7 +687,7 @@ impl AdvancedQMCGenerator {
 
             // Use Faure-Tezuka permutation pattern
             for i in 1..base {
-                let j = rng.gen_range(0..=i);
+                let j = rng.gen_range(0..i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -729,7 +729,7 @@ impl AdvancedQMCGenerator {
 
             // Enhanced shuffling with bias towards uniformity
             for i in (1..base).rev() {
-                let j = rng.gen_range(0..=i);
+                let j = rng.gen_range(0..i);
                 perm.swap(i as usize, j as usize);
             }
 

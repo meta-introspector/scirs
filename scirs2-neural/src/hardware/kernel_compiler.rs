@@ -158,10 +158,10 @@ impl CompilationTarget {
     /// From accelerator type
     pub fn from_accelerator(_acc_type: AcceleratorType) -> Self {
         match _acc_type {
-            AcceleratorType::CUDA =>, CompilationTarget::CUDA,
-            AcceleratorType::ROCm =>, CompilationTarget::OpenCL,
-            AcceleratorType::OneAPI =>, CompilationTarget::SPIRV,
-            AcceleratorType::Metal => CompilationTarget::Metal_ =>, CompilationTarget::CPU,
+            AcceleratorType::CUDA => CompilationTarget::CUDA,
+            AcceleratorType::ROCm => CompilationTarget::OpenCL,
+            AcceleratorType::OneAPI => CompilationTarget::SPIRV,
+            AcceleratorType::Metal => CompilationTarget::Metal_ => CompilationTarget::CPU,
 /// Compiled kernel representation
 #[derive(Clone)]
 pub struct CompiledKernel {
@@ -195,8 +195,8 @@ impl KernelTemplateGenerator {
         k: usize,
         tile_size: usize,
     ) -> String {
-            CompilationTarget::CUDA =>, Self::cuda_matmul_template(m, n, k, tile_size),
-            CompilationTarget::OpenCL =>, Self::opencl_matmul_template(m, n, k, tile_size, _ => String::new(),
+            CompilationTarget::CUDA => Self::cuda_matmul_template(m, n, k, tile_size),
+            CompilationTarget::OpenCL => Self::opencl_matmul_template(m, n, k, tile_size, _ => String::new(),
     /// CUDA matrix multiplication template
     fn cuda_matmul_template(m: usize, n: usize, k: usize, tile_size: usize) -> String {
         format!(

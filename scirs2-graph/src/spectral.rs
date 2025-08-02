@@ -236,7 +236,7 @@ fn deflated_lanczos_iteration(
 
     // Generate random starting vector
     let mut rng = rand::rng();
-    let mut v: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random::<f64>() - 0.5);
+    let mut v: Array1<f64> = Array1::fromshape_fn(n, |_| rng.random::<f64>() - 0.5);
 
     // Deflate against previous _eigenvectors
     for j in 0..prev_eigenvectors.ncols() {
@@ -370,7 +370,7 @@ fn solve_tridiagonal_eigenvalue(
     if n == 1 {
         return Ok((
             vec![alpha[0]],
-            Array2::from_shape_vec((1, 1), vec![1.0]).unwrap(),
+            Array2::fromshape_vec((1, 1), vec![1.0]).unwrap(),
         ));
     }
 
@@ -412,7 +412,7 @@ fn solve_small_symmetric_eigenvalue(
     if n == 1 {
         return Ok((
             vec![matrix[[0, 0]]],
-            Array2::from_shape_vec((1, 1), vec![1.0]).unwrap(),
+            Array2::fromshape_vec((1, 1), vec![1.0]).unwrap(),
         ));
     }
 
@@ -1210,7 +1210,7 @@ fn parallel_deflated_lanczos_iteration(
 
     // Generate random starting vector using parallel RNG
     let mut rng = rand::rng();
-    let mut v: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random::<f64>() - 0.5);
+    let mut v: Array1<f64> = Array1::fromshape_fn(n, |_| rng.random::<f64>() - 0.5);
 
     // Parallel deflation against previous _eigenvectors
     for j in 0..prev_eigenvectors.ncols() {
@@ -1299,7 +1299,7 @@ mod tests {
         //  [ 0, -1,  2, -1],
         //  [-1,  0, -1,  2]]
 
-        let expected = Array2::from_shape_vec(
+        let expected = Array2::fromshape_vec(
             (4, 4),
             vec![
                 2.0, -1.0, 0.0, -1.0, -1.0, 2.0, -1.0, 0.0, 0.0, -1.0, 2.0, -1.0, -1.0, 0.0, -1.0,

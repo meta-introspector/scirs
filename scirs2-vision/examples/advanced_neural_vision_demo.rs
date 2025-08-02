@@ -399,7 +399,7 @@ fn create_test_images() -> Result<(Array2<f32>, Vec<Array2<f32>>)> {
     let height = 480;
 
     // Create main test image with various features
-    let test_image = Array2::from_shape_fn((height, width), |(y, x)| {
+    let test_image = Array2::fromshape_fn((height, width), |(y, x)| {
         let fx = x as f32 / width as f32;
         let fy = y as f32 / height as f32;
 
@@ -522,7 +522,7 @@ fn create_detection_sequences() -> Vec<Vec<Detection>> {
                 TrackingBoundingBox::new(x, y, 50.0, 80.0, 0.8 + obj_id as f32 * 0.05, obj_id);
 
             // Add synthetic appearance feature
-            let feature = Array1::from_shape_fn(128, |i| {
+            let feature = Array1::fromshape_fn(128, |i| {
                 ((obj_id as f32 + i as f32) * 0.1).sin() * 0.5 + 0.5
             });
 

@@ -328,8 +328,8 @@ impl MemristiveCrossbar {
 
         // Wire resistance (increases with array size)
         let wire_r_per_cell = 1.0; // Ohms per cell
-        let row_resistance = Array1::from_shape_fn(rows, |i| wire_r_per_cell * (i + 1) as f64);
-        let col_resistance = Array1::from_shape_fn(cols, |j| wire_r_per_cell * (j + 1) as f64);
+        let row_resistance = Array1::fromshape_fn(rows, |i| wire_r_per_cell * (i + 1) as f64);
+        let col_resistance = Array1::fromshape_fn(cols, |j| wire_r_per_cell * (j + 1) as f64);
 
         let mut stats = CrossbarStats::default();
         stats.faulty_devices = faulty_count;

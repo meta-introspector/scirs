@@ -73,10 +73,10 @@ where
 
     // Initialize _indices array if needed
     let mut _indices = if return_indices {
-        let mut ind_shape = Vec::with_capacity(ndim + 1);
-        ind_shape.push(ndim);
-        ind_shape.extend(shape);
-        Some(Array::zeros(IxDyn(&ind_shape)))
+        let mut indshape = Vec::with_capacity(ndim + 1);
+        indshape.push(ndim);
+        indshape.extend(shape);
+        Some(Array::zeros(IxDyn(&indshape)))
     } else {
         None
     };
@@ -411,10 +411,10 @@ where
     };
 
     let mut _indices = if return_indices {
-        let mut ind_shape = Vec::with_capacity(ndim + 1);
-        ind_shape.push(ndim);
-        ind_shape.extend(shape);
-        Some(Array::zeros(IxDyn(&ind_shape)))
+        let mut indshape = Vec::with_capacity(ndim + 1);
+        indshape.push(ndim);
+        indshape.extend(shape);
+        Some(Array::zeros(IxDyn(&indshape)))
     } else {
         None
     };

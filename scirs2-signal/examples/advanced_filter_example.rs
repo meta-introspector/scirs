@@ -1,18 +1,18 @@
-//! Advanced Filter Design Example
-//!
-//! This example demonstrates the advanced filter design capabilities including:
-//! - Improved Butterworth filters with proper analog prototypes
-//! - Chebyshev Type I and Type II filters
-//! - Bessel filters with maximally flat group delay
-//! - Comb filters for periodic signal processing
-//! - Notch and peak filters for frequency-specific processing
-//! - Allpass filters for phase equalization
+// Advanced Filter Design Example
+//
+// This example demonstrates the advanced filter design capabilities including:
+// - Improved Butterworth filters with proper analog prototypes
+// - Chebyshev Type I and Type II filters
+// - Bessel filters with maximally flat group delay
+// - Comb filters for periodic signal processing
+// - Notch and peak filters for frequency-specific processing
+// - Allpass filters for phase equalization
 
-use scirs2__signal::filter::{
-use std::f64::consts::PI;
+use scirs2_signal::filter::{
     allpass_filter, bessel, butter, cheby1, cheby2, comb_filter, ellip, group_delay, lfilter,
     notch_filter, peak_filter,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -52,7 +52,7 @@ fn main() {
     println!("  Denominator: {:?}", format_coeffs(&a_cheb2));
 
     // Example 4: Elliptic (Cauer) Filter Design
-    println!("\\n\\n4. Elliptic (Cauer) Filter Design");
+    println!("\n\n4. Elliptic (Cauer) Filter Design");
     println!("--------------------------------");
 
     let (b_ellip, a_ellip) = ellip(4, 0.5, 40.0, 0.3, "lowpass").unwrap(); // 0.5 dB ripple, 40 dB attenuation
@@ -89,7 +89,7 @@ fn main() {
     println!("--------------------");
 
     // FIR comb filter for echo enhancement
-    let (b_comb_fir_a_comb_fir) = comb_filter(20, 0.0, 0.5).unwrap();
+    let (b_comb_fir, a_comb_fir) = comb_filter(20, 0.0, 0.5).unwrap();
     println!("FIR comb filter (20-sample delay, 0.5 gain):");
     println!("  Numerator length: {}", b_comb_fir.len());
     println!(

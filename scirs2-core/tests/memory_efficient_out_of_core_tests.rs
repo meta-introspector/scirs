@@ -10,7 +10,7 @@ mod tests {
     #[test]
     fn test_out_of_core_array_creation() {
         // Create test data
-        let data = Array2::from_shape_fn((10, 10), |(i, j)| i as f64 + j as f64);
+        let data = Array2::fromshape_fn((10, 10), |(i, j)| i as f64 + j as f64);
 
         // Create a temporary file
         let temp_file = NamedTempFile::new().unwrap();
@@ -33,7 +33,7 @@ mod tests {
     #[test]
     fn test_out_of_core_array_temp() {
         // Create test data
-        let data = Array2::from_shape_fn((10, 10), |(i, j)| i as f64 + j as f64);
+        let data = Array2::fromshape_fn((10, 10), |(i, j)| i as f64 + j as f64);
 
         // Create a temporary out-of-core array
         let result = OutOfCoreArray::new_temp(&data, ChunkingStrategy::Fixed(5));
@@ -59,7 +59,7 @@ mod tests {
     #[test]
     fn test_out_of_core_array_load() {
         // Create test data with a specific pattern
-        let data = Array2::from_shape_fn((5, 5), |(i, j)| (i * 10 + j) as f64);
+        let data = Array2::fromshape_fn((5, 5), |(i, j)| (i * 10 + j) as f64);
 
         // Create a temporary file
         let temp_file = NamedTempFile::new().unwrap();
@@ -84,7 +84,7 @@ mod tests {
     #[test]
     fn test_disk_backed_array() {
         // Create test data
-        let data = Array2::from_shape_fn((10, 10), |(i, j)| i as f64 + j as f64);
+        let data = Array2::fromshape_fn((10, 10), |(i, j)| i as f64 + j as f64);
 
         // Create a temporary file
         let temp_file = NamedTempFile::new().unwrap();
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn test_disk_backed_array_temp() {
         // Create test data
-        let data = Array2::from_shape_fn((10, 10), |(i, j)| i as f64 + j as f64);
+        let data = Array2::fromshape_fn((10, 10), |(i, j)| i as f64 + j as f64);
 
         // Create a temporary disk-backed array
         let result = DiskBackedArray::new_temp(
@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn test_out_of_core_array_num_chunks() {
         // Create test data
-        let data = Array2::from_shape_fn((100, 10), |(i, j)| i as f64 + j as f64);
+        let data = Array2::fromshape_fn((100, 10), |(i, j)| i as f64 + j as f64);
 
         // Create a temporary out-of-core array with different chunking strategies
 
@@ -182,13 +182,13 @@ mod tests {
     #[test]
     fn test_out_of_core_array_map_functionality() {
         // Create test data
-        let data = Array2::from_shape_fn((5, 5), |(i, j)| i as f64 + j as f64);
+        let data = Array2::fromshape_fn((5, 5), |(i, j)| i as f64 + j as f64);
 
         // Create a temporary out-of-core array with smaller chunks to avoid shape issues
         let array = OutOfCoreArray::new_temp(&data, ChunkingStrategy::Fixed(25)).unwrap();
 
         // Test that map works - sum all elements in each chunk
-        let result: Result<Vec<f64>_> = array.map(|chunk| chunk.sum());
+        let result: Result<Vec<f64>> = array.map(|chunk| chunk.sum());
 
         // The map should succeed (though the specific results depend on chunking implementation)
         assert!(result.is_ok());

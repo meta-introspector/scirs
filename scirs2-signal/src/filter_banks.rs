@@ -1,53 +1,53 @@
-//! Filter Bank Design and Analysis
-//!
-//! This module provides comprehensive filter bank design and analysis functionality,
-//! including quadrature mirror filters (QMF), wavelet filter banks, and multirate
-//! signal processing systems.
-//!
-//! ## Filter Bank Types
-//!
-//! - **QMF Banks**: Quadrature Mirror Filter banks for perfect reconstruction
-//! - **Wavelet Filter Banks**: Filter banks based on wavelet decomposition
-//! - **Cosine Modulated Banks**: Efficient filter banks using cosine modulation
-//! - **Oversampled Banks**: Filter banks with oversampling for reduced aliasing
-//! - **Polyphase Filter Banks**: Efficient implementation using polyphase decomposition
-//!
-//! ## Features
-//!
-//! - Perfect reconstruction filter bank design
-//! - Aliasing and distortion analysis
-//! - Multirate signal processing operations
-//! - Efficient polyphase implementations
-//! - Filter bank optimization for various criteria
-//!
-//! ## Example Usage
-//!
-//! ```rust
-//! use ndarray::Array1;
-//! use scirs2_signal::filter_banks::{QmfBank, WaveletFilterBank, FilterBankType};
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!
-//! // Design a QMF filter bank
-//! let qmf = QmfBank::new(8, FilterBankType::Orthogonal)?;
-//! let input = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-//!
-//! // Analysis (decomposition)
-//! let subbands = qmf.analysis(&input)?;
-//!
-//! // Synthesis (reconstruction)
-//! let reconstructed = qmf.synthesis(&subbands)?;
-//!
-//! // Design a wavelet filter bank
-//! let wavelet_bank = WaveletFilterBank::new("db4", 3)?;
-//! let coeffs = wavelet_bank.decompose(&input)?;
-//! let recovered = wavelet_bank.reconstruct(&coeffs)?;
-//! # Ok(())
-//! # }
-//! ```
+// Filter Bank Design and Analysis
+//
+// This module provides comprehensive filter bank design and analysis functionality,
+// including quadrature mirror filters (QMF), wavelet filter banks, and multirate
+// signal processing systems.
+//
+// ## Filter Bank Types
+//
+// - **QMF Banks**: Quadrature Mirror Filter banks for perfect reconstruction
+// - **Wavelet Filter Banks**: Filter banks based on wavelet decomposition
+// - **Cosine Modulated Banks**: Efficient filter banks using cosine modulation
+// - **Oversampled Banks**: Filter banks with oversampling for reduced aliasing
+// - **Polyphase Filter Banks**: Efficient implementation using polyphase decomposition
+//
+// ## Features
+//
+// - Perfect reconstruction filter bank design
+// - Aliasing and distortion analysis
+// - Multirate signal processing operations
+// - Efficient polyphase implementations
+// - Filter bank optimization for various criteria
+//
+// ## Example Usage
+//
+// ```rust
+// use ndarray::Array1;
+// use scirs2_signal::filter_banks::{QmfBank, WaveletFilterBank, FilterBankType};
+// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//
+// // Design a QMF filter bank
+// let qmf = QmfBank::new(8, FilterBankType::Orthogonal)?;
+// let input = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+//
+// // Analysis (decomposition)
+// let subbands = qmf.analysis(&input)?;
+//
+// // Synthesis (reconstruction)
+// let reconstructed = qmf.synthesis(&subbands)?;
+//
+// // Design a wavelet filter bank
+// let wavelet_bank = WaveletFilterBank::new("db4", 3)?;
+// let coeffs = wavelet_bank.decompose(&input)?;
+// let recovered = wavelet_bank.reconstruct(&coeffs)?;
+// # Ok(())
+// # }
+// ```
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::filter::{FilterType, butter};
+use crate::filter::{butter, FilterType};
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use std::f64::consts::PI;

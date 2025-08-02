@@ -1,14 +1,14 @@
-//! Enhanced Modern WPT Validation Demonstration
-//!
-//! This example demonstrates the use of the enhanced modern validation
-//! framework for wavelet packet transforms, showing how to:
-//! - Configure comprehensive validation testing
-//! - Run various modern validation techniques
-//! - Analyze and interpret validation results
-//! - Generate detailed validation reports
+// Enhanced Modern WPT Validation Demonstration
+//
+// This example demonstrates the use of the enhanced modern validation
+// framework for wavelet packet transforms, showing how to:
+// - Configure comprehensive validation testing
+// - Run various modern validation techniques
+// - Analyze and interpret validation results
+// - Generate detailed validation reports
 
-use scirs2__signal::dwt::Wavelet;
-use scirs2__signal::wpt_enhanced_modern_validation::{
+use scirs2_signal::dwt::Wavelet;
+use scirs2_signal::wpt_enhanced_modern_validation::{
 use std::f64::consts::PI;
     generate_enhanced_modern_validation_report, run_enhanced_modern_validation,
     EnhancedModernValidationConfig,

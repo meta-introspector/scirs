@@ -1,20 +1,21 @@
-//! Validation utilities for 2D Discrete Wavelet Transform
-//!
-//! This module provides comprehensive validation for 2D DWT implementations,
-//! including perfect reconstruction, energy conservation, and comparison
-//! with reference implementations.
+use ndarray::s;
+// Validation utilities for 2D Discrete Wavelet Transform
+//
+// This module provides comprehensive validation for 2D DWT implementations,
+// including perfect reconstruction, energy conservation, and comparison
+// with reference implementations.
 
 use crate::dwt::Wavelet;
 use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, s};
+use ndarray::{ Array2};
 use rand::Rng;
 use statrs::statistics::Statistics;
 use std::f64;
 use std::time::Instant;
 
 #[allow(unused_imports)]
-use crate::dwt2d__enhanced::{
+use crate::dwt2d_enhanced::{
     enhanced_dwt2d_decompose, wavedec2_enhanced, BoundaryMode, Dwt2dConfig, EnhancedDwt2dResult,
 };
 /// 2D DWT validation result
@@ -154,7 +155,10 @@ pub fn validate_dwt2d(
     score += 40.0 * (1.0 - reconstruction_error.mean_error.min(1.0));
 
     // Energy conservation (30%)
-    score += 30.0 * ((1.0 - (energy_conservation.energy_ratio - 1.0) as f64).abs().min(1.0));
+    score += 30.0
+        * ((1.0 - (energy_conservation.energy_ratio - 1.0) as f64)
+            .abs()
+            .min(1.0));
 
     // Boundary handling (20%)
     score += 20.0 * boundary_validation.continuity_score;
@@ -207,7 +211,7 @@ fn test_perfect_reconstruction(
     }
 
     let max_error = errors.iter().cloned().fold(0.0, f64::max);
-    let mean_error = errors.iter().sum::<f64>() / errors.len()  as f64;
+    let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;
     let rmse = (sum_sq_error / errors.len() as f64).sqrt();
 
     // PSNR calculation
@@ -320,7 +324,7 @@ fn test_boundary_handling(
         }
     }
 
-    let n_modes = boundary_modes.len()  as f64;
+    let n_modes = boundary_modes.len() as f64;
     let edge_artifacts = total_artifacts / n_modes;
     let continuity_score = total_continuity / n_modes;
     let symmetry_accuracy = if symmetry_scores.is_empty() {
@@ -406,9 +410,9 @@ fn compute_ssim(
 
             // Compute variances and covariance
             let var1 = window1.iter().map(|&x| (x - mu1).powi(2)).sum::<f64>()
-                / (window_size * window_size)  as f64;
+                / (window_size * window_size) as f64;
             let var2 = window2.iter().map(|&x| (x - mu2).powi(2)).sum::<f64>()
-                / (window_size * window_size)  as f64;
+                / (window_size * window_size) as f64;
 
             let mut cov = 0.0;
             for wi in 0..window_size {
@@ -416,7 +420,7 @@ fn compute_ssim(
                     cov += (window1[[wi, wj]] - mu1) * (window2[[wi, wj]] - mu2);
                 }
             }
-            cov /= (window_size * window_size)  as f64;
+            cov /= (window_size * window_size) as f64;
 
             // SSIM formula
             let ssim = (2.0 * mu1 * mu2 + c1) * (2.0 * cov + c2)
@@ -449,7 +453,7 @@ fn measure_edge_artifacts(_result: &EnhancedDwt2dResult) -> SignalResult<f64> {
     }
 
     // Normalize by perimeter
-    let perimeter = 2.0 * (rows + cols)  as f64;
+    let perimeter = 2.0 * (rows + cols) as f64;
     Ok(total_artifacts / perimeter)
 }
 
@@ -691,7 +695,7 @@ mod tests {
 
     #[test]
     fn test_multilevel_validation() {
-        let image = Array2::from_shape_fn((128, 128), |(i, j)| ((i + j) as f64).sin());
+        let image = Array2::fromshape_fn((128, 128), |(i, j)| ((i + j) as f64).sin());
 
         assert!(validate_multilevel_dwt2d(&image, Wavelet::Sym(8), 4, 1e-10).unwrap());
     }

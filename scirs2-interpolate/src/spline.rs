@@ -300,8 +300,8 @@ impl<F: crate::traits::InterpolationFloat> CubicSplineBuilder<F> {
             .ok_or_else(|| InterpolateError::invalid_input("y coordinates not set".to_string()))?;
 
         match self.boundary_condition {
-            SplineBoundaryCondition::Natural =>, CubicSpline::new(&x.view(), &y.view()),
-            SplineBoundaryCondition::NotAKnot =>, CubicSpline::new_not_a_knot(&x.view(), &y.view()),
+            SplineBoundaryCondition::Natural => CubicSpline::new(&x.view(), &y.view()),
+            SplineBoundaryCondition::NotAKnot => CubicSpline::new_not_a_knot(&x.view(), &y.view()),
             SplineBoundaryCondition::Clamped(left_deriv, right_deriv) => {
                 let left_f = F::from_f64(left_deriv).ok_or_else(|| {
                     InterpolateError::ComputationError(format!(
@@ -317,7 +317,7 @@ impl<F: crate::traits::InterpolationFloat> CubicSplineBuilder<F> {
                 })?;
                 CubicSpline::new_clamped(&x.view(), &y.view(), left_f, right_f)
             }
-            SplineBoundaryCondition::Periodic =>, CubicSpline::new_periodic(&x.view(), &y.view()),
+            SplineBoundaryCondition::Periodic => CubicSpline::new_periodic(&x.view(), &y.view()),
             SplineBoundaryCondition::SecondDerivative(left_d2, right_d2) => {
                 let left_f = F::from_f64(left_d2).ok_or_else(|| {
                     InterpolateError::ComputationError(format!(
@@ -1644,7 +1644,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     }
 
     /// Adaptive arc length integration using Simpson's rule
-    fn adaptive_arc_length_integration(&self, a: F, b: F_tolerance: F) -> InterpolateResult<F> {
+    fn adaptive_arc_length_integration(&self, a: F, b: F, tolerance: F) -> InterpolateResult<F> {
         // Simple implementation using composite Simpson's rule
         let n = 100; // Number of subdivisions
         let n_f = F::from_usize(n).ok_or_else(|| {
@@ -2322,7 +2322,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// Find roots related to derivative discontinuities
     fn find_derivative_discontinuity_roots(
         &self,
-        tolerance: F_max_iterations: usize,
+        tolerance: F_max, iterations: usize,
     ) -> InterpolateResult<Vec<F>> {
         let mut discontinuity_roots = Vec::new();
 
@@ -3234,7 +3234,7 @@ fn integrate_segment<F: crate::traits::InterpolationFloat>(
 
 /// Check if a root is far enough from existing roots
 #[allow(dead_code)]
-fn root_far_enough<F: Float>(_roots: &[F], candidate: F, tolerance: F) -> bool {
+fn root_far_enough<F: Float>(roots: &[F], candidate: F, tolerance: F) -> bool {
     for &existing_root in _roots {
         if (candidate - existing_root).abs() < tolerance {
             return false;

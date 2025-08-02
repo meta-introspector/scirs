@@ -1,11 +1,11 @@
-//! Multivariate Empirical Mode Decomposition (MEMD) for signal separation
-//!
-//! This module implements MEMD for multivariate signal processing.
+// Multivariate Empirical Mode Decomposition (MEMD) for signal separation
+//
+// This module implements MEMD for multivariate signal processing.
 
+use super::BssConfig;
 use crate::error::SignalResult;
 use ndarray::Array2;
 use rand::{Rng, SeedableRng};
-use super::BssConfig;
 
 #[allow(unused_imports)]
 /// Apply Multivariate Empirical Mode Decomposition (MEMD) to separate components

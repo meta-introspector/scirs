@@ -1062,7 +1062,7 @@ where
                     Err(_) => {
                         // Fallback: create dummy labels
                         let n_samples = data.nrows();
-                        let labels = Array1::from_shape_fn(n_samples, |i| (i % k) as i32);
+                        let labels = Array1::fromshape_fn(n_samples, |i| (i % k) as i32);
                         Ok(labels)
                     }
                 }
@@ -1255,7 +1255,7 @@ where
 
 /// Extract samples based on indices
 #[allow(dead_code)]
-fn extract_samples<F: Float>(_data: ArrayView2<F>, indices: &[usize]) -> Result<Array2<F>> {
+fn extract_samples<F: Float>(data: ArrayView2<F>, indices: &[usize]) -> Result<Array2<F>> {
     let n_features = _data.ncols();
     let mut sampled_data = Array2::zeros((indices.len(), n_features));
 
@@ -1270,7 +1270,7 @@ fn extract_samples<F: Float>(_data: ArrayView2<F>, indices: &[usize]) -> Result<
 
 /// Extract features based on indices
 #[allow(dead_code)]
-fn extract_features<F: Float>(_data: ArrayView2<F>, feature_indices: &[usize]) -> Result<Array2<F>> {
+fn extract_features<F: Float>(data: ArrayView2<F>, feature_indices: &[usize]) -> Result<Array2<F>> {
     let n_samples = _data.nrows();
     let mut sampled_data = Array2::zeros((n_samples, feature_indices.len()));
 
@@ -1290,7 +1290,7 @@ impl Default for EnsembleConfig {
     fn default() -> Self {
         Self {
             n_estimators: 10,
-            sampling_strategy: SamplingStrategy::Bootstrap { sample_ratio: 0.8 },
+            sampling_strategy: SamplingStrategy::Bootstrap { sample, ratio: 0.8 },
             consensus_method: ConsensusMethod::MajorityVoting,
             random_seed: None,
             diversity_strategy: Some(DiversityStrategy::AlgorithmDiversity {
@@ -2867,7 +2867,7 @@ mod tests {
     #[test]
     fn test_sampling_strategies() {
         let config = EnsembleConfig {
-            sampling_strategy: SamplingStrategy::Bootstrap { sample_ratio: 0.8 },
+            sampling_strategy: SamplingStrategy::Bootstrap { sample, ratio: 0.8 },
             ..Default::default()
         };
 
@@ -2903,7 +2903,7 @@ mod tests {
 
     #[test]
     fn test_convenience_functions() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )

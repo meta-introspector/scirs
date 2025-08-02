@@ -16,7 +16,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::async_io::{AsyncChunkedReader, AsyncStreamingConfig};
+//! use scirs2_io::async_io::{AsyncChunkedReader, AsyncStreamingConfig};
 //! use futures::StreamExt;
 //!
 //! #[tokio::main]
@@ -146,7 +146,7 @@ pub struct AsyncChunkedReader {
 
 impl AsyncChunkedReader {
     /// Create a new async chunked reader for the specified file
-    pub async fn new<P: AsRef<Path>>(_path: P, config: AsyncStreamingConfig) -> Result<Self> {
+    pub async fn new<P: AsRef<Path>>(path: P, config: AsyncStreamingConfig) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .await
             .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
@@ -266,10 +266,10 @@ impl Stream for AsyncChunkedReader {
         tokio::pin!(read_future);
 
         match read_future.poll(cx) {
-            Poll::Ready(Ok(Some(chunk))) =>, Poll::Ready(Some(Ok(chunk))),
-            Poll::Ready(Ok(None)) =>, Poll::Ready(None),
-            Poll::Ready(Err(e)) =>, Poll::Ready(Some(Err(e))),
-            Poll::Pending =>, Poll::Pending,
+            Poll::Ready(Ok(Some(chunk))) => Poll::Ready(Some(Ok(chunk))),
+            Poll::Ready(Ok(None)) => Poll::Ready(None),
+            Poll::Ready(Err(e)) => Poll::Ready(Some(Err(e))),
+            Poll::Pending => Poll::Pending,
         }
     }
 }
@@ -284,7 +284,7 @@ pub struct AsyncLineReader {
 
 impl AsyncLineReader {
     /// Create a new async line reader
-    pub async fn new<P: AsRef<Path>>(_path: P, config: AsyncStreamingConfig) -> Result<Self> {
+    pub async fn new<P: AsRef<Path>>(path: P, config: AsyncStreamingConfig) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .await
             .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
@@ -411,10 +411,10 @@ impl Stream for AsyncLineReader {
         tokio::pin!(read_future);
 
         match read_future.poll(cx) {
-            Poll::Ready(Ok(Some(lines))) =>, Poll::Ready(Some(Ok(lines))),
-            Poll::Ready(Ok(None)) =>, Poll::Ready(None),
-            Poll::Ready(Err(e)) =>, Poll::Ready(Some(Err(e))),
-            Poll::Pending =>, Poll::Pending,
+            Poll::Ready(Ok(Some(lines))) => Poll::Ready(Some(Ok(lines))),
+            Poll::Ready(Ok(None)) => Poll::Ready(None),
+            Poll::Ready(Err(e)) => Poll::Ready(Some(Err(e))),
+            Poll::Pending => Poll::Pending,
         }
     }
 }

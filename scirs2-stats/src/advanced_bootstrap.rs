@@ -518,7 +518,7 @@ where
                 break;
             }
 
-            let start_idx = self.rng.gen_range(0..=(n - block_length));
+            let start_idx = self.rng.gen_range(0..(n - block_length));
             let copy_length = std::cmp::min(block_length, n - pos);
 
             for i in 0..copy_length {
@@ -653,7 +653,7 @@ where
                 break;
             }
 
-            let start_idx = self.rng.gen_range(0..=(n - block_length));
+            let start_idx = self.rng.gen_range(0..(n - block_length));
             let copy_length = std::cmp::min(block_length, n - pos);
 
             // Apply tapering weights
@@ -859,7 +859,7 @@ where
 
         // Shuffle the indices
         for i in (1..all_indices.len()).rev() {
-            let j = self.rng.gen_range(0..=i);
+            let j = self.rng.gen_range(0..i);
             all_indices.swap(i, j);
         }
 

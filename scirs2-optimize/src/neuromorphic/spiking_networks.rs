@@ -233,7 +233,7 @@ impl SpikingNeuralNetwork {
 
         let num_neurons = _config.num_neurons;
         Self {
-            _config,
+            config: _config,
             neurons,
             synapses,
             current_time: 0.0,

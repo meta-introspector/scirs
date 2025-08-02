@@ -1,14 +1,14 @@
-//! Independent Component Analysis (ICA) for blind source separation
-//!
-//! This module implements the main ICA interface for BSS techniques.
+// Independent Component Analysis (ICA) for blind source separation
+//
+// This module implements the main ICA interface for BSS techniques.
 
-use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, Axis};
-use scirs2_linalg::solve_multiple;
-use super::{BssConfig, IcaMethod, NonlinearityFunction, whiten_signals};
 use super::fastica::fast_ica;
 use super::infomax::{extended_infomax_ica, infomax_ica};
 use super::jade::jade_ica;
+use super::{whiten_signals, BssConfig, IcaMethod, NonlinearityFunction};
+use crate::error::{SignalError, SignalResult};
+use ndarray::{Array2, Axis};
+use scirs2_linalg::solve_multiple;
 
 #[allow(unused_imports)]
 /// Apply Independent Component Analysis (ICA) to separate mixed signals

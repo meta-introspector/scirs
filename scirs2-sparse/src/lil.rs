@@ -49,8 +49,8 @@ where
     /// matrix.set(2, 0, 4.0);
     /// matrix.set(2, 1, 5.0);
     /// ```
-    pub fn new(_shape: (usize, usize)) -> Self {
-        let (rows, cols) = _shape;
+    pub fn new(shape: (usize, usize)) -> Self {
+        let (rows, cols) = shape;
 
         let data = vec![Vec::new(); rows];
         let indices = vec![Vec::new(); rows];

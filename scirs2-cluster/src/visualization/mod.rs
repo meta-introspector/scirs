@@ -20,7 +20,7 @@
 //! use ndarray::Array2;
 //! use scirs2__cluster::visualization::{create_scatter_plot_2d, VisualizationConfig};
 //!
-//! let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+//! let data = Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
 //! let labels = ndarray::Array1::from_vec(vec![0, 0, 1, 1]);
 //! let config = VisualizationConfig::default();
 //!
@@ -773,7 +773,7 @@ mod tests {
     #[test]
     fn test_create_scatter_plot_2d() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
         let config = VisualizationConfig::default();
 
@@ -788,7 +788,7 @@ mod tests {
 
     #[test]
     fn test_create_scatter_plot_3d() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (4, 3),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
@@ -807,7 +807,7 @@ mod tests {
 
     #[test]
     fn test_dimensionality_reduction() {
-        let data = Array2::from_shape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((10, 5), (0..50).map(|x| x as f64).collect()).unwrap();
 
         let result_2d =
             apply_dimensionality_reduction_2d(data.view(), DimensionalityReduction::PCA).unwrap();

@@ -166,7 +166,7 @@ impl Workflow {
             created_at: Instant::now(),
         }
     }
-    
+
     /// Create a new workflow (alias for workflow_id)
     pub fn new(id: String, name: String) -> Self {
         Self::workflow_id(id, name)
@@ -245,7 +245,7 @@ impl OrchestratorNode {
             last_heartbeat: Instant::now(),
         }
     }
-    
+
     /// Create a new orchestrator node (alias for id)
     pub fn new(node_id: String, address: SocketAddr, capacity: usize) -> Self {
         Self::id(node_id, address, capacity)
@@ -408,7 +408,9 @@ impl OrchestrationEngine {
         Ok(())
     }
 
-    fn find_task_priority(&self, task_id: &str,
+    fn find_task_priority(
+        &self,
+        task_id: &str,
         workflows: &HashMap<String, Workflow>,
     ) -> Option<TaskPriority> {
         for workflow in workflows.values() {

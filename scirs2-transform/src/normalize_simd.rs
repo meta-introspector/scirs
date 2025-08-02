@@ -36,12 +36,12 @@ pub struct AdaptiveBlockSizer {
 
 impl AdaptiveBlockSizer {
     /// Create adaptive block sizer based on data characteristics
-    pub fn new<F>(_data_shape: &[usize]) -> Self
+    pub fn new<F>(_datashape: &[usize]) -> Self
     where
         F: Float + NumCast,
     {
         let element_size = std::mem::size_of::<F>();
-        let data_size = _data_shape.iter().product::<usize>() * element_size;
+        let data_size = _datashape.iter().product::<usize>() * element_size;
 
         // Adaptive block sizing based on data size and cache characteristics
         let optimal_block_size = if data_size <= L1_CACHE_SIZE / 4 {

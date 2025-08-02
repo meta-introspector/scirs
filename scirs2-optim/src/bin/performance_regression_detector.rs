@@ -343,7 +343,7 @@ fn load_benchmark_results(_path: &str) -> Result<serde_json::Value> {
     let content = fs::read_to_string(_path)
         .map_err(|e| OptimError::ResourceError(format!("Failed to read benchmark results: {e}")))?;
 
-    let data: serde_json: Value = serde, _json::from_str(&content).map_err(|e| {
+    let data: serde, json: Value = serde_json:::from_str(&content).map_err(|e| {
         OptimError::OptimizationError(format!("Failed to parse benchmark results: {e}"))
     })?;
 

@@ -6,7 +6,7 @@
 use ndarray::{ArrayBase, Data, Dimension};
 use num_traits::{Float, FromPrimitive, NumCast};
 
-use super::{check_same_shape, mean};
+use super::{check_sameshape, mean};
 use crate::error::{MetricsError, Result};
 
 /// Calculates the R² score (coefficient of determination)
@@ -107,7 +107,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     let _n_samples = y_true.len();
 
@@ -236,7 +236,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     let n_samples = y_true.len();
 
@@ -310,7 +310,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     // Calculate means
     let y_true_mean = mean(y_true);
@@ -379,7 +379,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     let _n_samples = y_true.len();
 
@@ -468,7 +468,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     // Calculate means
     let y_true_mean = mean(y_true);

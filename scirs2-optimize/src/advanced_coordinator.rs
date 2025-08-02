@@ -244,7 +244,7 @@ impl AdvancedCoordinator {
         };
 
         Self {
-            _config,
+            config: _config,
             state,
             quantum_optimizer,
             neuromorphic_optimizer,
@@ -814,7 +814,9 @@ struct CrossModalFusionEngine {
 
 impl CrossModalFusionEngine {
     fn new(_num_params: usize) -> Self {
-        Self { _num_params }
+        Self {
+            num_params: _num_params,
+        }
     }
 
     fn fuse_solutions(

@@ -13,8 +13,8 @@
 //! - Comprehensive performance reporting
 //! - Real-time adaptation and optimization
 
-use scirs2__text::error::Result;
-use scirs2__text::text_coordinator::{AdvancedTextConfig, AdvancedTextCoordinator};
+use scirs2_text::error::Result;
+use scirs2_text::text_coordinator::{AdvancedTextConfig, AdvancedTextCoordinator};
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
@@ -62,7 +62,7 @@ fn main() -> Result<()> {
     println!("✅ Coordinator initialized successfully!\n");
 
     // Demo 1: Advanced-optimized text processing
-    demo_advanced_text_processing(&coordinator)?;
+    demo_advancedtext_processing(&coordinator)?;
 
     // Demo 2: Advanced semantic similarity
     demo_semantic_similarity(&coordinator)?;
@@ -84,11 +84,11 @@ fn main() -> Result<()> {
 
 /// Demonstrates advanced-optimized text processing with full feature coordination
 #[allow(dead_code)]
-fn demo_advanced_text_processing(_coordinator: &AdvancedTextCoordinator) -> Result<()> {
+fn demo_advancedtext_processing(_coordinator: &AdvancedTextCoordinator) -> Result<()> {
     println!("📊 Demo 1: Advanced-Optimized Text Processing");
     println!("==========================================");
 
-    let sample_texts = vec![
+    let sampletexts = vec![
         "Artificial intelligence is transforming the way we process and understand text data.".to_string(),
         "Machine learning algorithms can extract meaningful patterns from large corpora of documents.".to_string(),
         "Natural language processing combines computational linguistics with statistical analysis.".to_string(),
@@ -98,11 +98,11 @@ fn demo_advanced_text_processing(_coordinator: &AdvancedTextCoordinator) -> Resu
 
     println!(
         "Processing {} documents with Advanced optimization...",
-        sample_texts.len()
+        sampletexts.len()
     );
 
     let start_time = std::time::Instant::now();
-    let result = _coordinator.advanced_process_text(&sample_texts)?;
+    let result = _coordinator.advanced_processtext(&sampletexts)?;
     let processing_time = start_time.elapsed();
 
     println!("\n📈 Results:");

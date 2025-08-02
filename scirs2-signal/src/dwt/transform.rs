@@ -1,13 +1,13 @@
-//! Core DWT decomposition and reconstruction functions
-//!
-//! This module provides the core functions for single-level discrete wavelet transform
-//! decomposition and reconstruction.
+// Core DWT decomposition and reconstruction functions
+//
+// This module provides the core functions for single-level discrete wavelet transform
+// decomposition and reconstruction.
 
+use super::boundary::extend_signal;
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
-use super::boundary::extend_signal;
 
 #[allow(unused_imports)]
 /// Perform single-level discrete wavelet transform (DWT) decomposition
@@ -25,7 +25,7 @@ use super::boundary::extend_signal;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::{dwt_decompose, Wavelet};
+/// use scirs2_signal::dwt::{dwt_decompose, Wavelet};
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 /// let (approx, detail) = dwt_decompose(&signal, Wavelet::DB(4), None).unwrap();
@@ -123,7 +123,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::{dwt_decompose, dwt_reconstruct, Wavelet};
+/// use scirs2_signal::dwt::{dwt_decompose, dwt_reconstruct, Wavelet};
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 /// let (approx, detail) = dwt_decompose(&signal, Wavelet::DB(4), None).unwrap();
@@ -135,7 +135,11 @@ where
 /// assert!(reconstructed.len() > 0);
 /// ```
 #[allow(dead_code)]
-pub fn dwt_reconstruct(_approx: &[f64], detail: &[f64], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
+pub fn dwt_reconstruct(
+    _approx: &[f64],
+    detail: &[f64],
+    wavelet: Wavelet,
+) -> SignalResult<Vec<f64>> {
     if _approx.is_empty() || detail.is_empty() {
         return Err(SignalError::ValueError(
             "Input arrays are empty".to_string(),

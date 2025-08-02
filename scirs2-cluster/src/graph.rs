@@ -205,7 +205,7 @@ impl<F: Float + FromPrimitive + Debug> Graph<F> {
 /// use scirs2__cluster::graph::{Graph, louvain};
 ///
 /// // Create a simple graph
-/// let adjacency = Array2::from_shape_vec((4, 4), vec![
+/// let adjacency = Array2::fromshape_vec((4, 4), vec![
 ///     0.0, 1.0, 1.0, 0.0,
 ///     1.0, 0.0, 0.0, 0.0,
 ///     1.0, 0.0, 0.0, 1.0,
@@ -753,7 +753,7 @@ mod tests {
     #[test]
     fn test_graph_from_adjacency_matrix() {
         let adjacency =
-            Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0])
+            Array2::fromshape_vec((3, 3), vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0])
                 .unwrap();
 
         let graph = Graph::from_adjacency_matrix(adjacency.view()).unwrap();
@@ -766,7 +766,7 @@ mod tests {
     #[test]
     fn test_louvain_clustering() {
         // Create a simple graph with two obvious communities
-        let adjacency = Array2::from_shape_vec(
+        let adjacency = Array2::fromshape_vec(
             (4, 4),
             vec![
                 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
@@ -786,7 +786,7 @@ mod tests {
 
     #[test]
     fn test_label_propagation() {
-        let adjacency = Array2::from_shape_vec(
+        let adjacency = Array2::fromshape_vec(
             (4, 4),
             vec![
                 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
@@ -806,7 +806,7 @@ mod tests {
     #[test]
     fn test_knn_graph_creation() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
 
         let graph = Graph::from_knn_graph(data.view(), 2).unwrap();
         assert_eq!(graph.n_nodes, 4);

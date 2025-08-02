@@ -896,7 +896,7 @@ mod tests {
     fn test_large_matrix_blocked() {
         // Test with larger matrix to verify blocking works correctly
         let n = 100;
-        let a = Array2::from_shape_fn((n, n), |(i, j)| (i + j) as f64);
+        let a = Array2::fromshape_fn((n, n), |(i, j)| (i + j) as f64);
         let b = Array2::eye(n);
 
         let config = OptConfig {

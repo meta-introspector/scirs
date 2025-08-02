@@ -1,10 +1,10 @@
-//! Scalogram and related visualizations
+// Scalogram and related visualizations
 
+use super::transform::cwt;
 use crate::error::{SignalError, SignalResult};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
-use super::transform::cwt;
 
 #[allow(unused_imports)]
 /// Computes a scalogram (squared magnitude of CWT coefficients) of a signal.
@@ -26,7 +26,7 @@ use super::transform::cwt;
 /// # Example
 ///
 /// ```
-/// use scirs2__signal::wavelets::{scalogram, morlet};
+/// use scirs2_signal::wavelets::{scalogram, morlet};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal
@@ -118,7 +118,7 @@ where
 /// # Example
 ///
 /// ```
-/// use scirs2__signal::wavelets::{cwt_magnitude, morlet};
+/// use scirs2_signal::wavelets::{cwt_magnitude, morlet};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a simple signal
@@ -205,7 +205,7 @@ where
 /// # Example
 ///
 /// ```
-/// use scirs2__signal::wavelets::{cwt_phase, morlet};
+/// use scirs2_signal::wavelets::{cwt_phase, morlet};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a simple signal
@@ -274,7 +274,7 @@ where
 /// # Example
 ///
 /// ```
-/// use scirs2__signal::wavelets::{scale_to_frequency};
+/// use scirs2_signal::wavelets::{scale_to_frequency};
 ///
 /// // Define scales
 /// let scales: Vec<f64> = (1..32).map(|i| i as f64).collect();

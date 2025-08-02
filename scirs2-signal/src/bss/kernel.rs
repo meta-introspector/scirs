@@ -1,14 +1,15 @@
-//! Kernel ICA for nonlinear blind source separation
-//!
-//! This module implements kernel-based ICA methods.
+use ndarray::s;
+// Kernel ICA for nonlinear blind source separation
+//
+// This module implements kernel-based ICA methods.
 
+use super::{pca, BssConfig};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Axis, s};
+use ndarray::{ Array1, Array2, Axis};
 use rand::SeedableRng;
 use rand_distr::{Distribution, Normal};
 use scirs2_linalg::{eigh, svd};
 use statrs::statistics::Statistics;
-use super::{BssConfig, pca};
 
 #[allow(unused_imports)]
 /// Apply Kernel ICA for nonlinear blind source separation
@@ -214,8 +215,8 @@ pub fn kernel_ica(
     let unmixing = w.dot(&pca_mixing.slice(s![.., 0..n_components]).t());
 
     // Calculate mixing matrix (pseudoinverse of unmixing)
-    let (u, s, vt) = match svd(&unmixing.view(), false, None) {
-        Ok((u, s, vt)) => (u, s, vt),
+    let (u, vt) = match svd(&unmixing.view(), false, None) {
+        Ok((u, vt)) => (u, vt),
         Err(_) => {
             return Err(SignalError::ComputationError(
                 "Failed to compute SVD of unmixing matrix".to_string(),

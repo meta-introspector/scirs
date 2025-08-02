@@ -20,7 +20,10 @@ use std::fmt::Debug;
 ///
 /// * A HashMap containing the extracted features
 #[allow(dead_code)]
-pub fn activity_recognition_features<T>(_signal: &[T], fs: f64) -> SignalResult<HashMap<String, f64>>
+pub fn activity_recognition_features<T>(
+    _signal: &[T],
+    fs: f64,
+) -> SignalResult<HashMap<String, f64>>
 where
     T: Float + NumCast + Debug,
 {

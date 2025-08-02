@@ -106,9 +106,9 @@ pub struct OperationContext {
     /// Type of operation
     pub operation_type: String,
     /// Input tensor shapes
-    pub input_shapes: Vec<Vec<usize>>,
+    pub inputshapes: Vec<Vec<usize>>,
     /// Expected output shapes
-    pub output_shapes: Vec<Vec<usize>>,
+    pub outputshapes: Vec<Vec<usize>>,
     /// Memory constraints (bytes)
     pub memory_limit: Option<usize>,
     /// Time constraints (milliseconds)
@@ -242,8 +242,8 @@ impl UnifiedPerformanceManager {
     pub fn optimized_matmul(&mut self, a: &ArrayD<f32>, b: &ArrayD<f32>) -> Result<ArrayD<f32>> {
         let context = OperationContext {
             operation_type: "matmul".to_string(),
-            input_shapes: vec![a.shape().to_vec(), b.shape().to_vec()],
-            output_shapes: vec![vec![a.shape()[0], b.shape()[1]]],
+            inputshapes: vec![a.shape().to_vec(), b.shape().to_vec()],
+            outputshapes: vec![vec![a.shape()[0], b.shape()[1]]],
             memory_limit: None,
             time_limit: None,
             energy_limit: None,
@@ -259,10 +259,10 @@ impl UnifiedPerformanceManager {
         padding: (usize, usize),
     ) -> Result<ArrayD<f32>> {
         // Calculate output shape (simplified)
-        let output_shape = self.calculate_conv2d_output_shape(input, kernel, stride, padding);
+        let outputshape = self.calculate_conv2d_outputshape(input, kernel, stride, padding);
             operation_type: "conv2d".to_string(),
-            input_shapes: vec![input.shape().to_vec(), kernel.shape().to_vec()],
-            output_shapes: vec![output_shape],
+            inputshapes: vec![input.shape().to_vec(), kernel.shape().to_vec()],
+            outputshapes: vec![outputshape],
             batch_size: input.shape()[0],
         // For now, delegate to CPU optimizer
         self.cpu_optimizer
@@ -289,7 +289,7 @@ impl UnifiedPerformanceManager {
             AutoOptimizationStrategy::Custom(selector) => Ok(selector(context)),
     /// Execute operation with specific strategy
     fn execute_with_strategy<F: Float + Debug>(
-        strategy: &OptimizationChoice_context: &OperationContext,
+        strategy: &OptimizationChoice, context: &OperationContext,
         match strategy {
             OptimizationChoice::CPUSimd => {
                 #[cfg(feature = "simd")]
@@ -370,14 +370,14 @@ impl UnifiedPerformanceManager {
             OptimizationChoice::JIT => {
                 if let Some(jit_compiler) = &self.jit_compiler {
                     let jit_op = self.convert_to_jit_operation(operation_type, inputs)?;
-                    let output_shapes = self.infer_jit_output_shapes(&jit_op, inputs)?;
+                    let outputshapes = self.infer_jit_outputshapes(&jit_op, inputs)?;
                     // Execute with JIT (simplified to first input conversion)
                     if !inputs.is_empty() {
                         let f32_input = inputs[0].mapv(|x| x.to_f32().unwrap_or(0.0));
                         let result = jit_compiler.compile_and_execute(
                             &jit_op,
                             &[&f32_input],
-                            &output_shapes[0],
+                            &outputshapes[0],
                         )?;
                         let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
                         Ok(vec![result_f])
@@ -464,12 +464,12 @@ impl UnifiedPerformanceManager {
     fn estimate_operation_size(&self, context: &OperationContext) -> usize {
         // Rough estimate based on input/output sizes
         let input_size: usize = context
-            .input_shapes
+            .inputshapes
             .iter()
             .map(|shape| shape.iter().product::<usize>())
             .sum();
         let output_size: usize = context
-            .output_shapes
+            .outputshapes
         input_size + output_size
     /// Convert operation to JIT format
     fn convert_to_jit_operation<F: Float + Debug>(
@@ -478,8 +478,8 @@ impl UnifiedPerformanceManager {
             "matmul" => {
                 if inputs.len() >= 2 {
                     Ok(JITOperation::MatMul {
-                        a_shape: inputs[0].shape().to_vec(),
-                        b_shape: inputs[1].shape().to_vec(),
+                        ashape: inputs[0].shape().to_vec(),
+                        bshape: inputs[1].shape().to_vec(),
                         transpose_a: false,
                         transpose_b: false,
                     })
@@ -495,8 +495,8 @@ impl UnifiedPerformanceManager {
                         "ReLU requires 1 input".to_string(),
             "conv2d" => {
                     Ok(JITOperation::Conv2D {
-                        input_shape: inputs[0].shape().to_vec(),
-                        kernel_shape: inputs[1].shape().to_vec(),
+                        inputshape: inputs[0].shape().to_vec(),
+                        kernelshape: inputs[1].shape().to_vec(),
                         stride: (1, 1),
                         padding: (0, 0),
                         "Conv2D requires 2 inputs".to_string(),
@@ -536,13 +536,13 @@ impl UnifiedPerformanceManager {
             "reshape" => Ok(TPUOperation::Reshape),
                 "TPU operation {} not supported",
     /// Infer output shapes for JIT operations
-    fn infer_jit_output_shapes<F: Float + Debug>(
+    fn infer_jit_outputshapes<F: Float + Debug>(
         operation: &JITOperation,
     ) -> Result<Vec<Vec<usize>>> {
         match operation {
             JITOperation::MatMul {
-                a_shape, b_shape, ..
-            } => Ok(vec![vec![a_shape[0], b_shape[1]]], _ => {
+                ashape, bshape, ..
+            } => Ok(vec![vec![ashape[0], bshape[1]]], _ => {
                     Ok(vec![inputs[0].shape().to_vec()])
                         "Cannot infer output shapes without inputs".to_string(),
     /// Execute operation using CPU serial implementation
@@ -629,7 +629,7 @@ impl UnifiedPerformanceManager {
         inputs
             .map(|input| input.len() * std::mem::size_of::<F>())
             .sum()
-    fn calculate_conv2d_output_shape(
+    fn calculate_conv2d_outputshape(
     ) -> Vec<usize> {
         let n = input.shape()[0];
         let c_out = kernel.shape()[0];
@@ -874,8 +874,8 @@ mod tests {
         let manager = UnifiedPerformanceManager::new();
         assert!(manager.is_ok());
     fn test_operation_context_creation() {
-            input_shapes: vec![vec![100, 200], vec![200, 150]],
-            output_shapes: vec![vec![100, 150]],
+            inputshapes: vec![vec![100, 200], vec![200, 150]],
+            outputshapes: vec![vec![100, 150]],
             memory_limit: Some(1024 * 1024),
             time_limit: Some(1000),
             energy_limit: Some(0.8),

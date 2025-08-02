@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn analyze_modules(_src_dir: &Path) -> Result<Vec<ModuleAnalysis>, Box<dyn std::error::Error>> {
+fn analyze_modules(src_dir: &Path) -> Result<Vec<ModuleAnalysis>, Box<dyn std::error::Error>> {
     let mut modules = Vec::new();
 
     // Define key modules to analyze
@@ -96,7 +96,7 @@ fn analyze_modules(_src_dir: &Path) -> Result<Vec<ModuleAnalysis>, Box<dyn std::
     ];
 
     for module_name in key_modules {
-        let module_path = _src_dir.join(module_name);
+        let module_path = src_dir.join(module_name);
         if module_path.exists() {
             let analysis = analyze_single_module(&module_path, module_name)?;
             modules.push(analysis);
@@ -227,7 +227,7 @@ fn assess_completion_status(
     match (has_implementations, has_tests, has_advanced, has_stubs) {
         (true, true, true, false) => CompletionStatus::Complete,
         (true_, true, false) => CompletionStatus::NearlyComplete,
-        (true___) => CompletionStatus::PartiallyComplete_ =>, CompletionStatus::Incomplete,
+        (true___) => CompletionStatus::PartiallyComplete_ => CompletionStatus::Incomplete,
     }
 }
 

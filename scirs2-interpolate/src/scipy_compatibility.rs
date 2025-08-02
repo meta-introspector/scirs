@@ -511,7 +511,7 @@ impl SciPyCompatibilityChecker {
             "interp1d" | "CubicSpline" | "BSpline" | "griddata" | "RBFInterpolator" => {
                 FunctionCoverage::Complete
             }
-            "interp2d" | "interpn" | "RegularGridInterpolator" => FunctionCoverage::Partial_ =>, FunctionCoverage::Missing,
+            "interp2d" | "interpn" | "RegularGridInterpolator" => FunctionCoverage::Partial_ => FunctionCoverage::Missing,
         }
     }
 
@@ -525,7 +525,7 @@ impl SciPyCompatibilityChecker {
                 scirs2_param: "SplineBoundaryCondition enum".to_string(),
                 severity: DifferenceSeverity::Minor,
             }]),
-            "interp1d" => ParameterCompatibilityLevel::Identical_ =>, ParameterCompatibilityLevel::Incompatible(Vec::new()),
+            "interp1d" => ParameterCompatibilityLevel::Identical_ => ParameterCompatibilityLevel::Incompatible(Vec::new()),
         }
     }
 

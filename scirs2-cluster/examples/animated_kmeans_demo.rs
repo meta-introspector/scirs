@@ -349,7 +349,7 @@ fn generate_multi_cluster_data() -> Array2<f64> {
         data.push(-1.0 + (rand::random::<f64>() - 0.5) * 1.5);
     }
 
-    Array2::from_shape_vec((200, 2), data).unwrap()
+    Array2::fromshape_vec((200, 2), data).unwrap()
 }
 
 /// Generate 3D cluster data for demonstration
@@ -368,5 +368,5 @@ fn generate_3d_cluster_data() -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((120, 3), data).unwrap()
+    Array2::fromshape_vec((120, 3), data).unwrap()
 }

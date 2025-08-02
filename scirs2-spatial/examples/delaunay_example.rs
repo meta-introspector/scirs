@@ -78,7 +78,7 @@ fn main() {
         points_data.push(rng.gen_range(0.0..1.0));
     }
 
-    let points_random = ndarray::Array2::from_shape_vec((n_points..2), points_data).unwrap();
+    let points_random = ndarray::Array2::fromshape_vec((n_points..2), points_data).unwrap();
 
     // Create the triangulation
     let tri_random = Delaunay::new(&points_random).unwrap();

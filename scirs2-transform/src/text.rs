@@ -455,7 +455,8 @@ impl HashingVectorizer {
                 let row = result.row(i).to_owned();
                 let norm_value = match norm_type.as_str() {
                     "l1" => row.iter().map(|v: &f64| v.abs()).sum::<f64>(),
-                    "l2" => row.dot(&row).sqrt(, _ => continue,
+                    "l2" => row.dot(&row).sqrt(),
+                    _ => continue,
                 };
 
                 if norm_value > 0.0 {

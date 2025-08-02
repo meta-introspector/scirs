@@ -353,7 +353,7 @@ fn test_multi_curve_visualizer() {
 fn test_heatmap_visualizer() {
     // Create a matrix
     let matrix =
-        Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]).unwrap();
+        Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]).unwrap();
 
     // Test creating a visualizer
     let visualizer = helpers::visualize_heatmap(

@@ -13,7 +13,7 @@ pub struct Scalar<T: Float> {
     pub val: T,
 }
 
-impl<T: Float>, op::Op<T> for Scalar<T> {
+impl<T: Float> op::Op<T> for Scalar<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         ctx.append_output(ndarray::arr0(self.val).into_dyn());
         Ok(())
@@ -24,7 +24,7 @@ impl<T: Float>, op::Op<T> for Scalar<T> {
     }
 }
 
-impl<T: Float>, op::Op<T> for Zeros {
+impl<T: Float> op::Op<T> for Zeros {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let shape = &ctx.input(0);
         let ret = if let Some(a) = shape.as_slice() {
@@ -52,7 +52,7 @@ impl<T: Float>, op::Op<T> for Zeros {
     }
 }
 
-impl<T: Float>, op::Op<T> for Ones {
+impl<T: Float> op::Op<T> for Ones {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let shape = &ctx.input(0);
         let ret = if let Some(a) = shape.as_slice() {
@@ -80,7 +80,7 @@ impl<T: Float>, op::Op<T> for Ones {
     }
 }
 
-impl<T: Float>, op::Op<T> for ConvertToTensor<T> {
+impl<T: Float> op::Op<T> for ConvertToTensor<T> {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         // Save the original array shape for debugging
         let shape = self.arr.shape();

@@ -42,7 +42,7 @@ fn test_csv_round_trip_basic() {
     let rows = original_data.len();
     let cols = if rows > 0 { original_data[0].len() } else { 0 };
     let flat_data: Vec<String> = original_data.clone().into_iter().flatten().collect();
-    let array_data = Array2::from_shape_vec((rows, cols), flat_data).unwrap();
+    let array_data = Array2::fromshape_vec((rows, cols), flat_data).unwrap();
 
     // Extract headers
     let headers = if array_data.nrows() > 0 {
@@ -53,7 +53,7 @@ fn test_csv_round_trip_basic() {
     let data_only = if array_data.nrows() > 1 {
         array_data.slice(ndarray::s![1.., ..]).to_owned()
     } else {
-        Array2::from_shape_vec((0, cols), Vec::new()).unwrap()
+        Array2::fromshape_vec((0, cols), Vec::new()).unwrap()
     };
 
     let write_result = csv::write_csv(&file_path, &data_only, headers.as_ref(), None);
@@ -126,7 +126,7 @@ fn test_csv_round_trip_with_options() {
     let rows = original_data.len();
     let cols = if rows > 0 { original_data[0].len() } else { 0 };
     let flat_data: Vec<String> = original_data.clone().into_iter().flatten().collect();
-    let array_data = Array2::from_shape_vec((rows, cols), flat_data).unwrap();
+    let array_data = Array2::fromshape_vec((rows, cols), flat_data).unwrap();
 
     // Extract headers
     let headers = if array_data.nrows() > 0 {
@@ -137,7 +137,7 @@ fn test_csv_round_trip_with_options() {
     let data_only = if array_data.nrows() > 1 {
         array_data.slice(ndarray::s![1.., ..]).to_owned()
     } else {
-        Array2::from_shape_vec((0, cols), Vec::new()).unwrap()
+        Array2::fromshape_vec((0, cols), Vec::new()).unwrap()
     };
 
     // Create write options that match read options
@@ -580,7 +580,7 @@ fn test_serialize_round_trip_binary() {
     let file_path = dir.path().join("test.bin");
 
     // Original array
-    let original_array = Array2::from_shape_fn((10, 10), |(i, j)| (i * j) as f64);
+    let original_array = Array2::fromshape_fn((10, 10), |(i, j)| (i * j) as f64);
 
     // Write array as binary
     let write_result =
@@ -628,7 +628,7 @@ fn test_validation_round_trip() {
     let rows = test_data.len();
     let cols = if rows > 0 { test_data[0].len() } else { 0 };
     let flat_data: Vec<String> = test_data.clone().into_iter().flatten().collect();
-    let array_data = Array2::from_shape_vec((rows, cols), flat_data).unwrap();
+    let array_data = Array2::fromshape_vec((rows, cols), flat_data).unwrap();
 
     // Extract headers and data
     let headers = if array_data.nrows() > 0 {
@@ -639,7 +639,7 @@ fn test_validation_round_trip() {
     let data_only = if array_data.nrows() > 1 {
         array_data.slice(ndarray::s![1.., ..]).to_owned()
     } else {
-        Array2::from_shape_vec((0, cols), Vec::new()).unwrap()
+        Array2::fromshape_vec((0, cols), Vec::new()).unwrap()
     };
 
     csv::write_csv(&file_path, &data_only, headers.as_ref(), None).unwrap();
@@ -676,7 +676,7 @@ fn test_compression_round_trip() {
     let file_path = dir.path().join("compressed.h5");
 
     // Create test data
-    let large_array = Array2::from_shape_fn((100, 100), |(i, j)| (i + j) as f64);
+    let large_array = Array2::fromshape_fn((100, 100), |(i, j)| (i + j) as f64);
 
     // Create compression options
     let mut compression = CompressionOptions::default();

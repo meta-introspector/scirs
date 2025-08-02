@@ -1,12 +1,12 @@
-//! Jackknife error estimation for multitaper spectral analysis
-//!
-//! This module implements jackknife resampling methods to estimate
-//! confidence intervals and standard errors for multitaper spectral estimates.
+// Jackknife error estimation for multitaper spectral analysis
+//
+// This module implements jackknife resampling methods to estimate
+// confidence intervals and standard errors for multitaper spectral estimates.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
-use num__complex::Complex64;
-use scirs2_core::validation::check_shape;
+use num_complex::Complex64;
+use scirs2_core::validation::checkshape;
 use statrs::distribution::{ContinuousCDF, StudentsT};
 
 #[allow(unused_imports)]
@@ -37,8 +37,8 @@ pub fn jackknife_confidence_intervals(
     log_transform: Option<bool>,
 ) -> SignalResult<(Array1<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
     let (k, n_freq) = eigenspectra.dim();
-    check_shape(eigenspectra, (Some(k), None), "eigenspectra")?;
-    check_shape(eigenvalues, (k,), "eigenvalues")?;
+    checkshape(eigenspectra, (Some(k), None), "eigenspectra")?;
+    checkshape(eigenvalues, (k,), "eigenvalues")?;
 
     let conf_level = confidence.unwrap_or(0.95);
     if conf_level <= 0.0 || conf_level >= 1.0 {
@@ -93,7 +93,7 @@ pub fn jackknife_confidence_intervals(
     let mut std_error = Array1::zeros(n_freq);
 
     // Student's t-distribution for small samples
-    let dof = (k - 1)  as f64;
+    let dof = (k - 1) as f64;
     let t_dist = StudentsT::new(0.0, 1.0, dof).map_err(|e| {
         SignalError::ComputationError(format!("Failed to create t-distribution: {}", e))
     })?;
@@ -112,14 +112,14 @@ pub fn jackknife_confidence_intervals(
         for i in 0..k {
             jack_mean += jackknife_estimates[[i, j]];
         }
-        jack_mean /= k  as f64;
+        jack_mean /= k as f64;
 
         let mut jack_var = 0.0;
         for i in 0..k {
             let diff = jackknife_estimates[[i, j]] - jack_mean;
             jack_var += diff * diff;
         }
-        jack_var *= (k - 1) as f64 / k  as f64;
+        jack_var *= (k - 1) as f64 / k as f64;
 
         // Standard error
         let se = jack_var.sqrt();
@@ -173,7 +173,7 @@ pub fn weighted_jackknife(
     confidence: Option<f64>,
 ) -> SignalResult<(Array1<f64>, Array1<f64>, Array1<f64>)> {
     let (k, n_freq) = eigenspectra.dim();
-    check_shape(
+    checkshape(
         adaptive_weights,
         (Some(k), Some(n_freq)),
         "adaptive_weights",
@@ -226,7 +226,7 @@ pub fn weighted_jackknife(
     let mut lower_ci = Array1::zeros(n_freq);
     let mut upper_ci = Array1::zeros(n_freq);
 
-    let dof = (k - 1)  as f64;
+    let dof = (k - 1) as f64;
     let t_dist = StudentsT::new(0.0, 1.0, dof).map_err(|e| {
         SignalError::ComputationError(format!("Failed to create t-distribution: {}", e))
     })?;
@@ -240,14 +240,14 @@ pub fn weighted_jackknife(
         for i in 0..k {
             jack_mean += jackknife_estimates[[i, j]];
         }
-        jack_mean /= k  as f64;
+        jack_mean /= k as f64;
 
         let mut jack_var = 0.0;
         for i in 0..k {
             let diff = jackknife_estimates[[i, j]] - jack_mean;
             jack_var += diff * diff;
         }
-        jack_var *= (k - 1) as f64 / k  as f64;
+        jack_var *= (k - 1) as f64 / k as f64;
 
         let se = jack_var.sqrt();
         let bias = (k - 1) as f64 * (jack_mean - full_log);
@@ -293,8 +293,8 @@ pub fn cross_spectrum_jackknife(
     (Array1<f64>, Array1<f64>),
 )> {
     let (k, n_freq) = eigenspectra_x.dim();
-    check_shape(eigenspectra_y, (Some(k), Some(n_freq)), "eigenspectra_y")?;
-    check_shape(eigenvalues, (k,), "eigenvalues")?;
+    checkshape(eigenspectra_y, (Some(k), Some(n_freq)), "eigenspectra_y")?;
+    checkshape(eigenvalues, (k,), "eigenvalues")?;
 
     let conf_level = confidence.unwrap_or(0.95);
 
@@ -365,7 +365,7 @@ pub fn cross_spectrum_jackknife(
     }
 
     // Compute confidence intervals
-    let dof = (k - 1)  as f64;
+    let dof = (k - 1) as f64;
     let t_dist = StudentsT::new(0.0, 1.0, dof).map_err(|e| {
         SignalError::ComputationError(format!("Failed to create t-distribution: {}", e))
     })?;
@@ -381,9 +381,9 @@ pub fn cross_spectrum_jackknife(
             }
         }
 
-        let z_mean: f64 = z_vals.iter().sum::<f64>() / k  as f64;
+        let z_mean: f64 = z_vals.iter().sum::<f64>() / k as f64;
         let z_var: f64 =
-            z_vals.iter().map(|&z| (z - z_mean).powi(2)).sum::<f64>() * (k - 1) as f64 / k  as f64;
+            z_vals.iter().map(|&z| (z - z_mean).powi(2)).sum::<f64>() * (k - 1) as f64 / k as f64;
         let z_se = z_var.sqrt();
 
         let z_lower = z_mean - t_critical * z_se;
@@ -400,14 +400,14 @@ pub fn cross_spectrum_jackknife(
         for i in 0..k {
             phase_mean += jack_phase[[i, j]];
         }
-        phase_mean /= k  as f64;
+        phase_mean /= k as f64;
 
         let mut phase_var = 0.0;
         for i in 0..k {
             let diff = jack_phase[[i, j]] - phase_mean;
             phase_var += diff * diff;
         }
-        phase_var *= (k - 1) as f64 / k  as f64;
+        phase_var *= (k - 1) as f64 / k as f64;
         let phase_se = phase_var.sqrt();
 
         phase_lower[j] = phase[j] - t_critical * phase_se;

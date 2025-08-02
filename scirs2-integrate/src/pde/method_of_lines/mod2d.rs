@@ -189,7 +189,7 @@ impl MOLParabolicSolver2D {
         }
 
         // Flatten the 2D grid into a 1D array for the ODE solver
-        let _u0_flat = u0.clone().into_shape_with_order(nx * ny).unwrap();
+        let _u0_flat = u0.clone().intoshape_with_order(nx * ny).unwrap();
 
         // Clone grids for the closure
         let x_grid_closure = x_grid.clone();
@@ -227,7 +227,7 @@ impl MOLParabolicSolver2D {
         // Construct the ODE function that represents the PDE after spatial discretization
         let ode_func = move |t: f64, u_flat: ArrayView1<f64>| -> Array1<f64> {
             // Reshape the flattened array back to 2D for easier indexing
-            let u = u_flat.into_shape_with_order((ny, nx)).unwrap();
+            let u = u_flat.intoshape_with_order((ny, nx)).unwrap();
             let mut dudt = Array2::zeros((ny, nx));
 
             // Apply finite difference approximations for interior points
@@ -355,7 +355,7 @@ impl MOLParabolicSolver2D {
             }
 
             // Flatten the 2D dudt back to 1D for the ODE solver
-            dudt.into_shape_with_order(nx * ny).unwrap()
+            dudt.intoshape_with_order(nx * ny).unwrap()
         };
 
         // Apply Dirichlet boundary conditions to initial condition
@@ -366,7 +366,7 @@ impl MOLParabolicSolver2D {
             &y_grid_apply,
         );
 
-        let u0_flat = u0.clone().into_shape_with_order(nx * ny).unwrap();
+        let u0_flat = u0.clone().intoshape_with_order(nx * ny).unwrap();
 
         // Solve the ODE system
         let ode_result = solve_ivp(ode_func, time_range, u0_flat, Some(ode_options))?;
@@ -382,7 +382,7 @@ impl MOLParabolicSolver2D {
         let mut u_3d = Array3::zeros((nt, ny, nx));
 
         for (time_idx, y_flat) in ode_result.y.iter().enumerate() {
-            let u_2d = y_flat.clone().into_shape_with_order((ny, nx)).unwrap();
+            let u_2d = y_flat.clone().intoshape_with_order((ny, nx)).unwrap();
             for j in 0..ny {
                 for i in 0..nx {
                     u_3d[[time_idx, j, i]] = u_2d[[j, i]];

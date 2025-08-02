@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Creating a {}x{} matrix with {} elements", rows, cols, size);
 
     // Initialize with data (i*100 + j pattern)
-    let matrix = Array2::<f64>::from_shape_fn((rows, cols), |(i, j)| (i * 100 + j) as f64);
+    let matrix = Array2::<f64>::fromshape_fn((rows, cols), |(i, j)| (i * 100 + j) as f64);
 
     // Save the matrix to a file
     let mut file = File::create(&file_path)?;

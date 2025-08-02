@@ -33,14 +33,14 @@ pub fn lu<F: Float + Debug + Send + Sync + 'static>(
         ));
     }
 
-    let a_shape = a.shape();
-    if a_shape[0] != a_shape[1] {
+    let ashape = a.shape();
+    if ashape[0] != ashape[1] {
         return Err(scirs2_autograd::error::AutogradError::ShapeMismatch(
             "LU decomposition requires a square matrix".to_string(),
         ));
     }
 
-    let n = a_shape[0];
+    let n = ashape[0];
 
     // For simplicity, let's implement LU decomposition for 2x2 matrices
     if n > 2 {
@@ -52,7 +52,7 @@ pub fn lu<F: Float + Debug + Send + Sync + 'static>(
 
     let mut p = Array2::<F>::eye(n);
     let mut l = Array2::<F>::eye(n);
-    let mut u = a.data.clone().into_shape((n, n)).unwrap();
+    let mut u = a.data.clone().intoshape((n, n)).unwrap();
 
     if n == 2 {
         // Pivoting
@@ -104,7 +104,7 @@ pub fn lu<F: Float + Debug + Send + Sync + 'static>(
 
                     // For matrices up to 2x2, we'll just pass the gradient of U directly to A
                     // This is highly simplified and not correct in general
-                    let grad_u_2d = grad_u.clone().into_shape((n, n)).unwrap();
+                    let grad_u_2d = grad_u.clone().intoshape((n, n)).unwrap();
                     Ok(grad_u_2d.into_dyn())
                 })
                     as Box<dyn Fn(ndarray::Array<F, ndarray::IxDyn>) -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> + Send + Sync>,
@@ -156,9 +156,9 @@ pub fn qr<F: Float + Debug + Send + Sync + 'static>(
         ));
     }
 
-    let a_shape = a.shape();
-    let m = a_shape[0];
-    let n = a_shape[1];
+    let ashape = a.shape();
+    let m = ashape[0];
+    let n = ashape[1];
 
     // For simplicity, let's implement QR decomposition for small matrices
     if m > 2 || n > 2 {
@@ -170,7 +170,7 @@ pub fn qr<F: Float + Debug + Send + Sync + 'static>(
 
     // For 2x2 matrices, use Householder reflections
     let mut q = Array2::<F>::eye(m);
-    let mut r = a.data.clone().into_shape((m, n)).unwrap();
+    let mut r = a.data.clone().intoshape((m, n)).unwrap();
 
     if m >= 1 && n >= 1 {
         // First column Householder reflection
@@ -212,8 +212,8 @@ pub fn qr<F: Float + Debug + Send + Sync + 'static>(
                     // dA = dQ * R^T + Q * dR^T
                     // Here we're assuming dQ = 0 for simplicity
 
-                    let grad_r_2d = grad_r.clone().into_shape((m, n)).unwrap();
-                    let q_2d = q_data_clone.clone().into_shape((m, m)).unwrap();
+                    let grad_r_2d = grad_r.clone().intoshape((m, n)).unwrap();
+                    let q_2d = q_data_clone.clone().intoshape((m, m)).unwrap();
 
                     // Compute Q * dR
                     let mut grad_a = Array2::<F>::zeros((m, n));
@@ -277,14 +277,14 @@ pub fn cholesky<F: Float + Debug + Send + Sync + 'static>(
         ));
     }
 
-    let a_shape = a.shape();
-    if a_shape[0] != a_shape[1] {
+    let ashape = a.shape();
+    if ashape[0] != ashape[1] {
         return Err(scirs2_autograd::error::AutogradError::ShapeMismatch(
             "Cholesky decomposition requires a square matrix".to_string(),
         ));
     }
 
-    let n = a_shape[0];
+    let n = ashape[0];
 
     // For simplicity, let's implement Cholesky decomposition for small matrices
     if n > 2 {
@@ -339,8 +339,8 @@ pub fn cholesky<F: Float + Debug + Send + Sync + 'static>(
                     // Gradient of Cholesky decomposition
                     // See "Matrix Differential Calculus with Applications in Statistics and Econometrics"
 
-                    let grad_l_2d = grad_l.clone().into_shape((n, n)).unwrap();
-                    let l_2d = l_data_clone.clone().into_shape((n, n)).unwrap();
+                    let grad_l_2d = grad_l.clone().intoshape((n, n)).unwrap();
+                    let l_2d = l_data_clone.clone().intoshape((n, n)).unwrap();
 
                     // Initialize gradient of A
                     let mut grad_a = Array2::<F>::zeros((n, n));

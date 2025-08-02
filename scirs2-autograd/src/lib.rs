@@ -95,7 +95,7 @@
 //!
 //! // Hooks
 //! ag::run(|ctx| {
-//!     let x: ag::Tensor<f32> = ones(&[2, 3], ctx).show_shape();
+//!     let x: ag::Tensor<f32> = ones(&[2, 3], ctx).showshape();
 //!     let y: ag::Tensor<f32> = ones(&[2, 3], ctx).raw_hook(|x| println!("{}", x));
 //! });
 //! ```

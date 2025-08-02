@@ -1,13 +1,13 @@
-//! Filter analysis and characterization functions
-//!
-//! This module provides comprehensive analysis capabilities for digital filters
-//! including frequency response analysis, stability checking, and filter
-//! characterization for design validation and performance evaluation.
+// Filter analysis and characterization functions
+//
+// This module provides comprehensive analysis capabilities for digital filters
+// including frequency response analysis, stability checking, and filter
+// characterization for design validation and performance evaluation.
 
-use crate::error::{SignalError, SignalResult};
-use num__complex::Complex64;
-use std::f64::consts::PI;
 use super::application::{evaluate_transfer_function, find_polynomial_roots, group_delay};
+use crate::error::{SignalError, SignalResult};
+use num_complex::Complex64;
+use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Comprehensive filter analysis results
@@ -101,8 +101,8 @@ impl Default for FilterStability {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::analysis::analyze_filter;
-/// use scirs2__signal::filter::iir::butter;
+/// use scirs2_signal::filter::analysis::analyze_filter;
+/// use scirs2_signal::filter::iir::butter;
 ///
 /// // Analyze a Butterworth filter
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -231,8 +231,8 @@ pub fn analyze_filter(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::analysis::check_filter_stability;
-/// use scirs2__signal::filter::iir::butter;
+/// use scirs2_signal::filter::analysis::check_filter_stability;
+/// use scirs2_signal::filter::iir::butter;
 ///
 /// // Check stability of a Butterworth filter
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -295,8 +295,8 @@ pub fn check_filter_stability(a: &[f64]) -> SignalResult<FilterStability> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::analysis::frequency_response;
-/// use scirs2__signal::filter::iir::butter;
+/// use scirs2_signal::filter::analysis::frequency_response;
+/// use scirs2_signal::filter::iir::butter;
 ///
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
 /// let freqs = vec![0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
@@ -350,8 +350,8 @@ pub fn frequency_response(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::analysis::find_poles_zeros;
-/// use scirs2__signal::filter::iir::butter;
+/// use scirs2_signal::filter::analysis::find_poles_zeros;
+/// use scirs2_signal::filter::iir::butter;
 ///
 /// let (b, a) = butter(2, 0.3, "lowpass").unwrap();
 /// let (zeros, poles) = find_poles_zeros(&b, &a).unwrap();
@@ -396,8 +396,8 @@ pub fn find_poles_zeros(b: &[f64], a: &[f64]) -> SignalResult<(Vec<Complex64>, V
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::analysis::compute_q_factor;
-/// use scirs2__signal::filter::iir::butter;
+/// use scirs2_signal::filter::analysis::compute_q_factor;
+/// use scirs2_signal::filter::iir::butter;
 ///
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
 /// let q = compute_q_factor(&b, &a, 512).unwrap();

@@ -94,8 +94,8 @@ where
     /// # Returns
     ///
     /// * A new empty DIA matrix
-    pub fn empty(_shape: (usize, usize)) -> Self {
-        let (rows, cols) = _shape;
+    pub fn empty(shape: (usize, usize)) -> Self {
+        let (rows, cols) = shape;
 
         DiaMatrix {
             rows,

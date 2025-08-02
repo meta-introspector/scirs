@@ -144,7 +144,7 @@ where
 /// # Arguments
 ///
 /// * `cols` - Column matrix of shape (kernel_h * kernel_w * channels, output_h * output_w * batch_size)
-/// * `output_shape` - Shape of the output tensor as (batch_size, channels, height, width)
+/// * `outputshape` - Shape of the output tensor as (batch_size, channels, height, width)
 /// * `kernel_size` - Size of the kernel as (kernel_height, kernel_width)
 /// * `stride` - Stride as (stride_height, stride_width)
 /// * `padding` - Padding as (padding_height, padding_width)
@@ -190,7 +190,7 @@ where
 #[allow(dead_code)]
 pub fn col2im<F>(
     cols: &ndarray::ArrayView2<F>,
-    output_shape: (usize, usize, usize, usize),
+    outputshape: (usize, usize, usize, usize),
     kernel_size: (usize, usize),
     stride: (usize, usize),
     padding: (usize, usize),
@@ -199,7 +199,7 @@ pub fn col2im<F>(
 where
     F: Float + NumAssign + Sum + Zero + ScalarOperand,
 {
-    let (batch_size, channels, height, width) = output_shape;
+    let (batch_size, channels, height, width) = outputshape;
     let (kernel_h, kernel_w) = kernel_size;
     let (stride_h, stride_w) = stride;
     let (padding_h, padding_w) = padding;
@@ -216,12 +216,12 @@ where
         )));
     }
 
-    // Check input columns _shape
+    // Check input columns shape
     if cols.shape()[0] != kernel_h * kernel_w * channels
         || cols.shape()[1] != output_h * output_w * batch_size
     {
         return Err(LinalgError::ShapeError(format!(
-            "Invalid cols _shape: expected ({}, {}), got ({}, {})",
+            "Invalid cols shape: expected ({}, {}), got ({}, {})",
             kernel_h * kernel_w * channels,
             output_h * output_w * batch_size,
             cols.shape()[0],
@@ -415,7 +415,7 @@ where
 ///
 /// * `grad_output` - Gradient of the output tensor of shape (batch_size, channels, output_height, output_width)
 /// * `indices` - Indices of the maximum values from the forward pass
-/// * `input_shape` - Shape of the original input tensor (batch_size, channels, height, width)
+/// * `inputshape` - Shape of the original input tensor (batch_size, channels, height, width)
 ///
 /// # Returns
 ///
@@ -456,12 +456,12 @@ where
 pub fn max_pool2d_backward<F>(
     grad_output: &ArrayView4<F>,
     indices: &ndarray::ArrayView4<usize>,
-    input_shape: (usize, usize, usize, usize),
+    inputshape: (usize, usize, usize, usize),
 ) -> LinalgResult<Array4<F>>
 where
     F: Float + NumAssign + Sum + Zero + ScalarOperand,
 {
-    let (batch_size, channels, height, width) = input_shape;
+    let (batch_size, channels, height, width) = inputshape;
     let (out_batch, out_channels_, out_height, out_width) = grad_output.dim();
     let (idx_batch, idx_channels, idx_height, idx_width) = indices.dim();
 
@@ -508,8 +508,8 @@ where
 ///
 /// # Arguments
 ///
-/// * `input_shape` - Shape of the input tensor (batch_size, channels, height, width)
-/// * `kernel_shape` - Shape of the kernel tensor (out_channels_, in_channels, kernel_h, kernel_w)
+/// * `inputshape` - Shape of the input tensor (batch_size, channels, height, width)
+/// * `kernelshape` - Shape of the kernel tensor (out_channels_, in_channels, kernel_h, kernel_w)
 /// * `stride` - Stride as (stride_height, stride_width)
 /// * `padding` - Padding as (padding_height, padding_width)
 ///
@@ -536,13 +536,13 @@ where
 /// ```
 #[allow(dead_code)]
 pub fn compute_conv_indices(
-    input_shape: (usize, usize, usize, usize),
-    kernel_shape: (usize, usize, usize, usize),
+    inputshape: (usize, usize, usize, usize),
+    kernelshape: (usize, usize, usize, usize),
     stride: (usize, usize),
     padding: (usize, usize),
 ) -> LinalgResult<ndarray::Array1<usize>> {
-    let (batch_size, in_channels, height, width) = input_shape;
-    let (out_channels_, _in_channels, kernel_h, kernel_w) = kernel_shape;
+    let (batch_size, in_channels, height, width) = inputshape;
+    let (out_channels_, _in_channels, kernel_h, kernel_w) = kernelshape;
     let (stride_h, stride_w) = stride;
     let (padding_h, padding_w) = padding;
 
@@ -765,7 +765,7 @@ where
 ///
 /// * `grad_output` - Gradient of the output tensor of shape (batch_size, out_channels_, output_h, output_w)
 /// * `kernel` - Kernel tensor of shape (out_channels_, in_channels, kernel_h, kernel_w)
-/// * `input_shape` - Shape of the input tensor (batch_size, in_channels, height, width)
+/// * `inputshape` - Shape of the input tensor (batch_size, in_channels, height, width)
 /// * `stride` - Stride as (stride_height, stride_width)
 /// * `padding` - Padding as (padding_height, padding_width)
 /// * `dilation` - Dilation as (dilation_height, dilation_width)
@@ -811,7 +811,7 @@ where
 pub fn conv2d_backward_input<F>(
     grad_output: &ArrayView4<F>,
     kernel: &ArrayView4<F>,
-    input_shape: (usize, usize, usize, usize),
+    inputshape: (usize, usize, usize, usize),
     stride: (usize, usize),
     padding: (usize, usize),
     dilation: (usize, usize),
@@ -821,12 +821,12 @@ where
 {
     let (batch_size, out_channels, _output_h, _output_w) = grad_output.dim();
     let (k_out_channels, in_channels, kernel_h, kernel_w) = kernel.dim();
-    let (i_batch_size, i_in_channels, _height, _width) = input_shape;
+    let (i_batch_size, i_in_channels, _height, _width) = inputshape;
 
     // Check that shapes match
     if batch_size != i_batch_size {
         return Err(LinalgError::ShapeError(format!(
-            "Batch size mismatch: grad_output ({batch_size}) vs input_shape ({i_batch_size})"
+            "Batch size mismatch: grad_output ({batch_size}) vs inputshape ({i_batch_size})"
         )));
     }
 
@@ -838,7 +838,7 @@ where
 
     if in_channels != i_in_channels {
         return Err(LinalgError::ShapeError(format!(
-            "Input channels mismatch: kernel ({in_channels}) vs input_shape ({i_in_channels})"
+            "Input channels mismatch: kernel ({in_channels}) vs inputshape ({i_in_channels})"
         )));
     }
 
@@ -887,7 +887,7 @@ where
 ///
 /// * `input` - Input tensor of shape (batch_size, in_channels, height, width)
 /// * `grad_output` - Gradient of the output tensor of shape (batch_size, out_channels_, output_h, output_w)
-/// * `kernel_shape` - Shape of the kernel tensor (out_channels_, in_channels, kernel_h, kernel_w)
+/// * `kernelshape` - Shape of the kernel tensor (out_channels_, in_channels, kernel_h, kernel_w)
 /// * `stride` - Stride as (stride_height, stride_width)
 /// * `padding` - Padding as (padding_height, padding_width)
 /// * `dilation` - Dilation as (dilation_height, dilation_width)
@@ -904,10 +904,10 @@ where
 ///
 /// // Simple example with smaller dimensions
 /// let input = Array4::<f32>::zeros((1, 1, 4, 4));
-/// let kernel_shape = (1, 1, 2, 2);
+/// let kernelshape = (1, 1, 2, 2);
 ///
 /// // Forward pass to get output shape
-/// let kernel = Array4::<f32>::zeros(kernel_shape);
+/// let kernel = Array4::<f32>::zeros(kernelshape);
 /// let output = conv2d_im2col(
 ///     &input.view(),
 ///     &kernel.view(),
@@ -922,7 +922,7 @@ where
 /// let grad_kernel = conv2d_backward_kernel(
 ///     &input.view(),
 ///     &grad_output.view(),
-///     kernel_shape,
+///     kernelshape,
 ///     (1, 1),
 ///     (0, 0),
 ///     (1, 1),
@@ -935,7 +935,7 @@ where
 pub fn conv2d_backward_kernel<F>(
     input: &ArrayView4<F>,
     grad_output: &ArrayView4<F>,
-    kernel_shape: (usize, usize, usize, usize),
+    kernelshape: (usize, usize, usize, usize),
     stride: (usize, usize),
     padding: (usize, usize),
     dilation: (usize, usize),
@@ -945,7 +945,7 @@ where
 {
     let (batch_size, in_channels, _height, _width) = input.dim();
     let (go_batch_size, out_channels_, output_h, output_w) = grad_output.dim();
-    let (k_out_channels, k_in_channels, kernel_h, kernel_w) = kernel_shape;
+    let (k_out_channels, k_in_channels, kernel_h, kernel_w) = kernelshape;
 
     // Check that shapes match
     if batch_size != go_batch_size {
@@ -956,13 +956,13 @@ where
 
     if out_channels_ != k_out_channels {
         return Err(LinalgError::ShapeError(format!(
-            "Output channels mismatch: grad_output ({out_channels_}) vs kernel_shape ({k_out_channels})"
+            "Output channels mismatch: grad_output ({out_channels_}) vs kernelshape ({k_out_channels})"
         )));
     }
 
     if in_channels != k_in_channels {
         return Err(LinalgError::ShapeError(format!(
-            "Input channels mismatch: input ({in_channels}) vs kernel_shape ({k_in_channels})"
+            "Input channels mismatch: input ({in_channels}) vs kernelshape ({k_in_channels})"
         )));
     }
 
@@ -977,7 +977,7 @@ where
     // Compute kernel gradient using matrix multiplication
     let grad_kernel_flat = grad_output_reshaped.dot(&cols.t());
 
-    // Reshape to kernel _shape
+    // Reshape to kernel shape
     let grad_kernel = grad_kernel_flat
         .into_shape_with_order((out_channels_, in_channels, kernel_h, kernel_w))
         .map_err(|e| LinalgError::ShapeError(e.to_string()))?;

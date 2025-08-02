@@ -50,7 +50,7 @@ impl Default for StabilityTestConfig {
 
 /// Main numerical stability tester
 pub struct NumericalStabilityTester<F: Float> {
-    config: StabilityTestConfig_phantom: std::marker::PhantomData<F>,
+    config: StabilityTestConfig, phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> NumericalStabilityTester<F> {
@@ -326,7 +326,7 @@ impl<F: Float> NumericalStabilityTester<F> {
             90..=100 => StabilityGrade::Excellent,
             80..=89 => StabilityGrade::Good,
             70..=79 => StabilityGrade::Fair,
-            60..=69 => StabilityGrade::Poor_ =>, StabilityGrade::Critical,
+            60..=69 => StabilityGrade::Poor_ => StabilityGrade::Critical,
         }
     }
 }

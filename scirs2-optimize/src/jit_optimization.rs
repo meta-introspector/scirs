@@ -134,7 +134,7 @@ impl JitCompiler {
         };
 
         Self {
-            _options,
+            options: _options,
             cache: Arc::new(Mutex::new(HashMap::new())),
             pattern_detector: PatternDetector::new(),
             profiler,

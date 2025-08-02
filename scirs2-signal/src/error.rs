@@ -1,4 +1,4 @@
-//! Error types for the SciRS2 signal processing module
+// Error types for the SciRS2 signal processing module
 
 use thiserror::Error;
 
@@ -65,7 +65,7 @@ impl From<std::io::Error> for SignalError {
 
 // Conversion from scirs2_linalg errors
 // impl From<scirs2_linalg::LinalgError> for SignalError {
-//     fn from(_err: scirs2_linalg: LinalgError) -> Self {
+//     fn from(_err: scirs2, linalg: LinalgError) -> Self {
 //         SignalError::ComputationError(format!("Linear algebra error: {}", _err))
 //     }
 // }

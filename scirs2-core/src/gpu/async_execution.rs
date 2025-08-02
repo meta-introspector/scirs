@@ -211,10 +211,7 @@ impl std::fmt::Debug for GpuEvent {
             .field("dependencies", &self.dependencies)
             .field(
                 "callbacks",
-                &format!(
-                    "{} callbacks",
-                    self.callbacks.lock().unwrap().len()
-                ),
+                &format!("{} callbacks", self.callbacks.lock().unwrap().len()),
             )
             .finish()
     }
@@ -564,11 +561,7 @@ pub struct AsyncGpuStatistics {
 /// Extension trait for adding async capabilities to GPU operations
 pub trait AsyncGpuOps {
     /// Launch a kernel asynchronously
-    fn launch_async(
-        &self,
-        work_groups: [u32; 3],
-        stream: &Arc<GpuStream>,
-    ) -> Arc<GpuEvent>;
+    fn launch_async(&self, work_groups: [u32; 3], stream: &Arc<GpuStream>) -> Arc<GpuEvent>;
 
     /// Copy data asynchronously
     fn copy_async<T: crate::gpu::GpuDataType>(

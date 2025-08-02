@@ -1,10 +1,10 @@
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
 // use plotters::prelude::*;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use rand::{rng, Rng};
-use rand__distr::{Distribution, Normal};
-use scirs2__signal::{interpolate, SignalError, SignalResult};
+use rand_distr::{Distribution, Normal};
+use scirs2_signal::{interpolate, SignalError, SignalResult};
 use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;

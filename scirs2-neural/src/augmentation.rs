@@ -228,7 +228,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
     pub fn add_image_transform(&mut self, transform: ImageAugmentation) {
         self.image_transforms.push(transform);
     /// Add text augmentation transform
-    pub fn add_text_transform(&mut self, transform: TextAugmentation) {
+    pub fn addtext_transform(&mut self, transform: TextAugmentation) {
         self.text_transforms.push(transform);
     /// Add audio augmentation transform
     pub fn add_audio_transform(&mut self, transform: AudioAugmentation) {
@@ -401,7 +401,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
                         ])
                         .fill(fill_val);
     fn elastic_deformation(
-        _alpha: f64_sigma: f64,
+        _alpha: f64, sigma: f64,
         // Simplified elastic deformation implementation
         // In practice, this would involve complex displacement field generation
             // Apply simple noise as a placeholder for elastic deformation
@@ -573,7 +573,7 @@ mod tests {
         let mut manager = AugmentationManager::<f64>::new(Some(42));
         manager.add_image_transform(ImageAugmentation::RandomHorizontalFlip { probability: 1.0 });
         let input =
-            Array4::<f64>::from_shape_fn((2, 3, 4, 4), |(____)| rand::random()).into_dyn();
+            Array4::<f64>::fromshape_fn((2, 3, 4, 4), |(____)| rand::random()).into_dyn();
         let result = manager.augment_images(&input).unwrap();
         assert_eq!(result.shape(), input.shape());
         assert!(manager.stats.samples_processed > 0);

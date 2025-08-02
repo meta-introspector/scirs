@@ -162,9 +162,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Attention<F> {
                         .to_owned()
                         .into_shape_with_order((batch_size * seq_len, encoder_dim))?;
                     let projected = proj.forward(&flat_encoder.into_dyn())?;
-                    let proj_shape = projected.shape()[1];
+                    let projshape = projected.shape()[1];
                     projected
-                        .into_shape_with_order((batch_size, seq_len, proj_shape))?
+                        .into_shape_with_order((batch_size, seq_len, projshape))?
                         .into_dyn()
                 } else {
                     return Err(NeuralError::InferenceError(
@@ -717,7 +717,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Seq2Seq<F> {
             embedding_dim: hidden_dim,
         Self::new(config)
     /// Create a small and fast Seq2Seq model
-    pub fn create_small_model(_src_vocab_size: usize, tgt_vocab_size: usize) -> Result<Self> {
+    pub fn create_small_model(src_vocab_size: usize, tgt_vocab_size: usize) -> Result<Self> {
             embedding_dim: 128,
             hidden_dim: 256,
             num_layers: 1,

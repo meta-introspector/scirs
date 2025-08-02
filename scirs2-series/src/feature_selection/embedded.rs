@@ -32,7 +32,7 @@ impl EmbeddedMethods {
     /// use ndarray::{Array1, Array2};
     /// use scirs2__series::feature_selection::EmbeddedMethods;
     ///
-    /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
+    /// let features = Array2::fromshape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
     ///
     /// let result = EmbeddedMethods::lasso_selection(&features, &target, 1.0, 1000).unwrap();

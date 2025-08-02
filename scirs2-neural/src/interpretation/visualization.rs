@@ -202,7 +202,7 @@ where
 #[allow(dead_code)]
 pub fn generate_feature_visualization<F>(
     method: &VisualizationMethod,
-    input_shape: &[usize],
+    inputshape: &[usize],
 ) -> Result<VisualizationResult<F>>
     match method {
         VisualizationMethod::ActivationMaximization {
@@ -212,7 +212,7 @@ pub fn generate_feature_visualization<F>(
             learning_rate,
         } => {
             // Simplified activation maximization
-            let mut optimized_input = ndarray::Array::zeros(input_shape).into_dyn();
+            let mut optimized_input = ndarray::Array::zeros(inputshape).into_dyn();
             for _iter in 0..*num_iterations {
                 // Apply gradient ascent (simplified)
                 optimized_input = optimized_input
@@ -231,7 +231,7 @@ pub fn generate_feature_visualization<F>(
         VisualizationMethod::DeepDream {
             amplify_factor,
             // Simplified deep dream implementation
-            let mut dream_input = ndarray::Array::ones(input_shape).into_dyn();
+            let mut dream_input = ndarray::Array::ones(inputshape).into_dyn();
                 // Amplify activations (simplified)
                 dream_input = dream_input.mapv(|x| {
                     x * F::from(*amplify_factor).unwrap()
@@ -243,7 +243,7 @@ pub fn generate_feature_visualization<F>(
         VisualizationMethod::FeatureInversion {
             regularization_weight,
             // Simplified feature inversion
-            let inverted_input = ndarray::Array::zeros(input_shape).into_dyn();
+            let inverted_input = ndarray::Array::zeros(inputshape).into_dyn();
             metadata.insert(
                 "regularization".to_string(),
                 regularization_weight.to_string(),
@@ -253,7 +253,7 @@ pub fn generate_feature_visualization<F>(
         VisualizationMethod::ClassActivationMapping {
             target_class,
             // Simplified CAM
-            let cam_result = ndarray::Array::ones(input_shape).into_dyn();
+            let cam_result = ndarray::Array::ones(inputshape).into_dyn();
             metadata.insert("target_class".to_string(), target_class.to_string());
                 visualization_data: cam_result,
                 quality_score: 0.85,
@@ -261,7 +261,7 @@ pub fn generate_feature_visualization<F>(
             concept_data,
             concept_labels,
             // Simplified network dissection
-            let dissection_result = ndarray::Array::zeros(input_shape).into_dyn();
+            let dissection_result = ndarray::Array::zeros(inputshape).into_dyn();
             metadata.insert("num_concepts".to_string(), concept_labels.len().to_string());
             metadata.insert("num_examples".to_string(), concept_data.len().to_string());
                 visualization_data: dissection_result,

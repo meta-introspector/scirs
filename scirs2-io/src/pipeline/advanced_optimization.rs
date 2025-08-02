@@ -738,7 +738,8 @@ impl CacheOptimizer {
     }
 
     fn determine_optimal_config(
-        &self, _cache_patterns: &CacheUsagePatterns,
+        &self,
+        _cache_patterns: &CacheUsagePatterns,
         system_metrics: &SystemMetrics,
     ) -> Result<CacheConfiguration> {
         // Calculate optimal cache sizes based on system cache hierarchy
@@ -798,7 +799,8 @@ impl CacheAnalysis {
     }
 
     pub fn analyze_patterns(
-        &mut self, _historical_data: &[&ExecutionRecord],
+        &mut self,
+        _historical_data: &[&ExecutionRecord],
     ) -> Result<CacheUsagePatterns> {
         // Analyze cache usage patterns from execution history
         Ok(CacheUsagePatterns {
@@ -1360,7 +1362,8 @@ pub struct OptimizedPipelineBuilder<I, O> {
     optimizer: AdvancedPipelineOptimizer,
     pipeline_id: String,
     estimated_data_size: usize,
-    stages: Vec<Box<dyn PipelineStage>>, _phantom: std::marker::PhantomData<(I, O)>,
+    stages: Vec<Box<dyn PipelineStage>>,
+    _phantom: std::marker::PhantomData<(I, O)>,
 }
 
 impl<I, O> OptimizedPipelineBuilder<I, O> {
@@ -1369,7 +1372,8 @@ impl<I, O> OptimizedPipelineBuilder<I, O> {
             optimizer: AdvancedPipelineOptimizer::new(),
             pipeline_id: _pipeline_id.to_string(),
             estimated_data_size: 0,
-            stages: Vec::new(), _phantom: std::marker::PhantomData,
+            stages: Vec::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -1746,7 +1750,10 @@ impl NeuromorphicOptimizer {
 
             // Apply bio-inspired adaptation mechanisms
             if iteration % 100 == 0 {
-                BioinspiredAdaptationEngine::adapt_network(&mut self.spiking_network, &self.neuromorphic_memory)?;
+                BioinspiredAdaptationEngine::adapt_network(
+                    &mut self.spiking_network,
+                    &self.neuromorphic_memory,
+                )?;
             }
         }
 
@@ -1911,7 +1918,8 @@ impl ConsciousnessInspiredOptimizer {
     /// Advanced-advanced consciousness-inspired optimization with self-awareness
     pub fn conscious_optimize(
         &mut self,
-        optimization_goal: &ConsciousnessOptimizationGoal, _parameters: &ConsciousnessParameters,
+        optimization_goal: &ConsciousnessOptimizationGoal,
+        _parameters: &ConsciousnessParameters,
     ) -> Result<ConsciousnessOptimizationResult> {
         // Set intentional _goal in consciousness system
         self.intentionality_engine
@@ -2098,20 +2106,19 @@ impl ConsciousnessInspiredOptimizer {
 
         if let Some(best_solution) = solutions.first() {
             state.convergence_level = best_solution.quality;
-            state.satisfaction_level = ConsciousnessInspiredOptimizer::measure_satisfaction(&state, best_solution);
+            state.satisfaction_level =
+                ConsciousnessInspiredOptimizer::measure_satisfaction(&state, best_solution);
         }
 
         // Update consciousness metrics
-        state.awareness_level = ConsciousnessInspiredOptimizer::measure_awareness_level(&state, solutions);
+        state.awareness_level =
+            ConsciousnessInspiredOptimizer::measure_awareness_level(&state, solutions);
         state.metacognitive_accuracy = self.metacognitive_monitor.get_accuracy();
 
         Ok(state)
     }
 
-    fn measure_satisfaction(
-        self_state: &ConsciousnessState,
-        solution: &EvaluatedSolution,
-    ) -> f64 {
+    fn measure_satisfaction(self_state: &ConsciousnessState, solution: &EvaluatedSolution) -> f64 {
         // Measure consciousness-level satisfaction with solution
         solution.quality * 0.7 + solution.creativity * 0.3
     }
@@ -2548,14 +2555,20 @@ impl SynapticPlasticityManager {
     }
 
     pub fn strengthen_synapses(
-        &mut self, _spike_pattern: &SpikePattern, _response: &NetworkResponse, _fitness: f64,
+        &mut self,
+        _spike_pattern: &SpikePattern,
+        _response: &NetworkResponse,
+        _fitness: f64,
     ) -> Result<()> {
         // Implement synaptic strengthening
         Ok(())
     }
 
     pub fn weaken_synapses(
-        &mut self, _spike_pattern: &SpikePattern, _response: &NetworkResponse, _fitness: f64,
+        &mut self,
+        _spike_pattern: &SpikePattern,
+        _response: &NetworkResponse,
+        _fitness: f64,
     ) -> Result<()> {
         // Implement synaptic weakening
         Ok(())
@@ -2653,7 +2666,8 @@ impl BioinspiredAdaptationEngine {
     }
 
     pub fn adapt_network(
-        self_network: &mut SpikingNeuralNetwork, _memory: &NeuromorphicMemory,
+        self_network: &mut SpikingNeuralNetwork,
+        _memory: &NeuromorphicMemory,
     ) -> Result<()> {
         // Implement bio-inspired _network adaptation
         Ok(())
@@ -2722,7 +2736,9 @@ impl GlobalWorkspace {
     }
 
     pub fn broadcast(
-        &mut self, _attention_focus: &AttentionFocus, _contents: &[WorkingMemoryItem],
+        &mut self,
+        _attention_focus: &AttentionFocus,
+        _contents: &[WorkingMemoryItem],
     ) -> Result<WorkspaceContents> {
         // Implement global workspace broadcasting
         let mut active_ideas = Vec::new();
@@ -3012,7 +3028,9 @@ impl IntentionalityEngine {
     }
 
     pub fn adapt_strategy(
-        &mut self, _consciousness_state: &ConsciousnessState, _solutions: &[EvaluatedSolution],
+        &mut self,
+        _consciousness_state: &ConsciousnessState,
+        _solutions: &[EvaluatedSolution],
     ) -> Result<()> {
         // Adapt optimization strategy based on intentionality
         Ok(())
@@ -3584,7 +3602,8 @@ impl ReinforcementLearningOptimizer {
         let mut reward_distribution = Vec::new();
 
         for experience in meta_batch {
-            state_diversity += ReinforcementLearningOptimizer::compute_state_diversity(&experience.state);
+            state_diversity +=
+                ReinforcementLearningOptimizer::compute_state_diversity(&experience.state);
             action_effectiveness += experience.reward;
             reward_distribution.push(experience.reward);
         }
@@ -3665,7 +3684,9 @@ impl DQNAgent {
     pub fn new(_state_dim: usize, hidden_dim: usize, action_dim: usize) -> Self {
         Self {
             q_network: NeuralNetwork::new(vec![_state_dim, hidden_dim, hidden_dim, action_dim]),
-            target_network: NeuralNetwork::new(vec![_state_dim, hidden_dim, hidden_dim, action_dim]),
+            target_network: NeuralNetwork::new(vec![
+                _state_dim, hidden_dim, hidden_dim, action_dim,
+            ]),
             experience_buffer: Vec::new(),
             epsilon: 0.9, // High initial exploration
             learning_rate: 0.001,
@@ -4808,7 +4829,8 @@ impl RealTimePerformancePredictor {
     }
 
     fn calculate_failure_probability(
-        &self, _system_metrics: &SystemMetrics,
+        &self,
+        _system_metrics: &SystemMetrics,
         degradation: &DegradationAnalysis,
     ) -> Result<f64> {
         // Calculate failure probability based on degradation analysis
@@ -4820,7 +4842,8 @@ impl RealTimePerformancePredictor {
     }
 
     fn estimate_remaining_useful_life(
-        &self, _system_metrics: &SystemMetrics,
+        &self,
+        _system_metrics: &SystemMetrics,
         degradation: &DegradationAnalysis,
     ) -> Result<Duration> {
         // Estimate remaining useful life based on degradation patterns
@@ -4888,7 +4911,8 @@ impl RealTimePerformancePredictor {
 
     fn calculate_optimal_maintenance_window(
         &self,
-        remaining_useful_life: Duration, _metrics: &SystemMetrics,
+        remaining_useful_life: Duration,
+        _metrics: &SystemMetrics,
     ) -> Result<MaintenanceWindow> {
         let days_remaining = remaining_useful_life.as_secs() / (24 * 3600);
 
@@ -4958,7 +4982,8 @@ impl RealTimePerformancePredictor {
     }
 
     fn identify_critical_components(
-        &self, _historical_data: &[PipelinePerformanceMetrics],
+        &self,
+        _historical_data: &[PipelinePerformanceMetrics],
     ) -> Result<Vec<CriticalComponent>> {
         Ok(vec![
             CriticalComponent {
@@ -5514,7 +5539,8 @@ impl AdaptiveAlertSystem {
         &self,
         metrics: &ProcessedMetrics,
         _predictions: &[MetricsPrediction],
-        anomaly_score: f64, _trend_analysis: &TrendAnalysis,
+        anomaly_score: f64,
+        _trend_analysis: &TrendAnalysis,
     ) -> Result<Vec<PerformanceAlert>> {
         let mut alerts = Vec::new();
 

@@ -4,7 +4,6 @@
 //! following SciPy's `stats.distributions` module.
 
 use crate::error::StatsResult;
-use statrs::statistics::Statistics;
 
 // Export distributions
 pub mod bernoulli;
@@ -282,7 +281,7 @@ where
 /// assert!((pdf_at_one - 0.3678794).abs() < 1e-6);
 /// ```
 #[allow(dead_code)]
-pub fn gamma<F>(_shape: F, scale: F, loc: F) -> StatsResult<Gamma<F>>
+pub fn gamma<F>(shape: F, scale: F, loc: F) -> StatsResult<Gamma<F>>
 where
     F: num_traits::Float
         + num_traits::NumCast
@@ -292,7 +291,7 @@ where
         + 'static
         + std::fmt::Display,
 {
-    Gamma::new(_shape, scale, loc)
+    Gamma::new(shape, scale, loc)
 }
 
 /// Create a Beta distribution with the given parameters.
@@ -418,11 +417,11 @@ where
 /// assert!((pdf_at_one - 0.73575888).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn weibull<F>(_shape: F, scale: F, loc: F) -> StatsResult<Weibull<F>>
+pub fn weibull<F>(shape: F, scale: F, loc: F) -> StatsResult<Weibull<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    Weibull::new(_shape, scale, loc)
+    Weibull::new(shape, scale, loc)
 }
 
 /// Create a Pareto distribution with the given parameters.
@@ -450,11 +449,11 @@ where
 /// assert!((pdf_at_two - 0.1875).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn pareto<F>(_shape: F, scale: F, loc: F) -> StatsResult<Pareto<F>>
+pub fn pareto<F>(shape: F, scale: F, loc: F) -> StatsResult<Pareto<F>>
 where
     F: num_traits::Float + num_traits::NumCast + std::fmt::Display,
 {
-    Pareto::new(_shape, scale, loc)
+    Pareto::new(shape, scale, loc)
 }
 
 /// Create a Cauchy distribution with the given parameters.

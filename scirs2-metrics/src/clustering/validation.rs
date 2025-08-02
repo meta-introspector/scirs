@@ -133,7 +133,7 @@ where
 /// use ndarray::{array, Array2};
 /// use scirs2__metrics::clustering::validation::cluster_stability;
 ///
-/// let x = Array2::from_shape_vec((6, 2), vec![
+/// let x = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2,
 /// ]).unwrap();
@@ -417,7 +417,7 @@ where
 /// use ndarray::{array, Array2};
 /// use scirs2__metrics::clustering::validation::fold_stability;
 ///
-/// let x = Array2::from_shape_vec((10, 2), vec![
+/// let x = Array2::fromshape_vec((10, 2), vec![
 ///     1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 1.3, 2.1, 1.4, 1.9,
 ///     5.0, 6.0, 5.2, 5.8, 5.5, 6.2, 5.3, 6.1, 5.4, 5.9,
 /// ]).unwrap();
@@ -659,7 +659,7 @@ mod tests {
     #[test]
     fn test_cluster_stability() {
         // Create a simple dataset with well-separated clusters
-        let x = Array2::from_shape_vec(
+        let x = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
@@ -674,7 +674,7 @@ mod tests {
         assert!(stability > 0.5);
 
         // Create a dataset with less separated clusters
-        let less_separated = Array2::from_shape_vec(
+        let less_separated = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 2.8, 3.0, 3.2, 3.5, 4.0, 4.2, 4.5, 5.0],
         )
@@ -710,7 +710,7 @@ mod tests {
             labels_data.push(1);
         }
 
-        let x = Array2::from_shape_vec((40, 2), x_data).unwrap();
+        let x = Array2::fromshape_vec((40, 2), x_data).unwrap();
         let labels = Array1::from_vec(labels_data);
 
         // Test fold stability

@@ -1,7 +1,8 @@
+use ndarray::s;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Array3, s};
+use ndarray::{ Array1, Array2, Array3};
 use rand::Rng;
-use scirs2__linalg::{cholesky, inv};
+use scirs2_linalg::{cholesky, inv};
 use statrs::statistics::Statistics;
 
 // Kalman filtering module
@@ -221,11 +222,11 @@ pub fn kalman_filter(
                     let centered = inn - &innovation_mean;
                     let centered_col = centered
                         .clone()
-                        .into_shape_with_order((centered.len(), 1))
+                        .intoshape_with_order((centered.len(), 1))
                         .unwrap();
                     let centered_row = centered
                         .clone()
-                        .into_shape_with_order((1, centered.len()))
+                        .intoshape_with_order((1, centered.len()))
                         .unwrap();
                     r_estimate += &centered_col.dot(&centered_row);
                 }
@@ -241,11 +242,11 @@ pub fn kalman_filter(
                 let pred_err = &_x - &x_pred;
                 let pred_err_col = pred_err
                     .clone()
-                    .into_shape_with_order((pred_err.len(), 1))
+                    .intoshape_with_order((pred_err.len(), 1))
                     .unwrap();
                 let pred_err_row = pred_err
                     .clone()
-                    .into_shape_with_order((1, pred_err.len()))
+                    .intoshape_with_order((1, pred_err.len()))
                     .unwrap();
                 let q_update = pred_err_col.dot(&pred_err_row);
                 adaptive_q = &adaptive_q * (1.0 - config.forgetting_factor)
@@ -492,8 +493,8 @@ where
         let mut p_pred = Array2::<f64>::zeros((n_states, n_states));
         for j in 0..predicted_sigmas.len() {
             let diff = &predicted_sigmas[j] - &x_pred;
-            let diff_col = diff.clone().into_shape_with_order((diff.len(), 1)).unwrap();
-            let diff_row = diff.clone().into_shape_with_order((1, diff.len())).unwrap();
+            let diff_col = diff.clone().intoshape_with_order((diff.len(), 1)).unwrap();
+            let diff_row = diff.clone().intoshape_with_order((1, diff.len())).unwrap();
             p_pred = &p_pred + &(weights_cov[j] * diff_col.dot(&diff_row));
         }
         p_pred = &p_pred + &q;
@@ -514,8 +515,8 @@ where
         let mut s = Array2::<f64>::zeros((n_measurements, n_measurements));
         for j in 0..measurement_sigmas.len() {
             let diff = &measurement_sigmas[j] - &z_pred;
-            let diff_col = diff.clone().into_shape_with_order((diff.len(), 1)).unwrap();
-            let diff_row = diff.clone().into_shape_with_order((1, diff.len())).unwrap();
+            let diff_col = diff.clone().intoshape_with_order((diff.len(), 1)).unwrap();
+            let diff_row = diff.clone().intoshape_with_order((1, diff.len())).unwrap();
             s = &s + &(weights_cov[j] * diff_col.dot(&diff_row));
         }
         s = &s + &r;
@@ -527,11 +528,11 @@ where
             let diff_z = &measurement_sigmas[j] - &z_pred;
             let diff_x_col = diff_x
                 .clone()
-                .into_shape_with_order((diff_x.len(), 1))
+                .intoshape_with_order((diff_x.len(), 1))
                 .unwrap();
             let diff_z_row = diff_z
                 .clone()
-                .into_shape_with_order((1, diff_z.len()))
+                .intoshape_with_order((1, diff_z.len()))
                 .unwrap();
             c = &c + &(weights_cov[j] * diff_x_col.dot(&diff_z_row));
         }
@@ -731,20 +732,20 @@ where
 
             let x_diff_col = x_diff
                 .clone()
-                .into_shape_with_order((x_diff.len(), 1))
+                .intoshape_with_order((x_diff.len(), 1))
                 .unwrap();
             let z_diff_row = z_diff
                 .clone()
-                .into_shape_with_order((1, z_diff.len()))
+                .intoshape_with_order((1, z_diff.len()))
                 .unwrap();
             pxz = &pxz + &x_diff_col.dot(&z_diff_row);
             let z_diff_col = z_diff
                 .clone()
-                .into_shape_with_order((z_diff.len(), 1))
+                .intoshape_with_order((z_diff.len(), 1))
                 .unwrap();
             let z_diff_row = z_diff
                 .clone()
-                .into_shape_with_order((1, z_diff.len()))
+                .intoshape_with_order((1, z_diff.len()))
                 .unwrap();
             pzz = &pzz + &z_diff_col.dot(&z_diff_row);
         }
@@ -817,7 +818,7 @@ pub fn kalman_denoise_1d(
     let _n = signal.len();
 
     // Define a simple constant-velocity model
-    let f = match Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 0.0, 1.0]) {
+    let f = match Array2::fromshape_vec((2, 2), vec![1.0, 1.0, 0.0, 1.0]) {
         Ok(arr) => arr,
         Err(e) => {
             return Err(SignalError::InvalidArgument(format!(
@@ -826,7 +827,7 @@ pub fn kalman_denoise_1d(
             )))
         }
     };
-    let h = match Array2::from_shape_vec((1, 2), vec![1.0, 0.0]) {
+    let h = match Array2::fromshape_vec((1, 2), vec![1.0, 0.0]) {
         Ok(arr) => arr,
         Err(e) => {
             return Err(SignalError::InvalidArgument(format!(

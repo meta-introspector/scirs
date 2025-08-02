@@ -1,13 +1,13 @@
-//! Power spectral density estimation using multitaper methods.
+// Power spectral density estimation using multitaper methods.
 
+use super::utils::compute_fft;
+use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rand::Rng;
 use std::fmt::Debug;
-use super::utils::compute_fft;
-use super::windows::dpss;
 
 #[allow(unused_imports)]
 // PI is only used in doc examples
@@ -39,7 +39,7 @@ pub type MultitaperResult = (Vec<f64>, Vec<f64>, Option<Array2<f64>>, Option<Arr
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::multitaper::pmtm;
+/// use scirs2_signal::multitaper::pmtm;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sinusoid with noise)
@@ -244,7 +244,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::multitaper::multitaper_spectrogram;
+/// use scirs2_signal::multitaper::multitaper_spectrogram;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal with changing frequency

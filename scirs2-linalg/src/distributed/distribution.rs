@@ -30,9 +30,9 @@ pub struct DataDistribution {
     /// Distribution strategy used
     pub strategy: DistributionStrategy,
     /// Global matrix dimensions
-    pub global_shape: (usize, usize),
+    pub globalshape: (usize, usize),
     /// Local matrix dimensions on this node
-    pub local_shape: (usize, usize),
+    pub localshape: (usize, usize),
     /// Global indices that this node owns
     pub owned_indices: IndexRange,
     /// Mapping of global indices to owning nodes
@@ -83,11 +83,11 @@ impl IndexRange {
 impl DataDistribution {
     /// Create row-wise distribution
     pub fn row_wise(
-        global_shape: (usize, usize),
+        globalshape: (usize, usize),
         num_nodes: usize,
         node_rank: usize,
     ) -> LinalgResult<Self> {
-        let (global_rows, global_cols) = global_shape;
+        let (global_rows, global_cols) = globalshape;
         let rows_per_node = global_rows / num_nodes;
         let remainder = global_rows % num_nodes;
         
@@ -105,7 +105,7 @@ impl DataDistribution {
         };
         
         let local_rows = end_row - start_row;
-        let local_shape = (local_rows, global_cols);
+        let localshape = (local_rows, global_cols);
         let owned_indices = IndexRange::new(start_row, end_row, 0, global_cols);
         
         // Create index map
@@ -132,8 +132,8 @@ impl DataDistribution {
         
         Ok(Self {
             strategy: DistributionStrategy::RowWise,
-            global_shape,
-            local_shape,
+            globalshape,
+            localshape,
             owned_indices,
             index_map,
             block_size: (1, global_cols),
@@ -142,11 +142,11 @@ impl DataDistribution {
     
     /// Create column-wise distribution  
     pub fn column_wise(
-        global_shape: (usize, usize),
+        globalshape: (usize, usize),
         num_nodes: usize,
         node_rank: usize,
     ) -> LinalgResult<Self> {
-        let (global_rows, global_cols) = global_shape;
+        let (global_rows, global_cols) = globalshape;
         let cols_per_node = global_cols / num_nodes;
         let remainder = global_cols % num_nodes;
         
@@ -164,7 +164,7 @@ impl DataDistribution {
         };
         
         let local_cols = end_col - start_col;
-        let local_shape = (global_rows, local_cols);
+        let localshape = (global_rows, local_cols);
         let owned_indices = IndexRange::new(0, global_rows, start_col, end_col);
         
         // Create index map
@@ -191,8 +191,8 @@ impl DataDistribution {
         
         Ok(Self {
             strategy: DistributionStrategy::ColumnWise,
-            global_shape,
-            local_shape,
+            globalshape,
+            localshape,
             owned_indices,
             index_map,
             block_size: (global_rows, 1),
@@ -201,12 +201,12 @@ impl DataDistribution {
     
     /// Create block-cyclic distribution
     pub fn block_cyclic(
-        global_shape: (usize, usize),
+        globalshape: (usize, usize),
         num_nodes: usize,
         node_rank: usize,
         block_size: (usize, usize),
     ) -> LinalgResult<Self> {
-        let (global_rows, global_cols) = global_shape;
+        let (global_rows, global_cols) = globalshape;
         let (block_rows, block_cols) = block_size;
         
         // Calculate grid dimensions
@@ -228,7 +228,7 @@ impl DataDistribution {
             }
         }
         
-        // Calculate local _shape (approximate)
+        // Calculate local shape (approximate)
         let local_rows = owned_blocks.iter()
             .map(|(gr_)| {
                 let start_row = gr * block_rows;
@@ -246,7 +246,7 @@ impl DataDistribution {
             .max()
             .unwrap_or(0);
         
-        let local_shape = (local_rows, local_cols);
+        let localshape = (local_rows, local_cols);
         
         // For simplicity, use first block's range as owned_indices
         let owned_indices = if !owned_blocks.is_empty() {
@@ -277,8 +277,8 @@ impl DataDistribution {
         
         Ok(Self {
             strategy: DistributionStrategy::BlockCyclic,
-            global_shape,
-            local_shape,
+            globalshape,
+            localshape,
             owned_indices,
             index_map,
             block_size,
@@ -495,11 +495,11 @@ impl MatrixPartitioner {
         let (global_rows, global_cols) = matrix.dim();
         
         // Validate that matrix matches distribution
-        if (global_rows, global_cols) != distribution.global_shape {
+        if (global_rows, global_cols) != distribution.globalshape {
             return Err(LinalgError::DimensionError(format!(
                 "Matrix shape {:?} doesn't match distribution shape {:?}",
                 (global_rows, global_cols),
-                distribution.global_shape
+                distribution.globalshape
             )));
         }
         
@@ -518,7 +518,7 @@ impl MatrixPartitioner {
     where
         T: Clone + Default,
     {
-        let mut global_matrix = Array2::default(distribution.global_shape);
+        let mut global_matrix = Array2::default(distribution.globalshape);
         
         // Place each partition in the correct location
         for (&node_rank, partition) in partitions {
@@ -569,8 +569,8 @@ mod tests {
         let distribution = DataDistribution::row_wise((100, 50), 4, 1).unwrap();
         
         assert_eq!(distribution.strategy, DistributionStrategy::RowWise);
-        assert_eq!(distribution.global_shape, (100, 50));
-        assert_eq!(distribution.local_shape.1, 50); // All columns
+        assert_eq!(distribution.globalshape, (100, 50));
+        assert_eq!(distribution.localshape.1, 50); // All columns
         
         // Node 1 should own rows 25-49
         assert!(distribution.owns(30, 10));
@@ -582,11 +582,11 @@ mod tests {
         let distribution = DataDistribution::column_wise((100, 50), 4, 2).unwrap();
         
         assert_eq!(distribution.strategy, DistributionStrategy::ColumnWise);
-        assert_eq!(distribution.global_shape, (100, 50));
-        assert_eq!(distribution.local_shape.0, 100); // All rows
+        assert_eq!(distribution.globalshape, (100, 50));
+        assert_eq!(distribution.localshape.0, 100); // All rows
         
         // Node 2 should own some columns
-        assert!(distribution.local_shape.1 > 0);
+        assert!(distribution.localshape.1 > 0);
     }
     
     #[test]
@@ -611,7 +611,7 @@ mod tests {
     
     #[test]
     fn test_matrix_partitioner() {
-        let matrix = Array2::from_shape_fn((10, 8), |(i, j)| (i * 8 + j) as f64);
+        let matrix = Array2::fromshape_fn((10, 8), |(i, j)| (i * 8 + j) as f64);
         let distribution = DataDistribution::row_wise((10, 8), 2, 0).unwrap();
         
         let partition = MatrixPartitioner::partition(&matrix.view(), &distribution).unwrap();

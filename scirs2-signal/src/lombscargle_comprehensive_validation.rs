@@ -1,18 +1,18 @@
-//! Comprehensive validation suite for Lomb-Scargle periodogram
-//!
-//! This module provides extensive validation of the Lomb-Scargle implementation including:
-//! - Accuracy validation against theoretical results
-//! - Numerical stability testing
-//! - Performance benchmarks
-//! - Cross-validation with reference implementations
-//! - Statistical significance testing
+// Comprehensive validation suite for Lomb-Scargle periodogram
+//
+// This module provides extensive validation of the Lomb-Scargle implementation including:
+// - Accuracy validation against theoretical results
+// - Numerical stability testing
+// - Performance benchmarks
+// - Cross-validation with reference implementations
+// - Statistical significance testing
 
 use crate::error::SignalResult;
-use crate::lombscargle::{AutoFreqMethod, lombscargle};
+use crate::lombscargle::{lombscargle, AutoFreqMethod};
+use crate::lti::design::tf;
 use rand::Rng;
 use std::f64::consts::PI;
 use std::time::Instant;
-use crate::lti::design::tf;
 
 #[allow(unused_imports)]
 /// Comprehensive validation result for Lomb-Scargle methods
@@ -372,15 +372,15 @@ fn validate_lombscargle_accuracy(
     let noise_floor_accuracy =
         1.0 - (noise_floor_errors.iter().sum::<f64>() / noise_floor_errors.len().max(1) as f64);
 
-    let false_positive_rate = false_positives as f64 / total_detections.max(1)  as f64;
-    let false_negative_rate = false_negatives as f64 / total_detections.max(1)  as f64;
+    let false_positive_rate = false_positives as f64 / total_detections.max(1) as f64;
+    let false_negative_rate = false_negatives as f64 / total_detections.max(1) as f64;
 
     // Estimate frequency resolution from test results
     let frequency_resolution = estimate_lombscargle_frequency_resolution(&config.test_signals[0])?;
 
     // Calculate spectral leakage metrics
     let leakage_factor =
-        single_freq_errors.iter().sum::<f64>() / single_freq_errors.len().max(1)  as f64;
+        single_freq_errors.iter().sum::<f64>() / single_freq_errors.len().max(1) as f64;
     let spectral_leakage_level = (false_positive_rate + false_negative_rate) / 2.0;
 
     Ok(LombScargleAccuracyMetrics {
@@ -405,7 +405,17 @@ fn test_lombscargle_stability(
     // Test 1: Highly irregular sampling
     let mut irregular_stable = true;
     let (times, signal) = generate_highly_irregular_data(100, 10.0)?;
-    match lombscargle(&times, &signal, None, None, None, None, None, None, Some(false)) {
+    match lombscargle(
+        &times,
+        &signal,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(false),
+    ) {
         Ok(result) => {
             if !result.1.iter().all(|&p: &f64| p.is_finite() && p >= 0.0) {
                 irregular_stable = false;
@@ -524,9 +534,18 @@ fn benchmark_lombscargle_performance(
 
         let start = Instant::now();
         for _ in 0..10 {
-            let _ = lombscargle(&test_times, &test_signal, None, None, None, None,
+            let _ = lombscargle(
+                &test_times,
+                &test_signal,
                 None,
-                None, None, None)?;
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )?;
         }
         let elapsed = start.elapsed().as_secs_f64() * 100.0; // ms per operation
 
@@ -538,7 +557,7 @@ fn benchmark_lombscargle_performance(
 
     // Calculate scalability factor (should be O(N log N) ideally)
     let scalability_factor = if sizes.len() >= 2 {
-        let size_ratio = sizes[sizes.len() - 1] as f64 / sizes[0]  as f64;
+        let size_ratio = sizes[sizes.len() - 1] as f64 / sizes[0] as f64;
         let time_ratio = times[times.len() - 1] / times[0];
         time_ratio / (size_ratio * size_ratio.log2())
     } else {
@@ -588,7 +607,7 @@ fn validate_statistical_significance(
     let false_alarm_accuracy =
         1.0 - (false_alarm_errors.iter().sum::<f64>() / false_alarm_errors.len() as f64);
     let statistical_power =
-        power_estimates.iter().sum::<f64>() / power_estimates.len().max(1)  as f64;
+        power_estimates.iter().sum::<f64>() / power_estimates.len().max(1) as f64;
 
     // Bootstrap validation
     let bootstrap_validation = test_bootstrap_validation(config)?;
@@ -646,7 +665,7 @@ fn generate_lombscargle_test_signal(
     for i in 0..config.n {
         let regular_time = (i as f64 / (config.n - 1) as f64) * config.time_span;
         let noise =
-            rng.random_range(-1.0..1.0) * config.irregularity * config.time_span / config.n  as f64;
+            rng.random_range(-1.0..1.0) * config.irregularity * config.time_span / config.n as f64;
         times.push(regular_time + noise);
     }
     times.sort_by(|a..b| a.partial_cmp(b).unwrap());
@@ -725,9 +744,11 @@ fn generate_single_sinusoid(
 /// Generate multiple sinusoids signal
 #[allow(dead_code)]
 fn generate_multiple_sinusoids(
-    times: &[f64], frequencies: &[f64],
+    times: &[f64],
+    frequencies: &[f64],
     amplitudes: &[f64],
-    noise_level: f64,) -> Vec<f64> {
+    noise_level: f64,
+) -> Vec<f64> {
     let mut rng = rand::rng();
 
     times
@@ -810,9 +831,9 @@ fn find_peaks(_data: &[f64], threshold: f64) -> Vec<usize> {
 #[allow(dead_code)]
 fn analyze_noise_floor(_freqs: &[f64], power: &[f64]) -> f64 {
     // For pure noise, expect relatively flat spectrum
-    let mean_power = power.iter().sum::<f64>() / power.len()  as f64;
+    let mean_power = power.iter().sum::<f64>() / power.len() as f64;
     let variance =
-        power.iter().map(|&p| (p - mean_power).powi(2)).sum::<f64>() / power.len()  as f64;
+        power.iter().map(|&p| (p - mean_power).powi(2)).sum::<f64>() / power.len() as f64;
 
     // Low variance indicates good noise floor estimation
     variance.sqrt() / mean_power
@@ -1330,7 +1351,7 @@ fn enhance_with_real_world_signal_validation(
     }
 
     match lombscargle(
-        &star_times..&star_magnitudes,
+        &star_times, &star_magnitudes,
         None,
         Some("standard"),
         Some(true),
@@ -1381,7 +1402,7 @@ fn enhance_with_real_world_signal_validation(
         .collect();
 
     match lombscargle(
-        &hrv_times..&hrv_signal,
+        &hrv_times, &hrv_signal,
         None,
         Some("standard"),
         Some(true),
@@ -1459,7 +1480,7 @@ fn enhance_with_statistical_robustness_tests(
             .collect();
 
         match lombscargle(
-            &times..&signal,
+            &times, &signal,
             None,
             Some("standard"),
             Some(true),
@@ -1483,7 +1504,7 @@ fn enhance_with_statistical_robustness_tests(
     }
 
     if !bootstrap_results.is_empty() {
-        let mean_freq: f64 = bootstrap_results.iter().sum::<f64>() / bootstrap_results.len()  as f64;
+        let mean_freq: f64 = bootstrap_results.iter().sum::<f64>() / bootstrap_results.len() as f64;
         let std_freq: f64 = (bootstrap_results
             .iter()
             .map(|&f| (f - mean_freq).powi(2))
@@ -1566,7 +1587,7 @@ fn enhance_with_statistical_robustness_tests(
         .collect();
 
     match lombscargle(
-        &times..&laplacian_signal,
+        &times, &laplacian_signal,
         None,
         Some("standard"),
         Some(true),

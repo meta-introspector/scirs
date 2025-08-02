@@ -38,8 +38,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> + std::fmt::Debug
         f.debug_struct("Dense")
             .field("input_dim", &self.input_dim)
             .field("output_dim", &self.output_dim)
-            .field("weights_shape", &self.weights.shape())
-            .field("biases_shape", &self.biases.shape())
+            .field("weightsshape", &self.weights.shape())
+            .field("biasesshape", &self.biases.shape())
             .field("has_activation", &self.activation.is_some())
             .finish()
     }
@@ -72,7 +72,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
     /// * `output_dim` - Number of output features
     /// * `activation_name` - Optional activation function name
     /// * `rng` - Random number generator for weight initialization
-    pub fn new<R: ndarray_rand: rand::Rng + ndarray, _rand::rand::RngCore>(
+    pub fn new<R: ndarray, rand: rand::Rng + ndarray, _rand::rand::RngCore>(
         input_dim: usize,
         output_dim: usize,
         activation_name: Option<&str>,

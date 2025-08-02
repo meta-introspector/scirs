@@ -207,7 +207,7 @@ fn visualize_spline_rotations(
     ))?;
 
     // Draw interpolation type and info
-    root.draw_text(
+    root.drawtext(
         &format!("Interpolation: {}", spline.interpolation_type()),
         &TextStyle::from(("sans-serif", 20)).color(&BLACK),
         (50, 20),
@@ -336,7 +336,7 @@ fn visualize_spline_rotations_3d(
     ))?;
 
     // Draw interpolation type and info
-    root.draw_text(
+    root.drawtext(
         &format!("Interpolation: {}", spline.interpolation_type()),
         &TextStyle::from(("sans-serif", 20)).color(&BLACK),
         (50, 20),

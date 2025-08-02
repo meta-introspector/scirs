@@ -84,7 +84,7 @@ fn generate_test_data() -> Array2<f64> {
         data.push(-2.0 + (rand::random::<f64>() - 0.5) * 1.0);
     }
 
-    Array2::from_shape_vec((90, 2), data).unwrap()
+    Array2::fromshape_vec((90, 2), data).unwrap()
 }
 
 /// Demonstrate basic ensemble clustering
@@ -164,7 +164,7 @@ fn demonstrate_consensus_methods(_data: &Array2<f64>) -> Result<(), Box<dyn std:
         let config = EnsembleConfig {
             n_estimators: 6,
             consensus_method: method,
-            sampling_strategy: SamplingStrategy::Bootstrap { sample_ratio: 0.8 },
+            sampling_strategy: SamplingStrategy::Bootstrap { sample, ratio: 0.8 },
             ..Default::default()
         };
 
@@ -233,15 +233,15 @@ fn demonstrate_meta_clustering_ensemble(
     let base_configs = vec![
         EnsembleConfig {
             n_estimators: 4,
-            sampling_strategy: SamplingStrategy::Bootstrap { sample_ratio: 0.7 },
+            sampling_strategy: SamplingStrategy::Bootstrap { sample, ratio: 0.7 },
             diversity_strategy: Some(DiversityStrategy::AlgorithmDiversity {
-                algorithms: vec![ClusteringAlgorithm::KMeans { k_range: (2, 4) }],
+                algorithms: vec![ClusteringAlgorithm::KMeans { k, range: (2, 4) }],
             }),
             ..Default::default()
         },
         EnsembleConfig {
             n_estimators: 4,
-            sampling_strategy: SamplingStrategy::RandomSubspace { feature_ratio: 0.8 },
+            sampling_strategy: SamplingStrategy::RandomSubspace { feature, ratio: 0.8 },
             diversity_strategy: Some(DiversityStrategy::AlgorithmDiversity {
                 algorithms: vec![ClusteringAlgorithm::DBSCAN {
                     eps_range: (0.3, 0.7),
@@ -304,7 +304,7 @@ fn demonstrate_advanced_ensemble_techniques(
             n_generations: 10,
             crossover_prob: 0.8,
             mutation_prob: 0.1,
-            selection_method: SelectionMethod::Tournament { tournament_size: 3 },
+            selection_method: SelectionMethod::Tournament { tournament, size: 3 },
             elite_percentage: 0.1,
             fitness_function: FitnessFunction::Silhouette,
         },

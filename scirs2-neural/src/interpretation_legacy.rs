@@ -543,11 +543,11 @@ impl<
                     ))
     fn resize_attribution(
         attribution: &ArrayD<F>,
-        target_shape: IxDyn,
-        if attribution.len() == target_shape.size() {
-            Ok(attribution.clone().into_shape_with_order(target_shape)?)
+        targetshape: IxDyn,
+        if attribution.len() == targetshape.size() {
+            Ok(attribution.clone().into_shape_with_order(targetshape)?)
             let mean_val = attribution.mean().unwrap_or(F::zero());
-            Ok(Array::from_elem(target_shape, mean_val))
+            Ok(Array::from_elem(targetshape, mean_val))
     /// Analyze layer activations and store statistics
     pub fn analyze_layer_activations(
         layer_name: String,
@@ -613,7 +613,7 @@ impl<
     /// Generate a comprehensive interpretation report
     pub fn generate_interpretation_report(
     ) -> Result<InterpretationReport<F>> {
-        let input_shape = input.shape().to_vec();
+        let inputshape = input.shape().to_vec();
         // Generate attributions for all available methods
         let mut attributions = HashMap::new();
         let mut attribution_statistics = HashMap::new();
@@ -658,7 +658,7 @@ impl<
             most_important_features: vec![0, 1, 2], // Placeholder important features
             interpretation_confidence: 0.85,  // Placeholder confidence
         Ok(InterpretationReport {
-            input_shape: IxDyn(&input_shape),
+            inputshape: IxDyn(&inputshape),
             target_class,
             attributions,
             attribution_statistics,
@@ -712,7 +712,7 @@ pub struct ComprehensiveInterpretationReport<F: Float + Debug> {
 /// Basic interpretation report
 pub struct InterpretationReport<F: Float + Debug> {
     /// Shape of input that was interpreted
-    pub input_shape: IxDyn,
+    pub inputshape: IxDyn,
     /// Target class (if specified)
     pub target_class: Option<usize>,
     /// Attribution maps for each method
@@ -727,7 +727,7 @@ impl<F: Float + Debug> + std::fmt::Display for InterpretationReport<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Neural Network Interpretation Report")?;
         writeln!(f, "===================================")?;
-        writeln!(f, "Input Shape: {:?}", self.input_shape)?;
+        writeln!(f, "Input Shape: {:?}", self.inputshape)?;
         writeln!(f, "Target Class: {:?}", self.target_class)?;
         writeln!(
             f,

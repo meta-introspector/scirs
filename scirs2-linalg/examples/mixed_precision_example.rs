@@ -285,9 +285,9 @@ fn main() {
     // Create a larger matrix and vector for meaningful benchmarks
     let size = 500; // 500x500 matrix
     let large_matrix =
-        Array2::<f32>::from_shape_fn((size, size), |(i, j)| if i == j { 1.0 } else { 0.01 });
+        Array2::<f32>::fromshape_fn((size, size), |(i, j)| if i == j { 1.0 } else { 0.01 });
 
-    let large_vector = Array1::<f32>::from_shape_fn(size, |i| (i % 10) as f32 / 10.0);
+    let large_vector = Array1::<f32>::fromshape_fn(size, |i| (i % 10) as f32 / 10.0);
 
     println!("Benchmarking with {}x{} matrix", size, size);
     println!("----------------------------------");
@@ -323,7 +323,7 @@ fn main() {
         test_matrix[[i + 1, i]] = 0.1;
     }
 
-    let b_large = Array1::<f32>::from_shape_fn(matrix_size, |i| if i == 0 { 1.0 } else { 0.0 });
+    let b_large = Array1::<f32>::fromshape_fn(matrix_size, |i| if i == 0 { 1.0 } else { 0.0 });
 
     let f32_solve_time = benchmark_fn("Pure f32 solver", || {
         let _ = mixed_precision_solve::<f32, f32, f32, f32>(&test_matrix.view(), &b_large.view())
@@ -352,13 +352,13 @@ fn main() {
         // Create test matrices and vectors with a mix of large and small values
         // to highlight precision issues
         let size = 1000;
-        let a_vec = Array1::<f32>::from_shape_fn(size, |i| if i % 2 == 0 { 1.0e-6 } else { 1.0e6 });
+        let a_vec = Array1::<f32>::fromshape_fn(size, |i| if i % 2 == 0 { 1.0e-6 } else { 1.0e6 });
 
-        let b_vec = Array1::<f32>::from_shape_fn(size, |i| if i % 2 == 0 { 1.0e6 } else { 1.0e-6 });
+        let b_vec = Array1::<f32>::fromshape_fn(size, |i| if i % 2 == 0 { 1.0e6 } else { 1.0e-6 });
 
         // Create smaller matrices for matmul demonstration
         let mat_size = 100;
-        let a_mat = Array2::<f32>::from_shape_fn((mat_size, mat_size), |(i, j)| {
+        let a_mat = Array2::<f32>::fromshape_fn((mat_size, mat_size), |(i, j)| {
             if (i + j) % 2 == 0 {
                 1.0e-6
             } else {
@@ -366,7 +366,7 @@ fn main() {
             }
         });
 
-        let b_mat = Array2::<f32>::from_shape_fn((mat_size, mat_size), |(i, j)| {
+        let b_mat = Array2::<f32>::fromshape_fn((mat_size, mat_size), |(i, j)| {
             if (i + j) % 3 == 0 {
                 1.0e6
             } else {
@@ -463,7 +463,7 @@ fn main() {
         let simd_mm_time = benchmark_fn(
             "SIMD-accelerated mixed precision matrix multiplication",
             || {
-                let _ = simd_mixed_precision_matmul_f32_f64: :<f32>(&a_mat.view(), &b_mat.view())
+                let _ = simd_mixed_precision_matmul_f32_f64: <f32>(&a_mat.view(), &b_mat.view())
                     .unwrap();
             },
         );

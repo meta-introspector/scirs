@@ -11,7 +11,7 @@ mod tests {
     use ndarray::{array, Array1, Array2, Array3, Ix2, IxDyn};
 
     #[test]
-    fn test_filters_preserve_shape() {
+    fn test_filters_preserveshape() {
         // Test that all filters preserve the shape of the input array
         let input = array![[1.0, 2.0], [4.0, 5.0]]; // Smaller array for test
 
@@ -480,7 +480,7 @@ mod tests {
     #[test]
     fn test_consistency_across_dimensions() {
         // Test that the same operation on different dimensional views gives consistent results
-        let input_3d = Array3::from_shape_fn((4, 4, 4), |(i, j, k)| (i + j + k) as f64);
+        let input_3d = Array3::fromshape_fn((4, 4, 4), |(i, j, k)| (i + j + k) as f64);
 
         // Apply filter to each 2D slice separately
         let mut manual_result = input_3d.clone();
@@ -545,7 +545,7 @@ mod tests {
 
     #[test]
     fn test_asymmetric_kernels() {
-        let input = Array2::from_shape_fn((10, 20), |(i, j)| (i * j) as f64);
+        let input = Array2::fromshape_fn((10, 20), |(i, j)| (i * j) as f64);
 
         // Test asymmetric kernel sizes
         let result = uniform_filter(&input, &[3, 7], None, None)
@@ -560,7 +560,7 @@ mod tests {
     #[test]
     fn test_filter_memory_efficiency() {
         // Test that filters work with moderately large arrays without excessive memory usage
-        let large_input = Array2::from_shape_fn((100, 100), |(i, j)| ((i + j) as f64).sin());
+        let large_input = Array2::fromshape_fn((100, 100), |(i, j)| ((i + j) as f64).sin());
 
         // These should complete without running out of memory
         let gaussian_result = gaussian_filter(&large_input, 2.0, None, None)

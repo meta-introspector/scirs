@@ -617,8 +617,8 @@ impl OptimizerFactory {
     }
 
     /// Create Adam optimizer
-    pub fn adam<'a, F: Float>(_learning_rate: f64) -> Box<dyn AutogradOptimizer<F> + 'a> {
-        Box::new(AdamOptimizer::default_adam(_learning_rate))
+    pub fn adam<'a, F: Float>(learning_rate: f64) -> Box<dyn AutogradOptimizer<F> + 'a> {
+        Box::new(AdamOptimizer::default_adam(learning_rate))
     }
 
     /// Create custom Adam optimizer

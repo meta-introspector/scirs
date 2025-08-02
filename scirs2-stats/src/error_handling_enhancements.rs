@@ -180,7 +180,7 @@ impl AdvancedErrorMessages {
         };
 
         StatsError::computation(format!(
-            "Optimization opportunity: {} Data _size: {} elements, Current time: {:.3}s",
+            "Optimization opportunity: {} Data , size: {} elements, Current time: {:.3}s",
             message,
             data_size,
             current_performance.as_secs_f64()

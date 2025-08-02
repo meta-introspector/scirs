@@ -16,7 +16,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::streaming::{ChunkedReader, StreamingConfig};
+//! use scirs2_io::streaming::{ChunkedReader, StreamingConfig};
 //! use std::path::Path;
 //!
 //! // Read a large CSV file in 1MB chunks
@@ -125,7 +125,7 @@ pub struct ChunkedReader {
 
 impl ChunkedReader {
     /// Create a new chunked reader for the specified file
-    pub fn new<P: AsRef<Path>>(_path: P, config: StreamingConfig) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
@@ -234,7 +234,7 @@ pub struct LineChunkedReader {
 
 impl LineChunkedReader {
     /// Create a new line-based chunked reader
-    pub fn new<P: AsRef<Path>>(_path: P, config: StreamingConfig) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
@@ -346,7 +346,7 @@ pub struct StreamingCsvReader {
 
 impl StreamingCsvReader {
     /// Create a new streaming CSV reader
-    pub fn new<P: AsRef<Path>>(_path: P, config: StreamingConfig) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
         let line_reader = LineChunkedReader::new(_path, config)?;
 
         Ok(Self {

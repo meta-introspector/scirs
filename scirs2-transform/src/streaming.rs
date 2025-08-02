@@ -301,7 +301,8 @@ impl P2State {
                 1 => self.p / 2.0,
                 2 => self.p,
                 3 => (1.0 + self.p) / 2.0,
-                4 => 1.0_ => unreachable!(),
+                4 => 1.0,
+                _ => unreachable!(),
             };
         }
 

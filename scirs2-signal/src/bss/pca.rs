@@ -1,11 +1,12 @@
-//! Principal Component Analysis (PCA) for blind source separation
-//!
-//! This module implements PCA techniques for signal processing.
+use ndarray::s;
+// Principal Component Analysis (PCA) for blind source separation
+//
+// This module implements PCA techniques for signal processing.
 
-use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, Axis, s};
-use scirs2_linalg::eigh;
 use super::BssConfig;
+use crate::error::{SignalError, SignalResult};
+use ndarray::{ Array2, Axis};
+use scirs2_linalg::eigh;
 
 #[allow(unused_imports)]
 /// Apply Principal Component Analysis (PCA) to separate mixed signals

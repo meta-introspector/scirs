@@ -97,7 +97,7 @@ impl VectorWidth {
 
 /// Advanced-advanced SIMD statistical processor
 pub struct AdvancedAdvancedSimdProcessor<F> {
-    config: AdvancedAdvancedSimdConfig_phantom: PhantomData<F>,
+    config: AdvancedAdvancedSimdConfig, phantom: PhantomData<F>,
 }
 
 /// Advanced regression result with SIMD optimizations

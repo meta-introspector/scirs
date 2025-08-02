@@ -156,7 +156,7 @@ impl TensorConverter {
             .map(|i| F::from(i + 1).unwrap())
             .collect();
 
-        Array::from_shape_vec(IxDyn(&shape), data).map_err(|e| {
+        Array::fromshape_vec(IxDyn(&shape), data).map_err(|e| {
             IntegrationError::TensorConversion(format!("Failed to create ndarray: {e}"))
         })
     }
@@ -219,10 +219,10 @@ impl TensorConverter {
         &self,
         tensor: &Tensor<F>,
     ) -> Result<TensorMetadata, IntegrationError> {
-        let final_shape = tensor.shape();
+        let finalshape = tensor.shape();
 
         Ok(TensorMetadata {
-            shape: final_shape,
+            shape: finalshape,
             dtype: std::any::type_name::<F>().to_string(),
             memory_layout: MemoryLayout::RowMajor, // Simplified
             requires_grad: tensor.requires_grad(),
@@ -406,7 +406,7 @@ pub fn convert_tensor_precision<F1: Float, F2: Float>(
 
 /// Quick conversion from ndarray
 #[allow(dead_code)]
-pub fn from_ndarray<F: Float>(_array: ArrayD<F>) -> Result<(), IntegrationError> {
+pub fn from_ndarray<F: Float>(array: ArrayD<F>) -> Result<(), IntegrationError> {
     let _converter = init_tensor_converter();
     let _converter_guard = _converter.lock().map_err(|_| {
         IntegrationError::TensorConversion("Failed to acquire converter lock".to_string())
@@ -418,7 +418,7 @@ pub fn from_ndarray<F: Float>(_array: ArrayD<F>) -> Result<(), IntegrationError>
 
 /// Quick conversion to ndarray
 #[allow(dead_code)]
-pub fn to_ndarray<F: Float>(_tensor: &Tensor<F>) -> Result<ArrayD<F>, IntegrationError> {
+pub fn to_ndarray<F: Float>(tensor: &Tensor<F>) -> Result<ArrayD<F>, IntegrationError> {
     let converter = init_tensor_converter();
     let converter_guard = converter.lock().map_err(|_| {
         IntegrationError::TensorConversion("Failed to acquire converter lock".to_string())
@@ -444,15 +444,15 @@ mod tests {
             let converter = TensorConverter::new();
             // Use constant tensor which properly preserves shape
             let tensor = convert_to_tensor(
-                ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
+                ndarray::Array::fromshape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
                 g,
             );
 
             // Get shape from evaluated tensor
-            let actual_shape = tensor.eval(g).unwrap().shape().to_vec();
+            let actualshape = tensor.eval(g).unwrap().shape().to_vec();
 
             let metadata = converter.extract_metadata(&tensor).unwrap();
-            assert_eq!(metadata.shape, actual_shape);
+            assert_eq!(metadata.shape, actualshape);
             assert!(metadata.dtype.contains("f32"));
             assert_eq!(metadata.memory_layout, MemoryLayout::RowMajor);
             // Tensors created with convert_to_tensor may require gradients by default
@@ -466,7 +466,7 @@ mod tests {
         crate::run(|g| {
             let converter = TensorConverter::new();
             let tensor_f32 = convert_to_tensor(
-                ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
+                ndarray::Array::fromshape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
                 g,
             );
 
@@ -481,7 +481,7 @@ mod tests {
     fn test_tensor_view() {
         crate::run(|g| {
             let tensor = convert_to_tensor(
-                ndarray::Array::from_shape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
+                ndarray::Array::fromshape_vec((2, 2), vec![1.0f32, 2.0, 3.0, 4.0]).unwrap(),
                 g,
             );
             let converter = TensorConverter::new();
@@ -497,9 +497,9 @@ mod tests {
     fn test_ndarray_conversion() {
         crate::run(|g| {
             let data = vec![1.0f32, 2.0, 3.0, 4.0];
-            let _shape = [2, 2];
+            let shape = [2, 2];
             let tensor = convert_to_tensor(
-                ndarray::Array::from_shape_vec((2, 2), data.clone()).unwrap(),
+                ndarray::Array::fromshape_vec((2, 2), data.clone()).unwrap(),
                 g,
             );
 

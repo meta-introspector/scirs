@@ -500,17 +500,17 @@ where
             identity_triplets.push((i, i, 1e-6));
         }
 
-        let rows: Vec<usize> = identity_triplets.iter().map(|(r__)| *r).collect();
-        let cols: Vec<usize> = identity_triplets.iter().map(|(_, c_)| *c).collect();
-        let data: Vec<f64> = identity_triplets.iter().map(|(__, d)| *d).collect();
+        let rows: Vec<usize> = identity_triplets.iter().map(|(r, _, _)| *r).collect();
+        let cols: Vec<usize> = identity_triplets.iter().map(|(_, c, _)| *c).collect();
+        let data: Vec<f64> = identity_triplets.iter().map(|(_, _, d)| *d).collect();
 
         CsrArray::from_triplets(&rows, &cols, &data, (n, n), false).map_err(|_| {
             OptimizeError::ComputationError("Failed to create sparse Hessian".to_string())
         })
     } else {
-        let rows: Vec<usize> = triplets.iter().map(|(r__)| *r).collect();
-        let cols: Vec<usize> = triplets.iter().map(|(_, c_)| *c).collect();
-        let data: Vec<f64> = triplets.iter().map(|(__, d)| *d).collect();
+        let rows: Vec<usize> = triplets.iter().map(|(r, _, _)| *r).collect();
+        let cols: Vec<usize> = triplets.iter().map(|(_, c, _)| *c).collect();
+        let data: Vec<f64> = triplets.iter().map(|(_, _, d)| *d).collect();
 
         CsrArray::from_triplets(&rows, &cols, &data, (n, n), false).map_err(|_| {
             OptimizeError::ComputationError("Failed to create sparse Hessian".to_string())

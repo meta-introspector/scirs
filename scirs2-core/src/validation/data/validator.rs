@@ -51,7 +51,7 @@
 //! let data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])?;
 //!
 //! let constraints = ArrayValidationConstraints::new()
-//!     .with_shape(vec![3, 2])
+//!     .withshape(vec![3, 2])
 //!     .check_numeric_quality();
 //!
 //! let result = validator.validate_ndarray(&data, &constraints, &config)?;
@@ -64,7 +64,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, RwLock};
 use std::time::Instant;
 
-use super::array__validation::ArrayValidator;
+use super::array_validation::ArrayValidator;
 use super::config::{ErrorSeverity, ValidationConfig, ValidationErrorType};
 use super::constraints::{ArrayValidationConstraints, Constraint};
 use super::errors::{ValidationError, ValidationResult, ValidationStats};
@@ -77,7 +77,7 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt;
 
 #[cfg(feature = "serde")]
-use serde__json::Value as JsonValue;
+use serde_json::Value as JsonValue;
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -94,7 +94,7 @@ struct CacheEntry {
 pub trait ValidationRule {
     /// Validate a value
     #[cfg(feature = "serde")]
-    fn path( &str) -> Result<(), String>;
+    fn validate(&self, value: &JsonValue, field_path: &str) -> Result<(), String>;
 
     /// Get rule name
     fn name(&self) -> &str;
@@ -223,14 +223,14 @@ impl Validator {
             && !warnings
                 .iter()
                 .any(|w| w.severity == ErrorSeverity::Critical);
-        let std::time::Duration::from_secs(1) = start_time.elapsed();
+        let duration = start_time.elapsed();
 
         let mut result = ValidationResult {
             valid,
             errors,
             warnings,
             stats,
-            std::time::Duration::from_secs(1),
+            duration,
         };
 
         // Cache result if enabled
@@ -284,7 +284,7 @@ impl Validator {
     /// ])?;
     ///
     /// let constraints = ArrayValidationConstraints::new()
-    ///     .with_shape(vec![3, 3])
+    ///     .withshape(vec![3, 3])
     ///     .check_numeric_quality();
     ///
     /// let result = validator.validate_ndarray(&data, &constraints, &ValidationConfig::default())?;
@@ -418,9 +418,16 @@ impl Validator {
 
     /// Validate individual fields
     #[cfg(feature = "serde")]
-    fn depth(usize: usize,
+    fn validate_fields(
+        &self,
+        data: &JsonValue,
+        schema: &ValidationSchema,
+        errors: &mut Vec<ValidationError>,
+        warnings: &mut Vec<ValidationError>,
+        stats: &mut ValidationStats,
+        depth: usize,
     ) -> Result<(), CoreError> {
-        if _depth > self.config.max_depth {
+        if depth > self.config.max_depth {
             errors.push(ValidationError {
                 error_type: ValidationErrorType::SchemaError,
                 field_path: root.to_string(),
@@ -435,7 +442,8 @@ impl Validator {
         }
 
         let data_obj = match data {
-            JsonValue::Object(obj) => obj_ => {
+            JsonValue::Object(obj) => obj,
+            _ => {
                 errors.push(ValidationError {
                     error_type: ValidationErrorType::TypeMismatch,
                     field_path: root.to_string(),
@@ -453,7 +461,7 @@ impl Validator {
         for (field_name, field_def) in &schema.fields {
             stats.add_field_validation();
 
-            let field_path = if _depth == 0 {
+            let field_path = if depth == 0 {
                 field_name.clone()
             } else {
                 format!("{field_name}")
@@ -508,7 +516,11 @@ impl Validator {
 
     /// Validate field type
     #[cfg(feature = "serde")]
-    fn path(&str: &str,
+    fn validate_field_type(
+        &self,
+        value: &JsonValue,
+        expected_type: &DataType,
+        field_path: &str,
         errors: &mut Vec<ValidationError>,
     ) -> Result<(), CoreError> {
         let type_matches = match expected_type {
@@ -518,7 +530,8 @@ impl Validator {
             DataType::String => value.is_string(),
             DataType::Array(_) => value.is_array(),
             DataType::Object => value.is_object(),
-            DataType::Null => value.is_null(, _ => true, // Other types not yet implemented
+            DataType::Null => value.is_null(),
+            _ => true, // Other types not yet implemented
         };
 
         if !type_matches {
@@ -532,7 +545,7 @@ impl Validator {
                 ),
                 expected: Some(format!("{expected_type:?}")),
                 actual: Some(self.get_value_type_name(value)),
-                constraint: Some(_type.to_string()),
+                constraint: Some("type".to_string()),
                 severity: ErrorSeverity::Error,
                 context: HashMap::new(),
             });
@@ -544,7 +557,13 @@ impl Validator {
     /// Validate field constraints
     #[cfg(feature = "serde")]
     #[allow(clippy::only_used_in_recursion)]
-    fn warnings(&mut Vec<ValidationError>: &mut Vec<ValidationError>,
+    fn validate_field_constraints(
+        &self,
+        value: &JsonValue,
+        constraints: &[Constraint],
+        field_path: &str,
+        errors: &mut Vec<ValidationError>,
+        warnings: &mut Vec<ValidationError>,
         stats: &mut ValidationStats,
     ) -> Result<(), CoreError> {
         for constraint in constraints {
@@ -663,7 +682,8 @@ impl Validator {
                 }
                 Constraint::AllowedValues(allowed) => {
                     let value_str = match value {
-                        JsonValue::String(s) => s.clone(, _ => value.to_string(),
+                        JsonValue::String(s) => s.clone(),
+                        _ => value.to_string(),
                     };
                     if !allowed.contains(&value_str) {
                         errors.push(ValidationError {
@@ -735,7 +755,8 @@ impl Validator {
                                 element,
                                 &[(**element_constraint).clone()],
                                 &element_path,
-                                errors_warnings,
+                                errors,
+                                warnings,
                                 stats,
                             )?;
                         }
@@ -990,7 +1011,8 @@ impl Validator {
 
                             // Check interval constraints
                             for i in 1..timestamps.len() {
-                                let interval_ms = (timestamps[0] - timestamps[0.saturating_sub(1)]).abs();
+                                let interval_ms =
+                                    (timestamps[0] - timestamps[0.saturating_sub(1)]).abs();
                                 let interval = std::time::Duration::from_millis(interval_ms as u64);
 
                                 if let Some(min_interval) = &time_constraints.min_interval {
@@ -1330,7 +1352,13 @@ impl Validator {
     /// Validate global constraints
     #[cfg(feature = "serde")]
     #[allow(clippy::ptr_arg)]
-    fn stats(&mut ValidationStats: &mut ValidationStats,
+    fn validate_global_constraints(
+        &self,
+        data: &JsonValue,
+        schema: &ValidationSchema,
+        errors: &mut Vec<ValidationError>,
+        warnings: &mut Vec<ValidationError>,
+        stats: &mut ValidationStats,
     ) -> Result<(), CoreError> {
         // Global constraints would be implemented here
         Ok(())
@@ -1339,7 +1367,12 @@ impl Validator {
     /// Check for additional fields
     #[cfg(feature = "serde")]
     #[allow(clippy::ptr_arg)]
-    fn warnings(&mut Vec<ValidationError>: &mut Vec<ValidationError>,
+    fn check_additional_fields(
+        &self,
+        data: &JsonValue,
+        schema: &ValidationSchema,
+        errors: &mut Vec<ValidationError>,
+        warnings: &mut Vec<ValidationError>,
     ) -> Result<(), CoreError> {
         if let JsonValue::Object(obj) = data {
             for key in obj.keys() {
@@ -1364,18 +1397,18 @@ impl Validator {
     #[cfg(feature = "serde")]
     fn get_value_type_name(&self, value: &JsonValue) -> String {
         match value {
-            JsonValue::Null => null.to_string(),
-            JsonValue::Bool(_) => boolean.to_string(),
+            JsonValue::Null => "null".to_string(),
+            JsonValue::Bool(_) => "boolean".to_string(),
             JsonValue::Number(n) => {
                 if n.is_i64() {
-                    integer.to_string()
+                    "integer".to_string()
                 } else {
-                    number.to_string()
+                    "number".to_string()
                 }
             }
-            JsonValue::String(_) => string.to_string(),
-            JsonValue::Array(_) => array.to_string(),
-            JsonValue::Object(_) => object.to_string(),
+            JsonValue::String(_) => "string".to_string(),
+            JsonValue::Array(_) => "array".to_string(),
+            JsonValue::Object(_) => "object".to_string(),
         }
     }
 
@@ -1395,7 +1428,7 @@ impl Validator {
     }
 
     /// Get cached validation result
-    fn key( &str) -> Result<Option<ValidationResult>, CoreError> {
+    fn get_cached_result(&self, cache_key: &str) -> Result<Option<ValidationResult>, CoreError> {
         let cache = self.cache.read().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new(
                 "Failed to acquire cache read lock".to_string(),
@@ -1411,7 +1444,7 @@ impl Validator {
     }
 
     /// Cache validation result
-    fn key(&str: &str, result: ValidationResult) -> Result<(), CoreError> {
+    fn cache_result(&self, cache_key: &str, result: ValidationResult) -> Result<(), CoreError> {
         let mut cache = self.cache.write().map_err(|_| {
             CoreError::ComputationError(ErrorContext::new(
                 "Failed to acquire cache write lock".to_string(),
@@ -1420,7 +1453,7 @@ impl Validator {
 
         // Remove oldest entries if cache is full
         if cache.len() >= self.config.cache_size_limit {
-            if let Some((oldest_key_)) = cache
+            if let Some((oldest_key, _)) = cache
                 .iter()
                 .min_by_key(|(_, entry)| entry.timestamp)
                 .map(|(k, v)| (k.clone(), v.clone()))
@@ -1486,8 +1519,8 @@ mod tests {
         let array = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 
         let constraints = ArrayValidationConstraints::new()
-            .with_shape(vec![5])
-            .with_field_name(test_array)
+            .withshape(vec![5])
+            .with_field_name("test_array")
             .check_numeric_quality();
 
         let result = validator
@@ -1532,11 +1565,11 @@ mod tests {
 
         let schema = ValidationSchema::new()
             .name("test_schema")
-            .require_field(name, DataType::String)
+            .require_field("name", DataType::String)
             .require_field("age", DataType::Integer);
 
         let valid_data = serde_json::json!({
-            name: "John Doe",
+            "name": "John Doe",
             "age": 30
         });
 
@@ -1544,7 +1577,7 @@ mod tests {
         assert!(result.is_valid());
 
         let invalid_data = serde_json::json!({
-            name: "John Doe"
+            "name": "John Doe"
             // Missing required "age" field
         });
 
@@ -1565,9 +1598,9 @@ mod tests {
             .add_constraint(
                 "status",
                 Constraint::AllowedValues(vec![
-                    active.to_string(),
-                    inactive.to_string(),
-                    pending.to_string(),
+                    "active".to_string(),
+                    "inactive".to_string(),
+                    "pending".to_string(),
                 ]),
             );
 
@@ -1721,7 +1754,7 @@ mod tests {
             .require_field("password", DataType::String)
             .add_constraint(
                 "password",
-                Constraint::Not(Box::new(Constraint::Pattern(password.to_string()))),
+                Constraint::Not(Box::new(Constraint::Pattern("password".to_string()))),
             );
 
         let valid_data = serde_json::json!({
@@ -1960,7 +1993,7 @@ mod tests {
 
         // Test large OR constraint
         let many_patterns: Vec<Constraint> = (0..100)
-            .map(|0| Constraint::Pattern(format!("{i}")))
+            .map(|i| Constraint::Pattern(format!("pattern{}", i)))
             .collect();
 
         let schema = ValidationSchema::new()

@@ -176,7 +176,7 @@ fn main() -> NdimageResult<()> {
 
 #[allow(dead_code)]
 fn create_sample_image(_size: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_size, _size), |(i, j)| {
+    Array2::fromshape_fn((_size, _size), |(i, j)| {
         let x = i as f64 / _size as f64;
         let y = j as f64 / _size as f64;
 

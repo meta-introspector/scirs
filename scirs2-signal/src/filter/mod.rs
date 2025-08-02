@@ -1,65 +1,65 @@
-//! Digital filter design and analysis
-//!
-//! This module provides comprehensive digital filter design capabilities including
-//! IIR and FIR filter design, filter analysis, specialized filters, and filter
-//! transformation functions. The module is organized into focused submodules:
-//!
-//! - [`common`] - Common types, enums, and utilities shared across all filter modules
-//! - [`iir`] - IIR (Infinite Impulse Response) filter designs (Butterworth, Chebyshev, etc.)
-//! - [`fir`] - FIR (Finite Impulse Response) filter designs (window method, Parks-McClellan)
-//! - [`application`] - Filter application functions (filtfilt, lfilter, matched filtering)
-//! - [`analysis`] - Filter analysis and characterization functions
-//! - [`transform`] - Filter transformation functions (bilinear transform, zpk conversions)
-//! - [`specialized`] - Specialized filter designs (notch, comb, allpass, etc.)
-//!
-//! # Quick Start
-//!
-//! ## IIR Filter Design
-//!
-//! ```rust
-//! use scirs2__signal::filter::{butter, FilterType};
-//!
-//! // Design a 4th order Butterworth lowpass filter
-//! let (b, a) = butter(4, 0.3, FilterType::Lowpass).unwrap();
-//!
-//! // Or using string parameter
-//! let (b, a) = butter(4, 0.3, "lowpass").unwrap();
-//! ```
-//!
-//! ## FIR Filter Design
-//!
-//! ```rust
-//! use scirs2__signal::filter::firwin;
-//!
-//! // Design a 65-tap FIR lowpass filter with Hamming window
-//! let h = firwin(65, 0.3, "hamming", true).unwrap();
-//! ```
-//!
-//! ## Filter Application
-//!
-//! ```rust
-//! use scirs2__signal::filter::{butter, filtfilt};
-//!
-//! // Design filter and apply with zero phase delay
-//! let (b, a) = butter(4, 0.2, "lowpass").unwrap();
-//! let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
-//! let filtered = filtfilt(&b, &a, &signal).unwrap();
-//! ```
-//!
-//! ## Filter Analysis
-//!
-//! ```rust
-//! use scirs2__signal::filter::{butter, analyze_filter};
-//!
-//! // Analyze filter characteristics
-//! let (b, a) = butter(4, 0.2, "lowpass").unwrap();
-//! let analysis = analyze_filter(&b, &a, Some(512)).unwrap();
-//! println!("3dB cutoff: {:.3}", analysis.cutoff_3db);
-//! ```
+// Digital filter design and analysis
+//
+// This module provides comprehensive digital filter design capabilities including
+// IIR and FIR filter design, filter analysis, specialized filters, and filter
+// transformation functions. The module is organized into focused submodules:
+//
+// - [`common`] - Common types, enums, and utilities shared across all filter modules
+// - [`iir`] - IIR (Infinite Impulse Response) filter designs (Butterworth, Chebyshev, etc.)
+// - [`fir`] - FIR (Finite Impulse Response) filter designs (window method, Parks-McClellan)
+// - [`application`] - Filter application functions (filtfilt, lfilter, matched filtering)
+// - [`analysis`] - Filter analysis and characterization functions
+// - [`transform`] - Filter transformation functions (bilinear transform, zpk conversions)
+// - [`specialized`] - Specialized filter designs (notch, comb, allpass, etc.)
+//
+// # Quick Start
+//
+// ## IIR Filter Design
+//
+// ```rust
+// use scirs2_signal::filter::{butter, FilterType};
+//
+// // Design a 4th order Butterworth lowpass filter
+// let (b, a) = butter(4, 0.3, FilterType::Lowpass).unwrap();
+//
+// // Or using string parameter
+// let (b, a) = butter(4, 0.3, "lowpass").unwrap();
+// ```
+//
+// ## FIR Filter Design
+//
+// ```rust
+// use scirs2_signal::filter::firwin;
+//
+// // Design a 65-tap FIR lowpass filter with Hamming window
+// let h = firwin(65, 0.3, "hamming", true).unwrap();
+// ```
+//
+// ## Filter Application
+//
+// ```rust
+// use scirs2_signal::filter::{butter, filtfilt};
+//
+// // Design filter and apply with zero phase delay
+// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
+// let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
+// let filtered = filtfilt(&b, &a, &signal).unwrap();
+// ```
+//
+// ## Filter Analysis
+//
+// ```rust
+// use scirs2_signal::filter::{butter, analyze_filter};
+//
+// // Analyze filter characteristics
+// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
+// let analysis = analyze_filter(&b, &a, Some(512)).unwrap();
+// println!("3dB cutoff: {:.3}", analysis.cutoff_3db);
+// ```
 
-use crate::lti::TransferFunction;
-use num__complex::Complex64;
 use crate::lti::design::tf as design_tf;
+use crate::lti::TransferFunction;
+use num_complex::Complex64;
 
 // Re-export all public modules
 #[allow(unused_imports)]
@@ -121,12 +121,12 @@ pub use parallel::{
 };
 
 // Re-export enhanced parallel filter functions
-pub use parallel__enhanced::{
+pub use parallel_enhanced::{
     enhanced_parallel_filtfilt, ParallelFilterConfig as EnhancedParallelFilterConfig,
 };
 
 // Re-export Advanced enhanced parallel filter functions
-pub use parallel_advanced__enhanced::{
+pub use parallel_advanced_enhanced::{
     benchmark_parallel_filtering_operations, validate_parallel_filtering_accuracy,
     AdvancedParallelConfig, LockFreeStreamingFilter, ParallelFilterMetrics,
     ParallelMultiRateFilterBank, ParallelSpectralFilter, SparseParallelFilter,

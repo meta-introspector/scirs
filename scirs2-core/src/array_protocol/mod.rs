@@ -252,7 +252,9 @@ impl ArrayFunctionRegistry {
 
     /// Get cached dispatch entry for optimization
     #[must_use]
-    pub fn get_cached_dispatch(&self, func_name: &'static str,
+    pub fn get_cached_dispatch(
+        &self,
+        func_name: &'static str,
         types: &[TypeId],
     ) -> Option<&DispatchCacheEntry> {
         let key = (func_name, types.to_vec());
@@ -559,7 +561,11 @@ pub trait JITFunction: Send + Sync {
 /// A factory for creating JIT functions for specific array implementations.
 pub trait JITFunctionFactory: Send + Sync {
     /// Create a new JIT function for the given expression and array type.
-    fn create_jit_function(&self, expression: &str, array_type_id: TypeId) -> CoreResult<Box<dyn JITFunction>>;
+    fn create_jit_function(
+        &self,
+        expression: &str,
+        array_type_id: TypeId,
+    ) -> CoreResult<Box<dyn JITFunction>>;
 
     /// Check if this factory supports the given array type.
     #[must_use]
@@ -601,7 +607,10 @@ impl JITFactoryRegistry {
 
     /// Get a JIT function factory that supports the given array type.
     #[must_use]
-    pub fn get_factory_for_array_type(&self, array_type_id: TypeId) -> Option<&dyn JITFunctionFactory> {
+    pub fn get_factory_for_array_type(
+        &self,
+        array_type_id: TypeId,
+    ) -> Option<&dyn JITFunctionFactory> {
         for factory in &self.factories {
             if factory.supports_array_type(array_type_id) {
                 return Some(&**factory);
@@ -614,7 +623,8 @@ impl JITFactoryRegistry {
 /// A wrapper for ndarray to implement the ArrayProtocol trait.
 #[derive(Debug, Clone)]
 pub struct NdarrayWrapper<T, D: ndarray::Dimension> {
-    array: ndarray::Array<T, D>, phantom: PhantomData<(T, D)>,
+    array: ndarray::Array<T, D>,
+    phantom: PhantomData<(T, D)>,
 }
 
 impl<T, D> NdarrayWrapper<T, D>
@@ -720,10 +730,10 @@ where
                         };
 
                         // Get dimensions
-                        let a_shape = a_f64.as_array().shape();
-                        let b_shape = b_f64.as_array().shape();
+                        let ashape = a_f64.as_array().shape();
+                        let bshape = b_f64.as_array().shape();
 
-                        if a_shape.len() != 2 || b_shape.len() != 2 || a_shape[1] != b_shape[0] {
+                        if ashape.len() != 2 || bshape.len() != 2 || ashape[1] != bshape[0] {
                             return Err(NotImplemented);
                         }
 
@@ -743,10 +753,10 @@ where
                         };
 
                         // Get dimensions
-                        let a_shape = a_f32.as_array().shape();
-                        let b_shape = b_f32.as_array().shape();
+                        let ashape = a_f32.as_array().shape();
+                        let bshape = b_f32.as_array().shape();
 
-                        if a_shape.len() != 2 || b_shape.len() != 2 || a_shape[1] != b_shape[0] {
+                        if ashape.len() != 2 || bshape.len() != 2 || ashape[1] != bshape[0] {
                             return Err(NotImplemented);
                         }
 
@@ -1386,7 +1396,8 @@ mod examples {
         let wrapped = NdarrayWrapper::new(array);
 
         // Create a JIT-enabled array
-        let jitarray: JITEnabledArray<f64, NdarrayWrapper<f64, ndarray::Ix2>> = JITEnabledArray::new(wrapped);
+        let jitarray: JITEnabledArray<f64, NdarrayWrapper<f64, ndarray::Ix2>> =
+            JITEnabledArray::new(wrapped);
 
         // Check if JIT is supported
         assert!(jitarray.supports_jit());

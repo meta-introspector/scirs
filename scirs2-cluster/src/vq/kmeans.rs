@@ -61,7 +61,7 @@ impl<F: Float + FromPrimitive> Default for KMeansOptions<F> {
 /// use ndarray::{ArrayView1, Array2, ArrayView2};
 /// use scirs2__cluster::vq::kmeans;
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![
+/// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -150,7 +150,7 @@ where
 /// use ndarray::{ArrayView1, Array2, ArrayView2};
 /// use scirs2__cluster::vq::kmeans_with_options;
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![
+/// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -842,7 +842,7 @@ where
 /// use ndarray::Array2;
 /// use scirs2__cluster::vq::{kmeans_with_metric, EuclideanDistance, KMeansOptions};
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![
+/// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -1056,7 +1056,7 @@ mod tests {
     #[test]
     fn test_kmeans_random_init() {
         // Create a sample dataset
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
@@ -1085,7 +1085,7 @@ mod tests {
     #[test]
     fn test_kmeans_plusplus_init() {
         // Create a sample dataset
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
@@ -1114,7 +1114,7 @@ mod tests {
     #[test]
     fn test_kmeans_parallel_init() {
         // Create a sample dataset
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (20, 2),
             vec![
                 1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 1.1, 2.2, 0.9, 1.7, 1.3, 2.1, 1.0, 1.9, 0.7, 2.0,
@@ -1159,7 +1159,7 @@ mod tests {
     #[test]
     fn test_scipy_compatible_kmeans() {
         // Test the new SciPy-compatible kmeans function
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
@@ -1203,7 +1203,7 @@ mod tests {
     #[test]
     fn test_scipy_kmeans_check_finite() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.5, 8.0, 8.0, 8.5, 8.5]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.5, 1.5, 8.0, 8.0, 8.5, 8.5]).unwrap();
 
         // Test with check_finite = true (should work with finite data)
         let result = kmeans(

@@ -1,78 +1,79 @@
-//! System Identification Module
-//!
-//! This module provides comprehensive system identification functionality for
-//! estimating mathematical models of dynamic systems from input-output data.
-//!
-//! ## Features
-//!
-//! - **Transfer Function Estimation**: Estimate transfer functions from input-output data
-//! - **Parametric Models**: AR, ARMA, and ARX model identification
-//! - **Non-parametric Methods**: Frequency response estimation using spectral methods
-//! - **Model Validation**: Cross-validation, residual analysis, and information criteria
-//! - **Subspace Methods**: Simple N4SID implementation for state-space identification
-//! - **Recursive Methods**: Online/adaptive identification algorithms
-//!
-//! ## System Identification Methods
-//!
-//! ### Time-Domain Methods
-//! - Least squares estimation for ARX models
-//! - Prediction error methods for ARMA models
-//! - Maximum likelihood estimation
-//! - Instrumental variable methods
-//!
-//! ### Frequency-Domain Methods
-//! - Spectral analysis based estimation
-//! - Frequency response function estimation
-//! - Empirical transfer function estimation
-//!
-//! ### Subspace Methods
-//! - N4SID (Numerical algorithms for Subspace State Space System Identification)
-//! - MOESP (Multivariable Output-Error State sPace)
-//!
-//! ## Example Usage
-//!
-//! ```rust
-//! use ndarray::Array1;
-//! use scirs2__signal::sysid::{estimate_transfer_function, TfEstimationMethod, ModelValidation};
-//! use scirs2__signal::waveforms::chirp;
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!
-//! // Generate test system and data
-//! let n = 1000;
-//! let fs = 100.0;
-//! let t = Array1::linspace(0.0, (n-1) as f64 / fs, n);
-//!
-//! // Create chirp input signal
-//! let input_vec = chirp(t.as_slice().unwrap(), 1.0, t[t.len()-1], 20.0, "linear", 0.0)?;
-//! let input = Array1::from(input_vec);
-//!
-//! // Simulate system output (simple first-order system)
-//! let mut output = Array1::zeros(n);
-//! let a = 0.9; // System parameter
-//! for i in 1..n {
-//!     output[i] = a * output[i-1] + (1.0 - a) * input[i-1];
-//! }
-//!
-//! // Estimate transfer function
-//! let result = estimate_transfer_function(
-//!     &input, &output, fs, 2, 2, TfEstimationMethod::LeastSquares
-//! )?;
-//!
-//! println!("Estimated numerator: {:?}", result.numerator);
-//! println!("Estimated denominator: {:?}", result.denominator);
-//! println!("Fit percentage: {:.2}%", result.fit_percentage);
-//! # Ok(())
-//! # }
-//! ```
+use ndarray::s;
+// System Identification Module
+//
+// This module provides comprehensive system identification functionality for
+// estimating mathematical models of dynamic systems from input-output data.
+//
+// ## Features
+//
+// - **Transfer Function Estimation**: Estimate transfer functions from input-output data
+// - **Parametric Models**: AR, ARMA, and ARX model identification
+// - **Non-parametric Methods**: Frequency response estimation using spectral methods
+// - **Model Validation**: Cross-validation, residual analysis, and information criteria
+// - **Subspace Methods**: Simple N4SID implementation for state-space identification
+// - **Recursive Methods**: Online/adaptive identification algorithms
+//
+// ## System Identification Methods
+//
+// ### Time-Domain Methods
+// - Least squares estimation for ARX models
+// - Prediction error methods for ARMA models
+// - Maximum likelihood estimation
+// - Instrumental variable methods
+//
+// ### Frequency-Domain Methods
+// - Spectral analysis based estimation
+// - Frequency response function estimation
+// - Empirical transfer function estimation
+//
+// ### Subspace Methods
+// - N4SID (Numerical algorithms for Subspace State Space System Identification)
+// - MOESP (Multivariable Output-Error State sPace)
+//
+// ## Example Usage
+//
+// ```rust
+// use ndarray::Array1;
+// use scirs2_signal::sysid::{estimate_transfer_function, TfEstimationMethod, ModelValidation};
+// use scirs2_signal::waveforms::chirp;
+// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//
+// // Generate test system and data
+// let n = 1000;
+// let fs = 100.0;
+// let t = Array1::linspace(0.0, (n-1) as f64 / fs, n);
+//
+// // Create chirp input signal
+// let input_vec = chirp(t.as_slice().unwrap(), 1.0, t[t.len()-1], 20.0, "linear", 0.0)?;
+// let input = Array1::from(input_vec);
+//
+// // Simulate system output (simple first-order system)
+// let mut output = Array1::zeros(n);
+// let a = 0.9; // System parameter
+// for i in 1..n {
+//     output[i] = a * output[i-1] + (1.0 - a) * input[i-1];
+// }
+//
+// // Estimate transfer function
+// let result = estimate_transfer_function(
+//     &input, &output, fs, 2, 2, TfEstimationMethod::LeastSquares
+// )?;
+//
+// println!("Estimated numerator: {:?}", result.numerator);
+// println!("Estimated denominator: {:?}", result.denominator);
+// println!("Fit percentage: {:.2}%", result.fit_percentage);
+// # Ok(())
+// # }
+// ```
 
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle__enhanced::WindowType;
+use crate::lombscargle_enhanced::WindowType;
 use crate::lti::{LtiSystem, TransferFunction};
-use crate::parametric::{ARMethod, OrderSelection, estimate_ar, estimate_arma};
+use crate::parametric::{estimate_ar, estimate_arma, ARMethod, OrderSelection};
 use crate::spectral::welch;
 use crate::window::get_window;
-use ndarray::{Array1, Array2, Axis, s};
-use num__complex::Complex64;
+use ndarray::{ Array1, Array2, Axis};
+use num_complex::Complex64;
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 
@@ -222,7 +223,7 @@ pub struct ModelValidation {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::sysid::{estimate_transfer_function, TfEstimationMethod};
+/// use scirs2_signal::sysid::{estimate_transfer_function, TfEstimationMethod};
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///
 /// // Create longer test signals to avoid singular matrix
@@ -281,7 +282,8 @@ pub fn estimate_transfer_function(
 #[allow(dead_code)]
 fn estimate_tf_least_squares(
     input: &Array1<f64>,
-    output: &Array1<f64>, _fs: f64,
+    output: &Array1<f64>,
+    _fs: f64,
     num_order: usize,
     den_order: usize,
 ) -> SignalResult<TfEstimationResult> {
@@ -395,7 +397,8 @@ fn estimate_tf_frequency_domain(
 #[allow(dead_code)]
 fn estimate_tf_instrumental_variable(
     input: &Array1<f64>,
-    output: &Array1<f64>, _fs: f64,
+    output: &Array1<f64>,
+    _fs: f64,
     num_order: usize,
     den_order: usize,
 ) -> SignalResult<TfEstimationResult> {
@@ -656,7 +659,7 @@ fn cross_spectral_density_welch(
     }
 
     // Average and normalize
-    let scale = fs * window_norm * window_norm * num_segments  as f64;
+    let scale = fs * window_norm * window_norm * num_segments as f64;
     pxy_acc.mapv_inplace(|x| x / scale);
 
     // Create frequency vector
@@ -670,7 +673,8 @@ fn cross_spectral_density_welch(
 fn estimate_freq_response_periodogram(
     input: &Array1<f64>,
     output: &Array1<f64>,
-    fs: f64, _config: &SysIdConfig,
+    fs: f64,
+    _config: &SysIdConfig,
 ) -> SignalResult<FreqResponseResult> {
     let n = input.len();
     let nfft = next_power_of_2(n);
@@ -939,7 +943,7 @@ pub fn identify_arma_model(
     max_ma_order: usize,
     selection_criterion: OrderSelection,
 ) -> SignalResult<ParametricResult> {
-    let n = signal.len()  as f64;
+    let n = signal.len() as f64;
     let mut best_criterion = f64::INFINITY;
     let mut best_result = None;
 
@@ -1008,7 +1012,7 @@ pub fn validate_model(
         ));
     }
 
-    let n = actual.len()  as f64;
+    let n = actual.len() as f64;
 
     // Calculate residuals
     let residuals = actual - predicted;
@@ -1031,7 +1035,7 @@ pub fn validate_model(
 
     // Information criteria
     let log_likelihood = -0.5 * n * (2.0 * PI * mse).ln() - 0.5 * n;
-    let aic = -2.0 * log_likelihood + 2.0 * model_order  as f64;
+    let aic = -2.0 * log_likelihood + 2.0 * model_order as f64;
     let bic = -2.0 * log_likelihood + model_order as f64 * n.ln();
 
     // Final prediction error
@@ -1070,7 +1074,8 @@ pub fn validate_model(
 #[allow(clippy::type_complexity)]
 #[allow(dead_code)]
 pub fn n4sid_identification(
-    input: &Array1<f64>, _output: &Array1<f64>,
+    input: &Array1<f64>,
+    _output: &Array1<f64>,
     state_order: usize,
     past_horizon: usize,
     future_horizon: usize,
@@ -1232,10 +1237,10 @@ fn ljung_box_test(_residuals: &Array1<f64>, max_lag: usize) -> f64 {
         }
         autocorr /= (n - _lag) as f64 * var_residual;
 
-        lb_stat += autocorr * autocorr / (n - _lag)  as f64;
+        lb_stat += autocorr * autocorr / (n - _lag) as f64;
     }
 
-    lb_stat *= n as f64 * (n + 2)  as f64;
+    lb_stat *= n as f64 * (n + 2) as f64;
 
     // Return p-value approximation (simplified)
     // In practice, would use chi-square distribution
@@ -1304,7 +1309,7 @@ fn compute_fft(_signal: &Array1<f64>) -> Array1<Complex64> {
     for k in 0..n {
         let mut sum = Complex64::new(0.0, 0.0);
         for t in 0..n {
-            let angle = -2.0 * PI * (k * t) as f64 / n  as f64;
+            let angle = -2.0 * PI * (k * t) as f64 / n as f64;
             sum += _signal[t] * Complex64::new(angle.cos(), angle.sin());
         }
         result[k] = sum;
@@ -1603,7 +1608,10 @@ pub fn adaptive_robust_identification(
 // Helper functions for robust estimation
 
 #[allow(dead_code)]
-fn solve_least_squares(_regressor: &Array2<f64>, target: &Array1<f64>) -> SignalResult<Array1<f64>> {
+fn solve_least_squares(
+    _regressor: &Array2<f64>,
+    target: &Array1<f64>,
+) -> SignalResult<Array1<f64>> {
     // Simple normal equations solution (A^T A)^-1 A^T b
     let at = _regressor.t();
     let ata = at.dot(_regressor);
@@ -1733,8 +1741,8 @@ fn calculate_median(_data: &Array1<f64>) -> f64 {
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
-use crate::lti::design::tf;
+    use crate::lti::design::tf;
+    use approx::assert_relative_eq;
     #[test]
     fn test_transfer_function_estimation_simple() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

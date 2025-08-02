@@ -1,16 +1,17 @@
-//! Advanced enhancements for parametric spectral estimation
-//!
-//! This module provides additional advanced features for parametric spectral estimation,
-//! including robust model selection, adaptive order selection, and enhanced numerical
-//! stability improvements.
+use ndarray::s;
+// Advanced enhancements for parametric spectral estimation
+//
+// This module provides additional advanced features for parametric spectral estimation,
+// including robust model selection, adaptive order selection, and enhanced numerical
+// stability improvements.
 
 use crate::error::{SignalError, SignalResult};
-use crate::parametric::{ARMethod, estimate_ar};
-use crate::parametric__arma::{ArmaMethod, ArmaModel, estimate_arma};
-use crate::parametric__enhanced::ModelType;
-use ndarray::{Array1, s};
-use rand::Rng;
+use crate::parametric::{estimate_ar, ARMethod};
+use crate::parametric_arma::{estimate_arma, ArmaMethod, ArmaModel};
+use crate::parametric_enhanced::ModelType;
+use ndarray::{ Array1};
 use rand::prelude::*;
+use rand::Rng;
 use scirs2_core::validation::check_finite;
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;
@@ -352,8 +353,7 @@ fn estimate_ar_robust(
         }
 
         // Re-estimate with weights
-        let (new_ar_coeffs_, new_variance) =
-            estimate_ar_weighted(signal, order, method, &weights)?;
+        let (new_ar_coeffs_, new_variance) = estimate_ar_weighted(signal, order, method, &weights)?;
         ar_coeffs = new_ar_coeffs;
         variance = new_variance;
     }
@@ -452,7 +452,7 @@ fn compute_model_criteria(
     model_type: ModelType,
 ) -> SignalResult<ModelCriteriaValues> {
     let (_ar_coeffs_, variance) = ar_result;
-    let n = signal.len()  as f64;
+    let n = signal.len() as f64;
     let k = match model_type {
         ModelType::AR(p) => p as f64,
         ModelType::ARMA(p, q) => (p + q) as f64,
@@ -492,10 +492,10 @@ fn compute_arma_criteria(
     signal: &Array1<f64>,
     arma_model: &ArmaModel,
 ) -> SignalResult<ModelCriteriaValues> {
-    let n = signal.len()  as f64;
+    let n = signal.len() as f64;
     let p = arma_model.ar_coeffs.len() - 1;
     let q = arma_model.ma_coeffs.len() - 1;
-    let k = (p + q)  as f64;
+    let k = (p + q) as f64;
 
     // Use log-likelihood from _model if available, otherwise estimate
     let log_likelihood = arma_model
@@ -548,7 +548,7 @@ fn compute_model_diagnostics(
     let is_stable = check_ar_stability(ar_coeffs)?;
 
     // Estimate log-likelihood
-    let n = signal.len()  as f64;
+    let n = signal.len() as f64;
     let log_likelihood = -0.5 * n * (1.0 + (2.0 * PI * variance).ln());
 
     Ok(ModelDiagnostics {
@@ -568,7 +568,7 @@ fn compute_arma_diagnostics(
     arma_model: &ArmaModel,
 ) -> SignalResult<ModelDiagnostics> {
     // Simplified implementation - could be expanded for full ARMA diagnostics
-    let n = signal.len()  as f64;
+    let n = signal.len() as f64;
     let log_likelihood = arma_model
         .log_likelihood
         .unwrap_or_else(|| -0.5 * n * (1.0 + (2.0 * PI * arma_model.variance).ln()));
@@ -638,13 +638,13 @@ fn perform_cross_validation(
         }
     }
 
-    let mean_prediction_error = fold_errors.iter().sum::<f64>() / fold_errors.len()  as f64;
+    let mean_prediction_error = fold_errors.iter().sum::<f64>() / fold_errors.len() as f64;
     let std_prediction_error = {
         let variance = fold_errors
             .iter()
             .map(|&x| (x - mean_prediction_error).powi(2))
             .sum::<f64>()
-            / fold_errors.len()  as f64;
+            / fold_errors.len() as f64;
         variance.sqrt()
     };
 
@@ -667,7 +667,7 @@ fn compute_autocorrelation(_data: &Array1<f64>, max_lag: usize) -> SignalResult<
     let mean = _data.mean().unwrap();
 
     // Compute variance
-    let variance = _data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n  as f64;
+    let variance = _data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n as f64;
 
     // Compute autocorrelations
     for _lag in 0..=max_lag {
@@ -687,10 +687,10 @@ fn ljung_box_test(_acf: &Array1<f64>, n: usize, fitted_params: usize) -> SignalR
     let mut lb_statistic = 0.0;
 
     for k in 1..=h {
-        lb_statistic += _acf[k].powi(2) / (n - k)  as f64;
+        lb_statistic += _acf[k].powi(2) / (n - k) as f64;
     }
 
-    lb_statistic *= n as f64 * (n + 2)  as f64;
+    lb_statistic *= n as f64 * (n + 2) as f64;
 
     // Degrees of freedom
     let _dof = h - fitted_params;
@@ -705,7 +705,11 @@ fn ljung_box_test(_acf: &Array1<f64>, n: usize, fitted_params: usize) -> SignalR
 #[allow(dead_code)]
 fn check_ar_stability(_ar_coeffs: &Array1<f64>) -> SignalResult<bool> {
     // Simplified stability check
-    let sum_abs_coeffs: f64 = _ar_coeffs.slice(s![1..]).iter().map(|&x: &f64| x.abs()).sum();
+    let sum_abs_coeffs: f64 = _ar_coeffs
+        .slice(s![1..])
+        .iter()
+        .map(|&x: &f64| x.abs())
+        .sum();
     Ok(sum_abs_coeffs < 1.0) // Necessary but not sufficient condition
 }
 
@@ -754,7 +758,7 @@ mod tests {
         let config = AdvancedModelSelection::default();
         let robust_config = RobustEstimationConfig::default();
 
-        let result = adaptive_model_selection(&signal..&config, &robust_config);
+        let result = adaptive_model_selection(&signal, &config, &robust_config);
         assert!(result.is_ok());
 
         let selection_result = result.unwrap();

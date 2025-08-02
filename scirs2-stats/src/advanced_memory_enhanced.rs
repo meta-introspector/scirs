@@ -623,7 +623,7 @@ impl AdvancedMemoryManager {
 
     fn allocate_from_pool<T>(
         &self,
-        size: usize_usage_hint: &MemoryUsageHint,
+        size: usize_usage, hint: &MemoryUsageHint,
     ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
@@ -651,7 +651,7 @@ impl AdvancedMemoryManager {
 
     fn allocate_direct<T>(
         &self,
-        size: usize_characteristics: &AllocationCharacteristics,
+        size: usize, characteristics: &AllocationCharacteristics,
     ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
@@ -679,7 +679,7 @@ impl AdvancedMemoryManager {
 
     fn allocate_memory_mapped<T>(
         &self,
-        size: usize_characteristics: &AllocationCharacteristics,
+        size: usize, characteristics: &AllocationCharacteristics,
     ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
@@ -690,7 +690,7 @@ impl AdvancedMemoryManager {
 
     fn allocate_compressed<T>(
         &self,
-        size: usize_characteristics: &AllocationCharacteristics,
+        size: usize, characteristics: &AllocationCharacteristics,
     ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
@@ -701,7 +701,7 @@ impl AdvancedMemoryManager {
 
     fn allocate_numa_optimized<T>(
         &self,
-        size: usize_characteristics: &AllocationCharacteristics,
+        size: usize, characteristics: &AllocationCharacteristics,
     ) -> StatsResult<OptimizedAllocation<T>>
     where
         T: Copy + Send + Sync,
@@ -1289,7 +1289,7 @@ pub struct IntelligentMemoryPools {
 }
 
 impl IntelligentMemoryPools {
-    pub fn new(_config: &AdvancedMemoryConfig_numa_topology: &NumaTopology) -> Self {
+    pub fn new(_config: &AdvancedMemoryConfig_numa, topology: &NumaTopology) -> Self {
         Self {
             pools: HashMap::new(),
             numa_topology: _numa_topology.clone(),

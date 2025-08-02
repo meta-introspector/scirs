@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         values_vec.push(value);
     }
 
-    let points = Array2::from_shape_vec((n_points, n_dims), points_vec)?;
+    let points = Array2::fromshape_vec((n_points, n_dims), points_vec)?;
     let values = Array1::from_vec(values_vec);
 
     // Generate query points
@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let query_points = Array2::from_shape_vec((n_queries, n_dims), query_vec)?;
+    let query_points = Array2::fromshape_vec((n_queries, n_dims), query_vec)?;
 
     // Part 1: Moving Least Squares
     println!("\n=== Moving Least Squares Comparison ===");

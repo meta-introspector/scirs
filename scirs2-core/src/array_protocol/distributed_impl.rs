@@ -404,12 +404,12 @@ where
                     // In a real implementation, we would perform a distributed matrix multiplication
                     // For this simplified version, we'll return a dummy result with the correct shape
 
-                    let result_shape = vec![self.shape[0], other.shape[1]];
+                    let resultshape = vec![self.shape[0], other.shape[1]];
 
                     // Create a dummy result array
                     // Using a simpler approach with IxDyn directly
-                    let dummy_shape = ndarray::IxDyn(&result_shape);
-                    let dummy_array = Array::<T, ndarray::IxDyn>::zeros(dummy_shape);
+                    let dummyshape = ndarray::IxDyn(&resultshape);
+                    let dummy_array = Array::<T, ndarray::IxDyn>::zeros(dummyshape);
 
                     // Create a new distributed array with the dummy result
                     let chunk = ArrayChunk {
@@ -419,7 +419,7 @@ where
                     };
 
                     let result =
-                        DistributedNdarray::new(vec![chunk], result_shape, self.config.clone());
+                        DistributedNdarray::new(vec![chunk], resultshape, self.config.clone());
 
                     return Ok(Box::new(result));
                 }
@@ -433,7 +433,7 @@ where
                 }
 
                 // Create a new shape for the transposed array
-                let transposed_shape = vec![self.shape[1], self.shape[0]];
+                let transposedshape = vec![self.shape[1], self.shape[0]];
 
                 // In a real implementation, we would transpose each chunk and reconstruct
                 // the distributed array with the correct chunk distribution
@@ -441,8 +441,8 @@ where
 
                 // Create a dummy result array
                 // Using a simpler approach with IxDyn directly
-                let dummy_shape = ndarray::IxDyn(&transposed_shape);
-                let dummy_array = Array::<T, ndarray::IxDyn>::zeros(dummy_shape);
+                let dummyshape = ndarray::IxDyn(&transposedshape);
+                let dummy_array = Array::<T, ndarray::IxDyn>::zeros(dummyshape);
 
                 // Create a new distributed array with the dummy result
                 let chunk = ArrayChunk {
@@ -452,7 +452,7 @@ where
                 };
 
                 let result =
-                    DistributedNdarray::new(vec![chunk], transposed_shape, self.config.clone());
+                    DistributedNdarray::new(vec![chunk], transposedshape, self.config.clone());
 
                 Ok(Box::new(result))
             }
@@ -475,8 +475,8 @@ where
 
                     // Create a dummy result array
                     // Using a simpler approach with IxDyn directly
-                    let dummy_shape = ndarray::IxDyn(shape);
-                    let dummy_array = Array::<T, ndarray::IxDyn>::zeros(dummy_shape);
+                    let dummyshape = ndarray::IxDyn(shape);
+                    let dummy_array = Array::<T, ndarray::IxDyn>::zeros(dummyshape);
 
                     // Create a new distributed array with the dummy result
                     let chunk = ArrayChunk {

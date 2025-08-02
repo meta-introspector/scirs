@@ -1,11 +1,11 @@
-//! Detrending functionality
-//!
-//! This module provides functions for removing linear trends and constant offsets
-//! from signal data, which is often useful as a preprocessing step before
-//! spectral analysis or other signal processing operations.
+// Detrending functionality
+//
+// This module provides functions for removing linear trends and constant offsets
+// from signal data, which is often useful as a preprocessing step before
+// spectral analysis or other signal processing operations.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, array};
+use ndarray::{array, Array1, Array2};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
@@ -31,7 +31,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::detrend;
+/// use scirs2_signal::detrend;
 ///
 /// // Create a signal with a linear trend
 /// let mut x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
@@ -51,7 +51,7 @@ use std::fmt::Debug;
 /// Remove just the mean value:
 ///
 /// ```
-/// use scirs2__signal::detrend;
+/// use scirs2_signal::detrend;
 ///
 /// // Create a signal with a constant offset
 /// let x = vec![5.0, 6.0, 7.0, 8.0, 9.0];
@@ -150,7 +150,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::detrend_axis;
+/// use scirs2_signal::detrend_axis;
 /// use ndarray::array;
 ///
 /// // Create a 2D array with a trend along columns
@@ -275,7 +275,7 @@ pub fn detrend_axis(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::detrend_poly;
+/// use scirs2_signal::detrend_poly;
 ///
 /// // Create a signal with a quadratic trend: y = 0.1*x^2 + 0.5*x + 1
 /// let n = 10;
@@ -446,7 +446,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Vec<f64
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_detrend_constant() {
         // Test signal with constant offset

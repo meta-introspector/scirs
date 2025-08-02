@@ -429,8 +429,8 @@ impl ZeroCostEstimator {
     /// Compute SynFlow score (Synaptic Flow)
     fn compute_synflow_score(
         // Create synthetic data with all ones
-        let input_shape = data.shape();
-        let synthetic_data = Array2::ones((batch_size, input_shape[1]));
+        let inputshape = data.shape();
+        let synthetic_data = Array2::ones((batch_size, inputshape[1]));
         // Compute synaptic flow
         let mut flow_scores = Vec::new();
             let input = synthetic_data

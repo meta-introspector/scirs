@@ -1,15 +1,15 @@
-//! Validation utilities for Wavelet Packet Transform
-//!
-//! This module provides comprehensive validation functions for WPT implementations,
-//! including energy conservation checks, reconstruction accuracy, and numerical stability.
+// Validation utilities for Wavelet Packet Transform
+//
+// This module provides comprehensive validation functions for WPT implementations,
+// including energy conservation checks, reconstruction accuracy, and numerical stability.
 
-use crate::dwt::{Wavelet, wavedec};
+use crate::dwt::{wavedec, Wavelet};
 use crate::error::{SignalError, SignalResult};
-use crate::wpt::{WaveletPacketTree, reconstruct_from_nodes, wp_decompose};
+use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast};
-use rand::Rng;
 use rand::prelude::*;
+use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
@@ -96,7 +96,8 @@ pub struct CompressionEfficiency {
 
 /// Get all node coordinates at a specific level
 fn get_level_nodes(_tree: &WaveletPacketTree, level: usize) -> Vec<(usize, usize)> {
-    _tree.nodes
+    _tree
+        .nodes
         .keys()
         .filter(|(l_)| *l == level)
         .copied()
@@ -144,7 +145,7 @@ where
     }
 
     // Check for reasonable signal characteristics
-    let signal_mean = signal_f64.iter().sum::<f64>() / signal_f64.len()  as f64;
+    let signal_mean = signal_f64.iter().sum::<f64>() / signal_f64.len() as f64;
     let signal_std = (signal_f64
         .iter()
         .map(|&x| (x - signal_mean).powi(2))
@@ -269,7 +270,7 @@ where
         .zip(reconstructed.iter())
         .map(|(&orig, &recon)| recon - orig)
         .sum::<f64>()
-        / signal_f64.len()  as f64;
+        / signal_f64.len() as f64;
 
     if bias.abs() > tolerance * 10.0 {
         issues.push(format!(
@@ -414,17 +415,17 @@ fn validate_reconstruction(
     // Compute errors using SIMD
     let orig_view = ArrayView1::from(original);
     let recon_view = ArrayView1::from(reconstructed);
-    let error_view = ArrayView1::from_shape(n, &mut errors).unwrap();
+    let error_view = ArrayView1::fromshape(n, &mut errors).unwrap();
 
     f64::simd_sub(&orig_view, &recon_view, &error_view);
 
     // Compute error metrics
     let max_error = errors.iter().map(|&e: &f64| e.abs()).fold(0.0, f64::max);
-    let mean_error = errors.iter().map(|&e: &f64| e.abs()).sum::<f64>() / n  as f64;
+    let mean_error = errors.iter().map(|&e: &f64| e.abs()).sum::<f64>() / n as f64;
 
     // Compute SNR
-    let signal_power = compute_energy(original) / n  as f64;
-    let noise_power = compute_energy(&errors) / n  as f64;
+    let signal_power = compute_energy(original) / n as f64;
+    let noise_power = compute_energy(&errors) / n as f64;
     let snr = if noise_power > tolerance * tolerance {
         10.0 * (signal_power / noise_power).log10()
     } else {
@@ -478,7 +479,7 @@ fn test_numerical_stability(
         Ok(tree) => {
             let nodes = get_level_nodes(&tree, max_level);
             if let Ok(reconstructed) = reconstruct_from_nodes(&tree, &nodes) {
-                let mean = reconstructed.iter().sum::<f64>() / reconstructed.len()  as f64;
+                let mean = reconstructed.iter().sum::<f64>() / reconstructed.len() as f64;
                 if ((mean - 1.0) as f64).abs() < 1e-10 {
                     passed_tests += 1;
                 }
@@ -790,7 +791,7 @@ fn analyze_best_basis_stability(
 
     for _ in 0..5 {
         // Add small amount of noise
-        let noise_level = 0.01 * compute_energy(signal).sqrt() / signal.len()  as f64;
+        let noise_level = 0.01 * compute_energy(signal).sqrt() / signal.len() as f64;
         let noisy_signal: Vec<f64> = signal
             .iter()
             .map(|&x| x + noise_level * rng.random_range(-1.0..1.0))
@@ -841,7 +842,7 @@ fn analyze_compression_efficiency(
     // Compute sparsity ratio
     let threshold = original_energy.sqrt() * 1e-6;
     let sparse_count = all_coeffs.iter().filter(|&&x| x.abs() < threshold).count();
-    let sparsity_ratio = sparse_count as f64 / all_coeffs.len()  as f64;
+    let sparsity_ratio = sparse_count as f64 / all_coeffs.len() as f64;
 
     // Estimate compression ratio
     let compression_ratio = if sparsity_ratio > 0.1 {
@@ -949,7 +950,7 @@ fn compute_selection_entropy(
     }
 
     // Compute Shannon entropy of selection distribution
-    let total_selections = selections.len()  as f64;
+    let total_selections = selections.len() as f64;
     let mut entropy = 0.0;
 
     for &count in node_frequencies.values() {
@@ -1022,7 +1023,10 @@ pub fn generate_wpt_validation_report(_result: &WptValidationResult) -> String {
         "  Reconstruction SNR: {:.1} dB\n",
         _result.reconstruction_snr
     ));
-    report.push_str(&format!("  Parseval Ratio: {:.6}\n", _result.parseval_ratio));
+    report.push_str(&format!(
+        "  Parseval Ratio: {:.6}\n",
+        _result.parseval_ratio
+    ));
     report.push_str(&format!(
         "  Stability Score: {:.2}\n\n",
         _result.stability_score
@@ -1208,7 +1212,7 @@ fn analyze_signal_characteristics(_signal: &[f64]) -> SignalResult<SignalCharact
 
     // Oscillation index (based on zero crossings)
     let mut zero_crossings = 0;
-    let mean = _signal.iter().sum::<f64>() / n  as f64;
+    let mean = _signal.iter().sum::<f64>() / n as f64;
     let centered: Vec<f64> = _signal.iter().map(|&x| x - mean).collect();
 
     for i in 1..centered.len() {
@@ -1218,7 +1222,7 @@ fn analyze_signal_characteristics(_signal: &[f64]) -> SignalResult<SignalCharact
             zero_crossings += 1;
         }
     }
-    let oscillation_index = zero_crossings as f64 / (n - 1)  as f64;
+    let oscillation_index = zero_crossings as f64 / (n - 1) as f64;
 
     // Noise level estimate (high frequency energy)
     let hf_energy = estimate_high_frequency_energy(_signal)?;
@@ -1228,7 +1232,7 @@ fn analyze_signal_characteristics(_signal: &[f64]) -> SignalResult<SignalCharact
     // Sparsity measure
     let threshold = total_energy.sqrt() * 1e-6;
     let sparse_count = _signal.iter().filter(|&&x| x.abs() < threshold).count();
-    let sparsity_measure = sparse_count as f64 / n  as f64;
+    let sparsity_measure = sparse_count as f64 / n as f64;
 
     // Dominant frequencies (simplified FFT-based analysis)
     let dominant_frequencies = find_dominant_frequencies(_signal)?;
@@ -1319,7 +1323,7 @@ fn validate_tree_structure(
     }
 
     // Total coefficients should be approximately equal to original signal _length
-    let coeff_ratio = total_coeffs as f64 / original_length  as f64;
+    let coeff_ratio = total_coeffs as f64 / original_length as f64;
     if coeff_ratio < 0.9 || coeff_ratio > 1.1 {
         eprintln!(
             "Warning: Coefficient count ratio ({:.2}) suggests potential issues with decomposition",
@@ -1362,7 +1366,7 @@ fn find_dominant_frequencies(_signal: &[f64]) -> SignalResult<Vec<f64>> {
         }
 
         if count > 0 {
-            correlation /= count  as f64;
+            correlation /= count as f64;
             if correlation > max_correlation {
                 max_correlation = correlation;
                 best_lag = lag;
@@ -1426,7 +1430,7 @@ fn compute_frame_bounds(_norms: &[f64]) -> (f64, f64) {
     }
 
     let sum_squares: f64 = _norms.iter().map(|&n| n * n).sum();
-    let n = _norms.len()  as f64;
+    let n = _norms.len() as f64;
 
     // Simplified frame bounds calculation
     let avg_squared = sum_squares / n;
@@ -1534,7 +1538,7 @@ fn validate_wavelet_compatibility(
     }
 
     // Check for potential boundary effect issues
-    let boundary_effect_ratio = filter_length as f64 / signal_length  as f64;
+    let boundary_effect_ratio = filter_length as f64 / signal_length as f64;
     if boundary_effect_ratio > 0.1 {
         warnings.push(format!(
             "Filter length ({}) is large relative to signal length ({}). Boundary effects may be significant.",
@@ -1567,8 +1571,8 @@ fn analyze_signal_spectrum(_signal: &[f64]) -> SignalResult<SpectralInfo> {
     };
 
     // Estimate _signal variance
-    let mean = _signal.iter().sum::<f64>() / n  as f64;
-    let variance = _signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n  as f64;
+    let mean = _signal.iter().sum::<f64>() / n as f64;
+    let variance = _signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n as f64;
 
     // Estimate high frequency content (simplified)
     let mut high_freq_energy = 0.0;

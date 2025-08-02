@@ -4,7 +4,7 @@
 //! extensions for scientific computing environments. Provides `SemVer` 2.0.0
 //! compliance with additional features for research and enterprise use.
 
-use crate::error::{CoreError, ErrorContext};
+use crate::error::CoreError;
 use std::cmp::Ordering;
 use std::fmt;
 use std::str::FromStr;
@@ -39,17 +39,24 @@ impl Version {
             build_metadata: None,
         }
     }
-    
-    pub fn parse(version_str: &str) -> Result<Self, String> {
+
+    /// Parse a simple version string (major.minor.patch format only)
+    pub fn parse_simple(version_str: &str) -> Result<Self, String> {
         let parts: Vec<&str> = version_str.split('.').collect();
         if parts.len() != 3 {
-            return Err(format!("Invalid version format: {}", version_str));
+            return Err(format!("Invalid version format: {version_str}"));
         }
-        
+
         Ok(Self {
-            major: parts[0].parse().map_err(|e| format!("Invalid major version: {}", e))?,
-            minor: parts[1].parse().map_err(|e| format!("Invalid minor version: {}", e))?,
-            patch: parts[2].parse().map_err(|e| format!("Invalid patch version: {}", e))?,
+            major: parts[0]
+                .parse()
+                .map_err(|e| format!("Invalid major version: {e}"))?,
+            minor: parts[1]
+                .parse()
+                .map_err(|e| format!("Invalid minor version: {e}"))?,
+            patch: parts[2]
+                .parse()
+                .map_err(|e| format!("Invalid patch version: {e}"))?,
             pre_release: None,
             build_metadata: None,
         })
@@ -66,8 +73,8 @@ impl Version {
         }
     }
 
-    /// Parse a version string
-    pub fn version(version_str: &str) -> Result<Self, CoreError> {
+    /// Parse a version string (supports pre-release and build metadata)
+    pub fn parse(version_str: &str) -> Result<Self, CoreError> {
         let version = version_str.trim();
 
         // Remove 'v' prefix if present
@@ -239,7 +246,7 @@ impl FromStr for Version {
     type Err = CoreError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::parse(s).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))
+        Self::parse(s)
     }
 }
 
@@ -344,42 +351,42 @@ impl VersionConstraint {
         }
 
         if let Some(stripped) = constraint.strip_prefix(">=") {
-            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
+            let version = Version::parse(stripped)?;
             return Ok(Self::GreaterThanOrEqual(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix("<=") {
-            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
+            let version = Version::parse(stripped)?;
             return Ok(Self::LessThanOrEqual(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('>') {
-            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
+            let version = Version::parse(stripped)?;
             return Ok(Self::GreaterThan(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('<') {
-            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
+            let version = Version::parse(stripped)?;
             return Ok(Self::LessThan(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('~') {
-            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
+            let version = Version::parse(stripped)?;
             return Ok(Self::Tilde(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('^') {
-            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
+            let version = Version::parse(stripped)?;
             return Ok(Self::Caret(version));
         }
 
         if let Some(stripped) = constraint.strip_prefix('=') {
-            let version = Version::parse(stripped).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
+            let version = Version::parse(stripped)?;
             return Ok(Self::Exact(version));
         }
 
         // Default to exact match
-        let version = Version::parse(constraint).map_err(|e| CoreError::ValueError(ErrorContext::new(e)))?;
+        let version = Version::parse(constraint)?;
         Ok(Self::Exact(version))
     }
 
@@ -392,9 +399,7 @@ impl VersionConstraint {
             Self::LessThan(v) => version < v,
             Self::LessThanOrEqual(v) => version <= v,
             Self::Compatible(v) => version.major == v.major && version >= v,
-            Self::Tilde(v) => {
-                version.major == v.major && version.minor == v.minor && version >= v
-            }
+            Self::Tilde(v) => version.major == v.major && version.minor == v.minor && version >= v,
             Self::Caret(v) => {
                 if v.major() > 0 {
                     version.major == v.major && version >= v

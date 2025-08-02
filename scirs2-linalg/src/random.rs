@@ -148,11 +148,11 @@ where
 ///
 /// A rows×cols matrix with standard normal distribution
 #[allow(dead_code)]
-pub fn random_normal_matrix<F>(_shape: (usize, usize), seed: Option<u64>) -> LinalgResult<Array2<F>>
+pub fn random_normal_matrix<F>(shape: (usize, usize), seed: Option<u64>) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive + NumAssign + 'static,
 {
-    Ok(normal(_shape.0, _shape.1, F::zero(), F::one(), seed))
+    Ok(normal(shape.0, shape.1, F::zero(), F::one(), seed))
 }
 
 #[allow(dead_code)]

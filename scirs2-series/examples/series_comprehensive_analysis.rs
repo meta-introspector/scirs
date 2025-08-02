@@ -280,7 +280,7 @@ fn compare_forecasting_methods(_data: &Array1<f64>) {
 
     // Method 3: LSTM Neural Network
     let lstm_config = LSTMConfig {
-        base: scirs2_series: forecasting::neural::NeuralConfig {
+        base: scirs2,series: forecasting::neural::NeuralConfig {
             lookback_window: 10,
             forecast_horizon,
             epochs: 50,

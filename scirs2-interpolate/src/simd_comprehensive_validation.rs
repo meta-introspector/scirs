@@ -602,7 +602,7 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
                 "distance_matrix_computation" => SimdTestCategory::DistanceComputation,
                 "rbf_evaluation" | "spline_evaluation" => SimdTestCategory::BasisFunctions,
                 "bspline_basis_computation" => SimdTestCategory::BasisFunctions,
-                "polynomial_evaluation" => SimdTestCategory::PolynomialEvaluation_ =>, SimdTestCategory::BasicArithmetic,
+                "polynomial_evaluation" => SimdTestCategory::PolynomialEvaluation_ => SimdTestCategory::BasicArithmetic,
             };
 
             let result = self.validate_operation(operation, category)?;

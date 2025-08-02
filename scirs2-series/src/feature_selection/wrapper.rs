@@ -30,7 +30,7 @@ impl WrapperMethods {
     /// use ndarray::{Array1, Array2};
     /// use scirs2__series::feature_selection::{WrapperMethods, FeatureSelectionConfig};
     ///
-    /// let features = Array2::from_shape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
+    /// let features = Array2::fromshape_vec((100, 10), (0..1000).map(|x| x as f64).collect()).unwrap();
     /// let target = Array1::from_vec((0..100).map(|x| x as f64).collect());
     /// let config = FeatureSelectionConfig::default();
     ///
@@ -402,7 +402,7 @@ impl WrapperMethods {
 
         // Extract selected features
         let selected_features =
-            Array2::from_shape_fn((n_samples, feature_indices.len()), |(i, j)| {
+            Array2::fromshape_fn((n_samples, feature_indices.len()), |(i, j)| {
                 features[[i, feature_indices[j]]]
             });
 
@@ -413,9 +413,9 @@ impl WrapperMethods {
             ScoringMethod::MeanAbsoluteError => {
                 Self::calculate_mae_score(&selected_features, target)
             }
-            ScoringMethod::RSquared =>, Self::calculate_r2_score(&selected_features, target),
-            ScoringMethod::AIC =>, Self::calculate_aic_score(&selected_features, target),
-            ScoringMethod::BIC =>, Self::calculate_bic_score(&selected_features, target),
+            ScoringMethod::RSquared => Self::calculate_r2_score(&selected_features, target),
+            ScoringMethod::AIC => Self::calculate_aic_score(&selected_features, target),
+            ScoringMethod::BIC => Self::calculate_bic_score(&selected_features, target),
             ScoringMethod::CrossValidation => {
                 Self::calculate_cv_score(&selected_features, target, config.cv_folds)
             }
@@ -524,17 +524,17 @@ impl WrapperMethods {
 
             // Create training and test sets
             let train_features =
-                Array2::from_shape_fn((train_indices.len(), features.ncols()), |(i, j)| {
+                Array2::fromshape_fn((train_indices.len(), features.ncols()), |(i, j)| {
                     features[[train_indices[i], j]]
                 });
             let train_target =
-                Array1::from_shape_fn(train_indices.len(), |i| target[train_indices[i]]);
+                Array1::fromshape_fn(train_indices.len(), |i| target[train_indices[i]]);
             let test_features =
-                Array2::from_shape_fn((test_indices.len(), features.ncols()), |(i, j)| {
+                Array2::fromshape_fn((test_indices.len(), features.ncols()), |(i, j)| {
                     features[[test_indices[i], j]]
                 });
             let test_target =
-                Array1::from_shape_fn(test_indices.len(), |i| target[test_indices[i]]);
+                Array1::fromshape_fn(test_indices.len(), |i| target[test_indices[i]]);
 
             // Fit on training and predict on test
             let coefficients = Self::fit_linear_regression(&train_features, &train_target)?;
@@ -698,7 +698,7 @@ impl WrapperMethods {
 
         // Extract selected features
         let selected_features =
-            Array2::from_shape_fn((features.nrows(), feature_indices.len()), |(i, j)| {
+            Array2::fromshape_fn((features.nrows(), feature_indices.len()), |(i, j)| {
                 features[[i, feature_indices[j]]]
             });
 

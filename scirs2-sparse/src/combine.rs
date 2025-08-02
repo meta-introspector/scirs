@@ -60,8 +60,8 @@ where
     }
 
     // Check that all arrays have the same number of rows
-    let first_shape = arrays[0].shape();
-    let m = first_shape.0;
+    let firstshape = arrays[0].shape();
+    let m = firstshape.0;
 
     for (_i, &array) in arrays.iter().enumerate().skip(1) {
         let shape = array.shape();
@@ -158,8 +158,8 @@ where
     }
 
     // Check that all arrays have the same number of columns
-    let first_shape = arrays[0].shape();
-    let n = first_shape.1;
+    let firstshape = arrays[0].shape();
+    let n = firstshape.1;
 
     for (_i, &array) in arrays.iter().enumerate().skip(1) {
         let shape = array.shape();
@@ -507,11 +507,11 @@ where
         + Copy
         + 'static,
 {
-    let a_shape = a.shape();
-    let b_shape = b.shape();
+    let ashape = a.shape();
+    let bshape = b.shape();
 
     // Calculate output shape
-    let output_shape = (a_shape.0 * b_shape.0, a_shape.1 * b_shape.1);
+    let outputshape = (ashape.0 * bshape.0, ashape.1 * bshape.1);
 
     // Check for empty matrices
     if a.nnz() == 0 || b.nnz() == 0 {
@@ -522,11 +522,11 @@ where
 
         return match format.to_lowercase().as_str() {
             "csr" => {
-                CsrArray::from_triplets(&empty_rows, &empty_cols, &empty_data, output_shape, false)
+                CsrArray::from_triplets(&empty_rows, &empty_cols, &empty_data, outputshape, false)
                     .map(|array| Box::new(array) as Box<dyn SparseArray<T>>)
             }
             "coo" => {
-                CooArray::from_triplets(&empty_rows, &empty_cols, &empty_data, output_shape, false)
+                CooArray::from_triplets(&empty_rows, &empty_cols, &empty_data, outputshape, false)
                     .map(|array| Box::new(array) as Box<dyn SparseArray<T>>)
             }
             _ => Err(SparseError::ValueError(format!(
@@ -560,8 +560,8 @@ where
     for i in 0..nnz_a {
         for j in 0..nnz_b {
             // Calculate row and column indices
-            let row = a_rows[i] * b_shape.0 + b_rows[j];
-            let col = a_cols[i] * b_shape.1 + b_cols[j];
+            let row = a_rows[i] * bshape.0 + b_rows[j];
+            let col = a_cols[i] * bshape.1 + b_cols[j];
 
             // Calculate data value
             let val = a_data[i] * b_data[j];
@@ -575,9 +575,9 @@ where
 
     // Create the output array in requested format
     match format.to_lowercase().as_str() {
-        "csr" => CsrArray::from_triplets(&out_rows, &out_cols, &out_data, output_shape, false)
+        "csr" => CsrArray::from_triplets(&out_rows, &out_cols, &out_data, outputshape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
-        "coo" => CooArray::from_triplets(&out_rows, &out_cols, &out_data, output_shape, false)
+        "coo" => CooArray::from_triplets(&out_rows, &out_cols, &out_data, outputshape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
@@ -639,29 +639,29 @@ where
         + Copy
         + 'static,
 {
-    let a_shape = a.shape();
-    let b_shape = b.shape();
+    let ashape = a.shape();
+    let bshape = b.shape();
 
     // Check that matrices are square
-    if a_shape.0 != a_shape.1 {
+    if ashape.0 != ashape.1 {
         return Err(SparseError::ValueError(
             "First matrix must be square".to_string(),
         ));
     }
-    if b_shape.0 != b_shape.1 {
+    if bshape.0 != bshape.1 {
         return Err(SparseError::ValueError(
             "Second matrix must be square".to_string(),
         ));
     }
 
     // Create identity matrices of appropriate sizes
-    let m = a_shape.0;
-    let n = b_shape.0;
+    let m = ashape.0;
+    let n = bshape.0;
 
     // For identity matrices, we'll use a direct implementation that creates
     // the expected pattern for Kronecker sum of identity matrices
     if is_identity_matrix(a) && is_identity_matrix(b) {
-        let output_shape = (m * n, m * n);
+        let outputshape = (m * n, m * n);
         let mut rows = Vec::new();
         let mut cols = Vec::new();
         let mut data = Vec::new();
@@ -706,9 +706,9 @@ where
 
         // Create the output array in the requested format
         return match format.to_lowercase().as_str() {
-            "csr" => CsrArray::from_triplets(&rows, &cols, &data, output_shape, true)
+            "csr" => CsrArray::from_triplets(&rows, &cols, &data, outputshape, true)
                 .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
-            "coo" => CooArray::from_triplets(&rows, &cols, &data, output_shape, true)
+            "coo" => CooArray::from_triplets(&rows, &cols, &data, outputshape, true)
                 .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
             _ => Err(SparseError::ValueError(format!(
                 "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
@@ -717,7 +717,7 @@ where
     }
 
     // General case for non-identity matrices
-    let output_shape = (m * n, m * n);
+    let outputshape = (m * n, m * n);
 
     // Create arrays to hold output triplets
     let mut rows = Vec::new();
@@ -753,9 +753,9 @@ where
 
     // Create the output array in the requested format
     match format.to_lowercase().as_str() {
-        "csr" => CsrArray::from_triplets(&rows, &cols, &data, output_shape, true)
+        "csr" => CsrArray::from_triplets(&rows, &cols, &data, outputshape, true)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
-        "coo" => CooArray::from_triplets(&rows, &cols, &data, output_shape, true)
+        "coo" => CooArray::from_triplets(&rows, &cols, &data, outputshape, true)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"
@@ -897,7 +897,7 @@ where
     }
 
     // Calculate total shape
-    let total_shape = (row_offsets[m], col_offsets[n]);
+    let totalshape = (row_offsets[m], col_offsets[n]);
 
     // If there are no blocks, return an empty matrix
     let mut has_blocks = false;
@@ -921,11 +921,11 @@ where
 
         return match format.to_lowercase().as_str() {
             "csr" => {
-                CsrArray::from_triplets(&empty_rows, &empty_cols, &empty_data, total_shape, false)
+                CsrArray::from_triplets(&empty_rows, &empty_cols, &empty_data, totalshape, false)
                     .map(|array| Box::new(array) as Box<dyn SparseArray<T>>)
             }
             "coo" => {
-                CooArray::from_triplets(&empty_rows, &empty_cols, &empty_data, total_shape, false)
+                CooArray::from_triplets(&empty_rows, &empty_cols, &empty_data, totalshape, false)
                     .map(|array| Box::new(array) as Box<dyn SparseArray<T>>)
             }
             _ => Err(SparseError::ValueError(format!(
@@ -960,9 +960,9 @@ where
 
     // Create the output array in the requested format
     match format.to_lowercase().as_str() {
-        "csr" => CsrArray::from_triplets(&rows, &cols, &data, total_shape, false)
+        "csr" => CsrArray::from_triplets(&rows, &cols, &data, totalshape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
-        "coo" => CooArray::from_triplets(&rows, &cols, &data, total_shape, false)
+        "coo" => CooArray::from_triplets(&rows, &cols, &data, totalshape, false)
             .map(|array| Box::new(array) as Box<dyn SparseArray<T>>),
         _ => Err(SparseError::ValueError(format!(
             "Unknown sparse format: {format}. Supported formats are 'csr' and 'coo'"

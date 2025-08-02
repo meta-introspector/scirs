@@ -234,7 +234,7 @@ impl SciPyCompatLayer {
         let binary_input = self.convert_to_binary(input);
 
         // Use default 3x3 cross structure if none provided
-        let default_structure = Array::from_shape_vec(
+        let default_structure = Array::fromshape_vec(
             (3, 3),
             vec![false, true, false, true, true, true, false, true, false],
         )
@@ -299,7 +299,7 @@ impl SciPyCompatLayer {
     {
         let binary_input = self.convert_to_binary(input);
 
-        let default_structure = Array::from_shape_vec(
+        let default_structure = Array::fromshape_vec(
             (3, 3),
             vec![false, true, false, true, true, true, false, true, false],
         )

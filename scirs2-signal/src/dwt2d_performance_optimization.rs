@@ -1,13 +1,13 @@
-//! Performance Optimization Module for 2D Wavelet Transforms
-//!
-//! This module provides comprehensive performance optimizations for 2D wavelet transforms:
-//! - Advanced SIMD vectorization for all supported wavelets
-//! - Memory-efficient cache-aware algorithms
-//! - Parallel processing with dynamic load balancing  
-//! - GPU-ready tiled processing patterns
-//! - Numerical stability enhancements
-//! - Real-time streaming capabilities
-//! - Adaptive precision management
+// Performance Optimization Module for 2D Wavelet Transforms
+//
+// This module provides comprehensive performance optimizations for 2D wavelet transforms:
+// - Advanced SIMD vectorization for all supported wavelets
+// - Memory-efficient cache-aware algorithms
+// - Parallel processing with dynamic load balancing  
+// - GPU-ready tiled processing patterns
+// - Numerical stability enhancements
+// - Real-time streaming capabilities
+// - Adaptive precision management
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::dwt2d::dwt2d_decompose;
@@ -195,7 +195,8 @@ impl Default for PerformanceConfig {
                     avx512: false, // Conservative default
                     neon: false,   // x86 default
                 },
-                cpu_cores: num, _cpus: get(),
+                cpu_cores: num,
+                _cpus: get(),
                 l1_cache_size: 32 * 1024,       // 32KB default
                 l2_cache_size: 256 * 1024,      // 256KB default
                 l3_cache_size: 8 * 1024 * 1024, // 8MB default
@@ -300,7 +301,8 @@ enum ProcessingStrategy {
 /// Determine optimal processing strategy based on input characteristics
 #[allow(dead_code)]
 fn determine_optimal_strategy(
-    image: &Array2<f64>, _wavelet: &Wavelet,
+    image: &Array2<f64>,
+    _wavelet: &Wavelet,
     levels: usize,
     config: &PerformanceConfig,
 ) -> SignalResult<ProcessingStrategy> {
@@ -411,7 +413,8 @@ fn simd_optimized_decomposition(
 #[allow(dead_code)]
 fn simd_row_transform(
     image: &Array2<f64>,
-    wavelet: &Wavelet, _config: &PerformanceConfig,
+    wavelet: &Wavelet,
+    _config: &PerformanceConfig,
 ) -> SignalResult<Array2<f64>> {
     let (height, width) = image.dim();
     let filters = wavelet.filters()?;
@@ -432,7 +435,8 @@ fn simd_row_transform(
 #[allow(dead_code)]
 fn simd_column_transform(
     image: &Array2<f64>,
-    wavelet: &Wavelet, _config: &PerformanceConfig,
+    wavelet: &Wavelet,
+    _config: &PerformanceConfig,
 ) -> SignalResult<(Array2<f64>, Array2<f64>, Array2<f64>, Array2<f64>)> {
     let (height, width) = image.dim();
     let half_height = height / 2;
@@ -511,7 +515,8 @@ fn simd_1d_transform(
 fn parallel_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
-    levels: usize, _config: &PerformanceConfig,
+    levels: usize,
+    _config: &PerformanceConfig,
 ) -> SignalResult<Vec<Array2<f64>>> {
     // For simplicity, fall back to standard decomposition with parallel row processing
     let mut current_image = image.clone();
@@ -555,7 +560,8 @@ fn tiled_optimized_decomposition(
 fn streaming_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
-    levels: usize, _config: &PerformanceConfig,
+    levels: usize,
+    _config: &PerformanceConfig,
 ) -> SignalResult<Vec<Array2<f64>>> {
     // For simplicity, fall back to standard decomposition
     // A full implementation would process data in streaming chunks
@@ -729,7 +735,7 @@ fn calculate_coefficient_stats(_coeffs: &[f64]) -> CoefficientStatistics {
     let dynamic_range = max_val - min_val;
 
     let near_zero_count = _coeffs.iter().filter(|&&x| x.abs() < 1e-10).count();
-    let sparsity_ratio = near_zero_count as f64 / _coeffs.len()  as f64;
+    let sparsity_ratio = near_zero_count as f64 / _coeffs.len() as f64;
 
     // Simple entropy calculation
     let abs_coeffs: Vec<f64> = _coeffs.iter().map(|&x: &f64| x.abs()).collect();
@@ -746,8 +752,8 @@ fn calculate_coefficient_stats(_coeffs: &[f64]) -> CoefficientStatistics {
     };
 
     // Simple outlier detection (values > 3 standard deviations)
-    let mean = _coeffs.iter().sum::<f64>() / _coeffs.len()  as f64;
-    let variance = _coeffs.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _coeffs.len()  as f64;
+    let mean = _coeffs.iter().sum::<f64>() / _coeffs.len() as f64;
+    let variance = _coeffs.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _coeffs.len() as f64;
     let std_dev = variance.sqrt();
     let outlier_threshold = 3.0 * std_dev;
     let outlier_count = _coeffs

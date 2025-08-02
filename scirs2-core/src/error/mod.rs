@@ -136,8 +136,8 @@ pub use async__handling::{
 // Advanced error diagnostics
 pub mod diagnostics;
 pub use diagnostics::{
-    error, error_with_context, EnvironmentInfo, ErrorDiagnosticReport,
-    ErrorDiagnostics, ErrorOccurrence, ErrorPattern, PerformanceImpact,
+    error, error_with_context, EnvironmentInfo, ErrorDiagnosticReport, ErrorDiagnostics,
+    ErrorOccurrence, ErrorPattern, PerformanceImpact,
 };
 
 // Circuit breaker and error recovery for production systems

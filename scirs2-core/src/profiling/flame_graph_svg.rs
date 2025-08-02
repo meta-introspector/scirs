@@ -171,7 +171,7 @@ pub struct SvgFlameGraphGenerator {
 impl SvgFlameGraphGenerator {
     /// Create a new SVG flame graph generator
     pub fn new(config: SvgFlameGraphConfig) -> Self {
-        Self { 
+        Self {
             config,
             cpu_usage: Vec::new(),
             memory_usage: Vec::new(),
@@ -190,8 +190,8 @@ impl SvgFlameGraphGenerator {
 <defs>
   <style><![CDATA[
     .func_g:hover {{ stroke:black; stroke-width:0.5; cursor:pointer; }}
-    .func_text {{ font-family:{}; font-size:{}px; fill:rgb(0,0,0); }}
-    .search_text {{ font-family:{}; font-size:{}px; fill:rgb(255,255,255); }}
+    .functext {{ font-family:{}; font-size:{}px; fill:rgb(0,0,0); }}
+    .searchtext {{ font-family:{}; font-size:{}px; fill:rgb(255,255,255); }}
   ]]></style>
 </defs>
 "#,
@@ -213,7 +213,7 @@ impl SvgFlameGraphGenerator {
         // Title
         if !self.config.title.is_empty() {
             svg.push_str(&format!(
-                r#"<text x="{}" y= 24 class= func_text style="font-size:20px; font-weight:bold; text-anchor:middle;">{}</text>
+                r#"<text x="{}" y= 24 class= functext style="font-size:20px; font-weight:bold; text-anchor:middle;">{}</text>
 "#,
                 self.config.width / 2,
                 self.config.title
@@ -223,7 +223,7 @@ impl SvgFlameGraphGenerator {
         // Subtitle
         if !self.config.subtitle.is_empty() {
             svg.push_str(&format!(
-                r#"<text x="{}" y= 48 class= func_text style="font-size:14px; text-anchor:middle;">{}</text>
+                r#"<text x="{}" y= 48 class= functext style="font-size:14px; text-anchor:middle;">{}</text>
 "#,
                 self.config.width / 2,
                 self.config.subtitle
@@ -269,7 +269,7 @@ impl SvgFlameGraphGenerator {
         y: f64,
         height: f64,
         total_time: f64,
-        depth: usize,
+        _depth: usize,
     ) {
         if width < self.config.min_width {
             return;
@@ -294,7 +294,7 @@ impl SvgFlameGraphGenerator {
         svg.push_str(&format!(
             r#"<g class= func_g>
   <rect x="{:.1}" y="{:.1}" width="{:.1}" height="{:.1}" fill="{}" rx= 2 ry= 2/>
-  <text x="{:.1}" y="{:.1}" class= func_text>{}</text>
+  <text x="{:.1}" y="{:.1}" class= functext>{}</text>
   <title>{} ({})</title>
 </g>
 "#,
@@ -305,7 +305,7 @@ impl SvgFlameGraphGenerator {
             color,
             x + 4.0,
             y + height * 0.7,
-            self.truncate_text(&escaped_name, width),
+            self.truncatetext(&escaped_name, width),
             escaped_name,
             percentage
         ));
@@ -329,7 +329,7 @@ impl SvgFlameGraphGenerator {
                     y + height + 1.0,
                     height,
                     total_time,
-                    depth + 1,
+                    _depth + 1,
                 );
             }
 
@@ -347,7 +347,7 @@ impl SvgFlameGraphGenerator {
     }
 
     /// Truncate text to fit within width
-    fn truncate_text(&self, text: &str, width: f64) -> String {
+    fn truncatetext(&self, text: &str, width: f64) -> String {
         let char_width = (self.config.font_size as f64) * 0.6; // Approximate character width
         let max_chars = ((width - 8.0) / char_width) as usize;
 
@@ -479,7 +479,7 @@ impl EnhancedFlameGraph {
 <defs>
   <style><![CDATA[
     .func_g:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
-    .func_text { font-family:Verdana, sans-serif; font-size:12px; fill:rgb(0,0,0); }
+    .functext { font-family:Verdana, sans-serif; font-size:12px; fill:rgb(0,0,0); }
     .chart_line { stroke:blue; stroke-width:2; fill:none; }
     .chart_area { fill:lightblue; opacity:0.3; }
   ]]></style>
@@ -489,11 +489,11 @@ impl EnhancedFlameGraph {
         );
 
         // Title
-        svg.push_str(r#"<text x= 600 y= 24 class= func_text style="font-size:18px; font-weight:bold; text-anchor:middle;">Enhanced Performance Profile</text>
+        svg.push_str(r#"<text x= 600 y= 24 class= functext style="font-size:18px; font-weight:bold; text-anchor:middle;">Enhanced Performance Profile</text>
 "#);
 
         // Performance flame graph (top half)
-        svg.push_str(r#"<text x= 10 y= 55 class= func_text style="font-weight:bold;">CPU Performance Flame Graph</text>
+        svg.push_str(r#"<text x= 10 y= 55 class= functext style="font-weight:bold;">CPU Performance Flame Graph</text>
 "#);
 
         // Generate main flame graph
@@ -505,7 +505,7 @@ impl EnhancedFlameGraph {
         ));
 
         // System metrics charts (bottom half)
-        svg.push_str(r#"<text x= 10 y= 425 class= func_text style="font-weight:bold;">System Resource Usage</text>
+        svg.push_str(r#"<text x= 10 y= 425 class= functext style="font-weight:bold;">System Resource Usage</text>
 "#);
 
         // CPU usage chart
@@ -543,7 +543,7 @@ impl EnhancedFlameGraph {
     fn add_cpu_chart(&self, svg: &mut String, x: f64, y: f64, width: f64, height: f64) {
         svg.push_str(&format!(
             r#"<rect x="{}" y="{}" width="{}" height="{}" fill= none stroke= black/>
-<text x="{}" y="{}" class= func_text style="font-size:10px;">CPU Usage (%)</text>
+<text x="{}" y="{}" class= functext style="font-size:10px;">CPU Usage (%)</text>
 "#,
             x,
             y,
@@ -585,7 +585,7 @@ impl EnhancedFlameGraph {
     fn add_memory_chart(&self, svg: &mut String, x: f64, y: f64, width: f64, height: f64) {
         svg.push_str(&format!(
             r#"<rect x="{}" y="{}" width="{}" height="{}" fill= none stroke= black/>
-<text x="{}" y="{}" class= func_text style="font-size:10px;">Memory Usage (MB)</text>
+<text x="{}" y="{}" class= functext style="font-size:10px;">Memory Usage (MB)</text>
 "#,
             x,
             y,
@@ -678,9 +678,9 @@ mod tests {
     }
 
     #[test]
-    fn test_text_truncation() {
+    fn testtext_truncation() {
         let generator = SvgFlameGraphGenerator::default();
-        let result = generator.truncate_text("very_long_function_name", 50.0);
+        let result = generator.truncatetext("very_long_function_name", 50.0);
         assert!(result.len() <= 50);
     }
 }

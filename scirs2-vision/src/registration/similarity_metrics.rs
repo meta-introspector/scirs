@@ -507,14 +507,14 @@ impl SimilarityMeasure for GradientCorrelation {
 #[allow(dead_code)]
 pub fn create_similarity_measure(_metric: SimilarityMetric) -> Box<dyn SimilarityMeasure> {
     match _metric {
-        SimilarityMetric::SumOfSquaredDifferences =>, Box::new(SumOfSquaredDifferences),
-        SimilarityMetric::NormalizedCrossCorrelation =>, Box::new(NormalizedCrossCorrelation),
-        SimilarityMetric::MutualInformation =>, Box::new(MutualInformation::default()),
-        SimilarityMetric::NormalizedMutualInformation =>, Box::new(NormalizedMutualInformation::default()),
-        SimilarityMetric::MeanSquaredError =>, Box::new(MeanSquaredError),
-        SimilarityMetric::PeakSignalToNoiseRatio =>, Box::new(PeakSignalToNoiseRatio::default()),
-        SimilarityMetric::StructuralSimilarity =>, Box::new(StructuralSimilarity::default()),
-        SimilarityMetric::GradientCorrelation =>, Box::new(GradientCorrelation),
+        SimilarityMetric::SumOfSquaredDifferences => Box::new(SumOfSquaredDifferences),
+        SimilarityMetric::NormalizedCrossCorrelation => Box::new(NormalizedCrossCorrelation),
+        SimilarityMetric::MutualInformation => Box::new(MutualInformation::default()),
+        SimilarityMetric::NormalizedMutualInformation => Box::new(NormalizedMutualInformation::default()),
+        SimilarityMetric::MeanSquaredError => Box::new(MeanSquaredError),
+        SimilarityMetric::PeakSignalToNoiseRatio => Box::new(PeakSignalToNoiseRatio::default()),
+        SimilarityMetric::StructuralSimilarity => Box::new(StructuralSimilarity::default()),
+        SimilarityMetric::GradientCorrelation => Box::new(GradientCorrelation),
     }
 }
 

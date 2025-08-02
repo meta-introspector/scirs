@@ -35,7 +35,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> Clone for C
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> CSVDataset<F> {
     /// Create a new dataset from CSV file
     pub fn from_csv<P: AsRef<Path>>(
-        _path: P_has_header: bool, _feature_cols: &[usize], _label_cols: &[usize], _delimiter: char,
+        _path: P_has, header: bool, _feature_cols: &[usize], _label_cols: &[usize], _delimiter: char,
     ) -> Result<Self> {
         // In a real implementation, we'd use a CSV reader here
         // For now, just return an error
@@ -63,14 +63,14 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> Dataset<F> 
         let x_slice = self.features.slice(ndarray::s![index, ..]);
         let y_slice = self.labels.slice(ndarray::s![index, ..]);
         // Convert to dynamic dimension arrays
-        let x_shape = x_slice.shape().to_vec();
-        let y_shape = y_slice.shape().to_vec();
+        let xshape = x_slice.shape().to_vec();
+        let yshape = y_slice.shape().to_vec();
         let mut x = x_slice
             .to_owned()
-            .into_shape_with_order(IxDyn(&x_shape))
+            .into_shape_with_order(IxDyn(&xshape))
             .unwrap();
         let mut y = y_slice
-            .into_shape_with_order(IxDyn(&y_shape))
+            .into_shape_with_order(IxDyn(&yshape))
         // Apply transforms if available
         if let Some(ref transform) = self.feature_transform {
             x = transform.apply(&x)?;

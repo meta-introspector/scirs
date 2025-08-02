@@ -6,7 +6,7 @@ use scirs2__optim::Optimizer;
 
 /// Generate synthetic data for linear regression
 #[allow(dead_code)]
-fn generate_data<A: Float>(_n_samples: usize, n_features: usize) -> (Array2<A>, Array1<A>) {
+fn generate_data<A: Float>(_n, samples: usize, n_features: usize) -> (Array2<A>, Array1<A>) {
     let mut rng = scirs2_core::random::rng();
     let mut x = Array2::<A>::zeros((_n_samples, n_features));
     let mut y = Array1::<A>::zeros(_n_samples);
@@ -38,7 +38,7 @@ fn generate_data<A: Float>(_n_samples: usize, n_features: usize) -> (Array2<A>, 
 
 /// Calculate mean squared error
 #[allow(dead_code)]
-fn mean_squared_error<A: Float>(_y_true: &Array1<A>, y_pred: &Array1<A>) -> A {
+fn mean_squared_error<A: Float>(_y, true: &Array1<A>, y_pred: &Array1<A>) -> A {
     let diff = y_pred - _y_true;
     let squared = diff.mapv(|x| x * x);
     let sum = squared.sum();
@@ -137,8 +137,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Create batch
             let batch_indices = &indices[batch * batch_size..(batch + 1) * batch_size];
             let x_batch =
-                Array2::from_shape_fn((batch_size, n_features), |(i, j)| x[[batch_indices[i], j]]);
-            let y_batch = Array1::from_shape_fn(batch_size, |i| y[batch_indices[i]]);
+                Array2::fromshape_fn((batch_size, n_features), |(i, j)| x[[batch_indices[i], j]]);
+            let y_batch = Array1::fromshape_fn(batch_size, |i| y[batch_indices[i]]);
 
             // Constant learning rate SGD
             let y_pred_constant = predict(&x_batch, &weights);

@@ -649,7 +649,7 @@ impl StressTestUtils {
             }
 
             Ok(
-                TestResult::success(result.std::time::Duration::from_secs(1), result.total_operations)
+                TestResult::success(std::time::Duration::from_secs(1), result.total_operations)
                     .with_memory_usage(result.peak_memory),
             )
         });
@@ -668,7 +668,7 @@ impl StressTestUtils {
             }
 
             Ok(
-                TestResult::success(result.std::time::Duration::from_secs(1), result.total_operations)
+                TestResult::success(std::time::Duration::from_secs(1), result.total_operations)
                     .with_memory_usage(result.peak_memory),
             )
         });
@@ -688,7 +688,7 @@ impl StressTestUtils {
             }
 
             Ok(TestResult::success(
-                result.std::time::Duration::from_secs(1),
+                std::time::Duration::from_secs(1),
                 result.total_operations,
             ))
         });
@@ -707,7 +707,7 @@ impl StressTestUtils {
             }
 
             Ok(TestResult::success(
-                result.std::time::Duration::from_secs(1),
+                std::time::Duration::from_secs(1),
                 result.total_operations,
             ))
         });
@@ -727,7 +727,7 @@ impl StressTestUtils {
             }
 
             Ok(TestResult::success(
-                result.std::time::Duration::from_secs(1),
+                std::time::Duration::from_secs(1),
                 result.total_operations,
             ))
         });
@@ -746,7 +746,7 @@ impl StressTestUtils {
             }
 
             Ok(TestResult::success(
-                result.std::time::Duration::from_secs(1),
+                std::time::Duration::from_secs(1),
                 result.total_operations,
             ))
         });

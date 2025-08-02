@@ -1021,7 +1021,8 @@ fn arbitrary_precision_computing() -> Result<(), Box<dyn std::error::Error>> {
             128 => "Extended precision",
             256 => "Mathematical research",
             512 => "Number theory",
-            1024 => "Advanced-high precision"_ => "Specialized applications",
+            1024 => "Advanced-high precision",
+            _ => "Specialized applications",
         };
 
         println!("{prec:<9}   {relative_speed:<14.2}x   {memory_usage:<12}x   {typical_use}");

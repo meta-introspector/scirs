@@ -162,7 +162,7 @@ void scirs2_tensor_free(scirs2_tensor_t* tensor) {
 scirs2_error_t scirs2_tensor_get_data(scirs2_tensor_t* tensor, void** data) {
     if (!tensor || !data) {
     *data = tensor->data;
-scirs2_error_t scirs2_tensor_get_shape(scirs2_tensor_t* tensor, size_t** shape, size_t* ndim) {
+scirs2_error_t scirs2_tensor_getshape(scirs2_tensor_t* tensor, size_t** shape, size_t* ndim) {
     if (!tensor || !shape || !ndim) {
     *shape = tensor->shape;
     *ndim = tensor->ndim;

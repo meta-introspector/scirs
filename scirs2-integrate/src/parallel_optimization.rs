@@ -436,12 +436,12 @@ impl ParallelOptimizer {
         task: VectorizedComputeTask<F>,
     ) -> IntegrateResult<Array2<F>> {
         let chunk_size = task.chunk_size.max(1);
-        let input_shape = task.input.dim();
-        let mut result = Array2::zeros(input_shape);
+        let inputshape = task.input.dim();
+        let mut result = Array2::zeros(inputshape);
 
         // Process in chunks for cache efficiency
-        for chunk_start in (0..input_shape.0).step_by(chunk_size) {
-            let chunk_end = (chunk_start + chunk_size).min(input_shape.0);
+        for chunk_start in (0..inputshape.0).step_by(chunk_size) {
+            let chunk_end = (chunk_start + chunk_size).min(inputshape.0);
             let chunk = task.input.slice(s![chunk_start..chunk_end, ..]);
 
             let chunk_result = match &task.operation {

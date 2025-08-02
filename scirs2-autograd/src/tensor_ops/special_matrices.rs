@@ -555,11 +555,11 @@ pub fn tril<'g, F: Float>(_matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, 
     let g = _matrix.graph();
 
     // Get the shape of the input tensor for setting the output shape
-    let matrix_shape = crate::tensor_ops::shape(_matrix);
+    let matrixshape = crate::tensor_ops::shape(_matrix);
 
     Tensor::builder(g)
         .append_input(_matrix, false)
-        .set_shape(&matrix_shape)  // Preserve shape information
+        .setshape(&matrixshape)  // Preserve shape information
         .build(LowerTriangularOp { diagonal })
 }
 
@@ -569,11 +569,11 @@ pub fn triu<'g, F: Float>(_matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, 
     let g = _matrix.graph();
 
     // Get the shape of the input tensor for setting the output shape
-    let matrix_shape = crate::tensor_ops::shape(_matrix);
+    let matrixshape = crate::tensor_ops::shape(_matrix);
 
     Tensor::builder(g)
         .append_input(_matrix, false)
-        .set_shape(&matrix_shape)  // Preserve shape information
+        .setshape(&matrixshape)  // Preserve shape information
         .build(UpperTriangularOp { diagonal })
 }
 
@@ -583,10 +583,10 @@ pub fn band_matrix<'g, F: Float>(_matrix: &Tensor<'g, F>, lower: i32, upper: i32
     let g = _matrix.graph();
 
     // Get the shape of the input tensor for setting the output shape
-    let matrix_shape = crate::tensor_ops::shape(_matrix);
+    let matrixshape = crate::tensor_ops::shape(_matrix);
 
     Tensor::builder(g)
         .append_input(_matrix, false)
-        .set_shape(&matrix_shape)  // Preserve shape information
+        .setshape(&matrixshape)  // Preserve shape information
         .build(BandMatrixOp { lower, upper })
 }

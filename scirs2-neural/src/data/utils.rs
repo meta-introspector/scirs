@@ -49,17 +49,17 @@ pub fn train_val_split<F: Float + Debug + ScalarOperand>(
         let x_val_2d = x.select(Axis(0), val_indices);
         let y_val_2d = y.select(Axis(0), val_indices);
         // Convert to IxDyn
-        let x_train_shape = x_train_2d.shape().to_vec();
-        let y_train_shape = y_train_2d.shape().to_vec();
-        let x_val_shape = x_val_2d.shape().to_vec();
-        let y_val_shape = y_val_2d.shape().to_vec();
+        let x_trainshape = x_train_2d.shape().to_vec();
+        let y_trainshape = y_train_2d.shape().to_vec();
+        let x_valshape = x_val_2d.shape().to_vec();
+        let y_valshape = y_val_2d.shape().to_vec();
         let x_train = x_train_2d
-            .into_shape_with_order(IxDyn(&x_train_shape))
+            .into_shape_with_order(IxDyn(&x_trainshape))
             .unwrap();
         let y_train = y_train_2d
-            .into_shape_with_order(IxDyn(&y_train_shape))
-        let x_val = x_val_2d.into_shape_with_order(IxDyn(&x_val_shape)).unwrap();
-        let y_val = y_val_2d.into_shape_with_order(IxDyn(&y_val_shape)).unwrap();
+            .into_shape_with_order(IxDyn(&y_trainshape))
+        let x_val = x_val_2d.into_shape_with_order(IxDyn(&x_valshape)).unwrap();
+        let y_val = y_val_2d.into_shape_with_order(IxDyn(&y_valshape)).unwrap();
         Ok((x_train, y_train, x_val, y_val))
     } else {
         // Split data without shuffling

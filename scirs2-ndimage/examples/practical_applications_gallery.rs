@@ -536,13 +536,13 @@ fn computer_vision_applications() -> NdimageResult<()> {
     let text_candidates = threshold_binary(&edge_density.view(), 0.3)?;
 
     println!("Step 2: Text line segmentation");
-    let text_lines = segment_text_lines(&text_candidates)?;
+    let text_lines = segmenttext_lines(&text_candidates)?;
 
     println!("Step 3: Document structure analysis");
     let layout_analysis = analyze_document_layout(&text_lines, &document_image)?;
 
     println!("Results: Document, analysis: ");
-    println!("   Text lines detected: {}", layout_analysis.num_text_lines);
+    println!("   Text lines detected: {}", layout_analysis.numtext_lines);
     println!(
         "   Paragraphs identified: {}",
         layout_analysis.num_paragraphs
@@ -768,7 +768,7 @@ impl PCBDefects {
 
 #[derive(Debug, Clone)]
 struct LayoutAnalysis {
-    num_text_lines: usize,
+    numtext_lines: usize,
     num_paragraphs: usize,
     avg_line_height: f64,
     text_coverage: f64,
@@ -817,7 +817,7 @@ struct LatticeInfo {
 
 #[allow(dead_code)]
 fn create_medical_scan_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -849,7 +849,7 @@ fn enhance_medical_contrast(_image: &Array2<f64>) -> NdimageResult<Array2<f64>> 
 
 #[allow(dead_code)]
 fn create_angiogram_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -892,7 +892,7 @@ fn analyze_vessel_network(_skeleton: &Array2<u8>) -> NdimageResult<VesselStats> 
 
 #[allow(dead_code)]
 fn create_microscopy_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -925,7 +925,7 @@ fn estimate_perimeter(_prop: &crate::measurements::RegionProperties) -> f64 {
 
 #[allow(dead_code)]
 fn create_surface_inspection_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -950,7 +950,7 @@ fn create_surface_inspection_simulation(_height: usize, width: usize) -> Array2<
 
 #[allow(dead_code)]
 fn create_part_measurement_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -965,7 +965,7 @@ fn create_part_measurement_simulation(_height: usize, width: usize) -> Array2<f6
 
 #[allow(dead_code)]
 fn create_pcb_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1014,7 +1014,7 @@ fn analyze_pcb_defects(
 
 #[allow(dead_code)]
 fn create_satellite_bands_simulation(_height: usize, width: usize) -> (Array2<f64>, Array2<f64>) {
-    let red_band = Array2::from_shape_fn((_height, width), |(i, j)| {
+    let red_band = Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1028,7 +1028,7 @@ fn create_satellite_bands_simulation(_height: usize, width: usize) -> (Array2<f6
         }
     });
 
-    let nir_band = Array2::from_shape_fn((_height, width), |(i, j)| {
+    let nir_band = Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1047,7 +1047,7 @@ fn create_satellite_bands_simulation(_height: usize, width: usize) -> (Array2<f6
 
 #[allow(dead_code)]
 fn create_multispectral_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1064,7 +1064,7 @@ fn create_multispectral_simulation(_height: usize, width: usize) -> Array2<f64> 
 
 #[allow(dead_code)]
 fn create_cloudy_satellite_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1093,7 +1093,7 @@ fn detect_cloud_shadows(
 
 #[allow(dead_code)]
 fn create_scene_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1114,7 +1114,7 @@ fn create_scene_simulation(_height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_document_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1165,8 +1165,8 @@ fn compute_local_edge_density(
 }
 
 #[allow(dead_code)]
-fn segment_text_lines(_text_mask: &Array2<u8>) -> NdimageResult<Array2<u32>> {
-    label(&_text_mask.view(), None).map(|(labeled_)| labeled)
+fn segmenttext_lines(text_mask: &Array2<u8>) -> NdimageResult<Array2<u32>> {
+    label(&text_mask.view(), None).map(|(labeled_)| labeled)
 }
 
 #[allow(dead_code)]
@@ -1175,7 +1175,7 @@ fn analyze_document_layout(
     image: &Array2<f64>,
 ) -> NdimageResult<LayoutAnalysis> {
     Ok(LayoutAnalysis {
-        num_text_lines: 6,
+        numtext_lines: 6,
         num_paragraphs: 3,
         avg_line_height: 12.0,
         text_coverage: 25.0,
@@ -1184,7 +1184,7 @@ fn analyze_document_layout(
 
 #[allow(dead_code)]
 fn create_portrait_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1224,7 +1224,7 @@ fn validate_face_candidates(
 
 #[allow(dead_code)]
 fn create_particle_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1250,7 +1250,7 @@ fn create_particle_simulation(_height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_astronomy_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -1309,7 +1309,7 @@ fn perform_star_photometry(
 
 #[allow(dead_code)]
 fn create_crystal_simulation(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         // Create periodic lattice pattern
         let period = 20.0;
         let lattice = ((i as f64 / period).sin() * (j as f64 / period).cos() + 1.0) / 2.0;

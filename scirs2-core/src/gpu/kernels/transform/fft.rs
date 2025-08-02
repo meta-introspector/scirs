@@ -181,10 +181,7 @@ __kernel void fft_1d_forward(
 
     /// Generate a kernel specialized for a specific size
     #[allow(dead_code)]
-    fn specialized_for_size(
-        &self,
-        _size: usize,
-    ) -> Result<FftKernel, GpuError> {
+    fn specialized_for_size(&self, _size: usize) -> Result<FftKernel, GpuError> {
         // In a real implementation, we would generate different kernels
         // optimized for different sizes (especially powers of 2)
 

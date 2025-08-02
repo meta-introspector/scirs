@@ -2,7 +2,7 @@
 // This example creates synthetic images and extracts various features
 
 use ndarray::{Array2, Array3};
-use scirs2__signal::image_features::{
+use scirs2_signal::image_features::{
     extract_color_image_features, extract_image_features, ImageFeatureOptions,
 };
 use std::collections::HashMap;
@@ -100,19 +100,19 @@ fn main() {
     println!("-----------------------------");
 
     // Create two different texture patterns
-    let mut smooth_texture = Array2::zeros((size, size));
-    let mut rough_texture = Array2::zeros((size, size));
+    let mut smoothtexture = Array2::zeros((size, size));
+    let mut roughtexture = Array2::zeros((size, size));
 
     for i in 0..size {
         for j in 0..size {
             // Smooth gradient
-            smooth_texture[[i, j]] = (i as f64 + j as f64) / (2.0 * size as f64) * 255.0;
+            smoothtexture[[i, j]] = (i as f64 + j as f64) / (2.0 * size as f64) * 255.0;
 
             // Rough checkerboard pattern
             if (i / 4 + j / 4) % 2 == 0 {
-                rough_texture[[i, j]] = 255.0;
+                roughtexture[[i, j]] = 255.0;
             } else {
-                rough_texture[[i, j]] = 50.0;
+                roughtexture[[i, j]] = 50.0;
             }
         }
     }
@@ -128,8 +128,8 @@ fn main() {
         ..ImageFeatureOptions::default()
     };
 
-    let smooth_features = extract_image_features(&smooth_texture, &texture_options).unwrap();
-    let rough_features = extract_image_features(&rough_texture, &texture_options).unwrap();
+    let smooth_features = extract_image_features(&smoothtexture, &texture_options).unwrap();
+    let rough_features = extract_image_features(&roughtexture, &texture_options).unwrap();
 
     println!("Smooth vs Rough Texture Features:");
     compare_features(&smooth_features, &rough_features);

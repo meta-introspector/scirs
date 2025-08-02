@@ -82,9 +82,9 @@ pub enum JITOperation {
     /// Matrix multiplication with specific dimensions
     MatMul {
         /// Input A dimensions
-        a_shape: Vec<usize>,
+        ashape: Vec<usize>,
         /// Input B dimensions
-        b_shape: Vec<usize>,
+        bshape: Vec<usize>,
         /// Transpose flags
         transpose_a: bool,
         transpose_b: bool,
@@ -97,9 +97,9 @@ pub enum JITOperation {
     /// Convolution operations
     Convolution {
         /// Input shape [N, C, H, W]
-        input_shape: Vec<usize>,
+        inputshape: Vec<usize>,
         /// Weight shape [out_channels, in_channels, kH, kW]
-        weight_shape: Vec<usize>,
+        weightshape: Vec<usize>,
         /// Stride
         stride: Vec<usize>,
         /// Padding
@@ -265,8 +265,8 @@ pub struct MatMulKernel {
     pub block_size: usize,
 /// Convolution kernel
 pub struct ConvolutionKernel {
-    pub input_shape: Vec<usize>,
-    pub weight_shape: Vec<usize>,
+    pub inputshape: Vec<usize>,
+    pub weightshape: Vec<usize>,
     pub stride: Vec<usize>,
     pub padding: Vec<usize>,
     pub use_im2col: bool,
@@ -498,12 +498,12 @@ impl JITCompiler {
         &self,
         kernel: &CompiledKernel,
         inputs: &[&ArrayD<F>],
-        output_shape: &[usize],
+        outputshape: &[usize],
     ) -> Result<ArrayD<F>> {
         // Validate inputs
         self.validate_kernel_inputs(kernel, inputs)?;
         // Execute using the enhanced native implementation
-        let output = self.execute_kernel_native(kernel, inputs, output_shape)?;
+        let output = self.execute_kernel_native(kernel, inputs, outputshape)?;
         // Update usage statistics
         kernel.usage_count.fetch_add(1, Ordering::Relaxed);
         let execution_time = start_time.elapsed().as_millis() as f64;
@@ -513,7 +513,7 @@ impl JITCompiler {
     pub fn compile_and_execute<F: Float + Debug + 'static>(
         operation: &JITOperation,
         let kernel = self.compile_operation(operation)?;
-        self.execute_kernel(&kernel, inputs, output_shape)
+        self.execute_kernel(&kernel, inputs, outputshape)
     /// Get cached kernel if available
     fn get_cached_kernel(&self, key: &JITKernelKey) -> Option<CompiledKernel> {
         if let Ok(cache) = self.kernel_cache.read() {
@@ -534,23 +534,23 @@ impl JITCompiler {
     fn generate_code(&self, operation: &JITOperation) -> Result<String> {
         match operation {
             JITOperation::MatMul {
-                a_shape,
-                b_shape,
+                ashape,
+                bshape,
                 transpose_a,
                 transpose_b,
-            } => self.generate_matmul_code(a_shape, b_shape, *transpose_a, *transpose_b),
+            } => self.generate_matmul_code(ashape, bshape, *transpose_a, *transpose_b),
             JITOperation::ElementWise { op, shapes } => self.generate_elementwise_code(op, shapes),
             JITOperation::Convolution {
-                input_shape,
-                weight_shape,
+                inputshape,
+                weightshape,
                 stride,
                 padding,
                 dilation,
             } => {
-                self.generate_convolution_code(input_shape, weight_shape, stride, padding, dilation)
+                self.generate_convolution_code(inputshape, weightshape, stride, padding, dilation)
             JITOperation::Activation {
                 activation,
-            } => self.generate_activation_code(activation, input_shape),
+            } => self.generate_activation_code(activation, inputshape),
             JITOperation::FusedOp {
                 operations,
                 fusion_strategy,
@@ -559,12 +559,12 @@ impl JITCompiler {
                 Ok(self.generate_generic_code(operation))
     /// Generate matrix multiplication code
     fn generate_matmul_code(
-        a_shape: &[usize],
-        b_shape: &[usize],
+        ashape: &[usize],
+        bshape: &[usize],
     ) -> Result<String> {
-        let m = if transpose_a { a_shape[1] } else { a_shape[0] };
-        let k = if transpose_a { a_shape[0] } else { a_shape[1] };
-        let n = if transpose_b { b_shape[0] } else { b_shape[1] };
+        let m = if transpose_a { ashape[1] } else { ashape[0] };
+        let k = if transpose_a { ashape[0] } else { ashape[1] };
+        let n = if transpose_b { bshape[0] } else { bshape[1] };
         let mut code = String::new();
         code.push_str(&format!("// Optimized MatMul: {m}x{k} * {k}x{n}\n"));
         code.push_str("void kernel_matmul(const float* A, const float* B, float* C) {\n");
@@ -590,8 +590,8 @@ impl JITCompiler {
             code.push_str(&self.generate_scalar_elementwise(op, total_elements));
     /// Generate convolution code
     fn generate_convolution_code(
-        input_shape: &[usize],
-        weight_shape: &[usize],
+        inputshape: &[usize],
+        weightshape: &[usize],
         stride: &[usize],
         padding: &[usize], _dilation: &[usize],
         code.push_str("// Optimized Convolution\n");
@@ -599,13 +599,13 @@ impl JITCompiler {
             "void kernel_conv2d(const float* input, const float* weight, float* output) {\n",
         );
         // Generate convolution loops with optimizations
-        let n = input_shape[0]; // batch size
-        let c_in = input_shape[1]; // input channels
-        let h_in = input_shape[2]; // input height
-        let w_in = input_shape[3]; // input width
-        let c_out = weight_shape[0]; // output channels
-        let kh = weight_shape[2]; // kernel height
-        let kw = weight_shape[3]; // kernel width
+        let n = inputshape[0]; // batch size
+        let c_in = inputshape[1]; // input channels
+        let h_in = inputshape[2]; // input height
+        let w_in = inputshape[3]; // input width
+        let c_out = weightshape[0]; // output channels
+        let kh = weightshape[2]; // kernel height
+        let kw = weightshape[3]; // kernel width
         let h_out = (h_in + 2 * padding[0] - kh) / stride[0] + 1;
         let w_out = (w_in + 2 * padding[1] - kw) / stride[1] + 1;
         if self.codegen_settings.unroll_loops && kh <= 3 && kw <= 3 {
@@ -616,7 +616,7 @@ impl JITCompiler {
     /// Generate activation function code
     fn generate_activation_code(
         activation: &ActivationType,
-        let total_elements = input_shape.iter().product::<usize>();
+        let total_elements = inputshape.iter().product::<usize>();
         code.push_str(&format!("// Activation: {activation:?}\n"));
         code.push_str("void kernel_activation(const float* input, float* output) {\n");
             code.push_str(&self.generate_vectorized_activation(activation, total_elements)?);
@@ -703,10 +703,10 @@ impl JITCompiler {
         code.push_str("  }\n");
         code
     /// Generate SSE matrix multiplication code
-    fn generate_sse_matmul(&self_m: usize, _k: usize_n: usize) -> String {
+    fn generate_sse_matmul(&self, m: usize, _k: usize, n: usize) -> String {
         String::from("  // SSE implementation placeholder\n")
     /// Generate NEON matrix multiplication code
-    fn generate_neon_matmul(&self_m: usize, _k: usize_n: usize) -> String {
+    fn generate_neon_matmul(&self, m: usize, _k: usize, n: usize) -> String {
         String::from("  // NEON implementation placeholder\n")
     /// Generate vectorized element-wise code
     fn generate_vectorized_elementwise(
@@ -837,10 +837,10 @@ impl JITCompiler {
     /// Analyze memory requirements for an operation
     fn analyze_memory_requirements(&self, operation: &JITOperation) -> Result<MemoryRequirements> {
         let (min_memory, optimal_memory, access_pattern) = match operation {
-                a_shape, b_shape, ..
-                let a_size = a_shape.iter().product::<usize>() * std::mem::size_of::<f32>();
-                let b_size = b_shape.iter().product::<usize>() * std::mem::size_of::<f32>();
-                let c_size = a_shape[0] * b_shape[1] * std::mem::size_of::<f32>();
+                ashape, bshape, ..
+                let a_size = ashape.iter().product::<usize>() * std::mem::size_of::<f32>();
+                let b_size = bshape.iter().product::<usize>() * std::mem::size_of::<f32>();
+                let c_size = ashape[0] * bshape[1] * std::mem::size_of::<f32>();
                 let min_mem = a_size + b_size + c_size;
                 let optimal_mem = min_mem * 2; // For blocking optimizations
                 (min_mem, optimal_mem, MemoryAccessPattern::Blocked), JITOperation::ElementWise { shapes, .. } => {
@@ -850,14 +850,14 @@ impl JITCompiler {
                     .sum::<usize>();
                 (total_size, total_size, MemoryAccessPattern::Sequential)
                 ..
-                let input_size = input_shape.iter().product::<usize>() * std::mem::size_of::<f32>();
+                let input_size = inputshape.iter().product::<usize>() * std::mem::size_of::<f32>();
                 let weight_size =
-                    weight_shape.iter().product::<usize>() * std::mem::size_of::<f32>();
+                    weightshape.iter().product::<usize>() * std::mem::size_of::<f32>();
                 // Output size calculation
-                let n = input_shape[0];
-                let c_out = weight_shape[0];
-                let h_out = input_shape[2]; // Simplified
-                let w_out = input_shape[3]; // Simplified
+                let n = inputshape[0];
+                let c_out = weightshape[0];
+                let h_out = inputshape[2]; // Simplified
+                let w_out = inputshape[3]; // Simplified
                 let output_size = n * c_out * h_out * w_out * std::mem::size_of::<f32>();
                 let min_mem = input_size + weight_size + output_size;
                 let optimal_mem = min_mem + input_size; // For im2col buffer
@@ -873,9 +873,9 @@ impl JITCompiler {
     /// Estimate performance characteristics
     fn estimate_performance(&self, operation: &JITOperation) -> Result<PerformanceHints> {
         let (flops, memory_bytes, vectorization_factor, parallelization_level) = match operation {
-                let m = a_shape[0];
-                let k = a_shape[1];
-                let n = b_shape[1];
+                let m = ashape[0];
+                let k = ashape[1];
+                let n = bshape[1];
                 let flops = 2 * m * k * n; // 2 operations per multiply-add
                 let memory_bytes = (m * k + k * n + m * n) * std::mem::size_of::<usize>();
                 (flops as u64, memory_bytes, 8, 4) // AVX can process 8 floats, good parallelization
@@ -883,14 +883,14 @@ impl JITCompiler {
                 let flops = elements; // 1 operation per element
                 let memory_bytes = elements * shapes.len() * std::mem::size_of::<usize>();
                 (flops as u64, memory_bytes, 8, 8) // Highly parallel
-                let c_in = input_shape[1];
-                let h_in = input_shape[2];
-                let w_in = input_shape[3];
-                let kh = weight_shape[2];
-                let kw = weight_shape[3];
+                let c_in = inputshape[1];
+                let h_in = inputshape[2];
+                let w_in = inputshape[3];
+                let kh = weightshape[2];
+                let kw = weightshape[3];
                 let flops = n * c_out * h_in * w_in * c_in * kh * kw * 2; // Approximate
-                let memory_bytes = (input_shape.iter().product::<usize>()
-                    + weight_shape.iter().product::<usize>())
+                let memory_bytes = (inputshape.iter().product::<usize>()
+                    + weightshape.iter().product::<usize>())
                     * std::mem::size_of::<usize>();
                 (flops as u64, memory_bytes, 4, 4) // Moderate vectorization and parallelization
                 (1000, 1024, 1, 1) // Conservative estimates
@@ -915,29 +915,29 @@ impl JITCompiler {
     fn execute_kernel_native<F: Float + Debug + 'static>(
         // Execute using compiled function if available
         if let Some(ref compiled_fn) = kernel.compiled_fn {
-            return self.execute_compiled_function(compiled_fn, inputs, output_shape);
+            return self.execute_compiled_function(compiled_fn, inputs, outputshape);
         // Fallback to optimized SIMD implementations
-        self.execute_optimized_fallback(inputs, output_shape)
+        self.execute_optimized_fallback(inputs, outputshape)
     /// Execute compiled native function
     fn execute_compiled_function<F: Float + Debug + 'static>(
         compiled_fn: &CompiledFunction,
         match compiled_fn {
             CompiledFunction::ElementWise(kernel) => {
-                self.execute_elementwise_kernel(kernel, inputs, output_shape)
+                self.execute_elementwise_kernel(kernel, inputs, outputshape)
             CompiledFunction::MatMul(kernel) => {
-                self.execute_matmul_kernel(kernel, inputs, output_shape)
+                self.execute_matmul_kernel(kernel, inputs, outputshape)
             CompiledFunction::Convolution(kernel) => {
-                self.execute_convolution_kernel(kernel, inputs, output_shape)
+                self.execute_convolution_kernel(kernel, inputs, outputshape)
             CompiledFunction::Activation(kernel) => {
-                self.execute_activation_kernel(kernel, inputs, output_shape)
+                self.execute_activation_kernel(kernel, inputs, outputshape)
             CompiledFunction::Fused(kernel) => {
-                self.execute_fused_kernel(kernel, inputs, output_shape)
+                self.execute_fused_kernel(kernel, inputs, outputshape)
     /// Execute element-wise operation kernel with SIMD optimization
     fn execute_elementwise_kernel<F: Float + Debug + 'static>(
         kernel: &ElementWiseKernel,
         if inputs.len() < 1 || inputs.len() > 2 {
                 "Element-wise operations support 1-2 inputs".to_string(),
-        let mut output = Array::zeros(output_shape).into_dyn();
+        let mut output = Array::zeros(outputshape).into_dyn();
         // Use f32 optimized path for best performance
         if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f32>() {
             self.execute_elementwise_f32(&kernel.operation, inputs, &mut output)
@@ -967,10 +967,10 @@ impl JITCompiler {
     fn execute_fused_kernel<F: Float + Debug + 'static>(
         kernel: &FusedKernel,
         match kernel.fusion_strategy {
-            FusionStrategy::Vertical => self.execute_vertical_fusion(kernel, inputs, output_shape),
-                self.execute_horizontal_fusion(kernel, inputs, output_shape)
+            FusionStrategy::Vertical => self.execute_vertical_fusion(kernel, inputs, outputshape),
+                self.execute_horizontal_fusion(kernel, inputs, outputshape)
                 // Fallback to sequential execution
-                self.execute_sequential_fusion(kernel, inputs, output_shape)
+                self.execute_sequential_fusion(kernel, inputs, outputshape)
     /// Optimized fallback implementation using scirs2-core
     fn execute_optimized_fallback<F: Float + Debug + 'static>(
         if inputs.len() == 2 {
@@ -1036,9 +1036,9 @@ impl JITCompiler {
                     input_count: shapes.len(),
                     use_simd: self.target_arch_supports_simd(),
                 Ok(CompiledFunction::ElementWise(kernel))
-                let m = if *transpose_a { a_shape[1] } else { a_shape[0] };
-                let k = if *transpose_a { a_shape[0] } else { a_shape[1] };
-                let n = if *transpose_b { b_shape[0] } else { b_shape[1] };
+                let m = if *transpose_a { ashape[1] } else { ashape[0] };
+                let k = if *transpose_a { ashape[0] } else { ashape[1] };
+                let n = if *transpose_b { bshape[0] } else { bshape[1] };
                 let kernel = MatMulKernel {
                     m,
                     k,
@@ -1048,11 +1048,11 @@ impl JITCompiler {
                     block_size: self.calculate_optimal_block_size(m, k, n),
                 Ok(CompiledFunction::MatMul(kernel))
                 let kernel = ConvolutionKernel {
-                    input_shape: input_shape.clone(),
-                    weight_shape: weight_shape.clone(),
+                    inputshape: inputshape.clone(),
+                    weightshape: weightshape.clone(),
                     stride: stride.clone(),
                     padding: padding.clone(),
-                    use_im2col: self.should_use_im2col(input_shape, weight_shape),
+                    use_im2col: self.should_use_im2col(inputshape, weightshape),
                 Ok(CompiledFunction::Convolution(kernel)), JITOperation::Activation { activation, .. } => {
                 let kernel = ActivationKernel {
                     activation: activation.clone(),
@@ -1076,13 +1076,13 @@ impl JITCompiler {
             TargetArchitecture::X86_64 { avx_level, .. } => match *avx_level {
                 512 => SimdLevel::AVX512,
                 2 => SimdLevel::AVX2,
-                1 => SimdLevel::AVX_ =>, SimdLevel::SSE,
+                1 => SimdLevel::AVX_ => SimdLevel::SSE,
             },
-            TargetArchitecture::ARM64 { neon: true, .. } => SimdLevel::NEON_ =>, SimdLevel::None,
+            TargetArchitecture::ARM64 { neon: true, .. } => SimdLevel::NEON_ => SimdLevel::None,
         let memory_optimization = match operation {
-            JITOperation::MatMul { .. } =>, MemoryOptimization::Blocking,
-            JITOperation::Convolution { .. } =>, MemoryOptimization::TileOptimized,
-            JITOperation::ElementWise { .. } => MemoryOptimization::Streaming_ =>, MemoryOptimization::None,
+            JITOperation::MatMul { .. } => MemoryOptimization::Blocking,
+            JITOperation::Convolution { .. } => MemoryOptimization::TileOptimized,
+            JITOperation::ElementWise { .. } => MemoryOptimization::Streaming_ => MemoryOptimization::None,
         let parallel_strategy = if self.codegen_settings.use_intrinsics {
             ParallelStrategy::Hybrid
             ParallelStrategy::Rayon
@@ -1107,12 +1107,12 @@ impl JITCompiler {
         block_size = (block_size / 8) * 8;
         block_size.max(8).min(max_dim / 4)
     /// Determine if im2col should be used for convolution
-    fn should_use_im2col(&self, input_shape: &[usize], weight_shape: &[usize]) -> bool {
-        if input_shape.len() < 4 || weight_shape.len() < 4 {
+    fn should_use_im2col(&self, inputshape: &[usize], weightshape: &[usize]) -> bool {
+        if inputshape.len() < 4 || weightshape.len() < 4 {
             return false;
-        let kh = weight_shape[2];
-        let kw = weight_shape[3];
-        let c_in = weight_shape[1];
+        let kh = weightshape[2];
+        let kw = weightshape[3];
+        let c_in = weightshape[1];
         // Use im2col for larger kernels or many input channels
         kh * kw * c_in > 64
     /// Determine if lookup table should be used for activation
@@ -1121,14 +1121,14 @@ impl JITCompiler {
                 self.codegen_settings.use_lookup_tables
     /// Calculate cache-friendly block sizes
     fn calculate_cache_blocks(&self, operation: &JITOperation) -> Vec<usize> {
-            JITOperation::MatMul { a_shape, .. } => {
+            JITOperation::MatMul { ashape, .. } => {
                 let block_size =
-                    self.calculate_optimal_block_size(a_shape[0], a_shape[1], a_shape[1]);
+                    self.calculate_optimal_block_size(ashape[0], ashape[1], ashape[1]);
                 vec![block_size, block_size]
-            JITOperation::Convolution { input_shape, .. } => {
-                if input_shape.len() >= 4 {
-                    let h = input_shape[2];
-                    let w = input_shape[3];
+            JITOperation::Convolution { inputshape, .. } => {
+                if inputshape.len() >= 4 {
+                    let h = inputshape[2];
+                    let w = inputshape[3];
                     vec![(h / 4).max(1), (w / 4).max(1)]
                     vec![1]
             _ => vec![1],
@@ -1185,20 +1185,20 @@ impl FusionOptimizer {
                 // Optimize element-wise operations for SIMD
                 Ok(JITOperation::ElementWise {
                     op: self.optimize_elementwise_op(op)?,
-                    shapes: self.optimize_shapes_for_simd(shapes),
+                    shapes: self.optimizeshapes_for_simd(shapes),
                 })
                 // Apply matrix multiplication optimizations
-                let (opt_a_shape, opt_b_shape, opt_transpose_a, opt_transpose_b) =
-                    self.optimize_matmul_layout(a_shape, b_shape, *transpose_a, *transpose_b)?;
+                let (opt_ashape, opt_bshape, opt_transpose_a, opt_transpose_b) =
+                    self.optimize_matmul_layout(ashape, bshape, *transpose_a, *transpose_b)?;
                 Ok(JITOperation::MatMul {
-                    a_shape: opt_a_shape,
-                    b_shape: opt_b_shape,
+                    ashape: opt_ashape,
+                    bshape: opt_bshape,
                     transpose_a: opt_transpose_a,
                     transpose_b: opt_transpose_b,
                 // Optimize convolution parameters
                 Ok(JITOperation::Convolution {
-                    input_shape: self.optimize_conv_input_layout(input_shape),
-                    weight_shape: self.optimize_conv_weight_layout(weight_shape),
+                    inputshape: self.optimize_conv_input_layout(inputshape),
+                    weightshape: self.optimize_conv_weight_layout(weightshape),
                     dilation: dilation.clone(, _ => Ok(operation.clone()),
     /// Reorder operations for better cache efficiency
     fn reorder_for_cache_efficiency(
@@ -1243,42 +1243,42 @@ impl FusionOptimizer {
                 Ok(ElementWiseOp::Custom(self.simplify_expression(expr)))
             _ => Ok(op.clone()),
     /// Optimize shapes for SIMD alignment
-    fn optimize_shapes_for_simd(&self, shapes: &[Vec<usize>]) -> Vec<Vec<usize>> {
+    fn optimizeshapes_for_simd(&self, shapes: &[Vec<usize>]) -> Vec<Vec<usize>> {
         shapes
             .iter()
             .map(|shape| {
-                let mut opt_shape = shape.clone();
-                if let Some(last) = opt_shape.last_mut() {
+                let mut optshape = shape.clone();
+                if let Some(last) = optshape.last_mut() {
                     // Pad to SIMD-friendly size (multiple of 8 for AVX)
                     *last = (*last + 7) / 8 * 8;
-                opt_shape
+                optshape
             .collect()
     /// Optimize matrix multiplication layout
     fn optimize_matmul_layout(
     ) -> Result<(Vec<usize>, Vec<usize>, bool, bool)> {
         // Heuristic: prefer column-major B matrix for better cache performance
-        let opt_transpose_b = if !transpose_b && b_shape[0] > b_shape[1] {
+        let opt_transpose_b = if !transpose_b && bshape[0] > bshape[1] {
             true
             transpose_b
         Ok((
-            a_shape.to_vec(),
-            b_shape.to_vec(),
+            ashape.to_vec(),
+            bshape.to_vec(),
             transpose_a,
             opt_transpose_b,
         ))
     /// Optimize convolution input layout
-    fn optimize_conv_input_layout(&self, input_shape: &[usize]) -> Vec<usize> {
-        let mut opt_shape = input_shape.to_vec();
+    fn optimize_conv_input_layout(&self, inputshape: &[usize]) -> Vec<usize> {
+        let mut optshape = inputshape.to_vec();
         // Ensure channel dimension is SIMD-friendly
-        if opt_shape.len() >= 2 {
-            opt_shape[1] = (opt_shape[1] + 7) / 8 * 8;
-        opt_shape
+        if optshape.len() >= 2 {
+            optshape[1] = (optshape[1] + 7) / 8 * 8;
+        optshape
     /// Optimize convolution weight layout
-    fn optimize_conv_weight_layout(&self, weight_shape: &[usize]) -> Vec<usize> {
-        let mut opt_shape = weight_shape.to_vec();
+    fn optimize_conv_weight_layout(&self, weightshape: &[usize]) -> Vec<usize> {
+        let mut optshape = weightshape.to_vec();
         // Ensure output channels are SIMD-friendly
-        if !opt_shape.is_empty() {
-            opt_shape[0] = (opt_shape[0] + 7) / 8 * 8;
+        if !optshape.is_empty() {
+            optshape[0] = (optshape[0] + 7) / 8 * 8;
     /// Simplify mathematical expressions
     fn simplify_expression(&self, expr: &str) -> String {
         // Basic expression simplification
@@ -1295,7 +1295,7 @@ impl FusionOptimizer {
                 return false;
             // Additional checks for fusion compatibility
             self.check_memory_compatibility(op1, op2)
-                && self.check_shape_compatibility(op1, op2)
+                && self.checkshape_compatibility(op1, op2)
                 && self.check_compute_intensity_compatibility(op1, op2)
             false
     /// Check memory access pattern compatibility
@@ -1308,9 +1308,9 @@ impl FusionOptimizer {
             (MemoryAccessPattern::Blocked, MemoryAccessPattern::Blocked) => true,
             (MemoryAccessPattern::Sequential, MemoryAccessPattern::Strided) => true,
     /// Check shape compatibility for fusion
-    fn check_shape_compatibility(&self, op1: &JITOperation, op2: &JITOperation) -> bool {
-        let shapes1 = self.get_operation_shapes(op1);
-        let shapes2 = self.get_operation_shapes(op2);
+    fn checkshape_compatibility(&self, op1: &JITOperation, op2: &JITOperation) -> bool {
+        let shapes1 = self.get_operationshapes(op1);
+        let shapes2 = self.get_operationshapes(op2);
         // Must have compatible output/input shapes
         if shapes1.is_empty() || shapes2.is_empty() {
         // Check if output of op1 can be input to op2
@@ -1327,30 +1327,30 @@ impl FusionOptimizer {
         ratio < 10.0 // Allow up to 10x difference
     /// Get memory access pattern for operation
     fn get_memory_access_pattern(&self, operation: &JITOperation) -> MemoryAccessPattern {
-            JITOperation::ElementWise { .. } =>, MemoryAccessPattern::Sequential,
-            JITOperation::MatMul { .. } =>, MemoryAccessPattern::Blocked,
-            JITOperation::Convolution { .. } =>, MemoryAccessPattern::Strided,
-            JITOperation::Activation { .. } => MemoryAccessPattern::Sequential_ =>, MemoryAccessPattern::Random,
+            JITOperation::ElementWise { .. } => MemoryAccessPattern::Sequential,
+            JITOperation::MatMul { .. } => MemoryAccessPattern::Blocked,
+            JITOperation::Convolution { .. } => MemoryAccessPattern::Strided,
+            JITOperation::Activation { .. } => MemoryAccessPattern::Sequential_ => MemoryAccessPattern::Random,
     /// Get shapes involved in operation
-    fn get_operation_shapes(&self, operation: &JITOperation) -> Vec<Vec<usize>> {
+    fn get_operationshapes(&self, operation: &JITOperation) -> Vec<Vec<usize>> {
             JITOperation::ElementWise { shapes, .. } => shapes.clone(),
-                vec![a_shape.clone(), b_shape.clone()]
-                vec![input_shape.clone(), weight_shape.clone()]
-            JITOperation::Activation { input_shape, .. } => {
-                vec![input_shape.clone()]
+                vec![ashape.clone(), bshape.clone()]
+                vec![inputshape.clone(), weightshape.clone()]
+            JITOperation::Activation { inputshape, .. } => {
+                vec![inputshape.clone()]
             _ => Vec::new(),
     /// Estimate compute intensity (FLOPS per byte)
     fn estimate_compute_intensity(&self, operation: &JITOperation) -> f64 {
             JITOperation::ElementWise { .. } => 0.25, // 1 op per 4 bytes
-                let m = a_shape[0] as f64;
-                let k = a_shape[1] as f64;
-                let n = b_shape[1] as f64;
+                let m = ashape[0] as f64;
+                let k = ashape[1] as f64;
+                let n = bshape[1] as f64;
                 let flops = 2.0 * m * k * n;
                 let bytes = (m * k + k * n + m * n) * 4.0; // f32
                 flops / bytes
-                if input_shape.len() >= 4 && weight_shape.len() >= 4 {
-                    let input_size = input_shape.iter().product::<usize>() as f64;
-                    let weight_size = weight_shape.iter().product::<usize>() as f64;
+                if inputshape.len() >= 4 && weightshape.len() >= 4 {
+                    let input_size = inputshape.iter().product::<usize>() as f64;
+                    let weight_size = weightshape.iter().product::<usize>() as f64;
                     let flops = input_size * weight_size.sqrt(); // Approximation
                     let bytes = (input_size + weight_size) * 4.0;
                     flops / bytes
@@ -1375,10 +1375,10 @@ impl FusionOptimizer {
     /// Get estimated memory savings for fusion
     pub fn get_fusion_memory_savings(&self, op1: &JITOperation, op2: &JITOperation) -> usize {
             // Calculate intermediate buffer size that would be saved
-            let shapes1 = self.get_operation_shapes(op1);
-            if let Some(output_shape) = shapes1.last() {
+            let shapes1 = self.get_operationshapes(op1);
+            if let Some(outputshape) = shapes1.last() {
                 let intermediate_size =
-                    output_shape.iter().product::<usize>() * std::mem::size_of::<f32>();
+                    outputshape.iter().product::<usize>() * std::mem::size_of::<f32>();
                 rule.memory_savings + intermediate_size
                 rule.memory_savings
     /// Execute f32 element-wise operations with SIMD optimization
@@ -1583,12 +1583,12 @@ impl FusionOptimizer {
         let mut current_output = inputs[0].to_owned();
         for op in &kernel.operations {
             let temp_inputs = vec![&current_output];
-            let temp_shape = current_output.shape().to_vec();
-            current_output = self.execute_compiled_function(op, &temp_inputs, &temp_shape)?;
+            let tempshape = current_output.shape().to_vec();
+            current_output = self.execute_compiled_function(op, &temp_inputs, &tempshape)?;
         // Reshape to target output if needed
-        if current_output.shape() != output_shape {
+        if current_output.shape() != outputshape {
             current_output = current_output
-                .into_shape(output_shape)
+                .intoshape(outputshape)
                 .map_err(|e| NeuralError::ComputationError(format!("Shape error: {}", e)))?;
         Ok(current_output)
     /// Execute horizontal fusion (parallel operations)
@@ -1602,12 +1602,12 @@ impl FusionOptimizer {
                 let op_inputs = if i < inputs.len() {
                     vec![inputs[i]]
                     vec![inputs[0]]
-                let temp_shape = op_inputs[0].shape().to_vec();
-                self.execute_compiled_function(op, &op_inputs, &temp_shape)
+                let tempshape = op_inputs[0].shape().to_vec();
+                self.execute_compiled_function(op, &op_inputs, &tempshape)
             .collect();
         let results = results?;
         if results.is_empty() {
-            return Ok(Array::zeros(output_shape).into_dyn());
+            return Ok(Array::zeros(outputshape).into_dyn());
         // Combine results by element-wise addition
         let mut combined = results[0].clone();
         for result in results.iter().skip(1) {
@@ -1617,7 +1617,7 @@ impl FusionOptimizer {
     /// Execute sequential fusion (fallback)
     fn execute_sequential_fusion<F: Float + Debug + 'static>(
         // Sequential execution of fused operations
-        self.execute_vertical_fusion(kernel, inputs, output_shape)
+        self.execute_vertical_fusion(kernel, inputs, outputshape)
 /// Represents a fusion opportunity between operations
 pub struct FusionOpportunity {
     /// Index of first operation
@@ -1664,8 +1664,8 @@ mod tests {
     fn test_matrix_multiplication_compilation() {
         let target_arch = TargetArchitecture::Generic;
         let operation = JITOperation::MatMul {
-            a_shape: vec![16, 32],
-            b_shape: vec![32, 64],
+            ashape: vec![16, 32],
+            bshape: vec![32, 64],
             transpose_a: false,
             transpose_b: false,
         let result = compiler.compile_operation(&operation);
@@ -1680,8 +1680,8 @@ mod tests {
         assert!(kernel.code.contains("elementwise"));
     fn test_convolution_compilation() {
         let operation = JITOperation::Convolution {
-            input_shape: vec![1, 3, 224, 224],
-            weight_shape: vec![64, 3, 7, 7],
+            inputshape: vec![1, 3, 224, 224],
+            weightshape: vec![64, 3, 7, 7],
             stride: vec![2, 2],
             padding: vec![3, 3],
             dilation: vec![1, 1],
@@ -1689,7 +1689,7 @@ mod tests {
     fn test_activation_compilation() {
         let operation = JITOperation::Activation {
             activation: ActivationType::ReLU,
-            input_shape: vec![32, 128, 56, 56],
+            inputshape: vec![32, 128, 56, 56],
         assert!(kernel.code.contains("activation"));
     fn test_cache_functionality() {
             op: ElementWiseOp::Mul,
@@ -1707,8 +1707,8 @@ mod tests {
         let op2 = JITOperation::ElementWise {
         assert!(optimizer.can_fuse(&op1, &op2));
     fn test_memory_requirements_analysis() {
-            a_shape: vec![100, 200],
-            b_shape: vec![200, 300],
+            ashape: vec![100, 200],
+            bshape: vec![200, 300],
         let requirements = compiler.analyze_memory_requirements(&operation);
         assert!(requirements.is_ok());
         let mem_req = requirements.unwrap();

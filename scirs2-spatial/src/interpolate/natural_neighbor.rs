@@ -89,7 +89,7 @@ impl fmt::Debug for NaturalNeighborInterpolator {
         f.debug_struct("NaturalNeighborInterpolator")
             .field("dim", &self.dim)
             .field("n_points", &self.n_points)
-            .field("points_shape", &self.points.shape())
+            .field("pointsshape", &self.points.shape())
             .field("values_len", &self.values.len())
             .finish()
     }

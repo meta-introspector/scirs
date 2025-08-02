@@ -135,11 +135,11 @@ impl<F: Float + Debug + Display> FeatureImportance<F> {
         let mut result = String::with_capacity(features.len() * 80);
 
         // Add title if provided
-        if let Some(title_text) = title {
+        if let Some(titletext) = title {
             if color_options.enabled {
-                result.push_str(&stylize(title_text, Style::Bold));
+                result.push_str(&stylize(titletext, Style::Bold));
             } else {
-                result.push_str(title_text);
+                result.push_str(titletext);
             }
             result.push_str("\n\n");
         }

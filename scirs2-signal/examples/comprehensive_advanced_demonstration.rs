@@ -1,17 +1,17 @@
-//! Comprehensive Advanced Mode Demonstration
-//!
-//! This example showcases the complete Advanced validation suite for scirs2-signal,
-//! demonstrating all the enhanced validation capabilities implemented:
-//!
-//! 1. Advanced-comprehensive validation suite
-//! 2. Enhanced multitaper spectral estimation validation
-//! 3. Comprehensive Lomb-Scargle periodogram testing
-//! 4. Parametric spectral estimation validation (AR, ARMA)
-//! 5. 2D wavelet transform validation and refinement
-//! 6. Wavelet packet transform validation
-//! 7. SIMD and parallel processing validation
-//! 8. Numerical precision and stability testing
-//! 9. Performance benchmarking and scaling analysis
+// Comprehensive Advanced Mode Demonstration
+//
+// This example showcases the complete Advanced validation suite for scirs2-signal,
+// demonstrating all the enhanced validation capabilities implemented:
+//
+// 1. Advanced-comprehensive validation suite
+// 2. Enhanced multitaper spectral estimation validation
+// 3. Comprehensive Lomb-Scargle periodogram testing
+// 4. Parametric spectral estimation validation (AR, ARMA)
+// 5. 2D wavelet transform validation and refinement
+// 6. Wavelet packet transform validation
+// 7. SIMD and parallel processing validation
+// 8. Numerical precision and stability testing
+// 9. Performance benchmarking and scaling analysis
 
 use std::time::Instant;
 

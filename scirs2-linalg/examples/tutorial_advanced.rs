@@ -145,9 +145,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let d_v = 8;
 
     // Create random Q, K, V matrices
-    let query = Array3::from_shape_fn((batch_size, seq_len, d_k), |_| rand::random::<f32>());
-    let key = Array3::from_shape_fn((batch_size, seq_len, d_k), |_| rand::random::<f32>());
-    let value = Array3::from_shape_fn((batch_size, seq_len, d_v), |_| rand::random::<f32>());
+    let query = Array3::fromshape_fn((batch_size, seq_len, d_k), |_| rand::random::<f32>());
+    let key = Array3::fromshape_fn((batch_size, seq_len, d_k), |_| rand::random::<f32>());
+    let value = Array3::fromshape_fn((batch_size, seq_len, d_v), |_| rand::random::<f32>());
 
     // Scaled dot-product attention
     let scale = 1.0 / (d_k as f32).sqrt();

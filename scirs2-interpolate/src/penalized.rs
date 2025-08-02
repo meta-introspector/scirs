@@ -341,7 +341,7 @@ where
     ///
     /// A square penalty matrix of size n × n
     fn create_penalty_matrix(
-        n: usize_degree: usize,
+        n: usize, degree: usize,
         penalty_type: PenaltyType,
     ) -> InterpolateResult<Array2<T>> {
         let mut penalty = Array2::zeros((n, n));

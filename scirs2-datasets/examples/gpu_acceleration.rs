@@ -490,7 +490,8 @@ fn demonstrate_batch_processing() -> Result<(), Box<dyn std::error::Error>> {
             "regression" => {
                 make_regression_auto_gpu(samples, features, features / 2, 0.1, Some(42))?
             }
-            "clustering" => make_blobs_auto_gpu(samples, features, 8, 1.0, Some(42))?_ => unreachable!(),
+            "clustering" => make_blobs_auto_gpu(samples, features, 8, 1.0, Some(42))?,
+            _ => unreachable!(),
         };
 
         let duration = start.elapsed();

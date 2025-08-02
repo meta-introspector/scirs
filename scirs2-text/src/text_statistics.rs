@@ -470,7 +470,7 @@ mod tests {
     }
 
     #[test]
-    fn test_empty_text() {
+    fn test_emptytext() {
         let stats = TextStatistics::new();
 
         assert_eq!(stats.word_count("").unwrap(), 0);

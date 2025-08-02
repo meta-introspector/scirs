@@ -1,13 +1,13 @@
-//! Advanced-Enhanced Controllability and Observability Analysis
-//!
-//! This module provides cutting-edge controllability and observability analysis with:
-//! - Quantum-inspired subspace identification
-//! - Neuromorphic-hybrid sensitivity analysis
-//! - Advanced-high-resolution numerical robustness assessment
-//! - Advanced geometric analysis of reachable/observable sets
-//! - Real-time controllability/observability monitoring
-//! - SIMD-accelerated gramian computations
-//! - Multi-scale temporal controllability analysis
+// Advanced-Enhanced Controllability and Observability Analysis
+//
+// This module provides cutting-edge controllability and observability analysis with:
+// - Quantum-inspired subspace identification
+// - Neuromorphic-hybrid sensitivity analysis
+// - Advanced-high-resolution numerical robustness assessment
+// - Advanced geometric analysis of reachable/observable sets
+// - Real-time controllability/observability monitoring
+// - SIMD-accelerated gramian computations
+// - Multi-scale temporal controllability analysis
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::analysis::KalmanDecomposition;
@@ -18,7 +18,7 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
 
 #[allow(unused_imports)]
-use crate::lti::robust__analysis::{
+use crate::lti::robust_analysis::{
     EnhancedControllabilityAnalysis, EnhancedObservabilityAnalysis, RobustAnalysisConfig,
 };
 /// Advanced-enhanced controllability and observability analysis result
@@ -1685,7 +1685,7 @@ fn setup_real_time_monitoring(
         adaptive_thresholds: AdaptiveThresholds {
             adaptation_rules: vec!["Exponential".to_string(), "Linear".to_string()],
             adaptation_rates: Array1::from_vec(vec![0.01, 0.001]),
-            threshold_bounds: Array2::from_shape_vec((2, 2), vec![0.001, 0.1, 0.0005, 0.05])
+            threshold_bounds: Array2::fromshape_vec((2, 2), vec![0.001, 0.1, 0.0005, 0.05])
                 .unwrap(),
             performance_metrics: Array1::ones(2) * 0.95,
         },

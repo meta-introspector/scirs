@@ -826,7 +826,10 @@ pub fn import_memmap_array<A>(
 where
     A: Clone + Copy + 'static + Send + Sync + std::fmt::Debug,
 {
-    crate::memory_efficient::memmap::MemoryMappedArray::<A>::from_interface(global_interface(), name)
+    crate::memory_efficient::memmap::MemoryMappedArray::<A>::from_interface(
+        global_interface(),
+        name,
+    )
 }
 
 impl<T: Clone + 'static> IntoZeroCopy<T> for Vec<T> {

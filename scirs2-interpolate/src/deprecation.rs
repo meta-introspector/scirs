@@ -331,7 +331,7 @@ pub mod convenience {
     pub fn warn_matrix_conditioning(_condition_number: f64, context: &str) {
         if _condition_number > 1e14 {
             eprintln!(
-                "NUMERICAL WARNING: Poor matrix conditioning (condition _number: {condition_number:.2e}) in {context}. \
+                "NUMERICAL WARNING: Poor matrix conditioning (condition , number: {condition_number:.2e}) in {context}. \
                 Consider regularization or data preprocessing."
             );
         }

@@ -15,16 +15,16 @@ fn main() -> Result<()> {
     let src_vocab_size = 10000; // Source language vocabulary size
     let tgt_vocab_size = 8000; // Target language vocabulary size
     // Create random input sequences (batch_size=2, sequence_length=10)
-    let input_shape = [2, 10];
-    let mut input_seq = Array::<f32>::zeros(input_shape).into_dyn();
+    let inputshape = [2, 10];
+    let mut input_seq = Array::<f32>::zeros(inputshape).into_dyn();
     // Fill with random token IDs (between 0 and src_vocab_size-1)
     let mut rng = rand::rng();
     for elem in input_seq.iter_mut() {
         *elem = (rng.gen_range(0.0..1.0) * (src_vocab_size as f32 - 1.0)).floor();
     }
     // Create random target sequences for teacher forcing (batch_size=2..sequence_length=8)
-    let target_shape = [2, 8];
-    let mut target_seq = Array::<f32>::zeros(target_shape).into_dyn();
+    let targetshape = [2, 8];
+    let mut target_seq = Array::<f32>::zeros(targetshape).into_dyn();
     // Fill with random token IDs (between 0 and tgt_vocab_size-1)
     for elem in target_seq.iter_mut() {
         *elem = (rng.gen_range(0.0..1.0) * (tgt_vocab_size as f32 - 1.0)).floor();

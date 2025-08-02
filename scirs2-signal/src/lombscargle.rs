@@ -1,7 +1,7 @@
-//! Lomb-Scargle periodogram implementation for unevenly sampled data.
-//!
-//! This module provides functions for spectral analysis of unevenly sampled signals
-//! using the Lomb-Scargle periodogram technique.
+// Lomb-Scargle periodogram implementation for unevenly sampled data.
+//
+// This module provides functions for spectral analysis of unevenly sampled signals
+// using the Lomb-Scargle periodogram technique.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
@@ -34,7 +34,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::lombscargle::{lombscargle, AutoFreqMethod};
+/// use scirs2_signal::lombscargle::{lombscargle, AutoFreqMethod};
 /// use ndarray::Array1;
 /// use std::f64::consts::PI;
 /// use rand::prelude::*;
@@ -190,12 +190,12 @@ where
     }
 
     // Check for reasonable signal variance
-    let signal_mean = y_f64.iter().sum::<f64>() / y_f64.len()  as f64;
+    let signal_mean = y_f64.iter().sum::<f64>() / y_f64.len() as f64;
     let signal_variance = y_f64
         .iter()
         .map(|&val| (val - signal_mean).powi(2))
         .sum::<f64>()
-        / y_f64.len()  as f64;
+        / y_f64.len() as f64;
 
     if signal_variance == 0.0 {
         eprintln!("Warning: Signal has zero variance (constant signal). Periodogram will be uninformative.");
@@ -332,7 +332,7 @@ where
     }
 
     // Statistical validation
-    let pgram_mean = pgram_vec.iter().sum::<f64>() / pgram_vec.len()  as f64;
+    let pgram_mean = pgram_vec.iter().sum::<f64>() / pgram_vec.len() as f64;
     let pgram_max = pgram_vec.iter().cloned().fold(0.0, f64::max);
     let pgram_min = pgram_vec.iter().cloned().fold(f64::INFINITY, f64::min);
 
@@ -526,7 +526,7 @@ fn _lombscargle_impl(
 
     // Center the _data if requested
     let (y_centered_y_mean) = if center_data {
-        let _mean = y.sum() / n_samples  as f64;
+        let _mean = y.sum() / n_samples as f64;
         (y - _mean, _mean)
     } else {
         (y.clone(), 0.0)
@@ -583,7 +583,7 @@ fn _lombscargle_impl(
                 if fit_mean {
                     // Include a constant offset (_mean) in the model
                     let y_dot_h = y_centered.iter().sum::<f64>();
-                    let h_dot_h = n_samples  as f64;
+                    let h_dot_h = n_samples as f64;
 
                     // Calculate YY = sum(y^2)
                     let yy = y_centered.iter().map(|&y| y * y).sum::<f64>();
@@ -603,7 +603,7 @@ fn _lombscargle_impl(
                 // Normalize by the model chi-squared (Baluev 2008)
                 if fit_mean {
                     let y_dot_h = y_centered.iter().sum::<f64>();
-                    let h_dot_h = n_samples  as f64;
+                    let h_dot_h = n_samples as f64;
 
                     // Calculate YY = sum(y^2)
                     let yy = y_centered.iter().map(|&y| y * y).sum::<f64>();
@@ -625,7 +625,7 @@ fn _lombscargle_impl(
                 // Return the logarithm of the standard normalization
                 let standard = if fit_mean {
                     let y_dot_h = y_centered.iter().sum::<f64>();
-                    let h_dot_h = n_samples  as f64;
+                    let h_dot_h = n_samples as f64;
 
                     // Calculate YY = sum(y^2)
                     let yy = y_centered.iter().map(|&y| y * y).sum::<f64>();
@@ -646,7 +646,7 @@ fn _lombscargle_impl(
                 // Normalize for a power spectral density (Horne & Baliunas 1986)
                 if fit_mean {
                     let y_dot_h = y_centered.iter().sum::<f64>();
-                    let h_dot_h = n_samples  as f64;
+                    let h_dot_h = n_samples as f64;
 
                     // Calculate YY = sum(y^2)
                     let yy = y_centered.iter().map(|&y| y * y).sum::<f64>();
@@ -850,7 +850,7 @@ pub fn find_peaks(
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_lombscargle_sine_wave() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

@@ -237,7 +237,7 @@ fn noisy_data_example() {
     .unwrap();
 
     // Evaluate at the outlier point
-    let outlier_point = Array2::from_shape_vec((1, 2), vec![0.0, 0.0]).unwrap();
+    let outlier_point = Array2::fromshape_vec((1, 2), vec![0.0, 0.0]).unwrap();
     let true_value = true_function(&outlier_point.view())[0];
 
     let exact_pred = tps_exact.evaluate(&outlier_point.view()).unwrap()[0];
@@ -259,7 +259,7 @@ fn noisy_data_example() {
 
     // Evaluate at some nearby points
     let nearby_points =
-        Array2::from_shape_vec((4, 2), vec![0.1, 0.1, 0.1, -0.1, -0.1, 0.1, -0.1, -0.1]).unwrap();
+        Array2::fromshape_vec((4, 2), vec![0.1, 0.1, 0.1, -0.1, -0.1, 0.1, -0.1, -0.1]).unwrap();
 
     let true_nearby = true_function(&nearby_points.view());
     let exact_nearby = tps_exact.evaluate(&nearby_points.view()).unwrap();

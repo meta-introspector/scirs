@@ -33,6 +33,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 chrono = { workspace = true }
 num_cpus = { workspace = true }
+approx = { workspace = true }
 # BLAS dependencies removed - using core abstractions
 # ndarray-linalg = { workspace = true }
 ndarray-rand = { workspace = true }

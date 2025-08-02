@@ -27,7 +27,7 @@
 //! };
 //!
 //! // Small scattered dataset for demonstration
-//! let points = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+//! let points = Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 //! let values = Array1::from_vec(vec![0.0, 1.0, 1.0, 2.0]);
 //! let config = ScatteredConfig::for_large_dataset();
 //!
@@ -382,7 +382,7 @@ where
         let n_points = points.nrows();
 
         // Calculate cell size
-        let cell_size = Array1::from_shape_fn(n_dims, |i| {
+        let cell_size = Array1::fromshape_fn(n_dims, |i| {
             (bounding_box.max[i] - bounding_box.min[i]) / F::from_usize(resolution).unwrap()
         });
 
@@ -394,10 +394,10 @@ where
             let cell_coords = Self::cell_index_to_coords(cell_idx, resolution, n_dims);
 
             // Compute cell bounds
-            let cell_min = Array1::from_shape_fn(n_dims, |i| {
+            let cell_min = Array1::fromshape_fn(n_dims, |i| {
                 bounding_box.min[i] + cell_size[i] * F::from_usize(cell_coords[i]).unwrap()
             });
-            let cell_max = Array1::from_shape_fn(n_dims, |i| cell_min[i] + cell_size[i]);
+            let cell_max = Array1::fromshape_fn(n_dims, |i| cell_min[i] + cell_size[i]);
 
             let cell_bounds = BoundingBox {
                 min: cell_min,
@@ -513,7 +513,7 @@ where
         if self.config.parallel && n_queries > 100 {
             let chunk_size = self.config.chunk_size.min(n_queries / 4).max(1);
 
-            let results_vec: Result<Vec<_>_> = query_points
+            let results_vec: Result<Vec<_>> = query_points
                 .axis_chunks_iter(Axis(0), chunk_size)
                 .enumerate()
                 .collect::<Vec<_>>()

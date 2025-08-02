@@ -1,9 +1,9 @@
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2};
+use ndarray::{ Array1, Array2};
 // use plotters::prelude::*;  // Plotters dependency not available
 use rand::rng;
-use rand__distr::{Distribution, Normal};
-use scirs2__signal::{kalman, SignalError, SignalResult};
+use rand_distr::{Distribution, Normal};
+use scirs2_signal::{kalman, SignalError, SignalResult};
 use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
@@ -117,9 +117,9 @@ fn basic_kalman_filtering() -> SignalResult<()> {
     // State is [position, velocity]
     // x(k+1) = F*x(k) + w(k)
     // z(k) = H*x(k) + v(k)
-    let f = Array2::from_shape_vec((2, 2), vec![1.0, 0.05, 0.0, 1.0])
+    let f = Array2::fromshape_vec((2, 2), vec![1.0, 0.05, 0.0, 1.0])
         .map_err(|e| SignalError::ValueError(e.to_string()))?;
-    let h = Array2::from_shape_vec((1, 2), vec![1.0, 0.0])
+    let h = Array2::fromshape_vec((1, 2), vec![1.0, 0.0])
         .map_err(|e| SignalError::ValueError(e.to_string()))?;
 
     // Initial state
@@ -203,12 +203,12 @@ fn extended_kalman_filtering() -> SignalResult<()> {
 
     // Jacobian of state transition function
     let f_jacobian = |x: &Array1<f64>| -> Array2<f64> {
-        Array2::from_shape_vec((2, 2), vec![1.0, dt, -dt * (x[0]).cos(), 1.0 - 0.1 * dt]).unwrap()
+        Array2::fromshape_vec((2, 2), vec![1.0, dt, -dt * (x[0]).cos(), 1.0 - 0.1 * dt]).unwrap()
     };
 
     // Jacobian of measurement function
     let h_jacobian = |x: &Array1<f64>| -> Array2<f64> {
-        Array2::from_shape_vec((1, 2), vec![2.0 * x[0], 0.0]).unwrap()
+        Array2::fromshape_vec((1, 2), vec![2.0 * x[0], 0.0]).unwrap()
     };
 
     // Generate true state trajectory

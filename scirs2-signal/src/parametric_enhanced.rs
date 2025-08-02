@@ -1,13 +1,14 @@
-//! Enhanced parametric spectral estimation with SIMD and parallel processing
-//!
-//! This module provides high-performance implementations of parametric spectral
-//! estimation methods using scirs2-core's acceleration capabilities.
+use ndarray::s;
+// Enhanced parametric spectral estimation with SIMD and parallel processing
+//
+// This module provides high-performance implementations of parametric spectral
+// estimation methods using scirs2-core's acceleration capabilities.
 
 use crate::error::{SignalError, SignalResult};
-use crate::parametric::{ARMethod, estimate_ar};
-use crate::parametric__arma::{ArmaMethod, estimate_arma};
-use ndarray::{Array1, Array2, Axis, s};
-use num__complex::Complex64;
+use crate::parametric::{estimate_ar, ARMethod};
+use crate::parametric_arma::{estimate_arma, ArmaMethod};
+use ndarray::{ Array1, Array2, Axis};
+use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
 use statrs::distribution::{ChiSquared, ContinuousCDF};
@@ -444,7 +445,9 @@ fn sequential_model_selection(
 #[allow(dead_code)]
 fn robust_parametric_estimation(
     signal: &Array1<f64>,
-    max_ar: usize, _max_ma: usize, _config: &ParametricConfig,
+    max_ar: usize,
+    _max_ma: usize,
+    _config: &ParametricConfig,
 ) -> SignalResult<OptimalModelResult> {
     // Identify and handle outliers using Median Absolute Deviation
     let signal_clean = robust_outlier_removal(signal)?;
@@ -633,7 +636,7 @@ fn robust_ar_order(_signal: &Array1<f64>, p: usize) -> SignalResult<RobustArResu
         })
         .collect();
 
-    let variance = final_residuals.iter().map(|r| r * r).sum::<f64>() / (n - p - 1)  as f64;
+    let variance = final_residuals.iter().map(|r| r * r).sum::<f64>() / (n - p - 1) as f64;
 
     // Information criteria
     let k = p + 1;
@@ -883,7 +886,8 @@ fn time_varying_parametric_estimation(
 #[allow(dead_code)]
 fn kalman_adaptive_ar_estimation(
     signal: &Array1<f64>,
-    ar_order: usize, _config: &ParametricConfig,
+    ar_order: usize,
+    _config: &ParametricConfig,
 ) -> SignalResult<OptimalModelResult> {
     let n = signal.len();
     let p = ar_order;
@@ -1089,7 +1093,7 @@ fn adaptive_window_size(_signal: &Array1<f64>, ar_order: usize) -> SignalResult<
         }
     }
 
-    let avg_autocorr = autocorr_sum / max_lag  as f64;
+    let avg_autocorr = autocorr_sum / max_lag as f64;
 
     // More autocorrelation means we need larger windows
     let window_factor = (avg_autocorr * 2.0).min(3.0).max(1.0);
@@ -1130,8 +1134,8 @@ fn assess_window_quality(_ar_result: &ArResult, window_data: &[f64]) -> f64 {
         residuals.push(window_data[i] - prediction);
     }
 
-    let residual_variance = residuals.iter().map(|r| r * r).sum::<f64>() / residuals.len()  as f64;
-    let signal_variance = window_data.iter().map(|x| x * x).sum::<f64>() / n  as f64;
+    let residual_variance = residuals.iter().map(|r| r * r).sum::<f64>() / residuals.len() as f64;
+    let signal_variance = window_data.iter().map(|x| x * x).sum::<f64>() / n as f64;
 
     let fit_score = if signal_variance > 1e-12 {
         (1.0 - residual_variance / signal_variance).max(0.0)
@@ -1196,7 +1200,7 @@ fn weighted_average(_values: &[f64], weights: &[f64]) -> f64 {
 
     let weight_sum: f64 = weights.iter().sum();
     if weight_sum < 1e-12 {
-        return _values.iter().sum::<f64>() / _values.len()  as f64;
+        return _values.iter().sum::<f64>() / _values.len() as f64;
     }
 
     _values
@@ -1226,7 +1230,7 @@ fn average_coefficients(_all_coeffs: &[Vec<f64>]) -> Vec<f64> {
     }
 
     for coeff in &mut avg_coeffs {
-        *coeff /= all_coeffs.len()  as f64;
+        *coeff /= all_coeffs.len() as f64;
     }
 
     avg_coeffs
@@ -1339,7 +1343,7 @@ fn compute_diagnostics(
     let residuals = compute_model_residuals(signal, result)?;
 
     // Residual variance
-    let residual_variance = residuals.iter().map(|r| r * r).sum::<f64>() / residuals.len()  as f64;
+    let residual_variance = residuals.iter().map(|r| r * r).sum::<f64>() / residuals.len() as f64;
 
     // Ljung-Box test for residual independence
     let max_lag = (residuals.len() / 4).min(20).max(1);
@@ -1394,7 +1398,7 @@ fn compute_model_residuals(
 /// Ljung-Box test for serial correlation
 #[allow(dead_code)]
 fn ljung_box_test(_residuals: &[f64], max_lag: usize) -> SignalResult<(f64, f64)> {
-    let n = _residuals.len()  as f64;
+    let n = _residuals.len() as f64;
 
     // Compute autocorrelations
     let autocorrs = compute_autocorrelation(_residuals, max_lag)?;
@@ -1429,12 +1433,12 @@ fn compute_autocorrelation(_data: &[f64], max_lag: usize) -> SignalResult<Vec<f6
     }
 
     // Center the _data
-    let mean = _data.iter().sum::<f64>() / n  as f64;
+    let mean = _data.iter().sum::<f64>() / n as f64;
     let centered: Vec<f64> = _data.iter().map(|x| x - mean).collect();
 
     // Compute autocorrelations
     let mut autocorrs = Vec::with_capacity(max_lag + 1);
-    let variance = centered.iter().map(|x| x * x).sum::<f64>() / n  as f64;
+    let variance = centered.iter().map(|x| x * x).sum::<f64>() / n as f64;
 
     for _lag in 0..=max_lag {
         let mut covariance = 0.0;
@@ -1443,7 +1447,7 @@ fn compute_autocorrelation(_data: &[f64], max_lag: usize) -> SignalResult<Vec<f6
         for i in 0..count {
             covariance += centered[i] * centered[i + _lag];
         }
-        covariance /= count  as f64;
+        covariance /= count as f64;
 
         autocorrs.push(covariance / variance.max(1e-12));
     }

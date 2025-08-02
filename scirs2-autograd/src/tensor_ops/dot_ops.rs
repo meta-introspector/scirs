@@ -97,12 +97,12 @@ fn batch_mat_mul_impl_slow<F: Float>(
         }
     }
 
-    let lhs_shape = lhs_.shape();
-    let rhs_shape = rhs_.shape();
+    let lhsshape = lhs_.shape();
+    let rhsshape = rhs_.shape();
     let (m, k, n) = (
-        lhs_shape[rank - 2],
-        lhs_shape[rank - 1],
-        rhs_shape[rank - 1],
+        lhsshape[rank - 2],
+        lhsshape[rank - 1],
+        rhsshape[rank - 1],
     );
 
     // common parameters for gemm
@@ -112,7 +112,7 @@ fn batch_mat_mul_impl_slow<F: Float>(
         let strides = c_.strides();
         (strides[rank - 2], strides[rank - 1])
     };
-    let num_batches: usize = lhs_shape[..rank - 2].iter().product();
+    let num_batches: usize = lhsshape[..rank - 2].iter().product();
     let lhs_batch_size = lhs_.len() / num_batches;
     let rhs_batch_size = rhs_.len() / num_batches;
     let c_batch_size = c_.len() / num_batches;
@@ -176,7 +176,7 @@ fn batch_mat_mul_requires_copy(_stride: &[ndarray::Ixs]) -> bool {
 }
 
 #[allow(dead_code)]
-fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> String {
+fn dotshape_error(m: usize, k: usize, k2: usize, n: usize) -> String {
     match m.checked_mul(n) {
         Some(len) if len <= isize::MAX as usize => {}
         _ => {
@@ -200,7 +200,7 @@ pub struct BatchMatMul {
     pub transpose_b: bool,
 }
 
-impl<T: Float>, op::Op<T> for MatMul {
+impl<T: Float> op::Op<T> for MatMul {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         // Check if we have enough inputs
         let inputs = ctx.inputs();
@@ -297,7 +297,7 @@ impl<T: Float>, op::Op<T> for MatMul {
         // Check dimensions
         let ((m, k), (k2, n)) = (a_final.dim(), b_final.dim());
         if k != k2 || m.checked_mul(n).is_none() {
-            return Err(op::OpError::IncompatibleShape(dot_shape_error(m, k, k2, n)));
+            return Err(op::OpError::IncompatibleShape(dotshape_error(m, k, k2, n)));
         }
 
         // Determine if output should be column-major (F-order) based on input strides
@@ -310,7 +310,7 @@ impl<T: Float>, op::Op<T> for MatMul {
         let mut c;
         unsafe {
             v.set_len(m * n);
-            c = ndarray::Array::from_shape_vec_unchecked((m, n).set_f(column_major), v);
+            c = ndarray::Array::fromshape_vec_unchecked((m, n).set_f(column_major), v);
         }
 
         // Perform matrix multiplication
@@ -346,7 +346,7 @@ impl<T: Float>, op::Op<T> for MatMul {
     }
 }
 
-impl<T: Float>, op::Op<T> for BatchMatMul {
+impl<T: Float> op::Op<T> for BatchMatMul {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let mut x0 = ctx.input(0);
         let mut x1 = ctx.input(1);
@@ -380,20 +380,20 @@ impl<T: Float>, op::Op<T> for BatchMatMul {
             )));
         }
 
-        let ret_shape = {
+        let retshape = {
             let mut ret = shape0.to_vec();
             ret[rank0 - 2] = shape0[rank0 - 2];
             ret[rank0 - 1] = shape1[rank0 - 1];
             ret
         };
         // A is Copy so this is safe
-        let size: usize = ret_shape.iter().product();
+        let size: usize = retshape.iter().product();
         let mut v = Vec::with_capacity(size);
         let mut c;
         unsafe {
             v.set_len(size);
             // BatchMatMul's ret val is a c-order array.
-            c = ndarray::Array::from_shape_vec_unchecked(ret_shape, v);
+            c = ndarray::Array::fromshape_vec_unchecked(retshape, v);
         }
         batch_mat_mul_impl_slow(T::one(), &x0, &x1, T::zero(), &mut c.view_mut());
 
@@ -459,7 +459,7 @@ fn tensordot_preprocess<T: Float>(
     }
 
     // make new shape
-    let new_shape = if flip {
+    let newshape = if flip {
         vec![
             T::from(prod_axes_dims).unwrap(),
             T::from(prod_free_dims).unwrap(),
@@ -471,25 +471,25 @@ fn tensordot_preprocess<T: Float>(
         ]
     };
 
-    (perm, new_shape, free_dims)
+    (perm, newshape, free_dims)
 }
 
-impl<T: Float>, op::Op<T> for TensordotPreprocess {
+impl<T: Float> op::Op<T> for TensordotPreprocess {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x0 = ctx.input(0);
         let x1 = &ctx.input(1);
         let axes0 = crate::ndarray_ext::normalize_negative_axes(&ctx.input(2), x0.ndim());
         let axes1 = crate::ndarray_ext::normalize_negative_axes(&ctx.input(3), x1.ndim());
 
-        let (perm0, new_shape0, mut free_dims0) = tensordot_preprocess(x0.shape(), &axes0, false);
-        let (perm1, new_shape1, free_dims1) = tensordot_preprocess(x1.shape(), &axes1, true);
+        let (perm0, newshape0, mut free_dims0) = tensordot_preprocess(x0.shape(), &axes0, false);
+        let (perm1, newshape1, free_dims1) = tensordot_preprocess(x1.shape(), &axes1, true);
         free_dims0.extend(free_dims1);
 
-        let r0 = NdArray::from_shape_vec(ndarray::IxDyn(&[free_dims0.len()]), free_dims0).unwrap();
-        let r1 = NdArray::from_shape_vec(ndarray::IxDyn(&[perm0.len()]), perm0).unwrap();
-        let r2 = NdArray::from_shape_vec(ndarray::IxDyn(&[perm1.len()]), perm1).unwrap();
-        let r3 = NdArray::from_shape_vec(ndarray::IxDyn(&[new_shape0.len()]), new_shape0).unwrap();
-        let r4 = NdArray::from_shape_vec(ndarray::IxDyn(&[new_shape1.len()]), new_shape1).unwrap();
+        let r0 = NdArray::fromshape_vec(ndarray::IxDyn(&[free_dims0.len()]), free_dims0).unwrap();
+        let r1 = NdArray::fromshape_vec(ndarray::IxDyn(&[perm0.len()]), perm0).unwrap();
+        let r2 = NdArray::fromshape_vec(ndarray::IxDyn(&[perm1.len()]), perm1).unwrap();
+        let r3 = NdArray::fromshape_vec(ndarray::IxDyn(&[newshape0.len()]), newshape0).unwrap();
+        let r4 = NdArray::fromshape_vec(ndarray::IxDyn(&[newshape1.len()]), newshape1).unwrap();
 
         ctx.append_output(r0);
         ctx.append_output(r1);

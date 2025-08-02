@@ -1078,7 +1078,7 @@ impl<N: Node> EmbeddingModel<N> {
     }
 
     /// Load embeddings from a file
-    pub fn load_from_file<P: AsRef<Path>>(_path: P) -> Result<EmbeddingModel<N>>
+    pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<EmbeddingModel<N>>
     where
         N: for<'de> Deserialize<'de>,
     {
@@ -1086,7 +1086,7 @@ impl<N: Node> EmbeddingModel<N> {
             .map_err(|e| GraphError::ComputationError(format!("Failed to open file: {e}")))?;
         let reader = BufReader::new(file);
 
-        let serializable_data: SerializableEmbeddingModel<N> = serde, _json::from_reader(reader)
+        let serializable_data: SerializableEmbeddingModel<N> = serde_json:::from_reader(reader)
             .map_err(|e| {
                 GraphError::ComputationError(format!("Failed to deserialize embeddings: {e}"))
             })?;
@@ -1122,7 +1122,7 @@ impl<N: Node> EmbeddingModel<N> {
     }
 
     /// Load embeddings from binary format
-    pub fn load_binary<P: AsRef<Path>>(_path: P) -> Result<EmbeddingModel<N>>
+    pub fn load_binary<P: AsRef<Path>>(path: P) -> Result<EmbeddingModel<N>>
     where
         N: for<'de> Deserialize<'de>,
     {
@@ -1174,7 +1174,7 @@ impl<N: Node> EmbeddingModel<N> {
     }
 
     /// Import embeddings from CSV format
-    pub fn import_csv<P: AsRef<Path>>(_path: P) -> Result<EmbeddingModel<String>> {
+    pub fn import_csv<P: AsRef<Path>>(path: P) -> Result<EmbeddingModel<String>> {
         let content = std::fs::read_to_string(_path)
             .map_err(|e| GraphError::ComputationError(format!("Failed to read CSV file: {e}")))?;
 

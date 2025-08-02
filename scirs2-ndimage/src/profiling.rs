@@ -28,7 +28,7 @@ pub struct OperationMetrics {
     pub duration: Duration,
     pub memory_allocated: usize,
     pub memory_deallocated: usize,
-    pub array_shape: Vec<usize>,
+    pub arrayshape: Vec<usize>,
     pub backend: Backend,
     pub thread_count: usize,
     pub timestamp: Instant,
@@ -41,7 +41,7 @@ impl Display for OperationMetrics {
             "{}: {:.3}ms, shape={:?}, backend={:?}, threads={}",
             self.name,
             self.duration.as_secs_f64() * 1000.0,
-            self.array_shape,
+            self.arrayshape,
             self.backend,
             self.thread_count
         )
@@ -319,7 +319,7 @@ fn generate_recommendations(
         // Check if there are large arrays that could benefit from GPU
         let large_arrays = metrics
             .iter()
-            .filter(|m| m.array_shape.iter().product::<usize>() > 1_000_000)
+            .filter(|m| m.arrayshape.iter().product::<usize>() > 1_000_000)
             .count();
 
         if large_arrays > 0 {
@@ -396,7 +396,7 @@ impl Drop for ProfilingScope {
             duration,
             memory_allocated,
             memory_deallocated: 0,
-            array_shape: self.shape.clone(),
+            arrayshape: self.shape.clone(),
             backend: self.backend,
             thread_count,
             timestamp: self.start,
@@ -775,7 +775,7 @@ impl OptimizationAdvisor {
         for (op_name, metrics) in op_groups {
             let avg_array_size: usize = metrics
                 .iter()
-                .map(|m| m.array_shape.iter().product::<usize>())
+                .map(|m| m.arrayshape.iter().product::<usize>())
                 .sum::<usize>()
                 / metrics.len().max(1);
 
@@ -812,7 +812,7 @@ impl OptimizationAdvisor {
 
         // Check for SIMD opportunities
         for metric in &self.metrics {
-            let array_size: usize = metric.array_shape.iter().product();
+            let array_size: usize = metric.arrayshape.iter().product();
 
             if array_size > 1000 && !metric.name.contains("simd") {
                 if self.hardware_info.simd_support.avx2 {
@@ -834,7 +834,7 @@ impl OptimizationAdvisor {
         let mut recommendations = Vec::new();
 
         for metric in &self.metrics {
-            let array_size: usize = metric.array_shape.iter().product();
+            let array_size: usize = metric.arrayshape.iter().product();
 
             // Check if operation is large enough to benefit from parallelization
             if array_size > 50_000 && metric.thread_count == 1 {
@@ -862,7 +862,7 @@ impl OptimizationAdvisor {
         }
 
         for metric in &self.metrics {
-            let array_size: usize = metric.array_shape.iter().product();
+            let array_size: usize = metric.arrayshape.iter().product();
 
             // GPU is beneficial for large arrays and compute-intensive operations
             if array_size > 1_000_000 && metric.backend == Backend::Cpu {
@@ -910,7 +910,7 @@ impl OptimizationAdvisor {
         match max_difficulty {
             1 => ImplementationDifficulty::Easy,
             2 => ImplementationDifficulty::Moderate,
-            3 => ImplementationDifficulty::Hard_ =>, ImplementationDifficulty::Expert,
+            3 => ImplementationDifficulty::Hard_ => ImplementationDifficulty::Expert,
         }
     }
 }
@@ -951,7 +951,7 @@ pub enum ImplementationDifficulty {
 impl HardwareInfo {
     fn detect() -> Self {
         Self {
-            cpu_cores: num, _cpus: get(),
+            cpu_cores: num_cpus::get(),
             simd_support: SimdSupport::detect(),
             gpu_available: cfg!(feature = "cuda") || cfg!(feature = "opencl"),
             total_memory: 16_000_000_000, // 16GB default

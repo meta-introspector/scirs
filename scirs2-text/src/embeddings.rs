@@ -16,7 +16,7 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use scirs2_text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
+//! use scirs2text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
 //!
 //! // Basic Word2Vec training
 //! let documents = vec![
@@ -56,7 +56,7 @@
 //! ### Custom Configuration
 //!
 //! ```rust
-//! use scirs2_text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
+//! use scirs2text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
 //!
 //! let config = Word2VecConfig {
 //!     algorithm: Word2VecAlgorithm::CBOW,
@@ -74,7 +74,7 @@
 //! ### Incremental Training
 //!
 //! ```rust
-//! # use scirs2_text::embeddings::{Word2Vec, Word2VecConfig};
+//! # use scirs2text::embeddings::{Word2Vec, Word2VecConfig};
 //! # let mut model = Word2Vec::new(Word2VecConfig::default());
 //! // Initial training
 //! let batch1 = vec!["first batch of documents"];
@@ -88,7 +88,7 @@
 //! ### Saving and Loading Models
 //!
 //! ```rust
-//! # use scirs2_text::embeddings::{Word2Vec, Word2VecConfig};
+//! # use scirs2text::embeddings::{Word2Vec, Word2VecConfig};
 //! # let mut model = Word2Vec::new(Word2VecConfig::default());
 //! // Save trained model
 //! model.save_to_file("my_model.w2v").expect("Failed to save model");
@@ -442,10 +442,10 @@ impl Word2Vec {
 
         // Initialize input and output embeddings with small random values
         let mut rng = rand::rng();
-        let input_embeddings = Array2::from_shape_fn((vocab_size, vector_size), |_| {
+        let input_embeddings = Array2::fromshape_fn((vocab_size, vector_size), |_| {
             (rng.random::<f64>() * 2.0 - 1.0) / vector_size as f64
         });
-        let output_embeddings = Array2::from_shape_fn((vocab_size, vector_size), |_| {
+        let output_embeddings = Array2::fromshape_fn((vocab_size, vector_size), |_| {
             (rng.random::<f64>() * 2.0 - 1.0) / vector_size as f64
         });
 
@@ -912,7 +912,7 @@ impl Word2Vec {
     }
 
     /// Load a Word2Vec model from a file
-    pub fn load<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path).map_err(|e| TextError::IoError(e.to_string()))?;
         let mut reader = BufReader::new(file);
 

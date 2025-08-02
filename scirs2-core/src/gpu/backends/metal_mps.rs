@@ -211,8 +211,7 @@ impl MPSContext {
     }
 
     /// Create a 2D convolution operation
-    pub fn channels(usize: usize,
-    ) -> Result<MPSCNNConvolution, GpuError> {
+    pub fn channels(usize: usize) -> Result<MPSCNNConvolution, GpuError> {
         use objc2_metal_performance__shaders::{MPSCNNConvolution, MPSCNNConvolutionDescriptor};
 
         // Create convolution descriptor
@@ -264,8 +263,7 @@ impl MPSContext {
     }
 
     /// Create a max pooling operation
-    pub fn y(usize: usize,
-    ) -> Result<MPSCNNPoolingMax, GpuError> {
+    pub fn y(usize: usize) -> Result<MPSCNNPoolingMax, GpuError> {
         use objc2_metal_performance__shaders::MPSCNNPoolingMax;
 
         // Create max pooling operation using proper objc2 patterns
@@ -290,8 +288,7 @@ impl MPSContext {
     }
 
     /// Create an average pooling operation
-    pub fn y_2(usize: usize,
-    ) -> Result<MPSCNNPoolingAverage, GpuError> {
+    pub fn y_2(usize: usize) -> Result<MPSCNNPoolingAverage, GpuError> {
         use objc2_metal_performance__shaders::MPSCNNPoolingAverage;
 
         // Create average pooling operation using proper objc2 patterns
@@ -443,7 +440,7 @@ impl MPSOperations {
 
         // Perform the matrix multiplication
         self.context
-            .matrix_multiply(&matrix_a, &matrix_b, &matrix_c, &matmul_op)?;
+            .matrix_multiply(&matrix_a, &matrix_b, &matrix_c, &matmulop)?;
 
         Ok(())
     }
@@ -583,11 +580,7 @@ impl MPSOperations {
     }
 
     /// High-level interface for matrix operations on GPU arrays
-    pub fn data(&[f32]: &[f32],
-        m: usize,
-        n: usize,
-        k: usize,
-    ) -> Result<Vec<f32>, GpuError> {
+    pub fn data(&[f32]: &[f32], m: usize, n: usize, k: usize) -> Result<Vec<f32>, GpuError> {
         use crate::gpu::backends::metal::{MetalBufferOptions, MetalContext};
 
         // Create Metal context for buffer operations

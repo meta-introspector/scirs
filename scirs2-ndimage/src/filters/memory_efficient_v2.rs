@@ -78,7 +78,7 @@ where
     // Process chunks
     let chunk_results = input_mmap.process_chunks(strategy.clone(), |chunk_data, chunk_idx| {
         // Create ArrayView from chunk data
-        let chunk_array = Array::from_shape_vec(chunk_data.len(), chunk_data.to_vec()).unwrap();
+        let chunk_array = Array::fromshape_vec(chunk_data.len(), chunk_data.to_vec()).unwrap();
 
         let chunk_view = chunk_array.view().into_dyn();
 
@@ -211,7 +211,7 @@ where
 /// Helper processor for Gaussian filter
 struct GaussianProcessorV2;
 
-impl<T: Float + Send + Sync, D: Dimension>, crate::chunked_v2::ChunkProcessorV2<T, D>
+impl<T: Float + Send + Sync, D: Dimension> crate::chunked_v2::ChunkProcessorV2<T, D>
     for GaussianProcessorV2
 {
     fn create_processor(
@@ -234,7 +234,7 @@ impl<T: Float + Send + Sync, D: Dimension>, crate::chunked_v2::ChunkProcessorV2<
 
 /// Check if separable filtering can be used
 #[allow(dead_code)]
-fn can_use_separable<T: Float>(_sigma: &[T]) -> bool {
+fn can_use_separable<T: Float>(sigma: &[T]) -> bool {
     // Separable filtering is beneficial when all sigmas are reasonably large
     _sigma.iter().all(|&s| {
         let s_f64: f64 = NumCast::from(s).unwrap_or(0.0);
@@ -358,7 +358,7 @@ where
 /// Helper processor for bilateral filter
 struct BilateralProcessorV2;
 
-impl<T: Float + Send + Sync>, crate::chunked_v2::ChunkProcessorV2<T, Ix2> for BilateralProcessorV2 {
+impl<T: Float + Send + Sync> crate::chunked_v2::ChunkProcessorV2<T, Ix2> for BilateralProcessorV2 {
     fn create_processor(
         &self,
     ) -> Box<

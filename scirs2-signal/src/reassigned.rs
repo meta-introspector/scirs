@@ -1,7 +1,8 @@
+use ndarray::s;
 use crate::error::SignalResult;
 use crate::{spectral, window};
-use ndarray::{Array1, Array2, s};
-use num__complex::Complex64;
+use ndarray::{ Array1, Array2};
+use num_complex::Complex64;
 use std::f64::consts::PI;
 
 // Reassigned Spectrogram Implementation
@@ -102,8 +103,8 @@ pub struct ReassignedResult {
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2__signal::reassigned::{reassigned_spectrogram, ReassignedConfig};
-/// use scirs2__signal::window;
+/// use scirs2_signal::reassigned::{reassigned_spectrogram, ReassignedConfig};
+/// use scirs2_signal::window;
 ///
 /// // Create a chirp signal
 /// let fs = 1000.0;

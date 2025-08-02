@@ -1,7 +1,7 @@
 //! Batch processing support for ML models
 
 use crate::error::Result;
-use crate::ml_framework::{MLTensor, datasets};
+use crate::ml_framework::{datasets, MLTensor};
 use scirs2_core::parallel_ops::*;
 
 /// Batch processor for ML models

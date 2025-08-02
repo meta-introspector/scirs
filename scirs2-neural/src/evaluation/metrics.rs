@@ -59,7 +59,7 @@ pub struct AccuracyMetric<F: Float + Debug + ScalarOperand + FromPrimitive + Dis
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + Send + Sync> AccuracyMetric<F> {
     /// Create a new accuracy metric
             correct: 0,
-            total: 0_phantom: PhantomData,
+            total: 0, phantom: PhantomData,
         predictions: &Array<F, IxDyn>,
         targets: &Array<F, IxDyn>, _loss: Option<F>,
         // For multi-class classification, find the class with highest probability

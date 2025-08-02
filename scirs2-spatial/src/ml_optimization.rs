@@ -194,7 +194,7 @@ impl NeuralSpatialOptimizer {
 
             // Xavier/Glorot initialization
             let scale = (2.0 / (input_size + output_size) as f64).sqrt();
-            let weights = Array2::from_shape_fn((output_size, input_size), |_| {
+            let weights = Array2::fromshape_fn((output_size, input_size), |_| {
                 (rand::random::<f64>() - 0.5) * 2.0 * scale
             });
             let biases = Array1::zeros(output_size);
@@ -226,7 +226,7 @@ impl NeuralSpatialOptimizer {
 
             // Xavier/Glorot initialization
             let scale = (2.0 / (input_size + output_size) as f64).sqrt();
-            let weights = Array2::from_shape_fn((output_size, input_size), |_| {
+            let weights = Array2::fromshape_fn((output_size, input_size), |_| {
                 (rand::random::<f64>() - 0.5) * 2.0 * scale
             });
             let biases = Array1::zeros(output_size);
@@ -440,7 +440,7 @@ impl NeuralSpatialOptimizer {
         // Generate random _points and calculate distances
         let bounds = self.get_data_bounds(_points);
         for _ in 0..sample_size {
-            let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
+            let random_point: Array1<f64> = Array1::fromshape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
             });
 
@@ -1226,7 +1226,7 @@ impl ReinforcementLearningSelector {
         // Random point distances
         let bounds = self.get_data_bounds(_points);
         for _ in 0..sample_size {
-            let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
+            let random_point: Array1<f64> = Array1::fromshape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
             });
 

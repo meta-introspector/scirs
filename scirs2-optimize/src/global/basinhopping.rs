@@ -13,7 +13,7 @@ use rand::Rng;
 
 /// Enforce bounds using reflection method for better exploration
 #[allow(dead_code)]
-fn enforce_bounds_with_reflection<R: Rng>(_rng: &mut R, val: f64, lb: f64, ub: f64) -> f64 {
+fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f64) -> f64 {
     if val >= lb && val <= ub {
         // Value is within bounds
         val

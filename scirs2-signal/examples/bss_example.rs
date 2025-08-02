@@ -1,8 +1,8 @@
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2};
+use ndarray::{ Array1, Array2};
 use rand::rng;
-use rand__distr::{Distribution, Normal};
-use scirs2__signal::{bss, SignalError, SignalResult};
+use rand_distr::{Distribution, Normal};
+use scirs2_signal::{bss, SignalError, SignalResult};
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 use std::fs::File;

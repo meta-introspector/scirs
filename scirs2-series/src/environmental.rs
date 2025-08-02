@@ -293,7 +293,8 @@ impl PrecipitationAnalysis {
                 x if x < 2.5 => "Light",
                 x if x < 7.6 => "Moderate",
                 x if x < 35.0 => "Heavy",
-                x if x < 50.0 => "Very Heavy"_ => "Extreme",
+                x if x < 50.0 => "Very Heavy",
+                _ => "Extreme",
             };
 
             *classification.get_mut(category).unwrap() += 1;

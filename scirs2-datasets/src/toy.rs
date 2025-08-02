@@ -14,7 +14,7 @@ use rand::rngs::StdRng;
 pub fn load_iris() -> Result<Dataset> {
     // Define the data
     #[rustfmt::skip]
-    let data = Array2::from_shape_vec((150, 4), vec![
+    let data = Array2::fromshape_vec((150, 4), vec![
         5.1, 3.5, 1.4, 0.2, 4.9, 3.0, 1.4, 0.2, 4.7, 3.2, 1.3, 0.2, 4.6, 3.1, 1.5, 0.2, 5.0, 3.6, 1.4, 0.2,
         5.4, 3.9, 1.7, 0.4, 4.6, 3.4, 1.4, 0.3, 5.0, 3.4, 1.5, 0.2, 4.4, 2.9, 1.4, 0.2, 4.9, 3.1, 1.5, 0.1,
         5.4, 3.7, 1.5, 0.2, 4.8, 3.4, 1.6, 0.2, 4.8, 3.0, 1.4, 0.1, 4.3, 3.0, 1.1, 0.1, 5.8, 4.0, 1.2, 0.2,
@@ -108,7 +108,7 @@ pub fn load_breast_cancer() -> Result<Dataset> {
     // This is a simplified version with only 30 samples
     // In a real implementation, include the full dataset
     #[rustfmt::skip]
-    let data = Array2::from_shape_vec((30, 5), vec![
+    let data = Array2::fromshape_vec((30, 5), vec![
         17.99, 10.38, 122.8, 1001.0, 0.1184,
         20.57, 17.77, 132.9, 1326.0, 0.08474,
         19.69, 21.25, 130.0, 1203.0, 0.1096,
@@ -154,7 +154,7 @@ pub fn load_breast_cancer() -> Result<Dataset> {
     // Add metadata
     let feature_names = vec![
         "mean_radius".to_string(),
-        "mean_texture".to_string(),
+        "meantexture".to_string(),
         "mean_perimeter".to_string(),
         "mean_area".to_string(),
         "mean_smoothness".to_string(),
@@ -303,7 +303,7 @@ pub fn load_boston() -> Result<Dataset> {
     let n_features = 5;
 
     #[rustfmt::skip]
-    let data = Array2::from_shape_vec((n_samples, n_features), vec![
+    let data = Array2::fromshape_vec((n_samples, n_features), vec![
         0.00632, 18.0, 2.31, 0.538, 6.575,
         0.02731, 0.0, 7.07, 0.469, 6.421,
         0.02729, 0.0, 7.07, 0.469, 7.185,
@@ -423,7 +423,7 @@ pub fn load_diabetes() -> Result<Dataset> {
         targets.push(target);
     }
 
-    let data_array = Array2::from_shape_vec((n_samples, n_features), data).unwrap();
+    let data_array = Array2::fromshape_vec((n_samples, n_features), data).unwrap();
     let target_array = Array1::from_vec(targets);
 
     let feature_names = vec![
@@ -587,7 +587,7 @@ mod tests {
     }
 
     #[test]
-    fn test_all_datasets_have_consistent_shapes() {
+    fn test_all_datasets_have_consistentshapes() {
         let datasets = vec![
             ("iris", load_iris().unwrap()),
             ("breast_cancer", load_breast_cancer().unwrap()),

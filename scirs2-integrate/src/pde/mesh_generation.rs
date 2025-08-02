@@ -159,7 +159,7 @@ impl AutoMeshGenerator {
                 height,
                 notch_width,
                 notch_height,
-            } => self.generate_l_shape_mesh(
+            } => self.generate_lshape_mesh(
                 *width,
                 *height,
                 *notch_width,
@@ -368,7 +368,7 @@ impl AutoMeshGenerator {
     }
 
     /// Generate L-shaped domain mesh
-    fn generate_l_shape_mesh(
+    fn generate_lshape_mesh(
         &mut self,
         width: f64,
         height: f64,
@@ -931,7 +931,7 @@ mod tests {
     }
 
     #[test]
-    fn test_l_shape_mesh_generation() {
+    fn test_lshape_mesh_generation() {
         let mut generator = AutoMeshGenerator::default();
         let domain = Domain::LShape {
             width: 2.0,

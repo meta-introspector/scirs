@@ -234,7 +234,7 @@ pub trait AcquisitionFunction: Send + Sync {
     fn evaluate(&self, x: &ArrayView1<f64>) -> f64;
 
     /// Compute gradient of acquisition function (if available)
-    fn gradient(&self_x: &ArrayView1<f64>) -> Option<Array1<f64>> {
+    fn gradient(&self, x: &ArrayView1<f64>) -> Option<Array1<f64>> {
         None
     }
 }
@@ -248,8 +248,8 @@ pub struct ExpectedImprovement {
 
 impl ExpectedImprovement {
     /// Create a new Expected Improvement acquisition function
-    pub fn new(_model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
-        Self { _model, y_best, xi }
+    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
+        Self { model, y_best, xi }
     }
 }
 
@@ -276,7 +276,7 @@ impl AcquisitionFunction for ExpectedImprovement {
         }
     }
 
-    fn gradient(&self_x: &ArrayView1<f64>) -> Option<Array1<f64>> {
+    fn gradient(&self, x: &ArrayView1<f64>) -> Option<Array1<f64>> {
         // For now, use numerical approximation
         None
     }
@@ -290,8 +290,8 @@ pub struct LowerConfidenceBound {
 
 impl LowerConfidenceBound {
     /// Create a new Lower Confidence Bound acquisition function
-    pub fn new(_model: GaussianProcess<SquaredExp, ConstantPrior>, kappa: f64) -> Self {
-        Self { _model, kappa }
+    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, kappa: f64) -> Self {
+        Self { model, kappa }
     }
 }
 
@@ -303,7 +303,7 @@ impl AcquisitionFunction for LowerConfidenceBound {
         mean - self.kappa * std
     }
 
-    fn gradient(&self_x: &ArrayView1<f64>) -> Option<Array1<f64>> {
+    fn gradient(&self, x: &ArrayView1<f64>) -> Option<Array1<f64>> {
         // For now, use numerical approximation
         None
     }
@@ -318,8 +318,8 @@ pub struct ProbabilityOfImprovement {
 
 impl ProbabilityOfImprovement {
     /// Create a new Probability of Improvement acquisition function
-    pub fn new(_model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
-        Self { _model, y_best, xi }
+    pub fn new(model: GaussianProcess<SquaredExp, ConstantPrior>, y_best: f64, xi: f64) -> Self {
+        Self { model, y_best, xi }
     }
 }
 
@@ -337,7 +337,7 @@ impl AcquisitionFunction for ProbabilityOfImprovement {
         0.5 * (1.0 + approx_erf(z * std::f64::consts::SQRT_2 / 2.0))
     }
 
-    fn gradient(&self_x: &ArrayView1<f64>) -> Option<Array1<f64>> {
+    fn gradient(&self, x: &ArrayView1<f64>) -> Option<Array1<f64>> {
         // For now, use numerical approximation
         None
     }
@@ -501,13 +501,13 @@ pub struct BayesianOptimizer {
 
 impl BayesianOptimizer {
     /// Create a new Bayesian optimizer
-    pub fn new(_space: Space, options: Option<BayesianOptimizationOptions>) -> Self {
+    pub fn new(space: Space, options: Option<BayesianOptimizationOptions>) -> Self {
         let options = options.unwrap_or_default();
         let seed = options.seed.unwrap_or_else(|| rand::rng().random());
         let rng = StdRng::seed_from_u64(seed);
 
         Self {
-            _space,
+            space,
             options,
             observations: Vec::new(),
             best_observation: None,

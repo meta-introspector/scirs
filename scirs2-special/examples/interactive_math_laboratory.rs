@@ -1385,7 +1385,8 @@ fn interactive_verification(_theorem: &TheoremExplorer) -> Result<(), Box<dyn st
             } else {
                 println!("❌ Invalid number format");
             }
-        }_ => {
+        },
+        _ => {
             println!("Interactive verification not yet implemented for this _theorem.");
         }
     }

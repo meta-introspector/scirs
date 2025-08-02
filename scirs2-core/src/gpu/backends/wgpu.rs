@@ -293,7 +293,7 @@ impl WebGPUContext {
                         binding: binding_index,
                         visibility: ShaderStages::COMPUTE,
                         ty: BindingType::Buffer {
-                            ty: BufferBindingType::Storage { read_only: false },
+                            ty: BufferBindingType::Storage { read, only: false },
                             has_dynamic_offset: false,
                             min_binding_size: None,
                         },
@@ -305,7 +305,7 @@ impl WebGPUContext {
                         binding: binding_index,
                         visibility: ShaderStages::COMPUTE,
                         ty: BindingType::Buffer {
-                            ty: BufferBindingType::Storage { read_only: true },
+                            ty: BufferBindingType::Storage { read, only: true },
                             has_dynamic_offset: false,
                             min_binding_size: None,
                         },
@@ -334,7 +334,7 @@ impl WebGPUContext {
                 binding: 0,
                 visibility: ShaderStages::COMPUTE,
                 ty: BindingType::Buffer {
-                    ty: BufferBindingType::Storage { read_only: false },
+                    ty: BufferBindingType::Storage { read, only: false },
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
@@ -541,8 +541,7 @@ impl GpuCompilerImpl for WebGPUCompiler {
         }))
     }
 
-    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId
-    ) -> Arc<dyn GpuKernelImpl> {
+    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
         Arc::new(WebGPUKernelHandle {
             shader_name: name.to_string(),
             compiled_shaders: Arc::clone(&self.context.compiled_shaders),

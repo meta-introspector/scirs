@@ -55,8 +55,8 @@ where
     let _prefilter_input = prefilter.unwrap_or(true);
 
     // Calculate output shape - each dimension scaled by zoom _factor
-    let input_shape = input.shape();
-    let output_shape: Vec<usize> = input_shape
+    let inputshape = input.shape();
+    let outputshape: Vec<usize> = inputshape
         .iter()
         .map(|&dim| {
             let new_dim = T::from_usize(dim).unwrap_or_else(|| T::one()) * zoom_factor;
@@ -65,7 +65,7 @@ where
         .collect();
 
     // Create output array with calculated shape
-    let output = Array::zeros(ndarray::IxDyn(&output_shape));
+    let output = Array::zeros(ndarray::IxDyn(&outputshape));
 
     // Convert input to dynamic for easier indexing
     let input_dyn = input.clone().into_dyn();
@@ -275,11 +275,11 @@ where
     let input_dyn = input.clone().into_dyn();
 
     // Get input shape and calculate center
-    let input_shape = input.shape();
+    let inputshape = input.shape();
     let center1 =
-        T::from_usize(input_shape[axis1]).unwrap_or_else(|| T::one()) / (T::one() + T::one());
+        T::from_usize(inputshape[axis1]).unwrap_or_else(|| T::one()) / (T::one() + T::one());
     let center2 =
-        T::from_usize(input_shape[axis2]).unwrap_or_else(|| T::one()) / (T::one() + T::one());
+        T::from_usize(inputshape[axis2]).unwrap_or_else(|| T::one()) / (T::one() + T::one());
 
     // For each output pixel, calculate corresponding input coordinates
     for (output_idx, output_val) in result_dyn.indexed_iter_mut() {

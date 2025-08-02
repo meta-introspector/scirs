@@ -39,7 +39,7 @@ pub enum BinningStrategy {
 /// use ndarray::Array2;
 /// use scirs2__datasets::utils::polynomial_features;
 ///
-/// let data = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+/// let data = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
 /// let poly_features = polynomial_features(&data, 2, true).unwrap();
 /// // Result includes: [1, x1, x2, x1², x1*x2, x2²]
 /// ```
@@ -168,7 +168,7 @@ fn generate_polynomial_combinations(
 /// use ndarray::Array2;
 /// use scirs2__datasets::utils::statistical_features;
 ///
-/// let data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]).unwrap();
+/// let data = Array2::fromshape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]).unwrap();
 /// let stats_features = statistical_features(&data).unwrap();
 /// // Result includes 9 statistical measures for each of the 2 original features
 /// ```
@@ -296,7 +296,7 @@ fn calculate_kurtosis(_data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> 
 /// use ndarray::Array2;
 /// use scirs2__datasets::utils::{create_binned_features, BinningStrategy};
 ///
-/// let data = Array2::from_shape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]).unwrap();
+/// let data = Array2::fromshape_vec((5, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]).unwrap();
 /// let binned = create_binned_features(&data, 3, BinningStrategy::Uniform).unwrap();
 /// // Each feature is now discretized into 3 bins (values 0, 1, 2)
 /// ```
@@ -393,7 +393,7 @@ mod tests {
 
     #[test]
     fn test_polynomial_features_degree_2() {
-        let data = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
         let poly = polynomial_features(&data, 2, true).unwrap();
 
         // Should have: [bias, x1, x2, x1², x1*x2, x2²] = 6 features
@@ -411,7 +411,7 @@ mod tests {
 
     #[test]
     fn test_polynomial_features_no_bias() {
-        let data = Array2::from_shape_vec((1, 2), vec![2.0, 3.0]).unwrap();
+        let data = Array2::fromshape_vec((1, 2), vec![2.0, 3.0]).unwrap();
         let poly = polynomial_features(&data, 2, false).unwrap();
 
         // Should have: [x1, x2, x1², x1*x2, x2²] = 5 features (no bias)
@@ -427,13 +427,13 @@ mod tests {
 
     #[test]
     fn test_polynomial_features_invalid_degree() {
-        let data = Array2::from_shape_vec((1, 1), vec![1.0]).unwrap();
+        let data = Array2::fromshape_vec((1, 1), vec![1.0]).unwrap();
         assert!(polynomial_features(&data, 0, true).is_err());
     }
 
     #[test]
     fn test_statistical_features() {
-        let data = Array2::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+        let data = Array2::fromshape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
         let stats = statistical_features(&data).unwrap();
 
         // Should have 9 statistical features for 1 original feature
@@ -457,7 +457,7 @@ mod tests {
 
     #[test]
     fn test_create_binned_features_uniform() {
-        let data = Array2::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+        let data = Array2::fromshape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
         let binned = create_binned_features(&data, 3, BinningStrategy::Uniform).unwrap();
 
         assert_eq!(binned.nrows(), 5);
@@ -472,7 +472,7 @@ mod tests {
 
     #[test]
     fn test_create_binned_features_quantile() {
-        let data = Array2::from_shape_vec((6, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let data = Array2::fromshape_vec((6, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let binned = create_binned_features(&data, 3, BinningStrategy::Quantile).unwrap();
 
         assert_eq!(binned.nrows(), 6);
@@ -493,7 +493,7 @@ mod tests {
 
     #[test]
     fn test_create_binned_features_invalid_bins() {
-        let data = Array2::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0]).unwrap();
+        let data = Array2::fromshape_vec((3, 1), vec![1.0, 2.0, 3.0]).unwrap();
         assert!(create_binned_features(&data, 1, BinningStrategy::Uniform).is_err());
         assert!(create_binned_features(&data, 0, BinningStrategy::Uniform).is_err());
     }
@@ -536,7 +536,7 @@ mod tests {
     #[test]
     fn test_feature_extraction_pipeline() {
         // Test a complete feature extraction pipeline
-        let data = Array2::from_shape_vec((4, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0])
+        let data = Array2::fromshape_vec((4, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0])
             .unwrap();
 
         // Step 1: Generate polynomial features
@@ -560,7 +560,7 @@ mod tests {
     fn test_binning_strategies_comparison() {
         // Create data with outliers
         let data =
-            Array2::from_shape_vec((7, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 100.0]).unwrap();
+            Array2::fromshape_vec((7, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 100.0]).unwrap();
 
         let uniform_binned = create_binned_features(&data, 3, BinningStrategy::Uniform).unwrap();
         let quantile_binned = create_binned_features(&data, 3, BinningStrategy::Quantile).unwrap();

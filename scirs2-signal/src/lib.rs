@@ -1,63 +1,58 @@
-//! Signal processing module
-//!
-//! This module provides implementations of various signal processing algorithms
-//! for filtering, convolution, and spectral analysis.
-//!
-//! Refactored modules:
-//! - features: Comprehensive time series feature extraction in modular structure
-//! - wavelets: Wavelet transforms and related functionality in modular structure
-//! - multitaper: Multitaper spectral estimation methods in modular structure
-//!
-//! ## Overview
-//!
-//! * Filtering: FIR and IIR filters, filter design, Savitzky-Golay filter
-//! * Convolution and correlation
-//! * Spectral analysis and periodograms
-//! * Short-time Fourier transform (STFT) and spectrograms
-//! * Wavelet transforms (1D and 2D)
-//! * Peak finding and signal measurements
-//! * Waveform generation and processing
-//! * Resampling and interpolation
-//! * Linear Time-Invariant (LTI) systems analysis
-//! * Chirp Z-Transform (CZT) for non-uniform frequency sampling
-//! * Signal detrending and trend analysis
-//! * Hilbert transform and analytic signal analysis
-//! * Multi-resolution analysis with wavelets (CWT, DWT, DWT2D, SWT, SWT2D, WPT)
-//! * Time-frequency analysis with Wigner-Ville distribution, reassigned spectrograms, and synchrosqueezed wavelets
-//! * Parametric spectral estimation (AR, ARMA models)
-//! * Higher-order spectral analysis (bispectrum, bicoherence, trispectrum)
-//! * Signal denoising techniques (Wiener, Non-Local Means, Total Variation, Median, Kalman)
-//! * Signal deconvolution (Wiener, Richardson-Lucy, Tikhonov, Total Variation, Blind)
-//! * Blind source separation (ICA, PCA, NMF, Sparse Component Analysis)
-//! * Missing data interpolation (Linear, Cubic Spline, Gaussian Process, Kriging, RBF, Spectral)
-//! * Sparse signal recovery (OMP, MP, CoSaMP, ISTA, FISTA, Basis Pursuit)
-//! * Compressed sensing and missing data reconstruction
-//! * Advanced filtering (median filtering for impulse noise removal)
-//! * State estimation (Kalman filtering, Extended Kalman, Unscented Kalman)
-//! * Synchrosqueezed Wavelet Transform (SSWT) for improved time-frequency analysis
-//! * Window functions (Hamming, Hann, Blackman, etc.) for spectral analysis
-//!
-//! ## Examples
-//!
-//! ```
-//! use scirs2__signal::filter::butter;
-//! use scirs2__signal::filter::filtfilt;
-//!
-//! // Generate a simple signal and apply a Butterworth filter
-//! // let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-//! // let fs = 100.0;  // Sample rate in Hz
-//! // let cutoff = 10.0;  // Cutoff frequency in Hz
-//! //
-//! // let (b, a) = butter(4, cutoff / (fs / 2.0), "lowpass").unwrap();
-//! // let filtered = filtfilt(&b, &a, &signal).unwrap();
-//! ```
+// Signal processing module
+//
+// This module provides implementations of various signal processing algorithms
+// for filtering, convolution, and spectral analysis.
+//
+// Refactored modules:
+// - features: Comprehensive time series feature extraction in modular structure
+// - wavelets: Wavelet transforms and related functionality in modular structure
+// - multitaper: Multitaper spectral estimation methods in modular structure
+//
+// ## Overview
+//
+// * Filtering: FIR and IIR filters, filter design, Savitzky-Golay filter
+// * Convolution and correlation
+// * Spectral analysis and periodograms
+// * Short-time Fourier transform (STFT) and spectrograms
+// * Wavelet transforms (1D and 2D)
+// * Peak finding and signal measurements
+// * Waveform generation and processing
+// * Resampling and interpolation
+// * Linear Time-Invariant (LTI) systems analysis
+// * Chirp Z-Transform (CZT) for non-uniform frequency sampling
+// * Signal detrending and trend analysis
+// * Hilbert transform and analytic signal analysis
+// * Multi-resolution analysis with wavelets (CWT, DWT, DWT2D, SWT, SWT2D, WPT)
+// * Time-frequency analysis with Wigner-Ville distribution, reassigned spectrograms, and synchrosqueezed wavelets
+// * Parametric spectral estimation (AR, ARMA models)
+// * Higher-order spectral analysis (bispectrum, bicoherence, trispectrum)
+// * Signal denoising techniques (Wiener, Non-Local Means, Total Variation, Median, Kalman)
+// * Signal deconvolution (Wiener, Richardson-Lucy, Tikhonov, Total Variation, Blind)
+// * Blind source separation (ICA, PCA, NMF, Sparse Component Analysis)
+// * Missing data interpolation (Linear, Cubic Spline, Gaussian Process, Kriging, RBF, Spectral)
+// * Sparse signal recovery (OMP, MP, CoSaMP, ISTA, FISTA, Basis Pursuit)
+// * Compressed sensing and missing data reconstruction
+// * Advanced filtering (median filtering for impulse noise removal)
+// * State estimation (Kalman filtering, Extended Kalman, Unscented Kalman)
+// * Synchrosqueezed Wavelet Transform (SSWT) for improved time-frequency analysis
+// * Window functions (Hamming, Hann, Blackman, etc.) for spectral analysis
+//
+// ## Examples
+//
+// ```
+// use scirs2_signal::filter::butter;
+// use scirs2_signal::filter::filtfilt;
+//
+// // Generate a simple signal and apply a Butterworth filter
+// // let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+// // let fs = 100.0;  // Sample rate in Hz
+// // let cutoff = 10.0;  // Cutoff frequency in Hz
+// //
+// // let (b, a) = butter(4, cutoff / (fs / 2.0), "lowpass").unwrap();
+// // let filtered = filtfilt(&b, &a, &signal).unwrap();
+// ```
 
-
-use crate::dwt::Wavelet;
-use crate::lti::design::tf;
-use crate::utilities::spectral::spectral_flux;
-use crate::utilities::spectral::spectral_centroid;
-use crate::utilities::spectral::spectral_rolloff;
+#[cfg(feature = "parallel")]
 use crate::wpt2d::WaveletPacket2D;
 // BLAS backend linking handled through scirs2-core
 
@@ -203,7 +198,7 @@ pub mod wvd;
 pub use adaptive::{
     ApaFilter, FdlmsFilter, LmfFilter, LmsFilter, NlmsFilter, RlsFilter, SmLmsFilter, VsLmsFilter,
 };
-pub use advanced__filter::{
+pub use advanced_filter::{
     arbitrary_magnitude_design, constrained_least_squares_design, least_squares_design,
     minimax_design, parks_mcclellan, ArbitraryResponse, FilterDesignResult, FilterSpec, FilterType,
     ParksMcClellanConfig,
@@ -260,7 +255,7 @@ pub use filter::{
     StreamingFilterState,
     StreamingStats,
 };
-pub use filter__banks::{
+pub use filter_banks::{
     CosineModulatedFilterBank, FilterBankAnalysis, FilterBankType, FilterBankWindow, IirStabilizer,
     QmfBank, StabilizationMethod, WaveletFilterBank,
 };
@@ -268,7 +263,7 @@ pub use higher_order::{
     biamplitude, bicoherence, bispectrum, cumulative_bispectrum, detect_phase_coupling,
     skewness_spectrum, trispectrum, BispecEstimator, HigherOrderConfig,
 };
-pub use hr__spectral::{
+pub use hr_spectral::{
     esprit, minimum_variance, music, pisarenko, prony, HrSpectralConfig, HrSpectralMethod,
     HrSpectralResult,
 };
@@ -299,10 +294,10 @@ pub use kalman::{
 pub use lombscargle::{
     find_peaks as find_ls_peaks, lombscargle, significance_levels, AutoFreqMethod,
 };
-pub use lombscargle__simd::{simd_lombscargle, SimdLombScargleResult, ValidationMetrics};
+pub use lombscargle_simd::{simd_lombscargle, SimdLombScargleResult, ValidationMetrics};
 
 // Advanced Enhanced Lomb-Scargle Validation
-pub use lombscargle__optimized::{
+pub use lombscargle_optimized::{
     generate_advanced_lombscargle_report, run_advanced_lombscargle_validation,
     AdvancedLombScargleResult, CompleteSimdValidation, ComprehensiveAccuracyResult,
     MemoryProfilingResult, PerformanceRegressionResult, ScipyComparisonResult,
@@ -310,14 +305,14 @@ pub use lombscargle__optimized::{
 };
 
 // Advanced-enhanced Lomb-Scargle validation
-pub use lombscargle_advanced_enhanced__validation::{
+pub use lombscargle_advanced_enhanced_validation::{
     generate_advanced_enhanced_validation_report, run_advanced_enhanced_lombscargle_validation,
     AdvancedEnhancedLombScargleValidationResult, EdgeCaseValidationMetrics,
     LombScargleAccuracyValidation, StatisticalRobustnessMetrics,
 };
 
 // Advanced Edge Case Validation for Lomb-Scargle
-pub use lombscargle_edge_case_advanced__validation::{
+pub use lombscargle_edge_case_advanced_validation::{
     generate_advanced_edge_case_report, run_advanced_edge_case_validation,
     AdvancedEdgeCaseValidationResult, AliasingDetectionResult, MultiScaleSignalResult,
     NoiseToleranceResult, NonUniformGridResult, NumericalPrecisionResult, SparseSamplingResult,
@@ -327,12 +322,12 @@ pub use median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
 };
-pub use memory__efficient::{
+pub use memory_efficient::{
     memory_efficient_correlation, memory_efficient_fft, memory_efficient_filter,
     memory_efficient_spectrogram, MemoryCache, StreamingCorrelationResult, StreamingFFTResult,
     StreamingFilterResult, StreamingProcessor, StreamingSpectrogramResult,
 };
-pub use memory__optimized::{
+pub use memory_optimized::{
     memory_optimized_fft, memory_optimized_fir_filter, memory_optimized_spectrogram, MemoryConfig,
     MemoryOptimizedData, MemoryOptimizedResult, MemoryStats, TimingStats,
 };
@@ -344,32 +339,32 @@ pub use nlm::{
     nlm_block_matching_2d, nlm_color_image, nlm_denoise_1d, nlm_denoise_2d, nlm_multiscale_2d,
     NlmConfig,
 };
-#[cfg(feature = "parallel")]
-pub use parallel__spectral::{parallel_welch, ParallelSpectralConfig, ParallelSpectralProcessor};
 #[cfg(not(feature = "parallel"))]
-pub use parallel__spectral::ParallelSpectralProcessor;
+pub use parallel_spectral::ParallelSpectralProcessor;
+#[cfg(feature = "parallel")]
+pub use parallel_spectral::{parallel_welch, ParallelSpectralConfig, ParallelSpectralProcessor};
 pub use parametric::{
     ar_spectrum, arma_spectrum, estimate_ar, estimate_arma, select_ar_order, ARMethod,
     OrderSelection,
 };
-pub use parametric__advanced::{
+pub use parametric_advanced::{
     estimate_var_model, high_resolution_spectral_estimation, AdvancedParametricConfig,
     HighResolutionMethod, HighResolutionResult, RegularizationMethod, VarModel,
 };
-pub use parametric_advanced__enhanced::{
+pub use parametric_advanced_enhanced::{
     adaptive_ar_spectral_estimation, advanced_enhanced_arma, advanced_enhanced_arma_spectrum,
     comprehensive_parametric_validation,
     high_resolution_spectral_estimation as advanced_high_resolution_spectral_estimation,
     multitaper_parametric_estimation, robust_parametric_spectral_estimation,
     AdvancedEnhancedARMAResult, ConvergenceInfo, ModelDiagnostics, PerformanceStats,
 };
-pub use parametric__enhanced::{
+pub use parametric_enhanced::{
     enhanced_parametric_estimation, DiagnosticStats, EnhancedParametricResult,
     ModelSelectionResult, ModelType, ParametricConfig,
 };
 
 // Comprehensive Parametric Optimization
-pub use parametric_comprehensive__optimization::{
+pub use parametric_comprehensive_optimization::{
     generate_comprehensive_optimization_report, run_comprehensive_parametric_optimization,
     ComplexityMetrics, ComprehensiveOptimizationConfig, ComprehensiveParametricResult,
     CrossValidationResults, ModelOrder, ModelTypePreference, OptimizationMethod,
@@ -388,18 +383,18 @@ pub use robust::{
 pub use separation::{
     harmonic_percussive_separation, multiband_separation, HarmonicPercussiveConfig, MultibandConfig,
 };
-pub use simd__advanced::{
+pub use simd_advanced::{
     benchmark_simd_operations, simd_apply_window, simd_autocorrelation, simd_complex_fft_butterfly,
     simd_cross_correlation, simd_fir_filter, SimdConfig,
 };
-pub use simd_memory__optimization::{
+pub use simd_memory_optimization::{
     benchmark_simd_memory_operations, simd_memory_efficient_fft, simd_optimized_convolution,
     simd_optimized_fir_filter, simd_optimized_matrix_multiply, SimdMemoryConfig, SimdMemoryResult,
 };
-pub use simd__ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
+pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
 
 // Advanced Enhanced SIMD Operations
-pub use simd_advanced__enhanced::{
+pub use simd_advanced_enhanced::{
     advanced_simd_dwt, advanced_simd_fft, advanced_simd_resample, advanced_simd_rfft,
     advanced_simd_stft, generate_simd_performance_report, AdvancedSimdConfig,
     FftPerformanceMetrics, SimdFftResult, SimdStftResult, SimdUtilizationStats, SimdWaveletResult,
@@ -416,7 +411,7 @@ pub use stft::{
     closest_stft_dual_window, create_cola_window, MemoryEfficientStft, MemoryEfficientStftConfig,
     MemoryInfo, ShortTimeFft,
 };
-pub use streaming__stft::{
+pub use streaming_stft::{
     RealTimeStft, RealTimeStftStatistics, StreamingStft, StreamingStftConfig,
     StreamingStftStatistics,
 };
@@ -443,7 +438,7 @@ pub use multitaper::{
 };
 
 // Enhanced multitaper validation with SciPy reference
-pub use multitaper_scipy__validation::{
+pub use multitaper_scipy_validation::{
     generate_multitaper_validation_report, run_scipy_multitaper_validation,
     EnhancedTestSignalConfig, MultitaperScipyValidationResult, PerformanceComparison,
     PrecisionAnalysisResult, SimdValidationMetrics, StatisticalValidationMetrics, TestResult,
@@ -452,29 +447,29 @@ pub use multitaper_scipy__validation::{
 
 // Wavelet transform functions already re-exported above
 pub use dwt2d::{dwt2d_decompose, dwt2d_reconstruct, wavedec2, waverec2, Dwt2dResult};
-pub use dwt2d_advanced__denoising::{
+pub use dwt2d_advanced_denoising::{
     advanced_wavelet_denoise_2d, context_adaptive_denoise, multiscale_edge_preserving_denoise,
     simd_threshold_coefficients, AdvancedDenoisingConfig, DenoisingMethod, NoiseEstimationMethod,
     ThresholdStrategy, WaveletDenoising2dResult,
 };
-pub use dwt2d_advanced__features::{
+pub use dwt2d_advanced_features::{
     advanced_wavelet_denoising, AdvancedWaveletConfig, AdvancedWaveletResult, DenoisingMetrics,
     EdgeMetrics, TextureFeatures, ThresholdMethod, ThresholdSelection,
 };
-pub use dwt2d_boundary__enhanced::{
+pub use dwt2d_boundary_enhanced::{
     dwt2d_decompose_enhanced, dwt2d_reconstruct_enhanced, generate_boundary_report,
     wavedec2_enhanced, waverec2_enhanced, AdaptiveBoundaryParams, ArtifactMeasures,
     BoundaryConfig2D, BoundaryInfo2D, BoundaryMode2D, BoundaryPreprocessing,
     BoundaryQualityMetrics, EnhancedDWT2DDecomposition, ExtensionInfo, WindowType, WindowingConfig,
 };
-pub use dwt2d_performance__optimization::{
+pub use dwt2d_performance_optimization::{
     generate_performance_report, optimized_dwt2d_decompose, MemoryConstraints, MemoryStatistics,
     OptimizationFlags, OptimizedDwt2dResult, PerformanceConfig, PerformanceMetrics, PlatformConfig,
     QualityAssessment,
 };
 
 // 2D wavelet advanced validation
-pub use dwt2d_advanced__validation::{
+pub use dwt2d_advanced_validation::{
     generate_dwt2d_comprehensive_report, run_dwt2d_comprehensive_validation,
     run_quick_dwt2d_validation, BoundaryValidationResult, CompressionValidationResult,
     ConsistencyAnalysisResult, DenoisingValidationResult, Dwt2dadvancedConfig, Dwt2dadvancedResult,
@@ -483,7 +478,9 @@ pub use dwt2d_advanced__validation::{
     SimdOptimizationResult, StabilityValidationResult,
 };
 pub use swt::{iswt, swt, swt_decompose, swt_reconstruct};
-pub use swt2d::{iswt2d, swt2d, swt2d_decompose, swt2d_reconstruct, Swt2dResult};
+pub use swt2d::{iswt2d, swt2d, swt2d_decompose, swt2d_reconstruct};
+#[cfg(feature = "parallel")]
+pub use swt2d::Swt2dResult;
 pub use wavelets::{
     complex_gaussian,
     complex_morlet,
@@ -509,15 +506,17 @@ pub use wavelets::{
 pub use wpt::{
     get_level_coefficients, reconstruct_from_nodes, wp_decompose, WaveletPacket, WaveletPacketTree,
 };
-pub use wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacket2D, WaveletPacketTree2D};
-pub use wpt_enhanced_modern__validation::{
+pub use wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacketTree2D};
+#[cfg(feature = "parallel")]
+pub use wpt2d::WaveletPacket2D;
+pub use wpt_enhanced_modern_validation::{
     generate_enhanced_modern_validation_report, run_enhanced_modern_validation,
     AnomalyDetectionResult, CrossFrameworkValidationResult, EdgeCaseValidationResult,
     EnhancedModernValidationConfig, EnhancedModernValidationResult, GpuValidationResult,
     OptimizationValidationResult, PrecisionValidationResult, ResourceValidationResult,
     StreamingValidationResult,
 };
-pub use wpt_super__validation::{run_advanced_wpt_validation, AdvancedWptValidationResult};
+pub use wpt_super_validation::{run_advanced_wpt_validation, AdvancedWptValidationResult};
 
 // Note: wpt_enhanced_modern_validation functions are already imported above
 
@@ -531,14 +530,14 @@ pub use lti::{
 };
 
 // Enhanced LTI system identification functions
-pub use lti_enhanced_system__identification::{
+pub use lti_enhanced_system_identification::{
     advanced_enhanced_system_identification, AdaptationResults, AdvancedEnhancedSysIdConfig,
     AdvancedEnhancedSysIdResult, AdvancedValidationMetrics, ParameterWithUncertainty,
     PerformanceMetrics as LtiPerformanceMetrics, StructureSelectionResults, SystemModel,
 };
 
 // Advanced-enhanced controllability and observability analysis
-pub use lti_advanced_controllability__observability::{
+pub use lti_advanced_controllability_observability::{
     advanced_controllability_observability_analysis, AdvancedAnalysisConfig,
     AdvancedControllabilityAnalysis, AdvancedControllabilityObservabilityResult,
     AdvancedObservabilityAnalysis, AnalysisPerformanceMetrics, GeometricAnalysis,
@@ -548,7 +547,7 @@ pub use lti_advanced_controllability__observability::{
 
 // LTI system functions (using what's available)
 // Note: Some functions temporarily commented out due to module restructuring
-pub use lti__response::{impulse_response, lsim, step_response};
+pub use lti_response::{impulse_response, lsim, step_response};
 
 // Chirp Z-Transform functions
 pub use czt::{czt, czt_points};
@@ -564,12 +563,12 @@ pub use detrend::{detrend, detrend_axis, detrend_poly};
 pub use denoise::{denoise_wavelet, ThresholdSelect};
 
 // 2D Wavelet image processing functions
-pub use dwt2d__image::{
+pub use dwt2d_image::{
     compress_image, denoise_image, detect_edges, DenoisingMethod as ImageDenoisingMethod,
 };
 
 // Wavelet visualization utilities
-pub use wavelet__vis::{
+pub use wavelet_vis::{
     arrange_coefficients_2d, arrange_multilevel_coefficients_2d, calculate_energy_1d,
     calculate_energy_2d, calculate_energy_swt2d, colormaps, count_nonzero_coefficients,
     create_coefficient_heatmap, normalize_coefficients, NormalizationStrategy, WaveletCoeffCount,
@@ -587,7 +586,7 @@ pub mod measurements;
 pub use measurements::{peak_to_peak, peak_to_rms, rms, snr, thd};
 
 // Phase vocoder for time stretching and pitch shifting
-pub use phase__vocoder::{phase_vocoder, PhaseVocoderConfig};
+pub use phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
 
 // Empirical Mode Decomposition (EMD) for nonlinear and non-stationary signals
 pub use emd::{eemd, emd, hilbert_huang_spectrum, EmdConfig, EmdResult};
@@ -598,7 +597,7 @@ pub use features::{
 };
 
 // Feature extraction for image analysis
-pub use image__features::{
+pub use image_features::{
     extract_color_image_features, extract_image_features, ImageFeatureOptions,
 };
 
@@ -637,7 +636,7 @@ pub use sysid::{
     FreqResponseResult, ModelValidation, ParametricResult, RecursiveLeastSquares, SysIdConfig,
     TfEstimationMethod, TfEstimationResult,
 };
-pub use sysid_robust__enhancements::{
+pub use sysid_robust_enhancements::{
     analyze_model_stability, enhanced_cross_validation, estimate_signal_noise_ratio_advanced,
     robust_least_squares, CrossValidationResults as SysidCrossValidationResults,
     EnhancedModelValidation, PredictionIntervals, RobustSysIdConfig, RobustnessMetrics,
@@ -651,19 +650,19 @@ pub use sswt::{
 };
 
 // SciPy numerical validation functions
-pub use scipy__validation::{
+pub use scipy_validation::{
     generate_validation_report, load_reference_data, validate_all, ValidationConfig,
     ValidationResults, ValidationSummary, ValidationTestResult,
 };
 
 // Advanced comprehensive validation
-pub use advanced_comprehensive__validation::{
+pub use advanced_comprehensive_validation::{
     generate_comprehensive_report, run_comprehensive_validation, ComprehensiveValidationResult,
     PerformanceImprovements,
 };
 
 // Advanced validation suite
-pub use advanced_validation__suite::{
+pub use advanced_validation_suite::{
     generate_comprehensive_report as generate_comprehensive_validation_report,
     run_comprehensive_validation as run_suite_comprehensive_validation,
     run_full_comprehensive_validation, run_quick_comprehensive_validation,
@@ -679,7 +678,7 @@ pub use benchmarking::{
 };
 
 // Advanced mode coordination and comprehensive validation
-pub use advanced_mode__coordinator::{
+pub use advanced_mode_coordinator::{
     run_advanced_validation_with_config,
     run_quick_comprehensive_validation as run_quick_advanced_validation_coordinator,
     AdvancedConfig, AdvancedCoordinator, AdvancedResults,

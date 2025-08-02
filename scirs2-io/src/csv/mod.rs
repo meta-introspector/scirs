@@ -1651,7 +1651,7 @@ pub fn aggregate_csv_statistics<P: AsRef<Path>>(
 ) -> Result<Vec<ColumnStats>> {
     let mut column_stats: Vec<Option<ColumnStats>> = Vec::new();
 
-    let (_results_stats) = process_csv_streaming(path, config, |chunk, _headers| {
+    let _results_stats = process_csv_streaming(path, config, |chunk, _headers| {
         let shape = chunk.shape();
 
         // Initialize column stats if needed
@@ -1729,7 +1729,8 @@ impl ColumnStats {
         let max_val = _values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let mean = _values.iter().sum::<f64>() / _values.len() as f64;
 
-        let variance = _values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / _values.len() as f64;
+        let variance =
+            _values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / _values.len() as f64;
         let std_dev = variance.sqrt();
 
         Self {

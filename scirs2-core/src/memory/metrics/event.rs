@@ -60,7 +60,8 @@ pub struct MemoryEvent {
 
 impl MemoryEvent {
     /// Create a new memory event
-    pub fn new(event_type: MemoryEventType,
+    pub fn new(
+        event_type: MemoryEventType,
         component: impl Into<String>,
         size: usize,
         address: usize,

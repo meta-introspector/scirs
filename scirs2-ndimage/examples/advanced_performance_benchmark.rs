@@ -205,7 +205,7 @@ fn main() -> NdimageResult<()> {
 
 #[allow(dead_code)]
 fn create_benchmark_image(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 

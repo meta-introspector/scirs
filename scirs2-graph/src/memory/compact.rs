@@ -532,7 +532,7 @@ pub struct MemmapGraph {
 
 impl MemmapGraph {
     /// Create a new memory-mapped graph from an existing CSR graph
-    pub fn from_csr<P: AsRef<Path>>(_csr: &CSRGraph, path: P) -> io::Result<Self> {
+    pub fn from_csr<P: AsRef<Path>>(csr: &CSRGraph, path: P) -> io::Result<Self> {
         let mut file = File::create(&path)?;
         let mut writer = BufWriter::new(&mut file);
 
@@ -578,7 +578,7 @@ impl MemmapGraph {
     }
 
     /// Load an existing memory-mapped graph
-    pub fn from_file<P: AsRef<Path>>(_path: P) -> io::Result<Self> {
+    pub fn from_file<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         let mut file = File::open(_path)?;
         let mut buffer = [0u8; 16];
 

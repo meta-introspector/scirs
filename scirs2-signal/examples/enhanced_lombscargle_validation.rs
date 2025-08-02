@@ -1,7 +1,7 @@
-//! Enhanced Lomb-Scargle periodogram validation example
-//!
-//! This example demonstrates the enhanced Lomb-Scargle validation capabilities
-//! including SciPy comparison, noise robustness, and SIMD consistency testing.
+// Enhanced Lomb-Scargle periodogram validation example
+//
+// This example demonstrates the enhanced Lomb-Scargle validation capabilities
+// including SciPy comparison, noise robustness, and SIMD consistency testing.
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

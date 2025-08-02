@@ -118,7 +118,7 @@ pub type ElementValidatorFn<T> = Box<dyn Fn(&T) -> bool + Send + Sync>;
 /// Array validation constraints
 pub struct ArrayValidationConstraints {
     /// Expected array shape
-    pub expected_shape: Option<Vec<usize>>,
+    pub expectedshape: Option<Vec<usize>>,
     /// Field name for error reporting
     pub field_name: Option<String>,
     /// Check for NaN and infinity values
@@ -135,7 +135,7 @@ impl ArrayValidationConstraints {
     /// Create new array validation constraints
     pub fn new() -> Self {
         Self {
-            expected_shape: None,
+            expectedshape: None,
             field_name: None,
             check_numeric_quality: false,
             statistical_constraints: None,
@@ -145,8 +145,8 @@ impl ArrayValidationConstraints {
     }
 
     /// Set expected shape
-    pub fn with_shape(mut self, shape: Vec<usize>) -> Self {
-        self.expected_shape = Some(shape);
+    pub fn withshape(mut self, shape: Vec<usize>) -> Self {
+        self.expectedshape = Some(shape);
         self
     }
 
@@ -468,7 +468,7 @@ mod tests {
     }
 
     #[test]
-    fn test_shape_constraints() {
+    fn testshape_constraints() {
         let constraints = ShapeConstraints::new()
             .with_dimensions(vec![Some(10), Some(20)])
             .with_element_range(100, 500)
@@ -656,7 +656,8 @@ mod tests {
                     assert_eq!(constraints.len(), 2);
                 }
                 _ => panic!("Expected Or constraint"),
-            }_ => panic!("Expected Not constraint"),
+            },
+            _ => panic!("Expected Not constraint"),
         }
     }
 
@@ -686,12 +687,12 @@ mod tests {
     #[test]
     fn test_array_validation_constraints() {
         let constraints = ArrayValidationConstraints::new()
-            .with_shape(vec![10, 20])
+            .withshape(vec![10, 20])
             .with_field_name(test_array)
             .check_numeric_quality()
             .check_performance();
 
-        assert_eq!(constraints.expected_shape, Some(vec![10, 20]));
+        assert_eq!(constraints.expectedshape, Some(vec![10, 20]));
         assert_eq!(constraints.field_name, Some(test_array.to_string()));
         assert!(constraints.check_numeric_quality);
         assert!(constraints.check_performance);

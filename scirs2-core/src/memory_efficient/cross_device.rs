@@ -692,8 +692,8 @@ enum BufferLocation<T: GpuDataType> {
     Gpu(Arc<GpuBuffer<T>>),
 }
 
-impl<T> std::fmt::Debug for BufferLocation<T> 
-where 
+impl<T> std::fmt::Debug for BufferLocation<T>
+where
     T: GpuDataType + std::fmt::Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -970,7 +970,7 @@ impl<T: GpuDataType, D: Dimension> DeviceArray<T, D> {
                     buffer: DeviceBuffer::new_cpu(mapped),
                     shape: self.shape.clone(),
                     device: DeviceType::Cpu,
-            phantom: PhantomData,
+                    phantom: PhantomData,
                 });
             }
         }

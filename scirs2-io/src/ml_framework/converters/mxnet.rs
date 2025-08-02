@@ -3,7 +3,7 @@
 
 use crate::error::{IoError, Result};
 use crate::ml_framework::converters::MLFrameworkConverter;
-use crate::ml_framework::types::{MLModel, MLTensor, MLFramework};
+use crate::ml_framework::types::{MLFramework, MLModel, MLTensor};
 use ndarray::{ArrayD, IxDyn};
 use std::fs::File;
 use std::path::Path;
@@ -60,7 +60,7 @@ impl MLFrameworkConverter for MXNetConverter {
                 let data: Vec<f32> = serde_json::from_value(param_data["data"].clone())
                     .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
-                let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
+                let array = ArrayD::fromshape_vec(IxDyn(&shape), data)
                     .map_err(|e| IoError::Other(e.to_string()))?;
 
                 model
@@ -99,7 +99,7 @@ impl MLFrameworkConverter for MXNetConverter {
             let data: Vec<f32> = serde_json::from_value(ndarray["data"].clone())
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
-            let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
+            let array = ArrayD::fromshape_vec(IxDyn(&shape), data)
                 .map_err(|e| IoError::Other(e.to_string()))?;
 
             return Ok(MLTensor::new(array, None));

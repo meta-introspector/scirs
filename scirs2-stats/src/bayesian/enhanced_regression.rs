@@ -33,7 +33,7 @@ pub struct BayesianRegressionPrior<F> {
     /// Prior precision matrix for coefficients
     pub beta_precision: Array2<F>,
     /// Prior shape parameter for noise precision
-    pub noise_shape: F,
+    pub noiseshape: F,
     /// Prior rate parameter for noise precision
     pub noise_rate: F,
 }
@@ -209,7 +209,7 @@ where
             .beta_precision
             .mapv(|v| v.to_f64().unwrap_or(0.0));
         let prior_mean_f64 = self.prior.beta_mean.mapv(|v| v.to_f64().unwrap_or(0.0));
-        let noise_shape_f64 = self.prior.noise_shape.to_f64().unwrap_or(1.0);
+        let noiseshape_f64 = self.prior.noiseshape.to_f64().unwrap_or(1.0);
         let noise_rate_f64 = self.prior.noise_rate.to_f64().unwrap_or(1.0);
 
         // Posterior precision matrix
@@ -230,16 +230,16 @@ where
         let residual = y - &x.dot(&posterior_mean_f);
         let residual_sum_squares = residual.dot(&residual).to_f64().unwrap_or(0.0);
 
-        let posterior_noise_shape = noise_shape_f64 + n / 2.0;
+        let posterior_noiseshape = noiseshape_f64 + n / 2.0;
         let posterior_noise_rate = noise_rate_f64 + residual_sum_squares / 2.0;
 
         // Convert back to F type
         let beta_mean = posterior_mean_f64.mapv(|v| F::from(v).unwrap());
         let beta_covariance = posterior_covariance_f64.mapv(|v| F::from(v).unwrap());
 
-        let noise_precision_mean = F::from(posterior_noise_shape / posterior_noise_rate).unwrap();
+        let noise_precision_mean = F::from(posterior_noiseshape / posterior_noise_rate).unwrap();
         let noise_precision_var =
-            F::from(posterior_noise_shape / (posterior_noise_rate * posterior_noise_rate)).unwrap();
+            F::from(posterior_noiseshape / (posterior_noise_rate * posterior_noise_rate)).unwrap();
 
         // Compute predictive distribution
         let predictive_mean = x.dot(&beta_mean);
@@ -252,7 +252,7 @@ where
             &xty_f64,
             &prior_precision_f64,
             &prior_mean_f64,
-            noise_shape_f64,
+            noiseshape_f64,
             noise_rate_f64,
             n,
             p,
@@ -283,7 +283,7 @@ where
         // Initialize variational parameters
         let mut q_beta_mean = self.prior.beta_mean.clone();
         let mut q_beta_precision = self.prior.beta_precision.clone();
-        let mut q_noise_shape = self.prior.noise_shape;
+        let mut q_noiseshape = self.prior.noiseshape;
         let mut q_noise_rate = self.prior.noise_rate;
 
         let mut converged = false;
@@ -296,7 +296,7 @@ where
             // Update beta parameters
             let xtx = x.t().dot(x);
             let xty = x.t().dot(y);
-            let expected_noise_precision = q_noise_shape / q_noise_rate;
+            let expected_noise_precision = q_noiseshape / q_noise_rate;
 
             q_beta_precision =
                 self.prior.beta_precision.clone() + xtx.mapv(|v| v * expected_noise_precision);
@@ -310,7 +310,7 @@ where
             );
 
             // Update noise parameters
-            q_noise_shape = self.prior.noise_shape + F::from(n).unwrap() / F::from(2.0).unwrap();
+            q_noiseshape = self.prior.noiseshape + F::from(n).unwrap() / F::from(2.0).unwrap();
 
             let _expected_beta_squared =
                 q_beta_mean.dot(&q_beta_mean) + q_beta_covariance.diag().sum();
@@ -322,7 +322,7 @@ where
 
             // Compute ELBO for convergence check
             let elbo =
-                self.compute_elbo(&q_beta_mean, &q_beta_precision, q_noise_shape, q_noise_rate)?;
+                self.compute_elbo(&q_beta_mean, &q_beta_precision, q_noiseshape, q_noise_rate)?;
 
             if (elbo - prev_elbo).abs() < F::from(self.config.tolerance).unwrap() {
                 converged = true;
@@ -337,8 +337,8 @@ where
             StatsError::ComputationError(format!("Final covariance computation failed: {}", e))
         })?;
 
-        let noise_precision_mean = q_noise_shape / q_noise_rate;
-        let noise_precision_var = q_noise_shape / (q_noise_rate * q_noise_rate);
+        let noise_precision_mean = q_noiseshape / q_noise_rate;
+        let noise_precision_var = q_noiseshape / (q_noise_rate * q_noise_rate);
 
         let predictive_mean = x.dot(&q_beta_mean);
         let predictive_var =
@@ -392,7 +392,7 @@ where
         // Initialize parameters
         #[allow(unused_assignments)]
         let mut beta = self.prior.beta_mean.clone();
-        let mut noise_precision = self.prior.noise_shape / self.prior.noise_rate;
+        let mut noise_precision = self.prior.noiseshape / self.prior.noise_rate;
 
         // Storage for samples
         let mut beta_samples = Vec::with_capacity(n_samples_ - n_burnin);
@@ -429,11 +429,11 @@ where
             let residual = y - &x.dot(&beta);
             let sum_squared_residuals = residual.dot(&residual).to_f64().unwrap_or(0.0);
 
-            let posterior_shape = self.prior.noise_shape.to_f64().unwrap_or(1.0) + (n as f64) / 2.0;
+            let posteriorshape = self.prior.noiseshape.to_f64().unwrap_or(1.0) + (n as f64) / 2.0;
             let posterior_rate =
                 self.prior.noise_rate.to_f64().unwrap_or(1.0) + sum_squared_residuals / 2.0;
 
-            let gamma_dist = Gamma::new(posterior_shape, 1.0 / posterior_rate).map_err(|e| {
+            let gamma_dist = Gamma::new(posteriorshape, 1.0 / posterior_rate).map_err(|e| {
                 StatsError::ComputationError(format!("Failed to create gamma distribution: {}", e))
             })?;
             noise_precision = F::from(gamma_dist.sample(&mut rng)).unwrap();
@@ -564,7 +564,7 @@ where
         _xty: &Array1<f64>,
         prior_precision: &Array2<f64>,
         _prior_mean: &Array1<f64>,
-        noise_shape: f64,
+        noiseshape: f64,
         noise_rate: f64,
         n: f64,
         p: usize,
@@ -579,7 +579,7 @@ where
         })?;
 
         // Simplified log marginal likelihood computation
-        let log_ml = 0.5 * (det_prior / det_posterior).ln() + noise_shape * noise_rate.ln()
+        let log_ml = 0.5 * (det_prior / det_posterior).ln() + noiseshape * noise_rate.ln()
             - (n / 2.0) * (2.0 * std::f64::consts::PI).ln();
 
         Ok(F::from(log_ml).unwrap())
@@ -590,12 +590,12 @@ where
         &self,
         q_beta_mean: &Array1<F>,
         _q_beta_precision: &Array2<F>,
-        q_noise_shape: F,
+        q_noiseshape: F,
         q_noise_rate: F,
     ) -> StatsResult<F> {
         // Simplified ELBO computation
         // Full implementation would include entropy terms and expected log-likelihood
-        let expected_noise_precision = q_noise_shape / q_noise_rate;
+        let expected_noise_precision = q_noiseshape / q_noise_rate;
         let residual = &self.response - &self.design_matrix.dot(q_beta_mean);
         let data_term = -F::from(0.5).unwrap() * expected_noise_precision * residual.dot(&residual);
 
@@ -774,13 +774,13 @@ where
     pub fn uninformative(p: usize) -> Self {
         let beta_mean = Array1::zeros(p);
         let beta_precision = Array2::eye(p) * F::from(1e-6).unwrap(); // Very small precision = large variance
-        let noise_shape = F::from(1e-3).unwrap();
+        let noiseshape = F::from(1e-3).unwrap();
         let noise_rate = F::from(1e-3).unwrap();
 
         Self {
             beta_mean,
             beta_precision,
-            noise_shape,
+            noiseshape,
             noise_rate,
         }
     }
@@ -789,13 +789,13 @@ where
     pub fn ridge(p: usize, alpha: F) -> Self {
         let beta_mean = Array1::zeros(p);
         let beta_precision = Array2::eye(p) * alpha;
-        let noise_shape = F::one();
+        let noiseshape = F::one();
         let noise_rate = F::one();
 
         Self {
             beta_mean,
             beta_precision,
-            noise_shape,
+            noiseshape,
             noise_rate,
         }
     }

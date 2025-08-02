@@ -350,7 +350,7 @@ impl NeuralRLAgent {
     }
 
     /// Select action using Thompson Sampling
-    fn select_thompson_sampling_action(&self, q_values: &[f64], _alpha: f64_beta: f64) -> usize {
+    fn select_thompson_sampling_action(&self, q_values: &[f64], alpha: f64, beta: f64) -> usize {
         let mut rng = rand::rng();
         let mut best_action = 0;
         let mut best_sample = f64::NEG_INFINITY;
@@ -1264,7 +1264,7 @@ impl AdvancedProcessor {
     /// Extract algorithm metrics from performance report
     fn extract_algorithm_metrics(
         &self,
-        report: &PerformanceReport_neuromorphic_features: &[f64],
+        report: &PerformanceReport_neuromorphic, features: &[f64],
     ) -> AlgorithmMetrics {
         AlgorithmMetrics {
             execution_time_us: report.duration.as_micros() as u64,

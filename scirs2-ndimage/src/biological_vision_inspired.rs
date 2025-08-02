@@ -722,7 +722,7 @@ fn create_center_surround_filters() -> NdimageResult<Vec<Array2<f64>>> {
     let mut filters = Vec::new();
 
     // Create ON-center filter
-    let on_center = Array2::from_shape_fn((5, 5), |(y, x)| {
+    let on_center = Array2::fromshape_fn((5, 5), |(y, x)| {
         let dy = y as f64 - 2.0;
         let dx = x as f64 - 2.0;
         let distance = (dy * dy + dx * dx).sqrt();
@@ -737,7 +737,7 @@ fn create_center_surround_filters() -> NdimageResult<Vec<Array2<f64>>> {
     });
 
     // Create OFF-center filter
-    let off_center = Array2::from_shape_fn((5, 5), |(y, x)| {
+    let off_center = Array2::fromshape_fn((5, 5), |(y, x)| {
         let dy = y as f64 - 2.0;
         let dx = x as f64 - 2.0;
         let distance = (dy * dy + dx * dx).sqrt();
@@ -1001,7 +1001,7 @@ fn plan_saccade_sequence(
 
 #[allow(dead_code)]
 fn initialize_predictive_coding_system(
-    _height: usize_width: usize, _config: &BiologicalVisionConfig,
+    _height: usize, width: usize, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<PredictiveCodingSystem> {
     Ok(PredictiveCodingSystem {
         prediction_models: Vec::new(),
@@ -1013,14 +1013,14 @@ fn initialize_predictive_coding_system(
 
 #[allow(dead_code)]
 fn generate_predictions(
-    _system: &mut PredictiveCodingSystem_time: usize, _config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem, time: usize, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn compute_prediction_errors<T>(
-    _system: &mut PredictiveCodingSystem_image: &ArrayView2<T>, _config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem, image: &ArrayView2<T>, _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1030,21 +1030,21 @@ where
 
 #[allow(dead_code)]
 fn update_prediction_models(
-    _system: &mut PredictiveCodingSystem_config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem, config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn estimate_prediction_confidence(
-    _system: &mut PredictiveCodingSystem_config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem, config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn adapt_to_prediction_errors(
-    _system: &mut PredictiveCodingSystem_config: &BiologicalVisionConfig,
+    _system: &mut PredictiveCodingSystem, config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
@@ -1088,7 +1088,7 @@ where
 
 #[allow(dead_code)]
 fn update_motion_estimates<T>(
-    _track: &mut MotionTrack_window: &[ArrayView2<T>], _config: &BiologicalVisionConfig,
+    _track: &mut MotionTrack, window: &[ArrayView2<T>], _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1098,14 +1098,14 @@ where
 
 #[allow(dead_code)]
 fn predict_future_positions(
-    _track: &mut MotionTrack_config: &BiologicalVisionConfig,
+    _track: &mut MotionTrack, config: &BiologicalVisionConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_tracking_confidence<T>(
-    _track: &mut MotionTrack_window: &[ArrayView2<T>], _config: &BiologicalVisionConfig,
+    _track: &mut MotionTrack, window: &[ArrayView2<T>], _config: &BiologicalVisionConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -1158,7 +1158,7 @@ mod tests {
     #[test]
     fn test_hierarchical_cortical_processing() {
         let image =
-            Array2::from_shape_vec((32, 32), (0..1024).map(|x| x as f64 / 1024.0).collect())
+            Array2::fromshape_vec((32, 32), (0..1024).map(|x| x as f64 / 1024.0).collect())
                 .unwrap();
         let config = BiologicalVisionConfig::default();
 
@@ -1171,8 +1171,8 @@ mod tests {
     #[test]
     fn test_retinal_processing() {
         let image1 =
-            Array2::from_shape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
-        let image2 = Array2::from_shape_vec(
+            Array2::fromshape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
+        let image2 = Array2::fromshape_vec(
             (16, 16),
             (0..256).map(|x| (x + 10) as f64 / 256.0).collect(),
         )
@@ -1206,7 +1206,7 @@ mod tests {
     #[test]
     fn test_bio_inspired_attention() {
         let image =
-            Array2::from_shape_vec((32, 32), (0..1024).map(|x| x as f64 / 1024.0).collect())
+            Array2::fromshape_vec((32, 32), (0..1024).map(|x| x as f64 / 1024.0).collect())
                 .unwrap();
         let feature_maps = vec![Array3::zeros((8, 32, 32))];
         let config = BiologicalVisionConfig::default();
@@ -1238,7 +1238,7 @@ mod tests {
     #[test]
     fn test_advanced_retinal_circuits() {
         let image =
-            Array2::from_shape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
+            Array2::fromshape_vec((16, 16), (0..256).map(|x| x as f64 / 256.0).collect()).unwrap();
         let config = BiologicalVisionConfig::default();
 
         let advanced_retina = advanced_retinal_circuits(image.view(), &config).unwrap();
@@ -1252,9 +1252,9 @@ mod tests {
     #[test]
     fn test_binocular_stereo_processing() {
         let left_image =
-            Array2::from_shape_vec((20, 20), (0..400).map(|x| x as f64 / 400.0).collect()).unwrap();
+            Array2::fromshape_vec((20, 20), (0..400).map(|x| x as f64 / 400.0).collect()).unwrap();
         let right_image =
-            Array2::from_shape_vec((20, 20), (0..400).map(|x| (x + 2) as f64 / 400.0).collect())
+            Array2::fromshape_vec((20, 20), (0..400).map(|x| (x + 2) as f64 / 400.0).collect())
                 .unwrap();
         let config = BiologicalVisionConfig::default();
 
@@ -1269,8 +1269,8 @@ mod tests {
     #[test]
     fn test_visual_working_memory() {
         let images = vec![
-            Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64 / 64.0).collect()).unwrap(),
-            Array2::from_shape_vec((8, 8), (0..64).map(|x| (x + 10) as f64 / 64.0).collect())
+            Array2::fromshape_vec((8, 8), (0..64).map(|x| x as f64 / 64.0).collect()).unwrap(),
+            Array2::fromshape_vec((8, 8), (0..64).map(|x| (x + 10) as f64 / 64.0).collect())
                 .unwrap(),
         ];
         let config = BiologicalVisionConfig::default();
@@ -1901,10 +1901,10 @@ fn compute_local_edge_detection(
 
     // Sobel-like edge detection
     let sobel_x =
-        Array2::from_shape_vec((3, 3), vec![-1.0, 0.0, 1.0, -2.0, 0.0, 2.0, -1.0, 0.0, 1.0])
+        Array2::fromshape_vec((3, 3), vec![-1.0, 0.0, 1.0, -2.0, 0.0, 2.0, -1.0, 0.0, 1.0])
             .unwrap();
     let sobel_y =
-        Array2::from_shape_vec((3, 3), vec![-1.0, -2.0, -1.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0])
+        Array2::fromshape_vec((3, 3), vec![-1.0, -2.0, -1.0, 0.0, 0.0, 0.0, 1.0, 2.0, 1.0])
             .unwrap();
 
     let mut gx = 0.0;

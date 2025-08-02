@@ -228,7 +228,7 @@ fn test_multi_algorithm_comparison(_data: &Array2<f64>) -> Result<(), Box<dyn st
     let optimal_config = GpuConfig {
         backend: GpuBackend::CpuFallback, // Auto-detect best
         device_selection: DeviceSelection::Automatic,
-        memory_strategy: MemoryStrategy::Pooled { pool_size_mb: 512 },
+        memory_strategy: MemoryStrategy::Pooled { pool_size, mb: 512 },
         block_size: 512, // Larger block size for better occupancy
         grid_size: 2048, // More threads
         auto_tune: true,
@@ -362,7 +362,7 @@ fn create_large_sample_data(_n_samples: usize, n_features: usize) -> Array2<f64>
         }
     }
 
-    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
+    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
 }
 
 #[cfg(test)]

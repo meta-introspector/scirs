@@ -225,7 +225,7 @@ where
 ///     let x = (i as f64) / 1000.0;
 ///     xi_vec.extend_from_slice(&[x, x]);
 /// }
-/// let xi = Array2::from_shape_vec((1000, 2), xi_vec).unwrap();
+/// let xi = Array2::fromshape_vec((1000, 2), xi_vec).unwrap();
 ///
 /// // Use 4 worker threads for parallel interpolation
 /// let result = griddata_parallel(&points.view(), &values.view(), &xi.view(),
@@ -441,7 +441,7 @@ where
         .with_min_len(chunk_size)
         .map(|i| {
             let query_point = xi.slice(ndarray::s![i, ..]);
-            let query_2d = query_point.to_shape((1, query_point.len())).unwrap();
+            let query_2d = query_point.toshape((1, query_point.len())).unwrap();
 
             match rbf_interpolator.interpolate(&query_2d.view()) {
                 Ok(result) => Ok(result[0]),
@@ -1263,7 +1263,7 @@ fn griddata_rbf<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
     xi: &ArrayView2<F>,
-    kernel: RBFKernel_fill_value: Option<F>,
+    kernel: RBFKernel_fill, value: Option<F>,
 ) -> InterpolateResult<Array1<F>>
 where
     F: Float

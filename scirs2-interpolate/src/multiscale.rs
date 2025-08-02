@@ -144,9 +144,9 @@ impl<
 
         // Convert our ExtrapolateMode to BSpline's ExtrapolateMode
         let bspline_extrapolate = match extrapolate {
-            ExtrapolateMode::Error =>, BSplineExtrapolateMode::Error,
-            ExtrapolateMode::Extrapolate =>, BSplineExtrapolateMode::Extrapolate,
-            ExtrapolateMode::Nan =>, BSplineExtrapolateMode::Nan,
+            ExtrapolateMode::Error => BSplineExtrapolateMode::Error,
+            ExtrapolateMode::Extrapolate => BSplineExtrapolateMode::Extrapolate,
+            ExtrapolateMode::Nan => BSplineExtrapolateMode::Nan,
         };
 
         let initial_spline = make_lsq_bspline(
@@ -247,9 +247,9 @@ impl<
         // Convert our ExtrapolateMode to BSpline's ExtrapolateMode
         use crate::bspline::ExtrapolateMode as BSplineExtrapolateMode;
         let bspline_extrapolate = match self.extrapolate {
-            ExtrapolateMode::Error =>, BSplineExtrapolateMode::Error,
-            ExtrapolateMode::Extrapolate =>, BSplineExtrapolateMode::Extrapolate,
-            ExtrapolateMode::Nan =>, BSplineExtrapolateMode::Nan,
+            ExtrapolateMode::Error => BSplineExtrapolateMode::Error,
+            ExtrapolateMode::Extrapolate => BSplineExtrapolateMode::Extrapolate,
+            ExtrapolateMode::Nan => BSplineExtrapolateMode::Nan,
         };
 
         let refined_spline = BSpline::new(

@@ -111,5 +111,5 @@ fn generate_data() -> Array2<f64> {
     }
 
     // Convert to ndarray
-    Array2::from_shape_vec((90, 2), data).unwrap()
+    Array2::fromshape_vec((90, 2), data).unwrap()
 }

@@ -12,13 +12,13 @@
 //! - Comprehensive analytics and reporting
 //! - Real-time adaptation and learning
 
-use scirs2__text::error::Result;
-use scirs2__text::performance::{AdvancedPerformanceMonitor, PerformanceThresholds};
-use scirs2__text::simd_ops::{AdvancedSIMDTextProcessor, SimdStringOps};
-use scirs2__text::streaming::AdvancedStreamingProcessor;
-use scirs2__text::text_coordinator::{AdvancedTextConfig, AdvancedTextCoordinator};
-use scirs2__text::tokenize::WordTokenizer;
-use scirs2__text::Tokenizer;
+use scirs2_text::error::Result;
+use scirs2_text::performance::{AdvancedPerformanceMonitor, PerformanceThresholds};
+use scirs2_text::simd_ops::{AdvancedSIMDTextProcessor, SimdStringOps};
+use scirs2_text::streaming::AdvancedStreamingProcessor;
+use scirs2_text::text_coordinator::{AdvancedTextConfig, AdvancedTextCoordinator};
+use scirs2_text::tokenize::WordTokenizer;
+use scirs2_text::Tokenizer;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -141,7 +141,7 @@ impl AdvancedSystem {
         let start_time = Instant::now();
 
         // Process through Advanced coordinator
-        let result = self.coordinator.advanced_process_text(&sample_documents)?;
+        let result = self.coordinator.advanced_processtext(&sample_documents)?;
 
         let processing_time = start_time.elapsed();
 
@@ -182,7 +182,7 @@ impl AdvancedSystem {
         println!("⚡ Demo 2: Performance-Monitored SIMD Operations");
         println!("===============================================");
 
-        let test_texts = vec![
+        let testtexts = vec![
             "The quick brown fox jumps over the lazy dog".to_string(),
             "Pack my box with five dozen liquor jugs".to_string(),
             "How vexingly quick daft zebras jump!".to_string(),
@@ -199,21 +199,21 @@ impl AdvancedSystem {
         let start_time = Instant::now();
 
         // Optimized text processing
-        let processed_results = AdvancedSIMDTextProcessor::advanced_batch_process(&test_texts);
+        let processed_results = AdvancedSIMDTextProcessor::advanced_batch_process(&testtexts);
 
         // SIMD string operations
-        let char_counts: Vec<usize> = test_texts
+        let char_counts: Vec<usize> = testtexts
             .iter()
             .map(|text| SimdStringOps::count_chars(text, 'o'))
             .collect();
 
         // Optimized similarity matrix
-        let similarity_matrix = AdvancedSIMDTextProcessor::advanced_similarity_matrix(&test_texts);
+        let similarity_matrix = AdvancedSIMDTextProcessor::advanced_similarity_matrix(&testtexts);
 
         let processing_time = start_time.elapsed();
 
         // Complete monitoring
-        operation_monitor.complete(test_texts.len())?;
+        operation_monitor.complete(testtexts.len())?;
 
         println!("\n📊 SIMD Operation Results:");
         println!("  • Processing Time: {processing_time:?}");
@@ -255,13 +255,13 @@ impl AdvancedSystem {
         println!("========================================");
 
         // Create large dataset simulation
-        let large_texts: Vec<String> = (0..1000)
+        let largetexts: Vec<String> = (0..1000)
             .map(|i| format!("This is streaming document number {i} with various content lengths and different patterns of text processing requirements."))
             .collect();
 
         println!(
             "Processing {} documents through adaptive streaming...",
-            large_texts.len()
+            largetexts.len()
         );
 
         // Start monitoring
@@ -278,7 +278,7 @@ impl AdvancedSystem {
         // Simple token counting for demonstration
         let mut total_tokens = 0;
         let tokenizer = WordTokenizer::default();
-        for text in &large_texts {
+        for text in &largetexts {
             if let Ok(tokens) = tokenizer.tokenize(text) {
                 total_tokens += tokens.len();
             }
@@ -287,20 +287,20 @@ impl AdvancedSystem {
         let processing_time = start_time.elapsed();
 
         // Complete monitoring
-        operation_monitor.complete(large_texts.len())?;
+        operation_monitor.complete(largetexts.len())?;
 
         // Get memory stats instead of performance metrics
         let (current_mem, peak_mem) = streaming_processor.memory_stats();
 
         println!("\n📈 Streaming Processing Results:");
         println!("  • Processing Time: {processing_time:?}");
-        println!("  • Documents Processed: {}", large_texts.len());
+        println!("  • Documents Processed: {}", largetexts.len());
         println!("  • Total Tokens Extracted: {total_tokens}");
         println!("  • Current Memory Usage: {current_mem} bytes");
         println!("  • Peak Memory Usage: {peak_mem} bytes");
         println!(
             "  • Throughput: {:.2} docs/sec",
-            large_texts.len() as f64 / processing_time.as_secs_f64()
+            largetexts.len() as f64 / processing_time.as_secs_f64()
         );
 
         println!("\n🔄 Advanced Features:");
@@ -337,7 +337,7 @@ impl AdvancedSystem {
             let start_time = Instant::now();
 
             // Process with adaptive optimization
-            let result = self.coordinator.advanced_process_text(&documents)?;
+            let result = self.coordinator.advanced_processtext(&documents)?;
 
             let processing_time = start_time.elapsed();
 
@@ -545,7 +545,7 @@ fn generate_mixed_workload(_count: usize) -> Vec<String> {
 
 #[allow(dead_code)]
 fn calculate_system_health_score(
-    report: &scirs2_text::performance::DetailedPerformanceReport,
+    report: &scirs2text::performance::DetailedPerformanceReport,
 ) -> f64 {
     let mut score: f64 = 100.0;
 

@@ -13,8 +13,8 @@ use scirs2__datasets::{
     make_multitask_dataset, AdversarialConfig, AnomalyConfig, AnomalyType, AttackMethod,
     DomainAdaptationConfig, MultiTaskConfig, TaskType,
 };
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -536,7 +536,7 @@ fn analyze_ordinal_target(_target: &ndarray::Array1<f64>) -> usize {
 }
 
 #[allow(dead_code)]
-fn analyze_task_relationships(_multitask_dataset: &scirs2, _datasets: :MultiTaskDataset) {
+fn analyze_task_relationships(_multitask_dataset: &scirs2, _datasets: MultiTaskDataset) {
     println!("  🔗 Task relationship analysis:");
     println!(
         "    Shared feature ratio: {:.1}%",
@@ -574,7 +574,7 @@ fn calculate_domain_statistics(_data: &ndarray::Array2<f64>) -> (f64, f64) {
 }
 
 #[allow(dead_code)]
-fn analyze_domain_shifts(_domain_dataset: &scirs2, _datasets: :DomainAdaptationDataset) {
+fn analyze_domain_shifts(_domain_dataset: &scirs2, _datasets: DomainAdaptationDataset) {
     if _domain_dataset.domains.len() >= 2 {
         let source_stats = calculate_domain_statistics(&_domain_dataset.domains[0].1.data);
         let target_stats =

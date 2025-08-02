@@ -322,7 +322,7 @@ where
     let mut rank: std::collections::HashMap<N, usize> =
         nodes.iter().map(|n| (n.clone(), 0)).collect();
 
-    fn find<N: crate::base::Node>(_parent: &mut std::collections::HashMap<N, N>, node: &N) -> N {
+    fn find<N: crate::base::Node>(parent: &mut std::collections::HashMap<N, N>, node: &N) -> N {
         if _parent[node] != *node {
             let root = find(_parent, &_parent[node].clone());
             _parent.insert(node.clone(), root.clone());
@@ -394,7 +394,7 @@ where
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A forest containing the specified trees
 #[allow(dead_code)]
-pub fn forest_graph<R: Rng>(_tree_sizes: &[usize], rng: &mut R) -> Result<Graph<usize, f64>> {
+pub fn forest_graph<R: Rng>(_tree, sizes: &[usize], rng: &mut R) -> Result<Graph<usize, f64>> {
     let mut forest = Graph::new();
     let mut node_offset = 0;
 
@@ -1052,7 +1052,7 @@ pub fn simple_configuration_model<R: Rng>(
             let stub2 = stubs[idx2];
 
             // Check for self-loop or existing edge
-            if stub1 == stub2 || graph.has_edge(&stub1..&stub2) {
+            if stub1 == stub2 || graph.has_edge(&stub1, &stub2) {
                 // Try a few more times before giving up on this attempt
                 let mut retries = 0;
                 let mut found_valid = false;
@@ -1061,7 +1061,7 @@ pub fn simple_configuration_model<R: Rng>(
                     let new_idx2 = rng.gen_range(0..stubs.len());
                     let new_stub2 = stubs[new_idx2];
 
-                    if stub1 != new_stub2 && !graph.has_edge(&stub1..&new_stub2) {
+                    if stub1 != new_stub2 && !graph.has_edge(&stub1, &new_stub2) {
                         // Remove stubs and add edge
                         // Remove the larger index first to avoid index shifting issues
                         if idx1 > new_idx2 {

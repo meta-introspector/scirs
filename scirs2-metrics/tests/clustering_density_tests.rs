@@ -8,7 +8,7 @@ mod clustering_density_tests {
     #[test]
     fn test_local_density_factor() {
         // Create a simple dataset with two well-separated clusters
-        let x = Array2::from_shape_vec(
+        let x = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
@@ -31,7 +31,7 @@ mod clustering_density_tests {
         assert_eq!(factors_k2.len(), 2);
 
         // Test with varying density clusters
-        let varying_density = Array2::from_shape_vec(
+        let varying_density = Array2::fromshape_vec(
             (6, 2),
             vec![
                 1.0, 1.1, 1.05, 1.05, 1.1, 1.0, // Dense cluster
@@ -52,7 +52,7 @@ mod clustering_density_tests {
         // Create datasets with different separation characteristics
 
         // Well-separated clusters
-        let well_separated = Array2::from_shape_vec(
+        let well_separated = Array2::fromshape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
@@ -61,14 +61,14 @@ mod clustering_density_tests {
         .unwrap();
 
         // Moderately separated clusters
-        let moderately_separated = Array2::from_shape_vec(
+        let moderately_separated = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 4.0, 5.0, 4.2, 4.8, 4.5, 5.2],
         )
         .unwrap();
 
         // Poorly separated clusters
-        let poorly_separated = Array2::from_shape_vec(
+        let poorly_separated = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 2.0, 2.5, 2.5, 3.0, 3.0, 3.2, 3.5, 3.8],
         )
@@ -95,7 +95,7 @@ mod clustering_density_tests {
     #[test]
     fn test_density_based_cluster_validity() {
         // Create a simple dataset with two well-separated clusters
-        let well_separated = Array2::from_shape_vec(
+        let well_separated = Array2::fromshape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
@@ -129,7 +129,7 @@ mod clustering_density_tests {
     #[test]
     fn test_with_invalid_inputs() {
         // Create a valid dataset
-        let x = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let x = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 
         // Mismatched dimensions
         let labels_wrong_size = array![0, 0]; // Only 2 labels for 3 samples

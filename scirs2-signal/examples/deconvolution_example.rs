@@ -1,9 +1,9 @@
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2};
+use ndarray::{ Array1, Array2};
 // use plotters::prelude::*; // Commented out until plotters is added as dependency
 use rand::rng;
-use rand__distr::{Distribution, Normal};
-use scirs2__signal::{deconvolution, SignalError, SignalResult};
+use rand_distr::{Distribution, Normal};
+use scirs2_signal::{deconvolution, SignalError, SignalResult};
 // use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;

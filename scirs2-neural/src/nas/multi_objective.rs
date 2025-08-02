@@ -377,7 +377,7 @@ use rand::rng;
         for _ in 1..tournament_size {
             let candidate_idx = rng.random_range(0..self.population.len());
             // Compare based on dominance and crowding distance
-            if self.is_better(&self.population[candidate_idx]..&self.population[best_idx]) {
+            if self.is_better(&self.population[candidate_idx], &self.population[best_idx]) {
                 best_idx = candidate_idx;
         Ok(&self.population[best_idx])
     /// Check if solution a is better than solution b
@@ -421,7 +421,7 @@ use rand::rng;
                 "validation_accuracy" => 0.3 + 0.4 * rand::random::<f64>(),
                 "model_flops" => 1e5 + 1e6 * rand::random::<f64>(),
                 "model_params" => 1e4 + 1e5 * rand::random::<f64>(),
-                "inference_latency" => 1.0 + 20.0 * rand::random::<f64>(, _ =>, rand::random::<f64>(),
+                "inference_latency" => 1.0 + 20.0 * rand::random::<f64>(, _ => rand::random::<f64>(),
             })
             .collect()
     /// Update Pareto front

@@ -341,7 +341,8 @@ impl QualityAnalyzer {
 
     /// Detect outliers and create quality issues
     fn detect_outliers<S, D>(
-        &self, array: &ArrayBase<S, D>,
+        &self,
+        array: &ArrayBase<S, D>,
         stats: &StatisticalSummary,
         field_name: &str,
     ) -> Result<Vec<QualityIssue>, CoreError>

@@ -1,9 +1,8 @@
-//! Wavelet filter definitions and generation functions
-//!
-//! This module provides various wavelet filter definitions, including Haar, Daubechies,
-//! Symlets, Coiflets, Biorthogonal, and Meyer wavelets.
+// Wavelet filter definitions and generation functions
+//
+// This module provides various wavelet filter definitions, including Haar, Daubechies,
+// Symlets, Coiflets, Biorthogonal, and Meyer wavelets.
 
-use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 
 #[allow(unused_imports)]
@@ -607,7 +606,8 @@ fn db_filters(n: usize) -> SignalResult<WaveletFilters> {
             -0.000000081726461,
             0.000000079784918,
             -0.000000007962295,
-        ],_ => {
+        ],
+        _ => {
             return Err(SignalError::ValueError(format!(
                 "Daubechies wavelet db{} is not supported. Valid values: 1-20.",
                 n
@@ -729,7 +729,8 @@ fn sym_filters(n: usize) -> SignalResult<WaveletFilters> {
             -0.099219543576373,
             -0.012592909212478,
             0.032755032597835,
-        ],_ => {
+        ],
+        _ => {
             // Fall back to Daubechies for other orders, with a note
             // In a full implementation, we would include coefficients for all supported symlets
             let db_wavelet = db_filters(n)?;
@@ -880,7 +881,8 @@ fn coif_filters(n: usize) -> SignalResult<WaveletFilters> {
             0.0021782363583355,
             0.0003585896879330,
             -0.0002120808398259,
-        ],_ => {
+        ],
+        _ => {
             return Err(SignalError::ValueError(format!(
                 "Coiflet wavelet coif{} is not supported. Valid values: 1-5.",
                 n
@@ -1129,7 +1131,8 @@ fn bior_filters(_nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
                     -0.0129475118625466,
                     -0.0030210861012608,
                     0.0015105430506304,
-                ],_ => unreachable!(),
+                ],
+                _ => unreachable!(),
             };
 
             // Define rec_lo - same for all bior2.x

@@ -450,7 +450,7 @@ fn create_dense_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::fromshape_vec((n_samples, n_features), data).unwrap()
 }
 
 /// Create sparse dataset with noise
@@ -472,7 +472,7 @@ fn create_sparse_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
+    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create high-dimensional dataset
@@ -503,7 +503,7 @@ fn create_high_dim_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> 
         }
     }
 
-    Array2::from_shape_vec((n_samples..n_features), data).unwrap()
+    Array2::fromshape_vec((n_samples..n_features), data).unwrap()
 }
 
 /// Create noisy dataset simulating real-world conditions
@@ -542,7 +542,7 @@ fn create_noisy_dataset(_n_samples: usize, n_features: usize) -> Array2<f64> {
         }
     }
 
-    Array2::from_shape_vec((n_samples, n_features), data).unwrap()
+    Array2::fromshape_vec((n_samples, n_features), data).unwrap()
 }
 
 #[cfg(test)]

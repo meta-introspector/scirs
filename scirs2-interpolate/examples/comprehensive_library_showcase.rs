@@ -168,7 +168,7 @@ fn demonstrate_advanced_methods() -> InterpolateResult<()> {
     println!("\n1. RBF Interpolation with Stability Monitoring:");
 
     // Create 2D scattered data
-    let points = Array2::from_shape_vec(
+    let points = Array2::fromshape_vec(
         (8, 2),
         vec![
             0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.0, 0.0, 0.5, 1.0, 0.5, 0.5, 0.5,
@@ -192,7 +192,7 @@ fn demonstrate_advanced_methods() -> InterpolateResult<()> {
         );
     }
 
-    let query = Array2::from_shape_vec((1, 2), vec![0.25, 0.75])?;
+    let query = Array2::fromshape_vec((1, 2), vec![0.25, 0.75])?;
     let rbf_result = rbf.interpolate(&query.view())?;
     println!("   RBF result at (0.25, 0.75): {:.4}", rbf_result[0]);
 
@@ -201,7 +201,7 @@ fn demonstrate_advanced_methods() -> InterpolateResult<()> {
     #[cfg(feature = "linalg")]
     {
         let large_points =
-            Array2::from_shape_vec((50, 2), (0..100).map(|i| (i % 10) as f64 * 0.1).collect())?;
+            Array2::fromshape_vec((50, 2), (0..100).map(|i| (i % 10) as f64 * 0.1).collect())?;
         let large_values = Array1::from_iter((0..50).map(|i| {
             let x = (i % 10) as f64 * 0.1;
             let y = (i / 10) as f64 * 0.1;
@@ -216,7 +216,7 @@ fn demonstrate_advanced_methods() -> InterpolateResult<()> {
             .max_neighbors(10)
             .build()?;
 
-        let fast_query = Array2::from_shape_vec((1, 2), vec![0.35, 0.65])?;
+        let fast_query = Array2::fromshape_vec((1, 2), vec![0.35, 0.65])?;
         let fast_result = fast_kriging.predict(&fast_query.view())?;
         println!(
             "   Fast Kriging result: {:.4} ± {:.4}",
@@ -337,7 +337,7 @@ fn demonstrate_numerical_stability() -> InterpolateResult<()> {
     println!("\n2. Interpolation with Stability Monitoring:");
 
     // Create challenging RBF problem
-    let close_points = Array2::from_shape_vec(
+    let close_points = Array2::fromshape_vec(
         (4, 2),
         vec![
             0.0, 0.0, 1e-8, 1e-8, // Very close points
@@ -429,7 +429,7 @@ fn demonstrate_specialized_methods() -> InterpolateResult<()> {
     println!("\n1. Enhanced Grid Data Interpolation:");
 
     // 2D grid data
-    let grid_points = Array2::from_shape_vec(
+    let grid_points = Array2::fromshape_vec(
         (9, 2),
         vec![
             0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.0, 2.0, 1.0, 2.0, 2.0,
@@ -442,7 +442,7 @@ fn demonstrate_specialized_methods() -> InterpolateResult<()> {
         x + y
     }));
 
-    let grid_query = Array2::from_shape_vec((1, 2), vec![0.5, 1.5])?;
+    let grid_query = Array2::fromshape_vec((1, 2), vec![0.5, 1.5])?;
     let grid_result = griddata(
         &grid_points.view(),
         &grid_values.view(),

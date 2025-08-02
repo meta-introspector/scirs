@@ -54,7 +54,7 @@ fn main() -> NdimageResult<()> {
     demonstrate_quality_assessment(&test_image)?;
 
     // 4. Texture Analysis
-    demonstrate_texture_analysis(&test_image)?;
+    demonstratetexture_analysis(&test_image)?;
 
     // 5. Advanced Filtering Techniques
     demonstrate_advanced_filtering(&test_image)?;
@@ -229,7 +229,7 @@ fn demonstrate_quality_assessment(_image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[allow(dead_code)]
-fn demonstrate_texture_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
+fn demonstratetexture_analysis(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("3. Comprehensive Texture Analysis");
     println!("----------------------------------");
 

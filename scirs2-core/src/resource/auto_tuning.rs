@@ -515,6 +515,7 @@ struct OptimizationEvent {
     performance_delta: f64,
 }
 
+#[allow(dead_code)]
 impl AutoTuner {
     pub fn new(performance_profile: PerformanceProfile) -> CoreResult<Self> {
         Ok(Self {
@@ -680,19 +681,19 @@ impl AutoTuner {
 
         Ok(recommendations)
     }
-    
+
     pub fn increase_resources(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
         // Placeholder implementation
         // In a real implementation, this would increase allocated resources
         Ok(())
     }
-    
+
     pub fn decrease_resources(&mut self, _metrics: &ResourceMetrics) -> CoreResult<()> {
         // Placeholder implementation
         // In a real implementation, this would decrease allocated resources
         Ok(())
     }
-    
+
     fn needs_optimization(&mut self, _metrics: &ResourceMetrics, _performance_score: f64) -> bool {
         // Placeholder implementation
         // In a real implementation, this would check if optimization is needed

@@ -1,17 +1,17 @@
-//! Enhanced validation improvements for Lomb-Scargle periodogram
-//!
-//! This module provides additional validation improvements focusing on:
-//! - Enhanced statistical power analysis
-//! - Advanced edge case handling with better error reporting
-//! - Improved numerical precision validation across different data types
-//! - Enhanced bootstrap confidence interval coverage
-//! - Cross-implementation consistency testing
-//! - Performance regression detection
-//! - Memory leak detection for large signals
+// Enhanced validation improvements for Lomb-Scargle periodogram
+//
+// This module provides additional validation improvements focusing on:
+// - Enhanced statistical power analysis
+// - Advanced edge case handling with better error reporting
+// - Improved numerical precision validation across different data types
+// - Enhanced bootstrap confidence interval coverage
+// - Cross-implementation consistency testing
+// - Performance regression detection
+// - Memory leak detection for large signals
 
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::lombscargle;
-use crate::lombscargle__enhanced::{LombScargleConfig, lombscargle_enhanced};
+use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig};
 use num_traits::Float;
 use rand::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
@@ -211,8 +211,17 @@ pub fn analyze_numerical_precision(
         Some(1.0),
         None,
     )?;
-    let (freqs_f32, power_f32) = lombscargle(&signal_f32_as_f64, &time_f32_as_f64, None, None, None, None,
-        None, None, None)?;
+    let (freqs_f32, power_f32) = lombscargle(
+        &signal_f32_as_f64,
+        &time_f32_as_f64,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )?;
 
     // Analyze differences
     let mut max_error = 0.0;
@@ -233,7 +242,7 @@ pub fn analyze_numerical_precision(
             }
         }
     }
-    mean_error /= min_len  as f64;
+    mean_error /= min_len as f64;
 
     // Estimate precision loss in bits
     let precision_loss_bits = if max_error > 0.0 {
@@ -254,8 +263,10 @@ pub fn analyze_numerical_precision(
     };
 
     Ok(PrecisionAnalysisResult {
-        f32, _f64_max_error: max_error,
-        f32, _f64_mean_error: mean_error,
+        f32,
+        _f64_max_error: max_error,
+        f32,
+        _f64_mean_error: mean_error,
         precision_loss_bits,
         stability_score,
         cancellation_events,
@@ -397,7 +408,7 @@ pub fn analyze_statistical_power(
             }
         }
 
-        let detection_power = detection_count as f64 / n_trials  as f64;
+        let detection_power = detection_count as f64 / n_trials as f64;
         power_curve.push((snr_db, detection_power));
 
         // Estimate error rates
@@ -410,8 +421,8 @@ pub fn analyze_statistical_power(
     }
 
     let n_snr_points = snr_range_db.len();
-    let type_i_error_rate = type_i_errors as f64 / n_snr_points.max(1)  as f64;
-    let type_ii_error_rate = type_ii_errors as f64 / n_snr_points.max(1)  as f64;
+    let type_i_error_rate = type_i_errors as f64 / n_snr_points.max(1) as f64;
+    let type_ii_error_rate = type_ii_errors as f64 / n_snr_points.max(1) as f64;
 
     // Find minimum detectable effect size (50% power point)
     let minimum_effect_size = power_curve
@@ -473,7 +484,7 @@ pub fn validate_cross_implementation_consistency(
             frequency_consistency.push(0.0);
         }
     }
-    mean_absolute_deviation /= min_len  as f64;
+    mean_absolute_deviation /= min_len as f64;
 
     // Compute correlation
     let correlation = compute_correlation(&power_std[..min_len], &enhanced_result.power[..min_len]);
@@ -538,7 +549,7 @@ fn compute_bootstrap_bias(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
 
     for i in 0..n_points {
         let values: Vec<f64> = bootstrap_powers.iter().map(|power| power[i]).collect();
-        let mean = values.iter().sum::<f64>() / values.len()  as f64;
+        let mean = values.iter().sum::<f64>() / values.len() as f64;
         let median = compute_median(&values);
         total_bias += (mean - median).abs();
     }
@@ -557,9 +568,9 @@ fn compute_bootstrap_variance(_bootstrap_powers: &[Vec<f64>]) -> SignalResult<f6
 
     for i in 0..n_points {
         let values: Vec<f64> = bootstrap_powers.iter().map(|power| power[i]).collect();
-        let mean = values.iter().sum::<f64>() / values.len()  as f64;
+        let mean = values.iter().sum::<f64>() / values.len() as f64;
         let variance =
-            values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / (values.len() - 1)  as f64;
+            values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
         total_variance += variance;
     }
 
@@ -617,7 +628,7 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
         return 0.0;
     }
 
-    let n = x.len()  as f64;
+    let n = x.len() as f64;
     let mean_x = x.iter().sum::<f64>() / n;
     let mean_y = y.iter().sum::<f64>() / n;
 
@@ -783,7 +794,7 @@ pub fn comprehensive_lombscargle_validation(
         simd_consistency_score,
     ];
 
-    validation_results.overall_score = scores.iter().sum::<f64>() / scores.len()  as f64;
+    validation_results.overall_score = scores.iter().sum::<f64>() / scores.len() as f64;
     validation_results.issues = issues;
 
     Ok(validation_results)
@@ -866,7 +877,7 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
         Ok((_, power)) => {
             // Should produce flat spectrum
             let power_variance =
-                power.iter().map(|&p| (p - power[0]).powi(2)).sum::<f64>() / power.len()  as f64;
+                power.iter().map(|&p| (p - power[0]).powi(2)).sum::<f64>() / power.len() as f64;
             if power_variance > 0.1 {
                 score -= 15.0;
             }
@@ -943,7 +954,7 @@ fn benchmark_lombscargle_performance(
         times.push(start.elapsed().as_secs_f64() * 1000.0); // Convert to ms
     }
 
-    let mean_time = times.iter().sum::<f64>() / times.len()  as f64;
+    let mean_time = times.iter().sum::<f64>() / times.len() as f64;
     let throughput = signal.len() as f64 / (mean_time / 1000.0);
 
     // Simple performance scoring based on throughput

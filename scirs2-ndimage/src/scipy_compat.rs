@@ -67,11 +67,11 @@ impl Mode {
     /// Convert to internal BoundaryMode
     pub fn to_boundary_mode(self) -> BoundaryMode {
         match self {
-            Mode::Reflect =>, BoundaryMode::Reflect,
-            Mode::Constant =>, BoundaryMode::Constant(0.0),
-            Mode::Nearest =>, BoundaryMode::Nearest,
-            Mode::Mirror =>, BoundaryMode::Mirror,
-            Mode::Wrap =>, BoundaryMode::Wrap,
+            Mode::Reflect => BoundaryMode::Reflect,
+            Mode::Constant => BoundaryMode::Constant(0.0),
+            Mode::Nearest => BoundaryMode::Nearest,
+            Mode::Mirror => BoundaryMode::Mirror,
+            Mode::Wrap => BoundaryMode::Wrap,
         }
     }
 }
@@ -113,7 +113,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::filters::gaussian_filter(
@@ -151,7 +151,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::filters::uniform_filter(
@@ -180,7 +180,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::filters::median_filter(input.view(), size, boundary_mode)
@@ -203,7 +203,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::filters::sobel_filter(input.view(), axis, Some(boundary_mode))
@@ -282,7 +282,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::morphology::grayscale_erosion(input.view(), structure.view(), Some(boundary_mode))
@@ -324,7 +324,7 @@ pub fn affine_transform<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     matrix: &Array2<f64>,
     offset: Option<Vec<f64>>,
-    output_shape: Option<Vec<usize>>,
+    outputshape: Option<Vec<usize>>,
     order: Option<usize>,
     mode: Option<&str>,
     cval: Option<T>,
@@ -340,14 +340,14 @@ where
         .transpose()?
         .unwrap_or(Mode::Constant);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::interpolation::affine_transform(
         input.view(),
         matrix.view(),
         &offset,
-        output_shape,
+        outputshape,
         order.unwrap_or(3),
         boundary_mode,
         prefilter.unwrap_or(true),
@@ -384,7 +384,7 @@ where
     let converted_indices = if let Some(idx_array) = _indices {
         if return_indices {
             // Convert from i32 IxDyn to usize D
-            let idx_shape = input.shape().to_vec();
+            let idxshape = input.shape().to_vec();
             let mut result_indices = Array::<usize, D>::zeros(input.dim());
 
             // Copy data with type conversion
@@ -393,7 +393,7 @@ where
                 let mut remaining = i;
 
                 // Convert flat index to multi-dimensional coordinates
-                for (dim, &size) in idx_shape.iter().enumerate().rev() {
+                for (dim, &size) in idxshape.iter().enumerate().rev() {
                     coords[dim] = remaining % size;
                     remaining /= size;
                 }
@@ -440,7 +440,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Constant);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::interpolation::map_coordinates(
@@ -480,7 +480,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Constant);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::interpolation::zoom(
@@ -520,7 +520,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Constant);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::interpolation::rotate(
@@ -553,7 +553,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Constant);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::interpolation::shift(
@@ -581,7 +581,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::filters::laplace_filter(input.view(), boundary_mode)
@@ -604,7 +604,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     crate::filters::prewitt_filter(input.view(), axis, Some(boundary_mode))
@@ -640,7 +640,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     if let Some(fp) = footprint {
@@ -682,7 +682,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::neg_infinity()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::neg_infinity()), _ => mode.to_boundary_mode(),
     };
 
     if let Some(fp) = footprint {
@@ -722,7 +722,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::infinity()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::infinity()), _ => mode.to_boundary_mode(),
     };
 
     if let Some(fp) = footprint {
@@ -763,7 +763,7 @@ where
         .transpose()?
         .unwrap_or(Mode::Reflect);
     let boundary_mode = match mode {
-        Mode::Constant =>, BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
+        Mode::Constant => BoundaryMode::Constant(cval.unwrap_or(T::zero()), _ => mode.to_boundary_mode(),
     };
 
     if let Some(fp) = footprint {

@@ -6,7 +6,6 @@ use crate::distributions::normal::Normal;
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
-use statrs::statistics::Statistics;
 
 /// Lognormal distribution structure
 ///

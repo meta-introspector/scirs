@@ -371,7 +371,7 @@ mod tests {
 
     #[test]
     fn test_pressure_boundary_conditions() {
-        let mut pressure = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
+        let mut pressure = Array2::fromshape_fn((5, 5), |(i, j)| (i + j) as f64);
         let original_interior = pressure[[2, 2]];
 
         apply_pressure_boundary_conditions(&mut pressure).unwrap();

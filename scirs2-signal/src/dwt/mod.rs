@@ -1,16 +1,15 @@
-//! Discrete Wavelet Transform (DWT)
-//!
-//! This module provides implementations of the Discrete Wavelet Transform (DWT),
-//! inverse DWT, and associated wavelet filters. The DWT is useful for
-//! multi-resolution analysis, denoising, and compression of signals.
-//!
-//! The module is organized into submodules:
-//! - `filters`: Wavelet filter definitions and generation functions
-//! - `transform`: Core DWT decomposition and reconstruction functions
-//! - `boundary`: Signal extension methods for handling boundary conditions
-//! - `multiscale`: Multi-level transform functions for decomposition and reconstruction
+// Discrete Wavelet Transform (DWT)
+//
+// This module provides implementations of the Discrete Wavelet Transform (DWT),
+// inverse DWT, and associated wavelet filters. The DWT is useful for
+// multi-resolution analysis, denoising, and compression of signals.
+//
+// The module is organized into submodules:
+// - `filters`: Wavelet filter definitions and generation functions
+// - `transform`: Core DWT decomposition and reconstruction functions
+// - `boundary`: Signal extension methods for handling boundary conditions
+// - `multiscale`: Multi-level transform functions for decomposition and reconstruction
 
-use crate::dwt::Wavelet;
 use ndarray::Array1;
 
 #[allow(unused_imports)]

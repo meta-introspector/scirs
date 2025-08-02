@@ -219,7 +219,7 @@ mod tests {
     }
 
     #[test]
-    fn test_text_cleaner() {
+    fn testtext_cleaner() {
         let cleaner = BasicTextCleaner::default();
         let text = "Hello, world! This is a test.";
         let cleaned = cleaner.clean(text).unwrap();
@@ -227,7 +227,7 @@ mod tests {
     }
 
     #[test]
-    fn test_text_preprocessor() {
+    fn testtext_preprocessor() {
         let preprocessor = TextPreprocessor::default();
         let text = "Héllo, World! This is a test.";
         let processed = preprocessor.process(text).unwrap();

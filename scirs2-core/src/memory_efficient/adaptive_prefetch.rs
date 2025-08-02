@@ -23,9 +23,9 @@ const EXPLORATION_RATE_INITIAL: f64 = 0.3;
 const EXPLORATION_RATE_DECAY: f64 = 0.995;
 
 /// Matrix traversal pattern constants
-const matrix_traversal_row_major: &str = "matrix_traversal_row_major";
-const matrix_traversal_col_major: &str = "matrix_traversal_col_major";
-const zigzag_scan: &str = "zigzag_scan";
+const MATRIX_TRAVERSAL_ROW_MAJOR: &str = "MATRIX_TRAVERSAL_ROW_MAJOR";
+const MATRIX_TRAVERSAL_COL_MAJOR: &str = "MATRIX_TRAVERSAL_COL_MAJOR";
+const ZIGZAG_SCAN: &str = "ZIGZAG_SCAN";
 
 /// Types of prefetching strategies that can be dynamically selected.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -374,7 +374,7 @@ impl AdaptivePatternTracker {
 
                     for pattern_name in detected_patterns {
                         // For matrix traversal, use hybrid strategy
-                        if pattern_name == matrix_traversal_row_major {
+                        if pattern_name == MATRIX_TRAVERSAL_ROW_MAJOR {
                             let strategy = PrefetchStrategy::Hybrid {
                                 sequential: dims[1], // Row length
                                 pattern: 2,
@@ -398,7 +398,7 @@ impl AdaptivePatternTracker {
                             if (self.exploration_step % 100) < 60 {
                                 self.current_strategy = strategy;
                             }
-                        } else if pattern_name == matrix_traversal_col_major {
+                        } else if pattern_name == MATRIX_TRAVERSAL_COL_MAJOR {
                             let strategy = PrefetchStrategy::Strided {
                                 stride: dims[0], // Column stride
                                 count: 3,
@@ -512,16 +512,16 @@ impl AdaptivePatternTracker {
 
         // Detect patterns if they match a significant portion of the history
         if row_major_pct > 0.6 {
-            detected_patterns.push(matrix_traversal_row_major.to_string());
+            detected_patterns.push(MATRIX_TRAVERSAL_ROW_MAJOR.to_string());
         }
 
         if col_major_pct > 0.6 {
-            detected_patterns.push(matrix_traversal_col_major.to_string());
+            detected_patterns.push(MATRIX_TRAVERSAL_COL_MAJOR.to_string());
         }
 
         // Try to detect zigzag pattern (alternating row directions)
         if self.detect_zigzag_pattern(&flat_indices, dimensions) {
-            detected_patterns.push(zigzag_scan.to_string());
+            detected_patterns.push(ZIGZAG_SCAN.to_string());
         }
 
         // Keep track of dimensional patterns
@@ -791,7 +791,9 @@ impl AdaptivePatternTracker {
         // For each occurrence, check what comes next
         for &occurrence_idx in &occurrences {
             if occurrence_idx + pattern.len() < self.history.len() {
-                if let Some((next_block_idx, _, _)) = self.history.get(occurrence_idx + pattern.len()) {
+                if let Some((next_block_idx, _, _)) =
+                    self.history.get(occurrence_idx + pattern.len())
+                {
                     predictions.push(*next_block_idx);
                 }
             }
@@ -857,7 +859,9 @@ pub struct PatternTrackerFactory;
 
 impl PatternTrackerFactory {
     /// Create a new access pattern tracker of the specified type.
-    pub fn create_tracker(tracker_type: &str, config: PrefetchConfig
+    pub fn create_tracker(
+        tracker_type: &str,
+        config: PrefetchConfig,
     ) -> Box<dyn AccessPatternTracker + Send + Sync> {
         match tracker_type {
             "adaptive" => Box::new(AdaptivePatternTracker::new(config)),
@@ -1114,7 +1118,7 @@ mod tests {
         let dimensions = vec![5, 5];
         let patterns = tracker.detect_dimensional_patterns(&dimensions);
         assert!(!patterns.is_empty());
-        assert!(patterns.contains(&matrix_traversal_row_major.to_string()));
+        assert!(patterns.contains(&MATRIX_TRAVERSAL_ROW_MAJOR.to_string()));
 
         // Clear history
         tracker.clear_history();
@@ -1129,7 +1133,7 @@ mod tests {
         // Check pattern detection
         let patterns = tracker.detect_dimensional_patterns(&dimensions);
         assert!(!patterns.is_empty());
-        assert!(patterns.contains(&matrix_traversal_col_major.to_string()));
+        assert!(patterns.contains(&MATRIX_TRAVERSAL_COL_MAJOR.to_string()));
     }
 
     #[test]

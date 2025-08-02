@@ -53,7 +53,7 @@ impl ActivationFunction {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
             ActivationFunction::LeakyReLU(alpha) => x.mapv(|v| if v > 0.0 { 1.0 } else { *alpha }),
-            ActivationFunction::Linear =>, Array::ones(x.dim()),
+            ActivationFunction::Linear => Array::ones(x.dim()),
     /// Get a string representation of the activation function
     fn to_string(&self) -> String {
             ActivationFunction::ReLU => "ReLU".to_string(),
@@ -254,16 +254,16 @@ impl Layer<Array4<f32>> for BatchNorm2D {
         2 * self.num_features
 /// Layer Normalization (normalizes over features)
 struct LayerNorm {
-    normalized_shape: Vec<usize>,
+    normalizedshape: Vec<usize>,
     input: Option<Array2<f32>>,
     normalized: Option<Array2<f32>>,
     mean: Option<Array1<f32>>,
 impl LayerNorm {
     /// Create a new LayerNorm layer
-    fn new(_normalized_shape: Vec<usize>, epsilon: f32) -> Self {
+    fn new(normalizedshape: Vec<usize>, epsilon: f32) -> Self {
         // Calculate number of features
-        let num_features: usize = _normalized_shape.iter().product();
-            _normalized_shape,
+        let num_features: usize = normalizedshape.iter().product();
+            normalizedshape,
             mean: None,
 impl Layer<Array2<f32>> for LayerNorm {
     fn forward(&mut self, x: &Array2<f32>, _is_training: bool) -> Array2<f32> {
@@ -317,8 +317,8 @@ impl Layer<Array2<f32>> for LayerNorm {
                 let dvar_term = 2.0 * (input[[b, f]] - mean[b]) / n_features;
                 dinput[[b, f]] =
                     dxhat[[b, f]] / std_dev[b] + dvar[b] * dvar_term + dmean[b] / n_features;
-            "LayerNorm: _normalized_shape={:?}, epsilon={}",
-            self.normalized_shape, self.epsilon
+            "LayerNorm: normalizedshape={:?}, epsilon={}",
+            self.normalizedshape, self.epsilon
         2 * self.gamma.len()
 /// Group Normalization layer
 struct GroupNorm {
@@ -411,7 +411,7 @@ impl Dense {
         let std_dev = (2.0 / input_size as f32).sqrt();
         let dist = Uniform::new_inclusive(-std_dev, std_dev);
         // Initialize weights and biases
-        let weights = Array2::from_shape_fn((input_size, output_size), |_| dist.sample(rng));
+        let weights = Array2::fromshape_fn((input_size, output_size), |_| dist.sample(rng));
         let biases = Array1::zeros(output_size);
             input_size,
             output_size,
@@ -481,7 +481,7 @@ impl LossFunction {
                 (predictions - targets) * (2.0 / n)
                 // Simplified gradient for cross-entropy: -y/ŷ
                 let n = predictions.shape()[0] as f32;
-                Array2::from_shape_fn(predictions.dim(), |(i, j)| {
+                Array2::fromshape_fn(predictions.dim(), |(i, j)| {
                     let y_pred = predictions[[i, j]].max(epsilon).min(1.0 - epsilon);
                     let y_true = targets[[i, j]];
                     if y_true > 0.0 {
@@ -500,7 +500,7 @@ fn example_batchnorm() -> Result<()> {
     let height = 16;
     let width = 16;
     // Create random input tensor
-    let x = Array4::from_shape_fn((batch_size, channels, height, width), |_| {
+    let x = Array4::fromshape_fn((batch_size, channels, height, width), |_| {
         rng.random::<f32>() * 2.0 - 1.0 // Random values between -1 and 1
     });
     // Create a BatchNorm2D layer
@@ -532,7 +532,7 @@ fn example_batchnorm() -> Result<()> {
 fn example_layernorm() -> Result<()> {
     println!("\nLayer Normalization Example\n");
     let features = 64;
-    let x = Array2::from_shape_fn((batch_size, features), |_| {
+    let x = Array2::fromshape_fn((batch_size, features), |_| {
     // Create a LayerNorm layer
     let mut ln = LayerNorm::new(vec![features], 1e-5);
     println!("{}", ln.get_description());
@@ -567,7 +567,7 @@ fn compare_normalization_methods() -> Result<()> {
     let n_features = 784; // 28x28
     let n_classes = 10;
     // Generate synthetic data
-    let x_train = Array2::from_shape_fn((n_samples, n_features), |_| {
+    let x_train = Array2::fromshape_fn((n_samples, n_features), |_| {
         rng.random::<f32>() // Values between 0 and 1
     // Generate one-hot encoded labels
     let mut y_train = Array2::zeros((n_samples, n_classes));

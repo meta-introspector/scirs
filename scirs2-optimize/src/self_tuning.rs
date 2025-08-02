@@ -72,7 +72,7 @@ impl SelfTuningOptimizer {
             performance_tracker: PerformanceTracker::new(_config.memory_window),
             adaptation_engine: AdaptationEngine::new(_config.adaptation_strategy),
             tuning_history: TuningHistory::new(),
-            _config,
+            config: _config,
         }
     }
 
@@ -275,7 +275,7 @@ where
     /// Create a new tunable parameter
     pub fn new(_current: T, min: T, max: T) -> Self {
         Self {
-            _current_value: _current,
+            current_value: _current,
             min_value: min,
             max_value: max,
             adaptation_rate: 0.1,
@@ -491,7 +491,7 @@ struct PerformanceTracker {
 impl PerformanceTracker {
     fn new(_memory_window: usize) -> Self {
         Self {
-            _memory_window,
+            memory_window: _memory_window,
             function_values: VecDeque::new(),
             gradient_norms: VecDeque::new(),
             improvements: VecDeque::new(),
@@ -658,7 +658,7 @@ impl AdaptationEngine {
         };
 
         Self {
-            _strategy,
+            strategy: _strategy,
             rl_agent,
             bayesian_optimizer,
         }
@@ -1193,7 +1193,7 @@ impl BayesianParameterOptimizer {
                             let new_val = ((*i as f64) * perturbation_factor) as i64;
                             Some(ParameterValue::Integer(new_val.max(1)))
                         }
-                        _ => None..,
+                        _ => None,
                     };
 
                     if let Some(new_value) = perturbed_value {

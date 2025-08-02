@@ -75,7 +75,7 @@ use crate::error::{SpatialError, SpatialResult};
 /// println!("Moran's I: {:.3}", moran);
 /// ```
 #[allow(dead_code)]
-pub fn morans_i<T: Float>(_values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
+pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
     let n = _values.len();
 
     if weights.shape()[0] != n || weights.shape()[1] != n {
@@ -158,7 +158,7 @@ pub fn morans_i<T: Float>(_values: &ArrayView1<T>, weights: &ArrayView2<T>) -> S
 /// println!("Geary's C: {:.3}", geary);
 /// ```
 #[allow(dead_code)]
-pub fn gearys_c<T: Float>(_values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
+pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
     let n = _values.len();
 
     if weights.shape()[0] != n || weights.shape()[1] != n {

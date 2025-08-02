@@ -846,14 +846,14 @@ mod tests {
 
     #[test]
     fn test_normalize_array_minmax() {
-        let data = Array::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+        let data = Array::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
             .unwrap();
 
         // Normalize columns (axis 0)
         let normalized = normalize_array(&data, NormalizationMethod::MinMax, 0).unwrap();
 
         let expected =
-            Array::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0])
+            Array::fromshape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0])
                 .unwrap();
 
         for i in 0..3 {
@@ -866,7 +866,7 @@ mod tests {
         let normalized = normalize_array(&data, NormalizationMethod::MinMax, 1).unwrap();
 
         let expected =
-            Array::from_shape_vec((3, 3), vec![0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0])
+            Array::fromshape_vec((3, 3), vec![0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0])
                 .unwrap();
 
         for i in 0..3 {
@@ -878,7 +878,7 @@ mod tests {
 
     #[test]
     fn test_normalizer_fit_transform() {
-        let data = Array::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+        let data = Array::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
             .unwrap();
 
         // Test MinMax normalization
@@ -886,7 +886,7 @@ mod tests {
         let transformed = normalizer.fit_transform(&data).unwrap();
 
         let expected =
-            Array::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0])
+            Array::fromshape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0])
                 .unwrap();
 
         for i in 0..3 {
@@ -896,11 +896,11 @@ mod tests {
         }
 
         // Test with separate fit and transform
-        let data2 = Array::from_shape_vec((2, 3), vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]).unwrap();
+        let data2 = Array::fromshape_vec((2, 3), vec![2.0, 3.0, 4.0, 5.0, 6.0, 7.0]).unwrap();
 
         let transformed2 = normalizer.transform(&data2).unwrap();
 
-        let expected2 = Array::from_shape_vec(
+        let expected2 = Array::fromshape_vec(
             (2, 3),
             vec![
                 1.0 / 6.0,
@@ -945,14 +945,14 @@ mod tests {
 
     #[test]
     fn test_normalize_array_robust() {
-        let data = Array::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap();
+        let data = Array::fromshape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap();
 
         // Normalize columns (axis 0)
         let normalized = normalize_array(&data, NormalizationMethod::Robust, 0).unwrap();
 
         // For column 0: [1, 2, 3] -> median=2, Q1=1.5, Q3=2.5, IQR=1.0
         // For column 1: [10, 20, 30] -> median=20, Q1=15, Q3=25, IQR=10
-        let expected = Array::from_shape_vec(
+        let expected = Array::fromshape_vec(
             (3, 2),
             vec![
                 (1.0 - 2.0) / 1.0,    // -1.0
@@ -975,7 +975,7 @@ mod tests {
     #[test]
     fn test_robust_normalizer() {
         let data =
-            Array::from_shape_vec((4, 2), vec![1.0, 100.0, 2.0, 200.0, 3.0, 300.0, 4.0, 400.0])
+            Array::fromshape_vec((4, 2), vec![1.0, 100.0, 2.0, 200.0, 3.0, 300.0, 4.0, 400.0])
                 .unwrap();
 
         let mut normalizer = Normalizer::new(NormalizationMethod::Robust, 0);
@@ -983,7 +983,7 @@ mod tests {
 
         // For column 0: [1, 2, 3, 4] -> median=2.5, Q1=1.75, Q3=3.25, IQR=1.5
         // For column 1: [100, 200, 300, 400] -> median=250, Q1=175, Q3=325, IQR=150
-        let expected = Array::from_shape_vec(
+        let expected = Array::fromshape_vec(
             (4, 2),
             vec![
                 (1.0 - 2.5) / 1.5,       // -1.0

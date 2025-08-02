@@ -738,7 +738,7 @@ mod tests {
         let comm = DistributedCommunicator::new(&config).unwrap();
         
         // Test serialization
-        let matrix = Array2::from_shape_fn((3, 3), |(i, j)| (i + j) as f64);
+        let matrix = Array2::fromshape_fn((3, 3), |(i, j)| (i + j) as f64);
         let serialized = comm.serialize_matrix(&matrix.view()).unwrap();
         let deserialized: Array2<f64> = comm.deserialize_matrix(&serialized).unwrap();
         

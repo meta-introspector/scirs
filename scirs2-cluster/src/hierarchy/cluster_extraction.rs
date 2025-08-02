@@ -395,7 +395,7 @@ fn calculate_wcss_approximation<F: Float + FromPrimitive + Debug + PartialOrd>(
 
 /// Find elbow point in a series of values
 #[allow(dead_code)]
-fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(_values: &[F]) -> usize {
+fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(values: &[F]) -> usize {
     if _values.len() < 3 {
         return 0;
     }
@@ -499,7 +499,7 @@ fn calculate_silhouette_score<F: Float + FromPrimitive + Debug + PartialOrd>(
 
 /// Calculate Euclidean distance between two points
 #[allow(dead_code)]
-fn euclidean_distance<F: Float + FromPrimitive>(_point1: ArrayView1<F>, point2: ArrayView1<F>) -> F {
+fn euclidean_distance<F: Float + FromPrimitive>(point1: ArrayView1<F>, point2: ArrayView1<F>) -> F {
     let mut sum = F::zero();
     for (a, b) in _point1.iter().zip(point2.iter()) {
         let diff = *a - *b;
@@ -629,7 +629,7 @@ mod tests {
     #[test]
     fn test_extract_clusters_by_count() {
         // Create a simple linkage matrix for 4 points
-        let linkage = Array2::from_shape_vec(
+        let linkage = Array2::fromshape_vec(
             (3, 4),
             vec![
                 0.0, 1.0, 0.5, 2.0, // Merge points 0 and 1
@@ -652,7 +652,7 @@ mod tests {
     #[test]
     fn test_estimate_optimal_clusters() {
         // Create test data with clear clusters
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![
                 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, // Cluster 1
@@ -662,7 +662,7 @@ mod tests {
         .unwrap();
 
         // Create a simple linkage matrix
-        let linkage = Array2::from_shape_vec(
+        let linkage = Array2::fromshape_vec(
             (5, 4),
             vec![
                 0.0, 1.0, 1.0, 2.0, 1.0, 2.0, 0.7, 2.0, 3.0, 4.0, 1.0, 2.0, 4.0, 5.0, 0.7, 2.0,
@@ -682,7 +682,7 @@ mod tests {
     #[test]
     fn test_prune_clusters() {
         let clusters = Array1::from_vec(vec![0, 0, 0, 1, 2, 2]); // Cluster 1 has only 1 point
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![
                 0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 10.0, 10.0, 10.1, 10.1,
@@ -701,7 +701,7 @@ mod tests {
 
     #[test]
     fn test_calculate_silhouette_score() {
-        let data = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 10.0, 10.0, 11.0, 10.0])
+        let data = Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 10.0, 10.0, 11.0, 10.0])
             .unwrap();
         let clusters = Array1::from_vec(vec![0, 0, 1, 1]);
 

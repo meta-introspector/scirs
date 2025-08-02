@@ -87,7 +87,7 @@ fn main() -> NdimageResult<()> {
 
 #[allow(dead_code)]
 fn create_test_image_2d(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
 
@@ -102,7 +102,7 @@ fn create_test_image_2d(_height: usize, width: usize) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_test_image_3d(_height: usize, width: usize, depth: usize) -> Array3<f64> {
-    Array3::from_shape_fn((_height, width, depth), |(i, j, k)| {
+    Array3::fromshape_fn((_height, width, depth), |(i, j, k)| {
         let x = i as f64 / _height as f64;
         let y = j as f64 / width as f64;
         let z = k as f64 / depth as f64;
@@ -117,7 +117,7 @@ fn create_test_image_3d(_height: usize, width: usize, depth: usize) -> Array3<f6
 #[allow(dead_code)]
 fn add_noise(_image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
     _image
-        + &Array2::from_shape_fn(_image.dim(), |(i, j)| {
+        + &Array2::fromshape_fn(_image.dim(), |(i, j)| {
             let noise = if (i * 7 + j * 11) % 13 == 0 {
                 noise_level
             } else {
@@ -133,7 +133,7 @@ fn add_noise(_image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_edge_test_image(_height: usize, width: usize) -> Array2<f64> {
-    Array2::from_shape_fn((_height, width), |(i, j)| {
+    Array2::fromshape_fn((_height, width), |(i, j)| {
         // Create step edges and lines
         if i > _height / 2 && i < _height / 2 + 5 {
             1.0
@@ -317,7 +317,7 @@ fn demonstrate_interpolation(_image: &Array2<f64>) -> NdimageResult<()> {
 
     // 3. Affine transformation
     println!("  • Affine transformation:");
-    let transform_matrix = Array2::from_shape_vec(
+    let transform_matrix = Array2::fromshape_vec(
         (2, 3),
         vec![
             1.2, 0.2, 10.0, // scale + shear + translation
@@ -335,7 +335,7 @@ fn demonstrate_interpolation(_image: &Array2<f64>) -> NdimageResult<()> {
 
     // 4. Coordinate mapping
     println!("  • Coordinate mapping:");
-    let coords = Array2::from_shape_fn((2, 100), |(axis, i)| {
+    let coords = Array2::fromshape_fn((2, 100), |(axis, i)| {
         if axis == 0 {
             (i as f64 / 99.0) * (_image.nrows() - 1) as f64
         } else {
@@ -407,7 +407,7 @@ fn demonstrate_segmentation(_image: &Array2<f64>) -> NdimageResult<()> {
 
     // 2. Watershed segmentation
     println!("  • Watershed segmentation:");
-    let markers = Array2::from_shape_fn(_image.dim(), |(i, j)| {
+    let markers = Array2::fromshape_fn(_image.dim(), |(i, j)| {
         if i < 20 && j < 20 {
             1u32
         } else if i > _image.nrows() - 20 && j > _image.ncols() - 20 {

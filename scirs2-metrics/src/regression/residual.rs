@@ -7,7 +7,7 @@ use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::{Float, FromPrimitive, NumCast};
 use std::cmp::Ordering;
 
-use super::check_same_shape;
+use super::check_sameshape;
 use crate::error::{MetricsError, Result};
 
 /// Structure representing a histogram of residuals
@@ -65,7 +65,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     if n_bins == 0 {
         return Err(MetricsError::InvalidInput(
@@ -179,7 +179,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     if n_quantiles < 2 {
         return Err(MetricsError::InvalidInput(
@@ -366,7 +366,7 @@ pub struct ResidualAnalysis<F: Float> {
 /// let y_pred = array![2.5, 0.0, 2.0, 8.0, 4.5, 7.5, 1.5, 3.5];
 ///
 /// // Create dummy X matrix (features matrix) with 2 predictors
-/// let x = Array2::from_shape_fn((8, 2), |(i, j)| i as f64 + j as f64);
+/// let x = Array2::fromshape_fn((8, 2), |(i, j)| i as f64 + j as f64);
 ///
 /// let analysis = residual_analysis(&y_true, &y_pred, Some(&x), None).unwrap();
 ///
@@ -389,7 +389,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     let n_samples = y_true.len();
 
@@ -645,7 +645,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     let n_samples = y_true.len();
 
@@ -718,7 +718,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     let n_samples = y_true.len();
 
@@ -790,7 +790,7 @@ where
     D2: Dimension,
 {
     // Check that arrays have the same shape
-    check_same_shape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
+    check_sameshape::<F, S1, S2, D1, D2>(y_true, y_pred)?;
 
     let n_samples = y_true.len();
 

@@ -166,7 +166,7 @@ where
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<Complex64>() {
             // Create a view with the correct type
             let ptr = x.as_ptr() as *const Complex64;
-            let complex_view = unsafe { ArrayView2::from_shape_ptr(x.dim(), ptr) };
+            let complex_view = unsafe { ArrayView2::fromshape_ptr(x.dim(), ptr) };
 
             return _hfft2_complex(&complex_view, shape, axes, norm);
         }
@@ -207,7 +207,8 @@ where
 fn _hfft2_complex(
     x: &ArrayView2<Complex64>,
     shape: Option<(usize, usize)>,
-    axes: Option<(usize, usize)>, _norm: Option<&str>,
+    axes: Option<(usize, usize)>,
+    _norm: Option<&str>,
 ) -> FFTResult<Array2<f64>> {
     // Extract dimensions
     let (n_rows, n_cols) = x.dim();
@@ -305,17 +306,17 @@ where
         if std::any::TypeId::of::<T>() == std::any::TypeId::of::<Complex64>() {
             // Create a view with the correct type
             let ptr = x.as_ptr() as *const Complex64;
-            let complex_view = unsafe { ArrayView::from_shape_ptr(IxDyn(x.shape()), ptr) };
+            let complex_view = unsafe { ArrayView::fromshape_ptr(IxDyn(x.shape()), ptr) };
 
             return _hfftn_complex(&complex_view, shape, axes, norm, overwrite_x, workers);
         }
     }
 
     // For other types, convert to complex and call the internal implementation
-    let x_shape = x.shape().to_vec();
+    let xshape = x.shape().to_vec();
 
     // Convert input to complex array
-    let complex_input = Array::from_shape_fn(IxDyn(&x_shape), |idx| {
+    let complex_input = Array::from_shape_fn(IxDyn(&xshape), |idx| {
         let val = x[idx.clone()];
 
         // Try to convert to complex directly
@@ -347,21 +348,24 @@ where
 fn _hfftn_complex(
     x: &ArrayView<Complex64, IxDyn>,
     shape: Option<Vec<usize>>,
-    axes: Option<Vec<usize>>, _norm: Option<&str>, _overwrite_x: Option<bool>, _workers: Option<usize>,
+    axes: Option<Vec<usize>>,
+    _norm: Option<&str>,
+    _overwrite_x: Option<bool>,
+    _workers: Option<usize>,
 ) -> FFTResult<Array<f64, IxDyn>> {
     // The overwrite_x and _workers parameters are not used in this implementation
     // They are included for API compatibility with scipy's fftn
 
-    let x_shape = x.shape().to_vec();
-    let ndim = x_shape.len();
+    let xshape = x.shape().to_vec();
+    let ndim = xshape.len();
 
     // Handle empty array case
-    if ndim == 0 || x_shape.contains(&0) {
+    if ndim == 0 || xshape.contains(&0) {
         return Ok(Array::zeros(IxDyn(&[])));
     }
 
     // Determine the output shape
-    let out_shape = match shape {
+    let outshape = match shape {
         Some(s) => {
             if s.len() != ndim {
                 return Err(FFTError::ValueError(format!(
@@ -372,7 +376,7 @@ fn _hfftn_complex(
             }
             s
         }
-        None => x_shape.clone(),
+        None => xshape.clone(),
     };
 
     // Determine the axes
@@ -403,10 +407,10 @@ fn _hfftn_complex(
         }
 
         // Note: We ignore the _norm parameter for now
-        let fft_result = fft(&complex_result, Some(out_shape[0]))?;
-        let mut real_result = Array::zeros(IxDyn(&[out_shape[0]]));
+        let fft_result = fft(&complex_result, Some(outshape[0]))?;
+        let mut real_result = Array::zeros(IxDyn(&[outshape[0]]));
 
-        for i in 0..out_shape[0] {
+        for i in 0..outshape[0] {
             real_result[i] = fft_result[i].re;
         }
 
@@ -414,20 +418,20 @@ fn _hfftn_complex(
     }
 
     // For multi-dimensional transforms, we have to transform along each axis
-    let mut array = Array::from_shape_fn(IxDyn(&x_shape), |idx| x[idx.clone()]);
+    let mut array = Array::from_shape_fn(IxDyn(&xshape), |idx| x[idx.clone()]);
 
     // For each axis, perform a 1D transform along that axis
     for &axis in &transform_axes {
         // Get the shape for this axis transformation
-        let axis_dim = out_shape[axis];
+        let axis_dim = outshape[axis];
 
         // Reshape the array to transform along this axis
         let _dim_permutation: Vec<_> = (0..ndim).collect();
-        let mut working_shape = x_shape.clone();
-        working_shape[axis] = axis_dim;
+        let mut workingshape = xshape.clone();
+        workingshape[axis] = axis_dim;
 
         // Allocate an array for the result along this axis
-        let mut axis_result = Array::zeros(IxDyn(&working_shape));
+        let mut axis_result = Array::zeros(IxDyn(&workingshape));
 
         // For each "fiber" along the current axis, perform a 1D FFT
         let mut indices = vec![0; ndim];
@@ -457,7 +461,7 @@ fn _hfftn_complex(
     }
 
     // Extract real part from the final complex array
-    let mut real_result = Array::zeros(IxDyn(&out_shape));
+    let mut real_result = Array::zeros(IxDyn(&outshape));
     for (i, &val) in array.iter().enumerate() {
         // Get the indices for this element
         // This is a simplified approach for the refactoring, in production code we'd use ndarray's APIs better

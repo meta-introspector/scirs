@@ -20,7 +20,7 @@
 //! # Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::fortran::{FortranFile, RecordType, EndianMode};
+//! use scirs2_io::fortran::{FortranFile, RecordType, EndianMode};
 //! use ndarray::Array2;
 //!
 //! // Read a Fortran unformatted file
@@ -157,7 +157,7 @@ pub struct FortranFile<R> {
 
 impl FortranFile<BufReader<File>> {
     /// Open a Fortran unformatted file for reading
-    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         let reader = BufReader::new(file);
@@ -169,7 +169,7 @@ impl FortranFile<BufReader<File>> {
     }
 
     /// Open a Fortran unformatted file with custom configuration
-    pub fn open_with_config<P: AsRef<Path>>(_path: P, config: FortranConfig) -> Result<Self> {
+    pub fn open_with_config<P: AsRef<Path>>(path: P, config: FortranConfig) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
         let reader = BufReader::new(file);
@@ -183,7 +183,7 @@ impl FortranFile<BufReader<File>> {
 
 impl FortranFile<BufWriter<File>> {
     /// Create a new Fortran unformatted file for writing
-    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         let writer = BufWriter::new(file);
@@ -195,7 +195,7 @@ impl FortranFile<BufWriter<File>> {
     }
 
     /// Create a new Fortran unformatted file with custom configuration
-    pub fn create_with_config<P: AsRef<Path>>(_path: P, config: FortranConfig) -> Result<Self> {
+    pub fn create_with_config<P: AsRef<Path>>(path: P, config: FortranConfig) -> Result<Self> {
         let file = File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         let writer = BufWriter::new(file);
@@ -362,7 +362,7 @@ impl<R: Read + Seek> FortranFile<R> {
         }
 
         // Convert from Fortran column-major to row-major
-        Array2::from_shape_vec((rows, cols).f(), values)
+        Array2::fromshape_vec((rows, cols).f(), values)
             .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
     }
 
@@ -398,7 +398,7 @@ impl<R: Read + Seek> FortranFile<R> {
         }
 
         // Convert from Fortran column-major to row-major
-        Array3::from_shape_vec((dim1, dim2, dim3).f(), values)
+        Array3::fromshape_vec((dim1, dim2, dim3).f(), values)
             .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
     }
 
@@ -654,7 +654,7 @@ impl<W: Write> FortranFile<W> {
 
 /// Read a complete Fortran unformatted file into memory
 #[allow(dead_code)]
-pub fn read_fortran_file<P: AsRef<Path>>(_path: P) -> Result<Vec<Vec<u8>>> {
+pub fn read_fortran_file<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<u8>>> {
     let mut file = FortranFile::open(_path)?;
     let mut records = Vec::new();
 
@@ -671,7 +671,7 @@ pub fn read_fortran_file<P: AsRef<Path>>(_path: P) -> Result<Vec<Vec<u8>>> {
 
 /// Detect the endianness and record marker size of a Fortran file
 #[allow(dead_code)]
-pub fn detect_fortran_format<P: AsRef<Path>>(_path: P) -> Result<(EndianMode, RecordMarkerSize)> {
+pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, RecordMarkerSize)> {
     let mut file = File::open(_path.as_ref())
         .map_err(|_e| IoError::FileNotFound(_path.as_ref().to_string_lossy().to_string()))?;
 
@@ -811,7 +811,7 @@ mod tests {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
 
-        let array = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+        let array = Array2::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
             .map_err(|e| IoError::ParseError(format!("Shape error: {e}")))?;
 
         // Write array

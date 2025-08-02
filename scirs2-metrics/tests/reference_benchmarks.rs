@@ -79,7 +79,7 @@ fn test_regression_reference_values() {
 #[allow(dead_code)]
 fn test_clustering_reference_values() {
     // Two well-separated 2D clusters
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (6, 2),
         vec![
             // Cluster 0: centered around (0, 0)

@@ -110,7 +110,12 @@ impl MemoryLayout {
     }
 
     /// Create a new layout with specified order and element size
-    pub fn new_with_order(shape: &[usize], order: LayoutOrder, element_size: usize, alignment: usize) -> Self {
+    pub fn new_with_order(
+        shape: &[usize],
+        order: LayoutOrder,
+        element_size: usize,
+        alignment: usize,
+    ) -> Self {
         let strides = Self::calculate_strides(shape, order, element_size);
         let total_size = shape.iter().product::<usize>() * element_size;
         let is_contiguous = Self::check_contiguous(shape, &strides, element_size);
@@ -160,7 +165,11 @@ impl MemoryLayout {
     }
 
     /// Calculate strides for given shape and order
-    pub fn calculate_strides(shape: &[usize], order: LayoutOrder, element_size: usize) -> Vec<isize> {
+    pub fn calculate_strides(
+        shape: &[usize],
+        order: LayoutOrder,
+        element_size: usize,
+    ) -> Vec<isize> {
         if shape.is_empty() {
             return Vec::new();
         }
@@ -401,27 +410,27 @@ impl MemoryLayout {
         };
 
         // Create new shape and strides
-        let mut new_shape = vec![0; ndim];
+        let mut newshape = vec![0; ndim];
         let mut new_strides = vec![0; ndim];
 
         for (i, &axis) in axes.iter().enumerate() {
-            new_shape[i] = self.shape[axis];
+            newshape[i] = self.shape[axis];
             new_strides[i] = self.strides[axis];
         }
 
         // Determine new order
-        let new_order = if Self::is_c_order(&new_shape, &new_strides, self.element_size) {
+        let new_order = if Self::is_c_order(&newshape, &new_strides, self.element_size) {
             LayoutOrder::C
-        } else if Self::is_f_order(&new_shape, &new_strides, self.element_size) {
+        } else if Self::is_f_order(&newshape, &new_strides, self.element_size) {
             LayoutOrder::Fortran
         } else {
             LayoutOrder::Any
         };
 
-        let is_contiguous = Self::check_contiguous(&new_shape, &new_strides, self.element_size);
+        let is_contiguous = Self::check_contiguous(&newshape, &new_strides, self.element_size);
 
         Ok(Self {
-            shape: new_shape,
+            shape: newshape,
             strides: new_strides,
             element_size: self.element_size,
             total_size: self.total_size,
@@ -432,8 +441,8 @@ impl MemoryLayout {
     }
 
     /// Reshape the layout to new shape
-    pub fn reshape(&self, new_shape: &[usize]) -> CoreResult<Self> {
-        let new_size = new_shape.iter().product::<usize>();
+    pub fn reshape(&self, newshape: &[usize]) -> CoreResult<Self> {
+        let new_size = newshape.iter().product::<usize>();
         let old_size = self.size();
 
         if new_size != old_size {
@@ -453,7 +462,7 @@ impl MemoryLayout {
         };
 
         Ok(Self::new_with_order(
-            new_shape,
+            newshape,
             order,
             self.element_size,
             self.alignment,
@@ -461,37 +470,41 @@ impl MemoryLayout {
     }
 
     /// Create a view with different shape (without copying data)
-    pub fn new_with_shape_and_strides(&self, new_shape: &[usize], new_strides: Option<&[isize]>) -> CoreResult<Self> {
+    pub fn new_withshape_and_strides(
+        &self,
+        newshape: &[usize],
+        new_strides: Option<&[isize]>,
+    ) -> CoreResult<Self> {
         let strides = if let Some(strides) = new_strides {
-            if strides.len() != new_shape.len() {
+            if strides.len() != newshape.len() {
                 return Err(CoreError::ShapeError(
                     ErrorContext::new(format!(
                         "Strides length {} doesn't match shape length {}",
                         strides.len(),
-                        new_shape.len()
+                        newshape.len()
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 ));
             }
             strides.to_vec()
         } else {
-            Self::calculate_strides(new_shape, self.order, self.element_size)
+            Self::calculate_strides(newshape, self.order, self.element_size)
         };
 
         // Determine order
-        let order = if Self::is_c_order(new_shape, &strides, self.element_size) {
+        let order = if Self::is_c_order(newshape, &strides, self.element_size) {
             LayoutOrder::C
-        } else if Self::is_f_order(new_shape, &strides, self.element_size) {
+        } else if Self::is_f_order(newshape, &strides, self.element_size) {
             LayoutOrder::Fortran
         } else {
             LayoutOrder::Any
         };
 
-        let is_contiguous = Self::check_contiguous(new_shape, &strides, self.element_size);
-        let total_size = new_shape.iter().product::<usize>() * self.element_size;
+        let is_contiguous = Self::check_contiguous(newshape, &strides, self.element_size);
+        let total_size = newshape.iter().product::<usize>() * self.element_size;
 
         Ok(Self {
-            shape: new_shape.to_vec(),
+            shape: newshape.to_vec(),
             strides,
             element_size: self.element_size,
             total_size,

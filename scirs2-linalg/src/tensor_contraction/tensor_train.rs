@@ -156,27 +156,27 @@ where
             let core = &self.cores[i];
 
             // Get current result shape and prepare for contraction
-            let current_shape = result.shape().to_vec();
-            let current_rank = current_shape[current_shape.len() - 1];
+            let currentshape = result.shape().to_vec();
+            let current_rank = currentshape[currentshape.len() - 1];
 
             // Reshape result to prepare for contraction
             let result_flat = result
                 .into_shape_with_order((
-                    current_shape[..current_shape.len() - 1].iter().product(),
+                    currentshape[..currentshape.len() - 1].iter().product(),
                     current_rank,
                 ))
                 .map_err(|e| LinalgError::ComputationError(format!("Reshape error: {}", e)))?;
 
             // Contract with the current core along the rank dimension
-            let mut new_shape = current_shape[..current_shape.len() - 1].to_vec();
-            new_shape.push(self.shape[i]);
-            new_shape.push(self.ranks[i + 1]);
+            let mut newshape = currentshape[..currentshape.len() - 1].to_vec();
+            newshape.push(self.shape[i]);
+            newshape.push(self.ranks[i + 1]);
 
             // Compute the contraction manually
-            let mut result_contracted = Array::zeros(ndarray::IxDyn(&new_shape));
+            let mut result_contracted = Array::zeros(ndarray::IxDyn(&newshape));
 
             // Handle different dimensionality cases
-            match new_shape.len() - 2 {
+            match newshape.len() - 2 {
                 0 => {
                     // Special case: no free indices
                     for k in 0..self.shape[i] {
@@ -191,7 +191,7 @@ where
                 }
                 1 => {
                     // One free index dimension
-                    for idx1 in 0..new_shape[0] {
+                    for idx1 in 0..newshape[0] {
                         for k in 0..self.shape[i] {
                             for l in 0..self.ranks[i + 1] {
                                 let mut sum = A::zero();
@@ -205,9 +205,9 @@ where
                 }
                 2 => {
                     // Two free index dimensions
-                    for idx1 in 0..new_shape[0] {
-                        for idx2 in 0..new_shape[1] {
-                            let flat_idx = idx1 * new_shape[1] + idx2;
+                    for idx1 in 0..newshape[0] {
+                        for idx2 in 0..newshape[1] {
+                            let flat_idx = idx1 * newshape[1] + idx2;
                             for k in 0..self.shape[i] {
                                 for l in 0..self.ranks[i + 1] {
                                     let mut sum = A::zero();
@@ -222,12 +222,12 @@ where
                 }
                 3 => {
                     // Three free index dimensions
-                    for idx1 in 0..new_shape[0] {
-                        for idx2 in 0..new_shape[1] {
-                            for idx3 in 0..new_shape[2] {
-                                let stride2 = new_shape[2];
+                    for idx1 in 0..newshape[0] {
+                        for idx2 in 0..newshape[1] {
+                            for idx3 in 0..newshape[2] {
+                                let stride2 = newshape[2];
                                 let flat_idx =
-                                    idx1 * new_shape[1] * stride2 + idx2 * stride2 + idx3;
+                                    idx1 * newshape[1] * stride2 + idx2 * stride2 + idx3;
                                 for k in 0..self.shape[i] {
                                     for l in 0..self.ranks[i + 1] {
                                         let mut sum = A::zero();
@@ -277,7 +277,7 @@ where
                         idx
                     }
 
-                    let free_dims = new_shape[..new_shape.len() - 2].to_vec();
+                    let free_dims = newshape[..newshape.len() - 2].to_vec();
                     let mut indices = Vec::new();
 
                     let mut callback = |idx: &[usize]| {
@@ -460,11 +460,11 @@ where
             let (q, r) = qr_decomposition(&core_mat)?;
 
             // Get the shape value before moving q
-            let q_shape1 = q.shape()[1];
+            let qshape1 = q.shape()[1];
 
             // Update the current core
             cores[i] = q
-                .into_shape_with_order((r1, n, q_shape1))
+                .into_shape_with_order((r1, n, qshape1))
                 .map_err(|e| LinalgError::ComputationError(format!("Reshape error: {}", e)))?;
 
             // Update the next core

@@ -12,7 +12,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, One, Zero};
 use std::fmt::Debug;
 
-use scirs2_core::validation::{check_1d, check_2d, check_same_shape};
+use scirs2_core::validation::{check_1d, check_2d, check_sameshape};
 
 use crate::error::{LinalgError, LinalgResult};
 use crate::matrix_calculus::gradient;
@@ -68,7 +68,7 @@ where
     // Validate inputs
     check_1d(x, "x")?;
     check_1d(v, "v")?;
-    check_same_shape(x, "x", v, "v")?;
+    check_sameshape(x, "x", v, "v")?;
 
     let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());
 
@@ -232,7 +232,7 @@ where
     // Validate inputs
     check_1d(x, "x")?;
     check_1d(v, "v")?;
-    check_same_shape(x, "x", v, "v")?;
+    check_sameshape(x, "x", v, "v")?;
 
     let _n = x.len();
     let eps = epsilon.unwrap_or_else(|| F::epsilon().cbrt()); // More accurate for 2nd derivatives
@@ -501,7 +501,7 @@ where
     // Validate inputs
     check_1d(x, "x")?;
     check_1d(y, "y")?;
-    check_same_shape(x, "x", y, "y")?;
+    check_sameshape(x, "x", y, "y")?;
 
     let eps = epsilon.unwrap_or_else(|| F::epsilon().sqrt());
 

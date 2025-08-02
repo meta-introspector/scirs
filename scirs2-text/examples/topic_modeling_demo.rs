@@ -1,6 +1,6 @@
 //! Topic modeling example using LDA
 
-use scirs2__text::{
+use scirs2_text::{
     CountVectorizer, LatentDirichletAllocation, LdaBuilder, LdaLearningMethod, Vectorizer,
 };
 use std::collections::HashMap;

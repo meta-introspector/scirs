@@ -1,11 +1,11 @@
-//! Basic interpolation methods for signal processing
-//!
-//! This module provides simple, fast interpolation algorithms including
-//! linear interpolation and nearest neighbor interpolation.
+// Basic interpolation methods for signal processing
+//
+// This module provides simple, fast interpolation algorithms including
+// linear interpolation and nearest neighbor interpolation.
 
+use super::core::find_nearest_valid_index;
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
-use super::core::find_nearest_valid_index;
 
 #[allow(unused_imports)]
 /// Applies linear interpolation to fill missing values in a signal
@@ -26,7 +26,7 @@ use super::core::find_nearest_valid_index;
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__signal::interpolate::basic::linear_interpolate;
+/// use scirs2_signal::interpolate::basic::linear_interpolate;
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 /// let result = linear_interpolate(&signal).unwrap();
@@ -137,7 +137,7 @@ pub fn linear_interpolate(_signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__signal::interpolate::basic::nearest_neighbor_interpolate;
+/// use scirs2_signal::interpolate::basic::nearest_neighbor_interpolate;
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 /// let result = nearest_neighbor_interpolate(&signal).unwrap();

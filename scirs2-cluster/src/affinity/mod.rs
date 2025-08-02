@@ -411,7 +411,7 @@ fn compare_labels(_labels1: ArrayView1<i32>, labels2: ArrayView1<i32>) -> bool {
 /// use scirs2__cluster::affinity::{affinity_propagation, AffinityPropagationOptions};
 ///
 /// // Example data with two clusters
-/// let data = Array2::from_shape_vec((6, 2), vec![
+/// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -476,7 +476,7 @@ mod tests {
     #[test]
     fn test_affinity_propagation_basic() {
         // Create a dataset with 2 well-separated clusters
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 5.0, 6.0, 5.2, 5.8, 4.8, 6.1],
         )
@@ -514,7 +514,7 @@ mod tests {
     fn test_affinity_propagation_precomputed() {
         // Create a precomputed similarity matrix for 4 points
         // Higher values indicate more similarity
-        let similarity = Array2::from_shape_vec(
+        let similarity = Array2::fromshape_vec(
             (4, 4),
             vec![
                 0.0, -1.0, -3.0, -5.0, -1.0, 0.0, -2.0, -4.0, -3.0, -2.0, 0.0, -6.0, -5.0, -4.0,

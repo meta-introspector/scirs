@@ -104,7 +104,7 @@ impl Default for AsyncOptimizationConfig {
             max_workers,
             evaluation_timeout: Some(Duration::from_secs(300)), // 5 minutes
             completion_timeout: Some(Duration::from_secs(60)),  // 1 minute
-            slow_evaluation_strategy: SlowEvaluationStrategy::UsePartial { min_fraction: 0.8 },
+            slow_evaluation_strategy: SlowEvaluationStrategy::UsePartial { min, fraction: 0.8 },
             min_evaluations: 10,
         }
     }
@@ -685,7 +685,7 @@ mod tests {
             max_workers: 4,
             evaluation_timeout: Some(Duration::from_millis(200)),
             completion_timeout: Some(Duration::from_secs(5)),
-            slow_evaluation_strategy: SlowEvaluationStrategy::UsePartial { min_fraction: 0.7 },
+            slow_evaluation_strategy: SlowEvaluationStrategy::UsePartial { min, fraction: 0.7 },
             min_evaluations: 5,
         };
 

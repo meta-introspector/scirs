@@ -183,15 +183,15 @@ impl AdvancedGpuOptimizer {
         &self,
         gpu_context: &GpuContext,
         operation: &str,
-        data_shape: (usize, usize),
+        datashape: (usize, usize),
     ) -> Result<AdvancedKernelConfig> {
         // Check performance cache first
         let cache_key = format!(
             "{}_{}_{}_{}",
             gpu_context.backend(),
             operation,
-            data_shape.0,
-            data_shape.1
+            datashape.0,
+            datashape.1
         );
 
         if let Ok(cache) = self.performance_cache.lock() {
@@ -202,7 +202,7 @@ impl AdvancedGpuOptimizer {
 
         // Perform auto-tuning if enabled
         if self.auto_tuning {
-            let profile = self.auto_tune_operation(gpu_context, operation, data_shape)?;
+            let profile = self.auto_tune_operation(gpu_context, operation, datashape)?;
 
             // Cache the result
             if let Ok(mut cache) = self.performance_cache.lock() {
@@ -221,24 +221,24 @@ impl AdvancedGpuOptimizer {
         &self,
         gpu_context: &GpuContext,
         operation: &str,
-        data_shape: (usize, usize),
+        datashape: (usize, usize),
     ) -> Result<GpuPerformanceProfile> {
         let backend = gpu_context.backend();
 
         // Determine optimal block size based on GPU architecture
         let optimal_block_size = match backend {
-            GpuBackend::Cuda { .. } => self.tune_cuda_block_size(data_shape),
-            GpuBackend::OpenCl { .. } => self.tune_opencl_work_group_size(data_shape, _ => 256, // Default for other backends
+            GpuBackend::Cuda { .. } => self.tune_cuda_block_size(datashape),
+            GpuBackend::OpenCl { .. } => self.tune_opencl_work_group_size(datashape, _ => 256, // Default for other backends
         };
 
         // Estimate memory bandwidth requirements
-        let memory_bandwidth = self.estimate_memory_bandwidth(operation, data_shape);
+        let memory_bandwidth = self.estimate_memory_bandwidth(operation, datashape);
 
         // Estimate compute utilization
-        let compute_utilization = self.estimate_compute_utilization(operation, data_shape);
+        let compute_utilization = self.estimate_compute_utilization(operation, datashape);
 
         // Determine optimal data layout
-        let optimal_layout = self.determine_optimal_layout(operation, data_shape);
+        let optimal_layout = self.determine_optimal_layout(operation, datashape);
 
         // Calculate overall performance score
         let performance_score = self.calculate_performance_score(
@@ -257,8 +257,8 @@ impl AdvancedGpuOptimizer {
     }
 
     /// Tune CUDA block size for optimal performance
-    fn tune_cuda_block_size(&self, data_shape: (usize, usize)) -> usize {
-        let total_elements = data_shape.0 * data_shape.1;
+    fn tune_cuda_block_size(&self, datashape: (usize, usize)) -> usize {
+        let total_elements = datashape.0 * datashape.1;
 
         // Use heuristics based on problem size
         match total_elements {
@@ -270,9 +270,9 @@ impl AdvancedGpuOptimizer {
     }
 
     /// Tune OpenCL work group size
-    fn tune_opencl_work_group_size(&self, data_shape: (usize, usize)) -> usize {
+    fn tune_opencl_work_group_size(&self, datashape: (usize, usize)) -> usize {
         // OpenCL typically prefers smaller work group sizes
-        let total_elements = data_shape.0 * data_shape.1;
+        let total_elements = datashape.0 * datashape.1;
 
         match total_elements {
             0..=1_000 => 16,
@@ -283,8 +283,8 @@ impl AdvancedGpuOptimizer {
     }
 
     /// Estimate memory bandwidth requirements
-    fn estimate_memory_bandwidth(&self, operation: &str, data_shape: (usize, usize)) -> f64 {
-        let total_elements = data_shape.0 * data_shape.1;
+    fn estimate_memory_bandwidth(&self, operation: &str, datashape: (usize, usize)) -> f64 {
+        let total_elements = datashape.0 * datashape.1;
         let bytes_per_element = 8; // f64
 
         // Different operations have different memory access patterns
@@ -301,12 +301,12 @@ impl AdvancedGpuOptimizer {
     }
 
     /// Estimate compute utilization
-    fn estimate_compute_utilization(&self, operation: &str, data_shape: (usize, usize)) -> f64 {
-        let total_elements = data_shape.0 * data_shape.1;
+    fn estimate_compute_utilization(&self, operation: &str, datashape: (usize, usize)) -> f64 {
+        let total_elements = datashape.0 * datashape.1;
 
         // Different operations have different compute intensities
         let compute_intensity = match operation {
-            "matrix_multiply" => 2.0 * data_shape.0 as f64, // O(n^3) for n x n matrices
+            "matrix_multiply" => 2.0 * datashape.0 as f64, // O(n^3) for n x n matrices
             "element_wise" => 1.0,                          // O(n) operations
             "reduction" => (total_elements as f64).log2(),  // O(log n) depth
             "trigonometric" => 10.0,                        // High compute intensity
@@ -318,18 +318,18 @@ impl AdvancedGpuOptimizer {
     }
 
     /// Determine optimal data layout
-    fn determine_optimal_layout(&self, operation: &str, data_shape: (usize, usize)) -> DataLayout {
+    fn determine_optimal_layout(&self, operation: &str, datashape: (usize, usize)) -> DataLayout {
         match operation {
             "matrix_multiply" => {
                 // For matrix multiplication, consider cache efficiency
-                if data_shape.0 * data_shape.1 > 100_000 {
+                if datashape.0 * datashape.1 > 100_000 {
                     DataLayout::Tiled { tile_size: 64 }
                 } else {
                     DataLayout::RowMajor
                 }
             }
             "transpose" => DataLayout::ColumnMajor,
-            "element_wise" => DataLayout::RowMajor_ =>, DataLayout::Adaptive,
+            "element_wise" => DataLayout::RowMajor_ => DataLayout::Adaptive,
         }
     }
 
@@ -363,12 +363,12 @@ impl AdvancedGpuOptimizer {
         };
 
         let memory_pattern = match profile.optimal_layout {
-            DataLayout::RowMajor =>, MemoryAccessPattern::Sequential,
-            DataLayout::ColumnMajor =>, MemoryAccessPattern::Strided { stride: 1 },
-            DataLayout::Tiled { tile_size } =>, MemoryAccessPattern::Blocked {
+            DataLayout::RowMajor => MemoryAccessPattern::Sequential,
+            DataLayout::ColumnMajor => MemoryAccessPattern::Strided { stride: 1 },
+            DataLayout::Tiled { tile_size } => MemoryAccessPattern::Blocked {
                 block_size: tile_size,
             },
-            DataLayout::Adaptive =>, MemoryAccessPattern::Sequential,
+            DataLayout::Adaptive => MemoryAccessPattern::Sequential,
         };
 
         let vectorization = if profile.compute_utilization > 0.7 {
@@ -845,7 +845,7 @@ impl AdvancedGpuOptimizer {
             })
             .collect();
 
-        Array2::from_shape_vec((rows, cols), data)
+        Array2::fromshape_vec((rows, cols), data)
             .map_err(|e| DatasetsError::Other(format!("Failed to create array: {e}")))
     }
 
@@ -854,11 +854,11 @@ impl AdvancedGpuOptimizer {
         &self,
         gpu_context: &GpuContext,
         operation: &str,
-        data_shapes: &[(usize, usize)],
+        datashapes: &[(usize, usize)],
     ) -> Result<PerformanceBenchmarkResults> {
         let mut results = Vec::new();
 
-        for &shape in data_shapes {
+        for &shape in datashapes {
             let gpu_config = self.optimize_execution(gpu_context, operation, shape)?;
 
             // Simulate performance measurement
@@ -867,7 +867,7 @@ impl AdvancedGpuOptimizer {
             let cpu_time = self.simulate_cpu_execution_time(operation, shape);
 
             results.push(BenchmarkResult {
-                data_shape: shape,
+                datashape: shape,
                 gpu_time_ms: gpu_time,
                 cpu_time_ms: cpu_time,
                 speedup: cpu_time / gpu_time,
@@ -945,7 +945,7 @@ pub struct PerformanceBenchmarkResults {
 #[derive(Debug, Clone)]
 pub struct BenchmarkResult {
     /// Data shape (rows, cols)
-    pub data_shape: (usize, usize),
+    pub datashape: (usize, usize),
     /// GPU execution time in milliseconds
     pub gpu_time_ms: f64,
     /// CPU execution time in milliseconds
@@ -998,10 +998,10 @@ pub fn generate_advanced_matrix(
 pub fn benchmark_advanced_performance(
     gpu_context: &GpuContext,
     operation: &str,
-    data_shapes: &[(usize, usize)],
+    datashapes: &[(usize, usize)],
 ) -> Result<PerformanceBenchmarkResults> {
     let optimizer = AdvancedGpuOptimizer::new();
-    optimizer.benchmark_performance(gpu_context, operation, data_shapes)
+    optimizer.benchmark_performance(gpu_context, operation, datashapes)
 }
 
 impl std::fmt::Display for GpuBackend {
@@ -1264,7 +1264,7 @@ pub struct PerformanceSnapshot {
     /// Operation being performed
     operation: String,
     /// Data shape
-    data_shape: (usize, usize),
+    datashape: (usize, usize),
 }
 
 /// Adaptive optimization state
@@ -1385,7 +1385,7 @@ impl RealTimePerformanceMonitor {
 
         // Add training data to AI predictor
         let features = vec![
-            (snapshot.data_shape.0 * snapshot.data_shape.1) as f64, // Problem size
+            (snapshot.datashape.0 * snapshot.datashape.1) as f64, // Problem size
             snapshot.memory_bandwidth_utilization,                  // Memory access pattern
             snapshot.gpu_utilization,                               // Compute intensity
             1.0, // Parallelism factor (simplified)
@@ -1469,7 +1469,7 @@ impl RealTimePerformanceMonitor {
         // Use AI predictor to suggest optimizations
         if let Some(latest_snapshot) = self.performance_history.back() {
             let current_features = vec![
-                (latest_snapshot.data_shape.0 * latest_snapshot.data_shape.1) as f64,
+                (latest_snapshot.datashape.0 * latest_snapshot.datashape.1) as f64,
                 latest_snapshot.memory_bandwidth_utilization,
                 latest_snapshot.gpu_utilization,
                 1.0,
@@ -1574,7 +1574,7 @@ impl AdvancedGpuOptimizer {
     pub fn predict_optimal_config(
         &self,
         operation: &str,
-        data_shape: (usize, usize),
+        datashape: (usize, usize),
         historical_data: &[PerformanceDataPoint],
     ) -> Result<AdvancedKernelConfig> {
         let mut ai_predictor = AIPerformancePredictor::new();
@@ -1586,9 +1586,9 @@ impl AdvancedGpuOptimizer {
 
         // Generate features for current scenario
         let features = vec![
-            (data_shape.0 * data_shape.1) as f64,
+            (datashape.0 * datashape.1) as f64,
             1.0, // Default memory access pattern
-            self.estimate_compute_utilization(operation, data_shape),
+            self.estimate_compute_utilization(operation, datashape),
             1.0, // Default parallelism factor
         ];
 

@@ -122,7 +122,7 @@ impl SecondOrderDual {
     /// Create a new second-order dual number
     pub fn new(_value: f64, first: f64, second: f64) -> Self {
         Self {
-            _value,
+            value: _value,
             first,
             second,
         }
@@ -131,7 +131,7 @@ impl SecondOrderDual {
     /// Create a constant (derivatives = 0)
     pub fn constant(_value: f64) -> Self {
         Self {
-            _value,
+            value: _value,
             first: 0.0,
             second: 0.0,
         }
@@ -140,7 +140,7 @@ impl SecondOrderDual {
     /// Create a variable (first = 1, second = 0)
     pub fn variable(_value: f64) -> Self {
         Self {
-            _value,
+            value: _value,
             first: 1.0,
             second: 0.0,
         }

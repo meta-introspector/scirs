@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let model = GPTModel::<f32>::new(config)?;
     // Create dummy input (batch_size=2, seq_len=16)
     // Input tensor contains token IDs
-    let input = Array::from_shape_fn(
+    let input = Array::fromshape_fn(
         IxDyn(&[2, 16]),
         |_| rand::random::<f32>() * 100.0, // Random token IDs between 0 and 100
     println!("Input shape: {:?}", input.shape());
@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nCreating a GPT-2 Small model...");
     let gpt2_small = GPTModel::<f32>::gpt2_small()?;
     // Create dummy input for a longer sequence
-    let small_input = Array::from_shape_fn(
+    let small_input = Array::fromshape_fn(
         IxDyn(&[1, 32]),
         |_| rand::random::<f32>() * 1000.0, // Random token IDs
     println!("GPT-2 Small input shape: {:?}", small_input.shape());

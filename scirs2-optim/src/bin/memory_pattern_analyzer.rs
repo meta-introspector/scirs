@@ -286,7 +286,7 @@ fn load_analysis_input(_input_dir: &str) -> Result<AnalysisInput> {
     } else {
         // Single file input
         let content = fs::read_to_string(input_path)?;
-        let data: serde_json: Value = serde, _json::from_str(&content)?;
+        let data: serde, json: Value = serde_json:::from_str(&content)?;
 
         // Try to extract data from the file
         if let Some(snapshot_array) = data.get("snapshots") {
@@ -320,7 +320,7 @@ fn load_analysis_input(_input_dir: &str) -> Result<AnalysisInput> {
 
 #[allow(dead_code)]
 fn analyze_memory_patterns(
-    input: &AnalysisInput_detailed: bool,
+    input: &AnalysisInput, detailed: bool,
 ) -> Result<PatternAnalysisResult> {
     println!("  📈 Analyzing allocation statistics...");
     let allocation_statistics =
@@ -564,7 +564,7 @@ fn detect_memory_anomalies(
 #[allow(dead_code)]
 fn generate_optimization_suggestions(
     stats: &AllocationStatistics,
-    trends: &MemoryTrends_patterns: &[MemoryPattern], _anomalies: &[MemoryAnomaly],
+    trends: &MemoryTrends, patterns: &[MemoryPattern], _anomalies: &[MemoryAnomaly],
 ) -> Vec<OptimizationSuggestion> {
     let mut suggestions = Vec::new();
 
@@ -630,7 +630,7 @@ fn generate_optimization_suggestions(
 #[allow(dead_code)]
 fn assess_risks(
     stats: &AllocationStatistics,
-    trends: &MemoryTrends_patterns: &[MemoryPattern],
+    trends: &MemoryTrends, patterns: &[MemoryPattern],
     anomalies: &[MemoryAnomaly],
 ) -> RiskAssessment {
     let mut risk_factors = Vec::new();

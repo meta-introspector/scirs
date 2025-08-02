@@ -143,7 +143,7 @@ fn array_compression_example() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Create ndarray from the data
-    let array = Array::from_shape_vec(IxDyn(&shape), data)?;
+    let array = Array::fromshape_vec(IxDyn(&shape), data)?;
 
     println!("Created array with shape: {:?}", array.shape());
 
@@ -218,7 +218,7 @@ fn chunked_array_compression_example() -> Result<(), Box<dyn std::error::Error>>
     }
 
     // Create ndarray from the data
-    let array = Array::from_shape_vec(IxDyn(&shape), data)?;
+    let array = Array::fromshape_vec(IxDyn(&shape), data)?;
 
     println!("Created large array with shape: {:?}", array.shape());
     println!("Number of elements: {}", array.len());
@@ -334,44 +334,44 @@ fn compare_algorithms() -> Result<(), Box<dyn std::error::Error>> {
 // Helper functions to create different test arrays
 
 #[allow(dead_code)]
-fn create_sine_wave_array(_shape: &[usize]) -> Array<f64, IxDyn> {
-    let mut data = Vec::with_capacity(_shape.iter().product());
+fn create_sine_wave_array(shape: &[usize]) -> Array<f64, IxDyn> {
+    let mut data = Vec::with_capacity(shape.iter().product());
 
-    for i in 0.._shape[0] {
-        for j in 0.._shape[1] {
+    for i in 0..shape[0] {
+        for j in 0..shape[1] {
             // Create smooth sine wave patterns
             data.push((i as f64 / 10.0).sin() * (j as f64 / 15.0).cos());
         }
     }
 
-    Array::from_shape_vec(IxDyn(_shape), data).unwrap()
+    Array::fromshape_vec(IxDyn(shape), data).unwrap()
 }
 
 #[allow(dead_code)]
-fn create_random_array(_shape: &[usize]) -> Array<f64, IxDyn> {
-    let mut data = Vec::with_capacity(_shape.iter().product());
+fn create_random_array(shape: &[usize]) -> Array<f64, IxDyn> {
+    let mut data = Vec::with_capacity(shape.iter().product());
 
     // Use a proper RNG for randomness
     let mut rng = rand::rng();
 
-    for _ in 0.._shape[0] {
-        for _ in 0.._shape[1] {
+    for _ in 0..shape[0] {
+        for _ in 0..shape[1] {
             // Random values don't compress well typically
             data.push(rng.gen_range(-1.0..1.0));
         }
     }
 
-    Array::from_shape_vec(IxDyn(_shape), data).unwrap()
+    Array::fromshape_vec(IxDyn(shape), data).unwrap()
 }
 
 #[allow(dead_code)]
-fn create_mixed_array(_shape: &[usize]) -> Array<f64, IxDyn> {
-    let mut data = Vec::with_capacity(_shape.iter().product());
+fn create_mixed_array(shape: &[usize]) -> Array<f64, IxDyn> {
+    let mut data = Vec::with_capacity(shape.iter().product());
     let mut rng = rand::rng();
 
-    for i in 0.._shape[0] {
-        for j in 0.._shape[1] {
-            if i < _shape[0] / 2 {
+    for i in 0..shape[0] {
+        for j in 0..shape[1] {
+            if i < shape[0] / 2 {
                 // Half the array is patterned
                 data.push((i as f64 / 20.0).sin() + (j as f64 / 20.0).cos());
             } else {
@@ -381,5 +381,5 @@ fn create_mixed_array(_shape: &[usize]) -> Array<f64, IxDyn> {
         }
     }
 
-    Array::from_shape_vec(IxDyn(_shape), data).unwrap()
+    Array::fromshape_vec(IxDyn(shape), data).unwrap()
 }

@@ -10,7 +10,7 @@
 //! use scirs2__cluster::vq::kmeans;
 //!
 //! // Example data
-//! let data = Array2::from_shape_vec((6, 2), vec![
+//! let data = Array2::fromshape_vec((6, 2), vec![
 //!     1.0, 2.0,
 //!     1.2, 1.8,
 //!     0.8, 1.9,
@@ -101,7 +101,7 @@ where
 /// use ndarray::Array2;
 /// use scirs2__cluster::vq::whiten;
 ///
-/// let data = Array2::<f64>::from_shape_vec((4, 2), vec![
+/// let data = Array2::<f64>::fromshape_vec((4, 2), vec![
 ///     1.0, 2.0,
 ///     1.5, 2.5,
 ///     0.5, 1.5,

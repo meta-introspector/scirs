@@ -176,9 +176,9 @@ fn demonstrate_advanced_gpu_optimization() -> Result<(), Box<dyn std::error::Err
 
     // Benchmark performance
     println!("📊 Running performance benchmarks...");
-    let data_shapes = vec![(100, 50), (500, 200), (1000, 500)];
+    let datashapes = vec![(100, 50), (500, 200), (1000, 500)];
     let benchmark_results =
-        optimizer.benchmark_performance(&gpu_context, "matrix_generation", &data_shapes)?;
+        optimizer.benchmark_performance(&gpu_context, "matrix_generation", &datashapes)?;
 
     println!("   Benchmark Results:");
     println!(

@@ -192,14 +192,14 @@ pub struct AnimationData {
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::image::load_image;
+/// use scirs2_io::image::load_image;
 ///
 /// let image_data = load_image("photo.jpg")?;
 /// println!("Image size: {}x{}", image_data.metadata.width, image_data.metadata.height);
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn load_image<P: AsRef<Path>>(_path: P) -> Result<ImageData> {
+pub fn load_image<P: AsRef<Path>>(path: P) -> Result<ImageData> {
     let _path = _path.as_ref();
     let img = image::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
 
@@ -217,7 +217,7 @@ pub fn load_image<P: AsRef<Path>>(_path: P) -> Result<ImageData> {
     let raw_data = rgb_img.into_raw();
 
     // Convert to ndarray
-    let data = Array3::from_shape_vec((height as usize, width as usize, 3), raw_data)
+    let data = Array3::fromshape_vec((height as usize, width as usize, 3), raw_data)
         .map_err(|e| IoError::FormatError(e.to_string()))?;
 
     // Try to read EXIF metadata
@@ -244,7 +244,7 @@ pub fn load_image<P: AsRef<Path>>(_path: P) -> Result<ImageData> {
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::image::{load_image, save_image, ImageFormat};
+/// use scirs2_io::image::{load_image, save_image, ImageFormat};
 ///
 /// let image_data = load_image("input.jpg")?;
 /// save_image(&image_data, "output.png", Some(ImageFormat::PNG))?;
@@ -292,7 +292,7 @@ pub fn save_image<P: AsRef<Path>>(
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::image::{convert_image, ImageFormat};
+/// use scirs2_io::image::{convert_image, ImageFormat};
 ///
 /// convert_image("photo.jpg", "photo.png", ImageFormat::PNG)?;
 /// # Ok::<(), scirs2_io::error::IoError>(())
@@ -319,7 +319,7 @@ pub fn convert_image<P1: AsRef<Path>, P2: AsRef<Path>>(
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::image::{load_image, resize_image};
+/// use scirs2_io::image::{load_image, resize_image};
 ///
 /// let image_data = load_image("large_photo.jpg")?;
 /// let resized = resize_image(&image_data, 800, 600)?;
@@ -340,7 +340,7 @@ pub fn resize_image(_image_data: &ImageData, new_width: u32, new_height: u32) ->
     let resized_raw = rgb_img.into_raw();
 
     let resized_data =
-        Array3::from_shape_vec((new_height as usize, new_width as usize, 3), resized_raw)
+        Array3::fromshape_vec((new_height as usize, new_width as usize, 3), resized_raw)
             .map_err(|e| IoError::FormatError(e.to_string()))?;
 
     let mut new_metadata = _image_data.metadata.clone();
@@ -363,14 +363,14 @@ pub fn resize_image(_image_data: &ImageData, new_width: u32, new_height: u32) ->
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::image::get_image_info;
+/// use scirs2_io::image::get_image_info;
 ///
 /// let info = get_image_info("photo.jpg")?;
 /// println!("Image: {}x{} pixels", info.width, info.height);
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn get_image_info<P: AsRef<Path>>(_path: P) -> Result<ImageMetadata> {
+pub fn get_image_info<P: AsRef<Path>>(path: P) -> Result<ImageMetadata> {
     let _path = _path.as_ref();
     let reader = image::ImageReader::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
 
@@ -412,14 +412,14 @@ pub fn get_image_info<P: AsRef<Path>>(_path: P) -> Result<ImageMetadata> {
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::image::load_animation;
+/// use scirs2_io::image::load_animation;
 ///
 /// let animation = load_animation("animated.gif")?;
 /// println!("Animation has {} frames", animation.frames.len());
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn load_animation<P: AsRef<Path>>(_path: P) -> Result<AnimationData> {
+pub fn load_animation<P: AsRef<Path>>(path: P) -> Result<AnimationData> {
     let _path = _path.as_ref();
     let file = std::fs::File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
@@ -451,7 +451,7 @@ pub fn load_animation<P: AsRef<Path>>(_path: P) -> Result<AnimationData> {
             raw_data
         };
 
-        let data = Array3::from_shape_vec((height as usize, width as usize, 3), rgb_data)
+        let data = Array3::fromshape_vec((height as usize, width as usize, 3), rgb_data)
             .map_err(|e| IoError::FormatError(e.to_string()))?;
 
         let metadata = ImageMetadata {
@@ -484,7 +484,7 @@ pub fn load_animation<P: AsRef<Path>>(_path: P) -> Result<AnimationData> {
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::image::read_exif_metadata;
+/// use scirs2_io::image::read_exif_metadata;
 ///
 /// if let Some(exif) = read_exif_metadata("photo.jpg")? {
 ///     if let Some(gps) = exif.gps {
@@ -494,7 +494,7 @@ pub fn load_animation<P: AsRef<Path>>(_path: P) -> Result<AnimationData> {
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn read_exif_metadata<P: AsRef<Path>>(_path: P) -> Result<Option<ExifMetadata>> {
+pub fn read_exif_metadata<P: AsRef<Path>>(path: P) -> Result<Option<ExifMetadata>> {
     let _path = _path.as_ref();
 
     // Try to read EXIF data using the `exif` crate
@@ -786,7 +786,7 @@ pub fn read_exif_metadata<P: AsRef<Path>>(_path: P) -> Result<Option<ExifMetadat
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::image::find_images;
+/// use scirs2_io::image::find_images;
 ///
 /// let images = find_images("./photos", "*.{jpg,png}", true)?;
 /// for image_path in images {
@@ -830,7 +830,7 @@ pub fn find_images<P: AsRef<Path>>(
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::image::{batch_process_images, ImageData, resize_image};
+/// use scirs2_io::image::{batch_process_images, ImageData, resize_image};
 ///
 /// batch_process_images(
 ///     "./input",

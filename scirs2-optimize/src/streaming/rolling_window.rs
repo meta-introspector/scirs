@@ -80,7 +80,7 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
     ) -> Self {
         let window_size = config.window_size;
         Self {
-            _parameters: initial_parameters,
+            parameters: initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),
@@ -88,7 +88,7 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
             window_optimizer: window_optimizer_type,
             refit_every_update,
             refit_frequency: window_size / 4, // Default: refit every quarter window
-            _update_counter: 0,
+            update_counter: 0,
         }
     }
 

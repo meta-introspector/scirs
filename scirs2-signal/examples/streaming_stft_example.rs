@@ -1,10 +1,10 @@
-//! Streaming STFT Example
-//!
-//! This example demonstrates real-time Short-Time Fourier Transform (STFT)
-//! processing for continuous data streams, showing various configurations
-//! and use cases for low-latency spectral analysis.
+// Streaming STFT Example
+//
+// This example demonstrates real-time Short-Time Fourier Transform (STFT)
+// processing for continuous data streams, showing various configurations
+// and use cases for low-latency spectral analysis.
 
-use scirs2__signal::streaming_stft::{RealTimeStft, StreamingStft, StreamingStftConfig};
+use scirs2_signal::streaming_stft::{RealTimeStft, StreamingStft, StreamingStftConfig};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

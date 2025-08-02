@@ -167,7 +167,7 @@ mod tests {
 
         // Test array validation
         let constraints = ArrayValidationConstraints::new()
-            .with_shape(vec![6, 2])
+            .withshape(vec![6, 2])
             .with_field_name(test_data)
             .check_numeric_quality();
 
@@ -199,7 +199,7 @@ mod tests {
 
         // These should all work exactly as they did before refactoring
         let constraints = ArrayValidationConstraints::new()
-            .with_shape(vec![4, 2])
+            .withshape(vec![4, 2])
             .check_numeric_quality();
 
         let result = validator
@@ -299,10 +299,7 @@ mod tests {
         assert_eq!(constraints.max_mean, Some(10.0));
         assert_eq!(constraints.min_std, Some(1.0));
         assert_eq!(constraints.max_std, Some(5.0));
-        assert_eq!(
-            constraints.expected_distribution,
-            Some(normal.to_string())
-        );
+        assert_eq!(constraints.expected_distribution, Some(normal.to_string()));
     }
 
     #[test]

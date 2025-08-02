@@ -232,7 +232,7 @@ fn create_enhanced_config() -> AdvancedConfig {
 #[allow(dead_code)]
 fn validate_output_properties<T>(_output: &Array2<T>, test_name: &str) -> NdimageResult<()>
 where
-    T: num_traits: Float + Copy,
+    T: num_traits:: Float + Copy,
 {
     // Check for NaN or infinite values
     for &pixel in _output.iter() {
@@ -259,7 +259,7 @@ where
 
 /// Print comprehensive performance summary
 #[allow(dead_code)]
-fn print_performance_summary(_summary: &scirs2_ndimage: :PerformanceSummary) {
+fn print_performance_summary(_summary: &scirs2, ndimage: PerformanceSummary) {
     println!("\n📈 Performance Summary");
     println!("=====================");
     println!("Total operations: {}", _summary.total_operations);

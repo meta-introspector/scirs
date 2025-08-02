@@ -29,8 +29,10 @@ fn add_noise(_signal: &[f64], noise_level: f64) -> Vec<f64> {
 
 #[allow(dead_code)]
 fn print_result(
-    name: &str..result: &scirs2_fft::sparse, _fft::SparseFFTResult,
-    expected_freqs: &[usize],) {
+    name: &str,
+    result: &scirs2_fft::sparse_fft::SparseFFTResult,
+    expected_freqs: &[usize],
+) {
     println!("=== {name} Results ===");
     println!("Algorithm: {:?}", result.algorithm);
     println!(

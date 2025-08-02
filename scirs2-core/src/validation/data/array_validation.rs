@@ -32,7 +32,8 @@ impl ArrayValidator {
     pub fn validate_ndarray<S, D>(
         &self,
         array: &ArrayBase<S, D>,
-        constraints: &ArrayValidationConstraintsconfig: &super::config::ValidationConfig,
+        constraints: &ArrayValidationConstraints,
+        config: &super::config::ValidationConfig,
     ) -> Result<ValidationResult, CoreError>
     where
         S: Data,
@@ -45,20 +46,17 @@ impl ArrayValidator {
         let mut stats = ValidationStats::default();
 
         // Basic shape validation
-        if let Some(expected_shape) = &constraints.expected_shape {
-            if !self.validate_array_shape(array, expected_shape)? {
+        if let Some(expectedshape) = &constraints.expectedshape {
+            if !self.validate_arrayshape(array, expectedshape)? {
                 errors.push(ValidationError {
                     error_type: ValidationErrorType::ShapeError,
-                    field_path: constraints
-                        .field_name
-                        .clone()
-                        .unwrap_or(array.to_string()),
+                    field_path: constraints.field_name.clone().unwrap_or(array.to_string()),
                     message: format!(
                         "Array shape {:?} does not match expected {:?}",
                         array.shape(),
-                        expected_shape
+                        expectedshape
                     ),
-                    expected: Some(format!("{expected_shape:?}")),
+                    expected: Some(format!("{expectedshape:?}")),
                     actual: Some(format!("{:?}", array.shape())),
                     constraint: Some(shape.to_string()),
                     severity: ErrorSeverity::Error,
@@ -96,36 +94,37 @@ impl ArrayValidator {
             && !warnings
                 .iter()
                 .any(|w| w.severity == ErrorSeverity::Critical);
-        let std::time::Duration::from_secs(1) = start_time.elapsed();
+        let duration = start_time.elapsed();
 
         Ok(ValidationResult {
             valid,
             errors,
             warnings,
             stats,
-            std::time::Duration::from_secs(1),
+            duration,
         })
     }
 
     /// Validate array shape against constraints
-    fn validate_array_shape<S, D>(
+    fn validate_arrayshape<S, D>(
         &self,
         array: &ArrayBase<S, D>,
-        expected_shape: &[usize],
+        expectedshape: &[usize],
     ) -> Result<bool, CoreError>
     where
         S: Data,
         D: Dimension,
     {
-        let actual_shape = array._shape();
-        Ok(actual_shape == expected_shape)
+        let actualshape = array.shape();
+        Ok(actualshape == expectedshape)
     }
 
     /// Validate numeric quality (NaN, infinity, precision)
     #[allow(clippy::ptr_arg)]
     fn validate_numeric_quality<S, D>(
         &self,
-        array: &ArrayBase<S, D>, errors: &mut Vec<ValidationError>,
+        array: &ArrayBase<S, D>,
+        errors: &mut Vec<ValidationError>,
         warnings: &mut Vec<ValidationError>,
         stats: &mut ValidationStats,
     ) -> Result<(), CoreError>
@@ -260,7 +259,7 @@ impl ArrayValidator {
 
         // Validate mean constraints
         if let Some(min_mean) = constraints.min_mean {
-            let min_mean_typed: S::Elem = num, traits: :cast(min_mean).unwrap_or(S::Elem::zero());
+            let min_mean_typed: S::Elem = num_traits::cast(min_mean).unwrap_or(S::Elem::zero());
             if mean < min_mean_typed {
                 errors.push(ValidationError {
                     error_type: ValidationErrorType::ConstraintViolation,
@@ -276,7 +275,7 @@ impl ArrayValidator {
         }
 
         if let Some(max_mean) = constraints.max_mean {
-            let max_mean_typed: S::Elem = num, traits: :cast(max_mean).unwrap_or(S::Elem::zero());
+            let max_mean_typed: S::Elem = num_traits::cast(max_mean).unwrap_or(S::Elem::zero());
             if mean > max_mean_typed {
                 errors.push(ValidationError {
                     error_type: ValidationErrorType::ConstraintViolation,
@@ -293,7 +292,7 @@ impl ArrayValidator {
 
         // Validate standard deviation constraints
         if let Some(min_std) = constraints.min_std {
-            let min_std_typed: S::Elem = num, traits: :cast(min_std).unwrap_or(S::Elem::zero());
+            let min_std_typed: S::Elem = num_traits::cast(min_std).unwrap_or(S::Elem::zero());
             if std_dev < min_std_typed {
                 warnings.push(ValidationError {
                     error_type: ValidationErrorType::ConstraintViolation,
@@ -312,7 +311,7 @@ impl ArrayValidator {
         }
 
         if let Some(max_std) = constraints.max_std {
-            let max_std_typed: S::Elem = num, traits: :cast(max_std).unwrap_or(S::Elem::zero());
+            let max_std_typed: S::Elem = num_traits::cast(max_std).unwrap_or(S::Elem::zero());
             if std_dev > max_std_typed {
                 warnings.push(ValidationError {
                     error_type: ValidationErrorType::ConstraintViolation,
@@ -393,7 +392,8 @@ impl ArrayValidator {
         &self,
         array: &ArrayBase<S, D>,
         validator: &super::constraints::ElementValidatorFn<f64>,
-        errors: &mut Vec<ValidationError>, warnings: &mut Vec<ValidationError>,
+        errors: &mut Vec<ValidationError>,
+        warnings: &mut Vec<ValidationError>,
     ) -> Result<(), CoreError>
     where
         S: Data,
@@ -462,8 +462,8 @@ mod tests {
         let config = super::super::config::ValidationConfig::default();
 
         let constraints = ArrayValidationConstraints::new()
-            .with_shape(vec![5])
-            .with_field_name(test_array)
+            .withshape(vec![5])
+            .with_field_name("test_array")
             .check_numeric_quality();
 
         let result = validator
@@ -473,20 +473,20 @@ mod tests {
     }
 
     #[test]
-    fn test_shape_validation() {
+    fn testshape_validation() {
         let validator = ArrayValidator::new();
         let array = Array1::from_vec(vec![1.0, 2.0, 3.0]);
         let config = super::super::config::ValidationConfig::default();
 
         // Test correct shape
-        let constraints = ArrayValidationConstraints::new().with_shape(vec![3]);
+        let constraints = ArrayValidationConstraints::new().withshape(vec![3]);
         let result = validator
             .validate_ndarray(&array, &constraints, &config)
             .unwrap();
         assert!(result.is_valid());
 
         // Test incorrect shape
-        let constraints = ArrayValidationConstraints::new().with_shape(vec![5]);
+        let constraints = ArrayValidationConstraints::new().withshape(vec![5]);
         let result = validator
             .validate_ndarray(&array, &constraints, &config)
             .unwrap();

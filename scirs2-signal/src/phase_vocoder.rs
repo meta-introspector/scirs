@@ -1,18 +1,18 @@
-//! Phase vocoder implementation for time stretching and pitch shifting
-//!
-//! This module provides functions for time-scale modification and pitch shifting
-//! of audio signals using the phase vocoder technique. The phase vocoder works
-//! in the frequency domain, using the short-time Fourier transform (STFT) to
-//! analyze and modify signals while preserving their spectral characteristics.
+// Phase vocoder implementation for time stretching and pitch shifting
+//
+// This module provides functions for time-scale modification and pitch shifting
+// of audio signals using the phase vocoder technique. The phase vocoder works
+// in the frequency domain, using the short-time Fourier transform (STFT) to
+// analyze and modify signals while preserving their spectral characteristics.
 
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle__enhanced::WindowType;
+use crate::lombscargle_enhanced::WindowType;
 use crate::stft::{ShortTimeFft, StftConfig};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
+use rustfft;
 use std::f64::consts::PI;
 use std::fmt::Debug;
-use rustfft;
 
 #[allow(unused_imports)]
 // Arrays are not used directly in this file
@@ -68,7 +68,7 @@ impl Default for PhaseVocoderConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
+/// use scirs2_signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a simple test signal (a sine wave)
@@ -95,7 +95,9 @@ where
 {
     // Validate input
     if _signal.is_empty() {
-        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
+        return Err(SignalError::ValueError(
+            "Input _signal is empty".to_string(),
+        ));
     }
 
     if config.time_stretch <= 0.0 {
@@ -285,7 +287,9 @@ where
 {
     // Validate input
     if _signal.is_empty() {
-        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
+        return Err(SignalError::ValueError(
+            "Input _signal is empty".to_string(),
+        ));
     }
 
     let pitch_shift_semitones = match config.pitch_shift {
@@ -345,7 +349,9 @@ where
 #[allow(dead_code)]
 fn resample(_signal: &[f64], factor: f64) -> SignalResult<Vec<f64>> {
     if _signal.is_empty() {
-        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
+        return Err(SignalError::ValueError(
+            "Input _signal is empty".to_string(),
+        ));
     }
 
     if factor <= 0.0 {
@@ -691,7 +697,7 @@ fn compute_ifft(_signal: &[Complex64]) -> SignalResult<Vec<f64>> {
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_phase_vocoder_time_stretch() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

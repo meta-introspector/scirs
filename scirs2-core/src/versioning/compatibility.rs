@@ -468,7 +468,7 @@ impl CompatibilityRule {
     /// Apply breaking change rule
     fn apply_breaking_change_rule(
         &self,
-        from_api: &ApiVersion,
+        _from_api: &ApiVersion,
         to_api: &ApiVersion,
         report: &mut CompatibilityReport,
     ) -> Result<(), CoreError> {

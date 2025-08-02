@@ -49,7 +49,7 @@ impl ReverseVariable {
     /// Create a new variable
     pub fn new(_index: usize, value: f64) -> Self {
         Self {
-            _index,
+            index: _index,
             value,
             grad: 0.0,
         }
@@ -59,7 +59,7 @@ impl ReverseVariable {
     pub fn constant(_value: f64) -> Self {
         Self {
             index: usize::MAX, // Special index for constants
-            _value,
+            value: _value,
             grad: 0.0,
         }
     }

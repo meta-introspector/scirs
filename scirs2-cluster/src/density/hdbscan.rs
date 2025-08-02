@@ -192,7 +192,7 @@ impl<F: Float + FromPrimitive> Default for HDBSCANOptions<F> {
 /// use scirs2__cluster::{hdbscan, HDBSCANOptions};
 ///
 /// // Example data with two clusters
-/// let data = Array2::from_shape_vec((10, 2), vec![
+/// let data = Array2::fromshape_vec((10, 2), vec![
 ///     1.0, 2.0,  // Cluster 1
 ///     1.5, 1.8,
 ///     0.9, 1.9,
@@ -444,7 +444,7 @@ where
 /// use scirs2__cluster::{hdbscan, dbscan_clustering};
 ///
 /// // Example data with two clusters
-/// let data = Array2::from_shape_vec((10, 2), vec![
+/// let data = Array2::fromshape_vec((10, 2), vec![
 ///     1.0, 2.0,  // Cluster 1
 ///     1.5, 1.8,
 ///     0.9, 1.9,
@@ -629,7 +629,7 @@ fn get_leaves(_node: i32, tree: &SingleLinkageTree<impl Float>, n_samples: i32) 
 ///
 /// The mutual reachability distance
 #[allow(dead_code)]
-fn mutual_reachability_distance<F: Float>(_distance: F, core_dist1: F, core_dist2: F) -> F {
+fn mutual_reachability_distance<F: Float>(distance: F, core_dist1: F, core_dist2: F) -> F {
     _distance.max(core_dist1).max(core_dist2)
 }
 
@@ -1481,7 +1481,7 @@ mod tests {
     #[test]
     fn test_hdbscan_placeholder() {
         // Create a test dataset with more points
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![
                 // Cluster 1 - tight cluster

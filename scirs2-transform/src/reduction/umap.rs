@@ -6,7 +6,7 @@
 use ndarray::{Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use rand::Rng;
-use scirs2_core::validation::{check_positive, check_shape};
+use scirs2_core::validation::{check_positive, checkshape};
 use std::collections::BinaryHeap;
 
 use crate::error::{Result, TransformError};
@@ -349,7 +349,7 @@ impl UMAP {
         check_positive(self.n_neighbors, "n_neighbors")?;
         check_positive(self.n_components, "n_components")?;
         check_positive(self.n_epochs, "n_epochs")?;
-        check_shape(x, &[n_samples, n_features], "x")?;
+        checkshape(x, &[n_samples, n_features], "x")?;
 
         if n_samples < self.n_neighbors {
             return Err(TransformError::InvalidInput(format!(
@@ -359,7 +359,7 @@ impl UMAP {
         }
 
         // Store training data for out-of-sample extension
-        let training_data = Array2::from_shape_fn((n_samples, n_features), |(i, j)| {
+        let training_data = Array2::fromshape_fn((n_samples, n_features), |(i, j)| {
             num_traits::cast::<S::Elem, f64>(x[[i, j]]).unwrap_or(0.0)
         });
         self.training_data = Some(training_data);
@@ -539,7 +539,7 @@ mod tests {
     #[test]
     fn test_umap_basic() {
         // Create a simple dataset
-        let x = Array::from_shape_vec(
+        let x = Array::fromshape_vec(
             (10, 3),
             vec![
                 1.0, 2.0, 3.0, 1.1, 2.1, 3.1, 1.2, 2.2, 3.2, 5.0, 6.0, 7.0, 5.1, 6.1, 7.1, 5.2,

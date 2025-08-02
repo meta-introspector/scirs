@@ -82,7 +82,8 @@ impl GpuIoProcessor {
             if Self::is_backend_available(backend) {
                 // Additional validation - check if we can actually create a device
                 match Self::validate_backend(backend) {
-                    Ok(true) => return Ok(backend, _ => continue,
+                    Ok(true) => return Ok(backend),
+                    _ => continue,
                 }
             }
         }
@@ -103,9 +104,10 @@ impl GpuIoProcessor {
             device => {
                 // Additional validation based on _backend type
                 match _backend {
-                    GpuBackend::Cuda =>, Self::validate_cuda_backend(&device),
-                    GpuBackend::Metal =>, Self::validate_metal_backend(&device),
-                    GpuBackend::OpenCL =>, Self::validate_opencl_backend(&device, _ => Ok(false),
+                    GpuBackend::Cuda => Self::validate_cuda_backend(&device),
+                    GpuBackend::Metal => Self::validate_metal_backend(&device),
+                    GpuBackend::OpenCL => Self::validate_opencl_backend(&device),
+                    _ => Ok(false),
                 }
             }
         }
@@ -236,7 +238,8 @@ pub mod gpu_compression {
                 match self.gpu_processor.backend() {
                     GpuBackend::Cuda => self.compress_cuda(data, algorithm, level),
                     GpuBackend::Metal => self.compress_metal(data, algorithm, level),
-                    GpuBackend::OpenCL => self.compress_opencl(data, algorithm, level, _ => {
+                    GpuBackend::OpenCL => self.compress_opencl(data, algorithm, level),
+                    _ => {
                         // Fallback to CPU implementation
                         Err(IoError::Other(format!(
                             "GPU backend {} not supported for compression",
@@ -769,8 +772,9 @@ pub mod gpu_compression {
                         zstd::bulk::decompress(chunk, 16 * 1024 * 1024) // 16MB max
                             .map_err(|e| IoError::Other(e.to_string()))
                     }
-                    CompressionAlgorithm::Lz4 =>, lz4_flex::decompress_size_prepended(chunk)
-                        .map_err(|e| IoError::Other(format!("LZ4 decompression error: {}", e)), _ => Err(IoError::UnsupportedFormat(format!(
+                    CompressionAlgorithm::Lz4 => lz4_flex::decompress_size_prepended(chunk)
+                        .map_err(|e| IoError::Other(format!("LZ4 decompression error: {}", e))),
+                    _ => Err(IoError::UnsupportedFormat(format!(
                         "Compression algorithm {:?} not supported",
                         algorithm
                     ))),
@@ -832,7 +836,8 @@ pub mod gpu_transform {
 
             match self.gpu_processor.backend() {
                 GpuBackend::Cuda => self.f64_to_f32_cuda(input),
-                GpuBackend::Metal => self.f64_to_f32_metal(input, _ => Err(IoError::Other(format!(
+                GpuBackend::Metal => self.f64_to_f32_metal(input),
+                _ => Err(IoError::Other(format!(
                     "GPU backend {} not supported for type conversion",
                     self.gpu_processor.backend()
                 ))),
@@ -921,7 +926,8 @@ pub mod gpu_matrix {
 
             match self.gpu_processor.backend() {
                 GpuBackend::Cuda => self.transpose_cuda(matrix),
-                GpuBackend::Metal => self.transpose_metal(matrix, _ => Err(IoError::Other(format!(
+                GpuBackend::Metal => self.transpose_metal(matrix),
+                _ => Err(IoError::Other(format!(
                     "GPU backend {} not supported for matrix operations",
                     self.gpu_processor.backend()
                 ))),
@@ -998,7 +1004,8 @@ pub mod gpu_checksum {
 
             match self.gpu_processor.backend() {
                 GpuBackend::Cuda => self.crc32_cuda(data),
-                GpuBackend::Metal => self.crc32_metal(data, _ => Err(IoError::Other(format!(
+                GpuBackend::Metal => self.crc32_metal(data),
+                _ => Err(IoError::Other(format!(
                     "GPU backend {} not supported for checksum calculation",
                     self.gpu_processor.backend()
                 ))),
@@ -2274,7 +2281,7 @@ impl AdvancedMultiGpuProcessor {
         let layout = analyzer.analyze_optimal_layout(data)?;
 
         Ok(OptimizedDataLayout {
-            original_shape: data.dim(),
+            originalshape: data.dim(),
             partitions: layout.partitions,
             memory_assignments: layout.memory_assignments,
             transfer_plan: layout.transfer_plan,
@@ -2287,7 +2294,8 @@ impl AdvancedMultiGpuProcessor {
         match _backend {
             GpuBackend::Cuda => Ok(if _backend.is_available() { 1 } else { 0 }),
             GpuBackend::Metal => Ok(if _backend.is_available() { 1 } else { 0 }),
-            GpuBackend::OpenCL => Ok(if _backend.is_available() { 1 } else { 0 }, _ => Ok(0),
+            GpuBackend::OpenCL => Ok(if _backend.is_available() { 1 } else { 0 }),
+            _ => Ok(0),
         }
     }
 
@@ -2433,14 +2441,14 @@ impl IntelligentLoadBalancer {
 
     pub fn determine_optimal_partitioning(
         &self,
-        data_shape: (usize, usize),
+        datashape: (usize, usize),
         requirements: &ComputationRequirements,
     ) -> Result<PartitioningStrategy> {
         // Analyze computation characteristics
         let computation_type = self.classify_computation(requirements);
 
         // Predict performance for different partitioning strategies
-        let strategies = self.generate_partitioning_candidates(data_shape, requirements);
+        let strategies = self.generate_partitioning_candidates(datashape, requirements);
         let mut best_strategy = strategies[0].clone();
         let mut best_predicted_time = f64::INFINITY;
 
@@ -2471,7 +2479,8 @@ impl IntelligentLoadBalancer {
 
     fn generate_partitioning_candidates(
         &self,
-        data_shape: (usize, usize), _requirements: &ComputationRequirements,
+        datashape: (usize, usize),
+        _requirements: &ComputationRequirements,
     ) -> Vec<PartitioningStrategy> {
         let device_count = self.device_capabilities.len();
         let mut strategies = Vec::new();
@@ -2617,7 +2626,8 @@ impl TensorAccelerationEngine {
 
     fn execute_convolution_kernel<T>(
         &self_kernel: CompiledKernel,
-        input: &Array2<T>, _filter: &Array2<T>,
+        input: &Array2<T>,
+        _filter: &Array2<T>,
     ) -> Result<Array2<T>>
     where
         T: GpuDataType + Clone,
@@ -2628,7 +2638,8 @@ impl TensorAccelerationEngine {
 
     fn execute_fused_kernel<T, F>(
         &self_kernel: CompiledKernel,
-        inputs: Vec<&Array2<T>>, _operation: F,
+        inputs: Vec<&Array2<T>>,
+        _operation: F,
     ) -> Result<Array2<T>>
     where
         T: GpuDataType + Clone,
@@ -2877,7 +2888,8 @@ impl GpuTaskScheduler {
     }
 
     pub fn schedule_tasks<T, F>(
-        &mut self_partitioning: PartitioningStrategy, _computation: &F,
+        &mut self_partitioning: PartitioningStrategy,
+        _computation: &F,
     ) -> Result<Vec<GpuTask<T>>>
     where
         T: GpuDataType + Clone + Send + Sync,
@@ -2956,7 +2968,8 @@ impl GpuPerformanceMonitor {
     pub fn record_execution<T>(
         &mut self,
         requirements: &ComputationRequirements,
-        execution_time: Duration, _results: &[TaskResult<T>],
+        execution_time: Duration,
+        _results: &[TaskResult<T>],
     ) {
         let record = PerformanceRecord {
             timestamp: Utc::now(),
@@ -2995,7 +3008,7 @@ impl DeviceMetrics {
 
 #[derive(Debug)]
 pub struct OptimizedDataLayout<T> {
-    pub original_shape: (usize, usize),
+    pub originalshape: (usize, usize),
     pub partitions: Vec<DataPartition<T>>,
     pub memory_assignments: Vec<MemoryAssignment>,
     pub transfer_plan: DataTransferPlan,
@@ -3103,8 +3116,8 @@ impl TensorCompiler {
 
     pub fn compile_matmul_kernel(
         &self,
-        a_shape: (usize, usize),
-        b_shape: (usize, usize),
+        ashape: (usize, usize),
+        bshape: (usize, usize),
     ) -> Result<CompiledKernel> {
         let template = self
             .kernel_templates
@@ -3112,9 +3125,9 @@ impl TensorCompiler {
             .ok_or_else(|| IoError::Other("Matmul template not found".to_string()))?;
 
         let kernel = template.instantiate(vec![
-            ("M".to_string(), a_shape.0.to_string()),
-            ("N".to_string(), b_shape.1.to_string()),
-            ("K".to_string(), a_shape.1.to_string()),
+            ("M".to_string(), ashape.0.to_string()),
+            ("N".to_string(), bshape.1.to_string()),
+            ("K".to_string(), ashape.1.to_string()),
         ])?;
 
         self.optimize_kernel(kernel)
@@ -3122,8 +3135,8 @@ impl TensorCompiler {
 
     pub fn compile_conv_kernel(
         &self,
-        input_shape: (usize, usize),
-        kernel_shape: (usize, usize),
+        inputshape: (usize, usize),
+        kernelshape: (usize, usize),
         stride: (usize, usize),
         padding: (usize, usize),
     ) -> Result<CompiledKernel> {
@@ -3133,10 +3146,10 @@ impl TensorCompiler {
             .ok_or_else(|| IoError::Other("Conv2d template not found".to_string()))?;
 
         let kernel = template.instantiate(vec![
-            ("IH".to_string(), input_shape.0.to_string()),
-            ("IW".to_string(), input_shape.1.to_string()),
-            ("KH".to_string(), kernel_shape.0.to_string()),
-            ("KW".to_string(), kernel_shape.1.to_string()),
+            ("IH".to_string(), inputshape.0.to_string()),
+            ("IW".to_string(), inputshape.1.to_string()),
+            ("KH".to_string(), kernelshape.0.to_string()),
+            ("KW".to_string(), kernelshape.1.to_string()),
             ("SH".to_string(), stride.0.to_string()),
             ("SW".to_string(), stride.1.to_string()),
             ("PH".to_string(), padding.0.to_string()),
@@ -3370,7 +3383,8 @@ impl MemoryPool {
             Ok(GpuAllocation {
                 offset: block.offset,
                 size: bytes_needed,
-                memory_type: self.memory_type, _phantom: PhantomData,
+                memory_type: self.memory_type,
+                _phantom: PhantomData,
             })
         } else {
             Err(IoError::Other("Out of memory".to_string()))
@@ -3423,7 +3437,8 @@ pub struct MemoryBlock {
 pub struct GpuAllocation<T> {
     pub offset: usize,
     pub size: usize,
-    pub memory_type: MemoryType, _phantom: PhantomData<T>,
+    pub memory_type: MemoryType,
+    _phantom: PhantomData<T>,
 }
 
 impl<T> GpuAllocation<T> {
@@ -3581,7 +3596,8 @@ impl MultiPrecisionProcessor {
         match error_analysis.required_precision_bits {
             0..=16 => Ok(PrecisionMode::Half),
             17..=32 => Ok(PrecisionMode::Single),
-            33..=64 => Ok(PrecisionMode::Double, _ => Ok(PrecisionMode::Quadruple),
+            33..=64 => Ok(PrecisionMode::Double),
+            _ => Ok(PrecisionMode::Quadruple),
         }
     }
 }

@@ -986,7 +986,8 @@ fn atomic_spectroscopy() -> Result<(), Box<dyn std::error::Error>> {
             "Doppler" => "Low pressure",
             "Natural" => "All conditions",
             "Pressure" => "High pressure",
-            "Stark" => "Strong E-field"_ => "Special conditions",
+            "Stark" => "Strong E-field",
+            _ => "Special conditions",
         };
 
         println!(
@@ -1972,7 +1973,7 @@ fn gaussian_significance(_snr: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn parameter_uncertainty_mass(_m1: f64_m2: f64, distance: f64) -> f64 {
+fn parameter_uncertainty_mass(m1: f64, m2: f64, distance: f64) -> f64 {
     // Simplified Fisher matrix estimate
     0.1 / (distance / 100.0).sqrt()
 }

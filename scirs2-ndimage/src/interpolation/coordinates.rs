@@ -17,7 +17,7 @@ use crate::interpolation::spline::spline_filter;
 /// # Arguments
 ///
 /// * `input` - Input array
-/// * `coordinates` - Coordinates at which to sample the input (shape: [ndim, ...output_shape])
+/// * `coordinates` - Coordinates at which to sample the input (shape: [ndim, ...outputshape])
 /// * `order` - Interpolation order (default: 3 for cubic)
 /// * `mode` - Boundary handling mode (default: Constant)
 /// * `cval` - Value to use for constant mode (default: 0.0)
@@ -74,8 +74,8 @@ where
     }
 
     // Output shape is coordinates shape with first dimension dropped
-    let output_shape: Vec<usize> = coordinates.shape()[1..].to_vec();
-    let output_size: usize = output_shape.iter().product();
+    let outputshape: Vec<usize> = coordinates.shape()[1..].to_vec();
+    let output_size: usize = outputshape.iter().product();
 
     // Apply spline filter if needed and order > 1
     let filtered_input = if prefilter_input && interp_order > 1 {
@@ -87,11 +87,11 @@ where
     };
 
     // Create output array
-    let mut output = Array::<T, IxDyn>::zeros(IxDyn(&output_shape));
+    let mut output = Array::<T, IxDyn>::zeros(IxDyn(&outputshape));
 
     // Interpolate at each coordinate point
     for i in 0..output_size {
-        let output_indices = unravel_index(i, &output_shape);
+        let output_indices = unravel_index(i, &outputshape);
 
         // Get coordinates for this output point
         let mut coords = Vec::with_capacity(input.ndim());
@@ -471,7 +471,7 @@ where
     )?;
 
     // Convert result to 1D array
-    Ok(result.into_shape((n_points,)).unwrap())
+    Ok(result.intoshape((n_points,)).unwrap())
 }
 
 #[cfg(test)]

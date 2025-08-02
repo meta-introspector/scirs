@@ -356,7 +356,6 @@ impl PerformanceCounter for LinuxPerfCounter {
             Err(HardwareCounterError::CounterNotFound(format!("{counter_type:?}")).into())
         }
     }
-
 }
 
 /// Windows Performance Data Helper (PDH) implementation
@@ -460,7 +459,6 @@ impl PerformanceCounter for WindowsPdhCounter {
                 .into(),
         )
     }
-
 }
 
 /// macOS performance counter implementation using system profiling
@@ -834,7 +832,7 @@ pub struct PerformanceReport {
 
 impl PerformanceReport {
     /// Format the report as human-readable text
-    pub fn format_text(&self) -> String {
+    pub fn formattext(&self) -> String {
         let mut output = String::new();
 
         output.push_str(&format!(
@@ -1008,7 +1006,7 @@ mod tests {
             counters_monitored: vec![CounterType::CpuCycles],
         };
 
-        let text = report.format_text();
+        let text = report.formattext();
         assert!(text.contains("Performance Report: test_session"));
         assert!(text.contains("CPU cycles"));
 

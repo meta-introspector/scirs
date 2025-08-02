@@ -77,7 +77,7 @@ mod tests {
     }
 
     #[test]
-    fn test_shape_function_properties() {
+    fn testshape_function_properties() {
         // Test partition of unity for all element types
         let test_points = vec![
             (0.0, 0.0),             // corner

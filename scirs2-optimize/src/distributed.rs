@@ -237,7 +237,7 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
 
             // Reshape into 2D array
             let _result =
-                Array2::from_shape_vec((self.size as usize, local_result.len()), gathered_data)
+                Array2::fromshape_vec((self.size as usize, local_result.len()), gathered_data)
                     .map_err(|e| {
                         ScirsError::InvalidInput(scirs2_core::error::ErrorContext::new(format!(
                             "Failed to reshape gathered data: {}",

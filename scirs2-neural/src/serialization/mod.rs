@@ -83,7 +83,7 @@ pub struct Conv2DConfig {
 /// LayerNorm layer configuration
 pub struct LayerNormConfig {
     /// Normalized shape
-    pub normalized_shape: usize,
+    pub normalizedshape: usize,
     /// Epsilon for numerical stability
     pub eps: f64,
 /// BatchNorm layer configuration
@@ -122,7 +122,7 @@ pub fn save_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static, P: A
 ) -> Result<()> {
     let serialized = serialize_model(model)?;
     let bytes = match format {
-        SerializationFormat::JSON =>, serde_json::to_vec_pretty(&serialized)
+        SerializationFormat::JSON => serde_json::to_vec_pretty(&serialized)
             .map_err(|e| NeuralError::SerializationError(e.to_string()))?,
         SerializationFormat::CBOR => {
             let mut buf = Vec::new();
@@ -181,7 +181,7 @@ fn serialize_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
             let params = extract_parameters(conv.get_parameters())?;
         } else if let Some(ln) = layer.as_any().downcast_ref::<LayerNorm<F>>() {
             let config = LayerConfig::LayerNorm(LayerNormConfig {
-                normalized_shape: ln.normalized_shape(),
+                normalizedshape: ln.normalizedshape(),
                 eps: ln.eps().to_f64().unwrap(),
             let params = extract_parameters(ln.get_parameters())?;
         } else if let Some(bn) = layer.as_any().downcast_ref::<BatchNorm<F>>() {
@@ -305,22 +305,22 @@ fn create_dense_layer<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     // Load parameters if available
     if params.len() >= 2 {
         // We need to calculate the expected weights shape based on the config
-        let weights_shape = [config.input_dim, config.output_dim];
-        let bias_shape = [config.output_dim];
+        let weightsshape = [config.input_dim, config.output_dim];
+        let biasshape = [config.output_dim];
         // Check if the array has the correct number of elements
         if params[0].len() == config.output_dim * config.input_dim {
             // We have the right number of elements, proceed with caution
-            let weights_array = match array_from_vec::<F>(&params[0], &weights_shape) {
+            let weights_array = match array_from_vec::<F>(&params[0], &weightsshape) {
                 Ok(arr) => arr,
                 Err(_) => {
                     // If we get an error with the expected shape, try the transposed shape
-                    let transposed_shape = [config.output_dim, config.input_dim];
-                    let transposed_arr = array_from_vec::<F>(&params[0], &transposed_shape)?;
+                    let transposedshape = [config.output_dim, config.input_dim];
+                    let transposed_arr = array_from_vec::<F>(&params[0], &transposedshape)?;
                     // Transpose the array to get the correct shape
                     transposed_arr.t().to_owned().into_dyn()
                 }
             };
-            let bias_array = array_from_vec::<F>(&params[1], &bias_shape)?;
+            let bias_array = array_from_vec::<F>(&params[1], &biasshape)?;
             layer.set_parameters(vec![weights_array, bias_array])?;
                 "Weight vector length ({}) doesn't match expected shape size ({})",
                 params[0].len(),
@@ -347,25 +347,25 @@ fn create_conv2d_layer<F: Float + Debug + ScalarOperand + Send + Sync + 'static>
         stride,
         padding_mode,
         // Ensure the weight shape matches what Conv2D expects
-        let weights_shape = [
+        let weightsshape = [
             config.out_channels,
             config.in_channels,
             config.kernel_size,
         ];
-        let bias_shape = [config.out_channels];
-        let weights_array = array_from_vec::<F>(&params[0], &weights_shape)?;
-        let bias_array = array_from_vec::<F>(&params[1], &bias_shape)?;
+        let biasshape = [config.out_channels];
+        let weights_array = array_from_vec::<F>(&params[0], &weightsshape)?;
+        let bias_array = array_from_vec::<F>(&params[1], &biasshape)?;
         layer.set_parameters(vec![weights_array, bias_array])?;
 /// Create a LayerNorm layer from configuration and parameters
 #[allow(dead_code)]
 fn create_layer_norm<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     config: &LayerNormConfig,
 ) -> Result<LayerNorm<F>> {
-    let mut layer = LayerNorm::new(config.normalized_shape, config.eps, &mut rng)?;
-        let gamma_shape = [config.normalized_shape];
-        let beta_shape = [config.normalized_shape];
-        let gamma_array = array_from_vec::<F>(&params[0], &gamma_shape)?;
-        let beta_array = array_from_vec::<F>(&params[1], &beta_shape)?;
+    let mut layer = LayerNorm::new(config.normalizedshape, config.eps, &mut rng)?;
+        let gammashape = [config.normalizedshape];
+        let betashape = [config.normalizedshape];
+        let gamma_array = array_from_vec::<F>(&params[0], &gammashape)?;
+        let beta_array = array_from_vec::<F>(&params[1], &betashape)?;
         layer.set_parameters(vec![gamma_array, beta_array])?;
 /// Create a BatchNorm layer from configuration and parameters
 #[allow(dead_code)]
@@ -373,8 +373,8 @@ fn create_batch_norm<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     config: &BatchNormConfig,
 ) -> Result<BatchNorm<F>> {
     let mut layer = BatchNorm::new(config.num_features, config.momentum, config.eps, &mut rng)?;
-        let gamma_shape = [config.num_features];
-        let beta_shape = [config.num_features];
+        let gammashape = [config.num_features];
+        let betashape = [config.num_features];
 /// Create a Dropout layer from configuration
 #[allow(dead_code)]
 fn create_dropout<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
@@ -469,15 +469,15 @@ impl ActivationFunction {
             ActivationFunction::Mish => "mish".to_string(),
     /// Create activation function from enum
     pub fn create<F: Float + Debug + ScalarOperand + Send + Sync>(&self) -> Box<dyn Activation<F>> {
-            ActivationFunction::ReLU =>, Box::new(ReLU::new()),
-            ActivationFunction::Sigmoid =>, Box::new(Sigmoid::new()),
-            ActivationFunction::Tanh =>, Box::new(Tanh::new()),
-            ActivationFunction::Softmax =>, Box::new(Softmax::new(1)), // Default axis is 1
-            ActivationFunction::LeakyReLU(alpha) =>, Box::new(LeakyReLU::new(*alpha)),
-            ActivationFunction::ELU(alpha) =>, Box::new(ELU::new(*alpha)),
-            ActivationFunction::GELU =>, Box::new(GELU::new()),
-            ActivationFunction::Swish =>, Box::new(Swish::new(1.0)),
-            ActivationFunction::Mish =>, Box::new(Mish::new()),
+            ActivationFunction::ReLU => Box::new(ReLU::new()),
+            ActivationFunction::Sigmoid => Box::new(Sigmoid::new()),
+            ActivationFunction::Tanh => Box::new(Tanh::new()),
+            ActivationFunction::Softmax => Box::new(Softmax::new(1)), // Default axis is 1
+            ActivationFunction::LeakyReLU(alpha) => Box::new(LeakyReLU::new(*alpha)),
+            ActivationFunction::ELU(alpha) => Box::new(ELU::new(*alpha)),
+            ActivationFunction::GELU => Box::new(GELU::new()),
+            ActivationFunction::Swish => Box::new(Swish::new(1.0)),
+            ActivationFunction::Mish => Box::new(Mish::new()),
 /// Activation function factory
 pub struct ActivationFactory;
 impl ActivationFactory {

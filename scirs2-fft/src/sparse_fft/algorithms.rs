@@ -43,7 +43,10 @@ impl SparseFFT {
         let seed = _config.seed.unwrap_or_else(rand::random);
         let rng = rand::rngs::StdRng::seed_from_u64(seed);
 
-        Self { config: _config, rng }
+        Self {
+            config: _config,
+            rng,
+        }
     }
 
     /// Create a new sparse FFT processor with default configuration
@@ -560,7 +563,10 @@ where
 
 /// Frequency pruning sparse FFT
 #[allow(dead_code)]
-pub fn frequency_pruning_sparse_fft<T>(_signal: &[T], sensitivity: f64) -> FFTResult<SparseFFTResult>
+pub fn frequency_pruning_sparse_fft<T>(
+    _signal: &[T],
+    sensitivity: f64,
+) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
 {
@@ -600,7 +606,9 @@ where
 /// 2D sparse FFT (placeholder implementation)
 #[allow(dead_code)]
 pub fn sparse_fft2<T>(
-    _signal: &[Vec<T>], _k: usize, _algorithm: Option<SparseFFTAlgorithm>,
+    _signal: &[Vec<T>],
+    _k: usize,
+    _algorithm: Option<SparseFFTAlgorithm>,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -614,7 +622,10 @@ where
 /// N-dimensional sparse FFT (placeholder implementation)
 #[allow(dead_code)]
 pub fn sparse_fftn<T>(
-    _signal: &[T], _shape: &[usize], _k: usize, _algorithm: Option<SparseFFTAlgorithm>,
+    _signal: &[T],
+    shape: &[usize],
+    _k: usize,
+    _algorithm: Option<SparseFFTAlgorithm>,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,

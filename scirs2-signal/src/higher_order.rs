@@ -1,51 +1,52 @@
-//! Higher-order spectral analysis module
-//!
-//! This module implements higher-order spectral analysis methods, including:
-//! - Bispectrum: third-order spectrum for detecting quadratic phase coupling
-//! - Bicoherence: normalized bispectrum for phase coupling detection
-//! - Trispectrum: fourth-order spectrum for cubic phase coupling detection
-//! - Various estimators and windowing techniques
-//!
-//! Higher-order spectra can reveal non-linear coupling between frequency components
-//! that are not visible in traditional power spectral density estimates.
-//!
-//! # Example
-//! ```
-//! use ndarray::Array1;
-//! use scirs2__signal::higher_order::{bispectrum, bicoherence};
-//! use std::f64::consts::PI;
-//!
-//! // Create a signal with quadratic phase coupling
-//! let n = 1024;
-//! let fs = 1000.0;
-//! let t = Array1::linspace(0.0, (n as f64 - 1.0) / fs, n);
-//!
-//! let f1 = 50.0;
-//! let f2 = 120.0;
-//! let f3 = f1 + f2; // Sum frequency - will show phase coupling
-//!
-//! // Signal with phase coupling: sin(2πf₁t) + sin(2πf₂t) + sin(2π(f₁+f₂)t + θ)
-//! // When θ = 0, there is perfect phase coupling
-//! let phase_coupling = 0.0;
-//! let signal = t.mapv(|ti| (2.0 * PI * f1 * ti).sin() +
-//!                          (2.0 * PI * f2 * ti).sin() +
-//!                          0.5 * (2.0 * PI * f3 * ti + phase_coupling).sin());
-//!
-//! // Compute bispectrum
-//! let nfft = 256;
-//! let (bispec, f1_axis, f2_axis) = bispectrum(&signal, nfft, Some("hann"), None, fs).unwrap();
-//!
-//! // Compute bicoherence (normalized bispectrum)
-//! let (bicoh_) = bicoherence(&signal, nfft, Some("hann"), None, fs).unwrap();
-//!
-//! // Look for peaks in bicoherence to detect phase coupling
-//! // Strong peaks at (f1, f2) indicate quadratic phase coupling between f1, f2, and f1+f2
-//! ```
+use ndarray::s;
+// Higher-order spectral analysis module
+//
+// This module implements higher-order spectral analysis methods, including:
+// - Bispectrum: third-order spectrum for detecting quadratic phase coupling
+// - Bicoherence: normalized bispectrum for phase coupling detection
+// - Trispectrum: fourth-order spectrum for cubic phase coupling detection
+// - Various estimators and windowing techniques
+//
+// Higher-order spectra can reveal non-linear coupling between frequency components
+// that are not visible in traditional power spectral density estimates.
+//
+// # Example
+// ```
+// use ndarray::Array1;
+// use scirs2_signal::higher_order::{bispectrum, bicoherence};
+// use std::f64::consts::PI;
+//
+// // Create a signal with quadratic phase coupling
+// let n = 1024;
+// let fs = 1000.0;
+// let t = Array1::linspace(0.0, (n as f64 - 1.0) / fs, n);
+//
+// let f1 = 50.0;
+// let f2 = 120.0;
+// let f3 = f1 + f2; // Sum frequency - will show phase coupling
+//
+// // Signal with phase coupling: sin(2πf₁t) + sin(2πf₂t) + sin(2π(f₁+f₂)t + θ)
+// // When θ = 0, there is perfect phase coupling
+// let phase_coupling = 0.0;
+// let signal = t.mapv(|ti| (2.0 * PI * f1 * ti).sin() +
+//                          (2.0 * PI * f2 * ti).sin() +
+//                          0.5 * (2.0 * PI * f3 * ti + phase_coupling).sin());
+//
+// // Compute bispectrum
+// let nfft = 256;
+// let (bispec, f1_axis, f2_axis) = bispectrum(&signal, nfft, Some("hann"), None, fs).unwrap();
+//
+// // Compute bicoherence (normalized bispectrum)
+// let (bicoh_) = bicoherence(&signal, nfft, Some("hann"), None, fs).unwrap();
+//
+// // Look for peaks in bicoherence to detect phase coupling
+// // Strong peaks at (f1, f2) indicate quadratic phase coupling between f1, f2, and f1+f2
+// ```
 
-use crate::window;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
-use num__complex::{Complex64, ComplexFloat};
+use crate::window;
+use ndarray::{ Array1, Array2};
+use num_complex::{Complex64, ComplexFloat};
 use scirs2_fft;
 
 #[allow(unused_imports)]
@@ -134,7 +135,7 @@ impl Default for HigherOrderConfig {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::higher_order::bispectrum;
+/// use scirs2_signal::higher_order::bispectrum;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 1.0, 0.0, -1.0, -2.0, -1.0, 0.0]);
 /// let (bis, f1, f2) = bispectrum(&signal, 16, Some("hann"), None, 1.0).unwrap();
@@ -185,7 +186,7 @@ pub fn bispectrum(
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::higher_order::bicoherence;
+/// use scirs2_signal::higher_order::bicoherence;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 1.0, 0.0, -1.0, -2.0, -1.0, 0.0]);
 /// let (bic, (f1, f2)) = bicoherence(&signal, 16, Some("hann"), None, 1.0).unwrap();

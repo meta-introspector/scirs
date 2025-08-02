@@ -3,12 +3,12 @@ use rand::{rng, Rng};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2__signal::reassigned::{
+use scirs2_signal::reassigned::{
     extract_ridges, reassigned_spectrogram, smoothed_reassigned_spectrogram, ReassignedConfig,
     ReassignedResult,
 };
-use scirs2__signal::spectral;
-use scirs2__signal::window;
+use scirs2_signal::spectral;
+use scirs2_signal::window;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

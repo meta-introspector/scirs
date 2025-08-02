@@ -1,6 +1,6 @@
-//! Simple test of elliptic filter design
+// Simple test of elliptic filter design
 
-use scirs2__signal::filter::ellip;
+use scirs2_signal::filter::ellip;
 
 #[allow(dead_code)]
 fn main() {

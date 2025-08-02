@@ -73,9 +73,9 @@ pub struct RecoveryHint {
 
 impl RecoveryHint {
     /// Create a new recovery hint
-    pub fn new<S: Into<String>>(_action: S, explanation: S, confidence: f64) -> Self {
+    pub fn new<S: Into<String>>(action: S, explanation: S, confidence: f64) -> Self {
         Self {
-            action: _action.into(),
+            action: action.into(),
             explanation: explanation.into(),
             examples: Vec::new(),
             confidence: confidence.clamp(0.0, 1.0),
@@ -449,7 +449,11 @@ pub enum CircuitState {
 
 impl CircuitBreaker {
     /// Create a new circuit breaker
-    pub fn timeout(failure_threshold: usize, timeout: Duration, recovery_timeout: Duration) -> Self {
+    pub fn timeout(
+        failure_threshold: usize,
+        timeout: Duration,
+        recovery_timeout: Duration,
+    ) -> Self {
         Self {
             failure_threshold,
             timeout,
@@ -461,7 +465,7 @@ impl CircuitBreaker {
             })),
         }
     }
-    
+
     /// Create a new circuit breaker (alias for timeout method)
     pub fn new(failure_threshold: usize, timeout: Duration, recovery_timeout: Duration) -> Self {
         Self::timeout(failure_threshold, timeout, recovery_timeout)
@@ -571,7 +575,7 @@ impl RetryExecutor {
     pub fn strategy(strategy: RecoveryStrategy) -> Self {
         Self { strategy }
     }
-    
+
     /// Create a new retry executor (alias for strategy method)
     pub fn new(strategy: RecoveryStrategy) -> Self {
         Self::strategy(strategy)

@@ -50,13 +50,13 @@ fn main() {
     // Performance comparison
     println!("\nPerformance comparison for different volume sizes:");
     for &size in &[16, 32, 64] {
-        let test_shape = [size, size, size];
+        let testshape = [size, size, size];
         let test_total = size * size * size;
         let test_data = generate_test_volume(size, size, size);
 
         println!("\nVolume size: {size} x {size} x {size} = {test_total} voxels");
         let start = Instant::now();
-        let _filtered = frequency_domain_filter_3d(&test_data, &test_shape, "lowpass");
+        let _filtered = frequency_domain_filter_3d(&test_data, &testshape, "lowpass");
         let time = start.elapsed();
         println!("Processing time: {time:?}");
 

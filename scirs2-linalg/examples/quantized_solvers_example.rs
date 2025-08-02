@@ -171,7 +171,7 @@ fn example_preconditioned_cg() {
             .positive_definite();
 
     // Create a Jacobi preconditioner
-    let precond = quantized_jacobi_preconditioner(&quantized_op).unwrap();
+    let precond = quantized_jacobi_preconditioner(&quantizedop).unwrap();
 
     // Solve with standard quantized conjugate gradient (without preconditioner)
     let x_unpreconditioned =

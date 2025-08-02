@@ -388,7 +388,7 @@ pub extern "C" fn scirs_create_arima(
     seasonal_period: c_int,
 ) -> *mut RARIMAModel {
     let config = ArimaConfig {
-        _p: _p as usize_d: _d as usize,
+        _p: _p as usize, d: _d as usize,
         _q: _q as usize,
         seasonal_p: seasonal_p as usize,
         seasonal_d: seasonal_d as usize,
@@ -918,7 +918,7 @@ pub unsafe extern "C" fn scirs_auto_arima(
         match crate::arima_models::auto_arima(&values_array, &options) {
             Ok((_arima_model, sarima_params)) => {
                 let config = ArimaConfig {
-                    _p: sarima_params.pdq.0_d: sarima_params.pdq.1,
+                    _p: sarima_params.pdq.0, d: sarima_params.pdq.1,
                     _q: sarima_params.pdq.2,
                     seasonal_p: sarima_params.seasonal_pdq.0,
                     seasonal_d: sarima_params.seasonal_pdq.1,
@@ -929,7 +929,7 @@ pub unsafe extern "C" fn scirs_auto_arima(
                     Ok(model) => {
                         let r_model = Box::new(RARIMAModel {
                             handle: Box::into_raw(Box::new(model)) as *mut c_void_p: config._p as c_int,
-                            _d: config._d as c_int_q: config._q as c_int,
+                            _d: config._d as c_int, q: config._q as c_int,
                             seasonal_p: config.seasonal_p as c_int,
                             seasonal_d: config.seasonal_d as c_int,
                             seasonal_q: config.seasonal_q as c_int,
@@ -1000,7 +1000,7 @@ pub extern "C" fn scirs_create_neural_forecaster(
 pub unsafe extern "C" fn scirs_train_neural_forecaster(
     forecaster: *mut RNeuralForecaster,
     ts: *const RTimeSeries,
-    epochs: c_int_learning_rate: c_double,
+    epochs: c_int_learning, rate: c_double,
 ) -> c_int {
     if forecaster.is_null() || ts.is_null() || epochs <= 0 {
         return R_ERROR_INVALID_PARAMS;

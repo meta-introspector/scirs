@@ -104,7 +104,7 @@ fn demonstrate_advanced_amr(_profiler: &mut PerformanceProfiler) -> IntegrateRes
     amr_manager.add_criterion(Box::new(gradient_criterion));
 
     // Simulate solution update
-    let solution = Array2::from_shape_fn((4, 1), |(i_)| {
+    let solution = Array2::fromshape_fn((4, 1), |(i_)| {
         let x = (i % 2) as f64 * 0.5 + 0.25;
         let y = (i / 2) as f64 * 0.5 + 0.25;
         heat_equation_solution(x, y, 0.1)
@@ -191,7 +191,7 @@ fn demonstrate_parallel_optimization(_profiler: &mut PerformanceProfiler) -> Int
 
     // Create test matrix
     let input_matrix =
-        Array2::from_shape_fn((100, 50), |(i, j)| (i as f64 * 0.1 + j as f64 * 0.05).sin());
+        Array2::fromshape_fn((100, 50), |(i, j)| (i as f64 * 0.1 + j as f64 * 0.05).sin());
 
     // Test different vectorized operations
     let operations = vec![

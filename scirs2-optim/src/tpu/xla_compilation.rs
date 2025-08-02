@@ -109,7 +109,7 @@ pub struct XLACompilerConfig {
     pub enable_advanced_memory_coalescing: bool,
 
     /// Dynamic shape optimization
-    pub enable_dynamic_shape_optimization: bool,
+    pub enable_dynamicshape_optimization: bool,
 
     /// Cross-replica optimization
     pub enable_cross_replica_optimization: bool,
@@ -2544,8 +2544,8 @@ pub struct ShapeAnalyzer<T: Float> {
 #[derive(Debug, Clone)]
 pub struct ShapeInferenceRule {
     pub operation_type: OperationType,
-    pub input_shapes: Vec<TensorShape>,
-    pub output_shape: TensorShape,
+    pub inputshapes: Vec<TensorShape>,
+    pub outputshape: TensorShape,
     pub conditions: Vec<ShapeCondition>,
 }
 
@@ -2685,7 +2685,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
     pub fn compile_optimizer<O, D>(
         &mut self,
         optimizer: &O,
-        input_shapes: &[TensorShape],
+        inputshapes: &[TensorShape],
     ) -> Result<CompiledOptimizer<T>>
     where
         O: Optimizer<T, D>,
@@ -2694,7 +2694,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
         let start_time = Instant::now();
 
         // Build computation graph
-        let computation = self.build_optimizer_computation(optimizer, input_shapes)?;
+        let computation = self.build_optimizer_computation(optimizer, inputshapes)?;
 
         // Optimize computation
         let optimized_computation = self.optimization_pipeline.optimize(computation)?;
@@ -2722,7 +2722,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
     fn build_optimizer_computation<O, D>(
         &mut self,
         optimizer: &O,
-        input_shapes: &[TensorShape],
+        inputshapes: &[TensorShape],
     ) -> Result<XLAComputation<T>>
     where
         O: Optimizer<T, D>,
@@ -2749,7 +2749,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
         };
 
         // Add input specifications
-        for (i, shape) in input_shapes.iter().enumerate() {
+        for (i, shape) in inputshapes.iter().enumerate() {
             computation.inputs.push(InputSpecification {
                 name: format!("input_{}", i),
                 operand_type: OperandType::Tensor {
@@ -2920,7 +2920,7 @@ pub struct AdvancedTPUOptimizer<T: Float> {
     memory_coalescing_optimizer: MemoryCoalescingOptimizer<T>,
 
     /// Dynamic shape optimizer
-    dynamic_shape_optimizer: DynamicShapeOptimizer<T>,
+    dynamicshape_optimizer: DynamicShapeOptimizer<T>,
 
     /// Cross-replica optimizer
     cross_replica_optimizer: CrossReplicaOptimizer<T>,
@@ -2966,7 +2966,7 @@ pub struct TileSizeOptimizer<T: Float> {
 /// Tile key for caching
 #[derive(Debug, Clone, PartialEq)]
 pub struct TileKey {
-    pub matrix_shape: (usize, usize, usize), // (M, N, K)
+    pub matrixshape: (usize, usize, usize), // (M, N, K)
     pub data_type: ElementType,
     pub operation: OperationType,
 }
@@ -3510,7 +3510,7 @@ impl<T: Float + Send + Sync> AdvancedTPUOptimizer<T> {
             sparsity_optimizer: SparsityOptimizer::<T>::new(&config),
             quantization_optimizer: QuantizationOptimizer::new(&config),
             memory_coalescing_optimizer: MemoryCoalescingOptimizer::new(&config),
-            dynamic_shape_optimizer: DynamicShapeOptimizer::new(&config),
+            dynamicshape_optimizer: DynamicShapeOptimizer::new(&config),
             cross_replica_optimizer: CrossReplicaOptimizer::new(&config),
             config,
         }
@@ -3548,8 +3548,8 @@ impl<T: Float + Send + Sync> AdvancedTPUOptimizer<T> {
         }
 
         // Apply dynamic shape optimizations
-        if self.config.enable_dynamic_shape_optimization {
-            let shape_result = self.dynamic_shape_optimizer.optimize(computation)?;
+        if self.config.enable_dynamicshape_optimization {
+            let shape_result = self.dynamicshape_optimizer.optimize(computation)?;
             optimization_result.merge(shape_result);
         }
 
@@ -3903,7 +3903,7 @@ impl Default for XLACompilerConfig {
             enable_quantization_optimization: true,
             enable_gradient_accumulation_optimization: true,
             enable_advanced_memory_coalescing: true,
-            enable_dynamic_shape_optimization: true,
+            enable_dynamicshape_optimization: true,
             enable_cross_replica_optimization: true,
         }
     }
@@ -4537,7 +4537,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
 
         // Run the analysis
         let result = match analysis_name {
-            "shape_analysis" => self.run_shape_analysis(computation)?,
+            "shape_analysis" => self.runshape_analysis(computation)?,
             "memory_analysis" => self.run_memory_analysis(computation)?,
             "dependency_analysis" => self.run_dependency_analysis(computation)?,
             "performance_analysis" => self.run_performance_analysis(computation)?,
@@ -4557,14 +4557,14 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
         Ok(())
     }
 
-    fn run_shape_analysis(&self, computation: &XLAComputation<T>) -> Result<AnalysisResult> {
+    fn runshape_analysis(&self, computation: &XLAComputation<T>) -> Result<AnalysisResult> {
         let mut data = HashMap::new();
 
         // Analyze shapes of all operands
         for operation in computation.operations.values() {
             for (i, operand) in operation.inputs.iter().enumerate() {
                 if let OperandType::Tensor { shape, .. } = &operand.operand_type {
-                    let shape_key = format!("op_{}_{}_shape", operation.id.0, i);
+                    let shape_key = format!("op_{}_{}shape", operation.id.0, i);
                     data.insert(
                         shape_key,
                         AnalysisData::Vector(
@@ -4626,7 +4626,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
         let mut dependency_count = 0;
         for operation in computation.operations.values() {
             for input in &operation.inputs {
-                if let Some(source_op) = input.source_operation {
+                if let Some(sourceop) = input.source_operation {
                     let dep_key = format!("dep_{}_{}", source_op.0, operation.id.0);
                     data.insert(dep_key, AnalysisData::Boolean(true));
                     dependency_count += 1;
@@ -5132,9 +5132,9 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
         })
     }
 
-    fn calculate_tensor_memory_size_static(_shape: &TensorShape) -> Result<usize> {
+    fn calculate_tensor_memory_size_static(shape: &TensorShape) -> Result<usize> {
         let element_size = 4; // Assume 32-bit floats
-        let total_elements: usize = _shape.dimensions.iter().product();
+        let total_elements: usize = shape.dimensions.iter().product();
         Ok(total_elements * element_size)
     }
 
@@ -5355,7 +5355,7 @@ mod tests {
     }
 
     #[test]
-    fn test_tensor_shape_creation() {
+    fn test_tensorshape_creation() {
         let shape = TensorShape {
             dimensions: vec![10, 20, 30],
             is_dynamic: vec![false, false, false],

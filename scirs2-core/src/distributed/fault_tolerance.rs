@@ -137,7 +137,7 @@ impl FaultToleranceManager {
             failure_threshold: Duration::from_secs(300), // 5 minutes
         }
     }
-    
+
     /// Create a new fault tolerance manager (alias for failures)
     pub fn new(detection_strategy: FaultDetectionStrategy, max_failures: usize) -> Self {
         Self::failures(detection_strategy, max_failures)
@@ -312,15 +312,15 @@ impl FaultToleranceManager {
         summary.total_count = nodes.len();
         Ok(summary)
     }
-    
+
     /// Register a node with the fault tolerance manager
     pub fn register_node(&self, node: NodeInfo) -> Result<(), FaultToleranceError> {
         let mut nodes = self.nodes.lock().map_err(|_| {
             FaultToleranceError::LockError("Failed to acquire nodes lock".to_string())
         })?;
-        
+
         nodes.insert(node.node_id.clone(), node);
-        
+
         Ok(())
     }
 }

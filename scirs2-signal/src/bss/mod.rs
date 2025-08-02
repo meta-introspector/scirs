@@ -1,11 +1,12 @@
-//! Blind source separation module
-//!
-//! This module implements various blind source separation (BSS) techniques for signal processing,
-//! including Independent Component Analysis (ICA), Principal Component Analysis (PCA),
-//! Non-negative Matrix Factorization (NMF), and related methods.
+use ndarray::s;
+// Blind source separation module
+//
+// This module implements various blind source separation (BSS) techniques for signal processing,
+// including Independent Component Analysis (ICA), Principal Component Analysis (PCA),
+// Non-negative Matrix Factorization (NMF), and related methods.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Axis, s};
+use ndarray::{ Array1, Array2, Axis};
 use scirs2_linalg::eigh;
 use statrs::statistics::Statistics;
 

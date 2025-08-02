@@ -12,7 +12,7 @@ use std::fmt::Write;
 #[derive(Debug, Clone)]
 pub struct VisualizationConfig {
     /// Whether to show tensor shapes in nodes
-    pub show_shapes: bool,
+    pub showshapes: bool,
     /// Whether to show operation names
     pub show_operations: bool,
     /// Whether to show gradient flow
@@ -28,7 +28,7 @@ pub struct VisualizationConfig {
 impl Default for VisualizationConfig {
     fn default() -> Self {
         Self {
-            show_shapes: true,
+            showshapes: true,
             show_operations: true,
             show_gradients: false,
             max_nodes: Some(100),
@@ -53,7 +53,7 @@ pub enum OutputFormat {
 
 /// Graph visualizer for creating visual representations of computation graphs
 pub struct GraphVisualizer<F: Float> {
-    config: VisualizationConfig_phantom: std::marker::PhantomData<F>,
+    config: VisualizationConfig, phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> GraphVisualizer<F> {
@@ -75,7 +75,7 @@ impl<F: Float> GraphVisualizer<F> {
     pub fn visualize(&self, graph: &Graph<F>) -> Result<String, VisualizationError> {
         match self.config.format {
             OutputFormat::Dot => self.generate_dot(graph),
-            OutputFormat::Text => self.generate_text(graph),
+            OutputFormat::Text => self.generatetext(graph),
             OutputFormat::Json => self.generate_json(graph),
             OutputFormat::Mermaid => self.generate_mermaid(graph),
         }
@@ -118,7 +118,7 @@ impl<F: Float> GraphVisualizer<F> {
     }
 
     /// Generate simple text representation
-    fn generate_text(&self, graph: &Graph<F>) -> Result<String, VisualizationError> {
+    fn generatetext(&self, graph: &Graph<F>) -> Result<String, VisualizationError> {
         let mut output = String::new();
         writeln!(output, "Computation Graph:")?;
         writeln!(output, "==================")?;
@@ -331,7 +331,7 @@ impl<F: Float> GraphVisualizer<F> {
             write!(label, "Tensor")?;
         }
 
-        if self.config.show_shapes {
+        if self.config.showshapes {
             // In a real implementation, we would extract shape from tensor_id
             if !label.is_empty() {
                 write!(label, "\\n")?;
@@ -485,14 +485,14 @@ pub enum VisualizationError {
 /// Public API functions for graph visualization
 /// Visualize a computation graph in DOT format
 #[allow(dead_code)]
-pub fn visualize_graph_dot<F: Float>(_graph: &Graph<F>) -> Result<String, VisualizationError> {
+pub fn visualize_graph_dot<F: Float>(graph: &Graph<F>) -> Result<String, VisualizationError> {
     let visualizer = GraphVisualizer::new();
     visualizer.visualize(_graph)
 }
 
 /// Visualize a computation graph in text format
 #[allow(dead_code)]
-pub fn visualize_graph_text<F: Float>(_graph: &Graph<F>) -> Result<String, VisualizationError> {
+pub fn visualize_graphtext<F: Float>(graph: &Graph<F>) -> Result<String, VisualizationError> {
     let config = VisualizationConfig {
         format: OutputFormat::Text,
         ..Default::default()
@@ -503,7 +503,7 @@ pub fn visualize_graph_text<F: Float>(_graph: &Graph<F>) -> Result<String, Visua
 
 /// Visualize a computation graph in JSON format
 #[allow(dead_code)]
-pub fn visualize_graph_json<F: Float>(_graph: &Graph<F>) -> Result<String, VisualizationError> {
+pub fn visualize_graph_json<F: Float>(graph: &Graph<F>) -> Result<String, VisualizationError> {
     let config = VisualizationConfig {
         format: OutputFormat::Json,
         ..Default::default()
@@ -514,7 +514,7 @@ pub fn visualize_graph_json<F: Float>(_graph: &Graph<F>) -> Result<String, Visua
 
 /// Visualize a computation graph in Mermaid format
 #[allow(dead_code)]
-pub fn visualize_graph_mermaid<F: Float>(_graph: &Graph<F>) -> Result<String, VisualizationError> {
+pub fn visualize_graph_mermaid<F: Float>(graph: &Graph<F>) -> Result<String, VisualizationError> {
     let config = VisualizationConfig {
         format: OutputFormat::Mermaid,
         ..Default::default()
@@ -525,14 +525,14 @@ pub fn visualize_graph_mermaid<F: Float>(_graph: &Graph<F>) -> Result<String, Vi
 
 /// Print graph statistics to console
 #[allow(dead_code)]
-pub fn print_graph_stats<F: Float>(_graph: &Graph<F>) -> Result<(), VisualizationError> {
+pub fn print_graph_stats<F: Float>(graph: &Graph<F>) -> Result<(), VisualizationError> {
     let debugger = GraphDebugger::new();
     debugger.print_stats(_graph)
 }
 
 /// Validate graph structure and return any issues found
 #[allow(dead_code)]
-pub fn validate_graph<F: Float>(_graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
+pub fn validate_graph<F: Float>(graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
     let debugger = GraphDebugger::new();
     debugger.validate_graph(_graph)
 }
@@ -553,7 +553,7 @@ mod tests {
     #[test]
     fn test_visualization_config() {
         let config = VisualizationConfig::default();
-        assert!(config.show_shapes);
+        assert!(config.showshapes);
         assert!(config.show_operations);
         assert!(!config.show_gradients);
         assert_eq!(config.max_nodes, Some(100));

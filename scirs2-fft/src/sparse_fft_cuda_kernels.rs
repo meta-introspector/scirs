@@ -43,7 +43,9 @@ impl CUDASublinearSparseFFTKernel {
 /// Execute CUDA sublinear sparse FFT (stub)
 #[allow(dead_code)]
 pub fn execute_cuda_sublinear_sparse_fft<T>(
-    _input: &[T], _k: usize, _algorithm: SparseFFTAlgorithm,
+    _input: &[T],
+    _k: usize,
+    _algorithm: SparseFFTAlgorithm,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug,
@@ -76,7 +78,8 @@ impl Default for CUDACompressedSensingSparseFFTKernel {
 /// Execute CUDA compressed sensing sparse FFT (stub)
 #[allow(dead_code)]
 pub fn execute_cuda_compressed_sensing_sparse_fft<T>(
-    _input: &[T], _k: usize,
+    _input: &[T],
+    _k: usize,
 ) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug,

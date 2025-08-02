@@ -1,22 +1,22 @@
-//! Advanced Mode Enhanced Validation Showcase
-//!
-//! This example demonstrates the comprehensive validation capabilities added to scirs2-signal
-//! in Advanced mode, including:
-//! - Enhanced multitaper spectral estimation validation
-//! - Comprehensive Lomb-Scargle periodogram testing
-//! - Parametric spectral estimation validation (AR, ARMA)
-//! - 2D wavelet transform validation and refinement
-//! - SIMD and parallel processing validation
-//! - Numerical precision and stability testing
-//! - Performance benchmarking and scaling analysis
+// Advanced Mode Enhanced Validation Showcase
+//
+// This example demonstrates the comprehensive validation capabilities added to scirs2-signal
+// in Advanced mode, including:
+// - Enhanced multitaper spectral estimation validation
+// - Comprehensive Lomb-Scargle periodogram testing
+// - Parametric spectral estimation validation (AR, ARMA)
+// - 2D wavelet transform validation and refinement
+// - SIMD and parallel processing validation
+// - Numerical precision and stability testing
+// - Performance benchmarking and scaling analysis
 
 use crate::error::SignalResult;
-use scirs2__signal::error::SignalResult;
-use scirs2__signal::lombscargle::{lombscargle, AutoFreqMethod};
-use scirs2__signal::lombscargle_enhanced_validation::{
+use scirs2_signal::error::SignalResult;
+use scirs2_signal::lombscargle::{lombscargle, AutoFreqMethod};
+use scirs2_signal::lombscargle_enhanced_validation::{
     validate_edge_cases_comprehensive, validate_numerical_robustness_extreme,
 };
-use scirs2__signal::multitaper::{
+use scirs2_signal::multitaper::{
 use std::f64::consts::PI;
     validate_numerical_precision_enhanced, validate_parameter_consistency, TestSignalConfig,
 };

@@ -1,20 +1,21 @@
-//! Robust System Identification Enhancements
-//!
-//! This module provides enhanced numerical robustness, advanced validation,
-//! and improved diagnostics for system identification methods.
+use ndarray::s;
+// Robust System Identification Enhancements
+//
+// This module provides enhanced numerical robustness, advanced validation,
+// and improved diagnostics for system identification methods.
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
+use crate::lti::design::tf;
 use crate::lti::StateSpace;
-use crate::sysid__enhanced::{EnhancedSysIdConfig, ModelValidationMetrics, SystemModel};
-use ndarray::{Array1, Array2, s};
-use num__complex::Complex64;
+use crate::sysid_enhanced::{EnhancedSysIdConfig, ModelValidationMetrics, SystemModel};
+use ndarray::{ Array1, Array2};
+use num_complex::Complex64;
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::{check_finite, check_shape};
+use scirs2_core::validation::{check_finite, checkshape};
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;
-use crate::lti::design::tf;
 
 #[allow(unused_imports)]
 /// Enhanced numerical robustness for system identification
@@ -140,7 +141,7 @@ pub fn estimate_signal_noise_ratio_advanced(
     input: &Array1<f64>,
     output: &Array1<f64>,
 ) -> SignalResult<f64> {
-    check_shape(input, (output.len(), None), "input and output")?;
+    checkshape(input, (output.len(), None), "input and output")?;
     check_finite(&input.to_vec(), "input")?;
     check_finite(&output.to_vec(), "output")?;
 
@@ -206,7 +207,7 @@ fn estimate_snr_spectral(_input: &Array1<f64>, output: &Array1<f64>) -> SignalRe
         return Ok(0.0);
     }
 
-    let avg_coherence = coherence_sum / freq_count  as f64;
+    let avg_coherence = coherence_sum / freq_count as f64;
     let snr_linear = avg_coherence / (1.0 - avg_coherence).max(1e-10);
     Ok(10.0 * snr_linear.log10())
 }
@@ -504,7 +505,7 @@ pub fn enhanced_cross_validation(
 
     for _ in 0..n_bootstrap {
         let bootstrap_sample = bootstrap_resample(&fold_errors.to_vec());
-        let bootstrap_mean = bootstrap_sample.iter().sum::<f64>() / bootstrap_sample.len()  as f64;
+        let bootstrap_mean = bootstrap_sample.iter().sum::<f64>() / bootstrap_sample.len() as f64;
         bootstrap_errors.push(bootstrap_mean);
     }
 
@@ -651,7 +652,7 @@ fn compute_fft_padded(_signal: &Array1<f64>, nfft: usize) -> Array1<Complex64> {
     for k in 0..nfft {
         let mut sum = Complex64::new(0.0, 0.0);
         for t in 0..nfft {
-            let angle = -2.0 * PI * (k * t) as f64 / nfft  as f64;
+            let angle = -2.0 * PI * (k * t) as f64 / nfft as f64;
             sum += padded[t] * Complex64::new(angle.cos(), angle.sin());
         }
         result[k] = sum;
@@ -819,7 +820,7 @@ fn estimate_arx_cv(
     let a = params.slice(s![..na]).to_owned();
     let b = params.slice(s![na..]).to_owned();
     let residuals = &y - &phi.dot(&params);
-    let cost = residuals.dot(&residuals) / n_samples  as f64;
+    let cost = residuals.dot(&residuals) / n_samples as f64;
 
     Ok((a, b, cost))
 }
@@ -865,7 +866,9 @@ fn compute_validation_error(
 
 #[allow(dead_code)]
 fn compute_loo_approximation(
-    _input: &Array1<f64>, _output: &Array1<f64>, _config: &EnhancedSysIdConfig,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
+    _config: &EnhancedSysIdConfig,
 ) -> SignalResult<f64> {
     // Placeholder for Leave-One-Out approximation
     Ok(0.1)
@@ -991,7 +994,7 @@ mod tests {
         // Create well-conditioned test problem
         for i in 0..m {
             phi[[i, 0]] = 1.0;
-            phi[[i, 1]] = i  as f64;
+            phi[[i, 1]] = i as f64;
             phi[[i, 2]] = (i as f64).powi(2);
             y[i] = 1.0 + 2.0 * i as f64 + 0.5 * (i as f64).powi(2);
         }

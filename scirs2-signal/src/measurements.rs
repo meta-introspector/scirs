@@ -1,8 +1,8 @@
-//! Signal measurements and analysis functions
-//!
-//! This module provides functions for measuring various properties of signals,
-//! such as RMS level, peak-to-peak amplitude, signal-to-noise ratio (SNR),
-//! and total harmonic distortion (THD).
+// Signal measurements and analysis functions
+//
+// This module provides functions for measuring various properties of signals,
+// such as RMS level, peak-to-peak amplitude, signal-to-noise ratio (SNR),
+// and total harmonic distortion (THD).
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
@@ -24,7 +24,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::measurements::rms;
+/// use scirs2_signal::measurements::rms;
 ///
 /// // Calculate RMS of a sine wave
 /// let signal = (0..1000).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -73,7 +73,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::measurements::peak_to_peak;
+/// use scirs2_signal::measurements::peak_to_peak;
 ///
 /// // Calculate peak-to-peak amplitude of a signal
 /// let signal = vec![-1.5, -0.5, 0.0, 0.5, 1.0, 0.5, 0.0, -0.5];
@@ -123,7 +123,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::measurements::peak_to_rms;
+/// use scirs2_signal::measurements::peak_to_rms;
 ///
 /// // Calculate crest factor of a sine wave
 /// let signal = (0..1000).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -177,7 +177,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::measurements::snr;
+/// use scirs2_signal::measurements::snr;
 /// use rand::Rng;  // Import the Rng trait to access gen_range
 ///
 /// // Create a clean signal
@@ -273,7 +273,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::measurements::thd;
+/// use scirs2_signal::measurements::thd;
 ///
 /// // Create a signal with some harmonic distortion
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -299,7 +299,9 @@ where
     T: Float + NumCast + Debug,
 {
     if _signal.is_empty() {
-        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
+        return Err(SignalError::ValueError(
+            "Input _signal is empty".to_string(),
+        ));
     }
 
     if fs <= 0.0 {
@@ -403,7 +405,7 @@ where
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_rms() {
         // DC signal

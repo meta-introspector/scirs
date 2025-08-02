@@ -166,7 +166,13 @@ pub struct BaseKernel {
 
 impl BaseKernel {
     /// Create a new base kernel
-    pub fn new(name: &str, cuda_source: &str, rocm_source: &str, wgpu_source: &str, metal_source: &str, opencl_source: &str,
+    pub fn new(
+        name: &str,
+        cuda_source: &str,
+        rocm_source: &str,
+        wgpu_source: &str,
+        metal_source: &str,
+        opencl_source: &str,
         metadata: KernelMetadata,
     ) -> Self {
         Self {

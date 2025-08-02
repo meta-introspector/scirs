@@ -228,12 +228,12 @@ impl<A: Float + ScalarOperand + Debug> HyperparameterPredictor<A> {
     /// Create a new hyperparameter predictor
     pub fn new(_input_size: usize, hidden_size: usize, output_size: usize) -> Self {
         // Initialize with small random weights
-        let input_weights = Array2::from_shape_fn((hidden_size, _input_size), |_| {
+        let input_weights = Array2::fromshape_fn((hidden_size, _input_size), |_| {
             A::from(0.01).unwrap()
                 * (A::from(rand::random::<f64>()).unwrap() - A::from(0.5).unwrap())
         });
 
-        let output_weights = Array2::from_shape_fn((output_size, hidden_size), |_| {
+        let output_weights = Array2::fromshape_fn((output_size, hidden_size), |_| {
             A::from(0.01).unwrap()
                 * (A::from(rand::random::<f64>()).unwrap() - A::from(0.5).unwrap())
         });
@@ -741,7 +741,7 @@ pub struct UpdateNetwork<A: Float> {
 impl<A: Float + ScalarOperand + Debug> UpdateNetwork<A> {
     /// Create a new update network
     pub fn new(input_size: usize, output_size: usize) -> Self {
-        let weights = Array2::from_shape_fn((output_size, input_size), |_| {
+        let weights = Array2::fromshape_fn((output_size, input_size), |_| {
             A::from(0.01).unwrap()
                 * (A::from(rand::random::<f64>()).unwrap() - A::from(0.5).unwrap())
         });

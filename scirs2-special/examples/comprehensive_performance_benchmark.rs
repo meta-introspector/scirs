@@ -149,7 +149,8 @@ fn generate_performance_recommendations(
         let size_range = match result.array_size {
             0..=1000 => "Small (≤1K)",
             1001..=10000 => "Medium (1K-10K)",
-            10001..=100000 => "Large (10K-100K)"_ => "Very Large (>100K)",
+            10001..=100000 => "Large (10K-100K)",
+            _ => "Very Large (>100K)",
         };
 
         size_recommendations

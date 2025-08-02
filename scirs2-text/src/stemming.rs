@@ -64,7 +64,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2_text::{LancasterStemmer, PorterStemmer, RuleLemmatizer, SimpleLemmatizer, SnowballStemmer, Stemmer};
+//! use scirs2text::{LancasterStemmer, PorterStemmer, RuleLemmatizer, SimpleLemmatizer, SnowballStemmer, Stemmer};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let porter = PorterStemmer::new();
@@ -111,8 +111,8 @@ pub use self::rule_lemmatizer::{
 /// # Example
 ///
 /// ```
-/// use scirs2_text::stemming::create_pos_aware_lemmatizer;
-/// use scirs2_text::stemming::Stemmer;
+/// use scirs2text::stemming::create_pos_aware_lemmatizer;
+/// use scirs2text::stemming::Stemmer;
 ///
 /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let lemmatizer = create_pos_aware_lemmatizer();

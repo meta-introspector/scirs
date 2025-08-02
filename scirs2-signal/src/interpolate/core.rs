@@ -1,14 +1,14 @@
-//! Core configuration and dispatch logic for interpolation algorithms
-//!
-//! This module provides the common types, configuration structures, and dispatch
-//! functions that coordinate between different interpolation algorithms.
+use ndarray::s;
+// Core configuration and dispatch logic for interpolation algorithms
+//
+// This module provides the common types, configuration structures, and dispatch
+// functions that coordinate between different interpolation algorithms.
 
-use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
 use super::basic::{linear_interpolate, nearest_neighbor_interpolate};
 use super::spectral::{sinc_interpolate, spectral_interpolate};
 use super::spline::{cubic_hermite_interpolate, cubic_spline_interpolate};
-use crate::interpolate::InterpolationConfig;
+use crate::error::{SignalError, SignalResult};
+use ndarray::{ Array1, Array2};
 
 #[allow(unused_imports)]
 // Import the specific interpolation functions from their respective modules
@@ -472,7 +472,6 @@ mod tests {
 
     #[test]
     fn test_nearest_neighbor_interpolate_2d() {
-
         let mut image = Array2::zeros((3, 3));
         image[[0, 0]] = 1.0;
         image[[0, 1]] = f64::NAN;

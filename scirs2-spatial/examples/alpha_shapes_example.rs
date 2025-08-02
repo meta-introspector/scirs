@@ -5,7 +5,7 @@
 //! non-convex boundaries and holes in data.
 
 use ndarray::array;
-use scirs2__spatial::alpha_shapes::AlphaShape;
+use scirs2__spatial::alphashapes::AlphaShape;
 use std::f64::consts::PI;
 
 #[allow(dead_code)]
@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 1: Basic 2D alpha shape
     println!("1. Basic 2D Alpha Shape");
-    basic_2d_alpha_shape()?;
+    basic_2d_alphashape()?;
     println!();
 
     // Example 2: Multiple alpha values comparison
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 3: Non-convex shape (C-shape)
     println!("3. Non-Convex Shape Analysis");
-    non_convex_shape_example()?;
+    non_convexshape_example()?;
     println!();
 
     // Example 4: Point cloud with outliers
@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 5: 3D alpha shape
     println!("5. 3D Alpha Shape");
-    alpha_shape_3d_example()?;
+    alphashape_3d_example()?;
     println!();
 
     // Example 6: Optimal alpha finding
@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn basic_2d_alpha_shape() -> Result<(), Box<dyn std::error::Error>> {
+fn basic_2d_alphashape() -> Result<(), Box<dyn std::error::Error>> {
     // Create a simple square with an interior point
     let points = array![
         [0.0, 0.0], // Bottom-left
@@ -64,22 +64,22 @@ fn basic_2d_alpha_shape() -> Result<(), Box<dyn std::error::Error>> {
 
     // Compute alpha shape with moderate alpha
     let alpha = 1.5;
-    let alpha_shape = AlphaShape::new(&points, alpha)?;
+    let alphashape = AlphaShape::new(&points, alpha)?;
 
     println!("Alpha: {alpha}");
     println!(
         "Number of simplices in complex: {}",
-        alpha_shape.complex().len()
+        alphashape.complex().len()
     );
     println!(
         "Number of boundary elements: {}",
-        alpha_shape.boundary().len()
+        alphashape.boundary().len()
     );
-    println!("Area: {:.3}", alpha_shape.measure()?);
+    println!("Area: {:.3}", alphashape.measure()?);
 
     // Show the boundary edges
     println!("Boundary edges:");
-    for (i, edge) in alpha_shape.boundary().iter().enumerate() {
+    for (i, edge) in alphashape.boundary().iter().enumerate() {
         let p1 = &points.row(edge[0]);
         let p2 = &points.row(edge[1]);
         println!(
@@ -129,7 +129,7 @@ fn alpha_spectrum_analysis() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn non_convex_shape_example() -> Result<(), Box<dyn std::error::Error>> {
+fn non_convexshape_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create a C-shaped point set
     let mut points_vec = Vec::new();
 
@@ -161,7 +161,7 @@ fn non_convex_shape_example() -> Result<(), Box<dyn std::error::Error>> {
         flat_data.push(point[1]);
     }
 
-    let points = ndarray::Array2::from_shape_vec((n, 2), flat_data)?;
+    let points = ndarray::Array2::fromshape_vec((n, 2), flat_data)?;
 
     println!("C-shaped point cloud with {n} points");
 
@@ -169,14 +169,14 @@ fn non_convex_shape_example() -> Result<(), Box<dyn std::error::Error>> {
     let alphas = vec![0.3, 0.7, 1.0, 2.0];
 
     for alpha in alphas {
-        let alpha_shape = AlphaShape::new(&points, alpha)?;
-        let area = alpha_shape.measure()?;
+        let alphashape = AlphaShape::new(&points, alpha)?;
+        let area = alphashape.measure()?;
 
         println!(
             "Alpha {:.1}: {} simplices, {} boundary edges, area {:.2}",
             alpha,
-            alpha_shape.complex().len(),
-            alpha_shape.boundary().len(),
+            alphashape.complex().len(),
+            alphashape.boundary().len(),
             area
         );
     }
@@ -214,7 +214,7 @@ fn outlier_detection_example() -> Result<(), Box<dyn std::error::Error>> {
         flat_data.push(point[1]);
     }
 
-    let points = ndarray::Array2::from_shape_vec((n, 2), flat_data)?;
+    let points = ndarray::Array2::fromshape_vec((n, 2), flat_data)?;
 
     println!("Point cloud with {n} points including outliers");
 
@@ -233,15 +233,15 @@ fn outlier_detection_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Area: {:.3}", alpha_large.measure()?);
 
     // Find optimal alpha
-    let (optimal_alpha, optimal_shape) = AlphaShape::find_optimal_alpha(&points, "area")?;
+    let (optimal_alpha, optimalshape) = AlphaShape::find_optimal_alpha(&points, "area")?;
     println!("Optimal alpha: {optimal_alpha:.3}");
-    println!("Optimal shape area: {:.3}", optimal_shape.measure()?);
+    println!("Optimal shape area: {:.3}", optimalshape.measure()?);
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn alpha_shape_3d_example() -> Result<(), Box<dyn std::error::Error>> {
+fn alphashape_3d_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create a 3D point set (vertices of a cube plus center)
     let points = array![
         [0.0, 0.0, 0.0], // Cube vertices
@@ -259,29 +259,29 @@ fn alpha_shape_3d_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("3D point cloud with {} points", points.nrows());
 
     let alpha = 1.0;
-    let alpha_shape = AlphaShape::new(&points, alpha)?;
+    let alphashape = AlphaShape::new(&points, alpha)?;
 
     println!("Alpha: {alpha}");
     println!(
         "Number of tetrahedra in complex: {}",
-        alpha_shape.complex().len()
+        alphashape.complex().len()
     );
     println!(
         "Number of boundary triangles: {}",
-        alpha_shape.boundary().len()
+        alphashape.boundary().len()
     );
-    println!("Volume: {:.3}", alpha_shape.measure()?);
+    println!("Volume: {:.3}", alphashape.measure()?);
 
     // Show some circumradii
     println!("Circumradii of simplices:");
-    for (i, &radius) in alpha_shape.circumradii().iter().enumerate() {
+    for (i, &radius) in alphashape.circumradii().iter().enumerate() {
         if i < 5 {
             // Show first few
             println!("  Simplex {i}: radius = {radius:.3}");
         }
     }
-    if alpha_shape.circumradii().len() > 5 {
-        println!("  ... and {} more", alpha_shape.circumradii().len() - 5);
+    if alphashape.circumradii().len() > 5 {
+        println!("  ... and {} more", alphashape.circumradii().len() - 5);
     }
 
     Ok(())
@@ -314,7 +314,7 @@ fn optimal_alpha_example() -> Result<(), Box<dyn std::error::Error>> {
         flat_data.push(point[1]);
     }
 
-    let points = ndarray::Array2::from_shape_vec((n, 2), flat_data)?;
+    let points = ndarray::Array2::fromshape_vec((n, 2), flat_data)?;
 
     println!("Two-cluster point set with {n} points");
 
@@ -322,12 +322,12 @@ fn optimal_alpha_example() -> Result<(), Box<dyn std::error::Error>> {
     let criteria = ["area", "boundary"];
 
     for criterion in &criteria {
-        let (optimal_alpha, optimal_shape) = AlphaShape::find_optimal_alpha(&points, criterion)?;
-        let area = optimal_shape.measure()?;
+        let (optimal_alpha, optimalshape) = AlphaShape::find_optimal_alpha(&points, criterion)?;
+        let area = optimalshape.measure()?;
 
         println!("Optimal alpha ({criterion}): {optimal_alpha:.3}");
-        println!("  Complex size: {}", optimal_shape.complex().len());
-        println!("  Boundary edges: {}", optimal_shape.boundary().len());
+        println!("  Complex size: {}", optimalshape.complex().len());
+        println!("  Boundary edges: {}", optimalshape.boundary().len());
         println!("  Total area: {area:.3}");
     }
 
@@ -359,7 +359,7 @@ fn circular_points_example() -> Result<(), Box<dyn std::error::Error>> {
         flat_data.push(point[1]);
     }
 
-    let points = ndarray::Array2::from_shape_vec((n, 2), flat_data)?;
+    let points = ndarray::Array2::fromshape_vec((n, 2), flat_data)?;
 
     println!("Circular ring with {n} points");
 
@@ -368,24 +368,24 @@ fn circular_points_example() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Alpha analysis for ring structure:");
     for alpha in alphas {
-        let alpha_shape = AlphaShape::new(&points, alpha)?;
-        let area = alpha_shape.measure()?;
+        let alphashape = AlphaShape::new(&points, alpha)?;
+        let area = alphashape.measure()?;
 
         println!(
             "α = {:.1}: {} triangles, {} edges, area = {:.2}",
             alpha,
-            alpha_shape.complex().len(),
-            alpha_shape.boundary().len(),
+            alphashape.complex().len(),
+            alphashape.boundary().len(),
             area
         );
     }
 
     // Find the optimal alpha that captures the ring without connecting inner and outer
-    let (optimal_alpha, optimal_shape) = AlphaShape::find_optimal_alpha(&points, "boundary")?;
+    let (optimal_alpha, optimalshape) = AlphaShape::find_optimal_alpha(&points, "boundary")?;
     println!("\nOptimal alpha for ring: {optimal_alpha:.3}");
     println!(
         "Captures ring with {} boundary edges",
-        optimal_shape.boundary().len()
+        optimalshape.boundary().len()
     );
 
     Ok(())

@@ -310,7 +310,7 @@ fn integrate_expression<F: IntegrateFloat>(
 
 /// Check if expression depends on variable
 #[allow(dead_code)]
-fn depends_on_var<F: IntegrateFloat>(_expr: &SymbolicExpression<F>, var: &Variable) -> bool {
+fn depends_on_var<F: IntegrateFloat>(expr: &SymbolicExpression<F>, var: &Variable) -> bool {
     _expr.variables().contains(var)
 }
 

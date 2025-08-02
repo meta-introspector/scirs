@@ -227,7 +227,7 @@ fn parse_data_line(_line: &str, attributes: &[(String, AttributeType)]) -> Resul
 /// # Example
 ///
 /// ```no_run
-/// use scirs2__io::arff::read_arff;
+/// use scirs2_io::arff::read_arff;
 /// use std::path::Path;
 ///
 /// let arff_data = read_arff(Path::new("dataset.arff")).unwrap();
@@ -236,7 +236,7 @@ fn parse_data_line(_line: &str, attributes: &[(String, AttributeType)]) -> Resul
 /// println!("Number of instances: {}", arff_data.data.shape()[0]);
 /// ```
 #[allow(dead_code)]
-pub fn read_arff<P: AsRef<Path>>(_path: P) -> Result<ArffData> {
+pub fn read_arff<P: AsRef<Path>>(path: P) -> Result<ArffData> {
     let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
@@ -342,7 +342,7 @@ pub fn read_arff<P: AsRef<Path>>(_path: P) -> Result<ArffData> {
 /// # Example
 ///
 /// ```no_run
-/// use scirs2__io::arff::{read_arff, get_numeric_matrix};
+/// use scirs2_io::arff::{read_arff, get_numeric_matrix};
 /// use std::path::Path;
 ///
 /// let arff_data = read_arff(Path::new("iris.arff")).unwrap();
@@ -430,7 +430,7 @@ pub fn get_numeric_matrix(
 /// # Example
 ///
 /// ```no_run
-/// use scirs2__io::arff::{ArffData, ArffValue, AttributeType, write_arff};
+/// use scirs2_io::arff::{ArffData, ArffValue, AttributeType, write_arff};
 /// use ndarray::Array2;
 /// use std::path::Path;
 ///
@@ -443,7 +443,7 @@ pub fn get_numeric_matrix(
 ///         ])),
 ///         ("temperature".to_string(), AttributeType::Numeric),
 ///     ],
-///     data: Array2::from_shape_vec((2, 2), vec![
+///     data: Array2::fromshape_vec((2, 2), vec![
 ///         ArffValue::Nominal("sunny".to_string()), ArffValue::Numeric(85.0),
 ///         ArffValue::Nominal("overcast".to_string()), ArffValue::Numeric(72.0),
 ///     ]).unwrap(),
@@ -452,7 +452,7 @@ pub fn get_numeric_matrix(
 /// write_arff(Path::new("weather.arff"), &arff_data).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn write_arff<P: AsRef<Path>>(_path: P, arff_data: &ArffData) -> Result<()> {
+pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
     let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
@@ -547,18 +547,18 @@ pub fn write_arff<P: AsRef<Path>>(_path: P, arff_data: &ArffData) -> Result<()> 
 /// # Example
 ///
 /// ```no_run
-/// use scirs2__io::arff::numeric_matrix_to_arff;
+/// use scirs2_io::arff::numeric_matrix_to_arff;
 /// use ndarray::Array2;
 /// use std::path::Path;
 ///
 /// // Create a simple matrix
-/// let matrix = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+/// let matrix = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
 /// let attribute_names = vec!["attr1".to_string(), "attr2".to_string()];
 ///
 /// let arff_data = numeric_matrix_to_arff("simple_data", &attribute_names, &matrix);
 ///
 /// // Now you can write it to a file
-/// use scirs2__io::arff::write_arff;
+/// use scirs2_io::arff::write_arff;
 /// write_arff(Path::new("simple_data.arff"), &arff_data).unwrap();
 /// ```
 #[allow(dead_code)]

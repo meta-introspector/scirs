@@ -303,7 +303,7 @@ pub struct WorkerConnection {
     connection_pool: ConnectionPool,
     circuit_breaker: CircuitBreaker,
     last_used: Instant,
-    weight: f64_handle: Option<std::thread::JoinHandle<()>>,
+    weight: f64, handle: Option<std::thread::JoinHandle<()>>,
 }
 
 /// Load balancer trait for different strategies
@@ -665,7 +665,7 @@ impl DistributedMetricsCoordinator {
                     .as_secs(),
                 response_time: Duration::from_millis(0),
                 load_average: 0.0,
-                available_cores: num, _cpus: get(),
+                available_cores: num_cpus::get(),
                 gpu_usage: None,
                 worker_version: "1.0.0".to_string(),
                 capabilities: vec!["metrics".to_string()],
@@ -676,7 +676,7 @@ impl DistributedMetricsCoordinator {
             connection_pool: ConnectionPool::new(10),
             circuit_breaker: CircuitBreaker::new(5, Duration::from_secs(60)),
             last_used: Instant::now(),
-            weight: 1.0_handle: Some(handle),
+            weight: 1.0, handle: Some(handle),
         })
     }
 

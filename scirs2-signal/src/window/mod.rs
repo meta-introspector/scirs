@@ -1,12 +1,12 @@
-//! Window functions for signal processing.
-//!
-//! This module provides various window functions commonly used in signal processing,
-//! including Hamming, Hann, Blackman, and others. These windows are useful for
-//! reducing spectral leakage in Fourier transforms and filter design.
+// Window functions for signal processing.
+//
+// This module provides various window functions commonly used in signal processing,
+// including Hamming, Hann, Blackman, and others. These windows are useful for
+// reducing spectral leakage in Fourier transforms and filter design.
 
+use super::{analyze_window, compare_windows};
 use crate::error::{SignalError, SignalResult};
 use std::f64::consts::PI;
-use super::{analyze_window, blackman, compare_windows, hamming, hann};
 
 #[allow(unused_imports)]
 // Import specialized window implementations
@@ -28,7 +28,7 @@ pub use kaiser::{kaiser, kaiser_bessel_derived};
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::get_window;
+/// use scirs2_signal::window::get_window;
 ///
 /// // Create a Hamming window of length 10
 /// let window = get_window("hamming", 10, false).unwrap();
@@ -126,7 +126,7 @@ pub(crate) fn _truncate(w: Vec<f64>, needed: bool) -> Vec<f64> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::hamming;
+/// use scirs2_signal::window::hamming;
 ///
 /// let window = hamming(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -164,7 +164,7 @@ pub fn hamming(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::hann;
+/// use scirs2_signal::window::hann;
 ///
 /// let window = hann(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -203,7 +203,7 @@ pub fn hann(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::blackman;
+/// use scirs2_signal::window::blackman;
 ///
 /// let window = blackman(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -242,7 +242,7 @@ pub fn blackman(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::bartlett;
+/// use scirs2_signal::window::bartlett;
 ///
 /// let window = bartlett(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -279,7 +279,7 @@ pub fn bartlett(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::triang;
+/// use scirs2_signal::window::triang;
 ///
 /// let window = triang(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -319,7 +319,7 @@ pub fn triang(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::flattop;
+/// use scirs2_signal::window::flattop;
 ///
 /// let window = flattop(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -366,7 +366,7 @@ pub fn flattop(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::boxcar;
+/// use scirs2_signal::window::boxcar;
 ///
 /// let window = boxcar(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -399,7 +399,7 @@ pub fn boxcar(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::bohman;
+/// use scirs2_signal::window::bohman;
 ///
 /// let window = bohman(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -443,7 +443,7 @@ pub fn bohman(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::parzen;
+/// use scirs2_signal::window::parzen;
 ///
 /// let window = parzen(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -457,7 +457,7 @@ pub fn parzen(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     let (n, needs_trunc) = _extend(m, sym);
 
     let mut w = Vec::with_capacity(n);
-    let n1 = (n - 1)  as f64;
+    let n1 = (n - 1) as f64;
 
     for i in 0..n {
         let x = 2.0 * i as f64 / n1 - 1.0;
@@ -493,7 +493,7 @@ pub fn parzen(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::nuttall;
+/// use scirs2_signal::window::nuttall;
 ///
 /// let window = nuttall(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -539,7 +539,7 @@ pub fn nuttall(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::blackmanharris;
+/// use scirs2_signal::window::blackmanharris;
 ///
 /// let window = blackmanharris(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -584,7 +584,7 @@ pub fn blackmanharris(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::cosine;
+/// use scirs2_signal::window::cosine;
 ///
 /// let window = cosine(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -622,7 +622,7 @@ pub fn cosine(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::exponential;
+/// use scirs2_signal::window::exponential;
 ///
 /// let window = exponential(10, None, 1.0, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -665,7 +665,7 @@ pub fn exponential(m: usize, center: Option<f64>, tau: f64, sym: bool) -> Signal
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::tukey;
+/// use scirs2_signal::window::tukey;
 ///
 /// let window = tukey(10, 0.5, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -723,7 +723,7 @@ pub fn tukey(m: usize, alpha: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::barthann;
+/// use scirs2_signal::window::barthann;
 ///
 /// let window = barthann(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -738,7 +738,7 @@ pub fn barthann(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 
     let mut w = Vec::with_capacity(n);
     for i in 0..n {
-        let fac = (i as f64) / (n - 1)  as f64;
+        let fac = (i as f64) / (n - 1) as f64;
         let w_val = 0.62 - 0.48 * ((fac * 2.0 - 1.0) as f64).abs() - 0.38 * (2.0 * PI * fac).cos();
         w.push(w_val);
     }
@@ -766,7 +766,7 @@ pub fn barthann(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```ignore
-/// use scirs2__signal::window::dpss_windows;
+/// use scirs2_signal::window::dpss_windows;
 ///
 /// // Generate 5 DPSS windows for multitaper spectral estimation
 /// let windows = dpss_windows(256, 4.0, Some(7), true).unwrap();
@@ -802,7 +802,7 @@ pub fn dpss_windows(
     let (n, needs_trunc) = _extend(m, sym);
 
     // Build the tridiagonal matrix for the eigenvalue problem
-    let omega = 2.0 * PI * nw / n  as f64;
+    let omega = 2.0 * PI * nw / n as f64;
     let mut diag = vec![0.0; n];
     let mut off_diag = vec![0.0; n - 1];
 
@@ -814,7 +814,7 @@ pub fn dpss_windows(
 
     // Fill off-diagonal elements
     for (i, off_diag_val) in off_diag.iter_mut().enumerate() {
-        let k = (i + 1)  as f64;
+        let k = (i + 1) as f64;
         *off_diag_val = k * (n as f64 - k) / 2.0;
     }
 
@@ -864,7 +864,7 @@ pub fn dpss_windows(
 /// # Examples
 ///
 /// ```ignore
-/// use scirs2__signal::window::dpss;
+/// use scirs2_signal::window::dpss;
 ///
 /// let window = dpss(64, 2.5, None, true).unwrap();
 /// assert_eq!(window.len(), 64);
@@ -996,7 +996,7 @@ fn solve_tridiagonal_eigenproblem(
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_hamming_window() {
         let window = hamming(10, true).unwrap();
@@ -1198,7 +1198,7 @@ use approx::assert_relative_eq;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::lanczos;
+/// use scirs2_signal::window::lanczos;
 ///
 /// // Create a symmetric Lanczos window of length 10 with parameter a=2
 /// let window = lanczos(10, 2, true).unwrap();
@@ -1228,7 +1228,7 @@ pub fn lanczos(_length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
             i as f64 - m as f64 / 2.0
         };
 
-        let x = n / a  as f64;
+        let x = n / a as f64;
 
         let value = if x.abs() < 1e-15 {
             // Handle the case where x ≈ 0 (sinc(0) = 1)
@@ -1236,7 +1236,7 @@ pub fn lanczos(_length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
         } else if x.abs() < 1.0 {
             // Lanczos window: sinc(x) * sinc(x/a)
             let sinc_x = (PI * x).sin() / (PI * x);
-            let x_a = x / a  as f64;
+            let x_a = x / a as f64;
             let sinc_x_a = if x_a.abs() < 1e-15 {
                 1.0
             } else {
@@ -1340,7 +1340,7 @@ mod lanczos_tests {
 /// Window analysis and design utilities
 pub mod analysis {
     use super::*;
-    
+
     /// Window analysis results
     #[derive(Debug, Clone)]
     pub struct WindowAnalysis {
@@ -1372,7 +1372,10 @@ pub mod analysis {
     /// # Returns
     ///
     /// * Window analysis results
-    pub fn analyze_window(_window: &[f64], fft_size: Option<usize>) -> SignalResult<WindowAnalysis> {
+    pub fn analyze_window(
+        _window: &[f64],
+        fft_size: Option<usize>,
+    ) -> SignalResult<WindowAnalysis> {
         if _window.is_empty() {
             return Err(SignalError::ValueError(
                 "Window cannot be empty".to_string(),
@@ -1408,10 +1411,10 @@ pub mod analysis {
             freq_response[bin_05_idx]
         } else {
             // Interpolate
-            let frac_idx = 0.5 * fft_len as f64 / n  as f64;
+            let frac_idx = 0.5 * fft_len as f64 / n as f64;
             let idx1 = frac_idx.floor() as usize;
             let idx2 = (idx1 + 1).min(freq_response.len() - 1);
-            let frac = frac_idx - idx1  as f64;
+            let frac = frac_idx - idx1 as f64;
 
             if idx2 < freq_response.len() {
                 freq_response[idx1] * (1.0 - frac) + freq_response[idx2] * frac
@@ -1458,7 +1461,8 @@ pub mod analysis {
     /// Design a window with specified characteristics
     pub fn design_window_with_constraints(
         length: usize,
-        sidelobe_db: f64, _bandwidth_bins: Option<f64>,
+        sidelobe_db: f64,
+        _bandwidth_bins: Option<f64>,
     ) -> SignalResult<Vec<f64>> {
         if length == 0 {
             return Err(SignalError::ValueError(
@@ -1516,7 +1520,7 @@ pub mod analysis {
             let mut imag = 0.0;
 
             for (i, &w) in _window.iter().enumerate() {
-                let angle = -2.0 * PI * k as f64 * i as f64 / n  as f64;
+                let angle = -2.0 * PI * k as f64 * i as f64 / n as f64;
                 real += w * angle.cos();
                 imag += w * angle.sin();
             }
@@ -1561,13 +1565,13 @@ pub mod analysis {
         #[allow(clippy::needless_range_loop)]
         for i in 1..freq_response._len() {
             if freq_response[i] < threshold {
-                right_point = i  as f64;
+                right_point = i as f64;
                 break;
             }
         }
 
         // For symmetric windows, bandwidth is 2 * right_point
-        let bandwidth_bins = 2.0 * right_point * window_len as f64 / fft_len  as f64;
+        let bandwidth_bins = 2.0 * right_point * window_len as f64 / fft_len as f64;
 
         Ok(bandwidth_bins)
     }
@@ -1601,11 +1605,7 @@ pub mod analysis {
             assert_eq!(comparison.len(), 2);
 
             // Hamming should have lower sidelobes than Hann
-            let hann_analysis = &comparison
-                .iter()
-                .find(|(name_)| name == "hann")
-                .unwrap()
-                .1;
+            let hann_analysis = &comparison.iter().find(|(name_)| name == "hann").unwrap().1;
             let hamming_analysis = &comparison
                 .iter()
                 .find(|(name_)| name == "hamming")
@@ -1796,7 +1796,7 @@ pub mod analysis {
         }
 
         // Calculate metrics
-        let freq_bin_width = 1.0 / fft_size  as f64;
+        let freq_bin_width = 1.0 / fft_size as f64;
         let transition_width = (lower_point - upper_point) as f64 * freq_bin_width;
         let transition_center = (upper_point + lower_point) as f64 * freq_bin_width / 2.0;
 

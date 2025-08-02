@@ -426,17 +426,17 @@ where
 
 /// Helper function to try and extract a Complex value
 #[allow(dead_code)]
-fn try_as_complex<U: 'static + Copy>(_val: U) -> Option<num_complex::Complex64> {
+fn try_as_complex<U: 'static + Copy>(val: U) -> Option<num_complex::Complex64> {
     use num_complex::Complex64;
     use std::any::Any;
 
     // Try to use runtime type checking with Any for _complex types
-    if let Some(_complex) = (&_val as &dyn Any).downcast_ref::<Complex64>() {
+    if let Some(_complex) = (&val as &dyn Any).downcast_ref::<Complex64>() {
         return Some(*_complex);
     }
 
     // Try to handle f32 _complex numbers
-    if let Some(complex32) = (&_val as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
+    if let Some(complex32) = (&val as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
         return Some(Complex64::new(complex32.re as f64, complex32.im as f64));
     }
 
@@ -548,8 +548,8 @@ where
 /// ```
 #[must_use]
 #[allow(dead_code)]
-pub fn fft_bounds(_shape: &[usize]) -> Vec<(i32, i32)> {
-    _shape
+pub fn fft_bounds(shape: &[usize]) -> Vec<(i32, i32)> {
+    shape
         .iter()
         .map(|&n| {
             // Cast with explicit handling for possible truncation/wrapping

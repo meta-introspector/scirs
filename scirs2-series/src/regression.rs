@@ -1316,7 +1316,7 @@ mod tests {
                 .map(|i| i as f64 + 0.1 * rand::random::<f64>())
                 .collect(),
         );
-        let x = Array2::from_shape_vec((n, 1), (0..n).map(|i| (i as f64).sin()).collect()).unwrap();
+        let x = Array2::fromshape_vec((n, 1), (0..n).map(|i| (i as f64).sin()).collect()).unwrap();
 
         let regression = TimeSeriesRegression::new();
         let config = ARIMAErrorsConfig::default();

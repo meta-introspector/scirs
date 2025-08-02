@@ -6,7 +6,7 @@
 use ndarray::Array1;
 use ndarray::ArrayView1;
 use scirs2_stats::{
-    comprehensive_validation_suite::*, descriptive::mean, numerical_stability_analyzer::*,
+    comprehensive_validation_suite::*, mean, numerical_stability_analyzer::*,
     property_based_validation::*, scipy_benchmark_framework::*,
 };
 

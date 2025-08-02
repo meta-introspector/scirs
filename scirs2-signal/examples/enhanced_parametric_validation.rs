@@ -1,7 +1,7 @@
-//! Enhanced parametric spectral estimation validation example
-//!
-//! This example demonstrates the enhanced parametric spectral estimation capabilities
-//! including AR, MA, and ARMA model estimation with validation.
+// Enhanced parametric spectral estimation validation example
+//
+// This example demonstrates the enhanced parametric spectral estimation capabilities
+// including AR, MA, and ARMA model estimation with validation.
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

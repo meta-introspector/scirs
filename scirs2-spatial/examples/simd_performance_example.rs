@@ -91,7 +91,7 @@ fn single_distance_performance_example() -> Result<(), Box<dyn std::error::Error
         // Scalar timing
         let start = Instant::now();
         for _ in 0..iterations {
-            let _dist = scirs2_spatial::distance::euclidean(&a..&b);
+            let _dist = scirs2_spatial::distance::euclidean(&a, &b);
         }
         let scalar_time = start.elapsed().as_millis();
 
@@ -398,7 +398,7 @@ fn memory_allocation_analysis() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn generate_random_points(_n_points: usize, dim: usize) -> Array2<f64> {
     let mut rng = rand::rng();
-    Array2::from_shape_fn((_n_points, dim), |_| rng.gen_range(-10.0..10.0))
+    Array2::fromshape_fn((_n_points, dim), |_| rng.gen_range(-10.0..10.0))
 }
 
 /// Demonstrate different optimization strategies

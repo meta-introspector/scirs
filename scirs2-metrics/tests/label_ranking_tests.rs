@@ -36,7 +36,7 @@ fn test_coverage_error() {
 #[allow(dead_code)]
 fn test_coverage_error_multiple() {
     // Test case 1: Multiple samples, all perfect rankings
-    let y_true_1 = Array2::from_shape_vec(
+    let y_true_1 = Array2::fromshape_vec(
         (3, 5),
         vec![
             1.0, 1.0, 0.0, 0.0, 0.0, // Sample 1: labels 0 and 1 are relevant
@@ -46,7 +46,7 @@ fn test_coverage_error_multiple() {
     )
     .unwrap();
 
-    let y_score_1 = Array2::from_shape_vec(
+    let y_score_1 = Array2::fromshape_vec(
         (3, 5),
         vec![
             0.9, 0.8, 0.7, 0.6, 0.5, // Perfect ranking for sample 1
@@ -61,7 +61,7 @@ fn test_coverage_error_multiple() {
     assert_abs_diff_eq!(coverage_1, 1.67, epsilon = 0.01);
 
     // Test case 2: Multiple samples, mixed rankings
-    let y_true_2 = Array2::from_shape_vec(
+    let y_true_2 = Array2::fromshape_vec(
         (3, 5),
         vec![
             1.0, 1.0, 0.0, 0.0, 0.0, // Sample 1: labels 0 and 1 are relevant
@@ -71,7 +71,7 @@ fn test_coverage_error_multiple() {
     )
     .unwrap();
 
-    let y_score_2 = Array2::from_shape_vec(
+    let y_score_2 = Array2::fromshape_vec(
         (3, 5),
         vec![
             0.9, 0.8, 0.7, 0.6, 0.5, // Perfect ranking for sample 1
@@ -91,7 +91,7 @@ fn test_coverage_error_multiple() {
 #[allow(dead_code)]
 fn test_label_ranking_loss() {
     // Test case 1: Perfect rankings
-    let y_true_1 = Array2::from_shape_vec(
+    let y_true_1 = Array2::fromshape_vec(
         (3, 4),
         vec![
             1.0, 1.0, 0.0, 0.0, // Sample 1: labels 0 and 1 are relevant
@@ -101,7 +101,7 @@ fn test_label_ranking_loss() {
     )
     .unwrap();
 
-    let y_score_1 = Array2::from_shape_vec(
+    let y_score_1 = Array2::fromshape_vec(
         (3, 4),
         vec![
             0.9, 0.8, 0.4, 0.3, // Perfect ranking for sample 1
@@ -116,7 +116,7 @@ fn test_label_ranking_loss() {
     assert_abs_diff_eq!(loss_1, 0.0, epsilon = 1e-10);
 
     // Test case 2: Some errors in rankings
-    let y_true_2 = Array2::from_shape_vec(
+    let y_true_2 = Array2::fromshape_vec(
         (3, 4),
         vec![
             1.0, 1.0, 0.0, 0.0, // Sample 1: labels 0 and 1 are relevant
@@ -126,7 +126,7 @@ fn test_label_ranking_loss() {
     )
     .unwrap();
 
-    let y_score_2 = Array2::from_shape_vec(
+    let y_score_2 = Array2::fromshape_vec(
         (3, 4),
         vec![
             0.9, 0.8, 0.85, 0.3, // One error: irrelevant label 2 > relevant label 1
@@ -144,7 +144,7 @@ fn test_label_ranking_loss() {
     assert_abs_diff_eq!(loss_2, 5.0 / 12.0, epsilon = 0.01);
 
     // Test case 3: Worst possible rankings
-    let y_true_3 = Array2::from_shape_vec(
+    let y_true_3 = Array2::fromshape_vec(
         (2, 4),
         vec![
             1.0, 1.0, 0.0, 0.0, // Sample 1: labels 0 and 1 are relevant
@@ -153,7 +153,7 @@ fn test_label_ranking_loss() {
     )
     .unwrap();
 
-    let y_score_3 = Array2::from_shape_vec(
+    let y_score_3 = Array2::fromshape_vec(
         (2, 4),
         vec![
             0.1, 0.2, 0.9, 0.8, // Worst ranking for sample 1
@@ -171,7 +171,7 @@ fn test_label_ranking_loss() {
 #[allow(dead_code)]
 fn test_label_ranking_average_precision_score() {
     // Test case 1: Perfect rankings
-    let y_true_1 = Array2::from_shape_vec(
+    let y_true_1 = Array2::fromshape_vec(
         (3, 4),
         vec![
             1.0, 1.0, 0.0, 0.0, // Sample 1: labels 0 and 1 are relevant
@@ -181,7 +181,7 @@ fn test_label_ranking_average_precision_score() {
     )
     .unwrap();
 
-    let y_score_1 = Array2::from_shape_vec(
+    let y_score_1 = Array2::fromshape_vec(
         (3, 4),
         vec![
             0.9, 0.8, 0.4, 0.3, // Perfect ranking for sample 1
@@ -196,7 +196,7 @@ fn test_label_ranking_average_precision_score() {
     assert_abs_diff_eq!(score_1, 1.0, epsilon = 1e-10);
 
     // Test case 2: Some errors in rankings
-    let y_true_2 = Array2::from_shape_vec(
+    let y_true_2 = Array2::fromshape_vec(
         (3, 4),
         vec![
             1.0, 1.0, 0.0, 0.0, // Sample 1: labels 0 and 1 are relevant
@@ -206,7 +206,7 @@ fn test_label_ranking_average_precision_score() {
     )
     .unwrap();
 
-    let y_score_2 = Array2::from_shape_vec(
+    let y_score_2 = Array2::fromshape_vec(
         (3, 4),
         vec![
             0.9, 0.7, 0.8, 0.3, // Label 2 (irrelevant) ranked higher than label 1 (relevant)
@@ -223,7 +223,7 @@ fn test_label_ranking_average_precision_score() {
     assert!(score_2 > 0.0);
 
     // Test case 3: Worst possible rankings
-    let y_true_3 = Array2::from_shape_vec(
+    let y_true_3 = Array2::fromshape_vec(
         (2, 4),
         vec![
             1.0, 1.0, 0.0, 0.0, // Sample 1: labels 0 and 1 are relevant
@@ -232,7 +232,7 @@ fn test_label_ranking_average_precision_score() {
     )
     .unwrap();
 
-    let y_score_3 = Array2::from_shape_vec(
+    let y_score_3 = Array2::fromshape_vec(
         (2, 4),
         vec![
             0.1, 0.2, 0.9, 0.8, // Worst ranking for sample 1 (relevant labels ranked last)
@@ -250,8 +250,8 @@ fn test_label_ranking_average_precision_score() {
 #[allow(dead_code)]
 fn test_edge_cases() {
     // Test case 1: Empty arrays
-    let y_true_empty = Array2::<f64>::from_shape_vec((0, 4), vec![]).unwrap();
-    let y_score_empty = Array2::<f64>::from_shape_vec((0, 4), vec![]).unwrap();
+    let y_true_empty = Array2::<f64>::fromshape_vec((0, 4), vec![]).unwrap();
+    let y_score_empty = Array2::<f64>::fromshape_vec((0, 4), vec![]).unwrap();
 
     assert!(coverage_error_multiple(&y_true_empty, &y_score_empty).is_err());
     assert!(label_ranking_loss(&y_true_empty, &y_score_empty).is_err());
@@ -259,10 +259,10 @@ fn test_edge_cases() {
 
     // Test case 2: Different shapes
     let y_true_different =
-        Array2::from_shape_vec((2, 4), vec![1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0]).unwrap();
+        Array2::fromshape_vec((2, 4), vec![1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0]).unwrap();
 
     let y_score_different =
-        Array2::from_shape_vec((2, 3), vec![0.9, 0.8, 0.7, 0.6, 0.5, 0.4]).unwrap();
+        Array2::fromshape_vec((2, 3), vec![0.9, 0.8, 0.7, 0.6, 0.5, 0.4]).unwrap();
 
     assert!(coverage_error_multiple(&y_true_different, &y_score_different).is_err());
     assert!(label_ranking_loss(&y_true_different, &y_score_different).is_err());
@@ -270,10 +270,10 @@ fn test_edge_cases() {
 
     // Test case 3: No relevant labels
     let y_true_no_relevant =
-        Array2::from_shape_vec((2, 4), vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).unwrap();
+        Array2::fromshape_vec((2, 4), vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).unwrap();
 
     let y_score_no_relevant =
-        Array2::from_shape_vec((2, 4), vec![0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]).unwrap();
+        Array2::fromshape_vec((2, 4), vec![0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]).unwrap();
 
     assert!(
         label_ranking_average_precision_score(&y_true_no_relevant, &y_score_no_relevant).is_err()

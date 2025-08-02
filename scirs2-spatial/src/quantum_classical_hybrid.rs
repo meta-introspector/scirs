@@ -319,7 +319,7 @@ impl HybridSpatialOptimizer {
     /// Initialize optimization parameters
     fn initialize_parameters(&mut self, _dim: usize) {
         self.classical_state.parameters =
-            Array1::from_shape_fn(_dim, |_| rand::random::<f64>() * 2.0 - 1.0);
+            Array1::fromshape_fn(_dim, |_| rand::random::<f64>() * 2.0 - 1.0);
         self.classical_state.gradients = Array1::zeros(_dim);
         self.classical_state.hessian_approx = Array2::eye(_dim);
         self.classical_state.momentum = Array1::zeros(_dim);
@@ -399,7 +399,7 @@ impl HybridSpatialOptimizer {
         } else {
             // Fallback to quantum-inspired classical algorithm
             let mut quantum_clusterer = QuantumClusterer::new(2);
-            let dummy_data = Array2::from_shape_fn((10, 2), |(i, j)| {
+            let dummy_data = Array2::fromshape_fn((10, 2), |(i, j)| {
                 self.classical_state.parameters[i.min(self.classical_state.parameters.len() - 1)]
                     + j as f64
             });
@@ -504,7 +504,7 @@ impl HybridSpatialOptimizer {
         let n_points = 20;
         let n_dims = self.classical_state.parameters.len().min(4); // Limit dimensions for quantum
 
-        Array2::from_shape_fn((n_points, n_dims), |(i, j)| {
+        Array2::fromshape_fn((n_points, n_dims), |(i, j)| {
             let param_idx = j % self.classical_state.parameters.len();
             self.classical_state.parameters[param_idx] + (i as f64 / n_points as f64 - 0.5) * 0.1
             // Small perturbations around current parameters

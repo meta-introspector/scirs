@@ -1,4 +1,4 @@
-use scirs2__text::{BpeConfig, BpeTokenizer, Result, Tokenizer};
+use scirs2_text::{BpeConfig, BpeTokenizer, Result, Tokenizer};
 use std::path::Path;
 
 #[allow(dead_code)]
@@ -30,10 +30,10 @@ fn main() -> Result<()> {
     println!("Vocabulary size: {}", tokenizer.vocab_size());
 
     // Test the tokenizer on a new sentence
-    let test_text = "this is an unseen sentence with some new words";
-    let tokens = tokenizer.tokenize(test_text)?;
+    let testtext = "this is an unseen sentence with some new words";
+    let tokens = tokenizer.tokenize(testtext)?;
 
-    println!("\nInput text: {test_text}");
+    println!("\nInput text: {testtext}");
     println!("Tokenized: {tokens:?}");
 
     // Save the vocabulary for later use
@@ -46,7 +46,7 @@ fn main() -> Result<()> {
     new_tokenizer.load_vocabulary(vocab_path)?;
 
     // Test that the loaded tokenizer produces the same tokens
-    let new_tokens = new_tokenizer.tokenize(test_text)?;
+    let new_tokens = new_tokenizer.tokenize(testtext)?;
     println!("\nTokenized with loaded vocabulary: {new_tokens:?}");
     assert_eq!(tokens, new_tokens);
 

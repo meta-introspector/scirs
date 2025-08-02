@@ -83,10 +83,10 @@ pub struct ModelMetadata {
     pub created_at: String,
 
     /// Input shape.
-    pub input_shape: Vec<usize>,
+    pub inputshape: Vec<usize>,
 
     /// Output shape.
-    pub output_shape: Vec<usize>,
+    pub outputshape: Vec<usize>,
 
     /// Additional metadata.
     pub additional_info: HashMap<String, String>,
@@ -133,7 +133,11 @@ impl ModelSerializer {
     }
 
     /// Save a model to disk.
-    pub fn save_model(&self, model: &Sequential, name: &str, version: &str,
+    pub fn save_model(
+        &self,
+        model: &Sequential,
+        name: &str,
+        version: &str,
         optimizer: Option<&dyn Optimizer>,
     ) -> CoreResult<PathBuf> {
         // Create model directory
@@ -146,8 +150,8 @@ impl ModelSerializer {
             version: version.to_string(),
             framework_version: "0.1.0".to_string(),
             created_at: chrono::Utc::now().to_rfc3339(),
-            input_shape: vec![],  // This would be determined from the model
-            output_shape: vec![], // This would be determined from the model
+            inputshape: vec![],  // This would be determined from the model
+            outputshape: vec![], // This would be determined from the model
             additional_info: HashMap::new(),
         };
 
@@ -190,7 +194,10 @@ impl ModelSerializer {
     }
 
     /// Load a model from disk.
-    pub fn load_model(&self, name: &str, version: &str
+    pub fn load_model(
+        &self,
+        name: &str,
+        version: &str,
     ) -> CoreResult<(Sequential, Option<Box<dyn Optimizer>>)> {
         // Get model directory
         let model_dir = self.base_dir.join(name).join(version);
@@ -443,7 +450,7 @@ impl ModelSerializer {
                 };
 
                 // Create layer
-                Ok(Box::new(Conv2D::with_shape(
+                Ok(Box::new(Conv2D::withshape(
                     &config.name,
                     filter_height,
                     filter_width,
@@ -489,7 +496,7 @@ impl ModelSerializer {
                 let momentum = config.config["momentum"].as_f64().unwrap_or(0.1);
 
                 // Create layer
-                Ok(Box::new(BatchNorm::with_shape(
+                Ok(Box::new(BatchNorm::withshape(
                     &config.name,
                     num_features,
                     Some(epsilon),
@@ -534,7 +541,7 @@ impl ModelSerializer {
                         file.read_to_string(&mut json_str)?;
 
                         let load_data: serde_json::Value = serde_json::from_str(&json_str)?;
-                        let _shape: Vec<usize> =
+                        let shape: Vec<usize> =
                             serde_json::from_value(load_data["shape"].clone())?;
                         let _data: Vec<f64> = serde_json::from_value(load_data["data"].clone())?;
 
@@ -604,7 +611,7 @@ impl OnnxExporter {
         &self,
         _model: &Sequential,
         path: impl AsRef<Path>,
-        _input_shape: &[usize],
+        _inputshape: &[usize],
     ) -> CoreResult<()> {
         // This is a simplified implementation for demonstration purposes.
         // In a real implementation, this would convert the model to ONNX format.

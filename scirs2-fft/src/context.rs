@@ -176,7 +176,7 @@ pub struct FftSettingsGuard {
 
 impl FftSettingsGuard {
     pub fn new(_context: FftContext) -> Self {
-        Self { _context: _context }
+        Self { _context }
     }
 }
 

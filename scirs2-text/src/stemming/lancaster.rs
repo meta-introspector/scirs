@@ -26,7 +26,7 @@
 //! # Usage
 //!
 //! ```
-//! use scirs2__text::{LancasterStemmer, Stemmer};
+//! use scirs2_text::{LancasterStemmer, Stemmer};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a Lancaster stemmer with default settings

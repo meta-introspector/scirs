@@ -3,7 +3,7 @@
 //! This example shows how to use various text processing capabilities
 //! including tokenization, stemming, and vectorization.
 
-use scirs2__text::{
+use scirs2_text::{
     preprocess::{BasicNormalizer, BasicTextCleaner, TextCleaner, TextNormalizer},
     stemming::{PorterStemmer, SimpleLemmatizer, Stemmer},
     tokenize::{NgramTokenizer, RegexTokenizer, Tokenizer, WordTokenizer},
@@ -104,10 +104,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 7. Complete Pipeline Example
     println!("7. Complete Text Processing Pipeline");
-    let test_text = "The cats were running quickly through the gardens.";
+    let testtext = "The cats were running quickly through the gardens.";
 
     // Normalize
-    let normalized = normalizer.normalize(test_text)?;
+    let normalized = normalizer.normalize(testtext)?;
     println!("Normalized: {normalized}");
 
     // Clean

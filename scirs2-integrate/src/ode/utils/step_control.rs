@@ -19,7 +19,7 @@ use ndarray::{Array1, ArrayView1};
 ///
 /// The normalized error
 #[allow(dead_code)]
-pub fn error_norm<F: IntegrateFloat>(_error: &Array1<F>, y: &Array1<F>, rtol: F, atol: F) -> F {
+pub fn error_norm<F: IntegrateFloat>(error: &Array1<F>, y: &Array1<F>, rtol: F, atol: F) -> F {
     // Calculate the denominator for normalization
     let scale = y
         .iter()

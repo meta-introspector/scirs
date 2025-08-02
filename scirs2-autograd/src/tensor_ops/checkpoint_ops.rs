@@ -105,21 +105,21 @@ impl<F: Float> Op<F> for CheckpointOp {
         // Attempt to evaluate the input to understand its shape
         if let Ok(input_array) = input.eval(g) {
             // Create a gradient with the right shape
-            let input_shape = input_array.shape();
+            let inputshape = input_array.shape();
 
             // Create output gradient with the correct shape
             if let Ok(grad_output_array) = grad_output.eval(g) {
                 // If shapes match, pass through the gradient directly
-                if grad_output_array.shape() == input_shape {
+                if grad_output_array.shape() == inputshape {
                     ctx.append_input_grad(0, Some(*grad_output));
                 } else {
                     // If shapes don't match, we need to reshape or broadcast
                     // For now with our temporary gradient fix, we'll use a simple ones tensor
                     // with the same shape as the input
                     let shape_tensor = crate::tensor__ops::convert_to_tensor(
-                        ndarray::Array::from_shape_vec(
-                            ndarray::IxDyn(&[input_shape.len()]),
-                            input_shape
+                        ndarray::Array::fromshape_vec(
+                            ndarray::IxDyn(&[inputshape.len()]),
+                            inputshape
                                 .iter()
                                 .map(|&x| F::from(x).unwrap())
                                 .collect::<Vec<_>>(),
@@ -190,7 +190,7 @@ impl<F: Float> Op<F> for CheckpointOp {
 /// # Returns
 /// A new tensor with the same value but with gradient checkpointing enabled
 #[allow(dead_code)]
-pub fn checkpoint<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn checkpoint<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _tensor.graph();
 
     Tensor::builder(g)
@@ -210,7 +210,7 @@ pub fn checkpoint<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 /// # Returns
 /// A new tensor with the same value but detached from the gradient computation
 #[allow(dead_code)]
-pub fn detach<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn detach<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _tensor.graph();
 
     // Use the same checkpoint op but mark it as not differentiable
@@ -315,7 +315,7 @@ impl<'g, F: Float> CheckpointGroup<'g, F> {
     /// A new CheckpointGroup instance
     pub fn new(_ctx: &'g crate::graph::Context<'g, F>) -> Self {
         Self {
-            _ctx: _ctx_phantom: PhantomData,
+            _ctx: _ctx, phantom: PhantomData,
         }
     }
 

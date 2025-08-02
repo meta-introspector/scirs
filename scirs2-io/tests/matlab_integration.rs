@@ -21,7 +21,7 @@ fn test_matlab_write_read_roundtrip() {
     let single_array = Array1::from(vec![1.0f32, 2.5f32, PI_F32]).into_dyn();
     vars.insert("single_data".to_string(), MatType::Single(single_array));
 
-    let int32_array = Array2::from_shape_fn((2, 3), |(i, j)| (i * 3 + j) as i32).into_dyn();
+    let int32_array = Array2::fromshape_fn((2, 3), |(i, j)| (i * 3 + j) as i32).into_dyn();
     vars.insert("int32_matrix".to_string(), MatType::Int32(int32_array));
 
     // Logical array

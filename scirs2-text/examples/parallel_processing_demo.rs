@@ -1,6 +1,6 @@
 //! Parallel processing demonstration
 
-use scirs2__text::{
+use scirs2_text::{
     ParallelCorpusProcessor, ParallelTextProcessor, ParallelTokenizer, ParallelVectorizer,
     TfidfVectorizer, WordTokenizer,
 };
@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create test data with larger size to demonstrate parallelism
     println!("Creating test data...");
-    let texts = create_test_texts(1000);
+    let texts = create_testtexts(1000);
 
     // Create references to handle &[&str] requirements
     let text_refs: Vec<&str> = texts.iter().map(|s| s.as_str()).collect();
@@ -108,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
 
     // Import the Vectorizer trait to use its methods
-    use scirs2__text::Vectorizer;
+    use scirs2_text::Vectorizer;
     vectorizer.fit(&text_refs)?;
     let fit_duration = start.elapsed();
 
@@ -184,13 +184,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("------------------------------------------");
 
     println!("Simulating processing of a large corpus...");
-    let large_texts: Vec<&str> = text_refs.iter().cycle().take(5000).copied().collect();
-    println!("Large corpus size: {} documents", large_texts.len());
+    let largetexts: Vec<&str> = text_refs.iter().cycle().take(5000).copied().collect();
+    println!("Large corpus size: {} documents", largetexts.len());
 
     let processor = ParallelCorpusProcessor::new(250).with_max_memory(1024 * 1024 * 1024); // 1 GB limit
 
     let start = Instant::now();
-    let summary = processor.process(&large_texts, |batch| {
+    let summary = processor.process(&largetexts, |batch| {
         // Compute simple statistics for the batch
         let batch_size = batch.len();
         let total_words: usize = batch
@@ -211,14 +211,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Total chars: {total_chars}");
     println!(
         "Average processing speed: {:.2} documents/second",
-        large_texts.len() as f64 / duration.as_secs_f64()
+        largetexts.len() as f64 / duration.as_secs_f64()
     );
 
     Ok(())
 }
 
 #[allow(dead_code)]
-fn create_test_texts(_size: usize) -> Vec<String> {
+fn create_testtexts(_size: usize) -> Vec<String> {
     // Sample text fragments to combine randomly
     let subjects = [
         "Machine learning",

@@ -37,16 +37,16 @@ where
     T: Clone + Default,
 {
     // Check if the new shape is compatible with the original shape
-    let dim = shape.into_shape();
+    let dim = shape.intoshape();
     let total_elements = dim.size();
-    if total_elements != _array.len() {
+    if total_elements != array.len() {
         return Err("New shape dimensions must match the total number of elements");
     }
 
     // Create a new _array with the specified shape
-    match Array::from_shape_vec(dim, _array.iter().cloned().collect()) {
+    match Array::from_shape_vec(dim, array.iter().cloned().collect()) {
         Ok(reshaped) => Ok(reshaped),
-        Err(_) => Err("Failed to reshape _array"),
+        Err(_) => Err("Failed to reshape array"),
     }
 }
 
@@ -83,26 +83,26 @@ where
     }
 
     // Validate that all _arrays have the same shape
-    let first_shape = _arrays[0].shape();
+    let firstshape = _arrays[0].shape();
     for array in _arrays.iter().skip(1) {
-        if array.shape() != first_shape {
+        if array.shape() != firstshape {
             return Err("All _arrays must have the same shape for stacking");
         }
     }
 
     // Calculate the new shape
-    let mut new_shape = _arrays[0].raw_dim();
+    let mut newshape = _arrays[0].raw_dim();
     let axis_idx = axis.index();
 
-    if axis_idx >= new_shape.ndim() {
+    if axis_idx >= newshape.ndim() {
         return Err("Axis index out of bounds");
     }
 
     // Update the size of the specified axis
-    new_shape[axis_idx] = new_shape[axis_idx] * _arrays.len();
+    newshape[axis_idx] = newshape[axis_idx] * _arrays.len();
 
     // Create a new array to hold the stacked result
-    let mut result = Array::default(new_shape);
+    let mut result = Array::default(newshape);
 
     // Copy data from the input _arrays to the result
     let axis_stride = _arrays[0].len_of(axis);

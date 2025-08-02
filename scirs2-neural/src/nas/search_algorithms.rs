@@ -101,7 +101,7 @@ impl SearchAlgorithm for EvolutionarySearch {
             return Ok(proposals);
         // Elite selection
         let mut elite_indices: Vec<usize> = (0..self.population.len()).collect();
-        elite_indices.sort_by(|&a..&b| {
+        elite_indices.sort_by(|&a, &b| {
             self.fitness_scores[b]
                 .partial_cmp(&self.fitness_scores[a])
                 .unwrap()
@@ -335,7 +335,7 @@ impl SearchAlgorithm for ReinforcementSearch {
                 },
                 3 => crate::nas::search_space::LayerType::Dropout(0.1 + (token % 4) as f32 * 0.1),
                 4 => crate::nas::search_space::LayerType::BatchNorm,
-                5 => crate::nas::search_space::LayerType::Activation("relu".to_string(), _ =>, crate::nas::search_space::LayerType::MaxPool2D {
+                5 => crate::nas::search_space::LayerType::Activation("relu".to_string(), _ => crate::nas::search_space::LayerType::MaxPool2D {
                     pool_size: (2, 2),
                     stride: (2, 2),
             layers.push(layer_type);
@@ -394,7 +394,7 @@ impl DifferentiableSearch {
     /// Apply Gumbel softmax for continuous relaxation
     fn gumbel_softmax(&self, logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
         // Add Gumbel noise
-        let gumbel_noise: Array1<f32> = Array1::from_shape_fn(logits.len(), |_| {
+        let gumbel_noise: Array1<f32> = Array1::fromshape_fn(logits.len(), |_| {
             let u: f32 = rng.random();
             -((-u.ln()).ln())
         let noisy_logits = logits + &gumbel_noise;
@@ -426,7 +426,7 @@ impl DifferentiableSearch {
             // Convert operation to layer type
             if selected_op > 0 {
                 // Skip "none" operations
-                let layer_type = self.operation_to_layer_type(selected_op)?;
+                let layer_type = self.operation_to_layer_type(selectedop)?;
                 layers.push(layer_type);
         // Ensure we have at least a few layers
         if layers.len() < 3 {

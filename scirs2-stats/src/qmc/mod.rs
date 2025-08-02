@@ -6,7 +6,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use rand::{rng, rngs::StdRng, Rng, SeedableRng};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::validation::*;
 
 /// Generate Sobol sequence
@@ -102,7 +102,7 @@ pub fn latin_hypercube(n: usize, d: usize, seed: Option<u64>) -> StatsResult<Arr
 
         // Shuffle intervals
         for i in (1..n).rev() {
-            let j = rng.gen_range(0..=i);
+            let j = rng.gen_range(0..i);
             intervals.swap(i, j);
         }
 
@@ -463,7 +463,7 @@ impl HaltonSequence {
 
             // Fisher-Yates shuffle
             for i in (1..base).rev() {
-                let j = rng.gen_range(0..=i);
+                let j = rng.gen_range(0..i);
                 perm.swap(i as usize, j as usize);
             }
 

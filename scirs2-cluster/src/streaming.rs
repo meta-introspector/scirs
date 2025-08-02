@@ -469,19 +469,19 @@ mod tests {
 
         // First batch
         let batch1 =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 1.0, 1.0, 1.1, 1.1]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 0.1, 0.1, 1.0, 1.0, 1.1, 1.1]).unwrap();
 
         streaming_kmeans.partial_fit(batch1.view()).unwrap();
         assert!(streaming_kmeans.cluster_centers().is_some());
 
         // Second batch
         let batch2 =
-            Array2::from_shape_vec((4, 2), vec![0.2, 0.2, 0.0, 0.1, 1.2, 1.0, 1.0, 1.2]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.2, 0.2, 0.0, 0.1, 1.2, 1.0, 1.0, 1.2]).unwrap();
 
         streaming_kmeans.partial_fit(batch2.view()).unwrap();
 
         // Test prediction
-        let test_data = Array2::from_shape_vec((2, 2), vec![0.05, 0.05, 1.05, 1.05]).unwrap();
+        let test_data = Array2::fromshape_vec((2, 2), vec![0.05, 0.05, 1.05, 1.05]).unwrap();
 
         let labels = streaming_kmeans.predict(test_data.view()).unwrap();
         assert_eq!(labels.len(), 2);
@@ -496,7 +496,7 @@ mod tests {
         let mut progressive = ProgressiveHierarchical::new(config);
 
         // Process first batch
-        let batch1 = Array2::from_shape_vec(
+        let batch1 = Array2::fromshape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
@@ -513,7 +513,7 @@ mod tests {
     #[test]
     fn test_chunked_distance_matrix() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let chunked_matrix = ChunkedDistanceMatrix::new(4, 1); // 1 MB limit
         let mut distance_count = 0;

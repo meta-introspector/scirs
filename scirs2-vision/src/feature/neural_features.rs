@@ -198,7 +198,7 @@ impl SuperPointNet {
 
         // Apply initial convolution
         let conv1_kernel =
-            Array2::from_shape_vec((3, 3), vec![-1.0, 0.0, 1.0, -2.0, 0.0, 2.0, -1.0, 0.0, 1.0])?;
+            Array2::fromshape_vec((3, 3), vec![-1.0, 0.0, 1.0, -2.0, 0.0, 2.0, -1.0, 0.0, 1.0])?;
 
         let conv1_result = crate::gpu_ops::gpu_convolve_2d(gpu_ctx, image, &conv1_kernel.view())?;
 
@@ -541,10 +541,10 @@ impl SuperPointNet {
         // For demonstration, create synthetic weights
 
         let conv_weights = vec![
-            Array3::from_shape_fn((64, 1, 3), |(___)| rand::random::<f32>() * 0.1),
-            Array3::from_shape_fn((64, 64, 3), |(___)| rand::random::<f32>() * 0.1),
-            Array3::from_shape_fn((128, 64, 3), |(___)| rand::random::<f32>() * 0.1),
-            Array3::from_shape_fn((128, 128, 3), |(___)| rand::random::<f32>() * 0.1),
+            Array3::fromshape_fn((64, 1, 3), |(___)| rand::random::<f32>() * 0.1),
+            Array3::fromshape_fn((64, 64, 3), |(___)| rand::random::<f32>() * 0.1),
+            Array3::fromshape_fn((128, 64, 3), |(___)| rand::random::<f32>() * 0.1),
+            Array3::fromshape_fn((128, 128, 3), |(___)| rand::random::<f32>() * 0.1),
         ];
 
         let conv_biases = vec![
@@ -569,7 +569,7 @@ impl SuperPointNet {
         ];
 
         // Detection head
-        let fc_weights = vec![Array2::from_shape_fn((65, 128), |(__)| {
+        let fc_weights = vec![Array2::fromshape_fn((65, 128), |(__)| {
             rand::random::<f32>() * 0.1
         })];
 
@@ -590,7 +590,7 @@ impl SuperPointNet {
     /// Create synthetic descriptor weights for demonstration
     fn create_descriptor_weights(_config: &NeuralFeatureConfig) -> Result<ModelWeights> {
         // Descriptor head weights
-        let fc_weights = vec![Array2::from_shape_fn(
+        let fc_weights = vec![Array2::fromshape_fn(
             (_config.descriptor_dim, 128),
             |(__)| rand::random::<f32>() * 0.1,
         )];
@@ -1274,7 +1274,7 @@ mod tests {
         };
 
         if let Ok(superpoint) = SuperPointNet::new(Some(config)) {
-            let image = Array2::from_shape_fn((480, 640), |(y, x)| {
+            let image = Array2::fromshape_fn((480, 640), |(y, x)| {
                 ((x as f32 / 10.0).sin() + (y as f32 / 10.0).cos()) * 0.5 + 0.5
             });
 
@@ -1312,7 +1312,7 @@ mod tests {
     #[test]
     fn test_learned_sift() {
         let sift = LearnedSIFT::new(None);
-        let image = Array2::from_shape_fn((100, 100), |(y, x)| {
+        let image = Array2::fromshape_fn((100, 100), |(y, x)| {
             if (x as i32 - 50).abs() < 5 && (y as i32 - 50).abs() < 5 {
                 1.0
             } else {
@@ -1366,8 +1366,8 @@ mod tests {
             },
         ];
 
-        let desc1 = Array2::from_shape_fn((2, 64), |(__)| rand::random::<f32>());
-        let desc2 = Array2::from_shape_fn((2, 64), |(__)| rand::random::<f32>());
+        let desc1 = Array2::fromshape_fn((2, 64), |(__)| rand::random::<f32>());
+        let desc2 = Array2::fromshape_fn((2, 64), |(__)| rand::random::<f32>());
 
         let result =
             matcher.match_with_attention(&keypoints1, &desc1.view(), &keypoints2, &desc2.view());

@@ -357,7 +357,7 @@ impl HttpClient {
     // Fallback implementations when reqwest feature is not enabled
     #[cfg(not(feature = "reqwest"))]
     /// Download a file (fallback implementation when reqwest feature is disabled)
-    pub async fn download<P: AsRef<Path>>(_url: &str, _local_path: P) -> Result<()> {
+    pub async fn download<P: AsRef<Path>>(url: &str, _local_path: P) -> Result<()> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
         ))
@@ -365,7 +365,7 @@ impl HttpClient {
 
     #[cfg(not(feature = "reqwest"))]
     /// Upload a file (fallback implementation when reqwest feature is disabled)
-    pub async fn upload<P: AsRef<Path>>(_local_path: P, _url: &str) -> Result<()> {
+    pub async fn upload<P: AsRef<Path>>(_local, path: P, _url: &str) -> Result<()> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
         ))
@@ -374,7 +374,10 @@ impl HttpClient {
     #[cfg(not(feature = "reqwest"))]
     /// Make an HTTP request (fallback implementation when reqwest feature is disabled)
     pub async fn request(
-        &self, _method: HttpMethod, _url: &str, _body: Option<&[u8]>,
+        &self,
+        _method: HttpMethod,
+        _url: &str,
+        _body: Option<&[u8]>,
     ) -> Result<HttpResponse> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),

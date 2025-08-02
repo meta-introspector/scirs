@@ -415,7 +415,7 @@ impl LSTM {
         self.c_t = None;
     fn sample(
         &mut self,
-        seed_text: &str,
+        seedtext: &str,
         char_to_idx: &HashMap<char, usize>,
         idx_to_char: &HashMap<usize, char>,
         max_length: usize,
@@ -426,10 +426,10 @@ impl LSTM {
         // Reset states
         self.reset_state();
         // Convert seed text to one-hot encoded input
-        let mut result = String::from(seed_text);
+        let mut result = String::from(seedtext);
         let mut current_input = Array3::<f32>::zeros((batch_size, 1, input_size));
         // Process each character in the seed text
-        for c in seed_text.chars() {
+        for c in seedtext.chars() {
             let idx = *char_to_idx.get(&c).unwrap_or(&0);
             // Clear previous input
             for i in 0..input_size {
@@ -466,11 +466,11 @@ impl LSTM {
         result
 // Function to create character mappings from the text
 #[allow(dead_code)]
-fn create_char_mappings(_text: &str) -> (HashMap<char, usize>, HashMap<usize, char>) {
+fn create_char_mappings(text: &str) -> (HashMap<char, usize>, HashMap<usize, char>) {
     let mut char_to_idx = HashMap::new();
     let mut idx_to_char = HashMap::new();
     // Get unique characters
-    let unique_chars: Vec<char> = _text
+    let unique_chars: Vec<char> = text
         .chars()
         .collect::<std::collections::HashSet<_>>()
         .into_iter()
@@ -483,11 +483,11 @@ fn create_char_mappings(_text: &str) -> (HashMap<char, usize>, HashMap<usize, ch
 // Function to prepare training batches
 #[allow(dead_code)]
 fn prepare_batches(
-    _text: &str,
+    text: &str,
     char_to_idx: &HashMap<char, usize>,
     seq_len: usize,
 ) -> (Vec<Array3<f32>>, Vec<Array3<f32>>) {
-    let chars: Vec<char> = _text.chars().collect();
+    let chars: Vec<char> = text.chars().collect();
     let total_sequences = chars.len() / seq_len;
     let batches = total_sequences / batch_size;
     let vocab_size = char_to_idx.len();
@@ -517,7 +517,7 @@ fn prepare_batches(
 #[allow(dead_code)]
 fn text_generation_example() {
     // Simple training text
-    let training_text = "
+    let trainingtext = "
     In the world of artificial intelligence, recurrent neural networks play a crucial role in processing sequential data. 
     They are particularly effective for tasks like natural language processing, time series prediction, and speech recognition.
     Unlike feedforward neural networks, RNNs maintain an internal state that can capture information about previous inputs.
@@ -528,7 +528,7 @@ fn text_generation_example() {
     Both LSTM and GRU networks have become fundamental building blocks in many state-of-the-art sequence modeling systems.
     ";
     // Create character mappings
-    let (char_to_idx, idx_to_char) = create_char_mappings(training_text);
+    let (char_to_idx, idx_to_char) = create_char_mappings(trainingtext);
     println!("Vocabulary size: {}", vocab_size);
     // Hyperparameters
     let hidden_size = 128;
@@ -537,7 +537,7 @@ fn text_generation_example() {
     let learning_rate = 0.01;
     let num_epochs = 100;
     // Prepare training data
-    let (inputs, targets) = prepare_batches(training_text, &char_to_idx, seq_len, batch_size);
+    let (inputs, targets) = prepare_batches(trainingtext, &char_to_idx, seq_len, batch_size);
     // Create model
     let mut model = LSTM::new(vocab_size, hidden_size, vocab_size, batch_size);
     println!("Training character-level LSTM for text generation...");

@@ -218,7 +218,8 @@ impl ThreadPool {
     /// Execute a function with parallel processing
     pub fn parallel_map<T, F, R>(
         &self,
-        items: Vec<T>, _work_type: WorkType,
+        items: Vec<T>,
+        _work_type: WorkType,
         func: F,
     ) -> Result<Vec<R>>
     where

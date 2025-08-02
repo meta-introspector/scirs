@@ -254,7 +254,7 @@ fn display_recommendation(
         RecommendationPriority::Low => "💭",
     };
 
-    let effort_text = match rec.implementation_effort {
+    let efforttext = match rec.implementation_effort {
         ImplementationEffort::Trivial => "Trivial (<1h)",
         ImplementationEffort::Low => "Low (1-4h)",
         ImplementationEffort::Medium => "Medium (1-2d)",
@@ -271,7 +271,7 @@ fn display_recommendation(
         "      📊 Estimated Improvement: +{:.0}%",
         rec.estimated_improvement
     );
-    println!("      ⏱️  Implementation Effort: {}", effort_text);
+    println!("      ⏱️  Implementation Effort: {}", efforttext);
 
     if !rec.implementation_details.is_empty() {
         println!("      🔧 Implementation:");

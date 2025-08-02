@@ -89,7 +89,7 @@ fn create_complex_test_data() -> Array2<f64> {
         ]);
     }
 
-    Array2::from_shape_vec((45, 3), data_vec).expect("Failed to create test data")
+    Array2::fromshape_vec((45, 3), data_vec).expect("Failed to create test data")
 }
 
 #[allow(dead_code)]

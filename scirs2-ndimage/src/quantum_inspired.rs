@@ -567,7 +567,7 @@ fn apply_quantum_decoherence<T>(
 fn run_quantum_walk<T>(
     image: &ArrayView2<T>,
     start_pos: (usize, usize),
-    steps: usize_config: &QuantumConfig,
+    steps: usize, config: &QuantumConfig,
 ) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -1119,12 +1119,12 @@ where
 #[allow(dead_code)]
 fn tensor_network_to_image<T>(
     tensor_network: Array3<T>,
-    output_shape: (usize, usize),
+    outputshape: (usize, usize),
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = output_shape;
+    let (height, width) = outputshape;
     let (__, bond_dim) = tensor_network.dim();
     let mut image = Array2::zeros((height, width));
 
@@ -1281,11 +1281,11 @@ mod tests {
 
     #[test]
     fn test_quantum_superposition_filter() {
-        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64).collect()).unwrap();
 
-        let filter1 = Array2::from_shape_vec((3, 3), vec![1.0; 9]).unwrap() / 9.0;
+        let filter1 = Array2::fromshape_vec((3, 3), vec![1.0; 9]).unwrap() / 9.0;
         let filter2 =
-            Array2::from_shape_vec((3, 3), vec![-1.0, 0.0, 1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0])
+            Array2::fromshape_vec((3, 3), vec![-1.0, 0.0, 1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0])
                 .unwrap();
 
         let config = QuantumConfig::default();
@@ -1299,7 +1299,7 @@ mod tests {
     #[test]
     fn test_quantum_entanglement_correlation() {
         let image =
-            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 5.0, 2.0, 1.0, 2.0, 1.0])
+            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 5.0, 2.0, 1.0, 2.0, 1.0])
                 .unwrap();
 
         let config = QuantumConfig::default();
@@ -1311,7 +1311,7 @@ mod tests {
 
     #[test]
     fn test_quantum_walk_edge_detection() {
-        let image = Array2::from_shape_vec((5, 5), (0..25).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::fromshape_vec((5, 5), (0..25).map(|x| x as f64).collect()).unwrap();
 
         let config = QuantumConfig::default();
         let result = quantum_walk_edge_detection(image.view(), 10, &config).unwrap();
@@ -1322,7 +1322,7 @@ mod tests {
 
     #[test]
     fn test_quantum_fourier_enhancement() {
-        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64).collect()).unwrap();
+        let image = Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64).collect()).unwrap();
 
         let config = QuantumConfig::default();
         let result = quantum_fourier_enhancement(image.view(), &config).unwrap();
@@ -1334,12 +1334,12 @@ mod tests {
     #[test]
     fn test_quantum_machine_learning_classifier() {
         let image =
-            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
 
         let training_data = vec![
-            Array2::from_shape_vec((3, 3), vec![1.0; 9]).unwrap(),
-            Array2::from_shape_vec((3, 3), vec![5.0; 9]).unwrap(),
+            Array2::fromshape_vec((3, 3), vec![1.0; 9]).unwrap(),
+            Array2::fromshape_vec((3, 3), vec![5.0; 9]).unwrap(),
         ];
         let labels = vec![0, 1];
 
@@ -1355,7 +1355,7 @@ mod tests {
     #[test]
     fn test_quantum_error_correction() {
         let noisy_image =
-            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
 
         let config = QuantumConfig::default();
@@ -1368,7 +1368,7 @@ mod tests {
     #[test]
     fn test_quantum_tensor_network_processing() {
         let image =
-            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
 
         let config = QuantumConfig::default();
@@ -1381,7 +1381,7 @@ mod tests {
     #[test]
     fn test_quantum_variational_enhancement() {
         let image =
-            Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+            Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
                 .unwrap();
 
         let mut config = QuantumConfig::default();

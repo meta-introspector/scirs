@@ -952,7 +952,7 @@ impl CollaborativeWorkspace {
         };
         
         Self {
-            id: workspace_id_name: _name.to_string(),
+            id: workspace_id, name: _name.to_string(),
             members: vec![owner_member],
             documents: Vec::new(),
             channels: Vec::new(),

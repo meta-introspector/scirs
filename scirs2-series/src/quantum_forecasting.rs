@@ -726,7 +726,7 @@ mod tests {
         let quantum_attn = QuantumAttention::<f64>::new(64, 8, 3).unwrap();
 
         let input =
-            Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.001).collect()).unwrap();
+            Array2::fromshape_vec((10, 64), (0..640).map(|i| i as f64 * 0.001).collect()).unwrap();
 
         let output = quantum_attn.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 64));
@@ -766,7 +766,7 @@ mod tests {
 
         // Test kernel matrix
         let data =
-            Array2::from_shape_vec((3, 3), vec![0.1, 0.2, 0.3, 0.15, 0.25, 0.35, 0.9, 0.8, 0.7])
+            Array2::fromshape_vec((3, 3), vec![0.1, 0.2, 0.3, 0.15, 0.25, 0.35, 0.9, 0.8, 0.7])
                 .unwrap();
 
         let kernel_matrix = kernel.compute_kernel_matrix(&data).unwrap();
@@ -892,7 +892,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
 
             let activation = match layer_idx % 3 {
                 0 => QuantumActivation::QuantumReLU,
-                1 => QuantumActivation::QuantumSigmoid_ =>, QuantumActivation::QuantumTanh,
+                1 => QuantumActivation::QuantumSigmoid_ => QuantumActivation::QuantumTanh,
             };
 
             _layers.push(QuantumLayer {
@@ -1076,13 +1076,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
             }
 
             // Update quantum circuit parameters
-            let gradient_shape = layer.circuit.parameters.dim();
-            let mut gradients = Array3::zeros(gradient_shape);
+            let gradientshape = layer.circuit.parameters.dim();
+            let mut gradients = Array3::zeros(gradientshape);
 
             // Estimate gradients using finite differences
-            for layer_p in 0..gradient_shape.0 {
-                for qubit in 0..gradient_shape.1 {
-                    for param in 0..gradient_shape.2 {
+            for layer_p in 0..gradientshape.0 {
+                for qubit in 0..gradientshape.1 {
+                    for param in 0..gradientshape.2 {
                         let epsilon = F::from(0.01).unwrap();
 
                         // Perturb parameter

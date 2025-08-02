@@ -331,7 +331,7 @@ where
 
         // Extract taper range from method
         let taper_range = match self.approx_method {
-            FastKrigingMethod::Tapering(range) =>, F::from_f64(range).unwrap(, _ => {
+            FastKrigingMethod::Tapering(range) => F::from_f64(range).unwrap(, _ => {
                 return Err(InterpolateError::InvalidOperation(
                     "Invalid method type for tapered prediction".to_string(),
                 ));

@@ -301,7 +301,7 @@ where
     let raw_dim = D::from_dimension(&*shape)
         .map_err(|_| NdimageError::DimensionError("Invalid shape for dimension type".into()))?;
 
-    let array = Array::from_shape_vec(raw_dim, data)
+    let array = Array::fromshape_vec(raw_dim, data)
         .map_err(|e| NdimageError::ProcessingError(format!("Failed to create array: {}", e)))?;
 
     Ok(array)

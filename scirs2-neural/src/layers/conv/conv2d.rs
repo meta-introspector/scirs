@@ -38,8 +38,8 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Conv2D<F> {
         validate_conv_params(in_channels, out_channels, kernel_size, stride)
             .map_err(NeuralError::InvalidArchitecture)?;
 
-        let weights_shape = vec![out_channels, in_channels, kernel_size.0, kernel_size.1];
-        let weights = Array::zeros(IxDyn(&weights_shape));
+        let weightsshape = vec![out_channels, in_channels, kernel_size.0, kernel_size.1];
+        let weights = Array::zeros(IxDyn(&weightsshape));
 
         let bias = Some(Array::zeros(IxDyn(&[out_channels])));
 
@@ -67,11 +67,11 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Conv
         "Conv2D"
     }
 
-    fn input_shape(&self) -> Option<Vec<usize>> {
+    fn inputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
-    fn output_shape(&self) -> Option<Vec<usize>> {
+    fn outputshape(&self) -> Option<Vec<usize>> {
         None
     }
 

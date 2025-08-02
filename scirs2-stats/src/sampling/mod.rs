@@ -9,7 +9,6 @@ use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::Float;
 use rand::prelude::*;
 use rand::SeedableRng;
-use statrs::statistics::Statistics;
 
 /// Distribution trait for statistical distributions that can be sampled
 pub trait SampleableDistribution<T> {
@@ -668,15 +667,15 @@ where
         }
 
         // Estimate bias for this first-level sample
-        let second_level_mean = second_level_stats.mean();
+        let second_level_mean = second_level_stats.mean().unwrap();
         bias_estimates[i] = second_level_mean - first_stat;
     }
 
     // Overall bias estimate
-    let overall_bias = bias_estimates.mean();
+    let overall_bias = bias_estimates.mean().unwrap();
 
     // Bias-corrected estimate
-    let _first_level_mean = first_level_stats.clone().mean();
+    let _first_level_mean = first_level_stats.mean().unwrap();
     let bias_corrected = original_stat - overall_bias;
 
     Ok((bias_corrected, first_level_stats, overall_bias))

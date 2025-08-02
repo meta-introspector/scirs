@@ -832,7 +832,7 @@ mod tests {
 
     #[test]
     fn test_eeg_analysis() {
-        let signals = Array2::from_shape_vec((2, 1000), vec![0.1; 2000]).unwrap();
+        let signals = Array2::fromshape_vec((2, 1000), vec![0.1; 2000]).unwrap();
         let channel_names = vec!["C3".to_string(), "C4".to_string()];
 
         let eeg = EEGAnalysis::new(signals, 250.0, channel_names).unwrap();

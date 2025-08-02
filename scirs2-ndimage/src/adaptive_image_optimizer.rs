@@ -209,7 +209,7 @@ impl HardwareProfiler {
             cache_sizes: vec![32768, 262144, 8388608], // Default L1, L2, L3 sizes
             memory_bandwidth: 25.6e9,                  // 25.6 GB/s default
             cpu_frequency: 3.0e9,                      // 3 GHz default
-            num_cores: num, _cpus: get(),
+            num_cores: num_cpus::get(),
             simd_capabilities: Self::detect_simd_capabilities(),
         }
     }

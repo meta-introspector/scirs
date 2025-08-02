@@ -112,7 +112,7 @@ impl ConfigBuilder {
         let version_enum = match version {
             1 => MobileNetVersion::V1,
             2 => MobileNetVersion::V2,
-            3 => MobileNetVersion::V3Large_ =>, MobileNetVersion::V2, // Default to V2
+            3 => MobileNetVersion::V3Large_ => MobileNetVersion::V2, // Default to V2
         ModelConfig::MobileNet(MobileNetConfig {
             version: version_enum,
             width_multiplier: 1.0,

@@ -295,8 +295,8 @@ pub fn dstn<T>(
 where
     T: NumCast + Copy + Debug,
 {
-    let x_shape = x.shape().to_vec();
-    let n_dims = x_shape.len();
+    let xshape = x.shape().to_vec();
+    let n_dims = xshape.len();
 
     // Determine which axes to transform
     let axes_to_transform = match axes {
@@ -305,7 +305,7 @@ where
     };
 
     // Create an initial copy of the input array as float
-    let mut result = Array::from_shape_fn(IxDyn(&x_shape), |idx| {
+    let mut result = Array::from_shape_fn(IxDyn(&xshape), |idx| {
         let val = x[idx];
         num_traits::cast::cast::<T, f64>(val).unwrap_or(0.0)
     });
@@ -366,8 +366,8 @@ pub fn idstn<T>(
 where
     T: NumCast + Copy + Debug,
 {
-    let x_shape = x.shape().to_vec();
-    let n_dims = x_shape.len();
+    let xshape = x.shape().to_vec();
+    let n_dims = xshape.len();
 
     // Determine which axes to transform
     let axes_to_transform = match axes {
@@ -376,7 +376,7 @@ where
     };
 
     // Create an initial copy of the input array as float
-    let mut result = Array::from_shape_fn(IxDyn(&x_shape), |idx| {
+    let mut result = Array::from_shape_fn(IxDyn(&xshape), |idx| {
         let val = x[idx];
         num_traits::cast::cast::<T, f64>(val).unwrap_or(0.0)
     });

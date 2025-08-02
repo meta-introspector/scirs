@@ -30,14 +30,14 @@ fn create_test_matrix(n: usize) -> Array2<f64> {
 /// Create a symmetric positive definite matrix
 #[allow(dead_code)]
 fn create_spd_matrix(n: usize) -> Array2<f64> {
-    let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
+    let a = Array2::fromshape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     a.t().dot(&a) + Array2::<f64>::eye(n) * (n as f64)
 }
 
 /// Create a rectangular matrix for testing overdetermined/underdetermined systems
 #[allow(dead_code)]
 fn create_rect_matrix(m: usize, n: usize) -> Array2<f64> {
-    Array2::from_shape_fn((m, n), |(i, j)| {
+    Array2::fromshape_fn((m, n), |(i, j)| {
         ((i + j + 1) as f64 * 0.1).sin() + 0.01 * (i as f64)
     })
 }
@@ -46,7 +46,7 @@ fn create_rect_matrix(m: usize, n: usize) -> Array2<f64> {
 #[allow(dead_code)]
 fn create_complex_matrix(n: usize) -> Array2<num_complex::Complex64> {
     use num__complex::Complex64;
-    Array2::from_shape_fn((n, n), |(i, j)| {
+    Array2::fromshape_fn((n, n), |(i, j)| {
         Complex64::new(
             ((i + j) as f64 * 0.1).sin(),
             ((i as f64 - j as f64) * 0.1).cos(),
@@ -84,7 +84,7 @@ fn bench_lu_decomposition(c: &mut Criterion) {
         );
 
         // LU solve (combined decomposition + solve)
-        let rhs = Array1::from_shape_fn(size, |i| ((i + 1) as f64 * 0.1).sin());
+        let rhs = Array1::fromshape_fn(size, |i| ((i + 1) as f64 * 0.1).sin());
         group.bench_with_input(
             BenchmarkId::new("lu_solve", size),
             &(&matrix, &rhs),
@@ -218,7 +218,7 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
         );
 
         // Cholesky solve
-        let rhs = Array1::from_shape_fn(size, |i| ((i + 1) as f64 * 0.1).sin());
+        let rhs = Array1::fromshape_fn(size, |i| ((i + 1) as f64 * 0.1).sin());
         group.bench_with_input(
             BenchmarkId::new("cholesky_solve", size),
             &(&spd_matrix, &rhs),
@@ -232,7 +232,7 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
 
         // Cholesky update (not implemented yet)
         // if size <= 100 {
-        //     let update_vec = Array1::from_shape_fn(size, |i| ((i as f64 + 1.0) * 0.01).sin());
+        //     let update_vec = Array1::fromshape_fn(size, |i| ((i as f64 + 1.0) * 0.01).sin());
         //     group.bench_with_input(
         //         BenchmarkId::new("cholesky_update", size),
         //         &(&spd_matrix, &update_vec),

@@ -17,8 +17,8 @@
 //! ## Quick Start
 //!
 //! ```rust
-//! use scirs2__text::topic_modeling::{LatentDirichletAllocation, LdaConfig, LdaLearningMethod};
-//! use scirs2__text::vectorize::{CountVectorizer, Vectorizer};
+//! use scirs2_text::topic_modeling::{LatentDirichletAllocation, LdaConfig, LdaLearningMethod};
+//! use scirs2_text::vectorize::{CountVectorizer, Vectorizer};
 //!
 //! // Sample documents
 //! let documents = vec![
@@ -66,7 +66,7 @@
 //! ### Online Learning for Large Datasets
 //!
 //! ```rust
-//! use scirs2__text::topic_modeling::{LdaConfig, LdaLearningMethod, LatentDirichletAllocation};
+//! use scirs2_text::topic_modeling::{LdaConfig, LdaLearningMethod, LatentDirichletAllocation};
 //!
 //! let config = LdaConfig {
 //!     n_topics: 10,
@@ -85,7 +85,7 @@
 //! ### Custom Hyperparameters
 //!
 //! ```rust
-//! use scirs2__text::topic_modeling::LdaConfig;
+//! use scirs2_text::topic_modeling::LdaConfig;
 //!
 //! let config = LdaConfig {
 //!     n_topics: 20,
@@ -102,7 +102,7 @@
 //! ### Model Evaluation
 //!
 //! ```rust
-//! use scirs2__text::topic_coherence::TopicCoherence;
+//! use scirs2_text::topic_coherence::TopicCoherence;
 //!
 //! // Evaluate model coherence
 //! let coherence = TopicCoherence::new();
@@ -829,7 +829,7 @@ mod tests {
     #[test]
     fn test_lda_fit_transform() {
         // Create a simple document-term matrix
-        let doc_term_matrix = Array2::from_shape_vec(
+        let doc_term_matrix = Array2::fromshape_vec(
             (4, 6),
             vec![
                 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, // Doc 1
@@ -855,7 +855,7 @@ mod tests {
 
     #[test]
     fn test_get_topics() {
-        let doc_term_matrix = Array2::from_shape_vec(
+        let doc_term_matrix = Array2::fromshape_vec(
             (4, 3),
             vec![2.0, 1.0, 0.0, 0.0, 2.0, 1.0, 1.0, 0.0, 2.0, 2.0, 1.0, 1.0],
         )

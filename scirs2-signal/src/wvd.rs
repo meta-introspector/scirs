@@ -1,7 +1,8 @@
-use crate::hilbert;
+use ndarray::s;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
-use num__complex::Complex64;
+use crate::hilbert;
+use ndarray::{ Array1, Array2};
+use num_complex::Complex64;
 use std::f64::consts::PI;
 
 // Wigner-Ville Distribution Implementation
@@ -63,7 +64,7 @@ impl Default for WvdConfig {
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2__signal::wvd::{wigner_ville, WvdConfig};
+/// use scirs2_signal::wvd::{wigner_ville, WvdConfig};
 ///
 /// // Create a chirp signal
 /// let fs = 1000.0;
@@ -108,7 +109,7 @@ pub fn wigner_ville(_signal: &Array1<f64>, config: WvdConfig) -> SignalResult<Ar
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2__signal::wvd::{cross_wigner_ville, WvdConfig};
+/// use scirs2_signal::wvd::{cross_wigner_ville, WvdConfig};
 ///
 /// // Create two related signals
 /// let fs = 1000.0;
@@ -173,8 +174,8 @@ pub fn cross_wigner_ville(
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2__signal::wvd::{smoothed_pseudo_wigner_ville, WvdConfig};
-/// use scirs2__signal::window;
+/// use scirs2_signal::wvd::{smoothed_pseudo_wigner_ville, WvdConfig};
+/// use scirs2_signal::window;
 ///
 /// // Create a chirp signal
 /// let fs = 1000.0;

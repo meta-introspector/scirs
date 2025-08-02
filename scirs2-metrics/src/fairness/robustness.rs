@@ -44,7 +44,7 @@ use rand::seq::SliceRandom;
 /// let y_pred = array![0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0];
 ///
 /// // Protected group memberships (gender and age)
-/// let protected_groups = Array2::from_shape_vec((8, 2), vec![
+/// let protected_groups = Array2::fromshape_vec((8, 2), vec![
 ///     // Column 1: Gender (0=male, 1=female)
 ///     // Column 2: Age group (0=young, 1=old)
 ///     0.0, 0.0,

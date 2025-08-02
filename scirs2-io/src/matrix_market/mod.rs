@@ -281,13 +281,13 @@ impl MMHeader {
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::matrix_market::read_sparse_matrix;
+/// use scirs2_io::matrix_market::read_sparse_matrix;
 ///
 /// let matrix = read_sparse_matrix("matrix.mtx").unwrap();
 /// println!("Matrix: {}x{} with {} non-zeros", matrix.rows, matrix.cols, matrix.nnz);
 /// ```
 #[allow(dead_code)]
-pub fn read_sparse_matrix<P: AsRef<Path>>(_path: P) -> Result<MMSparseMatrix<f64>> {
+pub fn read_sparse_matrix<P: AsRef<Path>>(path: P) -> Result<MMSparseMatrix<f64>> {
     let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
@@ -402,8 +402,8 @@ pub fn read_sparse_matrix<P: AsRef<Path>>(_path: P) -> Result<MMSparseMatrix<f64
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::matrix_market::{write_sparse_matrix, MMSparseMatrix, MMHeader, SparseEntry};
-/// use scirs2__io::matrix_market::{MMFormat, MMDataType, MMSymmetry};
+/// use scirs2_io::matrix_market::{write_sparse_matrix, MMSparseMatrix, MMHeader, SparseEntry};
+/// use scirs2_io::matrix_market::{MMFormat, MMDataType, MMSymmetry};
 ///
 /// let header = MMHeader {
 ///     object: "matrix".to_string(),
@@ -428,7 +428,7 @@ pub fn read_sparse_matrix<P: AsRef<Path>>(_path: P) -> Result<MMSparseMatrix<f64
 /// write_sparse_matrix("output.mtx", &matrix).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn write_sparse_matrix<P: AsRef<Path>>(_path: P, matrix: &MMSparseMatrix<f64>) -> Result<()> {
+pub fn write_sparse_matrix<P: AsRef<Path>>(path: P, matrix: &MMSparseMatrix<f64>) -> Result<()> {
     let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
@@ -481,7 +481,7 @@ pub fn write_sparse_matrix<P: AsRef<Path>>(_path: P, matrix: &MMSparseMatrix<f64
 ///
 /// * `Result<MMDenseMatrix<f64>>` - The dense matrix or an error
 #[allow(dead_code)]
-pub fn read_dense_matrix<P: AsRef<Path>>(_path: P) -> Result<MMDenseMatrix<f64>> {
+pub fn read_dense_matrix<P: AsRef<Path>>(path: P) -> Result<MMDenseMatrix<f64>> {
     let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
 
@@ -577,7 +577,7 @@ pub fn read_dense_matrix<P: AsRef<Path>>(_path: P) -> Result<MMDenseMatrix<f64>>
 ///
 /// * `Result<()>` - Success or an error
 #[allow(dead_code)]
-pub fn write_dense_matrix<P: AsRef<Path>>(_path: P, matrix: &MMDenseMatrix<f64>) -> Result<()> {
+pub fn write_dense_matrix<P: AsRef<Path>>(path: P, matrix: &MMDenseMatrix<f64>) -> Result<()> {
     let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 
@@ -678,7 +678,7 @@ pub fn coo_to_sparse(
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::matrix_market::{read_sparse_matrix_parallel, ParallelConfig};
+/// use scirs2_io::matrix_market::{read_sparse_matrix_parallel, ParallelConfig};
 ///
 /// let config = ParallelConfig::default();
 /// let (matrix, stats) = read_sparse_matrix_parallel("large_matrix.mtx", config).unwrap();
@@ -912,8 +912,8 @@ fn parse_matrix_entry(_line: &str, header: &MMHeader) -> Result<SparseEntry<f64>
 /// # Examples
 ///
 /// ```no_run
-/// use scirs2__io::matrix_market::{write_sparse_matrix_parallel, MMSparseMatrix, ParallelConfig};
-/// # use scirs2__io::matrix_market::{MMHeader, MMFormat, MMDataType, MMSymmetry, SparseEntry};
+/// use scirs2_io::matrix_market::{write_sparse_matrix_parallel, MMSparseMatrix, ParallelConfig};
+/// # use scirs2_io::matrix_market::{MMHeader, MMFormat, MMDataType, MMSymmetry, SparseEntry};
 ///
 /// # let header = MMHeader {
 /// #     object: "matrix".to_string(),

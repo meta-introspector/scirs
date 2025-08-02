@@ -15,7 +15,7 @@ pub trait TokenFilter {
     fn apply(&self, tokens: &[String]) -> Vec<String>;
 
     /// Apply the filter directly to text
-    fn filter_text(&self, text: &str, tokenizer: &dyn Tokenizer) -> Result<String> {
+    fn filtertext(&self, text: &str, tokenizer: &dyn Tokenizer) -> Result<String> {
         let tokens = tokenizer.tokenize(text)?;
         let filtered = self.apply(&tokens);
         Ok(filtered.join(" "))
@@ -568,13 +568,13 @@ mod tests {
     }
 
     #[test]
-    fn test_filter_text() {
+    fn test_filtertext() {
         let text = "The quick brown fox jumps over the lazy dog";
         let tokenizer = WordTokenizer::default();
 
         // Filter out short words
         let filter = LengthFilter::new(5, usize::MAX);
-        let filtered = filter.filter_text(text, &tokenizer).unwrap();
+        let filtered = filter.filtertext(text, &tokenizer).unwrap();
 
         assert_eq!(filtered, "quick brown jumps");
     }

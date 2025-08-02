@@ -583,8 +583,8 @@ impl SciPyBenchmarkSuite {
 
 /// Estimate memory usage for given shape and data type size
 #[allow(dead_code)]
-fn estimate_memory_usage(_shape: &[usize], dtype_size: usize) -> usize {
-    _shape.iter().product::<usize>() * dtype_size
+fn estimate_memory_usage(shape: &[usize], dtype_size: usize) -> usize {
+    shape.iter().product::<usize>() * dtype_size
 }
 
 /// Calculate numerical accuracy metrics between two arrays

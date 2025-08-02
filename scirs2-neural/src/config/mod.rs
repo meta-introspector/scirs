@@ -63,7 +63,7 @@ pub enum ConfigFormat {
     YAML,
 impl ModelConfig {
     /// Load a model configuration from a file
-    pub fn from_file<P: AsRef<Path>>(_path: P, format: Option<ConfigFormat>) -> Result<Self> {
+    pub fn from_file<P: AsRef<Path>>(path: P, format: Option<ConfigFormat>) -> Result<Self> {
         let _path = _path.as_ref();
         // Determine format from extension if not specified
         let format = if let Some(fmt) = format {
@@ -90,9 +90,9 @@ impl ModelConfig {
             .map_err(|e| Error::IOError(format!("Failed to read config file: {}", e)))?;
         // Parse based on format
         match format {
-            ConfigFormat::JSON =>, serde_json::from_str(&content)
+            ConfigFormat::JSON => serde_json::from_str(&content)
                 .map_err(|e| Error::DeserializationError(format!("Failed to parse JSON: {}", e))),
-            ConfigFormat::YAML =>, serde_yaml::from_str(&content)
+            ConfigFormat::YAML => serde_yaml::from_str(&content)
                 .map_err(|e| Error::DeserializationError(format!("Failed to parse YAML: {}", e))),
         }
     }
@@ -137,7 +137,7 @@ impl ModelConfig {
         validation::validate_model_config(self)
     /// Create a model from this configuration
     pub fn create_model<
-        F: num_traits: Float
+        F: num_traits:: Float
             + std::fmt::Debug
             + num_traits::NumAssign
             + ndarray::ScalarOperand

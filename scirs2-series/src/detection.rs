@@ -253,7 +253,7 @@ where
 
     // Remove the mean to center the data
     let mean = ts.iter().fold(F::zero(), |acc, &x| acc + x) / F::from_usize(n).unwrap();
-    let centered_ts = Array1::from_shape_fn(n, |i| ts[i] - mean);
+    let centered_ts = Array1::fromshape_fn(n, |i| ts[i] - mean);
 
     // Compute the periodogram using DFT
     for k in 0..=n / 2 {

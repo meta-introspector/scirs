@@ -215,7 +215,7 @@ mod simple_nn {
     }
 
     /// Apply activation function to an array element-wise
-    pub fn apply_activation<F: Float>(_arr: &Array1<F>, activation: &str) -> Array1<F> {
+    pub fn apply_activation<F: Float>(arr: &Array1<F>, activation: &str) -> Array1<F> {
         match activation {
             "tanh" => _arr.mapv(tanh),
             "sigmoid" => _arr.mapv(sigmoid),
@@ -462,7 +462,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
         let z_score = match confidence_level {
             c if c >= 0.99 => F::from(2.576).unwrap(),
             c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(, _ =>, F::from(1.0).unwrap(),
+            c if c >= 0.90 => F::from(1.645).unwrap(, _ => F::from(1.0).unwrap(),
         };
 
         let margin = uncertainty * z_score;
@@ -685,7 +685,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for TransformerForeca
         let z_score = match confidence_level {
             c if c >= 0.99 => F::from(2.576).unwrap(),
             c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(, _ =>, F::from(1.0).unwrap(),
+            c if c >= 0.90 => F::from(1.645).unwrap(, _ => F::from(1.0).unwrap(),
         };
 
         let margin = uncertainty * z_score;
@@ -985,7 +985,7 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for NBeatsForecaster<
         let z_score = match confidence_level {
             c if c >= 0.99 => F::from(2.576).unwrap(),
             c if c >= 0.95 => F::from(1.96).unwrap(),
-            c if c >= 0.90 => F::from(1.645).unwrap(, _ =>, F::from(1.0).unwrap(),
+            c if c >= 0.90 => F::from(1.645).unwrap(, _ => F::from(1.0).unwrap(),
         };
 
         let margin = uncertainty * z_score;
@@ -1052,7 +1052,7 @@ pub mod utils {
     }
 
     /// Normalize data for neural network training
-    pub fn normalize_data<F: Float + FromPrimitive>(_data: &Array1<F>) -> Result<(Array1<F>, F, F)> {
+    pub fn normalize_data<F: Float + FromPrimitive>(data: &Array1<F>) -> Result<(Array1<F>, F, F)> {
         if _data.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Data cannot be empty".to_string(),
@@ -1159,8 +1159,8 @@ mod tests {
 
     #[test]
     fn test_train_val_split() {
-        let x = Array2::from_shape_vec((10, 3), (0..30).map(|i| i as f64).collect()).unwrap();
-        let y = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
+        let x = Array2::fromshape_vec((10, 3), (0..30).map(|i| i as f64).collect()).unwrap();
+        let y = Array2::fromshape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
 
         let (x_train, x_val, y_train, y_val) = utils::train_val_split(&x, &y, 0.2).unwrap();
 
@@ -1847,7 +1847,7 @@ pub mod advanced {
 
             // Store attention weights for interpretability
             self.attention_weights = Some(
-                Array2::from_shape_vec((1, attention_weights.len()), attention_weights.to_vec())
+                Array2::fromshape_vec((1, attention_weights.len()), attention_weights.to_vec())
                     .unwrap(),
             );
 
@@ -2547,7 +2547,7 @@ pub mod advanced {
                     let idx = self.evaluations % options.len();
                     ParameterValue::String(options[idx].clone())
                 }
-                ParameterRange::Boolean =>, ParameterValue::Bool(self.evaluations % 2 == 0),
+                ParameterRange::Boolean => ParameterValue::Bool(self.evaluations % 2 == 0),
             }
         }
 
@@ -2664,7 +2664,7 @@ pub mod advanced {
             default: f64,
         ) -> F {
             match params.get(name) {
-                Some(ParameterValue::Float(f)) => *f_ =>, F::from(default).unwrap(),
+                Some(ParameterValue::Float(f)) => *f_ => F::from(default).unwrap(),
             }
         }
 

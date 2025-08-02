@@ -126,12 +126,12 @@ enum BackwardFunction<T: Float> {
     /// Reduction backward
     ReductionBackward {
         reduction_type: ReductionType,
-        input_shape: Vec<usize>,
+        inputshape: Vec<usize>,
         axis: Option<usize>,
     },
 
     /// Reshape backward
-    ReshapeBackward { original_shape: Vec<usize> },
+    ReshapeBackward { originalshape: Vec<usize> },
 
     /// Custom backward function
     Custom { name: String },
@@ -503,7 +503,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     /// Sum reduction
     pub fn sum(&mut self, input: usize, axis: Option<usize>) -> Result<usize> {
         let input_val = self.get_value(input)?;
-        let input_shape = input_val.shape().to_vec();
+        let inputshape = input_val.shape().to_vec();
 
         let output_id = self.tape.len();
 
@@ -514,7 +514,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                 output: output_id,
                 backward_fn: BackwardFunction::ReductionBackward {
                     reduction_type: ReductionType::Sum,
-                    input_shape,
+                    inputshape,
                     axis,
                 },
                 saved_values: SavedValues::None,
@@ -529,7 +529,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     /// Mean reduction
     pub fn mean(&mut self, input: usize, axis: Option<usize>) -> Result<usize> {
         let input_val = self.get_value(input)?;
-        let input_shape = input_val.shape().to_vec();
+        let inputshape = input_val.shape().to_vec();
 
         let output_id = self.tape.len();
 
@@ -540,7 +540,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                 output: output_id,
                 backward_fn: BackwardFunction::ReductionBackward {
                     reduction_type: ReductionType::Mean,
-                    input_shape,
+                    inputshape,
                     axis,
                 },
                 saved_values: SavedValues::None,
@@ -555,7 +555,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     /// L2 norm
     pub fn norm(&mut self, input: usize) -> Result<usize> {
         let input_val = self.get_value(input)?;
-        let input_shape = input_val.shape().to_vec();
+        let inputshape = input_val.shape().to_vec();
 
         let output_id = self.tape.len();
 
@@ -566,7 +566,7 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                 output: output_id,
                 backward_fn: BackwardFunction::ReductionBackward {
                     reduction_type: ReductionType::Norm,
-                    input_shape,
+                    inputshape,
                     axis: None,
                 },
                 saved_values: SavedValues::Tensor(input_val),
@@ -579,9 +579,9 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
     }
 
     /// Reshape operation
-    pub fn reshape(&mut self, input: usize, new_shape: &[usize]) -> Result<usize> {
+    pub fn reshape(&mut self, input: usize, newshape: &[usize]) -> Result<usize> {
         let input_val = self.get_value(input)?;
-        let original_shape = input_val.shape().to_vec();
+        let originalshape = input_val.shape().to_vec();
 
         let output_id = self.tape.len();
 
@@ -590,8 +590,8 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                 op_type: ReverseOpType::Reshape,
                 inputs: vec![input],
                 output: output_id,
-                backward_fn: BackwardFunction::ReshapeBackward { original_shape },
-                saved_values: SavedValues::Shape(new_shape.to_vec()),
+                backward_fn: BackwardFunction::ReshapeBackward { originalshape },
+                saved_values: SavedValues::Shape(newshape.to_vec()),
             };
 
             self.tape.push(op);
@@ -862,19 +862,19 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
 
             BackwardFunction::ReductionBackward {
                 reduction_type,
-                input_shape,
+                inputshape,
                 axis: _,
             } => {
                 match reduction_type {
                     ReductionType::Sum => {
                         // Sum: gradient broadcasts to input shape
-                        let _grad = Array1::from_elem(input_shape[0], output_grad[0]);
+                        let _grad = Array1::from_elem(inputshape[0], output_grad[0]);
                         Ok(vec![_grad])
                     }
                     ReductionType::Mean => {
                         // Mean: gradient divided by input size then broadcast
-                        let n = T::from(input_shape[0]).unwrap();
-                        let _grad = Array1::from_elem(input_shape[0], output_grad[0] / n);
+                        let n = T::from(inputshape[0]).unwrap();
+                        let _grad = Array1::from_elem(inputshape[0], output_grad[0] / n);
                         Ok(vec![_grad])
                     }
                     ReductionType::Norm => {
@@ -897,14 +897,14 @@ impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> Rever
                 }
             }
 
-            BackwardFunction::ReshapeBackward { original_shape } => {
+            BackwardFunction::ReshapeBackward { originalshape } => {
                 // Reshape: just reshape gradient back to original shape
-                let total_elements: usize = original_shape.iter().product();
+                let total_elements: usize = originalshape.iter().product();
                 if output_grad.len() == total_elements {
                     Ok(vec![output_grad.clone()])
                 } else {
                     // Create appropriately sized gradient
-                    let _grad = Array1::zeros(original_shape[0]);
+                    let _grad = Array1::zeros(originalshape[0]);
                     Ok(vec![_grad])
                 }
             }

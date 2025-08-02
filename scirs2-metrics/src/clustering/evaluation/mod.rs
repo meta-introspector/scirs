@@ -34,7 +34,7 @@ use crate::error::{MetricsError, Result};
 /// use scirs2__metrics::clustering::evaluation::dunn_index_enhanced;
 ///
 /// // Create a small dataset with 2 clusters
-/// let x = Array2::from_shape_vec((6, 2), vec![
+/// let x = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.5, 1.8,
 ///     1.2, 2.2,
@@ -208,7 +208,7 @@ mod tests {
     #[test]
     fn test_dunn_index() {
         // Create a dataset with 2 well-separated clusters
-        let x = Array2::from_shape_vec(
+        let x = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
@@ -221,7 +221,7 @@ mod tests {
         assert!(dunn > 0.5);
 
         // Create a dataset with overlapping clusters
-        let x_overlap = Array2::from_shape_vec(
+        let x_overlap = Array2::fromshape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 3.2, 3.2, // Overlap point
@@ -253,7 +253,8 @@ mod tests {
                 2 => base / 2.0,
                 3 => base / 3.0, // Elbow point
                 4 => base / 3.2, // Small decrease after elbow
-                5 => base / 3.4_ => base / (3.5 + (k as f64 - 5.0) * 0.1),
+                5 => base / 3.4,
+                _ => base / (3.5 + (k as f64 - 5.0) * 0.1),
             }
         };
 

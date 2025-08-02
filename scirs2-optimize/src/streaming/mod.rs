@@ -124,7 +124,7 @@ impl StreamingDataPoint {
     /// Create a new streaming data point
     pub fn new(_features: Array1<f64>, target: f64) -> Self {
         Self {
-            _features,
+            features: _features,
             target,
             weight: None,
             timestamp: None,
@@ -134,7 +134,7 @@ impl StreamingDataPoint {
     /// Create a weighted streaming data point
     pub fn with_weight(_features: Array1<f64>, target: f64, weight: f64) -> Self {
         Self {
-            _features,
+            features: _features,
             target,
             weight: Some(weight),
             timestamp: None,
@@ -144,7 +144,7 @@ impl StreamingDataPoint {
     /// Create a timestamped streaming data point
     pub fn with_timestamp(_features: Array1<f64>, target: f64, timestamp: f64) -> Self {
         Self {
-            _features,
+            features: _features,
             target,
             weight: None,
             timestamp: Some(timestamp),

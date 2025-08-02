@@ -690,7 +690,7 @@ mod tests {
         let custom = AxisScale::Custom("symlog".to_string());
         match custom {
             AxisScale::Custom(name) => assert_eq!(name, "symlog", _ => assert!(false, "Expected custom scale"),
-    fn test_marker_shapes() {
+    fn test_markershapes() {
         let shapes = [
             MarkerShape::Circle,
             MarkerShape::Square,

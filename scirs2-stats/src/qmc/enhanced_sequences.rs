@@ -9,7 +9,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2};
 use num_traits::{Float, FromPrimitive, One, Zero};
-use rand::{rng, rngs::StdRng, Rng, SeedableRng};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
 

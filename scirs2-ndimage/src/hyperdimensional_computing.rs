@@ -353,7 +353,7 @@ impl ImageHDCEncoder {
     /// Create new image encoder
     pub fn new(_image_height: usize, image_width: usize, config: HDCConfig) -> Self {
         let mut pixel_encoders = HashMap::new();
-        let position_encoders = Array2::from_shape_fn((_image_height, image_width), |_| {
+        let position_encoders = Array2::fromshape_fn((_image_height, image_width), |_| {
             Hypervector::random(config.hypervector_dim, config.sparsity)
         });
 
@@ -1178,7 +1178,7 @@ impl ContinualLearningMemory {
 
     pub fn add_experience(
         &mut self,
-        experience: Experience_consolidation: &ConsolidationResult,
+        experience: Experience, consolidation: &ConsolidationResult,
     ) -> NdimageResult<()> {
         self.episodic_buffer.push_back(experience);
         self.current_time += 1;
@@ -1599,7 +1599,7 @@ fn assess_reasoning_confidence(_reasoning_chains: &[ReasoningChain]) -> MetaCogn
 
 #[allow(dead_code)]
 fn apply_interference_resistant_encoding(
-    encoding: &Hypervector_memory_system: &ContinualLearningMemory, _config: &HDCConfig,
+    encoding: &Hypervector_memory, system: &ContinualLearningMemory, _config: &HDCConfig,
 ) -> NdimageResult<Hypervector> {
     // Apply noise or permutation to reduce interference
     let noise_hv = Hypervector::random(encoding.dimension, 0.001);
@@ -1608,7 +1608,7 @@ fn apply_interference_resistant_encoding(
 
 #[allow(dead_code)]
 fn calculate_experience_importance(
-    _encoding: &Hypervector_memory_system: &ContinualLearningMemory,
+    _encoding: &Hypervector_memory, system: &ContinualLearningMemory,
 ) -> f64 {
     // Simplified importance calculation
     0.7
@@ -1802,7 +1802,7 @@ mod tests {
         let encoder = ImageHDCEncoder::new(10, 10, config);
 
         let image =
-            Array2::from_shape_vec((10, 10), (0..100).map(|x| x as f64 / 100.0).collect()).unwrap();
+            Array2::fromshape_vec((10, 10), (0..100).map(|x| x as f64 / 100.0).collect()).unwrap();
 
         let encoded = encoder.encode_image(image.view()).unwrap();
         assert_eq!(encoded.dimension, 10000);
@@ -1832,7 +1832,7 @@ mod tests {
         let config = HDCConfig::default();
 
         let image =
-            Array2::from_shape_vec((64, 64), (0..4096).map(|x| x as f64 / 4096.0).collect())
+            Array2::fromshape_vec((64, 64), (0..4096).map(|x| x as f64 / 4096.0).collect())
                 .unwrap();
         let pattern = Array2::ones((32, 32));
 
@@ -1865,7 +1865,7 @@ mod tests {
     fn test_advanced_hierarchical_hdc_reasoning() {
         let config = HDCConfig::default();
         let image =
-            Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64 / 64.0).collect()).unwrap();
+            Array2::fromshape_vec((8, 8), (0..64).map(|x| x as f64 / 64.0).collect()).unwrap();
 
         let mut concept_library = HierarchicalConceptLibrary::new();
 
@@ -1926,7 +1926,7 @@ mod tests {
         let fusion_config = MultiModalFusionConfig::default();
 
         let visual_data =
-            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+            Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
         let temporal_zeros = Array2::zeros((4, 4));
         let temporal_ones = Array2::ones((4, 4));
         let temporal_sequence = vec![temporal_zeros.view(), temporal_ones.view()];

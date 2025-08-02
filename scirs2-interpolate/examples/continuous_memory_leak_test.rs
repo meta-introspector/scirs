@@ -175,15 +175,15 @@ impl ContinuousMemoryTester {
     /// Generate test data for interpolation
     fn generate_test_data(&self) -> TestData {
         let n = self.config.data_size;
-        let x: Array1<f64> = Array1::from_shape_fn(n, |i| i as f64);
-        let y: Array1<f64> = Array1::from_shape_fn(n, |i| {
+        let x: Array1<f64> = Array1::fromshape_fn(n, |i| i as f64);
+        let y: Array1<f64> = Array1::fromshape_fn(n, |i| {
             let x_val = i as f64;
             x_val.sin() + 0.1 * x_val.cos() * x_val
         });
 
         // Generate evaluation points
         let eval_points: Array1<f64> =
-            Array1::from_shape_fn(50, |i| i as f64 * (n - 1) as f64 / 49.0 + 0.5);
+            Array1::fromshape_fn(50, |i| i as f64 * (n - 1) as f64 / 49.0 + 0.5);
 
         TestData { x, y, eval_points }
     }

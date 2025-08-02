@@ -1,6 +1,6 @@
 use ndarray::Array2;
-use scirs2__signal::dwt::Wavelet;
-use scirs2__signal::swt2d::swt2d_decompose;
+use scirs2_signal::dwt::Wavelet;
+use scirs2_signal::swt2d::swt2d_decompose;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -85,7 +85,7 @@ fn detect_edges_swt<T>(
     level: usize,
 ) -> Result<Array2<f64>, Box<dyn std::error::Error>>
 where
-    T: num_traits: Float + num, _traits::NumCast + std::fmt::Debug,
+    T: num_traits:: Float + num, _traits::NumCast + std::fmt::Debug,
 {
     // Step 1: Decompose the image using 2D SWT
     let decomp = swt2d_decompose(image, wavelet, level, None)?;

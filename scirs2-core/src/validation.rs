@@ -179,7 +179,7 @@ where
 /// # Arguments
 ///
 /// * `array` - The array to check
-/// * `expected_shape` - The expected shape
+/// * `expectedshape` - The expected shape
 /// * `name` - The name of the array being checked
 ///
 /// # Returns
@@ -190,9 +190,9 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ShapeError` if the array does not have the expected shape.
-pub fn check_shape<S, D, A>(
+pub fn checkshape<S, D, A>(
     array: &ArrayBase<S, D>,
-    expected_shape: &[usize],
+    expectedshape: &[usize],
     name: A,
 ) -> CoreResult<()>
 where
@@ -200,11 +200,11 @@ where
     D: Dimension,
     A: Into<String>,
 {
-    let actual_shape = array.shape();
-    if actual_shape != expected_shape {
+    let actualshape = array.shape();
+    if actualshape != expectedshape {
         return Err(CoreError::ShapeError(
             ErrorContext::new(format!(
-                "{} has incorrect shape: expected {expected_shape:?}, got {actual_shape:?}",
+                "{} has incorrect shape: expected {expectedshape:?}, got {actualshape:?}",
                 name.into()
             ))
             .with_location(ErrorLocation::new(file!(), line!())),
@@ -298,7 +298,7 @@ where
 /// # Errors
 ///
 /// Returns `CoreError::ShapeError` if the arrays have different shapes.
-pub fn check_same_shape<S1, S2, D1, D2, A, B>(
+pub fn check_sameshape<S1, S2, D1, D2, A, B>(
     a: &ArrayBase<S1, D1>,
     a_name: A,
     b: &ArrayBase<S2, D2>,
@@ -312,16 +312,16 @@ where
     A: Into<String>,
     B: Into<String>,
 {
-    let a_shape = a.shape();
-    let b_shape = b.shape();
-    if a_shape != b_shape {
+    let ashape = a.shape();
+    let bshape = b.shape();
+    if ashape != bshape {
         return Err(CoreError::ShapeError(
             ErrorContext::new(format!(
                 "{} and {} must have the same shape, got {:?} and {:?}",
                 a_name.into(),
                 b_name.into(),
-                a_shape,
-                b_shape
+                ashape,
+                bshape
             ))
             .with_location(ErrorLocation::new(file!(), line!())),
         ));
@@ -611,7 +611,8 @@ pub mod clustering {
     /// * `Ok(())` if data is valid
     /// * `Err(CoreError)` if data validation fails
     pub fn validate_clustering_data<S, D>(
-        data: &ArrayBase<S, D>, _operation: &str,
+        data: &ArrayBase<S, D>,
+        _operation: &str,
         check_finite: bool,
         min_samples: Option<usize>,
     ) -> CoreResult<()>
@@ -775,10 +776,10 @@ mod tests {
     }
 
     #[test]
-    fn test_check_shape() {
+    fn test_checkshape() {
         let a = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
-        assert!(check_shape(&a, &[2, 2], "array").is_ok());
-        assert!(check_shape(&a, &[2, 3], "array").is_err());
+        assert!(checkshape(&a, &[2, 2], "array").is_ok());
+        assert!(checkshape(&a, &[2, 3], "array").is_err());
     }
 
     #[test]
@@ -800,13 +801,13 @@ mod tests {
     }
 
     #[test]
-    fn test_check_same_shape() {
+    fn test_check_sameshape() {
         let a = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
         let b = arr2(&[[5.0, 6.0], [7.0, 8.0]]);
-        assert!(check_same_shape(&a, "a", &b, "b").is_ok());
+        assert!(check_sameshape(&a, "a", &b, "b").is_ok());
 
         let c = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
-        assert!(check_same_shape(&a, "a", &c, "c").is_err());
+        assert!(check_sameshape(&a, "a", &c, "c").is_err());
     }
 
     #[test]
@@ -1169,7 +1170,8 @@ pub mod custom {
     {
         shape_validator: Option<ShapeValidatorFn>,
         element_validator: Option<Box<dyn Validator<T>>>,
-        size_validator: Option<RangeValidator<usize>>, phantom: PhantomData<D>,
+        size_validator: Option<RangeValidator<usize>>,
+        phantom: PhantomData<D>,
     }
 
     impl<T, D> ArrayValidator<T, D>
@@ -1180,11 +1182,12 @@ pub mod custom {
             Self {
                 shape_validator: None,
                 element_validator: None,
-                size_validator: None, phantom: PhantomData,
+                size_validator: None,
+                phantom: PhantomData,
             }
         }
 
-        pub fn with_shape<F>(mut self, validator: F) -> Self
+        pub fn withshape<F>(mut self, validator: F) -> Self
         where
             F: Fn(&[usize]) -> CoreResult<()> + 'static,
         {

@@ -1,12 +1,12 @@
-//! Enhanced multitaper validation with SciPy reference comparison
-//!
-//! This module provides rigorous validation of multitaper spectral estimation
-//! by comparing against SciPy's reference implementation and additional
-//! numerical stability tests in Advanced mode.
+// Enhanced multitaper validation with SciPy reference comparison
+//
+// This module provides rigorous validation of multitaper spectral estimation
+// by comparing against SciPy's reference implementation and additional
+// numerical stability tests in Advanced mode.
 
 use crate::error::{SignalError, SignalResult};
-use crate::multitaper::{MultitaperConfig, enhanced_pmtm};
 use crate::multitaper::windows::dpss;
+use crate::multitaper::{enhanced_pmtm, MultitaperConfig};
 use crate::waveforms::{brown_noise, chirp};
 use ndarray::Array1;
 use rand::Rng;
@@ -292,7 +292,7 @@ fn validate_sinusoid_estimation() -> SignalResult<TestResult> {
     let frequency_error = (estimated_freq - true_freq).abs() / true_freq;
 
     // Frequency resolution
-    let freq_resolution = config.fs / config.n_samples  as f64;
+    let freq_resolution = config.fs / config.n_samples as f64;
     let acceptable_error = freq_resolution / true_freq;
 
     let mut additional_metrics = HashMap::new();
@@ -354,7 +354,7 @@ fn validate_multitone_estimation() -> SignalResult<TestResult> {
         total_error += freq_error;
     }
 
-    let mean_error = total_error / frequencies.len()  as f64;
+    let mean_error = total_error / frequencies.len() as f64;
     let threshold = 0.05; // 5% error threshold
 
     let mut additional_metrics = HashMap::new();
@@ -580,7 +580,7 @@ fn validate_numerical_stability_enhanced() -> SignalResult<TestResult> {
         stability_tests_passed += 1;
     }
 
-    let stability_ratio = stability_tests_passed as f64 / total_tests  as f64;
+    let stability_ratio = stability_tests_passed as f64 / total_tests as f64;
     let threshold = 0.8; // 80% of stability tests should pass
 
     let mut additional_metrics = HashMap::new();
@@ -616,7 +616,7 @@ fn test_signal_processing(_signal: &Array1<f64>) -> SignalResult<()> {
 fn generate_test_signal(_config: &EnhancedTestSignalConfig) -> SignalResult<Array1<f64>> {
     let mut rng = rand::rng();
     let dt = 1.0 / _config.fs;
-    let t: Array1<f64> = Array1::from_shape_fn(_config.n_samples, |i| i as f64 * dt);
+    let t: Array1<f64> = Array1::fromshape_fn(_config.n_samples, |i| i as f64 * dt);
 
     let signal = match &_config.signal_type {
         TestSignalType::Sinusoid {
@@ -651,7 +651,7 @@ fn generate_test_signal(_config: &EnhancedTestSignalConfig) -> SignalResult<Arra
                 }
                 _ => {
                     // White noise fallback
-                    Array1::from_shape_fn(_config.n_samples, |_| {
+                    Array1::fromshape_fn(_config.n_samples, |_| {
                         amplitude * rng.random_range(-1.0..1.0)
                     })
                 }
@@ -695,7 +695,7 @@ fn perform_statistical_validation() -> SignalResult<StatisticalValidationMetrics
 #[allow(dead_code)]
 fn validate_simd_implementation() -> SignalResult<SimdValidationMetrics> {
     // Test SIMD operations if available
-    let test_data = Array1::from_shape_fn(1024, |i| i as f64);
+    let test_data = Array1::fromshape_fn(1024, |i| i as f64);
 
     // Test basic SIMD operations
     let simd_result = f64::simd_add(&test_data.view(), &test_data.view());
@@ -731,8 +731,11 @@ fn analyze_numerical_precision() -> SignalResult<PrecisionAnalysisResult> {
 /// Calculate overall validation score
 #[allow(dead_code)]
 fn calculate_overall_score(_test_results: &HashMap<String, TestResult>) -> f64 {
-    let total_tests = _test_results.len()  as f64;
-    let passed_tests = _test_results.values().filter(|result| result.passed).count()  as f64;
+    let total_tests = _test_results.len() as f64;
+    let passed_tests = _test_results
+        .values()
+        .filter(|result| result.passed)
+        .count() as f64;
 
     (passed_tests / total_tests) * 100.0
 }
@@ -765,10 +768,7 @@ fn generate_recommendations(
 
 /// Identify critical issues that need immediate attention
 #[allow(dead_code)]
-fn identify_critical_issues(
-    test_results: &HashMap<String, TestResult>,
-    issues: &mut Vec<String>,
-) {
+fn identify_critical_issues(test_results: &HashMap<String, TestResult>, issues: &mut Vec<String>) {
     for (test_name, result) in test_results {
         if !result.passed && result.error_metric > 2.0 * result.threshold {
             issues.push(format!(
@@ -1026,7 +1026,7 @@ fn validate_memory_efficiency() -> SignalResult<TestResult> {
         efficiency_scores.push(efficiency);
     }
 
-    let avg_efficiency = efficiency_scores.iter().sum::<f64>() / efficiency_scores.len()  as f64;
+    let avg_efficiency = efficiency_scores.iter().sum::<f64>() / efficiency_scores.len() as f64;
 
     let mut additional_metrics = HashMap::new();
     additional_metrics.insert("avg_memory_efficiency".to_string(), avg_efficiency);

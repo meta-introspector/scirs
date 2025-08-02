@@ -55,11 +55,11 @@ where
     }
 
     // Get dimensions
-    let a_shape = a.shape();
-    let b_shape = b.shape();
+    let ashape = a.shape();
+    let bshape = b.shape();
 
     // Verify matrix dimensions
-    if a_shape.len() != 2 || b_shape.len() != 2 || a_shape[1] != b_shape[0] {
+    if ashape.len() != 2 || bshape.len() != 2 || ashape[1] != bshape[0] {
         return Err(NotImplemented);
     }
 
@@ -99,8 +99,8 @@ where
     }
 
     // Check if shapes are compatible for broadcasting
-    let a_shape = a.shape();
-    let b_shape = b.shape();
+    let ashape = a.shape();
+    let bshape = b.shape();
 
     // Transfer to CPU, perform operation, and transfer back to GPU
     let a_cpu = a.to_cpu().unwrap();
@@ -214,7 +214,7 @@ where
     let a_cpu = a.to_cpu().unwrap();
     let a_array = a_cpu.downcast_ref::<NdarrayWrapper<f64_>>().unwrap().as_array();
 
-    match a_array.clone().into_shape(shape) {
+    match a_array.clone().intoshape(shape) {
         Ok(result) => {
             // Create a new GPU array with the result
             let result_gpu = GPUNdarray::new(result, a.config().clone());
@@ -244,14 +244,14 @@ where
     // In a real implementation, this would use cuDNN for convolution.
     // For now, we'll return a placeholder result.
 
-    let input_shape = input.shape();
-    if input_shape.len() != 2 {
+    let inputshape = input.shape();
+    if inputshape.len() != 2 {
         return Err(NotImplemented);
     }
 
     // Calculate output dimensions (simplified)
-    let h_out = (input_shape[0] - kernel.shape()[0] + 2 * padding.0) / stride.0 + 1;
-    let w_out = (input_shape[1] - kernel.shape()[1] + 2 * padding.1) / stride.1 + 1;
+    let h_out = (inputshape[0] - kernel.shape()[0] + 2 * padding.0) / stride.0 + 1;
+    let w_out = (inputshape[1] - kernel.shape()[1] + 2 * padding.1) / stride.1 + 1;
 
     // Create a placeholder result array
     let result = Array::<f64>::zeros((h_out, w_out));

@@ -65,7 +65,7 @@ impl<F: Float + FromPrimitive> Default for ParallelKMeansOptions<F> {
 /// use ndarray::Array2;
 /// use scirs2__cluster::vq::parallel_kmeans;
 ///
-/// let data = Array2::from_shape_vec((1000, 2),
+/// let data = Array2::fromshape_vec((1000, 2),
 ///     (0..2000).map(|i| i as f64 / 100.0).collect()
 /// ).unwrap();
 ///
@@ -333,7 +333,7 @@ mod tests {
     #[test]
     fn test_parallel_kmeans_simple() {
         // Create a simple dataset
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 4.0, 5.0, 4.2, 4.8, 3.9, 5.1],
         )
@@ -378,7 +378,7 @@ mod tests {
             }
         }
 
-        let data = Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap();
+        let data = Array2::fromshape_vec((n_samples, n_features), data_vec).unwrap();
 
         // Run parallel k-means
         let options = ParallelKMeansOptions {

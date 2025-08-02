@@ -46,7 +46,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use scirs2__ndimage::filters::{median_filter, BorderMode};
 ///
 /// // Create a noisy image with salt-and-pepper noise
-/// let mut image = Array2::from_shape_fn((100, 100), |(i, j)| {
+/// let mut image = Array2::fromshape_fn((100, 100), |(i, j)| {
 ///     ((i + j) as f64 / 10.0).sin()
 /// });
 ///
@@ -67,7 +67,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use ndarray::Array2;
 /// use scirs2__ndimage::filters::median_filter;
 ///
-/// let noisy_image = Array2::from_shape_fn((50, 50), |(i, j)| {
+/// let noisy_image = Array2::fromshape_fn((50, 50), |(i, j)| {
 ///     if (i + j) % 10 == 0 { 255.0 } else { (i * j) as f64 }
 /// });
 ///
@@ -86,7 +86,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use ndarray::Array3;
 /// use scirs2__ndimage::filters::median_filter;
 ///
-/// let volume = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| {
+/// let volume = Array3::fromshape_fn((20, 20, 20), |(i, j, k)| {
 ///     if i == 10 && j == 10 && k == 10 { 1000.0 } else { (i + j + k) as f64 }
 /// });
 ///

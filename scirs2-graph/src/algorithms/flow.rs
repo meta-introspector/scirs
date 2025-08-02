@@ -1695,7 +1695,7 @@ impl<N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug> ParallelFlowGr
 
     /// Balance flows across partition boundaries
     fn balance_cross_partition_flows(
-        &self_source: &N, _sink: &N_partition_flows: &[f64],
+        &self_source: &N, _sink: &N_partition, flows: &[f64],
     ) -> f64 {
         // Simplified cross-partition balancing
         // In a full implementation, this would:

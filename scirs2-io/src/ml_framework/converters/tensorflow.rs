@@ -3,7 +3,7 @@
 
 use crate::error::{IoError, Result};
 use crate::ml_framework::converters::MLFrameworkConverter;
-use crate::ml_framework::types::{MLModel, MLTensor, MLFramework};
+use crate::ml_framework::types::{MLFramework, MLModel, MLTensor};
 use ndarray::{ArrayD, IxDyn};
 use std::fs::File;
 use std::path::Path;
@@ -30,8 +30,8 @@ impl MLFrameworkConverter for TensorFlowConverter {
                 },
                 "signature_def": {
                     "serving_default": {
-                        "inputs": model.metadata.input_shapes,
-                        "outputs": model.metadata.output_shapes,
+                        "inputs": model.metadata.inputshapes,
+                        "outputs": model.metadata.outputshapes,
                         "method_name": "tensorflow/serving/predict"
                     }
                 }
@@ -72,7 +72,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
                                     .iter()
                                     .filter_map(|v| v.as_u64().map(|u| u as usize))
                                     .collect();
-                                model.metadata.input_shapes.insert(name.clone(), shape_vec);
+                                model.metadata.inputshapes.insert(name.clone(), shape_vec);
                             }
                         }
                     }
@@ -99,7 +99,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
                             .filter_map(|v| v.as_f64().map(|f| f as f32))
                             .collect();
 
-                        if let Ok(array) = ArrayD::from_shape_vec(IxDyn(&shape_vec), data_vec) {
+                        if let Ok(array) = ArrayD::fromshape_vec(IxDyn(&shape_vec), data_vec) {
                             model.weights.insert(
                                 name.to_string(),
                                 MLTensor::new(array, Some(name.to_string())),
@@ -117,7 +117,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
         let tensor_data = serde_json::json!({
             "tensor": {
                 "dtype": format!("{:?}", tensor.metadata.dtype),
-                "tensor_shape": {
+                "tensorshape": {
                     "dim": tensor.metadata.shape.iter().map(|&d| serde_json::json!({"size": d})).collect::<Vec<_>>()
                 },
                 "tensor_content": tensor.data.as_slice().unwrap()
@@ -139,7 +139,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
 
         if let Some(tensor) = tensor_data.get("tensor") {
             let shape: Vec<usize> = tensor
-                .get("tensor_shape")
+                .get("tensorshape")
                 .and_then(|ts| ts.get("dim"))
                 .and_then(|dims| dims.as_array())
                 .map(|dims| {
@@ -160,7 +160,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
                 vec![0.0; shape.iter().product()]
             };
 
-            let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
+            let array = ArrayD::fromshape_vec(IxDyn(&shape), data)
                 .map_err(|e| IoError::Other(e.to_string()))?;
 
             return Ok(MLTensor::new(array, None));

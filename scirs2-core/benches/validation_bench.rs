@@ -97,7 +97,7 @@ fn bench_array_validation(c: &mut Criterion) {
     for size in [100, 1000, 10000].iter() {
         let data = Array2::<f64>::zeros((*size, 10));
         let constraints = ArrayValidationConstraints::new()
-            .with_shape(vec![*size, 10])
+            .withshape(vec![*size, 10])
             .check_numeric_quality();
 
         group.bench_with_input(BenchmarkId::new("array_size", size), size, |b_| {

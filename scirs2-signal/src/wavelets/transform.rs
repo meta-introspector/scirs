@@ -1,11 +1,11 @@
-//! Core wavelet transform implementations
+// Core wavelet transform implementations
 
+use super::cwt::{convolve_complex_same_complex, convolve_complex_same_real};
 use crate::error::{SignalError, SignalResult};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::NumCast;
 use std::f64::consts::PI;
 use std::fmt::Debug;
-use super::cwt::{convolve_complex_same_complex, convolve_complex_same_real};
 
 #[allow(unused_imports)]
 /// Continuous wavelet transform
@@ -26,7 +26,7 @@ use super::cwt::{convolve_complex_same_complex, convolve_complex_same_real};
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::wavelets::{cwt, ricker};
+/// use scirs2_signal::wavelets::{cwt, ricker};
 ///
 /// // Generate a signal
 /// let signal: Vec<f64> = (0..100).map(|i| (i as f64 / 10.0).sin()).collect();
@@ -41,7 +41,7 @@ use super::cwt::{convolve_complex_same_complex, convolve_complex_same_real};
 /// You can also use it with complex signals:
 ///
 /// ```rust
-/// use scirs2__signal::wavelets::{cwt, morlet};
+/// use scirs2_signal::wavelets::{cwt, morlet};
 ///
 /// // Generate a real signal (CWT also works with complex signals)
 /// let signal: Vec<f64> = (0..100)
@@ -90,7 +90,8 @@ where
     } else {
         // Complex _data
         is_complex = true;
-        _data.iter()
+        _data
+            .iter()
             .map(|&val| {
                 num_traits::cast::cast::<T, Complex64>(val).ok_or_else(|| {
                     SignalError::ValueError(format!("Could not convert {:?} to Complex64", val))

@@ -157,45 +157,45 @@ impl ScientificTextProcessor {
 
     /// Process scientific text
     pub fn process(&self, text: &str) -> Result<ProcessedDomainText> {
-        let mut processed_text = text.to_string();
+        let mut processedtext = text.to_string();
         let mut entities = Vec::new();
         let mut metadata = HashMap::new();
 
         // Extract citations
         if self.config.handle_citations {
-            let citation_entities = self.extract_citations_with_positions(&processed_text)?;
+            let citation_entities = self.extract_citations_with_positions(&processedtext)?;
             entities.extend(citation_entities);
         }
 
         // Extract and preserve formulas
-        let formulas = self.extract_formulas(&processed_text)?;
+        let formulas = self.extract_formulas(&processedtext)?;
         for (i, formula) in formulas.iter().enumerate() {
             let placeholder = format!("[FORMULA_{i}]");
-            processed_text = processed_text.replace(formula, &placeholder);
+            processedtext = processedtext.replace(formula, &placeholder);
         }
         metadata.insert("formulas".to_string(), formulas.join("|"));
 
         // Extract measurements
-        let measurement_entities = self.extract_measurements_with_positions(&processed_text)?;
+        let measurement_entities = self.extract_measurements_with_positions(&processedtext)?;
         entities.extend(measurement_entities);
 
         // Extract chemical formulas
-        let chemical_entities = self.extract_chemicals_with_positions(&processed_text)?;
+        let chemical_entities = self.extract_chemicals_with_positions(&processedtext)?;
         entities.extend(chemical_entities);
 
         // Normalize abbreviations
         if self.config.normalize_abbreviations {
             for (abbrev, expansion) in &self.abbreviation_map {
-                processed_text = processed_text.replace(abbrev, expansion);
+                processedtext = processedtext.replace(abbrev, expansion);
             }
         }
 
         // Clean text while preserving technical terms
-        processed_text = self.clean_scientific_text(&processed_text)?;
+        processedtext = self.clean_scientifictext(&processedtext)?;
 
         Ok(ProcessedDomainText {
-            original_text: text.to_string(),
-            processed_text,
+            originaltext: text.to_string(),
+            processedtext,
             domain: self.config.domain.clone(),
             entities,
             metadata,
@@ -207,7 +207,7 @@ impl ScientificTextProcessor {
     fn extract_citations(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .citation_regex
-            .find_iter(_text)
+            .find_iter(text)
             .map(|m| m.as_str().to_string())
             .collect())
     }
@@ -299,7 +299,7 @@ impl ScientificTextProcessor {
     }
 
     /// Clean scientific text while preserving important elements
-    fn clean_scientific_text(&self, text: &str) -> Result<String> {
+    fn clean_scientifictext(&self, text: &str) -> Result<String> {
         let mut cleaned = text.to_string();
 
         // Remove excessive whitespace
@@ -395,28 +395,28 @@ impl LegalTextProcessor {
 
     /// Process legal text
     pub fn process(&self, text: &str) -> Result<ProcessedDomainText> {
-        let mut processed_text = text.to_string();
+        let mut processedtext = text.to_string();
         let mut entities = Vec::new();
         let mut metadata = HashMap::new();
 
         // Extract case citations
-        let case_citation_entities = self.extract_case_citations_with_positions(&processed_text)?;
+        let case_citation_entities = self.extract_case_citations_with_positions(&processedtext)?;
         entities.extend(case_citation_entities);
 
         // Extract statute references
-        let statute_entities = self.extract_statutes_with_positions(&processed_text)?;
+        let statute_entities = self.extract_statutes_with_positions(&processedtext)?;
         entities.extend(statute_entities);
 
         // Identify contract clauses
-        let clauses = self.identify_contract_clauses(&processed_text)?;
+        let clauses = self.identify_contract_clauses(&processedtext)?;
         metadata.insert("contract_clauses".to_string(), clauses.join("|"));
 
         // Normalize legal formatting
-        processed_text = self.normalize_legal_text(&processed_text)?;
+        processedtext = self.normalize_legaltext(&processedtext)?;
 
         Ok(ProcessedDomainText {
-            original_text: text.to_string(),
-            processed_text,
+            originaltext: text.to_string(),
+            processedtext,
             domain: self.config.domain.clone(),
             entities,
             metadata,
@@ -428,7 +428,7 @@ impl LegalTextProcessor {
     fn extract_case_citations(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .case_citation_regex
-            .find_iter(_text)
+            .find_iter(text)
             .map(|m| m.as_str().to_string())
             .collect())
     }
@@ -485,7 +485,7 @@ impl LegalTextProcessor {
     }
 
     /// Normalize legal text formatting
-    fn normalize_legal_text(&self, text: &str) -> Result<String> {
+    fn normalize_legaltext(&self, text: &str) -> Result<String> {
         let mut normalized = text.to_string();
 
         // Normalize section numbering
@@ -580,39 +580,39 @@ impl MedicalTextProcessor {
 
     /// Process medical text
     pub fn process(&self, text: &str) -> Result<ProcessedDomainText> {
-        let mut processed_text = text.to_string();
+        let mut processedtext = text.to_string();
         let mut entities = Vec::new();
         let mut metadata = HashMap::new();
 
         // Extract drug names
-        let drug_entities = self.extract_drugs_with_positions(&processed_text)?;
+        let drug_entities = self.extract_drugs_with_positions(&processedtext)?;
         entities.extend(drug_entities);
 
         // Extract dosages
-        let dosage_entities = self.extract_dosages_with_positions(&processed_text)?;
+        let dosage_entities = self.extract_dosages_with_positions(&processedtext)?;
         entities.extend(dosage_entities);
 
         // Extract symptoms
-        let symptoms = self.extract_symptoms(&processed_text)?;
+        let symptoms = self.extract_symptoms(&processedtext)?;
         metadata.insert("symptoms".to_string(), symptoms.join("|"));
 
         // Expand medical abbreviations
         if self.config.normalize_abbreviations {
             for (abbrev, expansion) in &self.abbreviations {
                 let pattern = format!(r"\b{}\b", regex::escape(abbrev));
-                processed_text = Regex::new(&pattern)
+                processedtext = Regex::new(&pattern)
                     .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {e}")))?
-                    .replace_all(&processed_text, expansion)
+                    .replace_all(&processedtext, expansion)
                     .to_string();
             }
         }
 
         // Clean medical text
-        processed_text = self.clean_medical_text(&processed_text)?;
+        processedtext = self.clean_medicaltext(&processedtext)?;
 
         Ok(ProcessedDomainText {
-            original_text: text.to_string(),
-            processed_text,
+            originaltext: text.to_string(),
+            processedtext,
             domain: self.config.domain.clone(),
             entities,
             metadata,
@@ -624,7 +624,7 @@ impl MedicalTextProcessor {
     fn extract_drugs(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .drug_regex
-            .find_iter(_text)
+            .find_iter(text)
             .map(|m| m.as_str().to_string())
             .collect())
     }
@@ -679,7 +679,7 @@ impl MedicalTextProcessor {
     }
 
     /// Clean medical text
-    fn clean_medical_text(&self, text: &str) -> Result<String> {
+    fn clean_medicaltext(&self, text: &str) -> Result<String> {
         let mut cleaned = text.to_string();
 
         // Normalize medical record formatting
@@ -786,33 +786,33 @@ impl FinancialTextProcessor {
 
     /// Process financial text
     pub fn process(&self, text: &str) -> Result<ProcessedDomainText> {
-        let mut processed_text = text.to_string();
+        let mut processedtext = text.to_string();
         let mut entities = Vec::new();
         let mut metadata = HashMap::new();
 
         // Extract currency amounts
-        let currency_entities = self.extract_currencies_with_positions(&processed_text)?;
+        let currency_entities = self.extract_currencies_with_positions(&processedtext)?;
         entities.extend(currency_entities);
 
         // Extract financial instruments
         let instrument_entities =
-            self.extract_financial_instruments_with_positions(&processed_text)?;
+            self.extract_financial_instruments_with_positions(&processedtext)?;
         entities.extend(instrument_entities);
 
         // Extract percentages
-        let percentages = self.extract_percentages(&processed_text)?;
+        let percentages = self.extract_percentages(&processedtext)?;
         metadata.insert("percentages".to_string(), percentages.join("|"));
 
         // Extract financial dates
-        let dates = self.extract_financial_dates(&processed_text)?;
+        let dates = self.extract_financial_dates(&processedtext)?;
         metadata.insert("financial_dates".to_string(), dates.join("|"));
 
         // Clean financial text
-        processed_text = self.clean_financial_text(&processed_text)?;
+        processedtext = self.clean_financialtext(&processedtext)?;
 
         Ok(ProcessedDomainText {
-            original_text: text.to_string(),
-            processed_text,
+            originaltext: text.to_string(),
+            processedtext,
             domain: self.config.domain.clone(),
             entities,
             metadata,
@@ -824,7 +824,7 @@ impl FinancialTextProcessor {
     fn extract_currencies(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .currency_regex
-            .find_iter(_text)
+            .find_iter(text)
             .map(|m| m.as_str().to_string())
             .collect())
     }
@@ -888,7 +888,7 @@ impl FinancialTextProcessor {
     }
 
     /// Clean financial text
-    fn clean_financial_text(&self, text: &str) -> Result<String> {
+    fn clean_financialtext(&self, text: &str) -> Result<String> {
         let mut cleaned = text.to_string();
 
         // Normalize financial section headers
@@ -921,26 +921,26 @@ impl PatentTextProcessor {
 
     /// Process patent text with domain-specific extraction
     pub fn process(&self, text: &str) -> Result<ProcessedDomainText> {
-        let mut processed_text = text.to_string();
+        let mut processedtext = text.to_string();
         let mut entities = Vec::new();
         let mut metadata = HashMap::new();
 
         // Extract patent numbers (US patents, EP patents, etc.)
-        let patent_number_entities = self.extract_patent_numbers_with_positions(&processed_text)?;
+        let patent_number_entities = self.extract_patent_numbers_with_positions(&processedtext)?;
         entities.extend(patent_number_entities);
 
         // Extract claim numbers and references
-        let claim_entities = self.extract_claim_references_with_positions(&processed_text)?;
+        let claim_entities = self.extract_claim_references_with_positions(&processedtext)?;
         entities.extend(claim_entities);
 
         // Extract technical terms and classifications
         let classification_entities =
-            self.extract_patent_classifications_with_positions(&processed_text)?;
+            self.extract_patent_classifications_with_positions(&processedtext)?;
         entities.extend(classification_entities);
 
         // Normalize patent-specific text
         if self.config.normalize_abbreviations {
-            processed_text = self.normalize_patent_text(processed_text)?;
+            processedtext = self.normalize_patenttext(processedtext)?;
         }
 
         metadata.insert(
@@ -950,8 +950,8 @@ impl PatentTextProcessor {
         metadata.insert("processing_domain".to_string(), "patent".to_string());
 
         Ok(ProcessedDomainText {
-            original_text: text.to_string(),
-            processed_text,
+            originaltext: text.to_string(),
+            processedtext,
             domain: Domain::Patent,
             entities,
             metadata,
@@ -1117,7 +1117,7 @@ impl PatentTextProcessor {
         Ok(entities)
     }
 
-    fn normalize_patent_text(&self, text: String) -> Result<String> {
+    fn normalize_patenttext(&self, text: String) -> Result<String> {
         let mut normalized = text;
 
         // Normalize common patent abbreviations
@@ -1143,29 +1143,29 @@ impl NewsTextProcessor {
 
     /// Process news text with domain-specific extraction
     pub fn process(&self, text: &str) -> Result<ProcessedDomainText> {
-        let mut processed_text = text.to_string();
+        let mut processedtext = text.to_string();
         let mut entities = Vec::new();
         let mut metadata = HashMap::new();
 
         // Extract named entities (people, organizations, locations)
-        let person_entities = self.extract_person_names_with_positions(&processed_text)?;
+        let person_entities = self.extract_person_names_with_positions(&processedtext)?;
         entities.extend(person_entities);
 
         // Extract organizations and institutions
-        let org_entities = self.extract_organizations_with_positions(&processed_text)?;
+        let org_entities = self.extract_organizations_with_positions(&processedtext)?;
         entities.extend(org_entities);
 
         // Extract dates and time references
-        let date_entities = self.extract_dates_with_positions(&processed_text)?;
+        let date_entities = self.extract_dates_with_positions(&processedtext)?;
         entities.extend(date_entities);
 
         // Extract quotes and attributions
-        let quote_entities = self.extract_quotes_with_positions(&processed_text)?;
+        let quote_entities = self.extract_quotes_with_positions(&processedtext)?;
         entities.extend(quote_entities);
 
         // Clean and normalize news text
         if self.config.remove_html {
-            processed_text = self.clean_news_formatting(processed_text)?;
+            processedtext = self.clean_news_formatting(processedtext)?;
         }
 
         metadata.insert(
@@ -1175,8 +1175,8 @@ impl NewsTextProcessor {
         metadata.insert("processing_domain".to_string(), "news".to_string());
 
         Ok(ProcessedDomainText {
-            original_text: text.to_string(),
-            processed_text,
+            originaltext: text.to_string(),
+            processedtext,
             domain: Domain::News,
             entities,
             metadata,
@@ -1455,29 +1455,29 @@ impl SocialMediaTextProcessor {
 
     /// Process social media text with domain-specific extraction
     pub fn process(&self, text: &str) -> Result<ProcessedDomainText> {
-        let mut processed_text = text.to_string();
+        let mut processedtext = text.to_string();
         let mut entities = Vec::new();
         let mut metadata = HashMap::new();
 
         // Extract hashtags
-        let hashtag_entities = self.extract_hashtags_with_positions(&processed_text)?;
+        let hashtag_entities = self.extract_hashtags_with_positions(&processedtext)?;
         entities.extend(hashtag_entities);
 
         // Extract mentions (@username)
-        let mention_entities = self.extract_mentions_with_positions(&processed_text)?;
+        let mention_entities = self.extract_mentions_with_positions(&processedtext)?;
         entities.extend(mention_entities);
 
         // Extract URLs
-        let url_entities = self.extract_urls_with_positions(&processed_text)?;
+        let url_entities = self.extract_urls_with_positions(&processedtext)?;
         entities.extend(url_entities);
 
         // Extract emojis and emoticons
-        let emoji_entities = self.extract_emojis_with_positions(&processed_text)?;
+        let emoji_entities = self.extract_emojis_with_positions(&processedtext)?;
         entities.extend(emoji_entities);
 
         // Clean and normalize social media text
         if self.config.clean_whitespace {
-            processed_text = self.normalize_social_text(processed_text)?;
+            processedtext = self.normalize_socialtext(processedtext)?;
         }
 
         metadata.insert(
@@ -1487,8 +1487,8 @@ impl SocialMediaTextProcessor {
         metadata.insert("processing_domain".to_string(), "social_media".to_string());
 
         Ok(ProcessedDomainText {
-            original_text: text.to_string(),
-            processed_text,
+            originaltext: text.to_string(),
+            processedtext,
             domain: Domain::SocialMedia,
             entities,
             metadata,
@@ -1681,7 +1681,7 @@ impl SocialMediaTextProcessor {
         Ok(entities)
     }
 
-    fn normalize_social_text(&self, text: String) -> Result<String> {
+    fn normalize_socialtext(&self, text: String) -> Result<String> {
         let mut normalized = text;
 
         // Convert multiple spaces to single space
@@ -1731,9 +1731,9 @@ impl SocialMediaTextProcessor {
 #[derive(Debug, Clone)]
 pub struct ProcessedDomainText {
     /// Original input text
-    pub original_text: String,
+    pub originaltext: String,
     /// Processed text
-    pub processed_text: String,
+    pub processedtext: String,
     /// Domain type
     pub domain: Domain,
     /// Extracted domain-specific entities
@@ -2060,17 +2060,17 @@ mod tests {
     fn test_domain_detection() {
         let processor = UnifiedDomainProcessor::new();
 
-        let scientific_text =
+        let scientifictext =
             "This study analyzes the methodology used in the research hypothesis.";
-        assert_eq!(processor.detect_domain(scientific_text), Domain::Scientific);
+        assert_eq!(processor.detect_domain(scientifictext), Domain::Scientific);
 
-        let legal_text = "The court ruled that the defendant violated the contract law.";
-        assert_eq!(processor.detect_domain(legal_text), Domain::Legal);
+        let legaltext = "The court ruled that the defendant violated the contract law.";
+        assert_eq!(processor.detect_domain(legaltext), Domain::Legal);
 
-        let medical_text = "The patient was diagnosed with symptoms requiring clinical treatment.";
-        assert_eq!(processor.detect_domain(medical_text), Domain::Medical);
+        let medicaltext = "The patient was diagnosed with symptoms requiring clinical treatment.";
+        assert_eq!(processor.detect_domain(medicaltext), Domain::Medical);
 
-        let financial_text = "The portfolio showed strong returns with profit margins increasing and market performance.";
-        assert_eq!(processor.detect_domain(financial_text), Domain::Financial);
+        let financialtext = "The portfolio showed strong returns with profit margins increasing and market performance.";
+        assert_eq!(processor.detect_domain(financialtext), Domain::Financial);
     }
 }

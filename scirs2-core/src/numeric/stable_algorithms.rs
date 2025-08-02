@@ -616,7 +616,8 @@ where
     for j in 1..n {
         let factor = cast::<f64, T>(4.0_f64.powi(j as i32)).unwrap_or(T::one());
         for i in j..n {
-            d[[i, j]] = (factor * d[[i, j.saturating_sub(1)]] - d[[i.saturating_sub(1), j - 1]]) / (factor - T::one());
+            d[[i, j]] = (factor * d[[i, j.saturating_sub(1)]] - d[[i.saturating_sub(1), j - 1]])
+                / (factor - T::one());
         }
     }
 

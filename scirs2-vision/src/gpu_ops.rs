@@ -250,7 +250,7 @@ pub fn gpu_convolve_2d(
                 .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
             // Reshape to 2D array
-            Ok(Array2::from_shape_vec((out_height, out_width), result_flat)
+            Ok(Array2::fromshape_vec((out_height, out_width), result_flat)
                 .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))?)
         }
         Err(_) => {
@@ -388,7 +388,7 @@ fn conv2d_vision(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
-                Array2::from_shape_vec((height, width), result_flat)
+                Array2::fromshape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
@@ -556,7 +556,7 @@ fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
-                Array2::from_shape_vec((height, width), result_flat)
+                Array2::fromshape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
@@ -667,7 +667,7 @@ fn gpu_separable_convolution(
         false, // vertical
     )?;
 
-    Array2::from_shape_vec((height, width), final_result)
+    Array2::fromshape_vec((height, width), final_result)
         .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
 }
 
@@ -944,7 +944,7 @@ fn element_wise_multiply(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
-                Array2::from_shape_vec((height, width), result_flat)
+                Array2::fromshape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
@@ -1074,7 +1074,7 @@ fn harris_response(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 output_buffer.copy_to_host(&mut result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
-                Array2::from_shape_vec((height, width), result_flat)
+                Array2::fromshape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
             }
             Err(compile_error) => {
@@ -1424,7 +1424,7 @@ fn batch_conv2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
                     let end = start + height * width;
                     let image_data = &result_flat[start..end];
 
-                    let result_array = Array2::from_shape_vec((height, width), image_data.to_vec())
+                    let result_array = Array2::fromshape_vec((height, width), image_data.to_vec())
                         .map_err(|e| {
                             VisionError::Other(format!("Failed to reshape output: {e}"))
                         })?;
@@ -1794,7 +1794,7 @@ pub fn gpu_multi_head_attention(
     ) {
         Ok(_) => {
             let result_flat: Vec<f32> = ctx.context.read_buffer(&output_buffer)?;
-            Array2::from_shape_vec((seq_len, hidden_dim), result_flat)
+            Array2::fromshape_vec((seq_len, hidden_dim), result_flat)
                 .map_err(|e| VisionError::Other(format!("Failed to reshape attention output: {e}")))
         }
         Err(_) => {
@@ -1937,7 +1937,7 @@ pub fn gpu_batch_matmul_transformer(
     ) {
         Ok(_) => {
             let result_flat: Vec<f32> = ctx.context.read_buffer(&c_buffer)?;
-            Array2::from_shape_vec((m, n), result_flat)
+            Array2::fromshape_vec((m, n), result_flat)
                 .map_err(|e| VisionError::Other(format!("Failed to reshape matmul output: {e}")))
         }
         Err(_) => {
@@ -2134,7 +2134,7 @@ pub fn gpu_neural_feature_extraction(
     let image_flat: Vec<f32> = image.iter().cloned().collect();
     let mut current_buffer = ctx.context.create_buffer_from_slice(&image_flat);
 
-    let mut current_shape = (height, width);
+    let mut currentshape = (height, width);
 
     // Process through neural network layers
     for (layer_config, layer_weights) in layer_configs.iter().zip(weights.iter()) {
@@ -2145,23 +2145,23 @@ pub fn gpu_neural_feature_extraction(
                     &current_buffer,
                     layer_weights,
                     layer_config,
-                    current_shape,
+                    currentshape,
                 )?;
                 // Update shape based on convolution parameters
-                current_shape = compute_conv_output_shape(current_shape, layer_config);
+                currentshape = compute_conv_outputshape(currentshape, layer_config);
             }
             LayerType::MaxPool => {
                 current_buffer =
-                    gpu_maxpool_layer(ctx, &current_buffer, layer_config, current_shape)?;
-                current_shape = compute_pool_output_shape(current_shape, layer_config);
+                    gpu_maxpool_layer(ctx, &current_buffer, layer_config, currentshape)?;
+                currentshape = compute_pool_outputshape(currentshape, layer_config);
             }
             LayerType::Dense => {
                 current_buffer =
                     gpu_dense_layer(ctx, &current_buffer, layer_weights, layer_config)?;
-                current_shape = (layer_config.output_channels, 1);
+                currentshape = (layer_config.output_channels, 1);
             }
             LayerType::ReLU => {
-                current_buffer = gpu_relu_layer(ctx, &current_buffer, current_shape)?;
+                current_buffer = gpu_relu_layer(ctx, &current_buffer, currentshape)?;
             }
         }
     }
@@ -2170,14 +2170,14 @@ pub fn gpu_neural_feature_extraction(
     let result_flat: Vec<f32> = ctx.context.read_buffer(&current_buffer)?;
 
     // Reshape to final output format
-    let output_size = current_shape.0 * current_shape.1;
+    let output_size = currentshape.0 * currentshape.1;
     if result_flat.len() != output_size {
         return Err(VisionError::Other(
             "Neural network output size mismatch".to_string(),
         ));
     }
 
-    Array2::from_shape_vec(current_shape, result_flat)
+    Array2::fromshape_vec(currentshape, result_flat)
         .map_err(|e| VisionError::Other(format!("Failed to reshape neural output: {e}")))
 }
 
@@ -2218,11 +2218,11 @@ fn gpu_conv_layer(
     _input: &scirs2_core::gpu::GpuBuffer<f32>,
     _weights: &Array2<f32>,
     config: &LayerConfig,
-    input_shape: (usize, usize),
+    inputshape: (usize, usize),
 ) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
     // Simplified GPU convolution implementation
     // In a full implementation, this would use optimized convolution kernels
-    let output_size = compute_conv_output_shape(input_shape, config);
+    let output_size = compute_conv_outputshape(inputshape, config);
     let output_buffer = ctx
         .context
         .create_buffer::<f32>(output_size.0 * output_size.1 * config.output_channels);
@@ -2236,9 +2236,9 @@ fn gpu_maxpool_layer(
     ctx: &GpuVisionContext,
     _input: &scirs2_core::gpu::GpuBuffer<f32>,
     config: &LayerConfig,
-    input_shape: (usize, usize),
+    inputshape: (usize, usize),
 ) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
-    let output_size = compute_pool_output_shape(input_shape, config);
+    let output_size = compute_pool_outputshape(inputshape, config);
     let output_buffer = ctx
         .context
         .create_buffer::<f32>(output_size.0 * output_size.1 * config.input_channels);
@@ -2268,16 +2268,16 @@ fn gpu_relu_layer(
 }
 
 #[allow(dead_code)]
-fn compute_conv_output_shape(_input_shape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
-    let (h, w) = _input_shape;
+fn compute_conv_outputshape(_inputshape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
+    let (h, w) = _inputshape;
     let out_h = (h + 2 * config.padding - config.kernel_size) / config.stride + 1;
     let out_w = (w + 2 * config.padding - config.kernel_size) / config.stride + 1;
     (out_h, out_w)
 }
 
 #[allow(dead_code)]
-fn compute_pool_output_shape(_input_shape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
-    let (h, w) = _input_shape;
+fn compute_pool_outputshape(_inputshape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
+    let (h, w) = _inputshape;
     let out_h = h / config.stride;
     let out_w = w / config.stride;
     (out_h, out_w)

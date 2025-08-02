@@ -1,11 +1,11 @@
-//! Advanced-comprehensive wavelet packet transform validation in Advanced mode
-//!
-//! This module provides the most thorough validation possible for wavelet packet
-//! transforms, covering tree structure validation, coefficient organization,
-//! reconstruction fidelity, best basis selection, and compression performance.
+// Advanced-comprehensive wavelet packet transform validation in Advanced mode
+//
+// This module provides the most thorough validation possible for wavelet packet
+// transforms, covering tree structure validation, coefficient organization,
+// reconstruction fidelity, best basis selection, and compression performance.
 
-use crate::error::SignalResult;
 use crate::dwt::Wavelet;
+use crate::error::SignalResult;
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -622,7 +622,8 @@ pub fn run_wpt_advanced_validation(_config: &WptadvancedConfig) -> SignalResult<
 
 #[allow(dead_code)]
 fn validate_tree_structure(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<TreeValidationResult> {
     // Placeholder implementation for tree structure validation
     Ok(TreeValidationResult {
@@ -642,7 +643,8 @@ fn validate_tree_structure(
 
 #[allow(dead_code)]
 fn validate_coefficient_organization(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<CoefficientValidationResult> {
     // Placeholder implementation
     Ok(CoefficientValidationResult {
@@ -668,7 +670,8 @@ fn validate_coefficient_organization(
 
 #[allow(dead_code)]
 fn validate_reconstruction_fidelity(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ReconstructionValidationResult> {
     // Placeholder implementation
     Ok(ReconstructionValidationResult {
@@ -682,7 +685,8 @@ fn validate_reconstruction_fidelity(
 
 #[allow(dead_code)]
 fn validate_best_basis_selection(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<BestBasisValidationResult> {
     // Placeholder implementation
     Ok(BestBasisValidationResult {
@@ -697,7 +701,8 @@ fn validate_best_basis_selection(
 
 #[allow(dead_code)]
 fn validate_compression_performance(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<CompressionValidationResult> {
     // Placeholder implementation
     Ok(CompressionValidationResult {
@@ -716,7 +721,8 @@ fn validate_compression_performance(
 
 #[allow(dead_code)]
 fn validate_denoising_performance(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<DenoisingValidationResult> {
     // Placeholder implementation
     Ok(DenoisingValidationResult {
@@ -731,7 +737,8 @@ fn validate_denoising_performance(
 
 #[allow(dead_code)]
 fn validate_2d_wavelet_packets(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<TwoDValidationResult> {
     // Placeholder implementation
     Ok(TwoDValidationResult {
@@ -745,7 +752,8 @@ fn validate_2d_wavelet_packets(
 
 #[allow(dead_code)]
 fn validate_numerical_stability(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<StabilityValidationResult> {
     // Placeholder implementation
     Ok(StabilityValidationResult {
@@ -764,7 +772,8 @@ fn validate_numerical_stability(
 
 #[allow(dead_code)]
 fn analyze_performance(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<PerformanceAnalysisResult> {
     // Placeholder implementation
     Ok(PerformanceAnalysisResult {
@@ -784,7 +793,8 @@ fn analyze_performance(
 
 #[allow(dead_code)]
 fn analyze_memory_usage(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<MemoryAnalysisResult> {
     // Placeholder implementation
     Ok(MemoryAnalysisResult {
@@ -798,7 +808,8 @@ fn analyze_memory_usage(
 
 #[allow(dead_code)]
 fn validate_consistency(
-    _config: &WptadvancedConfig, _rng: &mut rand_chacha::ChaCha8Rng,
+    _config: &WptadvancedConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ConsistencyAnalysisResult> {
     // Placeholder implementation
     Ok(ConsistencyAnalysisResult {
@@ -855,7 +866,8 @@ fn calculate_compression_score(_result: &CompressionValidationResult) -> f64 {
 
 #[allow(dead_code)]
 fn calculate_denoising_score(_result: &DenoisingValidationResult) -> f64 {
-    (_result.edge_preservation + _result.artifact_suppression + _result.optimal_denoising_basis) / 3.0
+    (_result.edge_preservation + _result.artifact_suppression + _result.optimal_denoising_basis)
+        / 3.0
 }
 
 #[allow(dead_code)]

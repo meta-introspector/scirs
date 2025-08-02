@@ -1,9 +1,9 @@
-//! Complex-valued wavelets (Morlet, Paul, etc.)
+// Complex-valued wavelets (Morlet, Paul, etc.)
 
-use crate::error::{SignalError, SignalResult};
-use num__complex::Complex64;
-use std::f64::consts::PI;
 use super::utils::factorial;
+use crate::error::{SignalError, SignalResult};
+use num_complex::Complex64;
+use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Generate a Morlet wavelet
@@ -23,7 +23,7 @@ use super::utils::factorial;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::wavelets::morlet;
+/// use scirs2_signal::wavelets::morlet;
 ///
 /// // Generate a Morlet wavelet with 100 points, central frequency 5.0, and scaling 1.0
 /// let wavelet = morlet(100, 5.0, 1.0).unwrap();
@@ -84,7 +84,7 @@ pub fn morlet(_points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::wavelets::complex_morlet;
+/// use scirs2_signal::wavelets::complex_morlet;
 ///
 /// // Generate a Complex Morlet wavelet with 100 points, center frequency 5.0,
 /// // bandwidth 1.0, symmetry 0.0 (symmetric), and scaling 1.0
@@ -173,7 +173,7 @@ pub fn complex_morlet(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::wavelets::paul;
+/// use scirs2_signal::wavelets::paul;
 ///
 /// // Generate a Paul wavelet with 100 points, order 4, and scaling 1.0
 /// let wavelet = paul(100, 4, 1.0).unwrap();
@@ -246,7 +246,7 @@ pub fn paul(_points: usize, order: usize, scale: f64) -> SignalResult<Vec<Comple
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::wavelets::complex_gaussian;
+/// use scirs2_signal::wavelets::complex_gaussian;
 ///
 /// // Generate a Complex Gaussian wavelet with 100 points, order 1, and scaling 1.0
 /// let wavelet = complex_gaussian(100, 1, 1.0).unwrap();
@@ -333,7 +333,7 @@ pub fn complex_gaussian(_points: usize, order: usize, scale: f64) -> SignalResul
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::wavelets::shannon;
+/// use scirs2_signal::wavelets::shannon;
 ///
 /// // Generate a Shannon wavelet with 100 points, center frequency 1.0, bandwidth 0.5, and scaling 1.0
 /// let wavelet = shannon(100, 1.0, 0.5, 1.0).unwrap();
@@ -420,7 +420,7 @@ pub fn shannon(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::wavelets::fbsp;
+/// use scirs2_signal::wavelets::fbsp;
 ///
 /// // Generate a FBSP wavelet with 100 points, center frequency 1.0,
 /// // bandwidth 0.5, order 3, and scaling 1.0

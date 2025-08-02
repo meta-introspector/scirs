@@ -56,7 +56,7 @@ impl RecurrentActivation {
     fn apply<F: Float>(&self, x: F) -> F {
         match self {
             RecurrentActivation::Tanh => x.tanh(),
-            RecurrentActivation::Sigmoid =>, F::one() / (F::one() + (-x).exp()),
+            RecurrentActivation::Sigmoid => F::one() / (F::one() + (-x).exp()),
             RecurrentActivation::ReLU => {
                 if x > F::zero() {
                     x
@@ -131,21 +131,21 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> ThreadSafeRNN<F> 
         })
     /// Helper method to compute one step of the RNN
     fn step(&self, x: &ArrayView<F, IxDyn>, h: &ArrayView<F, IxDyn>) -> Result<Array<F, IxDyn>> {
-        let x_shape = x.shape();
-        let h_shape = h.shape();
-        let batch_size = x_shape[0];
+        let xshape = x.shape();
+        let hshape = h.shape();
+        let batch_size = xshape[0];
         // Validate shapes
-        if x_shape[1] != self.input_size {
+        if xshape[1] != self.input_size {
             return Err(NeuralError::InferenceError(format!(
                 "Input feature dimension mismatch: expected {}, got {}",
-                self.input_size, x_shape[1]
+                self.input_size, xshape[1]
             )));
-        if h_shape[1] != self.hidden_size {
+        if hshape[1] != self.hidden_size {
                 "Hidden state dimension mismatch: expected {}, got {}",
-                self.hidden_size, h_shape[1]
-        if x_shape[0] != h_shape[0] {
+                self.hidden_size, hshape[1]
+        if xshape[0] != hshape[0] {
                 "Batch size mismatch: input has {}, hidden state has {}",
-                x_shape[0], h_shape[0]
+                xshape[0], hshape[0]
         // Initialize output
         let mut new_h = Array::zeros((batch_size, self.hidden_size));
         // Compute h_t = activation(W_ih * x_t + b_ih + W_hh * h_(t-1) + b_hh)
@@ -173,13 +173,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Thre
             return Err(NeuralError::InferenceError(
                 "Failed to acquire write lock on input cache".to_string(),
         // Validate input shape
-        let input_shape = input.shape();
-        if input_shape.len() != 3 {
+        let inputshape = input.shape();
+        if inputshape.len() != 3 {
                 "Expected 3D input [batch_size, seq_len, features], got {:?}",
-                input_shape
-        let batch_size = input_shape[0];
-        let seq_len = input_shape[1];
-        let features = input_shape[2];
+                inputshape
+        let batch_size = inputshape[0];
+        let seq_len = inputshape[1];
+        let features = inputshape[2];
         if features != self.input_size {
                 "Input features dimension mismatch: expected {}, got {}",
                 self.input_size, features
@@ -320,8 +320,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
                 ndarray::stack(Axis(2), &[forward_output.view(), backward_output.view()])?;
             // Reshape to flatten the last dimension
             let shape = combined.shape();
-            let new_shape = (shape[0], shape[1], shape[2] * shape[3]);
-            let output = combined.into_shape_with_order(new_shape)?.into_dyn();
+            let newshape = (shape[0], shape[1], shape[2] * shape[3]);
+            let output = combined.into_shape_with_order(newshape)?.into_dyn();
             Ok(output)
             // If no backward _layer, just return forward output
             Ok(forward_output)
@@ -382,7 +382,7 @@ pub struct ThreadSafeLSTM<F: Float + Debug + Send + Sync> {
     states_cache: Arc<RwLock<Option<(Array<F, IxDyn>, Array<F, IxDyn>)>>>,
 impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> ThreadSafeLSTM<F> {
     /// Create a new thread-safe LSTM _layer
-    pub fn new<R: Rng>(_input_size: usize, hidden_size: usize, rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng>(_input, size: usize, hidden_size: usize, rng: &mut R) -> Result<Self> {
         // Helper function to create weights
         let create_weight = |rows: usize,
                              cols: usize,
@@ -476,10 +476,10 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + 'static> ThreadSafeLSTM<F>
         h: &ArrayView<F, IxDyn>,
         c: &ArrayView<F, IxDyn>,
     ) -> Result<(Array<F, IxDyn>, Array<F, IxDyn>)> {
-        let c_shape = c.shape();
-        if h_shape[1] != self.hidden_size || c_shape[1] != self.hidden_size {
+        let cshape = c.shape();
+        if hshape[1] != self.hidden_size || cshape[1] != self.hidden_size {
                 "Hidden/Cell state dimension mismatch: expected {}, got {}/{}",
-                self.hidden_size, h_shape[1], c_shape[1]
+                self.hidden_size, hshape[1], cshape[1]
         // Initialize outputs
         let mut new_c = Array::zeros((batch_size, self.hidden_size));
         // Compute LSTM gates

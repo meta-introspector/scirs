@@ -195,7 +195,7 @@ fn main() {
 
     // Create a correlation matrix (for example)
     let correlation_matrix =
-        Array2::from_shape_vec((3, 3), vec![1.0, 0.8, 0.3, 0.8, 1.0, 0.5, 0.3, 0.5, 1.0]).unwrap();
+        Array2::fromshape_vec((3, 3), vec![1.0, 0.8, 0.3, 0.8, 1.0, 0.5, 0.3, 0.5, 1.0]).unwrap();
 
     // Create a heatmap visualizer
     let heatmap_viz = helpers::visualize_heatmap(

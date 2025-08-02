@@ -16,7 +16,8 @@ use crate::rfft::rfft;
 /// Optimized N-dimensional FFT with better memory access patterns
 #[allow(dead_code)]
 pub fn fftn_optimized<T, D>(
-    x: &ArrayView<T, D>, _shape: Option<Vec<usize>>,
+    x: &ArrayView<T, D>,
+    shape: Option<Vec<usize>>,
     axes: Option<Vec<usize>>,
 ) -> FFTResult<Array<Complex64, D>>
 where
@@ -161,7 +162,8 @@ where
 #[allow(dead_code)]
 pub fn fftn_memory_efficient<T, D>(
     x: &ArrayView<T, D>,
-    axes: Option<Vec<usize>>, _max_memory_gb: f64,
+    axes: Option<Vec<usize>>,
+    _max_memory_gb: f64,
 ) -> FFTResult<Array<Complex64, D>>
 where
     T: NumCast + Copy + Send + Sync,
@@ -254,7 +256,8 @@ where
 /// Optimized real-to-complex N-dimensional FFT
 #[allow(dead_code)]
 pub fn rfftn_optimized<T, D>(
-    x: &ArrayView<T, D>, _shape: Option<Vec<usize>>,
+    x: &ArrayView<T, D>,
+    shape: Option<Vec<usize>>,
     axes: Option<Vec<usize>>,
 ) -> FFTResult<Array<Complex64, D>>
 where

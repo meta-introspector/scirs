@@ -1,12 +1,13 @@
-//! Tests for utilities module
-//!
-//! This module contains unit tests for the utilities module.
+use ndarray::s;
+// Tests for utilities module
+//
+// This module contains unit tests for the utilities module.
 
-use ndarray::{Array1, Array2, s};
 use super::super::spectral::*;
-use crate::utilities::spectral::spectral_flux;
 use crate::utilities::spectral::spectral_centroid;
+use crate::utilities::spectral::spectral_flux;
 use crate::utilities::spectral::spectral_rolloff;
+use ndarray::{ Array1, Array2};
 
 #[allow(unused_imports)]
 #[cfg(test)]
@@ -443,7 +444,7 @@ mod spectral_tests {
 
         // Create 2D array and take a slice
         let psd_2d =
-            Array2::from_shape_vec((1, 7), vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0]).unwrap();
+            Array2::fromshape_vec((1, 7), vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0]).unwrap();
         let psd_slice = psd_2d.slice(ndarray::s![0, ..]);
         let psd_slice_vec: Vec<f64> = psd_slice.iter().cloned().collect();
 

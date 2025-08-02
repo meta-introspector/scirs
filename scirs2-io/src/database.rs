@@ -361,7 +361,7 @@ impl ResultSet {
             }
         }
 
-        Array2::from_shape_vec((self.row_count(), self.column_count()), data)
+        Array2::fromshape_vec((self.row_count(), self.column_count()), data)
             .map_err(|e| IoError::Other(e.to_string()))
     }
 
@@ -537,7 +537,7 @@ impl SQLiteConnection {
             DataType::BigInt => "BIGINT",
             DataType::Float => "REAL",
             DataType::Double => "REAL",
-            DataType::Decimal(__) => "DECIMAL",
+            DataType::Decimal(_, _) => "DECIMAL",
             DataType::Varchar(_) => "VARCHAR",
             DataType::Text => "TEXT",
             DataType::Boolean => "BOOLEAN",
@@ -608,7 +608,7 @@ impl DatabaseConnection for SQLiteConnection {
             let mut result = ResultSet::new(column_names);
 
             let rows = stmt
-                .query_map(rusqlite::_params![], |row| {
+                .query_map(rusqlite::params![], |row| {
                     let mut values = Vec::new();
                     for i in 0..column_count {
                         let value: rusqlite::types::Value = row.get(i)?;
@@ -648,7 +648,7 @@ impl DatabaseConnection for SQLiteConnection {
         } else {
             // Handle INSERT, UPDATE, DELETE, CREATE, etc.
             let affected_rows = conn
-                .execute(sql, rusqlite::_params![])
+                .execute(sql, rusqlite::params![])
                 .map_err(|e| IoError::DatabaseError(format!("SQL execution failed: {}", e)))?;
 
             let mut result = ResultSet::new(vec!["rows_affected".to_string()]);
@@ -943,7 +943,7 @@ impl PostgreSQLConnection {
             .map_err(|e| IoError::NetworkError(format!("PostgreSQL connection failed: {}", e)))?;
 
         Ok(Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             pool: Some(pool),
         })
     }
@@ -1355,7 +1355,7 @@ impl MySQLConnection {
             .map_err(|e| IoError::NetworkError(format!("MySQL connection failed: {}", e)))?;
 
         Ok(Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             pool: Some(pool),
         })
     }
@@ -1765,7 +1765,7 @@ impl DuckDBConnection {
         .map_err(|e| IoError::ConnectionError(format!("DuckDB connection failed: {}", e)))?;
 
         Ok(Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             connection: Some(conn),
         })
     }
@@ -1800,7 +1800,9 @@ impl DatabaseConnection for DuckDBConnection {
                 }
                 serde_json::Value::Bool(b) => b as &dyn duckdb::ToSql,
                 serde_json::Value::Null => &None::<String> as &dyn duckdb::ToSql,
-                serde_json::Value::Array(_) | serde_json::Value::Object(_) => &p.to_string() as &dyn duckdb::ToSql,
+                serde_json::Value::Array(_) | serde_json::Value::Object(_) => {
+                    &p.to_string() as &dyn duckdb::ToSql
+                }
             })
             .collect();
 
@@ -2278,7 +2280,10 @@ impl PreparedStatement {
         let _sql = _sql.into();
         let param_count = _sql.matches('?').count();
 
-        Ok(Self { sql: _sql, param_count })
+        Ok(Self {
+            sql: _sql,
+            param_count,
+        })
     }
 
     /// Execute with parameters
@@ -2530,7 +2535,9 @@ pub mod cdc {
 
     impl CDCListener {
         pub fn new(_receiver: mpsc::Receiver<ChangeEvent>) -> Self {
-            Self { receiver: _receiver }
+            Self {
+                receiver: _receiver,
+            }
         }
 
         /// Get next change event

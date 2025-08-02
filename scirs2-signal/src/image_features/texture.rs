@@ -1,15 +1,16 @@
-//! Texture feature extraction for images
+// Texture feature extraction for images
 
+use super::types::ImageFeatureOptions;
 use crate::error::SignalResult;
 use ndarray::Array2;
 use std::collections::HashMap;
-use super::types::ImageFeatureOptions;
 
 #[allow(unused_imports)]
 /// Extract texture features from an image
 #[allow(dead_code)]
-pub fn extract_texture_features(
-    image: &Array2<f64>, _options: &ImageFeatureOptions, // Unused, but kept for consistency with other extraction functions
+pub fn extracttexture_features(
+    image: &Array2<f64>,
+    _options: &ImageFeatureOptions, // Unused, but kept for consistency with other extraction functions
     features: &mut HashMap<String, f64>,
 ) -> SignalResult<()> {
     // Calculate Global features based on gradient statistics

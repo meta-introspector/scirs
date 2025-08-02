@@ -703,7 +703,7 @@ where
 pub fn resample<S, F>(
     x: &ArrayBase<S, Ix1>,
     num: usize,
-    axis: usize_window: Option<&Array1<F>>,
+    axis: usize, window: Option<&Array1<F>>,
 ) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
@@ -829,7 +829,7 @@ where
 #[allow(dead_code)]
 fn apply_chebyshev_filter<S, F>(
     x: &ArrayBase<S, Ix1>,
-    order: usize_cutoff: F,
+    order: usize, cutoff: F,
 ) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
@@ -1181,7 +1181,7 @@ mod tests {
 
     #[test]
     fn test_detrend_2d() {
-        let x = Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+        let x = Array2::fromshape_vec((3, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
             .unwrap();
 
         // Detrend along columns (axis=0)

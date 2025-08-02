@@ -72,7 +72,7 @@ fn create_sample_data() -> Result<Array2<f64>, Box<dyn std::error::Error>> {
         data.push(4.0 + ((i % 3) as f64 * 0.1 - 0.1));
     }
 
-    let array = Array2::from_shape_vec((60, 2), data)?;
+    let array = Array2::fromshape_vec((60, 2), data)?;
     let standardized = standardize(array.view(), true)?;
     Ok(standardized)
 }
@@ -102,7 +102,7 @@ fn demo_unified_workflow(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::
     workflow.config.max_history_length = 50;
     workflow.config.hyperparameters.insert(
         "n_clusters".to_string(),
-        serde_json::Value::Number(serde, _json::Number::from(3)),
+        serde_json::Value::Number(serde_json::Number::from(3)),
     );
 
     // Simulate K-means training with state updates
@@ -278,15 +278,15 @@ fn demo_sklearn_scipy_compatibility(_data: &Array2<f64>) -> Result<(), Box<dyn s
     println!("   - Centroids shape: {:?}", imported_model.centroids.dim());
 
     // Verify model consistency
-    let original_shape = kmeans_model.centroids.dim();
-    let imported_shape = imported_model.centroids.dim();
+    let originalshape = kmeans_model.centroids.dim();
+    let importedshape = imported_model.centroids.dim();
 
-    if original_shape == imported_shape {
+    if originalshape == importedshape {
         println!("✅ Model import/export consistency verified!");
     } else {
         println!(
             "⚠️  Shape mismatch: {:?} vs {:?}",
-            original_shape, imported_shape
+            originalshape, importedshape
         );
     }
 

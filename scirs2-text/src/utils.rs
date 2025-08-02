@@ -18,8 +18,8 @@ use std::collections::HashMap;
 ///
 /// * Result containing a HashMap of token frequencies
 #[allow(dead_code)]
-pub fn count_tokens(_text: &str, tokenizer: &dyn Tokenizer) -> Result<HashMap<String, usize>> {
-    let tokens = tokenizer.tokenize(_text)?;
+pub fn count_tokens(text: &str, tokenizer: &dyn Tokenizer) -> Result<HashMap<String, usize>> {
+    let tokens = tokenizer.tokenize(text)?;
     let mut counts = HashMap::new();
 
     for token in tokens {
@@ -112,11 +112,11 @@ where
 ///
 /// * Result containing the filtered text
 #[allow(dead_code)]
-pub fn filter_tokens<F>(_text: &str, tokenizer: &dyn Tokenizer, predicate: F) -> Result<String>
+pub fn filter_tokens<F>(text: &str, tokenizer: &dyn Tokenizer, predicate: F) -> Result<String>
 where
     F: Fn(&str) -> bool,
 {
-    let tokens = tokenizer.tokenize(_text)?;
+    let tokens = tokenizer.tokenize(text)?;
     let filtered_tokens: Vec<String> = tokens
         .iter()
         .filter(|token| predicate(token))
@@ -138,14 +138,14 @@ where
 ///
 /// * Result containing a vector of n-grams
 #[allow(dead_code)]
-pub fn extract_ngrams(_text: &str, tokenizer: &dyn Tokenizer, n: usize) -> Result<Vec<String>> {
+pub fn extract_ngrams(text: &str, tokenizer: &dyn Tokenizer, n: usize) -> Result<Vec<String>> {
     if n == 0 {
         return Err(TextError::InvalidInput(
             "n-gram size must be greater than 0".to_string(),
         ));
     }
 
-    let tokens = tokenizer.tokenize(_text)?;
+    let tokens = tokenizer.tokenize(text)?;
 
     if tokens.is_empty() || tokens.len() < n {
         return Ok(Vec::new());
@@ -247,10 +247,10 @@ pub fn train_test_split(
     let test_count = (texts.len() as f64 * test_size).round() as usize;
     let train_count = texts.len() - test_count;
 
-    let train_texts = texts_copy.iter().take(train_count).cloned().collect();
-    let test_texts = texts_copy.iter().skip(train_count).cloned().collect();
+    let traintexts = texts_copy.iter().take(train_count).cloned().collect();
+    let testtexts = texts_copy.iter().skip(train_count).cloned().collect();
 
-    Ok((train_texts, test_texts))
+    Ok((traintexts, testtexts))
 }
 
 #[cfg(test)]

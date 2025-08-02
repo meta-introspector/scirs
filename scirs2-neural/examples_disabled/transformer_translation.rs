@@ -75,17 +75,17 @@ impl PositionalEncoding {
                     output[[b, t, d]] += self.encoding[[t, d]];
 // Layer Normalization
 struct LayerNorm {
-    normalized_shape: usize,
+    normalizedshape: usize,
     epsilon: f32,
     gamma: Array1<f32>,
     beta: Array1<f32>,
 impl LayerNorm {
-    fn new(_normalized_shape: usize, epsilon: f32) -> Self {
+    fn new(normalizedshape: usize, epsilon: f32) -> Self {
         // Initialize parameters
-        let gamma = Array1::<f32>::ones(_normalized_shape);
-        let beta = Array1::<f32>::zeros(_normalized_shape);
+        let gamma = Array1::<f32>::ones(normalizedshape);
+        let beta = Array1::<f32>::zeros(normalizedshape);
         LayerNorm {
-            _normalized_shape,
+            normalizedshape,
             epsilon,
             gamma,
             beta,
@@ -100,9 +100,9 @@ impl LayerNorm {
                 let mut variance = 0.0;
                 for &val in x_i.iter() {
                     variance += (val - mean).powi(2);
-                variance /= self._normalized_shape as f32;
+                variance /= self.normalizedshape as f32;
                 // Normalize
-                for d in 0..self._normalized_shape {
+                for d in 0..self.normalizedshape {
                     output[[b, t, d]] = (x_i[d] - mean) / (variance + self.epsilon).sqrt();
                     // Scale and shift
                     output[[b, t, d]] = self.gamma[d] * output[[b, t, d]] + self.beta[d];
@@ -462,7 +462,7 @@ impl Transformer {
         // src: [batch_size, src_len] - Source token IDs
         // tgt: [batch_size, tgt_len] - Target token IDs
         let batch_size = src.shape()[0];
-        let _src_len = src.shape()[1];
+        let src_len = src.shape()[1];
         let tgt_len = tgt.shape()[1];
         // Create masks
         let src_mask = self.create_padding_mask(src, src_pad_idx);

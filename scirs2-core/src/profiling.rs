@@ -384,7 +384,8 @@ impl Profiler {
 
     /// Get the global profiler instance
     pub fn global() -> &'static Mutex<Profiler> {
-        static GLOBAL_PROFILER: once_cell::sync::Lazy<Mutex<Profiler>> = once_cell::sync::Lazy::new(|| Mutex::new(Profiler::new()));
+        static GLOBAL_PROFILER: once_cell::sync::Lazy<Mutex<Profiler>> =
+            once_cell::sync::Lazy::new(|| Mutex::new(Profiler::new()));
         &GLOBAL_PROFILER
     }
 
@@ -2018,7 +2019,7 @@ pub mod comprehensive {
             let report = self.generate_report();
 
             // Export text report
-            std::fs::write(format!("{base_path}_report.txt"), report.to_text_format())?;
+            std::fs::write(format!("{base_path}_report.txt"), report.totext_format())?;
 
             // Export JSON report
             std::fs::write(format!("{base_path}_report.json"), report.to_json_format())?;
@@ -2112,7 +2113,7 @@ pub mod comprehensive {
 
     impl ComprehensiveReport {
         /// Convert report to text format
-        pub fn to_text_format(&self) -> String {
+        pub fn totext_format(&self) -> String {
             use std::fmt::Write;
             let mut report = String::new();
 
@@ -2251,7 +2252,7 @@ pub mod comprehensive {
 
         /// Print comprehensive report to console
         pub fn print(&self) {
-            println!("{}", self.to_text_format());
+            println!("{}", self.totext_format());
         }
     }
 
@@ -2307,7 +2308,7 @@ pub mod comprehensive {
                 generated_at: Instant::now(),
             };
 
-            let text = report.to_text_format();
+            let text = report.totext_format();
             assert!(text.contains("Test"));
 
             let json = report.to_json_format();

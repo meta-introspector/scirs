@@ -12,18 +12,18 @@ use std::path::Path;
 /// Normalizes a string based on case sensitivity settings
 #[inline]
 #[allow(dead_code)]
-pub fn normalize_string(_text: &str, case_sensitive: bool) -> String {
+pub fn normalize_string(text: &str, case_sensitive: bool) -> String {
     if !case_sensitive {
-        _text.to_lowercase()
+        text.to_lowercase()
     } else {
-        _text.to_string()
+        text.to_string()
     }
 }
 
 /// Extract words from text, normalizing and filtering empty words
 #[allow(dead_code)]
-pub fn extract_words(_text: &str) -> Vec<String> {
-    _text
+pub fn extract_words(text: &str) -> Vec<String> {
+    text
         .split_whitespace()
         .map(|s| {
             s.trim_matches(|c: char| !c.is_alphanumeric())
@@ -35,8 +35,8 @@ pub fn extract_words(_text: &str) -> Vec<String> {
 
 /// Split text into sentences
 #[allow(dead_code)]
-pub fn split_sentences(_text: &str) -> Vec<&str> {
-    _text
+pub fn split_sentences(text: &str) -> Vec<&str> {
+    text
         .split(['.', '?', '!'])
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())

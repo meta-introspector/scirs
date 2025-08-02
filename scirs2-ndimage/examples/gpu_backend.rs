@@ -155,8 +155,8 @@ impl BackendOp<f32, ndarray::Ix2> for CustomBlurOp {
         self.execute_cpu(input) // Fallback to CPU for now
     }
 
-    fn memory_requirement(&self, input_shape: &[usize]) -> usize {
-        let elements: usize = input_shape.iter().product();
+    fn memory_requirement(&self, inputshape: &[usize]) -> usize {
+        let elements: usize = inputshape.iter().product();
         // Need memory for input + output + temp buffer for each iteration
         elements * std::mem::size_of::<f32>() * (2 + self.iterations)
     }

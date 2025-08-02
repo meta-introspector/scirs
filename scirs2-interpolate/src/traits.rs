@@ -399,7 +399,7 @@ pub mod validation {
     }
 
     /// Validate interpolator configuration parameters
-    pub fn validate_config<C: InterpolationConfig>(_config: &C) -> crate::InterpolateResult<()> {
+    pub fn validate_config<C: InterpolationConfig>(config: &C) -> crate::InterpolateResult<()> {
         _config.validate()
     }
 }

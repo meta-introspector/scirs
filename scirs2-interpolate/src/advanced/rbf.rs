@@ -86,7 +86,7 @@ impl<
     /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// // Create 2D points
-    /// let points = Array2::from_shape_vec((5, 2), vec![
+    /// let points = Array2::fromshape_vec((5, 2), vec![
     ///     0.0f64, 0.0,
     ///     1.0, 0.0,
     ///     0.0, 1.0,
@@ -101,7 +101,7 @@ impl<
     /// let interp = RBFInterpolator::new(&points.view(), &values.view(), RBFKernel::Gaussian, 1.0).unwrap();
     ///
     /// // Interpolate at a new point
-    /// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
+    /// let test_point = Array2::fromshape_vec((1, 2), vec![0.25, 0.25]).unwrap();
     /// let result = interp.interpolate(&test_point.view()).unwrap();
     /// println!("Interpolated value at (0.25, 0.25): {}", result[0]);
     /// ```
@@ -144,7 +144,7 @@ impl<
     /// use scirs2__interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
     ///
     /// // Create 2D points
-    /// let points = Array2::from_shape_vec((5, 2), vec![
+    /// let points = Array2::fromshape_vec((5, 2), vec![
     ///     0.0f64, 0.0,
     ///     1.0, 0.0,
     ///     0.0, 1.0,
@@ -161,7 +161,7 @@ impl<
     ///                                          RBFKernel::Gaussian, 1.0, 0).unwrap();
     ///
     /// // Interpolate at a new point
-    /// let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
+    /// let test_point = Array2::fromshape_vec((1, 2), vec![0.25, 0.25]).unwrap();
     /// let result = interp.interpolate(&test_point.view()).unwrap();
     /// println!("Interpolated value at (0.25, 0.25): {}", result[0]);
     /// ```
@@ -273,7 +273,7 @@ impl<
             })
             .collect();
 
-        let a_matrix = Array2::from_shape_vec((n_points, n_points), matrix_data).map_err(|e| {
+        let a_matrix = Array2::fromshape_vec((n_points, n_points), matrix_data).map_err(|e| {
             InterpolateError::ComputationError(format!("Failed to construct RBF matrix: {e}"))
         })?;
 
@@ -374,7 +374,7 @@ impl<
         match kernel {
             RBFKernel::Gaussian => (-r2 / eps2).exp(),
             RBFKernel::Multiquadric => (r2 + eps2).sqrt(),
-            RBFKernel::InverseMultiquadric =>, F::one() / (r2 + eps2).sqrt(),
+            RBFKernel::InverseMultiquadric => F::one() / (r2 + eps2).sqrt(),
             RBFKernel::ThinPlateSpline => {
                 if r == F::zero() {
                     return F::zero();
@@ -495,7 +495,7 @@ impl<
     /// use scirs2__interpolate::numerical_stability::StabilityLevel;
     ///
     /// // Create interpolator (example data)
-    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let points = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
     /// let values = ndarray::array![0.0, 1.0, 1.0];
     /// let interp = RBFInterpolator::new(&points.view(), &values.view(),
     ///                                   RBFKernel::Gaussian, 1.0).unwrap();
@@ -583,7 +583,7 @@ impl<
     ///
     /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
     ///
-    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let points = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
     /// let values = array![0.0, 1.0, 1.0];
     ///
     /// rbf.fit(&points.view(), &values.view()).unwrap();
@@ -621,12 +621,12 @@ impl<
     ///
     /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
     ///
-    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let points = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
     /// let values = array![0.0, 1.0, 1.0];
     ///
     /// rbf.fit(&points.view(), &values.view()).unwrap();
     ///
-    /// let query_points = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
+    /// let query_points = Array2::fromshape_vec((1, 2), vec![0.5, 0.5]).unwrap();
     /// let result = rbf.predict(&query_points.view()).unwrap();
     /// ```
     pub fn predict(&self, query_points: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
@@ -776,7 +776,7 @@ mod tests {
     #[test]
     fn test_rbf_interpolator_2d() {
         // Create 2D points
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -805,7 +805,7 @@ mod tests {
         }
 
         // Test interpolation at a new point
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
+        let test_point = Array2::fromshape_vec((1, 2), vec![0.25, 0.25]).unwrap();
         let result_gaussian = interp_gaussian.interpolate(&test_point.view()).unwrap();
         let result_multiquadric = interp_multiquadric.interpolate(&test_point.view()).unwrap();
 
@@ -887,7 +887,7 @@ mod tests {
     #[test]
     fn test_rbf_interpolator_3d() {
         // Create 3D points
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (4, 3),
             vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
         )
@@ -902,7 +902,7 @@ mod tests {
                 .unwrap();
 
         // Test interpolation at a new point
-        let test_point = Array2::from_shape_vec((1, 3), vec![0.5, 0.5, 0.5]).unwrap();
+        let test_point = Array2::fromshape_vec((1, 3), vec![0.5, 0.5, 0.5]).unwrap();
         let result = interp.interpolate(&test_point.view()).unwrap();
 
         // The result should be close to x + y + z = 0.5 + 0.5 + 0.5 = 1.5
@@ -913,7 +913,7 @@ mod tests {
     #[test]
     fn test_rbf_interpolator_parallel() {
         // Create 2D points
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (8, 2),
             vec![
                 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.25, 0.25, 0.75, 0.75, 0.25,
@@ -939,7 +939,7 @@ mod tests {
         .unwrap();
 
         // Test interpolation at the same point with both methods
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.3, 0.7]).unwrap();
+        let test_point = Array2::fromshape_vec((1, 2), vec![0.3, 0.7]).unwrap();
         let result_serial = interp_serial.interpolate(&test_point.view()).unwrap();
         let result_parallel = interp_parallel.interpolate(&test_point.view()).unwrap();
 
@@ -964,7 +964,7 @@ mod tests {
     #[test]
     fn test_rbf_interpolator_parallel_different_kernels() {
         // Create 2D points
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (6, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.25, 0.75],
         )
@@ -990,7 +990,7 @@ mod tests {
                     .unwrap();
 
             // Test interpolation at a new point
-            let test_point = Array2::from_shape_vec((1, 2), vec![0.6, 0.4]).unwrap();
+            let test_point = Array2::fromshape_vec((1, 2), vec![0.6, 0.4]).unwrap();
             let result_serial = interp_serial.interpolate(&test_point.view()).unwrap();
             let result_parallel = interp_parallel.interpolate(&test_point.view()).unwrap();
 

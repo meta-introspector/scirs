@@ -387,7 +387,7 @@ fn compute_intersection<F: Float + FromPrimitive + Debug>(
 ///
 /// Returns the minimum and maximum coordinates as Arrays
 #[allow(dead_code)]
-fn compute_bounding_box<F: Float + Debug>(_points: ArrayView2<F>) -> (Array1<F>, Array1<F>) {
+fn compute_bounding_box<F: Float + Debug>(points: ArrayView2<F>) -> (Array1<F>, Array1<F>) {
     let dim = _points.ncols();
     let n_points = _points.nrows();
 
@@ -705,7 +705,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
             let max_z = self.bounds[5];
 
             // Define domain vertices (8 corners of the bounding box)
-            let _domain_vertices = Array2::from_shape_vec(
+            let _domain_vertices = Array2::fromshape_vec(
                 (8, 3),
                 vec![
                     min_x, min_y, min_z, max_x, min_y, min_z, max_x, max_y, min_z, min_x, max_y,
@@ -800,7 +800,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
                 cell_bounds[5] = cell_bounds[5].min(max_z);
 
                 // Create vertices for the cell (8 corners of the bounding box)
-                let vertices = Array2::from_shape_vec(
+                let vertices = Array2::fromshape_vec(
                     (8, 3),
                     vec![
                         cell_bounds[0],
@@ -873,7 +873,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
             let max_x = self.bounds[2];
             let max_y = self.bounds[3];
 
-            let corners = Array2::from_shape_vec(
+            let corners = Array2::fromshape_vec(
                 (4, 2),
                 vec![min_x, min_y, max_x, min_y, max_x, max_y, min_x, max_y],
             )
@@ -913,7 +913,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
             let max_z = self.bounds[5];
 
             // Create a box for the query cell
-            let corners = Array2::from_shape_vec(
+            let corners = Array2::fromshape_vec(
                 (8, 3),
                 vec![
                     min_x, min_y, min_z, max_x, min_y, min_z, max_x, max_y, min_z, min_x, max_y,

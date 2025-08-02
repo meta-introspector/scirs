@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a structured matrix (like those from kernel methods or FEM)
     let size = 128;
-    let matrix = Array2::from_shape_fn((size, size), |(i, j)| {
+    let matrix = Array2::fromshape_fn((size, size), |(i, j)| {
         // Kernel-like matrix with spatial decay (common in computational physics)
         let dist = ((i as f64 - j as f64).powi(2) + 1.0).sqrt();
         1.0 / (1.0 + dist)
@@ -64,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. H-MATRIX: Performance Comparison");
     println!("-----------------------------------");
 
-    let x = Array1::from_shape_fn(size, |i| (i + 1) as f64);
+    let x = Array1::fromshape_fn(size, |i| (i + 1) as f64);
 
     // Dense multiplication
     let start = std::time::Instant::now();
@@ -103,7 +103,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a matrix suitable for HSS (often from elliptic PDEs)
     let hss_size = 64; // Smaller for demonstration
-    let hss_matrix = Array2::from_shape_fn((hss_size, hss_size), |(i, j)| {
+    let hss_matrix = Array2::fromshape_fn((hss_size, hss_size), |(i, j)| {
         // Structured matrix with hierarchical low-rank property
         if (i as i32 - j as i32).abs() <= 2 {
             2.0 - (i as f64 - j as f64).abs() * 0.1 // Near-diagonal dominance
@@ -114,7 +114,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let hss = HSSMatrix::from_dense(&hss_matrix.view(), 1e-6)?;
 
-    let x_hss = Array1::from_shape_fn(hss_size, |i| (i + 1) as f64);
+    let x_hss = Array1::fromshape_fn(hss_size, |i| (i + 1) as f64);
 
     // HSS multiplication (O(n) complexity!)
     let start = std::time::Instant::now();
@@ -149,7 +149,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a matrix with varying rank structure
     let block_size = 32;
-    let test_block = Array2::from_shape_fn((block_size, block_size), |(i, j)| {
+    let test_block = Array2::fromshape_fn((block_size, block_size), |(i, j)| {
         // Low-rank block: sum of few rank-1 matrices
         let r1 = (i as f64 / block_size as f64) * (j as f64 / block_size as f64);
         let r2 = ((i + j) as f64 / (2.0 * block_size as f64)).sin() * 0.5;

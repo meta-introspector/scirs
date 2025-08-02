@@ -20,7 +20,7 @@ fn main() -> Result<()> {
         Some(ModelVizOptions {
             width: 100,
             show_params: true,
-            show_shapes: true,
+            showshapes: true,
             show_properties: true,
             color_options: ColorOptions {
                 enabled: true,

@@ -1,38 +1,38 @@
-//! Image processing utilities using 2D Wavelet Transform
-//!
-//! This module provides specialized functions for image processing
-//! using the 2D Discrete Wavelet Transform. It includes operations
-//! for image denoising, compression, edge detection, and fusion.
-//!
-//! # Examples
-//!
-//! Basic image denoising:
-//!
-//! ```
-//! use ndarray::{Array, Array2};
-//! use scirs2__signal::dwt::Wavelet;
-//! use scirs2__signal::dwt2d::wavedec2;
-//! use scirs2__signal::dwt2d_image::{denoise_image, DenoisingMethod};
-//!
-//! // Create a simple noisy image (8x8)
-//! let mut image = Array2::zeros((8, 8));
-//! for i in 0..8 {
-//!     for j in 0..8 {
-//!         // Add some pattern plus noise
-//!         image[[i, j]] = (i * j) as f64 + (i+j) as f64 * 0.2;
-//!     }
-//! }
-//!
-//! // Apply wavelet denoising
-//! let denoised = denoise_image(&image, Wavelet::DB(4), 2, 5.0,
-//!                             DenoisingMethod::VisuShrink, None).unwrap();
-//!
-//! // Check that the result has the same shape as the input
-//! assert_eq!(denoised.shape(), image.shape());
-//! ```
+// Image processing utilities using 2D Wavelet Transform
+//
+// This module provides specialized functions for image processing
+// using the 2D Discrete Wavelet Transform. It includes operations
+// for image denoising, compression, edge detection, and fusion.
+//
+// # Examples
+//
+// Basic image denoising:
+//
+// ```
+// use ndarray::{Array, Array2};
+// use scirs2_signal::dwt::Wavelet;
+// use scirs2_signal::dwt2d::wavedec2;
+// use scirs2_signal::dwt2d_image::{denoise_image, DenoisingMethod};
+//
+// // Create a simple noisy image (8x8)
+// let mut image = Array2::zeros((8, 8));
+// for i in 0..8 {
+//     for j in 0..8 {
+//         // Add some pattern plus noise
+//         image[[i, j]] = (i * j) as f64 + (i+j) as f64 * 0.2;
+//     }
+// }
+//
+// // Apply wavelet denoising
+// let denoised = denoise_image(&image, Wavelet::DB(4), 2, 5.0,
+//                             DenoisingMethod::VisuShrink, None).unwrap();
+//
+// // Check that the result has the same shape as the input
+// assert_eq!(denoised.shape(), image.shape());
+// ```
 
 use crate::dwt::Wavelet;
-use crate::dwt2d::{Dwt2dResult, ThresholdMethod, wavedec2, waverec2};
+use crate::dwt2d::{wavedec2, waverec2, Dwt2dResult, ThresholdMethod};
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
 use std::f64;
@@ -80,8 +80,8 @@ pub enum DenoisingMethod {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d_image::{denoise_image, DenoisingMethod};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d_image::{denoise_image, DenoisingMethod};
 ///
 /// // Create a noisy image (32x32) - larger to avoid overflow issues
 /// let mut image = Array2::from_elem((32, 32), 0.0);
@@ -214,8 +214,8 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d_image::detect_edges;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d_image::detect_edges;
 ///
 /// // Create a simple test image with a sharp edge
 /// let mut image = Array2::from_elem((8, 8), 0.0);
@@ -286,8 +286,8 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d_image::compress_image;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d_image::compress_image;
 ///
 /// // Create a test image
 /// let mut image = Array2::from_elem((16, 16), 0.0);

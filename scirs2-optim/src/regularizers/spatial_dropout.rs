@@ -250,7 +250,7 @@ mod tests {
 
         // Create a 4D tensor (batch, channels, height, width)
         // Use values that are always non-zero to better test dropout
-        let features = Array::from_shape_fn((2, 4, 3, 3), |(b, c, h, w)| {
+        let features = Array::fromshape_fn((2, 4, 3, 3), |(b, c, h, w)| {
             1.0 + b as f64 + c as f64 * 10.0 + h as f64 * 0.1 + w as f64 * 0.01
         });
 
@@ -307,7 +307,7 @@ mod tests {
         let fd = FeatureDropout::new(0.5).unwrap();
 
         // Create a 3D tensor (batch, features, sequence)
-        let features = Array::from_shape_fn((2, 5, 10), |(_b, f, s)| f as f64 + s as f64);
+        let features = Array::fromshape_fn((2, 5, 10), |(_b, f, s)| f as f64 + s as f64);
 
         // Apply feature dropout
         let masked = fd.apply(&features, true);

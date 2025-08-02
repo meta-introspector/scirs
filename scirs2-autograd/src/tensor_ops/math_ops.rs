@@ -91,7 +91,7 @@ macro_rules! impl_cmp_op {
     ($struct_name:ident, $name:expr, $assign:expr, $grad_fn:expr) => {
         pub struct $struct_name;
 
-        impl<T: Float>, op::Op<T> for $struct_name {
+        impl<T: Float> op::Op<T> for $struct_name {
             fn compute(
                 &self,
                 ctx: &mut crate::op::ComputeContext<T>,
@@ -101,8 +101,8 @@ macro_rules! impl_cmp_op {
                 let shape0 = x0.shape();
                 let shape1 = x1.shape();
 
-                let x0_is_scalar = crate::ndarray_ext::is_scalar_shape(shape0);
-                let x1_is_scalar = crate::ndarray_ext::is_scalar_shape(shape1);
+                let x0_is_scalar = crate::ndarray_ext::is_scalarshape(shape0);
+                let x1_is_scalar = crate::ndarray_ext::is_scalarshape(shape1);
 
                 let ret = if x0_is_scalar && x1_is_scalar {
                     let x1_elem = x1[ndarray::IxDyn(&[])];
@@ -201,7 +201,10 @@ impl_cmp_op!(Minimum, "Minimum", minimum_fn, min_max_grad);
 #[inline]
 #[allow(dead_code)]
 fn none_grad<'g, T: Float>(
-    _: Tensor<'g, T>_: Tensor<'g, T>_: Tensor<'g, T>_: Tensor<'g, T>,
+    _gy: Tensor<'g, T>,
+    _x1: Tensor<'g, T>,
+    _x2: Tensor<'g, T>,
+    _y: Tensor<'g, T>,
     ctx: &mut op::GradientContext<T>,
 ) {
     ctx.append_input_grad(0, None);
@@ -236,7 +239,7 @@ macro_rules! elem_wise_vm_or_std {
                     y.as_mut_ptr() as *mut f32,
                 );
                 y.set_len(x.len());
-                NdArray::from_shape_vec_unchecked(x.shape(), y)
+                NdArray::fromshape_vec_unchecked(x.shape(), y)
             } else if same_type::<T, f64>() {
                 let mut y = Vec::with_capacity(x.len());
                 $vmd_op(
@@ -245,7 +248,7 @@ macro_rules! elem_wise_vm_or_std {
                     y.as_mut_ptr() as *mut f64,
                 );
                 y.set_len(x.len());
-                NdArray::from_shape_vec_unchecked(x.shape(), y)
+                NdArray::fromshape_vec_unchecked(x.shape(), y)
             } else {
                 $ctx.input(0).mapv($closure)
             }
@@ -269,7 +272,7 @@ macro_rules! elem_wise_vm_with_param_or_std {
                     y.as_mut_ptr() as *mut f32,
                 );
                 y.set_len(x.len());
-                NdArray::from_shape_vec_unchecked(x.shape(), y)
+                NdArray::fromshape_vec_unchecked(x.shape(), y)
             } else if same_type::<T, f64>() {
                 let mut y = Vec::with_capacity(x.len());
                 let p = $param.to_f64().unwrap();
@@ -280,7 +283,7 @@ macro_rules! elem_wise_vm_with_param_or_std {
                     y.as_mut_ptr() as *mut f64,
                 );
                 y.set_len(x.len());
-                NdArray::from_shape_vec_unchecked(x.shape(), y)
+                NdArray::fromshape_vec_unchecked(x.shape(), y)
             } else {
                 $ctx.input(0).mapv(|a| a.$std_name($param))
             }
@@ -289,7 +292,7 @@ macro_rules! elem_wise_vm_with_param_or_std {
     };
 }
 
-impl<T: Float>, op::Op<T> for Abs {
+impl<T: Float> op::Op<T> for Abs {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.abs());
         ctx.append_output(ret);
@@ -301,7 +304,7 @@ impl<T: Float>, op::Op<T> for Abs {
     }
 }
 
-impl<T: Float>, op::Op<T> for NegOp {
+impl<T: Float> op::Op<T> for NegOp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|x| x.neg());
         ctx.append_output(ret);
@@ -313,7 +316,7 @@ impl<T: Float>, op::Op<T> for NegOp {
     }
 }
 
-impl<T: Float>, op::Op<T> for Square {
+impl<T: Float> op::Op<T> for Square {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).mapv(|a| a * a);
         ctx.append_output(ret);
@@ -326,7 +329,7 @@ impl<T: Float>, op::Op<T> for Square {
     }
 }
 
-impl<T: Float>, op::Op<T> for Inv {
+impl<T: Float> op::Op<T> for Inv {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.recip());
         ctx.append_output(ret);
@@ -338,7 +341,7 @@ impl<T: Float>, op::Op<T> for Inv {
     }
 }
 
-impl<T: Float>, op::Op<T> for InvSqrt {
+impl<T: Float> op::Op<T> for InvSqrt {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.sqrt().recip());
         ctx.append_output(ret);
@@ -353,7 +356,7 @@ impl<T: Float>, op::Op<T> for InvSqrt {
     }
 }
 
-impl<T: Float>, op::Op<T> for Sign {
+impl<T: Float> op::Op<T> for Sign {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).mapv(|x| {
             if x == T::zero() {
@@ -371,7 +374,7 @@ impl<T: Float>, op::Op<T> for Sign {
     }
 }
 
-impl<T: Float>, op::Op<T> for Floor {
+impl<T: Float> op::Op<T> for Floor {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.floor());
         ctx.append_output(ret);
@@ -383,7 +386,7 @@ impl<T: Float>, op::Op<T> for Floor {
     }
 }
 
-impl<T: Float>, op::Op<T> for Ceil {
+impl<T: Float> op::Op<T> for Ceil {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.ceil());
         ctx.append_output(ret);
@@ -395,7 +398,7 @@ impl<T: Float>, op::Op<T> for Ceil {
     }
 }
 
-impl<T: Float>, op::Op<T> for Transpose {
+impl<T: Float> op::Op<T> for Transpose {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let perm = &ctx.input(1);
         let perm_len = perm.len();
@@ -425,7 +428,7 @@ impl<T: Float>, op::Op<T> for Transpose {
         let gx = Tensor::builder(ctx.graph())
             .append_input(ctx.output_grad(), false)
             .append_input(ctx.input(1), false)
-            .set_shape(&shape(ctx.input(0)))
+            .setshape(&shape(ctx.input(0)))
             .build(Transpose {
                 invert_axes: !self.invert_axes,
             });
@@ -516,13 +519,13 @@ pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keep_dims: b
     } else {
         a.remove(axis);
     }
-    let reduced_shape = a.as_slice();
+    let reducedshape = a.as_slice();
 
     let max_fn = T::max;
     let min_val = T::min_value();
     let max = &x
         .fold_axis(ndarray::Axis(axis), min_val, move |&a, &b| max_fn(a, b))
-        .into_shape_with_order(ndarray::IxDyn(reduced_shape))
+        .intoshape_with_order(ndarray::IxDyn(reducedshape))
         .unwrap();
 
     let exp = {
@@ -542,7 +545,7 @@ pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keep_dims: b
     // unwrap is safe
     let mut sum = exp
         .sum_axis(ndarray::Axis(axis))
-        .into_shape_with_order(ndarray::IxDyn(reduced_shape))
+        .intoshape_with_order(ndarray::IxDyn(reducedshape))
         .unwrap();
 
     #[cfg(feature = "blas")]
@@ -558,7 +561,7 @@ pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keep_dims: b
     }
 }
 
-impl<T: Float>, op::Op<T> for LogSumExp {
+impl<T: Float> op::Op<T> for LogSumExp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = logsumexp_forward(&ctx.input(0), self.axis, self.keep_dims);
         ctx.append_output(ret);
@@ -574,7 +577,7 @@ impl<T: Float>, op::Op<T> for LogSumExp {
     }
 }
 
-impl<T: Float>, op::Op<T> for Pow<T> {
+impl<T: Float> op::Op<T> for Pow<T> {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.powf(self.a));
         ctx.append_output(ret);
@@ -588,7 +591,7 @@ impl<T: Float>, op::Op<T> for Pow<T> {
     }
 }
 
-impl<T: Float>, op::Op<T> for Sqrt {
+impl<T: Float> op::Op<T> for Sqrt {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.sqrt());
         ctx.append_output(ret);
@@ -603,7 +606,7 @@ impl<T: Float>, op::Op<T> for Sqrt {
     }
 }
 
-impl<T: Float>, op::Op<T> for Log10 {
+impl<T: Float> op::Op<T> for Log10 {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.log10());
         ctx.append_output(ret);
@@ -616,7 +619,7 @@ impl<T: Float>, op::Op<T> for Log10 {
     }
 }
 
-impl<T: Float>, op::Op<T> for Log2 {
+impl<T: Float> op::Op<T> for Log2 {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.log2());
         ctx.append_output(ret);
@@ -629,7 +632,7 @@ impl<T: Float>, op::Op<T> for Log2 {
     }
 }
 
-impl<T: Float>, op::Op<T> for Ln {
+impl<T: Float> op::Op<T> for Ln {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.ln());
         ctx.append_output(ret);
@@ -641,7 +644,7 @@ impl<T: Float>, op::Op<T> for Ln {
     }
 }
 
-impl<T: Float>, op::Op<T> for Exp {
+impl<T: Float> op::Op<T> for Exp {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.exp());
         ctx.append_output(ret);
@@ -653,7 +656,7 @@ impl<T: Float>, op::Op<T> for Exp {
     }
 }
 
-impl<T: Float>, op::Op<T> for Exp2 {
+impl<T: Float> op::Op<T> for Exp2 {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.exp2());
         ctx.append_output(ret);
@@ -668,7 +671,7 @@ impl<T: Float>, op::Op<T> for Exp2 {
     }
 }
 
-impl<T: Float>, op::Op<T> for Exp10 {
+impl<T: Float> op::Op<T> for Exp10 {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ten = T::from(10).unwrap();
 
@@ -686,7 +689,7 @@ impl<T: Float>, op::Op<T> for Exp10 {
     }
 }
 
-impl<T: Float>, op::Op<T> for Atanh {
+impl<T: Float> op::Op<T> for Atanh {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.atanh());
         ctx.append_output(ret);
@@ -700,7 +703,7 @@ impl<T: Float>, op::Op<T> for Atanh {
     }
 }
 
-impl<T: Float>, op::Op<T> for Acosh {
+impl<T: Float> op::Op<T> for Acosh {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.acosh());
         ctx.append_output(ret);
@@ -715,7 +718,7 @@ impl<T: Float>, op::Op<T> for Acosh {
     }
 }
 
-impl<T: Float>, op::Op<T> for Asinh {
+impl<T: Float> op::Op<T> for Asinh {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.asinh());
         ctx.append_output(ret);
@@ -730,7 +733,7 @@ impl<T: Float>, op::Op<T> for Asinh {
     }
 }
 
-impl<T: Float>, op::Op<T> for Tanh {
+impl<T: Float> op::Op<T> for Tanh {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.tanh());
         ctx.append_output(ret);
@@ -745,7 +748,7 @@ impl<T: Float>, op::Op<T> for Tanh {
     }
 }
 
-impl<T: Float>, op::Op<T> for Cosh {
+impl<T: Float> op::Op<T> for Cosh {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.cosh());
         ctx.append_output(ret);
@@ -757,7 +760,7 @@ impl<T: Float>, op::Op<T> for Cosh {
     }
 }
 
-impl<T: Float>, op::Op<T> for Sinh {
+impl<T: Float> op::Op<T> for Sinh {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.sinh());
         ctx.append_output(ret);
@@ -769,7 +772,7 @@ impl<T: Float>, op::Op<T> for Sinh {
     }
 }
 
-impl<T: Float>, op::Op<T> for Atan {
+impl<T: Float> op::Op<T> for Atan {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.atan());
         ctx.append_output(ret);
@@ -784,7 +787,7 @@ impl<T: Float>, op::Op<T> for Atan {
     }
 }
 
-impl<T: Float>, op::Op<T> for Acos {
+impl<T: Float> op::Op<T> for Acos {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.acos());
         ctx.append_output(ret);
@@ -798,7 +801,7 @@ impl<T: Float>, op::Op<T> for Acos {
     }
 }
 
-impl<T: Float>, op::Op<T> for Asin {
+impl<T: Float> op::Op<T> for Asin {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.asin());
         ctx.append_output(ret);
@@ -812,7 +815,7 @@ impl<T: Float>, op::Op<T> for Asin {
     }
 }
 
-impl<T: Float>, op::Op<T> for Sin {
+impl<T: Float> op::Op<T> for Sin {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.sin());
         ctx.append_output(ret);
@@ -824,7 +827,7 @@ impl<T: Float>, op::Op<T> for Sin {
     }
 }
 
-impl<T: Float>, op::Op<T> for Cos {
+impl<T: Float> op::Op<T> for Cos {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.cos());
         ctx.append_output(ret);
@@ -836,7 +839,7 @@ impl<T: Float>, op::Op<T> for Cos {
     }
 }
 
-impl<T: Float>, op::Op<T> for Tan {
+impl<T: Float> op::Op<T> for Tan {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ret = ctx.input(0).map(|a| a.tan());
         ctx.append_output(ret);

@@ -149,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    fn test_shape_mismatch() {
+    fn testshape_mismatch() {
         let msg = shape_mismatch("element-wise operation", &[3, 4], &[3, 5]);
         assert_eq!(
             msg,

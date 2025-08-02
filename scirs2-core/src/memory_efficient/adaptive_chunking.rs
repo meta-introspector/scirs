@@ -247,8 +247,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> AdaptiveChunking<A> for MemoryMapp
         chunksize = chunksize.min(total_elements);
 
         // Consider dimensionality-specific adjustments
-        let (chunksize, decision_factors) =
-            self.optimize_for_dimensionality(chunksize, &params)?;
+        let (chunksize, decision_factors) = self.optimize_for_dimensionality(chunksize, &params)?;
 
         // Factor in parallel processing if requested
         let (chunksize, decision_factors) = if params.optimize_for_parallel {
@@ -343,7 +342,9 @@ impl<A: Clone + Copy + 'static + Send + Sync> AdaptiveChunking<A> for MemoryMapp
 
 impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
     /// Optimize chunking based on array dimensionality.
-    fn optimize_for_dimensionality(&self, initial_chunksize: usize,
+    fn optimize_for_dimensionality(
+        &self,
+        initial_chunksize: usize,
         params: &AdaptiveChunkingParams,
     ) -> CoreResult<(usize, Vec<String>)> {
         let mut decision_factors = Vec::new();
@@ -432,7 +433,10 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
     }
 
     /// Optimize chunking for parallel processing.
-    fn optimize_for_parallel_processing(&self, initial_chunksize: usize, mut decision_factors: Vec<String>,
+    fn optimize_for_parallel_processing(
+        &self,
+        initial_chunksize: usize,
+        mut decision_factors: Vec<String>,
         params: &AdaptiveChunkingParams,
     ) -> (usize, Vec<String>) {
         let mut chunksize = initial_chunksize;
@@ -449,9 +453,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedArray<A> {
                 total_elements // Fallback for edge cases
             };
 
-            if ideal_chunksize >= params.min_chunksize
-                && ideal_chunksize <= params.max_chunksize
-            {
+            if ideal_chunksize >= params.min_chunksize && ideal_chunksize <= params.max_chunksize {
                 // Use the ideal chunk size for parallel processing
                 chunksize = ideal_chunksize;
                 decision_factors.push(format!(
@@ -605,7 +607,11 @@ pub mod alpha6_enhancements {
         }
 
         /// Update worker performance metrics based on observed execution times
-        pub fn update_performance(&mut self, worker_id: usize, work_amount: usize, execution_time: Duration
+        pub fn update_performance(
+            &mut self,
+            worker_id: usize,
+            work_amount: usize,
+            execution_time: Duration,
         ) {
             if worker_id < self.worker_performance.len() {
                 // Calculate performance as work/time (higher is better)
@@ -636,7 +642,11 @@ pub mod alpha6_enhancements {
         }
 
         /// Predict optimal chunk size based on workload characteristics and history
-        pub fn predict_chunk_size(&self, workload: WorkloadType, memory_available: usize, data_size: usize
+        pub fn predict_chunk_size(
+            &self,
+            workload: WorkloadType,
+            memory_available: usize,
+            data_size: usize,
         ) -> usize {
             // Start with base predictions from historical data
             let historical_prediction = self.get_historical_prediction(workload);
@@ -672,7 +682,10 @@ pub mod alpha6_enhancements {
         }
 
         /// Record performance metrics for future predictions
-        pub fn record_performance(&mut self, workload: WorkloadType, chunk_size: usize,
+        pub fn record_performance(
+            &mut self,
+            workload: WorkloadType,
+            chunk_size: usize,
             metrics: ChunkingPerformanceMetrics,
         ) {
             self.historical_metrics.push(metrics);
@@ -688,8 +701,7 @@ pub mod alpha6_enhancements {
 
     /// Alpha 6: NUMA-aware chunking for large multi-socket systems
     #[allow(dead_code)]
-    pub fn numa_aware_chunking(data_size: usize, num_numa_nodes: usize
-    ) -> ChunkingStrategy {
+    pub fn numa_aware_chunking(data_size: usize, num_numa_nodes: usize) -> ChunkingStrategy {
         if num_numa_nodes <= 1 {
             return ChunkingStrategy::Auto;
         }
@@ -704,9 +716,8 @@ pub mod alpha6_enhancements {
     /// Align size to cache line boundaries for better performance
     fn align_to_cache_line(size: usize) -> usize {
         const CACHE_LINE_SIZE: usize = 64; // Common cache line size
-        ((size + CACHE_LINE_SIZE - 1) / CACHE_LINE_SIZE) * CACHE_LINE_SIZE
+        size.div_ceil(CACHE_LINE_SIZE) * CACHE_LINE_SIZE
     }
-
 }
 
 #[cfg(test)]
@@ -776,7 +787,7 @@ mod tests {
         let cols = 120;
 
         // Create a test 2D array and save it to a file
-        let data = Array2::<f64>::from_shape_fn((rows, cols), |(i, j)| (i * cols + j) as f64);
+        let data = Array2::<f64>::fromshape_fn((rows, cols), |(i, j)| (i * cols + j) as f64);
         let mut file = File::create(&file_path).unwrap();
         for val in data.iter() {
             file.write_all(&val.to_ne_bytes()).unwrap();

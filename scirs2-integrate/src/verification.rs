@@ -667,7 +667,7 @@ impl ErrorAnalysis {
 
 /// Convenience functions for creating common exact solutions
 #[allow(dead_code)]
-pub fn polynomial_solution<F: IntegrateFloat>(_coefficients: Vec<F>) -> PolynomialSolution<F> {
+pub fn polynomial_solution<F: IntegrateFloat>(coefficients: Vec<F>) -> PolynomialSolution<F> {
     PolynomialSolution::new(_coefficients)
 }
 
@@ -1119,7 +1119,7 @@ pub fn trigonometric_solution_3d<F: IntegrateFloat>(
 }
 
 #[allow(dead_code)]
-pub fn combined_solution<F: IntegrateFloat>(_dimension: usize) -> CombinedSolution<F> {
+pub fn combined_solution<F: IntegrateFloat>(dimension: usize) -> CombinedSolution<F> {
     CombinedSolution::new(_dimension)
 }
 

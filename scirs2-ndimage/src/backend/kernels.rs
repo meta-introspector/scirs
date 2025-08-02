@@ -13,7 +13,7 @@ use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe usize conversion
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
@@ -21,7 +21,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult
 
 /// Helper function for safe array to slice conversion
 #[allow(dead_code)]
-fn safe_as_slice<'a, T, D: Dimension>(_array: &'a ArrayView<T, D>) -> NdimageResult<&'a [T]> {
+fn safe_as_slice<'a, T, D: Dimension>(array: &'a ArrayView<T, D>) -> NdimageResult<&'a [T]> {
     _array.as_slice().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert _array to contiguous slice".to_string())
     })
@@ -604,9 +604,9 @@ impl KernelRegistry {
             2,
         );
         self.register_kernel(
-            "laws_texture_energy_2d",
+            "lawstexture_energy_2d",
             TEXTURE_ANALYSIS_KERNEL,
-            "laws_texture_energy_2d",
+            "lawstexture_energy_2d",
             2,
         );
         self.register_kernel(
@@ -828,8 +828,8 @@ where
     let params = vec![
         sigma[0],
         sigma[1],
-        safe_usize, _to_float: :<T>(h)?,
-        safe_usize, _to_float: :<T>(w)?,
+        safe_usize, _to_float: <T>(h)?,
+        safe_usize, _to_float: <T>(w)?,
     ];
 
     // Get kernel from registry
@@ -851,7 +851,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::from_shape_vec((h, w), output_data)?)
+    Ok(Array::fromshape_vec((h, w), output_data)?)
 }
 
 /// GPU-accelerated convolution implementation
@@ -874,10 +874,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize, _to_float: :<T>(ih)?,
-        safe_usize, _to_float: :<T>(iw)?,
-        safe_usize, _to_float: :<T>(kh)?,
-        safe_usize, _to_float: :<T>(kw)?,
+        safe_usize, _to_float: <T>(ih)?,
+        safe_usize, _to_float: <T>(iw)?,
+        safe_usize, _to_float: <T>(kh)?,
+        safe_usize, _to_float: <T>(kw)?,
     ];
 
     // Get kernel from registry
@@ -899,7 +899,7 @@ where
     let mut output_data = vec![T::zero(); ih * iw];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::from_shape_vec((ih, iw), output_data)?)
+    Ok(Array::fromshape_vec((ih, iw), output_data)?)
 }
 
 /// GPU-accelerated median filter implementation
@@ -920,10 +920,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize, _to_float: :<T>(h)?,
-        safe_usize, _to_float: :<T>(w)?,
-        safe_usize, _to_float: :<T>(size[0])?,
-        safe_usize, _to_float: :<T>(size[1])?,
+        safe_usize, _to_float: <T>(h)?,
+        safe_usize, _to_float: <T>(w)?,
+        safe_usize, _to_float: <T>(size[0])?,
+        safe_usize, _to_float: <T>(size[1])?,
     ];
 
     // Get kernel from registry
@@ -945,7 +945,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::from_shape_vec((h, w), output_data)?)
+    Ok(Array::fromshape_vec((h, w), output_data)?)
 }
 
 /// GPU-accelerated morphological erosion
@@ -974,10 +974,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize, _to_float: :<T>(h)?,
-        safe_usize, _to_float: :<T>(w)?,
-        safe_usize, _to_float: :<T>(sh)?,
-        safe_usize, _to_float: :<T>(sw)?,
+        safe_usize, _to_float: <T>(h)?,
+        safe_usize, _to_float: <T>(w)?,
+        safe_usize, _to_float: <T>(sh)?,
+        safe_usize, _to_float: <T>(sw)?,
     ];
 
     // Get kernel from registry
@@ -999,7 +999,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::from_shape_vec((h, w), output_data)?)
+    Ok(Array::fromshape_vec((h, w), output_data)?)
 }
 
 /// GPU-accelerated separable Gaussian filter implementation
@@ -1015,12 +1015,12 @@ where
     let (h, w) = input.dim();
 
     // Calculate Gaussian weights for separable filter
-    let radius_x = (safe_f64, _to_float: :<T>(3.0)? * sigma[0])
+    let radius_x = (safe_f64, _to_float: <T>(3.0)? * sigma[0])
         .to_usize()
         .ok_or_else(|| {
             NdimageError::ComputationError("Failed to convert radius_x to usize".to_string())
         })?;
-    let radius_y = (safe_f64, _to_float: :<T>(3.0)? * sigma[1])
+    let radius_y = (safe_f64, _to_float: <T>(3.0)? * sigma[1])
         .to_usize()
         .ok_or_else(|| {
             NdimageError::ComputationError("Failed to convert radius_y to usize".to_string())
@@ -1032,8 +1032,8 @@ where
     // Gaussian weights for horizontal pass
     let weights_x: Result<Vec<T>, NdimageError> = (0..weights_size)
         .map(|i| -> NdimageResult<T> {
-            let offset = safe_usize, _to_float: :<T>(i)? - safe_usize, _to_float: :<T>(max_radius)?;
-            let exp_arg = -safe_f64, _to_float: :<T>(0.5)? * offset * offset / (sigma[0] * sigma[0]);
+            let offset = safe_usize, _to_float: <T>(i)? - safe_usize, _to_float: <T>(max_radius)?;
+            let exp_arg = -safe_f64, _to_float: <T>(0.5)? * offset * offset / (sigma[0] * sigma[0]);
             Ok(exp_arg.exp())
         })
         .collect();
@@ -1042,8 +1042,8 @@ where
     // Gaussian weights for vertical pass
     let weights_y: Result<Vec<T>, NdimageError> = (0..weights_size)
         .map(|i| -> NdimageResult<T> {
-            let offset = safe_usize, _to_float: :<T>(i)? - safe_usize, _to_float: :<T>(max_radius)?;
-            let exp_arg = -safe_f64, _to_float: :<T>(0.5)? * offset * offset / (sigma[1] * sigma[1]);
+            let offset = safe_usize, _to_float: <T>(i)? - safe_usize, _to_float: <T>(max_radius)?;
+            let exp_arg = -safe_f64, _to_float: <T>(0.5)? * offset * offset / (sigma[1] * sigma[1]);
             Ok(exp_arg.exp())
         })
         .collect();
@@ -1063,11 +1063,11 @@ where
 
     // Horizontal pass (direction = 0)
     let params_h = vec![
-        safe_usize, _to_float: :<T>(h * w)?,
-        safe_usize, _to_float: :<T>(radius_x)?,
+        safe_usize, _to_float: <T>(h * w)?,
+        safe_usize, _to_float: <T>(radius_x)?,
         T::zero(), // direction = 0 for horizontal
-        safe_usize, _to_float: :<T>(w)?,
-        safe_usize, _to_float: :<T>(h)?,
+        safe_usize, _to_float: <T>(w)?,
+        safe_usize, _to_float: <T>(h)?,
     ];
 
     executor.execute_kernel(
@@ -1080,11 +1080,11 @@ where
 
     // Vertical pass (direction = 1)
     let params_v = vec![
-        safe_usize, _to_float: :<T>(h * w)?,
-        safe_usize, _to_float: :<T>(radius_y)?,
+        safe_usize, _to_float: <T>(h * w)?,
+        safe_usize, _to_float: <T>(radius_y)?,
         T::one(), // direction = 1 for vertical
-        safe_usize, _to_float: :<T>(w)?,
-        safe_usize, _to_float: :<T>(h)?,
+        safe_usize, _to_float: <T>(w)?,
+        safe_usize, _to_float: <T>(h)?,
     ];
 
     executor.execute_kernel(
@@ -1099,7 +1099,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::from_shape_vec((h, w), output_data)?)
+    Ok(Array::fromshape_vec((h, w), output_data)?)
 }
 
 /// GPU-accelerated bilateral filter implementation
@@ -1124,9 +1124,9 @@ where
     let params = vec![
         sigma_spatial,
         sigma_intensity,
-        safe_usize, _to_float: :<T>(radius)?,
-        safe_usize, _to_float: :<T>(w)?,
-        safe_usize, _to_float: :<T>(h)?,
+        safe_usize, _to_float: <T>(radius)?,
+        safe_usize, _to_float: <T>(w)?,
+        safe_usize, _to_float: <T>(h)?,
     ];
 
     // Get kernel from registry
@@ -1148,7 +1148,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::from_shape_vec((h, w), output_data)?)
+    Ok(Array::fromshape_vec((h, w), output_data)?)
 }
 
 /// GPU-accelerated Sobel filter implementation
@@ -1173,7 +1173,7 @@ where
     let mut magnitude_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
 
     // Prepare kernel parameters
-    let params = vec![safe_usize, _to_float: :<T>(w)?, safe_usize, _to_float: :<T>(h)?];
+    let params = vec![safe_usize, _to_float: <T>(w)?, safe_usize, _to_float: <T>(h)?];
 
     // Get kernel from registry
     let registry = KernelRegistry::new();
@@ -1204,9 +1204,9 @@ where
     magnitude_buffer.copy_to_host(&mut magnitude_data)?;
 
     Ok((
-        Array::from_shape_vec((h, w), output_x_data)?,
-        Array::from_shape_vec((h, w), output_y_data)?,
-        Array::from_shape_vec((h, w), magnitude_data)?,
+        Array::fromshape_vec((h, w), output_x_data)?,
+        Array::fromshape_vec((h, w), output_y_data)?,
+        Array::fromshape_vec((h, w), magnitude_data)?,
     ))
 }
 
@@ -1228,9 +1228,9 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize, _to_float: :<T>(w)?,
-        safe_usize, _to_float: :<T>(h)?,
-        safe_usize, _to_float: :<T>(connectivity)?,
+        safe_usize, _to_float: <T>(w)?,
+        safe_usize, _to_float: <T>(h)?,
+        safe_usize, _to_float: <T>(connectivity)?,
     ];
 
     // Get kernel from registry
@@ -1252,7 +1252,7 @@ where
     let mut output_data = vec![T::zero(); h * w];
     output_buffer.copy_to_host(&mut output_data)?;
 
-    Ok(Array::from_shape_vec((h, w), output_data)?)
+    Ok(Array::fromshape_vec((h, w), output_data)?)
 }
 
 // GPU buffer allocation functions that delegate to backend-specific implementations

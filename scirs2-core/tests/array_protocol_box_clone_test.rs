@@ -30,12 +30,15 @@ struct MockDistributedArray {
 
 impl MockDistributedArray {
     fn new(data: Vec<f64>, shape: Vec<usize>) -> Self {
-        Self { data: data, shape }
+        Self { data, shape }
     }
 }
 
 impl ArrayProtocol for MockDistributedArray {
-    fn kwargs(&self, kwargs: &HashMap<String, Box<dyn Any>>) -> Result<Box<dyn Any>, NotImplemented> {
+    fn kwargs(
+        &self,
+        kwargs: &HashMap<String, Box<dyn Any>>,
+    ) -> Result<Box<dyn Any>, NotImplemented> {
         Err(NotImplemented)
     }
 
@@ -56,20 +59,24 @@ impl ArrayProtocol for MockDistributedArray {
 #[derive(Debug, Clone)]
 struct MockGPUArray {
     data: Vec<f64>, // Prefixed with underscore to indicate it's unused
-    shape: Vec<usize>, device: String, // Prefixed with underscore to indicate it's unused
+    shape: Vec<usize>,
+    device: String, // Prefixed with underscore to indicate it's unused
 }
 
 impl MockGPUArray {
     fn new(data: Vec<f64>, shape: Vec<usize>, device: String) -> Self {
         Self {
-            data: data,
+            data,
             shape_device: device,
         }
     }
 }
 
 impl ArrayProtocol for MockGPUArray {
-    fn kwargs(&self, kwargs: &HashMap<String, Box<dyn Any>>) -> Result<Box<dyn Any>, NotImplemented> {
+    fn kwargs(
+        &self,
+        kwargs: &HashMap<String, Box<dyn Any>>,
+    ) -> Result<Box<dyn Any>, NotImplemented> {
         Err(NotImplemented)
     }
 
@@ -89,7 +96,8 @@ impl ArrayProtocol for MockGPUArray {
 /// A simplified JIT-enabled array for testing box_clone
 #[derive(Debug, Clone)]
 struct JITEnabledArray<T, A: Clone> {
-    inner: A_phantom: PhantomData<T>,
+    inner: A,
+    phantom: PhantomData<T>,
 }
 
 impl<T, A: Clone> JITEnabledArray<T, A> {
@@ -125,7 +133,8 @@ where
 
     fn box_clone(&self) -> Box<dyn ArrayProtocol> {
         Box::new(JITEnabledArray {
-            inner: self.inner.clone(), phantom: PhantomData::<T>,
+            inner: self.inner.clone(),
+            phantom: PhantomData::<T>,
         })
     }
 }

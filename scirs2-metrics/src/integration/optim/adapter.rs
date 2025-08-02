@@ -51,7 +51,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> MetricOptimizer<F> {
     ///
     /// * `metric_name` - Name of the metric to optimize
     /// * `maximize` - Whether to maximize (true) or minimize (false) the metric
-    pub fn new<S: Into<String>>(_metric_name: S, maximize: bool) -> Self {
+    pub fn new<S: Into<String>>(_metric, name: S, maximize: bool) -> Self {
         Self {
             metric_name: _metric_name.into(),
             mode: if maximize {

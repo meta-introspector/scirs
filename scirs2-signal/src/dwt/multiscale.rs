@@ -1,13 +1,13 @@
-//! Multi-level wavelet transform functions
-//!
-//! This module provides functions for multi-level/multi-resolution wavelet analysis,
-//! including decomposition and reconstruction of signals.
+// Multi-level wavelet transform functions
+//
+// This module provides functions for multi-level/multi-resolution wavelet analysis,
+// including decomposition and reconstruction of signals.
 
+use super::transform::{dwt_decompose, dwt_reconstruct};
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
-use super::transform::{dwt_decompose, dwt_reconstruct};
 
 #[allow(unused_imports)]
 /// Perform multi-level wavelet decomposition
@@ -27,7 +27,7 @@ use super::transform::{dwt_decompose, dwt_reconstruct};
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::{wavedec, Wavelet};
+/// use scirs2_signal::dwt::{wavedec, Wavelet};
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 /// let coeffs = wavedec(&signal, Wavelet::DB(4), Some(2), None).unwrap();
@@ -121,7 +121,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::{wavedec, waverec, Wavelet};
+/// use scirs2_signal::dwt::{wavedec, waverec, Wavelet};
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 /// let coeffs = wavedec(&signal, Wavelet::DB(4), Some(2), None).unwrap();

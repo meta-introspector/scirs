@@ -334,14 +334,14 @@ where
     let mut output = Array::<T, D>::zeros(input.raw_dim());
 
     // Get the center of the footprint for offset calculations
-    let footprint_shape = footprint.shape();
-    let footprint_center: Vec<isize> = footprint_shape.iter().map(|&s| (s / 2) as isize).collect();
+    let footprintshape = footprint.shape();
+    let footprint_center: Vec<isize> = footprintshape.iter().map(|&s| (s / 2) as isize).collect();
 
     // Calculate padding based on footprint size and origin
     let mut pad_width = Vec::new();
     for d in 0..input.ndim() {
         let left_pad = (footprint_center[d] + origin[d]) as usize;
-        let right_pad = footprint_shape[d] - 1 - left_pad;
+        let right_pad = footprintshape[d] - 1 - left_pad;
         pad_width.push((left_pad, right_pad));
     }
 
@@ -643,7 +643,7 @@ fn sort5(_arr: &mut [f32; 5]) {
 /// Helper function to swap elements in an array
 #[inline]
 #[allow(dead_code)]
-fn swap<T: PartialOrd>(_arr: &mut [T], i: usize, j: usize) {
+fn swap<T: PartialOrd>(arr: &mut [T], i: usize, j: usize) {
     if _arr[i] > _arr[j] {
         _arr.swap(i, j);
     }
@@ -1232,7 +1232,7 @@ mod tests {
         use ndarray::Array3;
 
         // Create a 3D test array
-        let array = Array3::from_shape_fn((3, 3, 3), |(i, j, k)| {
+        let array = Array3::fromshape_fn((3, 3, 3), |(i, j, k)| {
             (i * 9 + j * 3 + k) as f64 // Values from 0 to 26
         });
 

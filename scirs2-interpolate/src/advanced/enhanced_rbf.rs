@@ -1045,8 +1045,8 @@ where
     /// Evaluate the RBF kernel function (standard or enhanced)
     fn evaluate_kernel(r: F, epsilon: F, kernel: KernelType<F>) -> F {
         match kernel {
-            KernelType::Standard(k) =>, Self::evaluate_standard_kernel(r, epsilon, k),
-            KernelType::Enhanced(k) =>, Self::evaluate_enhanced_kernel(r, epsilon, k),
+            KernelType::Standard(k) => Self::evaluate_standard_kernel(r, epsilon, k),
+            KernelType::Enhanced(k) => Self::evaluate_enhanced_kernel(r, epsilon, k),
             KernelType::Custom(__) => {
                 // In a real implementation, we would call a registered custom kernel function
                 // For now, default to a basic Gaussian
@@ -1063,7 +1063,7 @@ where
         match kernel {
             RBFKernel::Gaussian => (-r2 / eps2).exp(),
             RBFKernel::Multiquadric => (r2 + eps2).sqrt(),
-            RBFKernel::InverseMultiquadric =>, F::one() / (r2 + eps2).sqrt(),
+            RBFKernel::InverseMultiquadric => F::one() / (r2 + eps2).sqrt(),
             RBFKernel::ThinPlateSpline => {
                 if r == F::zero() {
                     return F::zero();
@@ -1579,7 +1579,7 @@ mod tests {
     #[test]
     fn test_enhanced_rbf_builder() {
         // Create 2D points
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -1660,7 +1660,7 @@ mod tests {
     #[test]
     fn test_multiscale_rbf() {
         // Create 2D points
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -1711,7 +1711,7 @@ mod tests {
     #[test]
     fn test_polynomial_trend() {
         // Create 2D points
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -1729,7 +1729,7 @@ mod tests {
 
         // Test that we can call interpolate without errors
         let test_points =
-            Array2::from_shape_vec((3, 2), vec![2.0, 1.0, 1.0, 2.0, 3.0, 0.0]).unwrap();
+            Array2::fromshape_vec((3, 2), vec![2.0, 1.0, 1.0, 2.0, 3.0, 0.0]).unwrap();
         let result = interp.interpolate(&test_points.view());
         assert!(result.is_ok());
 
@@ -1752,7 +1752,7 @@ mod tests {
     #[test]
     fn test_convenience_functions() {
         // Create 2D points
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -1771,7 +1771,7 @@ mod tests {
         let fast_rbf = make_fast_rbf(&points.view(), &values.view()).unwrap();
 
         // Verify that all interpolators can evaluate at a test point
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.25, 0.25]).unwrap();
+        let test_point = Array2::fromshape_vec((1, 2), vec![0.25, 0.25]).unwrap();
 
         let result_auto = auto_rbf.interpolate(&test_point.view()).unwrap();
         let result_accurate = accurate_rbf.interpolate(&test_point.view()).unwrap();

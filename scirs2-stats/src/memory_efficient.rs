@@ -9,7 +9,6 @@ use crate::error_standardization::ErrorMessages;
 use memmap2::Mmap;
 use ndarray::{s, ArrayBase, ArrayViewMut1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
-use statrs::statistics::Statistics;
 use std::cmp::Ordering;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
@@ -182,8 +181,8 @@ where
 
 /// Quickselect algorithm for finding k-th smallest element
 #[allow(dead_code)]
-fn quickselect<F: Float>(_data: &mut [F], k: usize) {
-    let len = _data.len();
+fn quickselect<F: Float>(data: &mut [F], k: usize) {
+    let len = data.len();
     if len <= 1 {
         return;
     }
@@ -192,7 +191,7 @@ fn quickselect<F: Float>(_data: &mut [F], k: usize) {
     let mut right = len - 1;
 
     while left < right {
-        let pivot_idx = partition(_data, left, right);
+        let pivot_idx = partition(data, left, right);
 
         match k.cmp(&pivot_idx) {
             Ordering::Less => right = pivot_idx - 1,
@@ -204,21 +203,21 @@ fn quickselect<F: Float>(_data: &mut [F], k: usize) {
 
 /// Partition function for quickselect
 #[allow(dead_code)]
-fn partition<F: Float>(_data: &mut [F], left: usize, right: usize) -> usize {
+fn partition<F: Float>(data: &mut [F], left: usize, right: usize) -> usize {
     let pivot_idx = left + (right - left) / 2;
-    let pivot = _data[pivot_idx];
+    let pivot = data[pivot_idx];
 
-    _data.swap(pivot_idx, right);
+    data.swap(pivot_idx, right);
 
     let mut store_idx = left;
     for i in left..right {
-        if _data[i] < pivot {
-            _data.swap(i, store_idx);
+        if data[i] < pivot {
+            data.swap(i, store_idx);
             store_idx += 1;
         }
     }
 
-    _data.swap(store_idx, right);
+    data.swap(store_idx, right);
     store_idx
 }
 

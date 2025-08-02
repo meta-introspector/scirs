@@ -1,23 +1,23 @@
-//! Enhanced validation suite for multitaper spectral estimation
-//!
-//! This module provides comprehensive validation including:
-//! - Comparison with theoretical results
-//! - Numerical stability tests
-//! - Cross-validation with reference implementations
-//! - Performance benchmarks
+// Enhanced validation suite for multitaper spectral estimation
+//
+// This module provides comprehensive validation including:
+// - Comparison with theoretical results
+// - Numerical stability tests
+// - Cross-validation with reference implementations
+// - Performance benchmarks
 
+use super::psd::pmtm;
+use super::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::Float;
 use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::f64::consts::PI;
 use std::time::Instant;
-use super::{EnhancedMultitaperResult, MultitaperConfig, enhanced_pmtm};
-use super::psd::pmtm;
 
-// use super::dpss__enhanced::validate_dpss_implementation; // Commented out for now
+// use super::dpss_enhanced::validate_dpss_implementation; // Commented out for now
 #[allow(unused_imports)]
 // Note: Array1, Array2 imports removed as unused
 // Note: validation imports removed as unused
@@ -273,7 +273,7 @@ fn validate_dpss_comprehensive(n: usize, nw: f64, k: usize) -> SignalResult<Dpss
     for i in 0..n / 2 {
         symmetry_error += (first_taper[i] - first_taper[n - 1 - i]).abs();
     }
-    let symmetry_preserved = symmetry_error < 1e-10 * n  as f64;
+    let symmetry_preserved = symmetry_error < 1e-10 * n as f64;
 
     // Calculate concentration ratio from eigenvalues
     let concentration_accuracy = if !eigenvalues.is_empty() {
@@ -295,7 +295,8 @@ fn validate_dpss_comprehensive(n: usize, nw: f64, k: usize) -> SignalResult<Dpss
 /// Validate spectral estimation accuracy (legacy version - use enhanced version)
 #[allow(dead_code)]
 fn validate_spectral_accuracy(
-    test_signals: &TestSignalConfig, _tolerance: f64,
+    test_signals: &TestSignalConfig,
+    _tolerance: f64,
 ) -> SignalResult<SpectralAccuracyMetrics> {
     // Generate test signal with known spectral content
     let t: Vec<f64> = (0..test_signals.n)
@@ -336,7 +337,7 @@ fn validate_spectral_accuracy(
     let peak_idx = (freq * test_signals.n as f64 / test_signals.fs) as usize;
     let peak_values: Vec<f64> = psd_estimates.iter().map(|psd| psd[peak_idx]).collect();
 
-    let mean_estimate = peak_values.iter().sum::<f64>() / peak_values.len()  as f64;
+    let mean_estimate = peak_values.iter().sum::<f64>() / peak_values.len() as f64;
     let true_power = 0.5; // Power of unit amplitude sinusoid
     let bias = (mean_estimate - true_power).abs() / true_power;
 
@@ -344,7 +345,7 @@ fn validate_spectral_accuracy(
         .iter()
         .map(|&val| (val - mean_estimate).powi(2))
         .sum::<f64>()
-        / (peak_values.len() - 1)  as f64;
+        / (peak_values.len() - 1) as f64;
 
     let mse = bias.powi(2) + variance;
 
@@ -593,7 +594,8 @@ fn benchmark_performance(_test_signals: &TestSignalConfig) -> SignalResult<Perfo
 /// Cross-validate with reference implementation
 #[allow(dead_code)]
 fn cross_validate_with_reference(
-    test_signals: &TestSignalConfig, _tolerance: f64,
+    test_signals: &TestSignalConfig,
+    _tolerance: f64,
 ) -> SignalResult<CrossValidationMetrics> {
     // Generate test signal
     let t: Vec<f64> = (0..test_signals.n)
@@ -636,7 +638,7 @@ fn cross_validate_with_reference(
     }
 
     let max_relative_error = relative_errors.iter().cloned().fold(0.0, f64::max);
-    let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors.len()  as f64;
+    let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors.len() as f64;
 
     // Calculate correlation
     let correlation = calculate_correlation(&ref_psd, &enhanced_result.psd);
@@ -715,7 +717,7 @@ fn estimate_memory_efficiency(n: usize, k: usize) -> f64 {
 
 #[allow(dead_code)]
 fn calculate_correlation(x: &[f64], y: &[f64]) -> f64 {
-    let n = x.len().min(y.len())  as f64;
+    let n = x.len().min(y.len()) as f64;
     let mean_x = x.iter().sum::<f64>() / n;
     let mean_y = y.iter().sum::<f64>() / n;
 
@@ -918,7 +920,7 @@ pub fn generate_test_signal(
 
     // Add _noise if requested
     if include_noise {
-        let signal_power = signal.iter().map(|&x| x * x).sum::<f64>() / n  as f64;
+        let signal_power = signal.iter().map(|&x| x * x).sum::<f64>() / n as f64;
         let snr_linear = 10.0_f64.powf(config.snr_db / 10.0);
         let noise_power = signal_power / snr_linear;
         let noise_std = noise_power.sqrt();
@@ -953,12 +955,12 @@ fn validate_spectral_accuracy_enhanced(
     }
 
     // Aggregate metrics across all signal types
-    let bias = bias_measurements.iter().sum::<f64>() / bias_measurements.len()  as f64;
-    let variance = variance_measurements.iter().sum::<f64>() / variance_measurements.len()  as f64;
+    let bias = bias_measurements.iter().sum::<f64>() / bias_measurements.len() as f64;
+    let variance = variance_measurements.iter().sum::<f64>() / variance_measurements.len() as f64;
     let frequency_resolution =
-        resolution_measurements.iter().sum::<f64>() / resolution_measurements.len()  as f64;
+        resolution_measurements.iter().sum::<f64>() / resolution_measurements.len() as f64;
     let leakage_factor =
-        leakage_measurements.iter().sum::<f64>() / leakage_measurements.len()  as f64;
+        leakage_measurements.iter().sum::<f64>() / leakage_measurements.len() as f64;
 
     let mse = bias.powi(2) + variance;
 
@@ -975,7 +977,8 @@ fn validate_spectral_accuracy_enhanced(
 #[allow(dead_code)]
 fn validate_single_signal_type(
     test_signals: &TestSignalConfig,
-    signal_type: TestSignalType, _tolerance: f64,
+    signal_type: TestSignalType,
+    _tolerance: f64,
 ) -> SignalResult<SpectralAccuracyMetrics> {
     let config = MultitaperConfig {
         fs: test_signals.fs,
@@ -1035,7 +1038,7 @@ fn calculate_sinusoidal_metrics(
     // Extract peak values
     let peak_values: Vec<f64> = psd_estimates.iter().map(|psd| psd[peak_idx]).collect();
 
-    let mean_estimate = peak_values.iter().sum::<f64>() / peak_values.len()  as f64;
+    let mean_estimate = peak_values.iter().sum::<f64>() / peak_values.len() as f64;
     let true_power = 0.5; // Theoretical power for unit amplitude sinusoid
     let bias = (mean_estimate - true_power).abs() / true_power;
 
@@ -1043,7 +1046,7 @@ fn calculate_sinusoidal_metrics(
         .iter()
         .map(|&val| (val - mean_estimate).powi(2))
         .sum::<f64>()
-        / (peak_values.len() - 1)  as f64;
+        / (peak_values.len() - 1) as f64;
 
     // Estimate frequency resolution from first PSD
     let frequency_resolution =
@@ -1073,26 +1076,26 @@ fn calculate_noise_metrics(
     // Calculate mean PSD at each frequency
     for j in 0..n_freqs {
         let values: Vec<f64> = psd_estimates.iter().map(|psd| psd[j]).collect();
-        freq_means[j] = values.iter().sum::<f64>() / values.len()  as f64;
+        freq_means[j] = values.iter().sum::<f64>() / values.len() as f64;
 
         freq_variances[j] = values
             .iter()
             .map(|&val| (val - freq_means[j]).powi(2))
             .sum::<f64>()
-            / (values.len() - 1)  as f64;
+            / (values.len() - 1) as f64;
     }
 
-    let mean_variance = freq_variances.iter().sum::<f64>() / freq_variances.len()  as f64;
+    let mean_variance = freq_variances.iter().sum::<f64>() / freq_variances.len() as f64;
 
     // For _white noise, expect flat spectrum
     let bias = if is_white {
         // Measure flatness of spectrum
-        let global_mean = freq_means.iter().sum::<f64>() / freq_means.len()  as f64;
+        let global_mean = freq_means.iter().sum::<f64>() / freq_means.len() as f64;
         let flatness_error = freq_means
             .iter()
             .map(|&mean| (mean - global_mean).abs() / global_mean)
             .sum::<f64>()
-            / freq_means.len()  as f64;
+            / freq_means.len() as f64;
         flatness_error
     } else {
         // For colored noise, accept larger deviations
@@ -1117,13 +1120,13 @@ fn calculate_general_metrics(_psd_estimates: &[Vec<f64>]) -> SignalResult<Spectr
     // Calculate variance across all frequency bins
     for j in 0..n_freqs {
         let values: Vec<f64> = _psd_estimates.iter().map(|psd| psd[j]).collect();
-        let mean = values.iter().sum::<f64>() / values.len()  as f64;
+        let mean = values.iter().sum::<f64>() / values.len() as f64;
         let variance =
-            values.iter().map(|&val| (val - mean).powi(2)).sum::<f64>() / (values.len() - 1)  as f64;
+            values.iter().map(|&val| (val - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
         total_variance += variance;
     }
 
-    let mean_variance = total_variance / n_freqs  as f64;
+    let mean_variance = total_variance / n_freqs as f64;
 
     Ok(SpectralAccuracyMetrics {
         bias: 0.05, // Conservative estimate for general signals
@@ -1137,7 +1140,8 @@ fn calculate_general_metrics(_psd_estimates: &[Vec<f64>]) -> SignalResult<Spectr
 /// Enhanced cross-validation with multiple reference methods
 #[allow(dead_code)]
 fn cross_validate_with_multiple_references(
-    test_signals: &TestSignalConfig, _tolerance: f64,
+    test_signals: &TestSignalConfig,
+    _tolerance: f64,
 ) -> SignalResult<CrossValidationMetrics> {
     let mut all_errors = Vec::new();
     let mut all_correlations = Vec::new();
@@ -1176,8 +1180,8 @@ fn cross_validate_with_multiple_references(
     }
 
     let max_relative_error = all_errors.iter().cloned().fold(0.0, f64::max);
-    let mean_relative_error = all_errors.iter().sum::<f64>() / all_errors.len()  as f64;
-    let mean_correlation = all_correlations.iter().sum::<f64>() / all_correlations.len()  as f64;
+    let mean_relative_error = all_errors.iter().sum::<f64>() / all_errors.len() as f64;
+    let mean_correlation = all_correlations.iter().sum::<f64>() / all_correlations.len() as f64;
 
     // Test confidence intervals on a subset
     let test_signal = generate_test_signal(test_signals, TestSignalType::Sinusoid, true)?;
@@ -1469,7 +1473,7 @@ fn validate_numerical_consistency(_config: &TestSignalConfig, tolerance: f64) ->
     // Compare results
     let errors = compute_relative_errors(&result1.psd, &result2.psd);
     let max_error = errors.iter().cloned().fold(0.0, f64::max);
-    let mean_error = errors.iter().sum::<f64>() / errors.len()  as f64;
+    let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;
 
     let consistency_score = if max_error < tolerance * 10.0 && mean_error < tolerance {
         100.0
@@ -1509,7 +1513,7 @@ fn validate_memory_scaling(_config: &TestSignalConfig) -> SignalResult<f64> {
         match enhanced_pmtm(&signal, &mt_config) {
             Ok(_) => {
                 // Simple heuristic: larger signals should still work efficiently
-                let expected_memory = (n * test_config.k)  as f64;
+                let expected_memory = (n * test_config.k) as f64;
                 let efficiency = 100.0 / (1.0 + expected_memory / 1e6); // Normalize by 1M elements
                 efficiency_scores.push(efficiency.min(100.0));
             }
@@ -1568,7 +1572,7 @@ fn test_convergence_stability(
         }
     }
 
-    let avg_iterations = convergence_rates.iter().sum::<f64>() / convergence_rates.len()  as f64;
+    let avg_iterations = convergence_rates.iter().sum::<f64>() / convergence_rates.len() as f64;
     let stability_score = if avg_iterations < 20.0 { 100.0 } else { 80.0 };
     let consistency = 95.0; // Placeholder
 
@@ -1645,7 +1649,7 @@ pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResul
     let signal_view = ndarray::ArrayView1::from(&signal);
     let window_view = ndarray::ArrayView1::from(&dummy_window);
     let mut result = vec![0.0; signal.len()];
-    let _result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut result)
+    let _result_view = ndarray::ArrayView1::fromshape(signal.len(), &mut result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD shape error: {}", e)))?;
 
     // Test SIMD multiplication
@@ -1671,7 +1675,7 @@ pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResul
 
     // Test 2: SIMD addition operations
     let mut add_result = vec![0.0; signal.len()];
-    let _add_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut add_result)
+    let _add_result_view = ndarray::ArrayView1::fromshape(signal.len(), &mut add_result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD add shape error: {}", e)))?;
 
     let add_simd_result = f64::simd_add(&signal_view, &window_view);
@@ -1695,7 +1699,7 @@ pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResul
 
     // Test 3: SIMD subtraction operations
     let mut sub_result = vec![0.0; signal.len()];
-    let _sub_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut sub_result)
+    let _sub_result_view = ndarray::ArrayView1::fromshape(signal.len(), &mut sub_result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD sub shape error: {}", e)))?;
 
     let sub_simd_result = f64::simd_sub(&signal_view, &window_view);
@@ -1743,7 +1747,11 @@ pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResul
     match (result_simd, result_no_simd) {
         (Ok(simd_res), Ok(no_simd_res)) => {
             // Check if SIMD-accelerated processing produces valid results
-            if !simd_res.psd.iter().all(|&p: &f64| p.is_finite() && p >= 0.0) {
+            if !simd_res
+                .psd
+                .iter()
+                .all(|&p: &f64| p.is_finite() && p >= 0.0)
+            {
                 simd_score -= 25.0;
                 validation_errors.push("SIMD result contains invalid values".to_string());
             }
@@ -1752,7 +1760,7 @@ pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResul
             let comparison_errors = compute_relative_errors(&no_simd_res.psd, &simd_res.psd);
             let max_comparison_error = comparison_errors.iter().cloned().fold(0.0, f64::max);
             let mean_comparison_error =
-                comparison_errors.iter().sum::<f64>() / comparison_errors.len()  as f64;
+                comparison_errors.iter().sum::<f64>() / comparison_errors.len() as f64;
 
             if max_comparison_error > 1e-6 {
                 simd_score -= 10.0;
@@ -1847,7 +1855,9 @@ pub fn validate_multitaper_with_simd(
 /// Enhanced numerical precision validation for multitaper methods
 /// Tests edge cases and numerical stability across different parameter ranges
 #[allow(dead_code)]
-pub fn validate_numerical_precision_enhanced(_test_signals: &TestSignalConfig) -> SignalResult<f64> {
+pub fn validate_numerical_precision_enhanced(
+    _test_signals: &TestSignalConfig,
+) -> SignalResult<f64> {
     let mut total_score = 0.0;
     let mut test_count = 0;
 
@@ -1966,7 +1976,7 @@ pub fn validate_parameter_consistency(_test_signals: &TestSignalConfig) -> Signa
 
             if let Ok(result) = enhanced_pmtm(&test_signal, &config) {
                 // Check for reasonable spectral estimates
-                let mean_psd = result.psd.iter().sum::<f64>() / result.psd.len()  as f64;
+                let mean_psd = result.psd.iter().sum::<f64>() / result.psd.len() as f64;
                 if mean_psd.is_finite() && mean_psd > 0.0 {
                     // Find peaks at expected frequencies (10 Hz and 25 Hz)
                     let peak_score =
@@ -1979,13 +1989,13 @@ pub fn validate_parameter_consistency(_test_signals: &TestSignalConfig) -> Signa
 
     // Calculate consistency score
     if consistency_scores.len() > 1 {
-        let mean_score = consistency_scores.iter().sum::<f64>() / consistency_scores.len()  as f64;
+        let mean_score = consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
         let std_dev = {
             let variance = consistency_scores
                 .iter()
                 .map(|x| (x - mean_score).powi(2))
                 .sum::<f64>()
-                / consistency_scores.len()  as f64;
+                / consistency_scores.len() as f64;
             variance.sqrt()
         };
 
@@ -2008,7 +2018,7 @@ fn validate_expected_peaks(
 
     for &freq in expected_freqs {
         // Find the frequency bin closest to the expected frequency
-        let freq_resolution = fs / result.frequencies.len()  as f64;
+        let freq_resolution = fs / result.frequencies.len() as f64;
         let target_bin = (freq / freq_resolution).round() as usize;
 
         if target_bin < result.psd.len() {

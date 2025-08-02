@@ -355,15 +355,15 @@ pub struct TextDataset {
 
 impl TextDataset {
     /// Create a new text dataset
-    pub fn new(_texts: Vec<String>, labels: Vec<String>) -> Result<Self> {
-        if _texts.len() != labels.len() {
+    pub fn new(texts: Vec<String>, labels: Vec<String>) -> Result<Self> {
+        if texts.len() != labels.len() {
             return Err(TextError::InvalidInput(
                 "Texts and labels must have the same length".to_string(),
             ));
         }
 
         Ok(Self {
-            _texts,
+            texts,
             labels,
             label_index: None,
         })
@@ -455,7 +455,7 @@ impl TextDataset {
         let train_indices = indices[test_size..].to_vec();
 
         // Create datasets
-        let train_texts = train_indices
+        let traintexts = train_indices
             .iter()
             .map(|&i| self.texts[i].clone())
             .collect();
@@ -464,7 +464,7 @@ impl TextDataset {
             .map(|&i| self.labels[i].clone())
             .collect();
 
-        let test_texts = test_indices
+        let testtexts = test_indices
             .iter()
             .map(|&i| self.texts[i].clone())
             .collect();
@@ -473,8 +473,8 @@ impl TextDataset {
             .map(|&i| self.labels[i].clone())
             .collect();
 
-        let mut train_dataset = Self::new(train_texts, train_labels)?;
-        let mut test_dataset = Self::new(test_texts, test_labels)?;
+        let mut train_dataset = Self::new(traintexts, train_labels)?;
+        let mut test_dataset = Self::new(testtexts, test_labels)?;
 
         // If we have a label index, build it for the split datasets
         if self.label_index.is_some() {
@@ -546,7 +546,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_text_dataset() {
+    fn testtext_dataset() {
         let texts = vec![
             "This is document 1".to_string(),
             "Another document".to_string(),

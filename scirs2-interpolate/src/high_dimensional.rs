@@ -592,7 +592,7 @@ where
     /// use ndarray::{Array1, Array2};
     ///
     /// // Create sample 5D data
-    /// let points = Array2::from_shape_vec((4, 5), vec![
+    /// let points = Array2::fromshape_vec((4, 5), vec![
     ///     0.0, 0.0, 0.0, 0.0, 0.0,
     ///     1.0, 0.0, 0.0, 0.0, 0.0,
     ///     0.0, 1.0, 0.0, 0.0, 0.0,
@@ -815,14 +815,14 @@ where
     /// use scirs2__interpolate::high_dimensional::HighDimensionalInterpolator;
     /// use ndarray::{Array1, Array2};
     ///
-    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let points = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
     /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0]);
     ///
     /// let interpolator = HighDimensionalInterpolator::builder()
     ///     .build(&points.view(), &values.view())
     ///     .unwrap();
     ///
-    /// let queries = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.0, 0.5]).unwrap();
+    /// let queries = Array2::fromshape_vec((2, 2), vec![0.5, 0.0, 0.0, 0.5]).unwrap();
     /// let results = interpolator.interpolate_multi(&queries.view()).unwrap();
     /// assert_eq!(results.len(), 2);
     /// ```
@@ -863,7 +863,7 @@ where
     /// use scirs2__interpolate::high_dimensional::HighDimensionalInterpolator;
     /// use ndarray::{Array1, Array2};
     ///
-    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let points = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
     /// let values = Array1::from_vec(vec![0.0, 1.0, 2.0]);
     ///
     /// let interpolator = HighDimensionalInterpolator::builder()
@@ -871,7 +871,7 @@ where
     ///     .unwrap();
     ///
     /// // Create many query points for parallel processing
-    /// let queries = Array2::from_shape_vec((1000, 2), (0..2000).map(|i| i as f64 / 1000.0).collect()).unwrap();
+    /// let queries = Array2::fromshape_vec((1000, 2), (0..2000).map(|i| i as f64 / 1000.0).collect()).unwrap();
     ///
     /// // Use 4 worker threads
     /// let results = interpolator.interpolate_multi_parallel(&queries.view(), Some(4)).unwrap();
@@ -961,7 +961,7 @@ where
 /// use ndarray::{Array1, Array2};
 ///
 /// // Create 3D scattered data
-/// let points = Array2::from_shape_vec((5, 3), vec![
+/// let points = Array2::fromshape_vec((5, 3), vec![
 ///     0.0, 0.0, 0.0,
 ///     1.0, 0.0, 0.0,
 ///     0.0, 1.0, 0.0,
@@ -1026,7 +1026,7 @@ where
 /// use ndarray::{Array1, Array2};
 ///
 /// // Create high-dimensional data that lies on a lower-dimensional manifold
-/// let points = Array2::from_shape_vec((4, 6), vec![
+/// let points = Array2::fromshape_vec((4, 6), vec![
 ///     1.0, 1.0, 1.0, 0.0, 0.0, 0.0,  // Redundant dimensions
 ///     2.0, 2.0, 2.0, 0.0, 0.0, 0.0,
 ///     1.0, 2.0, 3.0, 0.0, 0.0, 0.0,
@@ -1092,7 +1092,7 @@ where
 /// use ndarray::{Array1, Array2};
 ///
 /// // Create scattered 2D data
-/// let points = Array2::from_shape_vec((4, 2), vec![
+/// let points = Array2::fromshape_vec((4, 2), vec![
 ///     0.0, 0.0,
 ///     1.0, 0.0,
 ///     0.0, 1.0,

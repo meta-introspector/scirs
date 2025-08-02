@@ -1,11 +1,11 @@
-//! Convolution and correlation functions
-//!
-//! This module provides functions for convolution, correlation, and deconvolution
-//! of signals.
+// Convolution and correlation functions
+//
+// This module provides functions for convolution, correlation, and deconvolution
+// of signals.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rustfft::FftPlanner;
 use std::fmt::Debug;
@@ -26,7 +26,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::convolve;
+/// use scirs2_signal::convolve;
 ///
 /// let a = vec![1.0, 2.0, 3.0];
 /// let v = vec![0.5, 0.5];
@@ -118,7 +118,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::correlate;
+/// use scirs2_signal::correlate;
 ///
 /// let a = vec![1.0, 2.0, 3.0];
 /// let v = vec![0.5, 0.5];
@@ -403,7 +403,7 @@ pub fn convolve2d(
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_convolve_full() {
         let a = vec![1.0, 2.0, 3.0];

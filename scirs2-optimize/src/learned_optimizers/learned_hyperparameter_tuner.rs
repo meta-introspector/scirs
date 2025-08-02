@@ -1243,7 +1243,7 @@ impl CostModel {
     /// Create new cost model
     pub fn new() -> Self {
         Self {
-            cost_network: Array2::from_shape_fn((1, 10), |_| {
+            cost_network: Array2::fromshape_fn((1, 10), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             base_cost: 1.0,
@@ -1426,7 +1426,7 @@ mod tests {
     fn test_gaussian_process() {
         let mut gp = GaussianProcess::new();
 
-        let inputs = Array2::from_shape_fn((3, 2), |_| rand::rng().gen::<f64>());
+        let inputs = Array2::fromshape_fn((3, 2), |_| rand::rng().gen::<f64>());
         let outputs = Array1::from(vec![1.0, 2.0, 3.0]);
 
         gp.update_training_data(inputs, outputs).unwrap();

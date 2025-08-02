@@ -4,7 +4,7 @@
 //! retry logic, fallback strategies, and adaptive error handling for production environments.
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use rand::{Rng};
+use rand::Rng;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -555,7 +555,7 @@ impl RetryExecutor {
             CoreError::TimeoutError(_) => "TimeoutError",
             CoreError::IoError(_) => "IoError",
             CoreError::MemoryError(_) => return false, // Don't retry memory errors
-            _ => return false, // Don't retry other error types by default
+            _ => return false,                         // Don't retry other error types by default
         };
 
         self.policy.retry_on.contains(&error_type.to_string())

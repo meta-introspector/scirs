@@ -169,7 +169,7 @@ pub struct OutOfCoreConfig {
     /// Maximum number of chunks in cache
     pub max_cached_chunks: usize,
     /// Chunk size for each dimension
-    pub chunk_shape: Vec<usize>,
+    pub chunkshape: Vec<usize>,
     /// Cache replacement policy
     pub cache_policy: CachePolicy,
     /// Enable prefetching
@@ -187,7 +187,7 @@ impl Default for OutOfCoreConfig {
         Self {
             max_cache_memory: 1024 * 1024 * 1024, // 1 GB
             max_cached_chunks: 100,
-            chunk_shape: vec![1000, 1000], // Default 2D chunks
+            chunkshape: vec![1000, 1000], // Default 2D chunks
             cache_policy: CachePolicy::Lru,
             enable_prefetching: true,
             prefetch_count: 4,
@@ -495,7 +495,7 @@ pub struct FileStorageBackend {
 
 impl FileStorageBackend {
     /// Create a new file storage backend
-    pub fn new<P: AsRef<Path>>(_base_path: P) -> CoreResult<Self> {
+    pub fn new<P: AsRef<Path>>(_base_path: P, path: P) -> CoreResult<Self> {
         let base_path = _base_path.as_ref().to_path_buf();
         std::fs::create_dir_all(&_base_path)?;
 
@@ -649,7 +649,7 @@ where
 
         let chunk_coords: Vec<usize> = indices
             .iter()
-            .zip(self.config.chunk_shape.iter())
+            .zip(self.config.chunkshape.iter())
             .map(|(&idx, &chunk_size)| idx / chunk_size)
             .collect();
 
@@ -733,7 +733,7 @@ where
         // Get metadata for this chunk
         let metadata = ChunkMetadata::new(
             chunk_id.clone(),
-            self.config.chunk_shape.clone(),
+            self.config.chunkshape.clone(),
             0, // Would be looked up from storage registry
         );
 
@@ -757,10 +757,10 @@ where
         let chunk_id = ChunkId::new(self.array_id.clone(), chunk_coords.to_vec());
 
         // Calculate actual chunk shape (may be smaller at boundaries)
-        let chunk_shape = self.calculate_actual_chunk_shape(chunk_coords);
+        let chunkshape = self.calculate_actual_chunkshape(chunk_coords);
 
         // Create zero-initialized chunk
-        let chunk = Array::<T, IxDyn>::default(IxDyn(&chunk_shape));
+        let chunk = Array::<T, IxDyn>::default(IxDyn(&chunkshape));
 
         // Register chunk in storage
         let chunk_size = chunk.len() * std::mem::size_of::<T>();
@@ -779,10 +779,10 @@ where
     }
 
     /// Calculate actual chunk shape (handles boundary chunks)
-    fn calculate_actual_chunk_shape(&self, chunk_coords: &[usize]) -> Vec<usize> {
+    fn calculate_actual_chunkshape(&self, chunk_coords: &[usize]) -> Vec<usize> {
         chunk_coords
             .iter()
-            .zip(self.config.chunk_shape.iter())
+            .zip(self.config.chunkshape.iter())
             .zip(self.shape.iter())
             .map(|((&coord, &chunk_size), &total_size)| {
                 let start = coord * chunk_size;
@@ -847,7 +847,7 @@ where
         let total_chunks: Vec<usize> = self
             .shape
             .iter()
-            .zip(self.config.chunk_shape.iter())
+            .zip(self.config.chunkshape.iter())
             .map(|(&total, &chunk_size)| total.div_ceil(chunk_size))
             .collect();
 
@@ -987,7 +987,7 @@ where
         let chunk_ranges: Vec<(usize, usize)> = self
             .ranges
             .iter()
-            .zip(self.array.config.chunk_shape.iter())
+            .zip(self.array.config.chunkshape.iter())
             .map(|((start, end), &chunk_size)| {
                 let chunk_start = start / chunk_size;
                 let chunk_end = (end - 1) / chunk_size + 1;
@@ -1037,7 +1037,7 @@ where
     fn calculate_chunk_intersection(&self, chunk_coords: &[usize]) -> Vec<(usize, usize)> {
         chunk_coords
             .iter()
-            .zip(self.array.config.chunk_shape.iter())
+            .zip(self.array.config.chunkshape.iter())
             .zip(self.ranges.iter())
             .map(|((&coord, &chunk_size), &(region_start, region_end))| {
                 let chunk_start = coord * chunk_size;
@@ -1107,7 +1107,7 @@ impl OutOfCoreManager {
                 .clone()
         } else {
             // Use default file storage
-            Arc::new(FileStorageBackend::new("./out_of_core_data")?)
+            Arc::new(FileStorageBackend::new("./out_of_core_data", "./out_of_core_data")?)
         };
 
         let config = config.unwrap_or_else(|| self.config.clone());
@@ -1258,7 +1258,7 @@ pub mod utils {
         F: FnMut(&Array<T, IxDyn>, &[usize]) -> CoreResult<()>,
     {
         // Create storage backend for the data file
-        let storage = Arc::new(FileStorageBackend::new(data_path.parent().unwrap())?);
+        let storage = Arc::new(FileStorageBackend::new(data_path.parent().unwrap(), data_path)?);
 
         // Create out-of-core array
         let config = OutOfCoreConfig::default();
@@ -1290,11 +1290,11 @@ pub mod utils {
             // We've reached the deepest dimension, copy this chunk
 
             // Calculate the slice ranges for this chunk
-            let chunk_shape = &targetarray.config.chunk_shape;
+            let chunkshape = &targetarray.config.chunkshape;
             let mut slices = vec![];
 
             for (i, (&coord, &chunk_size)) in
-                chunk_coords.iter().zip(chunk_shape.iter()).enumerate()
+                chunk_coords.iter().zip(chunkshape.iter()).enumerate()
             {
                 let start = coord * chunk_size;
                 let end = ((coord + 1) * chunk_size).min(sourcearray.shape()[i]);
@@ -1356,13 +1356,13 @@ pub mod utils {
     pub fn convert_to_out_of_core<T>(
         array: &Array<T, IxDyn>,
         array_id: String,
-        chunk_shape: Vec<usize>,
+        chunkshape: Vec<usize>,
     ) -> CoreResult<Arc<OutOfCoreArray<T>>>
     where
         T: Clone + Default + 'static + Send + Sync + serde::Serialize + serde::de::DeserializeOwned,
     {
         let config = OutOfCoreConfig {
-            chunk_shape,
+            chunkshape,
             ..Default::default()
         };
 
@@ -1371,13 +1371,13 @@ pub mod utils {
             manager.create_array(array_id, array.shape().to_vec(), None, Some(config))?;
 
         // Copy data from in-memory array to out-of-core array
-        let chunk_shape = &out_of_core_array.config.chunk_shape;
-        let array_shape = array.shape();
+        let chunkshape = &out_of_core_array.config.chunkshape;
+        let arrayshape = array.shape();
 
         // Calculate the number of chunks needed in each dimension
-        let chunks_per_dim: Vec<usize> = array_shape
+        let chunks_per_dim: Vec<usize> = arrayshape
             .iter()
-            .zip(chunk_shape.iter())
+            .zip(chunkshape.iter())
             .map(|(&total, &chunk)| total.div_ceil(chunk))
             .collect();
 
@@ -1430,7 +1430,7 @@ mod tests {
         let config = OutOfCoreConfig::default();
         assert_eq!(config.max_cache_memory, 1024 * 1024 * 1024);
         assert_eq!(config.max_cached_chunks, 100);
-        assert_eq!(config.chunk_shape, vec![1000, 1000]);
+        assert_eq!(config.chunkshape, vec![1000, 1000]);
         assert!(matches!(config.cache_policy, CachePolicy::Lru));
     }
 
@@ -1561,7 +1561,7 @@ mod tests {
         let storage = Arc::new(FileStorageBackend::new(temp_dir.path())?);
 
         let config = OutOfCoreConfig {
-            chunk_shape: vec![100, 100],
+            chunkshape: vec![100, 100],
             max_cached_chunks: 2,
             ..Default::default()
         };

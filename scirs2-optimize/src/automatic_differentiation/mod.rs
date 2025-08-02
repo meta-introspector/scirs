@@ -90,7 +90,7 @@ where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
     pub fn new(_func: F) -> Self {
-        Self { _func }
+        Self { func: _func }
     }
 }
 

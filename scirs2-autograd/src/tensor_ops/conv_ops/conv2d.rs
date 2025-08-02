@@ -365,28 +365,28 @@ fn conv2d_extract_params<F: Float>(
     }
     // Extract size params
     let (batch_size, xch, xh, xw) = {
-        let x_shape = x.shape();
-        if x_shape.len() != 4 {
+        let xshape = x.shape();
+        if xshape.len() != 4 {
             return Err(op::OpError::IncompatibleShape(format!(
-                "conv2d: lhs input must be 4D (got {x_shape:?})"
+                "conv2d: lhs input must be 4D (got {xshape:?})"
             )));
         }
-        (x_shape[0], x_shape[1], x_shape[2], x_shape[3])
+        (xshape[0], xshape[1], xshape[2], xshape[3])
     };
     let (ych, kh, kw) = {
-        let w_shape = _w.shape();
-        if w_shape.len() != 4 {
+        let wshape = _w.shape();
+        if wshape.len() != 4 {
             return Err(op::OpError::IncompatibleShape(format!(
-                "conv2d: filter must be 4D (got {_w_shape:?})"
+                "conv2d: filter must be 4D (got {_wshape:?})"
             )));
         }
-        if xch != w_shape[1] {
+        if xch != wshape[1] {
             return Err(op::OpError::IncompatibleShape(format!(
                 "conv2d: input channel dim ({:?}) must match filter's second dim ({:?})",
-                xch, w_shape[1]
+                xch, wshape[1]
             )));
         }
-        (w_shape[0], w_shape[2], w_shape[3])
+        (wshape[0], wshape[2], wshape[3])
     };
     let yh = (xh + 2 * pad_h - (dilation_h * (kh - 1) + 1)) / stride_h + 1;
     let yw = (xw + 2 * pad_w - (dilation_w * (kw - 1) + 1)) / stride_w + 1;
@@ -480,21 +480,21 @@ fn conv2d_impl<F: Float>(
         dilation_h as i32,
         dilation_w as i32,
     );
-    let y = NdArray::from_shape_vec(IxDyn(&[batch_size, ych, yh, yw]), y).unwrap();
+    let y = NdArray::fromshape_vec(IxDyn(&[batch_size, ych, yh, yw]), y).unwrap();
     let cols = unsafe {
-        NdArray::from_shape_vec_unchecked(IxDyn(&[batch_size, xch, kw, kh, yh, yw]), cols)
+        NdArray::fromshape_vec_unchecked(IxDyn(&[batch_size, xch, kw, kh, yh, yw]), cols)
     };
     Ok((y, cols))
 }
 
 #[allow(dead_code)]
-fn conv2d_with_cols_impl<F: Float>(_cols: &NdArrayView<F>, w: &NdArrayView<F>) -> NdArray<F> {
+fn conv2d_with_cols_impl<F: Float>(cols: &NdArrayView<F>, w: &NdArrayView<F>) -> NdArray<F> {
     // Extract size params
-    let cols_shape = _cols.shape();
-    let k_shape = w.shape();
-    let (ych, xch, kh, kw) = { (k_shape[0], k_shape[1], k_shape[2], k_shape[3]) };
-    let (yh, yw) = (cols_shape[4], cols_shape[5]);
-    let batch_size = cols_shape[0];
+    let colsshape = _cols.shape();
+    let kshape = w.shape();
+    let (ych, xch, kh, kw) = { (kshape[0], kshape[1], kshape[2], kshape[3]) };
+    let (yh, yw) = (colsshape[4], colsshape[5]);
+    let batch_size = colsshape[0];
 
     let copied_w;
     let w_slice;
@@ -527,10 +527,10 @@ fn conv2d_with_cols_impl<F: Float>(_cols: &NdArrayView<F>, w: &NdArrayView<F>) -
         kw,
         batch_size,
     );
-    unsafe { NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch_size, ych, yh, yw]), y) }
+    unsafe { NdArray::fromshape_vec_unchecked(ndarray::IxDyn(&[batch_size, ych, yh, yw]), y) }
 }
 
-impl<T: Float>, crate::op::Op<T> for Conv2D {
+impl<T: Float> crate::op::Op<T> for Conv2D {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         // Grab inputs
         let x = &ctx.input(0);
@@ -588,7 +588,7 @@ impl<T: Float>, crate::op::Op<T> for Conv2D {
     }
 }
 
-impl<T: Float>, crate::op::Op<T> for Conv2DWithCols {
+impl<T: Float> crate::op::Op<T> for Conv2DWithCols {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         // Grab inputs
         let cols = &ctx.input(0);
@@ -636,15 +636,15 @@ fn conv2d_filter_grad_impl<F: Float>(
     gy: &NdArrayView<F>,
     w: &NdArrayView<F>,
 ) -> NdArray<F> {
-    let k_shape = w.shape();
-    let cols_shape = cols.shape();
-    let gy_shape = gy.shape();
+    let kshape = w.shape();
+    let colsshape = cols.shape();
+    let gyshape = gy.shape();
 
-    let size_per_batch_g = { gy_shape[1] * gy_shape[2] * gy_shape[3] };
+    let size_per_batch_g = { gyshape[1] * gyshape[2] * gyshape[3] };
     let size_per_batch_c =
-        { cols_shape[1] * cols_shape[2] * cols_shape[3] * cols_shape[4] * cols_shape[5] };
-    let (xch, kh, kw) = (k_shape[1], k_shape[2], k_shape[3]);
-    let (batch_size, ych, yh, yw) = (gy_shape[0], gy_shape[1], gy_shape[2], gy_shape[3]);
+        { colsshape[1] * colsshape[2] * colsshape[3] * colsshape[4] * colsshape[5] };
+    let (xch, kh, kw) = (kshape[1], kshape[2], kshape[3]);
+    let (batch_size, ych, yh, yw) = (gyshape[0], gyshape[1], gyshape[2], gyshape[3]);
 
     let cols = cols.as_ptr();
 
@@ -732,11 +732,11 @@ fn conv2d_filter_grad_impl<F: Float>(
 
     unsafe {
         gw.set_len(gw_len);
-        NdArray::from_shape_vec_unchecked(k_shape, gw)
+        NdArray::fromshape_vec_unchecked(kshape, gw)
     }
 }
 
-impl<T: Float>, crate::op::Op<T> for Conv2DFilterGrad {
+impl<T: Float> crate::op::Op<T> for Conv2DFilterGrad {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let cols = &ctx.input(0); // must be columns
         let gy = &ctx.input(1);

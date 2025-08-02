@@ -420,13 +420,13 @@ where
 
     fn add(&self, other: &dyn SparseArray<T>) -> SparseResult<Box<dyn SparseArray<T>>> {
         // First check shapes are compatible
-        let self_shape = self.shape();
-        let other_shape = other.shape();
+        let selfshape = self.shape();
+        let othershape = other.shape();
 
-        if self_shape != other_shape {
+        if selfshape != othershape {
             return Err(crate::error::SparseError::DimensionMismatch {
-                expected: self_shape.0,
-                found: other_shape.0,
+                expected: selfshape.0,
+                found: othershape.0,
             });
         }
 
@@ -465,9 +465,9 @@ where
                 let other_dense = other.to_array();
 
                 // Create the result dense array
-                let mut result_dense = ndarray::Array2::zeros(self_shape);
-                for i in 0..self_shape.0 {
-                    for j in 0..self_shape.1 {
+                let mut result_dense = ndarray::Array2::zeros(selfshape);
+                for i in 0..selfshape.0 {
+                    for j in 0..selfshape.1 {
                         result_dense[[i, j]] = self_dense[[i, j]] + other_dense[[i, j]];
                     }
                 }
@@ -478,8 +478,8 @@ where
                 let mut cols = Vec::new();
                 let mut values = Vec::new();
 
-                for i in 0..self_shape.0 {
-                    for j in 0..self_shape.1 {
+                for i in 0..selfshape.0 {
+                    for j in 0..selfshape.1 {
                         let val = result_dense[[i, j]];
                         if val != T::zero() {
                             rows.push(i);
@@ -489,7 +489,7 @@ where
                     }
                 }
 
-                let csr = CsrArray::from_triplets(&rows, &cols, &values, self_shape, false)?;
+                let csr = CsrArray::from_triplets(&rows, &cols, &values, selfshape, false)?;
                 Ok(Box::new(csr) as Box<dyn SparseArray<T>>)
             }
         }
@@ -497,13 +497,13 @@ where
 
     fn mul(&self, other: &dyn SparseArray<T>) -> SparseResult<Box<dyn SparseArray<T>>> {
         // First check shapes are compatible
-        let self_shape = self.shape();
-        let other_shape = other.shape();
+        let selfshape = self.shape();
+        let othershape = other.shape();
 
-        if self_shape != other_shape {
+        if selfshape != othershape {
             return Err(crate::error::SparseError::DimensionMismatch {
-                expected: self_shape.0,
-                found: other_shape.0,
+                expected: selfshape.0,
+                found: othershape.0,
             });
         }
 
@@ -542,9 +542,9 @@ where
                 let other_dense = other.to_array();
 
                 // Create the result dense array
-                let mut result_dense = ndarray::Array2::zeros(self_shape);
-                for i in 0..self_shape.0 {
-                    for j in 0..self_shape.1 {
+                let mut result_dense = ndarray::Array2::zeros(selfshape);
+                for i in 0..selfshape.0 {
+                    for j in 0..selfshape.1 {
                         result_dense[[i, j]] = self_dense[[i, j]] * other_dense[[i, j]];
                     }
                 }
@@ -555,8 +555,8 @@ where
                 let mut cols = Vec::new();
                 let mut values = Vec::new();
 
-                for i in 0..self_shape.0 {
-                    for j in 0..self_shape.1 {
+                for i in 0..selfshape.0 {
+                    for j in 0..selfshape.1 {
                         let val = result_dense[[i, j]];
                         if val != T::zero() {
                             rows.push(i);
@@ -566,7 +566,7 @@ where
                     }
                 }
 
-                let csr = CsrArray::from_triplets(&rows, &cols, &values, self_shape, false)?;
+                let csr = CsrArray::from_triplets(&rows, &cols, &values, selfshape, false)?;
                 Ok(Box::new(csr) as Box<dyn SparseArray<T>>)
             }
         }

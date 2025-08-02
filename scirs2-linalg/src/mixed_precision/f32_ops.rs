@@ -58,11 +58,11 @@ where
     H: Float + Clone + NumCast + Debug + ToPrimitive,
 {
     // Check dimensions
-    let a_shape = a.shape();
-    if a_shape[1] != x.len() {
+    let ashape = a.shape();
+    if ashape[1] != x.len() {
         return Err(LinalgError::ShapeError(format!(
             "Matrix columns ({}) must match vector length ({})",
-            a_shape[1],
+            ashape[1],
             x.len()
         )));
     }
@@ -72,13 +72,13 @@ where
     let x_high = convert::<B, H>(x);
 
     // Perform computation in high precision
-    let mut result_high = Array1::<H>::zeros(a_shape[0]);
+    let mut result_high = Array1::<H>::zeros(ashape[0]);
 
-    for i in 0..a_shape[0] {
+    for i in 0..ashape[0] {
         let row = a_high.index_axis(Axis(0), i);
         let mut sum = H::zero();
 
-        for j in 0..a_shape[1] {
+        for j in 0..ashape[1] {
             sum = sum + row[j] * x_high[j];
         }
 
@@ -86,7 +86,7 @@ where
     }
 
     // Convert back to desired output precision
-    let mut result = Array1::<C>::zeros(a_shape[0]);
+    let mut result = Array1::<C>::zeros(ashape[0]);
     for (i, &val) in result_high.iter().enumerate() {
         result[i] = C::from(val).unwrap_or_else(|| C::zero());
     }
@@ -110,19 +110,19 @@ where
     H: Float + Clone + NumCast + Debug + ToPrimitive + NumAssign + Zero,
 {
     // Check dimensions
-    let a_shape = a.shape();
-    let b_shape = b.shape();
+    let ashape = a.shape();
+    let bshape = b.shape();
 
-    if a_shape[1] != b_shape[0] {
+    if ashape[1] != bshape[0] {
         return Err(LinalgError::ShapeError(format!(
             "Matrix dimensions incompatible for multiplication: {}x{} and {}x{}",
-            a_shape[0], a_shape[1], b_shape[0], b_shape[1]
+            ashape[0], ashape[1], bshape[0], bshape[1]
         )));
     }
 
-    let m = a_shape[0];
-    let n = b_shape[1];
-    let k = a_shape[1];
+    let m = ashape[0];
+    let n = bshape[1];
+    let k = ashape[1];
 
     // Convert to high precision
     let a_high = convert_2d::<A, H>(a);

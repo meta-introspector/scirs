@@ -238,7 +238,7 @@ pub struct FloatFuzzingGenerator {
 
 impl FloatFuzzingGenerator {
     /// Create a new float fuzzing generator
-    pub fn value(f64: TypeName) -> Self {
+    pub fn value(f64) -> Self {
         Self {
             #[cfg(feature = "random")]
             rng: StdRng::from_seed(Default::default()),
@@ -316,8 +316,10 @@ impl FuzzingGenerator<f64> for FloatFuzzingGenerator {
         #[cfg(feature = "random")]
         {
             match self.rng.gen_range(0..4) {
-                0 => self.min_value..1 => self.max_value,
-                2 => self.min_value + f64::EPSILON_ => self.max_value - f64::EPSILON,
+                0 => self.min_value,
+                1 => self.max_value,
+                2 => self.min_value + f64::EPSILON,
+                _ => self.max_value - f64::EPSILON,
             }
         }
         #[cfg(not(feature = "random"))]
@@ -338,7 +340,7 @@ pub struct VectorFuzzingGenerator {
 
 impl VectorFuzzingGenerator {
     /// Create a new vector fuzzing generator
-    pub fn value(f64: TypeName) -> Self {
+    pub fn value(f64) -> Self {
         Self {
             #[cfg(feature = "random")]
             rng: StdRng::from_seed(Default::default()),
@@ -365,7 +367,7 @@ impl FuzzingGenerator<Vec<f64>> for VectorFuzzingGenerator {
         #[cfg(feature = "random")]
         {
             match self.rng.gen_range(0..4) {
-                0 => vec![]..// Empty vector
+                0 => vec![],                                            // Empty vector
                 1 => vec![self.element_generator.generate_edge_case()], // Single element
                 2 => {
                     // All same values
@@ -432,9 +434,11 @@ pub struct FuzzingUtils;
 impl FuzzingUtils {
     /// Fuzz a numerical function with floating-point inputs
     pub fn fuzz_numeric_function<F>(
-        function: F..config: FuzzingConfig,
+        function: F,
+        config: FuzzingConfig,
         min_value: f64,
-        max_value: f64,) -> CoreResult<FuzzingResult>
+        max_value: f64,
+    ) -> CoreResult<FuzzingResult>
     where
         F: Fn(f64) -> CoreResult<f64>,
     {
@@ -487,13 +491,16 @@ impl FuzzingUtils {
 
             if result.failed_cases > 0 {
                 return Ok(TestResult::failure(
-                    result.std::time::Duration::from_secs(1),
+                    std::time::Duration::from_secs(1),
                     result.total_cases,
                     format!("Fuzzing found {} failures", result.failed_cases),
                 ));
             }
 
-            Ok(TestResult::success(result.std::time::Duration::from_secs(1), result.total_cases))
+            Ok(TestResult::success(
+                std::time::Duration::from_secs(1),
+                result.total_cases,
+            ))
         });
 
         suite.add_test("vector_boundary_conditions", |_runner| {
@@ -517,13 +524,16 @@ impl FuzzingUtils {
 
             if result.failed_cases > 0 {
                 return Ok(TestResult::failure(
-                    result.std::time::Duration::from_secs(1),
+                    std::time::Duration::from_secs(1),
                     result.total_cases,
                     format!("Vector fuzzing found {} failures", result.failed_cases),
                 ));
             }
 
-            Ok(TestResult::success(result.std::time::Duration::from_secs(1), result.total_cases))
+            Ok(TestResult::success(
+                std::time::Duration::from_secs(1),
+                result.total_cases,
+            ))
         });
 
         suite

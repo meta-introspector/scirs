@@ -771,10 +771,10 @@ where
         let qi = q[i];
         let mi = (pi + qi) / F::from(2).unwrap();
 
-        if pi > F::zero() && mi >, F::zero() {
+        if pi > F::zero() && mi > F::zero() {
             js_div = js_div + pi * (pi / mi).ln() / F::from(2).unwrap();
         }
-        if qi > F::zero() && mi >, F::zero() {
+        if qi > F::zero() && mi > F::zero() {
             js_div = js_div + qi * (qi / mi).ln() / F::from(2).unwrap();
         }
     }
@@ -1264,7 +1264,7 @@ pub mod advanced_validation {
                 }
                 let p_yz = F::from(yz_count).unwrap() / n_samples_f;
 
-                if p_xyz > F::zero() && p_z > F::zero() && p_y > F::zero() && p_yz >, F::zero() {
+                if p_xyz > F::zero() && p_z > F::zero() && p_y > F::zero() && p_yz > F::zero() {
                     transfer_entropy = transfer_entropy + p_xyz * (p_xyz * p_y / (p_yz * p_z)).ln();
                 }
             }
@@ -1559,7 +1559,7 @@ pub mod advanced_validation {
         }
 
         /// Helper function to compute power of a float (simple implementation)
-        fn power<F: Float + FromPrimitive>(_base: F, exponent: F) -> F {
+        fn power<F: Float + FromPrimitive>(base: F, exponent: F) -> F {
             // Simple implementation using logarithms
             if _base <= F::zero() {
                 return F::zero();
@@ -1968,11 +1968,11 @@ pub mod advanced_metrics {
         for (p_i, q_i) in p.iter().zip(q.iter()) {
             let m_i = half * (*p_i + *q_i);
 
-            if *p_i > F::zero() && m_i >, F::zero() {
+            if *p_i > F::zero() && m_i > F::zero() {
                 js_div = js_div + half * *p_i * (*p_i / m_i).ln();
             }
 
-            if *q_i > F::zero() && m_i >, F::zero() {
+            if *q_i > F::zero() && m_i > F::zero() {
                 js_div = js_div + half * *q_i * (*q_i / m_i).ln();
             }
         }

@@ -235,8 +235,8 @@ where
     /// # Returns
     ///
     /// * A new empty CSR matrix
-    pub fn empty(_shape: (usize, usize)) -> Self {
-        let (rows, cols) = _shape;
+    pub fn empty(shape: (usize, usize)) -> Self {
+        let (rows, cols) = shape;
         let indptr = vec![0; rows + 1];
 
         CsrMatrix {

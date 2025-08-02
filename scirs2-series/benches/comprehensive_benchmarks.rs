@@ -351,7 +351,7 @@ fn advanced_bench_forecasting(c: &mut Criterion) {
             |b, data| {
                 b.iter(|| {
                     let mut model = LSTMForecaster::new(50, 64, 24).unwrap();
-                    let train_data = Array2::from_shape_vec(
+                    let train_data = Array2::fromshape_vec(
                         (data.len() - 50, 50),
                         data.windows(50).flat_map(|w| w.iter().copied()).collect(),
                     )
@@ -406,12 +406,12 @@ fn advanced_bench_advanced_training(c: &mut Criterion) {
                     let mut maml = MAML::<f64>::new(10, 32, 1, 0.01, 0.1, 5);
 
                     // Create dummy task data
-                    let support_x = Array2::from_shape_vec(
+                    let support_x = Array2::fromshape_vec(
                         (10, 10),
                         (0..100).map(|i| i as f64 * 0.01).collect(),
                     )
                     .unwrap();
-                    let support_y = Array2::from_shape_vec(
+                    let support_y = Array2::fromshape_vec(
                         (10, 1),
                         (0..10).map(|i| (i as f64).sin()).collect(),
                     )
@@ -439,7 +439,7 @@ fn advanced_bench_advanced_training(c: &mut Criterion) {
                 b.iter(|| {
                     let time_steps = Array1::from_iter((0..20).map(|i| i as f64 * 0.1));
                     let solver_config = scirs2_series::advanced, _training::ODESolverConfig {
-                        method: scirs2_series: advanced, _training: :IntegrationMethod::RungeKutta4,
+                        method: scirs2, series: advanced, _training: IntegrationMethod::RungeKutta4,
                         step_size: 0.1,
                         tolerance: 1e-6,
                     };
@@ -460,7 +460,7 @@ fn advanced_bench_advanced_training(c: &mut Criterion) {
                 b.iter(|| {
                     let vae = TimeSeriesVAE::<f64>::new(20, 3, 8, 32, 32);
                     let input =
-                        Array2::from_shape_vec((20, 3), data.iter().take(60).copied().collect())
+                        Array2::fromshape_vec((20, 3), data.iter().take(60).copied().collect())
                             .unwrap();
 
                     black_box(vae.forward(&input).unwrap());
@@ -476,7 +476,7 @@ fn advanced_bench_advanced_training(c: &mut Criterion) {
                 b.iter(|| {
                     let transformer = TimeSeriesTransformer::<f64>::new(50, 10, 128, 8, 4, 512);
                     let input =
-                        Array2::from_shape_vec((2, 50), data.iter().take(100).copied().collect())
+                        Array2::fromshape_vec((2, 50), data.iter().take(100).copied().collect())
                             .unwrap();
 
                     black_box(transformer.forward(&input).unwrap());

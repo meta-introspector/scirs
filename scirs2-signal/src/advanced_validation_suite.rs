@@ -1,23 +1,23 @@
-//! Advanced-comprehensive validation suite for signal processing in "Advanced mode"
-//!
-//! This module provides the most comprehensive validation system for the scirs2-signal
-//! library, incorporating all TODO requirements and validation best practices.
-//!
-//! The validation suite includes:
-//! - Enhanced multitaper spectral estimation validation
-//! - Comprehensive Lomb-Scargle periodogram testing
-//! - Parametric spectral estimation validation (AR, ARMA)
-//! - 2D wavelet transform validation and refinement
-//! - Wavelet packet transform validation
-//! - SIMD and parallel processing validation
-//! - Numerical precision and stability testing
-//! - Performance benchmarking and scaling analysis
-//! - Cross-platform consistency validation
-//! - Memory efficiency testing
-//! - SciPy reference comparison
+// Advanced-comprehensive validation suite for signal processing in "Advanced mode"
+//
+// This module provides the most comprehensive validation system for the scirs2-signal
+// library, incorporating all TODO requirements and validation best practices.
+//
+// The validation suite includes:
+// - Enhanced multitaper spectral estimation validation
+// - Comprehensive Lomb-Scargle periodogram testing
+// - Parametric spectral estimation validation (AR, ARMA)
+// - 2D wavelet transform validation and refinement
+// - Wavelet packet transform validation
+// - SIMD and parallel processing validation
+// - Numerical precision and stability testing
+// - Performance benchmarking and scaling analysis
+// - Cross-platform consistency validation
+// - Memory efficiency testing
+// - SciPy reference comparison
 
-use crate::error::SignalResult;
 use crate::dwt::Wavelet;
+use crate::error::SignalResult;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::SeedableRng;
 use std::collections::HashMap;
@@ -1017,7 +1017,8 @@ pub fn run_comprehensive_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_multitaper_validation(
-    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<MultitaperAdvancedResults> {
     // Placeholder implementation - in a real implementation this would
     // call the actual multitaper validation functions
@@ -1062,7 +1063,8 @@ fn run_enhanced_multitaper_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_lombscargle_validation(
-    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<LombScargleAdvancedResults> {
     // Placeholder implementation
     Ok(LombScargleAdvancedResults {
@@ -1091,7 +1093,8 @@ fn run_enhanced_lombscargle_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_parametric_validation(
-    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ParametricAdvancedResults> {
     // Placeholder implementation
     Ok(ParametricAdvancedResults {
@@ -1139,7 +1142,8 @@ fn run_enhanced_parametric_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_wavelet2d_validation(
-    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<Wavelet2dAdvancedResults> {
     // Placeholder implementation
     Ok(Wavelet2dAdvancedResults {
@@ -1167,7 +1171,8 @@ fn run_enhanced_wavelet2d_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_wavelet_packet_validation(
-    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<WaveletPacketAdvancedResults> {
     // Placeholder implementation
     Ok(WaveletPacketAdvancedResults {
@@ -1194,7 +1199,8 @@ fn run_enhanced_wavelet_packet_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_simd_validation(
-    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<SimdValidationResults> {
     // Placeholder implementation
     Ok(SimdValidationResults {
@@ -1210,7 +1216,8 @@ fn run_enhanced_simd_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_parallel_validation(
-    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig,
+    _rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ParallelValidationResults> {
     // Placeholder implementation
     Ok(ParallelValidationResults {
@@ -1249,8 +1256,14 @@ pub fn generate_comprehensive_report(_results: &ComprehensiveValidationResult) -
         "- **Total Tests**: {}\n",
         _results.summary.total_tests
     ));
-    report.push_str(&format!("- **Passed**: {}\n", _results.summary.passed_tests));
-    report.push_str(&format!("- **Failed**: {}\n", _results.summary.failed_tests));
+    report.push_str(&format!(
+        "- **Passed**: {}\n",
+        _results.summary.passed_tests
+    ));
+    report.push_str(&format!(
+        "- **Failed**: {}\n",
+        _results.summary.failed_tests
+    ));
     report.push_str(&format!(
         "- **Warnings**: {}\n",
         _results.summary.warning_tests

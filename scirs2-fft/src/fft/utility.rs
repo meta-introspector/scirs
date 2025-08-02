@@ -20,12 +20,12 @@ use std::fmt::Debug;
 ///
 /// * `Some(Complex64)` if the conversion was successful
 /// * `None` if the conversion failed
-pub(crate) fn try_as_complex<T: Copy + Debug + 'static>(_val: T) -> Option<Complex64> {
+pub(crate) fn try_as_complex<T: Copy + Debug + 'static>(val: T) -> Option<Complex64> {
     // Check if the type is Complex64
     if std::any::TypeId::of::<T>() == std::any::TypeId::of::<Complex64>() {
         unsafe {
             // This is a bit of a hack, but necessary for type detection at runtime
-            let ptr = &_val as *const T as *const Complex64;
+            let ptr = &val as *const T as *const Complex64;
             return Some(*ptr);
         }
     }
@@ -107,7 +107,7 @@ pub fn validate_fft_size(input_size: usize, n: Option<usize>) -> FFTResult<usize
 ///
 /// # Arguments
 ///
-/// * `input_shape` - The shape of the input array
+/// * `inputshape` - The shape of the input array
 /// * `shape` - The requested output shape (optional)
 ///
 /// # Returns
@@ -118,20 +118,20 @@ pub fn validate_fft_size(input_size: usize, n: Option<usize>) -> FFTResult<usize
 ///
 /// Returns an error if the dimensions don't match
 #[allow(dead_code)]
-pub fn validate_fft_shapes(
-    input_shape: &[usize],
+pub fn validate_fftshapes(
+    inputshape: &[usize],
     shape: Option<&[usize]>,
 ) -> FFTResult<Vec<usize>> {
     match shape {
-        Some(output_shape) => {
-            if output_shape.len() != input_shape.len() {
+        Some(outputshape) => {
+            if outputshape.len() != inputshape.len() {
                 return Err(FFTError::ValueError(
-                    "Output _shape must have the same number of dimensions as input".to_string(),
+                    "Output shape must have the same number of dimensions as input".to_string(),
                 ));
             }
-            Ok(output_shape.to_vec())
+            Ok(outputshape.to_vec())
         }
-        None => Ok(input_shape.to_vec()),
+        None => Ok(inputshape.to_vec()),
     }
 }
 
@@ -178,8 +178,8 @@ pub fn validate_fft_axes(_ndim: usize, axes: Option<&[usize]>) -> FFTResult<Vec<
 /// A new complex array with the specified shape
 /// Marked as dead code but kept for API consistency
 #[allow(dead_code)]
-pub fn zeros_like_complex(_shape: &[usize]) -> ArrayD<Complex64> {
-    ArrayD::<Complex64>::zeros(IxDyn(_shape))
+pub fn zeros_like_complex(shape: &[usize]) -> ArrayD<Complex64> {
+    ArrayD::<Complex64>::zeros(IxDyn(shape))
 }
 
 /// Expand a real array into a complex array with zero imaginary part

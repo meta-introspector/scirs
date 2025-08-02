@@ -132,7 +132,7 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml, ops: :activation"
+    "scirs2::array_protocol::ml, ops: activation"
 );
 
 array_function_dispatch!(
@@ -250,11 +250,13 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml, ops: :conv2d"
+    "scirs2::array_protocol::ml, ops: conv2d"
 );
 
 array_function_dispatch!(
-    fn max_pool2d(input: &dyn ArrayProtocol, kernel_size: (usize, usize),
+    fn max_pool2d(
+        input: &dyn ArrayProtocol,
+        kernel_size: (usize, usize),
         stride: (usize, usize),
         padding: (usize, usize),
     ) -> Result<Box<dyn ArrayProtocol>, OperationError> {
@@ -357,7 +359,7 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml, ops: :max_pool2d"
+    "scirs2::array_protocol::ml, ops: max_pool2d"
 );
 
 array_function_dispatch!(
@@ -488,7 +490,7 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml, ops: :batch_norm"
+    "scirs2::array_protocol::ml, ops: batch_norm"
 );
 
 array_function_dispatch!(
@@ -513,9 +515,9 @@ array_function_dispatch!(
                 // Check shapes
                 if logits.shape() != labels.shape() {
                     return Err(OperationError::ShapeMismatch(format!(
-                        "Logits shape {logits_shape:?} doesn't match labels shape {labels_shape:?}",
-                        logits_shape = logits.shape(),
-                        labels_shape = labels.shape()
+                        "Logits shape {logitsshape:?} doesn't match labels shape {labelsshape:?}",
+                        logitsshape = logits.shape(),
+                        labelsshape = labels.shape()
                     )));
                 }
 
@@ -593,7 +595,7 @@ array_function_dispatch!(
 
         Ok(result)
     },
-    "scirs2::array_protocol::ml, ops: :cross_entropy"
+    "scirs2::array_protocol::ml, ops: cross_entropy"
 );
 
 array_function_dispatch!(
@@ -671,7 +673,7 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml, ops: :dropout"
+    "scirs2::array_protocol::ml, ops: dropout"
 );
 
 array_function_dispatch!(
@@ -873,5 +875,5 @@ array_function_dispatch!(
             )),
         }
     },
-    "scirs2::array_protocol::ml, ops: :self_attention"
+    "scirs2::array_protocol::ml, ops: self_attention"
 );

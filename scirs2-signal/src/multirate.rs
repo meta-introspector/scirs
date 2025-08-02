@@ -1,32 +1,32 @@
-//! Perfect Reconstruction Filter Banks and Multirate Processing
-//!
-//! This module provides comprehensive multirate signal processing capabilities including:
-//! - Perfect reconstruction (PR) filter banks
-//! - Polyphase decomposition and implementation
-//! - Noble identities for efficient multirate structures
-//! - Arbitrary rate conversion systems
-//! - Advanced multirate algorithms (farrow interpolation, variable fractional delay)
-//! - Sample rate conversion with aliasing control
-//! - Multirate noise shaping and quantization
-//!
-//! ## Perfect Reconstruction Filter Banks
-//!
-//! Perfect reconstruction filter banks allow lossless decomposition and reconstruction
-//! of signals, which is essential for applications like audio compression, image processing,
-//! and feature extraction.
-//!
-//! ## Polyphase Implementation
-//!
-//! Polyphase structures provide computationally efficient implementations of multirate
-//! systems by operating at the lowest possible sampling rate.
+use ndarray::s;
+// Perfect Reconstruction Filter Banks and Multirate Processing
+//
+// This module provides comprehensive multirate signal processing capabilities including:
+// - Perfect reconstruction (PR) filter banks
+// - Polyphase decomposition and implementation
+// - Noble identities for efficient multirate structures
+// - Arbitrary rate conversion systems
+// - Advanced multirate algorithms (farrow interpolation, variable fractional delay)
+// - Sample rate conversion with aliasing control
+// - Multirate noise shaping and quantization
+//
+// ## Perfect Reconstruction Filter Banks
+//
+// Perfect reconstruction filter banks allow lossless decomposition and reconstruction
+// of signals, which is essential for applications like audio compression, image processing,
+// and feature extraction.
+//
+// ## Polyphase Implementation
+//
+// Polyphase structures provide computationally efficient implementations of multirate
+// systems by operating at the lowest possible sampling rate.
 
 #[allow(unused_imports)]
 #[allow(non_snake_case)]
 #[allow(clippy::needless_range_loop)]
-
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Array3, ArrayView1, s};
-use num__complex::Complex64;
+use ndarray::{ Array1, Array2, Array3, ArrayView1};
+use num_complex::Complex64;
 use std::f64::consts::PI;
 
 /// Configuration for perfect reconstruction filter banks

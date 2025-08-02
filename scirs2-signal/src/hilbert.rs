@@ -1,18 +1,18 @@
-//! Hilbert transform implementation
-//!
-//! This module provides functions for computing the Hilbert transform
-//! and analytic signal of a real-valued signal.
-//!
-//! The Hilbert transform is useful for creating analytic signals,
-//! computing instantaneous frequency and amplitude, and other signal
-//! processing applications.
+// Hilbert transform implementation
+//
+// This module provides functions for computing the Hilbert transform
+// and analytic signal of a real-valued signal.
+//
+// The Hilbert transform is useful for creating analytic signals,
+// computing instantaneous frequency and amplitude, and other signal
+// processing applications.
 
 use crate::error::{SignalError, SignalResult};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
+use rustfft;
 use std::f64::consts::PI;
 use std::fmt::Debug;
-use rustfft;
 
 #[allow(unused_imports)]
 /// Compute the Hilbert transform of a real-valued signal.
@@ -38,7 +38,7 @@ use rustfft;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::hilbert;
+/// use scirs2_signal::hilbert;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a cosine signal
@@ -182,7 +182,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::envelope;
+/// use scirs2_signal::envelope;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a windowed sine wave
@@ -238,7 +238,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::instantaneous_frequency;
+/// use scirs2_signal::instantaneous_frequency;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a chirp signal (increasing frequency)
@@ -337,7 +337,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::instantaneous_phase;
+/// use scirs2_signal::instantaneous_phase;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a sine wave
@@ -411,7 +411,7 @@ where
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_hilbert_transform() {
         // Test on a cosine wave

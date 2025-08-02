@@ -769,7 +769,7 @@ mod tests {
         assert_eq!(kriging.approximation_method(), FastKrigingMethod::Local);
 
         // Test prediction
-        let query_points = Array2::from_shape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
+        let query_points = Array2::fromshape_vec((2, 2), vec![0.25, 0.25, 0.75, 0.75]).unwrap();
 
         let result = kriging.predict(&query_points.view()).unwrap();
         assert_eq!(result.len(), 2);
@@ -800,7 +800,7 @@ mod tests {
             .unwrap();
 
         let query_points =
-            Array2::from_shape_vec((3, 2), vec![0.1, 0.1, 0.5, 0.5, 0.9, 0.9]).unwrap();
+            Array2::fromshape_vec((3, 2), vec![0.1, 0.1, 0.5, 0.5, 0.9, 0.9]).unwrap();
 
         let result = kriging.predict(&query_points.view()).unwrap();
         assert_eq!(result.len(), 3);
@@ -825,7 +825,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let query_points = Array2::from_shape_vec((2, 2), vec![0.3, 0.3, 0.7, 0.7]).unwrap();
+        let query_points = Array2::fromshape_vec((2, 2), vec![0.3, 0.3, 0.7, 0.7]).unwrap();
 
         let result = kriging.predict(&query_points.view()).unwrap();
         assert_eq!(result.len(), 2);
@@ -853,7 +853,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let query_points = Array2::from_shape_vec((2, 2), vec![0.4, 0.4, 0.6, 0.6]).unwrap();
+        let query_points = Array2::fromshape_vec((2, 2), vec![0.4, 0.4, 0.6, 0.6]).unwrap();
 
         let result = kriging.predict(&query_points.view()).unwrap();
         assert_eq!(result.len(), 2);
@@ -904,7 +904,7 @@ mod tests {
 
     #[test]
     fn test_single_point_dataset() {
-        let points = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
+        let points = Array2::fromshape_vec((1, 2), vec![0.5, 0.5]).unwrap();
         let values = Array1::from_vec(vec![1.0]);
 
         let kriging = FastKrigingBuilder::<f64>::new()
@@ -915,7 +915,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let query_points = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).unwrap();
+        let query_points = Array2::fromshape_vec((1, 2), vec![0.6, 0.6]).unwrap();
 
         // Should not crash on single point
         let result = kriging.predict(&query_points.view());

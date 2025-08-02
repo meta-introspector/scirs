@@ -578,7 +578,7 @@ impl BenchmarkSystem {
         }
 
         Self {
-            _config,
+            config: _config,
             test_problems,
         }
     }
@@ -597,7 +597,7 @@ impl BenchmarkSystem {
         for problem in &self.test_problems {
             println!(
                 "Benchmarking {} on {} ({}D)",
-                algorithm_name, problem._name, problem.dimensions
+                algorithm_name, problem.name, problem.dimensions
             );
 
             let starting_points = problem.generate_starting_points(self.config.runs_per_problem)?;
@@ -630,7 +630,7 @@ impl BenchmarkSystem {
                         };
 
                         runs.push(BenchmarkRun {
-                            problem_name: problem._name.clone(),
+                            problem_name: problem.name.clone(),
                             dimensions: problem.dimensions,
                             run_id,
                             algorithm: algorithm_name.to_string(),
@@ -651,7 +651,7 @@ impl BenchmarkSystem {
                         };
 
                         runs.push(BenchmarkRun {
-                            problem_name: problem._name.clone(),
+                            problem_name: problem.name.clone(),
                             dimensions: problem.dimensions,
                             run_id,
                             algorithm: algorithm_name.to_string(),

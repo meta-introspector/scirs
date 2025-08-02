@@ -104,19 +104,19 @@ pub mod memory_efficient {
     use super::*;
 
     /// Estimate memory usage for an operation
-    pub fn estimate_memory_usage<T>(_shape: &[usize], num_arrays: usize) -> usize {
+    pub fn estimate_memory_usage<T>(shape: &[usize], num_arrays: usize) -> usize {
         let elem_size = std::mem::size_of::<T>();
-        let total_elements: usize = _shape.iter().product();
+        let total_elements: usize = shape.iter().product();
         total_elements * elem_size * num_arrays
     }
 
     /// Check if operation fits within memory limits
     pub fn check_memory_limit<T>(
-        _shape: &[usize],
+        shape: &[usize],
         num_arrays: usize,
         config: &ArrayConfig,
     ) -> bool {
-        estimate_memory_usage::<T>(_shape, num_arrays) <= config.memory_limit
+        estimate_memory_usage::<T>(shape, num_arrays) <= config.memory_limit
     }
 }
 
@@ -526,7 +526,7 @@ pub mod gpu {
                 self.execute_kernel("gamma", &flattened, &mut output)?;
 
                 let result = Array::from_vec(output)
-                    .to_shape(input.dim())
+                    .toshape(input.dim())
                     .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
                     .into_owned();
 
@@ -546,7 +546,7 @@ pub mod gpu {
             self.execute_kernel("bessel_j0", &flattened, &mut output)?;
 
             let result = Array::from_vec(output)
-                .to_shape(input.dim())
+                .toshape(input.dim())
                 .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
                 .into_owned();
 
@@ -565,7 +565,7 @@ pub mod gpu {
             self.execute_kernel("erf", &flattened, &mut output)?;
 
             let result = Array::from_vec(output)
-                .to_shape(input.dim())
+                .toshape(input.dim())
                 .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
                 .into_owned();
 
@@ -606,11 +606,11 @@ pub mod broadcasting {
     use super::*;
 
     /// Check if two shapes can be broadcast together
-    pub fn can_broadcast(_shape1: &[usize], shape2: &[usize]) -> bool {
-        let max_len = _shape1.len().max(shape2.len());
+    pub fn can_broadcast(shape1: &[usize], shape2: &[usize]) -> bool {
+        let max_len = shape1.len().max(shape2.len());
 
         for i in 0..max_len {
-            let dim1 = _shape1.get(_shape1.len().wrapping_sub(i + 1)).unwrap_or(&1);
+            let dim1 = shape1.get(shape1.len().wrapping_sub(i + 1)).unwrap_or(&1);
             let dim2 = shape2.get(shape2.len().wrapping_sub(i + 1)).unwrap_or(&1);
 
             if *dim1 != 1 && *dim2 != 1 && *dim1 != *dim2 {
@@ -622,21 +622,21 @@ pub mod broadcasting {
     }
 
     /// Compute the broadcast shape of two arrays
-    pub fn broadcast_shape(
-        _shape1: &[usize],
+    pub fn broadcastshape(
+        shape1: &[usize],
         shape2: &[usize],
     ) -> Result<Vec<usize>, SpecialError> {
-        if !can_broadcast(_shape1, shape2) {
+        if !can_broadcast(shape1, shape2) {
             return Err(SpecialError::DomainError(
                 "Arrays cannot be broadcast together".to_string(),
             ));
         }
 
-        let max_len = _shape1.len().max(shape2.len());
+        let max_len = shape1.len().max(shape2.len());
         let mut result = Vec::with_capacity(max_len);
 
         for i in 0..max_len {
-            let dim1 = _shape1.get(_shape1.len().wrapping_sub(i + 1)).unwrap_or(&1);
+            let dim1 = shape1.get(shape1.len().wrapping_sub(i + 1)).unwrap_or(&1);
             let dim2 = shape2.get(shape2.len().wrapping_sub(i + 1)).unwrap_or(&1);
 
             result.push((*dim1).max(*dim2));
@@ -737,7 +737,7 @@ pub mod vectorized {
                 let data: Vec<f64> = input.iter().copied().collect();
                 let result: Vec<f64> = data.par_iter().map(|&x| crate::gamma::gamma(x)).collect();
                 let result_array = Array::from_vec(result)
-                    .to_shape(input.dim())
+                    .toshape(input.dim())
                     .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
                     .into_owned();
                 return Ok(GammaResult::Immediate(result_array));
@@ -794,7 +794,7 @@ pub mod vectorized {
                 let data: Vec<f64> = _input.iter().copied().collect();
                 let result: Vec<f64> = data.par_iter().map(|&x| crate::erf::erf(x)).collect();
                 return Ok(Array::from_vec(result)
-                    .to_shape(_input.dim())
+                    .toshape(_input.dim())
                     .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
                     .into_owned());
             }
@@ -821,7 +821,7 @@ pub mod vectorized {
                     .map(|&x| crate::combinatorial::factorial(x).unwrap_or(f64::NAN))
                     .collect();
                 return Ok(Array::from_vec(result)
-                    .to_shape(input.dim())
+                    .toshape(input.dim())
                     .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
                     .into_owned());
             }
@@ -946,7 +946,7 @@ pub mod vectorized {
     //     af_result.host(&mut result_vec);
     //
     //     let result = Array::from_vec(result_vec)
-    //         .to_shape(input.dim())
+    //         .toshape(input.dim())
     //         .map_err(|e| SpecialError::ComputationError(format!("Shape conversion error: {}", e)))?
     //         .into_owned();
     //
@@ -1059,7 +1059,7 @@ pub mod vectorized {
             let data: Vec<T> = input.iter().cloned().collect();
             let processed: Vec<T> = data.into_par_iter().map(operation).collect();
             let result = Array::from_vec(processed)
-                .to_shape(input.dim())
+                .toshape(input.dim())
                 .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
                 .into_owned();
             return Ok(result);
@@ -1324,7 +1324,7 @@ mod tests {
         assert!(broadcasting::can_broadcast(&[2, 3, 4], &[3, 4]));
         assert!(!broadcasting::can_broadcast(&[3, 2], &[4, 5]));
 
-        let shape = broadcasting::broadcast_shape(&[3, 1], &[1, 4]).unwrap();
+        let shape = broadcasting::broadcastshape(&[3, 1], &[1, 4]).unwrap();
         assert_eq!(shape, vec![3, 4]);
     }
 

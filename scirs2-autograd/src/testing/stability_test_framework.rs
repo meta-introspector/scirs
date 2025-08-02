@@ -485,7 +485,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             .map(|i| F::from(i).unwrap() * F::from(0.1).unwrap())
             .collect();
 
-        T::convert_to_tensor(Array::from_shape_vec(IxDyn(&shape), data).unwrap(), graph)
+        T::convert_to_tensor(Array::fromshape_vec(IxDyn(&shape), data).unwrap(), graph)
     }
 
     #[allow(dead_code)]
@@ -508,7 +508,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
             })
             .collect();
 
-        T::convert_to_tensor(Array::from_shape_vec(IxDyn(&shape), data).unwrap(), graph)
+        T::convert_to_tensor(Array::fromshape_vec(IxDyn(&shape), data).unwrap(), graph)
     }
 
     #[allow(dead_code)]
@@ -523,7 +523,7 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
         let shape = vec![values.len()];
         let data: Vec<F> = values.into_iter().map(|v| F::from(v).unwrap()).collect();
 
-        T::convert_to_tensor(Array::from_shape_vec(IxDyn(&shape), data).unwrap(), graph)
+        T::convert_to_tensor(Array::fromshape_vec(IxDyn(&shape), data).unwrap(), graph)
     }
 
     fn evaluate_test_pass(

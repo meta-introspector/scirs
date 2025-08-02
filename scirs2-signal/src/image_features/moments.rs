@@ -1,9 +1,9 @@
-//! Moment-based feature extraction for images
+// Moment-based feature extraction for images
 
+use super::utils::calculate_raw_moment;
 use crate::error::SignalResult;
 use ndarray::Array2;
 use std::collections::HashMap;
-use super::utils::calculate_raw_moment;
 
 #[allow(unused_imports)]
 /// Extract moment-based features from an image
@@ -12,7 +12,7 @@ pub fn extract_moment_features(
     image: &Array2<f64>,
     features: &mut HashMap<String, f64>,
 ) -> SignalResult<()> {
-    let _shape = image.shape();
+    let shape = image.shape();
 
     // Calculate raw moments up to order 3
     let m00 = calculate_raw_moment(image, 0, 0);

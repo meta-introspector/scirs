@@ -161,7 +161,7 @@ impl RobustConvergenceState {
                 plateau_detected: false,
                 plateau_start_iteration: None,
             },
-            _options,
+            options: _options,
         }
     }
 

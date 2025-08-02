@@ -57,7 +57,7 @@ impl ActivationFunction {
                 let tanh = x.mapv(|v| v.tanh());
                 tanh.mapv(|t| 1.0 - t * t)
             }
-            ActivationFunction::Linear =>, Array::ones(x.dim()),
+            ActivationFunction::Linear => Array::ones(x.dim()),
         }
     }
     /// Get a string representation of the activation function
@@ -117,7 +117,7 @@ impl LossFunction {
                 // d(CCE)/dŷ = -y/ŷ / n
                 let epsilon = 1e-15;
                 let n = predictions.shape()[0] as f32;
-                Array2::from_shape_fn(predictions.dim(), |(i, j)| {
+                Array2::fromshape_fn(predictions.dim(), |(i, j)| {
                     let y_pred = predictions[(i, j)].max(epsilon).min(1.0 - epsilon);
                     let y_true = targets[(i, j)];
                     if y_true > 0.0 {
@@ -188,7 +188,7 @@ impl Conv2D {
         let std_dev = (2.0 / fan_in as f32).sqrt();
         let dist = Uniform::new_inclusive(-std_dev, std_dev);
         // Initialize weights: [filters, input_channels, kernel_h, kernel_w]
-        let weights = Array4::from_shape_fn(
+        let weights = Array4::fromshape_fn(
             [filters, input_channels, kernel_size.0, kernel_size.1],
             |_| dist.sample(rng),
         );
@@ -210,10 +210,10 @@ impl Conv2D {
         }
     }
     /// Calculate output dimensions based on input and layer parameters
-    fn calculate_output_shape(&self, input_shape: &[usize]) -> [usize; 4] {
-        let batch_size = input_shape[0];
-        let input_height = input_shape[2];
-        let input_width = input_shape[3];
+    fn calculate_outputshape(&self, inputshape: &[usize]) -> [usize; 4] {
+        let batch_size = inputshape[0];
+        let input_height = inputshape[2];
+        let input_width = inputshape[3];
         let (output_height, output_width) = match self.padding {
             PaddingMode::Valid => {
                 let h = (input_height - self.kernel_size.0) / self.stride.0 + 1;
@@ -225,12 +225,12 @@ impl Conv2D {
         [batch_size, self.filters, output_height, output_width]
     }
     /// Calculate padding based on padding mode
-    fn calculate_padding(&self, input_shape: &[usize]) -> (usize, usize, usize, usize) {
+    fn calculate_padding(&self, inputshape: &[usize]) -> (usize, usize, usize, usize) {
         match self.padding {
             PaddingMode::Valid => (0, 0, 0, 0),
             PaddingMode::Same => {
-                let input_height = input_shape[2];
-                let input_width = input_shape[3];
+                let input_height = inputshape[2];
+                let input_width = inputshape[3];
                 let output_height = (input_height as f32 / self.stride.0 as f32).ceil() as usize;
                 let output_width = (input_width as f32 / self.stride.1 as f32).ceil() as usize;
                 let pad_height = ((output_height - 1) * self.stride.0 + self.kernel_size.0)
@@ -247,13 +247,13 @@ impl Conv2D {
     }
     /// Apply convolution operation
     fn convolve(&self, input: &Array4<f32>) -> Array4<f32> {
-        let input_shape = input.shape();
-        let batch_size = input_shape[0];
-        let input_channels = input_shape[1];
-        let input_height = input_shape[2];
-        let input_width = input_shape[3];
+        let inputshape = input.shape();
+        let batch_size = inputshape[0];
+        let input_channels = inputshape[1];
+        let input_height = inputshape[2];
+        let input_width = inputshape[3];
         // Calculate padding
-        let (pad_top, pad_bottom, pad_left, pad_right) = self.calculate_padding(input_shape);
+        let (pad_top, pad_bottom, pad_left, pad_right) = self.calculate_padding(inputshape);
         // Apply padding if needed
         let padded_input = if pad_top > 0 || pad_bottom > 0 || pad_left > 0 || pad_right > 0 {
             let padded_height = input_height + pad_top + pad_bottom;
@@ -274,10 +274,10 @@ impl Conv2D {
             input.clone()
         };
         // Calculate output dimensions
-        let output_shape = self.calculate_output_shape(input_shape);
-        let output_height = output_shape[2];
-        let output_width = output_shape[3];
-        let mut output = Array4::zeros(output_shape);
+        let outputshape = self.calculate_outputshape(inputshape);
+        let output_height = outputshape[2];
+        let output_width = outputshape[3];
+        let mut output = Array4::zeros(outputshape);
         // Perform convolution for each batch, filter, and spatial position
         for b in 0..batch_size {
             for f in 0..self.filters {
@@ -315,10 +315,10 @@ impl Conv2D {
             .input
             .as_ref()
             .expect("Forward pass must be called first");
-        let output_shape = grad_output.shape();
-        let batch_size = output_shape[0];
-        let output_height = output_shape[2];
-        let output_width = output_shape[3];
+        let outputshape = grad_output.shape();
+        let batch_size = outputshape[0];
+        let output_height = outputshape[2];
+        let output_width = outputshape[3];
         let input_channels = input.shape()[1];
         let input_height = input.shape()[2];
         let input_width = input.shape()[3];
@@ -529,11 +529,11 @@ impl MaxPool2D {
         }
     }
     /// Calculate output dimensions
-    fn calculate_output_shape(&self, input_shape: &[usize]) -> [usize; 4] {
-        let batch_size = input_shape[0];
-        let channels = input_shape[1];
-        let input_height = input_shape[2];
-        let input_width = input_shape[3];
+    fn calculate_outputshape(&self, inputshape: &[usize]) -> [usize; 4] {
+        let batch_size = inputshape[0];
+        let channels = inputshape[1];
+        let input_height = inputshape[2];
+        let input_width = inputshape[3];
         let output_height = (input_height - self.pool_size.0) / self.stride.0 + 1;
         let output_width = (input_width - self.pool_size.1) / self.stride.1 + 1;
         [batch_size, channels, output_height, output_width]
@@ -541,18 +541,18 @@ impl MaxPool2D {
 }
 impl Layer for MaxPool2D {
     fn forward(&mut self, x: &Array4<f32>) -> Array4<f32> {
-        let input_shape = x.shape();
-        let batch_size = input_shape[0];
-        let channels = input_shape[1];
-        let _input_height = input_shape[2];
-        let _input_width = input_shape[3];
+        let inputshape = x.shape();
+        let batch_size = inputshape[0];
+        let channels = inputshape[1];
+        let _input_height = inputshape[2];
+        let _input_width = inputshape[3];
         // Calculate output shape
-        let output_shape = self.calculate_output_shape(input_shape);
-        let output_height = output_shape[2];
-        let output_width = output_shape[3];
-        let mut output = Array4::zeros(output_shape);
+        let outputshape = self.calculate_outputshape(inputshape);
+        let output_height = outputshape[2];
+        let output_width = outputshape[3];
+        let mut output = Array4::zeros(outputshape);
         // Initialize output array and max indices
-        let mut max_indices = Array4::from_elem(output_shape, (0, 0));
+        let mut max_indices = Array4::from_elem(outputshape, (0, 0));
         // Perform max pooling
         for b in 0..batch_size {
             for c in 0..channels {
@@ -592,11 +592,11 @@ impl Layer for MaxPool2D {
             .as_ref()
             .expect("Forward pass must be called first");
 
-        let output_shape = grad_output.shape();
-        let batch_size = output_shape[0];
-        let channels = output_shape[1];
-        let output_height = output_shape[2];
-        let output_width = output_shape[3];
+        let outputshape = grad_output.shape();
+        let batch_size = outputshape[0];
+        let channels = outputshape[1];
+        let output_height = outputshape[2];
+        let output_width = outputshape[3];
 
         // Calculate input dimensions from _output and pooling parameters
         let input_height = (output_height - 1) * self.stride.0 + self.pool_size.0;
@@ -635,39 +635,39 @@ impl Layer for MaxPool2D {
 }
 /// Flatten layer to convert from 4D to 2D (for fully connected layers)
 struct Flatten {
-    input_shape: Option<Vec<usize>>,
+    inputshape: Option<Vec<usize>>,
 }
 
 impl Flatten {
     /// Create a new Flatten layer
     fn new() -> Self {
-        Self { input_shape: None }
+        Self { inputshape: None }
     }
 }
 impl Layer for Flatten {
     fn forward(&mut self, x: &Array4<f32>) -> Array4<f32> {
-        let input_shape = x.shape().to_vec();
-        let batch_size = input_shape[0];
+        let inputshape = x.shape().to_vec();
+        let batch_size = inputshape[0];
         // Calculate flattened size (excluding batch dimension)
-        let flat_size: usize = input_shape[1..].iter().product();
+        let flat_size: usize = inputshape[1..].iter().product();
         // Reshape to (batch_size, flat_size, 1, 1) - a 4D tensor with last two dims = 1
         let flattened = x
             .clone()
             .into_shape_with_order((batch_size, flat_size, 1, 1))
             .unwrap();
         // Store original shape for backward pass
-        self.input_shape = Some(input_shape);
+        self.inputshape = Some(inputshape);
         flattened
     }
     fn backward(&mut self, grad_output: &Array4<f32>) -> Array4<f32> {
-        let input_shape = self
-            .input_shape
+        let inputshape = self
+            .inputshape
             .as_ref()
             .expect("Forward pass must be called first");
         // Reshape back to original shape
         let reshaped = grad_output
             .clone()
-            .into_shape_with_order(input_shape.clone())
+            .into_shape_with_order(inputshape.clone())
             .unwrap();
         let reshaped_4d: Array4<f32> = reshaped.into_dimensionality().unwrap();
         reshaped_4d
@@ -708,7 +708,7 @@ impl Dense {
         let std_dev = (2.0 / input_size as f32).sqrt();
         let dist = Uniform::new_inclusive(-std_dev, std_dev);
         // Initialize weights and biases
-        let weights = Array2::from_shape_fn((input_size, output_size), |_| dist.sample(rng));
+        let weights = Array2::fromshape_fn((input_size, output_size), |_| dist.sample(rng));
         let biases = Array1::zeros(output_size);
         Self {
             input_size,
@@ -992,7 +992,7 @@ fn create_synthetic_dataset(
     let mut class_patterns = Vec::with_capacity(num_classes);
     for _ in 0..num_classes {
         let pattern =
-            Array2::from_shape_fn(
+            Array2::fromshape_fn(
                 image_size,
                 |_| {
                     if rng.gen::<f32>() > 0.7 {
@@ -1139,7 +1139,8 @@ fn train_cnn_example() -> Result<()> {
             "Example {}: True class = {}..Predicted class = {}",
             i + 1,
             true_class,
-            predicted_class);
+            predicted_class
+        );
     }
     Ok(())
 }

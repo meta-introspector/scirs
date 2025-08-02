@@ -696,7 +696,7 @@ fn resize_attribution<F>(_attribution: &ArrayD<F>, target_dim: IxDyn) -> Result<
                     result[[c, h, w]] = _attribution[[h, w]];
     } else if attr_ndim == target_ndim {
         // Same dimensions - direct copy with size adjustment
-        let attr_shape = attribution.shape();
+        let attrshape = attribution.shape();
         // Copy elements up to the minimum size in each dimension
         for idx in ndarray::indices(&target_dim) {
             let idx_slice = idx.as_slice().unwrap();
@@ -704,14 +704,14 @@ fn resize_attribution<F>(_attribution: &ArrayD<F>, target_dim: IxDyn) -> Result<
             // Map indices, clamping to attribution bounds
             for (i, &target_idx) in idx_slice.iter().enumerate() {
                 if i < attr_ndim {
-                    attr_idx[i] = target_idx.min(attr_shape[i] - 1);
+                    attr_idx[i] = target_idx.min(attrshape[i] - 1);
             if let Some(attr_val) = attribution.get(attr_idx.as_slice()) {
                 result[idx] = *attr_val;
         // For dimension mismatch, use nearest neighbor interpolation
             // Scale indices from target to attribution space
-                    let scale_factor = attr_shape[i] as f64 / target_slice[i] as f64;
+                    let scale_factor = attrshape[i] as f64 / target_slice[i] as f64;
                     attr_idx[i] = ((target_idx as f64 * scale_factor).round() as usize)
-                        .min(attr_shape[i] - 1);
+                        .min(attrshape[i] - 1);
     Ok(result)
 /// Compute SmoothGrad attribution by adding noise and averaging
 #[allow(dead_code)]
@@ -810,7 +810,7 @@ pub fn compute_occlusion_attribution<F>(
     stride: &[usize],
     baseline_value: F,
     let mut attribution = ArrayD::zeros(input.raw_dim());
-    let input_shape = input.shape();
+    let inputshape = input.shape();
     // Get baseline prediction
     let baseline_input = input.mapv(|_| baseline_value);
     let baseline_output = compute_pseudo_output_value(&baseline_input);
@@ -822,13 +822,13 @@ pub fn compute_occlusion_attribution<F>(
             "Window size and stride must match input dimensionality".to_string(),
     // Generate occlusion positions
     let mut positions = Vec::new();
-    generate_occlusion_positions(input_shape, window_size, stride, &mut positions, 0, vec![]);
+    generate_occlusion_positions(inputshape, window_size, stride, &mut positions, 0, vec![]);
     for position in positions {
         // Create occluded input
         let mut occluded_input = input.clone();
         // Apply occlusion window
         for (dim, &pos) in position.iter().enumerate() {
-            let end_pos = (pos + window_size[dim]).min(input_shape[dim]);
+            let end_pos = (pos + window_size[dim]).min(inputshape[dim]);
             // Occlude the region (simplified multi-dimensional occlusion)
             match dim {
                 0 => {
@@ -838,7 +838,7 @@ pub fn compute_occlusion_attribution<F>(
                         }
                     }
                 1 if ndim >= 2 => {
-                        for j in 0..input_shape[0] {
+                        for j in 0..inputshape[0] {
                             if let Some(elem) = occluded_input.get_mut([j, i].as_slice()) {
                                 *elem = baseline_value;
                             }

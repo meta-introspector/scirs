@@ -253,7 +253,7 @@ where
 /// use ndarray::Array2;
 /// use scirs2__cluster::vq::kmeans2_str;
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![
+/// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 1.0, 1.1, 1.1, 0.9, 0.9,
 ///     8.0, 8.0, 8.1, 8.1, 7.9, 7.9,
 /// ]).unwrap();

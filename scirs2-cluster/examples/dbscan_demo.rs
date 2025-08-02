@@ -7,7 +7,7 @@ fn main() {
     println!("========================");
 
     // Create a dataset with clusters of different shapes and noise points
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (16, 2),
         vec![
             // Cluster 1 - dense cluster

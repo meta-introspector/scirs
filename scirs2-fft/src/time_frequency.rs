@@ -172,7 +172,11 @@ where
 
 /// Compute Short-Time Fourier Transform (STFT)
 #[allow(dead_code)]
-fn compute_stft<T>(_signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
+fn compute_stft<T>(
+    _signal: &[T],
+    config: &TFConfig,
+    sample_rate: Option<f64>,
+) -> FFTResult<TFResult>
 where
     T: NumCast + Copy + Debug,
 {
@@ -183,12 +187,12 @@ where
 
     // Create window function
     let window_type = match config.window_function {
-        WindowFunction::None =>, crate::window::Window::Rectangular,
-        WindowFunction::Hann =>, crate::window::Window::Hann,
-        WindowFunction::Hamming =>, crate::window::Window::Hamming,
-        WindowFunction::Blackman =>, crate::window::Window::Blackman,
-        WindowFunction::FlatTop =>, crate::window::Window::FlatTop,
-        WindowFunction::Kaiser =>, crate::window::Window::Kaiser(5.0), // Default beta
+        WindowFunction::None => crate::window::Window::Rectangular,
+        WindowFunction::Hann => crate::window::Window::Hann,
+        WindowFunction::Hamming => crate::window::Window::Hamming,
+        WindowFunction::Blackman => crate::window::Window::Blackman,
+        WindowFunction::FlatTop => crate::window::Window::FlatTop,
+        WindowFunction::Kaiser => crate::window::Window::Kaiser(5.0), // Default beta
     };
     let window = window::get_window(window_type, window_size, true)?;
 
@@ -246,7 +250,7 @@ where
             let _signal_val: f64 = NumCast::from(_signal[start + i]).ok_or_else(|| {
                 FFTError::ValueError("Failed to convert _signal value to f64".to_string())
             })?;
-            windowed_frame.push(Complex64::new(signal_val * window[i], 0.0));
+            windowed_frame.push(Complex64::new(_signal_val * window[i], 0.0));
         }
 
         // Zero-padding
@@ -520,7 +524,7 @@ fn compute_reassigned_spectrogram(
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(0);
 
             // Reassign energy to the maximum neighbor
@@ -532,7 +536,8 @@ fn compute_reassigned_spectrogram(
                 4 => reassigned[[i, j + 1]] += mag,
                 5 => reassigned[[i + 1, j - 1]] += mag,
                 6 => reassigned[[i + 1, j]] += mag,
-                7 => reassigned[[i + 1, j + 1]] += mag_ => reassigned[[i, j]] += mag,
+                7 => reassigned[[i + 1, j + 1]] += mag,
+                _ => reassigned[[i, j]] += mag,
             }
         }
     }
@@ -610,7 +615,7 @@ fn compute_synchrosqueezed_wt(
                         .partial_cmp(&(*b - inst_freq).abs())
                         .unwrap()
                 })
-                .map(|(idx_)| idx)
+                .map(|(idx, _)| idx)
                 .unwrap_or(i);
 
             // Reassign energy to the closest frequency bin
@@ -707,7 +712,7 @@ pub fn extract_ridge(_tf_result: &TFResult) -> Vec<(f64, f64)> {
         }
 
         // Add (time, frequency) point to ridge
-        ridge.push((tf_result.times[j], tf_result.frequencies[max_freq_idx]));
+        ridge.push((_tf_result.times[j], _tf_result.frequencies[max_freq_idx]));
     }
 
     ridge
@@ -760,7 +765,7 @@ mod tests {
 
         // Use the middle frame
         let mid_frame = result.times.len() / 2;
-        for (bin_) in result.frequencies.iter().enumerate() {
+        for (bin, _) in result.frequencies.iter().enumerate() {
             let energy = result.coefficients[[mid_frame, bin]].norm_sqr();
             if energy > max_energy {
                 max_energy = energy;
@@ -812,7 +817,7 @@ mod tests {
 
         // Use the middle time point
         let mid_time = result.times.len() / 2;
-        for (scale_) in result
+        for (scale, _) in result
             .frequencies
             .iter()
             .enumerate()

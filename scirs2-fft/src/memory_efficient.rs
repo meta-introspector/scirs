@@ -14,23 +14,23 @@ use std::num::NonZeroUsize;
 
 // Helper function to attempt downcast to Complex64
 #[allow(dead_code)]
-fn downcast_to_complex<T: 'static>(_value: &T) -> Option<Complex64> {
+fn downcast_to_complex<T: 'static>(value: &T) -> Option<Complex64> {
     // Check if T is Complex64
-    if let Some(complex) = (_value as &dyn Any).downcast_ref::<Complex64>() {
+    if let Some(complex) = (value as &dyn Any).downcast_ref::<Complex64>() {
         return Some(*complex);
     }
 
     // Try to directly convert from num_complex::Complex<f32>
-    if let Some(complex) = (_value as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
+    if let Some(complex) = (value as &dyn Any).downcast_ref::<num_complex::Complex<f32>>() {
         return Some(Complex64::new(complex.re as f64, complex.im as f64));
     }
 
     // Try to convert from rustfft's Complex type
-    if let Some(complex) = (_value as &dyn Any).downcast_ref::<RustComplex<f64>>() {
+    if let Some(complex) = (value as &dyn Any).downcast_ref::<RustComplex<f64>>() {
         return Some(Complex64::new(complex.re, complex.im));
     }
 
-    if let Some(complex) = (_value as &dyn Any).downcast_ref::<RustComplex<f32>>() {
+    if let Some(complex) = (value as &dyn Any).downcast_ref::<RustComplex<f32>>() {
         return Some(Complex64::new(complex.re as f64, complex.im as f64));
     }
 

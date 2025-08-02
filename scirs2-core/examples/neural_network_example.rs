@@ -110,7 +110,7 @@ fn main() {
     let mut model = Sequential::new("SimpleCNN", Vec::new());
 
     // Add layers to the model
-    model.add_layer(Box::new(Conv2D::with_shape(
+    model.add_layer(Box::new(Conv2D::withshape(
         "conv1",
         3,
         3, // Filter size
@@ -129,7 +129,7 @@ fn main() {
         (0, 0), // Padding
     )));
 
-    model.add_layer(Box::new(Conv2D::with_shape(
+    model.add_layer(Box::new(Conv2D::withshape(
         "conv2",
         3,
         3, // Filter size
@@ -151,7 +151,7 @@ fn main() {
     // Add fully connected layers
     let feature_size = 32 * 6 * 6; // 32 channels, 6x6 spatial dimensions
 
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::withshape(
         "fc1",
         feature_size, // Input features
         120,          // Output features
@@ -165,7 +165,7 @@ fn main() {
         Some(42), // Fixed seed for reproducibility
     )));
 
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::withshape(
         "fc2",
         120,  // Input features
         84,   // Output features
@@ -173,7 +173,7 @@ fn main() {
         Some(ActivationFunc::ReLU),
     )));
 
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::withshape(
         "fc3", 84,   // Input features
         10,   // Output features (10 classes)
         true, // With bias

@@ -1,19 +1,20 @@
-//! Advanced features for 2D Discrete Wavelet Transform
-//!
-//! This module provides additional advanced features for 2D DWT including:
-//! - Adaptive threshold-based denoising
-//! - Edge-preserving wavelet processing
-//! - Anisotropic 2D wavelets
-//! - Multi-scale texture analysis
-//! - Wavelet-based image enhancement
-//! - Directional wavelets and steerable filters
+use ndarray::s;
+// Advanced features for 2D Discrete Wavelet Transform
+//
+// This module provides additional advanced features for 2D DWT including:
+// - Adaptive threshold-based denoising
+// - Edge-preserving wavelet processing
+// - Anisotropic 2D wavelets
+// - Multi-scale texture analysis
+// - Wavelet-based image enhancement
+// - Directional wavelets and steerable filters
 
 use crate::dwt::Wavelet;
-use crate::dwt2d_enhanced::{BoundaryMode, Dwt2dConfig, enhanced_dwt2d_decompose};
+use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, s};
+use ndarray::{ Array2};
 use rand::Rng;
-use scirs2_core::validation::check_array_finite;
+use scirs2_core::validation::checkarray_finite;
 use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 
@@ -187,7 +188,7 @@ pub fn advanced_wavelet_denoising(
     wavelet: Wavelet,
     config: &AdvancedWaveletConfig,
 ) -> SignalResult<AdvancedWaveletResult> {
-    check_array_finite(noisy_image, "noisy_image")?;
+    checkarray_finite(noisy_image, "noisy_image")?;
 
     let (rows, cols) = noisy_image.dim();
     if rows < 8 || cols < 8 {
@@ -222,7 +223,7 @@ pub fn advanced_wavelet_denoising(
 
     // Texture analysis if requested
     let texture_features = if config.use_directional {
-        Some(compute_texture_features(
+        Some(computetexture_features(
             &enhanced_image,
             &multi_scale,
             config,
@@ -432,7 +433,7 @@ fn compute_bayes_threshold(
 
     // Estimate signal _variance
     let empirical_variance =
-        all_coeffs.iter().map(|&&x| x * x).sum::<f64>() / all_coeffs.len()  as f64;
+        all_coeffs.iter().map(|&&x| x * x).sum::<f64>() / all_coeffs.len() as f64;
     let signal_variance = (empirical_variance - noise_variance).max(0.0);
 
     if signal_variance > 0.0 {
@@ -457,7 +458,7 @@ fn compute_sure_threshold(
     let mut sorted_coeffs: Vec<f64> = all_coeffs.iter().map(|&&x| x.abs()).collect();
     sorted_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    let n = sorted_coeffs.len()  as f64;
+    let n = sorted_coeffs.len() as f64;
     let sigma = noise_variance.sqrt();
 
     // Find threshold that minimizes SURE
@@ -592,7 +593,7 @@ fn adaptive_threshold_2d(_coeffs: &mut Array2<f64>, base_threshold: f64) -> Sign
             // Compute local statistics
             let window = _coeffs.slice(s![start_i..end_i, start_j..end_j]);
             let local_std =
-                window.iter().map(|&x| x.powi(2)).sum::<f64>().sqrt() / window.len()  as f64;
+                window.iter().map(|&x| x.powi(2)).sum::<f64>().sqrt() / window.len() as f64;
 
             // Adaptive _threshold
             let adaptive_thresh = base_threshold * (1.0 + local_std);
@@ -771,7 +772,7 @@ fn compute_denoising_metrics(
     denoised: &Array2<f64>,
     noise_variance: f64,
 ) -> DenoisingMetrics {
-    let n = original.len()  as f64;
+    let n = original.len() as f64;
 
     // Compute residual (assumed to be noise)
     let mut residual_variance = 0.0;
@@ -827,7 +828,7 @@ fn compute_edge_metrics(
         .zip(processed_edges.iter())
         .map(|(&orig, &proc)| if orig > 0.0 { proc / orig } else { 1.0 })
         .sum::<f64>()
-        / original_edges.len()  as f64;
+        / original_edges.len() as f64;
 
     Ok(EdgeMetrics {
         edge_strength: edge_strength.min(1.0),
@@ -839,7 +840,7 @@ fn compute_edge_metrics(
 
 /// Compute texture features from multi-scale decomposition
 #[allow(dead_code)]
-fn compute_texture_features(
+fn computetexture_features(
     image: &Array2<f64>,
     multi_scale: &MultiScaleDecomposition,
     config: &AdvancedWaveletConfig,
@@ -862,12 +863,12 @@ fn compute_texture_features(
         energy.push(level_energy);
 
         // Contrast (variance of coefficients)
-        let mean = all_details.iter().map(|&&x| x).sum::<f64>() / all_details.len()  as f64;
+        let mean = all_details.iter().map(|&&x| x).sum::<f64>() / all_details.len() as f64;
         let level_contrast = all_details
             .iter()
             .map(|&&x| (x - mean).powi(2))
             .sum::<f64>()
-            / all_details.len()  as f64;
+            / all_details.len() as f64;
         contrast.push(level_contrast);
 
         // Homogeneity (inverse variance)
@@ -881,7 +882,7 @@ fn compute_texture_features(
             hist[bin] += 1;
         }
 
-        let total = all_details.len()  as f64;
+        let total = all_details.len() as f64;
         let level_entropy = hist
             .iter()
             .filter(|&&count| count > 0)
@@ -917,7 +918,7 @@ mod tests {
     #[test]
     fn test_advanced_wavelet_denoising() {
         // Create test image with noise
-        let clean_image = Array2::from_shape_fn((64, 64), |(i, j)| {
+        let clean_image = Array2::fromshape_fn((64, 64), |(i, j)| {
             let x = i as f64 / 64.0;
             let y = j as f64 / 64.0;
             (2.0 * PI * x).sin() * (2.0 * PI * y).sin()
@@ -937,7 +938,7 @@ mod tests {
 
     #[test]
     fn test_threshold_methods() {
-        let coeffs = Array2::from_shape_vec(
+        let coeffs = Array2::fromshape_vec(
             (4, 4),
             vec![
                 0.1, 0.5, 1.0, 1.5, 0.2, 0.6, 1.1, 1.6, 0.3, 0.7, 1.2, 1.7, 0.4, 0.8, 1.3, 1.8,

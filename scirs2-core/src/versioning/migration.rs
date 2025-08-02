@@ -233,13 +233,16 @@ impl MigrationManager {
     }
 
     /// Register a version for migration planning
-    pub fn register_version(&mut self, api_version: &super::ApiVersion) -> Result<(), CoreError> {
+    pub fn register_version(&mut self, _api_version: &super::ApiVersion) -> Result<(), CoreError> {
         // This would register _version-specific migration information
         Ok(())
     }
 
     /// Create a migration plan between versions
-    pub fn create_migration_plan(&self, from_version: &Version, to_version: &Version,
+    pub fn create_migration_plan(
+        &self,
+        from_version: &Version,
+        to_version: &Version,
     ) -> Result<MigrationPlan, CoreError> {
         // Check if direct migration template exists
         if let Some(template) = self
@@ -274,7 +277,10 @@ impl MigrationManager {
     }
 
     /// Find migration path through intermediate versions
-    fn find_migration_path(&self, from_version: &Version, to_version: &Version,
+    fn find_migration_path(
+        &self,
+        from_version: &Version,
+        to_version: &Version,
     ) -> Result<Option<Vec<Version>>, CoreError> {
         // BFS to find shortest path
         let mut queue = VecDeque::new();

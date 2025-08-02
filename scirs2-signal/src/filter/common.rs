@@ -1,11 +1,10 @@
-//! Common types and utilities for digital filter design and analysis
-//!
-//! This module provides shared types, enums, and utility functions used across
-//! all filter design and application modules including IIR, FIR, and specialized filters.
+// Common types and utilities for digital filter design and analysis
+//
+// This module provides shared types, enums, and utility functions used across
+// all filter design and application modules including IIR, FIR, and specialized filters.
 
 use crate::error::{SignalError, SignalResult};
-use crate::filter::{FilterType, FilterTypeParam};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use std::f64::consts::PI;
 use std::fmt::Debug;
@@ -189,7 +188,7 @@ pub mod validation {
 
 /// Common mathematical operations for filter design
 pub mod math {
-    
+
     /// Pre-warp frequency for bilinear transform
     ///
     /// Pre-warps the digital frequency to compensate for the frequency warping

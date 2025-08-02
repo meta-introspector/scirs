@@ -1,10 +1,10 @@
-//! Demonstration of advanced SIMD operations and memory optimization
-//!
-//! This example shows how to use the new SIMD-optimized signal processing
-//! functions and memory-optimized algorithms for processing large signals.
+// Demonstration of advanced SIMD operations and memory optimization
+//
+// This example shows how to use the new SIMD-optimized signal processing
+// functions and memory-optimized algorithms for processing large signals.
 
 use crate::error::SignalResult;
-use scirs2__signal::{
+use scirs2_signal::{
     error::SignalResult,
     memory_optimized::{memory_optimized_fir_filter, memory_optimized_spectrogram, MemoryConfig},
     simd_advanced::{

@@ -184,12 +184,9 @@ impl CloudCredentials {
 
     /// Create Google Cloud credentials from environment variables
     pub fn google_from_env() -> Result<Self, CloudError> {
-        let service_account_key =
-            std::env::var(GOOGLE_APPLICATION_CREDENTIALS).map_err(|_| {
-                CloudError::AuthenticationError(
-                    "GOOGLE_APPLICATION_CREDENTIALS not found".to_string(),
-                )
-            })?;
+        let service_account_key = std::env::var(GOOGLE_APPLICATION_CREDENTIALS).map_err(|_| {
+            CloudError::AuthenticationError("GOOGLE_APPLICATION_CREDENTIALS not found".to_string())
+        })?;
         let project_id = std::env::var(GOOGLE_CLOUD_PROJECT).map_err(|_| {
             CloudError::AuthenticationError("GOOGLE_CLOUD_PROJECT not found".to_string())
         })?;
@@ -396,19 +393,16 @@ pub struct ListResult {
 #[async_trait]
 pub trait CloudStorageBackend: Send + Sync {
     /// Upload a file to cloud storage
-    async fn key(&str: &str,
-        options: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError>;
+    async fn key(&str: &str, options: TransferOptions) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Download a file from cloud storage
-    async fn path(&Path: &Path,
+    async fn path(
+        &Path: &Path,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Upload data from memory
-    async fn key(&str: &str,
-        options: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError>;
+    async fn key(&str: &str, options: TransferOptions) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Download data to memory
     async fn get_object(&self, key: &str) -> Result<Vec<u8>, CloudError>;
@@ -423,16 +417,17 @@ pub trait CloudStorageBackend: Send + Sync {
     async fn delete_object(&self, key: &str) -> Result<(), CloudError>;
 
     /// List objects with optional prefix
-    async fn list_objects(prefix: Option<&str>, continuation_token: Option<&str>,
+    async fn list_objects(
+        prefix: Option<&str>,
+        continuation_token: Option<&str>,
     ) -> Result<ListResult, CloudError>;
 
     /// Copy an object within the same bucket
-    async fn key(&str: &str,
-        options: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError>;
+    async fn key(&str: &str, options: TransferOptions) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Generate a presigned URL for temporary access
-    async fn key(&str: &str,
+    async fn key(
+        &str: &str,
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError>;
@@ -563,7 +558,8 @@ impl CloudStorageClient {
 
     /// Upload data from memory
     #[cfg(feature = "async")]
-    pub async fn key(&str: &str,
+    pub async fn key(
+        &str: &str,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         let result = self.backend.upload_data(data, remote_key, options).await?;
@@ -630,7 +626,10 @@ impl CloudStorageClient {
 
     /// List objects
     #[cfg(feature = "async")]
-    pub async fn list_objects(&self, prefix: Option<&str>, continuation_token: Option<&str>,
+    pub async fn list_objects(
+        &self,
+        prefix: Option<&str>,
+        continuation_token: Option<&str>,
     ) -> Result<ListResult, CloudError> {
         self.backend
             .list_objects(prefix, None, continuation_token)
@@ -639,7 +638,8 @@ impl CloudStorageClient {
 
     /// Copy an object
     #[cfg(feature = "async")]
-    pub async fn key(&str: &str,
+    pub async fn key(
+        &str: &str,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         let result = self
@@ -660,7 +660,8 @@ impl CloudStorageClient {
 
     /// Generate presigned URL
     #[cfg(feature = "async")]
-    pub async fn key(&str: &str,
+    pub async fn key(
+        &str: &str,
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError> {
@@ -706,8 +707,7 @@ impl S3Backend {
 #[cfg(feature = "async")]
 #[async_trait]
 impl CloudStorageBackend for S3Backend {
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         // In a real implementation, this would use the AWS SDK or reqwest
         // to perform the actual upload with proper authentication
 
@@ -727,8 +727,7 @@ impl CloudStorageBackend for S3Backend {
         })
     }
 
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         // Simulate download operation
         std::fs::write(local_path, b"mock file content")
             .map_err(|e| CloudError::DownloadError(format!("{e}")))?;
@@ -744,8 +743,7 @@ impl CloudStorageBackend for S3Backend {
         })
     }
 
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         // Simulate upload operation
         Ok(CloudObjectMetadata {
             key: remote_key.to_string(),
@@ -786,11 +784,17 @@ impl CloudStorageBackend for S3Backend {
         Ok(())
     }
 
-    async fn list_objects(&self, prefix: Option<&str>, max_keys: Option<&str>,
+    async fn list_objects(
+        &self,
+        prefix: Option<&str>,
+        max_keys: Option<&str>,
     ) -> Result<ListResult, CloudError> {
         // Simulate listing
         let mut objects = Vec::new();
-        let max = max_keys.and_then(|s| s.parse().ok()).unwrap_or(1000).min(10); // Limit for simulation
+        let max = max_keys
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1000)
+            .min(10); // Limit for simulation
 
         for i in 0..max {
             let key = if let Some(prefix) = prefix {
@@ -817,8 +821,7 @@ impl CloudStorageBackend for S3Backend {
         })
     }
 
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         // Simulate copy operation
         Ok(CloudObjectMetadata {
             key: dest_key.to_string(),
@@ -831,7 +834,8 @@ impl CloudStorageBackend for S3Backend {
         })
     }
 
-    async fn key(&str: &str,
+    async fn key(
+        &str: &str,
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError> {
@@ -877,8 +881,7 @@ impl GoogleCloudBackend {
 #[cfg(feature = "async")]
 #[async_trait]
 impl CloudStorageBackend for GoogleCloudBackend {
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         // Similar to S3 but with GCS-specific implementation
         let file_size = std::fs::metadata(local_path)
             .map_err(|e| CloudError::UploadError(format!("{e}")))?
@@ -895,8 +898,7 @@ impl CloudStorageBackend for GoogleCloudBackend {
         })
     }
 
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         std::fs::write(local_path, b"mock gcs content")
             .map_err(|e| CloudError::DownloadError(format!("{e}")))?;
 
@@ -911,7 +913,11 @@ impl CloudStorageBackend for GoogleCloudBackend {
         })
     }
 
-    async fn upload_data(&self, key: &str, data: &[u8], options: TransferOptions,
+    async fn upload_data(
+        &self,
+        key: &str,
+        data: &[u8],
+        options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         Ok(CloudObjectMetadata {
             key: key.to_string(),
@@ -948,7 +954,10 @@ impl CloudStorageBackend for GoogleCloudBackend {
         Ok(())
     }
 
-    async fn token(prefix: Option<&str>, max_keys: Option<usize>) -> Result<ListResult, CloudError> {
+    async fn token(
+        prefix: Option<&str>,
+        max_keys: Option<usize>,
+    ) -> Result<ListResult, CloudError> {
         let mut objects = Vec::new();
         let max = max_keys.unwrap_or(1000).min(10);
 
@@ -977,8 +986,7 @@ impl CloudStorageBackend for GoogleCloudBackend {
         })
     }
 
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         Ok(CloudObjectMetadata {
             key: dest_key.to_string(),
             size: 1024,
@@ -990,7 +998,8 @@ impl CloudStorageBackend for GoogleCloudBackend {
         })
     }
 
-    async fn key(&str: &str,
+    async fn key(
+        &str: &str,
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError> {
@@ -1035,8 +1044,7 @@ impl AzureBackend {
 #[cfg(feature = "async")]
 #[async_trait]
 impl CloudStorageBackend for AzureBackend {
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         let file_size = std::fs::metadata(local_path)
             .map_err(|e| CloudError::UploadError(format!("{e}")))?
             .len();
@@ -1052,8 +1060,7 @@ impl CloudStorageBackend for AzureBackend {
         })
     }
 
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         std::fs::write(local_path, b"mock azure content")
             .map_err(|e| CloudError::DownloadError(format!("{e}")))?;
 
@@ -1068,8 +1075,7 @@ impl CloudStorageBackend for AzureBackend {
         })
     }
 
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         Ok(CloudObjectMetadata {
             key: remote_key.to_string(),
             size: data.len() as u64,
@@ -1105,10 +1111,16 @@ impl CloudStorageBackend for AzureBackend {
         Ok(())
     }
 
-    async fn list_objects(&self, prefix: Option<&str>, max_keys: Option<&str>,
+    async fn list_objects(
+        &self,
+        prefix: Option<&str>,
+        max_keys: Option<&str>,
     ) -> Result<ListResult, CloudError> {
         let mut objects = Vec::new();
-        let max = max_keys.and_then(|s| s.parse().ok()).unwrap_or(1000).min(10);
+        let max = max_keys
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(1000)
+            .min(10);
 
         for i in 0..max {
             let key = if let Some(prefix) = prefix {
@@ -1135,8 +1147,7 @@ impl CloudStorageBackend for AzureBackend {
         })
     }
 
-    async fn options(TransferOptions: TransferOptions,
-    ) -> Result<CloudObjectMetadata, CloudError> {
+    async fn options(TransferOptions: TransferOptions) -> Result<CloudObjectMetadata, CloudError> {
         Ok(CloudObjectMetadata {
             key: dest_key.to_string(),
             size: 1024,
@@ -1148,7 +1159,8 @@ impl CloudStorageBackend for AzureBackend {
         })
     }
 
-    async fn key(&str: &str,
+    async fn key(
+        &str: &str,
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError> {
@@ -1181,9 +1193,7 @@ pub mod utils {
 
     /// Sync a local directory to cloud storage
     #[cfg(feature = "async")]
-    pub async fn prefix(&str: &str,
-        recursive: bool,
-    ) -> Result<usize, CloudError> {
+    pub async fn prefix(&str: &str, recursive: bool) -> Result<usize, CloudError> {
         let mut uploaded_count = 0;
 
         fn dir(_dir: &Path, files: &mut Vec<PathBuf>) -> std::io::Result<()> {
@@ -1231,8 +1241,7 @@ pub mod utils {
 
     /// Download and sync cloud storage to local directory
     #[cfg(feature = "async")]
-    pub async fn dir(&Path: &Path,
-    ) -> Result<usize, CloudError> {
+    pub async fn dir(&Path: &Path) -> Result<usize, CloudError> {
         let mut downloaded_count = 0;
         let mut continuation_token = None;
 

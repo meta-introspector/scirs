@@ -1,20 +1,20 @@
-//! Advanced-advanced denoising algorithms with modern computational techniques
-//!
-//! This module provides state-of-the-art denoising methods combining:
-//! - Deep learning-inspired architectures adapted for signal processing
-//! - SIMD-accelerated optimization algorithms
-//! - Adaptive multi-scale processing with content awareness
-//! - Real-time streaming denoising for embedded systems
-//! - Perceptual quality optimization using psychoacoustic models
-//! - GPU-ready algorithms with automatic device selection
-//! - Memory-efficient processing for arbitrarily large signals
+// Advanced-advanced denoising algorithms with modern computational techniques
+//
+// This module provides state-of-the-art denoising methods combining:
+// - Deep learning-inspired architectures adapted for signal processing
+// - SIMD-accelerated optimization algorithms
+// - Adaptive multi-scale processing with content awareness
+// - Real-time streaming denoising for embedded systems
+// - Perceptual quality optimization using psychoacoustic models
+// - GPU-ready algorithms with automatic device selection
+// - Memory-efficient processing for arbitrarily large signals
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use rand::Rng;
 use rand::prelude::*;
+use rand::Rng;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::check_finite;
 use statrs::statistics::Statistics;
@@ -95,7 +95,7 @@ pub struct AdaptiveNoiseModel {
     /// Time-varying noise variance
     pub variance_function: Array1<f64>,
     /// Noise spectral shape
-    pub spectral_shape: Array1<f64>,
+    pub spectralshape: Array1<f64>,
     /// Model confidence
     pub model_confidence: f64,
     /// Adaptation rate
@@ -321,7 +321,7 @@ impl Default for AdvancedAdvancedDenoisingConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::denoise_advanced_advanced::{advanced_advanced_denoise, AdvancedAdvancedDenoisingConfig, AdvancedAdvancedMethod};
+/// use scirs2_signal::denoise_advanced_advanced::{advanced_advanced_denoise, AdvancedAdvancedDenoisingConfig, AdvancedAdvancedMethod};
 /// use ndarray::Array1;
 ///
 ///
@@ -537,7 +537,7 @@ pub fn advanced_advanced_denoise_batch(
 
         // Report progress
         if let Some(ref _callback) = progress_callback {
-            let progress = (chunk_idx + 1) as f64 / (signals.len() / chunk_size)  as f64;
+            let progress = (chunk_idx + 1) as f64 / (signals.len() / chunk_size) as f64;
             _callback(progress);
         }
 
@@ -567,7 +567,8 @@ pub fn advanced_advanced_denoise_batch(
 fn adaptive_neural_net_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
-    simd_optimizer: &SimdOptimizer, _config: &AdvancedAdvancedDenoisingConfig,
+    simd_optimizer: &SimdOptimizer,
+    _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     let n = signal.len();
 
@@ -623,7 +624,8 @@ fn adaptive_neural_net_denoise(
 fn variational_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
-    simd_optimizer: &SimdOptimizer, _config: &AdvancedAdvancedDenoisingConfig,
+    simd_optimizer: &SimdOptimizer,
+    _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Implement variational energy minimization
     // Simplified implementation for demonstration
@@ -649,7 +651,8 @@ fn variational_denoise(
 fn attention_based_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
-    simd_optimizer: &SimdOptimizer, _config: &AdvancedAdvancedDenoisingConfig,
+    simd_optimizer: &SimdOptimizer,
+    _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Implement attention mechanisms for signal denoising
     let denoised = apply_attention_mechanism(signal, noise_analysis, simd_optimizer)?;
@@ -673,7 +676,10 @@ fn attention_based_denoise(
 
 #[allow(dead_code)]
 fn residual_learning_denoise(
-    signal: &Array1<f64>, _noise_analysis: &MultiScaleNoiseAnalysis, _simd: &SimdOptimizer, _config: &AdvancedAdvancedDenoisingConfig,
+    signal: &Array1<f64>,
+    _noise_analysis: &MultiScaleNoiseAnalysis,
+    _simd: &SimdOptimizer,
+    _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Residual learning approach
     let denoised = signal.clone(); // Placeholder
@@ -690,7 +696,10 @@ fn residual_learning_denoise(
 
 #[allow(dead_code)]
 fn multiscale_dictionary_denoise(
-    signal: &Array1<f64>, _noise_analysis: &MultiScaleNoiseAnalysis, _simd: &SimdOptimizer, _config: &AdvancedAdvancedDenoisingConfig,
+    signal: &Array1<f64>,
+    _noise_analysis: &MultiScaleNoiseAnalysis,
+    _simd: &SimdOptimizer,
+    _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Multi-scale dictionary learning
     let denoised = signal.clone(); // Placeholder
@@ -944,7 +953,7 @@ fn analyze_noise_multiscale(
 
     let adaptive_model = AdaptiveNoiseModel {
         variance_function: Array1::ones(signal.len()) * 0.01,
-        spectral_shape: Array1::ones(256),
+        spectralshape: Array1::ones(256),
         model_confidence: 0.85,
         adaptation_rate: 0.1,
     };
@@ -1056,13 +1065,13 @@ fn compute_batch_statistics(_results: &[AdvancedAdvancedDenoisingResult]) -> Bat
         .iter()
         .map(|r| r.quality_metrics.snr_improvement_db)
         .sum::<f64>()
-        / _results.len()  as f64;
+        / _results.len() as f64;
 
     let avg_time = _results
         .iter()
         .map(|r| r.processing_stats.total_time_ms)
         .sum::<f64>()
-        / _results.len()  as f64;
+        / _results.len() as f64;
 
     BatchStatistics {
         average_snr_improvement: avg_snr,
@@ -1079,7 +1088,7 @@ impl RealTimeDenoisingContext {
             buffer: Array1::zeros(_buffer_size),
             noise_model: AdaptiveNoiseModel {
                 variance_function: Array1::ones(_buffer_size) * 0.01,
-                spectral_shape: Array1::ones(256),
+                spectralshape: Array1::ones(256),
                 model_confidence: 0.5,
                 adaptation_rate: 0.1,
             },

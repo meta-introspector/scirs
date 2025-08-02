@@ -278,7 +278,7 @@ impl AdaptiveMonitoringSystem {
             timestamp: Instant::now(),
         })
     }
-    
+
     /// Main monitoring loop for performance tracking
     fn monitoring_loop(
         monitor: &Arc<RwLock<PerformanceMonitor>>,
@@ -287,18 +287,18 @@ impl AdaptiveMonitoringSystem {
     ) -> CoreResult<()> {
         // Collect metrics and update performance monitor
         Self::collect_metrics(metrics_collector, config, monitor)?;
-        
+
         // Update performance trends
         let mut monitor_write = monitor.write().map_err(|_| {
             CoreError::InvalidState(ErrorContext::new(
                 "Failed to acquire monitor lock".to_string(),
             ))
         })?;
-        
+
         // Get latest metrics for trend analysis
         let current_metrics = ComprehensivePerformanceMetrics::default();
         monitor_write.update_performance_trends(&current_metrics)?;
-        
+
         Ok(())
     }
 }
@@ -459,7 +459,9 @@ impl OptimizationEngine {
         })
     }
 
-    pub fn apply_strategy(&mut self, current_metrics: &ComprehensivePerformanceMetrics,
+    pub fn apply_strategy(
+        &mut self,
+        current_metrics: &ComprehensivePerformanceMetrics,
         predictions: &PerformancePredictions,
     ) -> CoreResult<()> {
         // Analyze current performance
@@ -490,7 +492,9 @@ impl OptimizationEngine {
         (cpu_score + memory_score + latency_score + throughput_score) / 4.0
     }
 
-    fn needs_optimization(&self, current_metrics: &ComprehensivePerformanceMetrics,
+    fn needs_optimization(
+        &self,
+        current_metrics: &ComprehensivePerformanceMetrics,
         predictions: &PerformancePredictions,
     ) -> CoreResult<bool> {
         // Check current performance thresholds
@@ -513,7 +517,9 @@ impl OptimizationEngine {
         Ok(false)
     }
 
-    fn select_optimization_action(&self, current_metrics: &ComprehensivePerformanceMetrics,
+    fn select_optimization_action(
+        &self,
+        current_metrics: &ComprehensivePerformanceMetrics,
         predictions: &PerformancePredictions,
     ) -> CoreResult<OptimizationAction> {
         let mut actions = Vec::new();
@@ -644,12 +650,12 @@ impl OptimizationEngine {
         self.reduce_memory_usage()?;
         Ok(())
     }
-    
+
     fn reduce_cpu_usage(&self) -> CoreResult<()> {
         // Implement CPU usage reduction
         Ok(())
     }
-    
+
     fn optimize_performance(&self) -> CoreResult<()> {
         // Implement general performance optimization
         Ok(())
@@ -729,7 +735,7 @@ impl OptimizationEngine {
         }
         counts
     }
-    
+
     /// Adaptive optimization method
     pub fn adaptive_optimize(
         &mut self,
@@ -738,14 +744,15 @@ impl OptimizationEngine {
     ) -> CoreResult<()> {
         // Apply optimization strategy
         self.apply_strategy(current_metrics, predictions)?;
-        
+
         // Update effectiveness tracking
         let performance_score = self.calculate_performance_score(current_metrics);
-        self.strategy_effectiveness.insert(self.current_strategy, performance_score);
-        
+        self.strategy_effectiveness
+            .insert(self.current_strategy, performance_score);
+
         Ok(())
     }
-    
+
     /// Determine the optimization action based on current metrics and predictions
     pub fn determine_optimization_action(
         &mut self,
@@ -754,22 +761,22 @@ impl OptimizationEngine {
     ) -> CoreResult<OptimizationAction> {
         // Analyze metrics to determine action
         let mut actions = Vec::new();
-        
+
         // Check CPU usage
         if current_metrics.cpu_utilization > 0.8 {
             actions.push(OptimizationActionType::ReduceCpuUsage);
         }
-        
+
         // Check memory usage
         if current_metrics.memory_utilization > 0.8 {
             actions.push(OptimizationActionType::ReduceMemoryUsage);
         }
-        
+
         // Check for performance issues based on predictions
         if predictions.predicted_performance_change < -0.1 {
             actions.push(OptimizationActionType::OptimizePerformance);
         }
-        
+
         Ok(OptimizationAction {
             timestamp: std::time::Instant::now(),
             actions,
@@ -779,7 +786,7 @@ impl OptimizationEngine {
             success: false, // Will be updated after execution
         })
     }
-    
+
     /// Adapt the optimization strategy based on performance score
     pub fn adapt_strategy(&mut self, performance_score: f64) -> CoreResult<()> {
         // Simple strategy adaptation logic
@@ -790,7 +797,7 @@ impl OptimizationEngine {
         } else {
             self.current_strategy = OptimizationStrategy::Conservative;
         }
-        
+
         Ok(())
     }
 }
@@ -815,7 +822,9 @@ impl PredictionEngine {
         })
     }
 
-    pub fn update_with_data(&mut self, historical_data: &[ComprehensivePerformanceMetrics],
+    pub fn update_with_data(
+        &mut self,
+        historical_data: &[ComprehensivePerformanceMetrics],
     ) -> CoreResult<()> {
         if historical_data.len() < 10 {
             return Ok(()); // Need at least 10 data points for predictions
@@ -897,7 +906,14 @@ impl PredictionEngine {
             confidence: self.prediction_accuracy,
             time_horizon_minutes: 5,
             generated_at: Instant::now(),
-            predicted_performance_change: if predicted_cpu_spike || predicted_memory_pressure || predicted_throughput_drop { -0.2 } else { 0.0 },
+            predicted_performance_change: if predicted_cpu_spike
+                || predicted_memory_pressure
+                || predicted_throughput_drop
+            {
+                -0.2
+            } else {
+                0.0
+            },
         })
     }
 }
@@ -996,10 +1012,10 @@ impl AlertingSystem {
                 acknowledged: false,
                 resolved: false,
             };
-            
+
             // Add to active alerts
             self.active_alerts.push(alert.clone());
-            
+
             // Add to history
             self.alert_history.push_back(AlertEvent {
                 alert,
@@ -1067,8 +1083,7 @@ impl AlertingSystem {
         }
     }
 
-    fn check_alerts(&mut self, metrics: &ComprehensivePerformanceMetrics,
-    ) -> CoreResult<()> {
+    fn check_alerts(&mut self, metrics: &ComprehensivePerformanceMetrics) -> CoreResult<()> {
         // Collect rules that need to trigger alerts to avoid borrowing conflicts
         let mut rules_to_trigger = Vec::new();
         for rule in &self.alert_rules {
@@ -1290,7 +1305,7 @@ impl MetricsCollector {
                                         user_str.replace("%", "").parse::<f64>()
                                     {
                                         // Also try to get system percentage
-                                        let sys_percent = if let Some(sys_part) =
+                                        let sys_percent = if let Some(_sys_part) =
                                             line.split("% sys").next()
                                         {
                                             line.split("% user,")
@@ -1581,7 +1596,7 @@ impl MetricsCollector {
             use std::process::Command;
             // Use ping to localhost to measure basic network latency
             if let Ok(output) = Command::new("ping")
-                .args(&["-c", "3", "-W", "1000", "127.0.0.1"])
+                .args(["-c", "3", "-W", "1000", "127.0.0.1"])
                 .output()
             {
                 if output.status.success() {
@@ -1691,10 +1706,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use powermetrics to get cache miss information (requires admin)
-            if let Ok(output) = Command::new("sysctl")
-                .args(&["-n", "hw.cachesize"])
-                .output()
-            {
+            if let Ok(output) = Command::new("sysctl").args(["-n", "hw.cachesize"]).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     if !output_str.trim().is_empty() {
@@ -1723,7 +1735,8 @@ impl MetricsCollector {
                     for line in output_str.lines() {
                         if line.starts_with("L3CacheSize=") {
                             if let Some(format!("{}", size)) = line.split('=').nth(1) {
-                                if let Ok(cache_size_kb) = format!("{}", size).trim().parse::<u64>() {
+                                if let Ok(cache_size_kb) = format!("{}", size).trim().parse::<u64>()
+                                {
                                     let cpu_utilization =
                                         self.collect_cpu_utilization().unwrap_or(0.5);
                                     let memory_utilization =
@@ -1818,7 +1831,7 @@ impl MetricsCollector {
             }
 
             // Alternative: use task_info system call through sysctl
-            if let Ok(output) = Command::new("sysctl").args(&["-n", "hw.memsize"]).output() {
+            if let Ok(output) = Command::new("sysctl").args(["-n", "hw.memsize"]).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     if let Ok(total_memory) = output_str.trim().parse::<usize>() {
@@ -1874,7 +1887,8 @@ impl MetricsCollector {
                     for line in output_str.lines() {
                         if line.starts_with("WorkingSetSize=") {
                             if let Some(format!("{}", size)) = line.split('=').nth(1) {
-                                if let Ok(size_bytes) = format!("{}", size).trim().parse::<usize>() {
+                                if let Ok(size_bytes) = format!("{}", size).trim().parse::<usize>()
+                                {
                                     return Ok(size_bytes);
                                 }
                             }
@@ -2128,7 +2142,7 @@ impl MetricsCollector {
         {
             use std::process::Command;
             // Use netstat to get network statistics
-            if let Ok(output) = Command::new("netstat").args(&["-ib"]).output() {
+            if let Ok(output) = Command::new("netstat").args(["-ib"]).output() {
                 if output.status.success() {
                     let output_str = String::from_utf8_lossy(&output.stdout);
                     let mut total_bytes = 0u64;
@@ -2308,7 +2322,7 @@ impl MetricsCollector {
             use std::process::Command;
             // Use iostat to get disk I/O statistics
             if let Ok(output) = Command::new("iostat")
-                .args(&["-d", "-w", "1", "-c", "1"])
+                .args(["-d", "-w", "1", "-c", "1"])
                 .output()
             {
                 if output.status.success() {
@@ -2320,8 +2334,12 @@ impl MetricsCollector {
                         if fields.len() >= 3 && !line.contains("device") {
                             // Try to parse read and write rates (usually in MB/s)
                             if let (Ok(read_rate), Ok(write_rate)) = (
-                                fields[1].parse::<f64>().or_else(|_| Ok::<f64, std::num::ParseFloatError>(0.0)),
-                                fields[2].parse::<f64>().or_else(|_| Ok::<f64, std::num::ParseFloatError>(0.0)),
+                                fields[1]
+                                    .parse::<f64>()
+                                    .or(Ok::<f64, std::num::ParseFloatError>(0.0)),
+                                fields[2]
+                                    .parse::<f64>()
+                                    .or(Ok::<f64, std::num::ParseFloatError>(0.0)),
                             ) {
                                 total_mb_per_sec += read_rate + write_rate;
                             }
@@ -2555,10 +2573,7 @@ impl MetricsCollector {
             let cpu_utilization = self.collect_cpu_utilization().unwrap_or(0.5);
 
             let resource_pressure_trend = (memory_utilization + cpu_utilization) / 2.0;
-            custom_metrics.insert(
-                resource_pressure_trend.to_string(),
-                resource_pressure_trend,
-            );
+            custom_metrics.insert(resource_pressure_trend.to_string(), resource_pressure_trend);
 
             // Performance degradation risk
             let performance_risk = if resource_pressure_trend > 0.8 {

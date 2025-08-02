@@ -157,7 +157,7 @@ impl VAEEncoder {
         let batch_size = features.shape()[0];
         let feature_dim = features.len() / batch_size;
         let flattened = features
-            .to_shape(IxDyn(&[batch_size, feature_dim]))?
+            .toshape(IxDyn(&[batch_size, feature_dim]))?
             .to_owned();
         // Get mean and log variance
         let mean = self.mean_head.forward(&flattened)?;
@@ -326,7 +326,7 @@ impl GANGenerator {
         // Reshape to image format
         let batch_size = output.shape()[0];
         let reshaped = output
-            .to_shape(IxDyn(&[batch_size, 1, height, width]))?
+            .toshape(IxDyn(&[batch_size, 1, height, width]))?
         Ok(reshaped)
 /// Simple GAN Discriminator
 pub struct GANDiscriminator {
@@ -341,7 +341,7 @@ impl GANDiscriminator {
         // Flatten input
         let batch_size = input.shape()[0];
         let input_size = self.config.input_size.0 * self.config.input_size.1;
-        let flattened = input.to_shape(IxDyn(&[batch_size, input_size]))?.to_owned();
+        let flattened = input.toshape(IxDyn(&[batch_size, input_size]))?.to_owned();
         Ok(self.layers.forward(&flattened)?)
 /// Generative model evaluation metrics
 pub struct GenerativeMetrics {
@@ -624,6 +624,6 @@ mod tests {
         let error = metrics.reconstruction_error(&original, &reconstructed);
         assert_eq!(error, 1.0); // MSE between all 1s and all 0s
         // Test diversity
-        let samples = Array2::<f32>::from_shape_fn((3, 4), |(i, j)| i as f32 + j as f32).into_dyn();
+        let samples = Array2::<f32>::fromshape_fn((3, 4), |(i, j)| i as f32 + j as f32).into_dyn();
         let diversity = metrics.sample_diversity(&samples);
         assert!(diversity > 0.0);

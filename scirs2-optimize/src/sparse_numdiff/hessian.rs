@@ -694,7 +694,7 @@ fn make_symmetric_sparsity(_sparsity: &CsrArray<f64>) -> Result<CsrArray<f64>, O
 /// Fills the lower triangle of a Hessian matrix based on the upper triangle
 #[allow(dead_code)]
 fn fill_symmetric_hessian(_upper: &CsrArray<f64>) -> Result<CsrArray<f64>, OptimizeError> {
-    let (n_) = _upper.shape();
+    let (n, _) = _upper.shape();
     if n != _upper.shape().1 {
         return Err(OptimizeError::ValueError(
             "Hessian matrix must be square".to_string(),

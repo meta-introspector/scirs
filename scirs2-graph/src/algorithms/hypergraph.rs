@@ -116,7 +116,7 @@ where
 
 /// Generate all combinations of k elements from a vector
 #[allow(dead_code)]
-fn generate_combinations<T: Clone>(_items: &[T], k: usize) -> Vec<Vec<T>> {
+fn generate_combinations<T: Clone>(items: &[T], k: usize) -> Vec<Vec<T>> {
     if k == 0 {
         return vec![vec![]];
     }

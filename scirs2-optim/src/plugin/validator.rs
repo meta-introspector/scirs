@@ -1432,7 +1432,7 @@ mod tests {
         fn version(&self) -> &str { "1.0.0" }
         fn plugin_info(&self) -> PluginInfo { PluginInfo::default() }
         fn capabilities(&self) -> PluginCapabilities { PluginCapabilities::default() }
-        fn initialize(&mut self, _param_shape: &[usize]) -> Result<()> { Ok(()) }
+        fn initialize(&mut self, _paramshape: &[usize]) -> Result<()> { Ok(()) }
         fn reset(&mut self) -> Result<()> { Ok(()) }
         fn get_config(&self) -> OptimizerConfig { OptimizerConfig::default() }
         fn set_config(&mut self, _config: OptimizerConfig) -> Result<()> { Ok(()) }

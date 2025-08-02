@@ -337,8 +337,8 @@ pub struct LcsSimilarity;
 
 impl LcsSimilarity {
     /// Calculate LCS-based similarity between two texts
-    pub fn similarity(_text1: &str, text2: &str, tokenizer: &dyn Tokenizer) -> Result<f64> {
-        let tokens1 = tokenizer.tokenize(_text1)?;
+    pub fn similarity(text1: &str, text2: &str, tokenizer: &dyn Tokenizer) -> Result<f64> {
+        let tokens1 = tokenizer.tokenize(text1)?;
         let tokens2 = tokenizer.tokenize(text2)?;
 
         let lcs_length = Self::lcs_length(&tokens1, &tokens2);

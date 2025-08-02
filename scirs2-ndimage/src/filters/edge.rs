@@ -9,7 +9,7 @@ use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function for safe conversion of hardcoded constants
 #[allow(dead_code)]
-fn safe_i32_to_float<T: Float + FromPrimitive>(_value: i32) -> NdimageResult<T> {
+fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(_value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", _value))
     })

@@ -182,7 +182,7 @@ where
     // Step 2: Remove trend to get detrended series
     let detrended = if is_additive {
         // Y - T for additive model
-        Array1::from_shape_fn(n, |i| {
+        Array1::fromshape_fn(n, |i| {
             if i < trend.len() {
                 ts[i] - trend[i]
             } else {
@@ -191,7 +191,7 @@ where
         })
     } else {
         // Y / T for multiplicative model
-        Array1::from_shape_fn(n, |i| {
+        Array1::fromshape_fn(n, |i| {
             if i < trend.len() && trend[i] != F::zero() {
                 ts[i] / trend[i]
             } else {
@@ -209,10 +209,10 @@ where
     // Step 5: Calculate residuals
     let residual = if is_additive {
         // R = Y - T - S for additive model
-        Array1::from_shape_fn(n, |i| ts[i] - trend[i] - seasonal[i])
+        Array1::fromshape_fn(n, |i| ts[i] - trend[i] - seasonal[i])
     } else {
         // R = Y / (T * S) for multiplicative model
-        Array1::from_shape_fn(n, |i| {
+        Array1::fromshape_fn(n, |i| {
             let denominator = trend[i] * seasonal[i];
             if denominator != F::zero() {
                 ts[i] / denominator
@@ -245,15 +245,15 @@ where
 
     if !is_additive {
         // For multiplicative model, log-transform the series
-        let log_ts = Array1::from_shape_fn(n, |i| ts[i].ln());
+        let log_ts = Array1::fromshape_fn(n, |i| ts[i].ln());
 
         // Perform STL on log-transformed series
         let decomp = stl_decomposition_inner(&log_ts, period, num_iterations, options.robust)?;
 
         // Transform back
-        let trend = Array1::from_shape_fn(n, |i| decomp.trend[i].exp());
-        let seasonal = Array1::from_shape_fn(n, |i| decomp.seasonal[i].exp());
-        let residual = Array1::from_shape_fn(n, |i| decomp.residual[i].exp());
+        let trend = Array1::fromshape_fn(n, |i| decomp.trend[i].exp());
+        let seasonal = Array1::fromshape_fn(n, |i| decomp.seasonal[i].exp());
+        let residual = Array1::fromshape_fn(n, |i| decomp.residual[i].exp());
 
         return Ok(SeasonalDecomposition {
             trend,
@@ -294,7 +294,7 @@ where
     for iter in 0..num_iterations {
         // Inner loop - cycle subseries
         // 1. Detrending
-        let detrended = Array1::from_shape_fn(n, |i| ts[i] - trend[i]);
+        let detrended = Array1::fromshape_fn(n, |i| ts[i] - trend[i]);
 
         // 2. Cycle-subseries smoothing
         for i in 0..period {
@@ -333,7 +333,7 @@ where
         }
 
         // 5. Deseasonalize
-        let deseasonalized = Array1::from_shape_fn(n, |i| ts[i] - seasonal[i]);
+        let deseasonalized = Array1::fromshape_fn(n, |i| ts[i] - seasonal[i]);
 
         // 6. Trend smoothing
         trend = loess_smooth(&deseasonalized, n_l, robust)?;
@@ -351,7 +351,7 @@ where
 
             // Apply weights to the trend estimation for next iteration
             // This implements weighted loess smoothing for full robustness
-            let deseasonalized = Array1::from_shape_fn(n, |i| ts[i] - seasonal[i]);
+            let deseasonalized = Array1::fromshape_fn(n, |i| ts[i] - seasonal[i]);
             trend = loess_smooth_weighted(&deseasonalized, n_l, &weights)?;
         }
     }
@@ -383,9 +383,9 @@ where
 
     // Step 2: Initial seasonal component
     let detrended = if is_additive {
-        Array1::from_shape_fn(n, |i| ts[i] - trend_init[i])
+        Array1::fromshape_fn(n, |i| ts[i] - trend_init[i])
     } else {
-        Array1::from_shape_fn(n, |i| {
+        Array1::fromshape_fn(n, |i| {
             if trend_init[i] != F::zero() {
                 ts[i] / trend_init[i]
             } else {
@@ -399,9 +399,9 @@ where
 
     // Step 3: Deseasonalized series
     let deseasonalized = if is_additive {
-        Array1::from_shape_fn(n, |i| ts[i] - seasonal_norm[i])
+        Array1::fromshape_fn(n, |i| ts[i] - seasonal_norm[i])
     } else {
-        Array1::from_shape_fn(n, |i| {
+        Array1::fromshape_fn(n, |i| {
             if seasonal_norm[i] != F::zero() {
                 ts[i] / seasonal_norm[i]
             } else {
@@ -415,9 +415,9 @@ where
 
     // Step 5: Refined seasonal component
     let detrended_refined = if is_additive {
-        Array1::from_shape_fn(n, |i| ts[i] - trend_refined[i])
+        Array1::fromshape_fn(n, |i| ts[i] - trend_refined[i])
     } else {
-        Array1::from_shape_fn(n, |i| {
+        Array1::fromshape_fn(n, |i| {
             if trend_refined[i] != F::zero() {
                 ts[i] / trend_refined[i]
             } else {
@@ -431,9 +431,9 @@ where
 
     // Step 6: Calculate final residuals
     let residual = if is_additive {
-        Array1::from_shape_fn(n, |i| ts[i] - trend_refined[i] - seasonal_final[i])
+        Array1::fromshape_fn(n, |i| ts[i] - trend_refined[i] - seasonal_final[i])
     } else {
-        Array1::from_shape_fn(n, |i| {
+        Array1::fromshape_fn(n, |i| {
             let denominator = trend_refined[i] * seasonal_final[i];
             if denominator != F::zero() {
                 ts[i] / denominator

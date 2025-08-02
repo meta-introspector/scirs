@@ -59,7 +59,7 @@ impl GpuPCA {
 
         Ok(GpuPCA {
             n_components,
-            center: true_components: None,
+            center: true, components: None,
             explained_variance: None,
             mean: None,
             gpu_context: Some(gpu_context),

@@ -37,13 +37,13 @@ use crate::error::{SparseError, SparseResult};
 /// assert_eq!(dtype, "i32");
 ///
 /// // Larger array, might need i64
-/// let large_shape = (2_000_000_000, 2_000_000_000);
-/// let dtype_large = get_index_dtype(large_shape, &[]);
+/// let largeshape = (2_000_000_000, 2_000_000_000);
+/// let dtype_large = get_index_dtype(largeshape, &[]);
 /// assert_eq!(dtype_large, "i64");
 /// ```
 #[allow(dead_code)]
-pub fn get_index_dtype(_shape: (usize, usize), idx_arrays: &[ArrayView1<usize>]) -> &'static str {
-    let (rows, cols) = _shape;
+pub fn get_index_dtype(shape: (usize, usize), idx_arrays: &[ArrayView1<usize>]) -> &'static str {
+    let (rows, cols) = shape;
 
     // Maximum index value that could be needed (product of dimensions)
     let theoretical_max = rows.saturating_mul(cols);

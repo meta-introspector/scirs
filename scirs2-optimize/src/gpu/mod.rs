@@ -97,7 +97,7 @@ impl GpuOptimizationContext {
         let memory_pool = memory_management::GpuMemoryPool::new_stub();
 
         Ok(Self {
-            _config,
+            config: _config,
             context,
             memory_pool,
         })
@@ -150,7 +150,7 @@ impl GpuOptimizationContext {
         gpu_data.copy_to_host(&mut host_data)?;
 
         // Reshape to ndarray
-        Array2::from_shape_vec((shape[0], shape[1]), host_data)
+        Array2::fromshape_vec((shape[0], shape[1]), host_data)
             .map_err(|e| ScirsError::ComputationError(format!("Shape error: {}", e)))
     }
 

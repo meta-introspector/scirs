@@ -53,8 +53,8 @@ where
     /// // Create a 6x6 sparse matrix with 2x2 blocks
     /// let matrix = BsrMatrix::<f64>::new((6, 6), (2, 2)).unwrap();
     /// ```
-    pub fn new(_shape: (usize, usize), block_size: (usize, usize)) -> SparseResult<Self> {
-        let (rows, cols) = _shape;
+    pub fn new(shape: (usize, usize), block_size: (usize, usize)) -> SparseResult<Self> {
+        let (rows, cols) = shape;
         let (r, c) = block_size;
 
         if r == 0 || c == 0 {

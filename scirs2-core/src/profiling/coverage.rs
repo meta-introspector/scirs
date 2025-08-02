@@ -871,7 +871,13 @@ impl CoverageAnalyzer {
     }
 
     /// Record branch execution
-    pub fn record_branch_execution(&self, file_path: &Path, line_number: u32, branch_id: &str, taken: bool) -> CoreResult<()> {
+    pub fn record_branch_execution(
+        &self,
+        file_path: &Path,
+        line_number: u32,
+        branch_id: &str,
+        taken: bool,
+    ) -> CoreResult<()> {
         if let Ok(mut coverage) = self.file_coverage.write() {
             let file_coverage =
                 coverage
@@ -923,7 +929,13 @@ impl CoverageAnalyzer {
     }
 
     /// Record function execution
-    pub fn record_function_execution(&self, file_path: &Path, function_name: &str, start_line: u32, end_line: u32) -> CoreResult<()> {
+    pub fn record_function_execution(
+        &self,
+        file_path: &Path,
+        function_name: &str,
+        start_line: u32,
+        end_line: u32,
+    ) -> CoreResult<()> {
         if let Ok(mut coverage) = self.file_coverage.write() {
             let file_coverage =
                 coverage
@@ -1282,7 +1294,7 @@ impl CoverageAnalyzer {
                 ReportFormat::Json => self.generate_json_report(report)?,
                 ReportFormat::Xml => self.generate_xml_report(report)?,
                 ReportFormat::Lcov => self.generate_lcov_report(report)?,
-                ReportFormat::Text => self.generate_text_report(report)?,
+                ReportFormat::Text => self.generatetext_report(report)?,
                 ReportFormat::Csv => self.generate_csv_report(report)?,
             }
         }
@@ -1362,8 +1374,8 @@ impl CoverageAnalyzer {
     }
 
     /// Generate text report
-    fn generate_text_report(&self, report: &CoverageReport) -> CoreResult<()> {
-        let text_content = self.create_text_content(report);
+    fn generatetext_report(&self, report: &CoverageReport) -> CoreResult<()> {
+        let text_content = self.createtext_content(report);
         let output_path = self.config.output_directory.join("coverage_summary.txt");
 
         std::fs::write(output_path, text_content).map_err(|e| {
@@ -1645,7 +1657,7 @@ impl CoverageAnalyzer {
     }
 
     /// Create text report content
-    fn create_text_content(&self, report: &CoverageReport) -> String {
+    fn createtext_content(&self, report: &CoverageReport) -> String {
         let mut content = String::new();
 
         content.push_str("===== COVERAGE REPORT =====\n\n");

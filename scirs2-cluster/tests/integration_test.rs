@@ -9,7 +9,7 @@ use scirs2__cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
 #[allow(dead_code)]
 fn test_whiten() {
     let data =
-        Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
+        Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
 
     let whitened = whiten(&data).unwrap();
 
@@ -20,7 +20,7 @@ fn test_whiten() {
 #[test]
 #[allow(dead_code)]
 fn test_kmeans2_init_methods() {
-    let data = Array2::from_shape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
+    let data = Array2::fromshape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
 
     let init_methods = vec![
         MinitMethod::Random,
@@ -74,7 +74,7 @@ fn test_silhouette_score_basic() {
 #[allow(dead_code)]
 fn test_advanced_clusterer_basic() {
     // Create test data with clear clusters
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (8, 2),
         vec![
             1.0, 1.0, // Cluster 1
@@ -101,7 +101,7 @@ fn test_advanced_clusterer_basic() {
 #[test]
 #[allow(dead_code)]
 fn test_advanced_clusterer_with_ai_selection() {
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (12, 3),
         vec![
             // Cluster 1
@@ -133,7 +133,7 @@ fn test_advanced_clusterer_with_ai_selection() {
 #[test]
 #[allow(dead_code)]
 fn test_advanced_clusterer_with_all_features() {
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (16, 4),
         (0..64)
             .map(|i| {
@@ -178,16 +178,16 @@ fn test_advanced_clusterer_error_handling() {
     assert!(clusterer.cluster(&empty_data.view()).is_err());
 
     // Test single point
-    let single_point = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();
+    let single_point = Array2::fromshape_vec((1, 2), vec![1.0, 2.0]).unwrap();
     assert!(clusterer.cluster(&single_point.view()).is_err());
 
     // Test data with NaN
-    let nan_data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, f64::NAN, 3.0, 4.0, 5.0]).unwrap();
+    let nan_data = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, f64::NAN, 3.0, 4.0, 5.0]).unwrap();
     assert!(clusterer.cluster(&nan_data.view()).is_err());
 
     // Test data with infinity
     let inf_data =
-        Array2::from_shape_vec((3, 2), vec![1.0, 2.0, f64::INFINITY, 3.0, 4.0, 5.0]).unwrap();
+        Array2::fromshape_vec((3, 2), vec![1.0, 2.0, f64::INFINITY, 3.0, 4.0, 5.0]).unwrap();
     assert!(clusterer.cluster(&inf_data.view()).is_err());
 }
 
@@ -198,13 +198,13 @@ fn test_advanced_clusterer_different_data_sizes() {
 
     // Test small dataset
     let small_data =
-        Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
+        Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 1.1, 1.1, 5.0, 5.0, 5.1, 5.1]).unwrap();
 
     let small_result = clusterer.cluster(&small_data.view()).unwrap();
     assert!(small_result.confidence > 0.0);
 
     // Test medium dataset
-    let medium_data = Array2::from_shape_vec(
+    let medium_data = Array2::fromshape_vec(
         (20, 3),
         (0..60)
             .map(|i| {
@@ -225,7 +225,7 @@ fn test_advanced_clusterer_different_data_sizes() {
 #[allow(dead_code)]
 fn test_advanced_clusterer_high_dimensional() {
     // Test with higher dimensional data
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (12, 8),
         (0..96)
             .map(|i| {
@@ -267,7 +267,7 @@ fn test_advanced_clusterer_noisy_data() {
         data_vec.push(base_y + noise_y);
     }
 
-    let data = Array2::from_shape_vec((16, 2), data_vec).unwrap();
+    let data = Array2::fromshape_vec((16, 2), data_vec).unwrap();
 
     let mut clusterer = AdvancedClusterer::new()
         .with_quantum_neuromorphic_fusion(true)
@@ -298,7 +298,7 @@ fn test_advanced_config_defaults() {
 #[test]
 #[allow(dead_code)]
 fn test_advanced_performance_metrics() {
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (6, 2),
         vec![
             1.0, 1.0, 1.1, 1.1, 1.2, 1.2, // Cluster 1

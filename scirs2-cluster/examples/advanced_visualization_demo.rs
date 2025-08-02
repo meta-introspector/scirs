@@ -129,7 +129,7 @@ fn create_sample_data() -> Array2<f64> {
         data_vec.push(4.0 + 0.5 * ((i * 13) as f64 % 23.0) / 23.0);
     }
 
-    Array2::from_shape_vec((65, 3), data_vec).unwrap()
+    Array2::fromshape_vec((65, 3), data_vec).unwrap()
 }
 
 #[allow(dead_code)]

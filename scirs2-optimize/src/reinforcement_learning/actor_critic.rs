@@ -129,11 +129,11 @@ impl ActorNetwork {
         let xavier_scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
 
         Self {
-            hidden_weights: Array2::from_shape_fn((hidden_size, _input_size), |_| {
+            hidden_weights: Array2::fromshape_fn((hidden_size, _input_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
-            output_weights: Array2::from_shape_fn((output_size, hidden_size), |_| {
+            output_weights: Array2::fromshape_fn((output_size, hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: Array1::zeros(output_size),
@@ -235,11 +235,11 @@ impl CriticNetwork {
         let xavier_scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
 
         Self {
-            hidden_weights: Array2::from_shape_fn((hidden_size, _input_size), |_| {
+            hidden_weights: Array2::fromshape_fn((hidden_size, _input_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
-            output_weights: Array1::from_shape_fn(hidden_size, |_| {
+            output_weights: Array1::fromshape_fn(hidden_size, |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: 0.0,
@@ -447,7 +447,7 @@ impl AdvantageActorCriticOptimizer {
         state: &OptimizationState,
     ) -> (OptimizationAction, Array1<f64>) {
         let state_features = self.extract_state_features(state);
-        let (__, policy_output) = self.actor.forward(&state_features.view());
+        let (_, policy_output) = self.actor.forward(&state_features.view());
 
         // Add exploration noise
         let exploration_noise = if self.training_stats.episodes_completed
@@ -541,7 +541,7 @@ impl AdvantageActorCriticOptimizer {
             // Forward pass through critic for current and next state
             let (hidden_raw, hidden_activated, current_value) =
                 self.critic.forward(&state_features.view());
-            let (__, next_value) = self.critic.forward(&next_state_features.view());
+            let (_, next_value) = self.critic.forward(&next_state_features.view());
 
             // Compute advantage
             let advantage = self.compute_advantage(
@@ -666,7 +666,7 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
     }
 
     fn select_action(&mut self, state: &OptimizationState) -> OptimizationAction {
-        let (action_) = self.select_action_with_exploration(state);
+        let (action, _) = self.select_action_with_exploration(state);
         action
     }
 
@@ -697,7 +697,7 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
 
         for step in 0..self.config.max_steps_per_episode {
             // Select action
-            let (action_) = self.select_action_with_exploration(&current_state);
+            let (action, _) = self.select_action_with_exploration(&current_state);
 
             // Apply action
             let new_params =

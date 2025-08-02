@@ -1,10 +1,11 @@
-use crate::window;
+use ndarray::s;
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle__enhanced::WindowType;
-use ndarray::{Array, Array1, Array2, s};
-use num__complex::{Complex64, ComplexFloat};
-use std::f64::consts::PI;
+use crate::lombscargle_enhanced::WindowType;
+use crate::window;
+use ndarray::{ Array, Array1, Array2};
+use num_complex::{Complex64, ComplexFloat};
 use scirs2_fft;
+use std::f64::consts::PI;
 
 // Constant-Q Transform Implementation
 //
@@ -144,7 +145,7 @@ pub struct SparseKernel {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::cqt::{constant_q_transform, CqtConfig};
+/// use scirs2_signal::cqt::{constant_q_transform, CqtConfig};
 ///
 /// // Generate a test signal with multiple harmonics
 /// let fs = 44100.0;
@@ -585,7 +586,7 @@ pub fn cqt_phase(_cqt: &CqtResult) -> Array2<f64> {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::cqt::{constant_q_transform, inverse_constant_q_transform, CqtConfig};
+/// use scirs2_signal::cqt::{constant_q_transform, inverse_constant_q_transform, CqtConfig};
 ///
 /// // Generate a test signal with shorter duration for faster test
 /// let fs = 8000.0;
@@ -771,7 +772,7 @@ pub fn chromagram(
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_create_window() {
         // Test window creation

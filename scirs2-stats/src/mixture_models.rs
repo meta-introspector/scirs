@@ -17,7 +17,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, One, Zero};
-use rand::{rng, Rng};
+use rand::Rng;
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
 
@@ -381,7 +381,7 @@ where
                 };
 
                 for i in 0..self.n_components {
-                    let idx = rng.gen_range(0..n_samples_);
+                    let idx = rng.random_range(0, n_samples_);
                     means.row_mut(i).assign(&data.row(idx));
                 }
             }
@@ -443,7 +443,7 @@ where
         let mut means = Array2::zeros((self.n_components, n_features));
 
         // Choose first center randomly
-        let first_idx = rng.gen_range(0..n_samples_);
+        let first_idx = rng.random_range(0, n_samples_);
         means.row_mut(0).assign(&data.row(first_idx));
 
         // Choose remaining centers
@@ -1804,7 +1804,7 @@ where
         };
 
         for i in 0..self.max_components {
-            let idx = rng.gen_range(0..n_samples_);
+            let idx = rng.random_range(0, n_samples_);
             means.row_mut(i).assign(&data.row(idx));
         }
 

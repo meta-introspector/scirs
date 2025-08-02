@@ -429,8 +429,8 @@ mod tests {
         let k = 80;
         let n = 60;
 
-        let a = Array2::from_shape_fn((m, k), |(i, j)| (i + j) as f32 * 0.01);
-        let b = Array2::from_shape_fn((k, n), |(i, j)| (i * 2 + j) as f32 * 0.01);
+        let a = Array2::fromshape_fn((m, k), |(i, j)| (i + j) as f32 * 0.01);
+        let b = Array2::fromshape_fn((k, n), |(i, j)| (i * 2 + j) as f32 * 0.01);
         let mut c = Array2::zeros((m, n));
 
         // Test with custom block sizes

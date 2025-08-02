@@ -61,7 +61,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use scirs2__ndimage::measurements::region_properties;
 ///
 /// // Simulate segmented cell image
-/// let cell_intensities = Array2::from_shape_fn((50, 50), |(i, j)| {
+/// let cell_intensities = Array2::fromshape_fn((50, 50), |(i, j)| {
 ///     // Create different cell-like regions with varying intensities
 ///     match ((i / 10), (j / 10)) {
 ///         (1, 1) => 80.0 + ((i + j) % 5) as f64,   // Cell 1
@@ -71,7 +71,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     }
 /// });
 ///
-/// let cell_labels = Array2::from_shape_fn((50, 50), |(i, j)| {
+/// let cell_labels = Array2::fromshape_fn((50, 50), |(i, j)| {
 ///     match ((i / 10), (j / 10)) {
 ///         (1, 1) => 1,  // Cell 1
 ///         (1, 3) => 2,  // Cell 2
@@ -122,7 +122,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use scirs2__ndimage::measurements::region_properties;
 ///
 /// // Simulate microscopy image of material grains
-/// let grain_image = Array2::from_shape_fn((100, 100), |(i, j)| {
+/// let grain_image = Array2::fromshape_fn((100, 100), |(i, j)| {
 ///     // Create grain-like structures with different properties
 ///     let grain_id = ((i / 25) * 2 + (j / 25)) + 1;
 ///     let base_intensity = match grain_id {
@@ -137,7 +137,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     base_intensity + texture
 /// });
 ///
-/// let grain_labels = Array2::from_shape_fn((100, 100), |(i, j)| {
+/// let grain_labels = Array2::fromshape_fn((100, 100), |(i, j)| {
 ///     ((i / 25) * 2 + (j / 25)) + 1
 /// });
 ///
@@ -163,7 +163,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use scirs2__ndimage::measurements::region_properties;
 ///
 /// // Simulate medical image with lesions
-/// let medical_scan = Array2::from_shape_fn((80, 80), |(i, j)| {
+/// let medical_scan = Array2::fromshape_fn((80, 80), |(i, j)| {
 ///     // Normal tissue background
 ///     let mut intensity = 100.0;
 ///     
@@ -180,7 +180,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///     intensity
 /// });
 ///
-/// let lesion_segmentation = Array2::from_shape_fn((80, 80), |(i, j)| {
+/// let lesion_segmentation = Array2::fromshape_fn((80, 80), |(i, j)| {
 ///     let dist1 = ((i as f64 - 20.0).powi(2) + (j as f64 - 30.0).powi(2)).sqrt();
 ///     let dist2 = ((i as f64 - 60.0).powi(2) + (j as f64 - 50.0).powi(2)).sqrt();
 ///     
@@ -382,7 +382,7 @@ where
 /// use scirs2__ndimage::measurements::find_objects;
 ///
 /// // Simulate cell segmentation result
-/// let cell_labels = Array2::from_shape_fn((100, 100), |(i, j)| {
+/// let cell_labels = Array2::fromshape_fn((100, 100), |(i, j)| {
 ///     // Create scattered cell-like objects
 ///     match ((i / 20), (j / 25)) {
 ///         (1, 0) => 1,  // Cell 1 in upper left
@@ -419,7 +419,7 @@ where
 /// use scirs2__ndimage::measurements::find_objects;
 ///
 /// // Create 3D labeled volume
-/// let labeled_volume = Array3::from_shape_fn((50, 50, 50), |(z, y, x)| {
+/// let labeled_volume = Array3::fromshape_fn((50, 50, 50), |(z, y, x)| {
 ///     // Create 3D objects at different positions
 ///     if (z >= 10 && z < 20) && (y >= 10 && y < 20) && (x >= 10 && x < 20) {
 ///         1  // Object 1: cube in center
@@ -448,7 +448,7 @@ where
 /// use ndarray::{Array2, s};
 /// use scirs2__ndimage::measurements::find_objects;
 ///
-/// let segmented_image = Array2::from_shape_fn((60, 60), |(i, j)| {
+/// let segmented_image = Array2::fromshape_fn((60, 60), |(i, j)| {
 ///     // Create multiple objects
 ///     if (i >= 10 && i < 25) && (j >= 10 && j < 25) {
 ///         1  // Square object
@@ -482,7 +482,7 @@ where
 /// use ndarray::Array2;
 /// use scirs2__ndimage::measurements::find_objects;
 ///
-/// let detection_result = Array2::from_shape_fn((100, 100), |(i, j)| {
+/// let detection_result = Array2::fromshape_fn((100, 100), |(i, j)| {
 ///     // Simulate detection with objects of various sizes
 ///     match ((i / 15), (j / 15)) {
 ///         (0, 0) => 1,   // Small object

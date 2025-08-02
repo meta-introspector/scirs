@@ -152,7 +152,7 @@ impl LateralConnection {
         target_layer: usize,
         source_dim: usize,
         target_dim: usize,
-        let weights = Array2::from_shape_fn((target_dim, source_dim), |_| {
+        let weights = Array2::fromshape_fn((target_dim, source_dim), |_| {
             use rand::Rng;
             rng().random_range(-0.1..0.1)
         });
@@ -342,11 +342,11 @@ pub struct TaskMask {
     available_capacity: Vec<f32>,
 impl TaskMask {
     /// Create a new task mask
-    pub fn new(_task_id: usize, layer_shapes: &[(usize, usize)]) -> Self {
-        let layer_masks = layer_shapes
+    pub fn new(_task_id: usize, layershapes: &[(usize, usize)]) -> Self {
+        let layer_masks = layershapes
             .iter()
             .map(|(rows, cols)| Array2::from_elem((*rows, *cols), true))
-        let available_capacity = vec![1.0; layer_shapes.len()];
+        let available_capacity = vec![1.0; layershapes.len()];
             layer_masks,
             available_capacity,
     /// Apply mask to parameters
@@ -397,9 +397,9 @@ impl PackNet {
             .add_task(task_name.clone(), &[64, 32], output_dim, task_type)?;
         // Create mask for this task
         let backbone_params = self.network.backbone_parameters();
-        let layer_shapes: Vec<(usize, usize)> = backbone_params
+        let layershapes: Vec<(usize, usize)> = backbone_params
             .map(|param| (param.shape()[0], param.shape()[1]))
-        let mut task_mask = TaskMask::new(self.current_task, &layer_shapes);
+        let mut task_mask = TaskMask::new(self.current_task, &layershapes);
         // Apply existing masks to reserve capacity
         for existing_mask in self.task_masks.values() {
             self.merge_masks(&mut task_mask, existing_mask)?;
@@ -584,8 +584,8 @@ mod tests {
         assert_eq!(lwf.current_task, 0);
         assert!(lwf.teacher_models.is_empty());
     fn test_task_mask() {
-        let layer_shapes = vec![(10, 5), (5, 3)];
-        let mut mask = TaskMask::new(0, &layer_shapes);
+        let layershapes = vec![(10, 5), (5, 3)];
+        let mut mask = TaskMask::new(0, &layershapes);
         assert_eq!(mask.layer_masks.len(), 2);
         assert_eq!(mask.available_capacity.len(), 2);
         // All weights should be available initially

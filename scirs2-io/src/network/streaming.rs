@@ -270,7 +270,7 @@ pub struct ChunkedReader {
 
 impl ChunkedReader {
     /// Create a new chunked reader
-    pub fn new<P: AsRef<Path>>(_path: P, chunk_size: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize) -> Result<Self> {
         let file = std::fs::File::open(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
 
@@ -353,7 +353,7 @@ pub struct ChunkedWriter {
 
 impl ChunkedWriter {
     /// Create a new chunked writer
-    pub fn new<P: AsRef<Path>>(_path: P, buffer_size: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, buffer_size: usize) -> Result<Self> {
         let file = std::fs::File::create(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
 

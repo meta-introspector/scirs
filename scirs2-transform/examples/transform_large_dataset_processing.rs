@@ -84,7 +84,7 @@ fn example_streaming_transformations() -> Result<(), Box<dyn std::error::Error>>
     println!("Processing streaming batches:");
     for i in 0..5 {
         // Generate a batch of data
-        let batch = Array2::from_shape_fn((100, n_features), |(_, j)| {
+        let batch = Array2::fromshape_fn((100, n_features), |(_, j)| {
             (i as f64 + j as f64) * 10.0 + rand::random::<f64>() * 5.0
         });
 
@@ -135,7 +135,7 @@ fn example_windowed_streaming() -> Result<(), Box<dyn std::error::Error>> {
         for batch_idx in 0..5 {
             // Generate data with shifting distribution
             let offset = epoch as f64 * 50.0;
-            let batch = Array2::from_shape_fn((100, n_features), |(_, j)| {
+            let batch = Array2::fromshape_fn((100, n_features), |(_, j)| {
                 offset + j as f64 * 10.0 + rand::random::<f64>() * 20.0
             });
 
@@ -173,7 +173,7 @@ fn example_streaming_quantiles() -> Result<(), Box<dyn std::error::Error>> {
     let n_batches = 10;
     for i in 0..n_batches {
         // Generate batch with known distribution
-        let batch = Array2::from_shape_fn((1000, n_features), |(_, j)| {
+        let batch = Array2::fromshape_fn((1000, n_features), |(_, j)| {
             // Feature 0: Normal distribution
             // Feature 1: Uniform distribution
             if j == 0 {

@@ -53,8 +53,8 @@ fn main() -> LinalgResult<()> {
 
     // Solve using extended precision (f64 calculation internally for f32 data)
     // For this example, we'll manually convert to f32 and back
-    let hilbert_f32: Array2<f32> = Array2::from_shape_fn((n, n), |(i, j)| hilbert[[i, j]] as f32);
-    let b_f32: Array1<f32> = Array1::from_shape_fn(n, |i| b[i] as f32);
+    let hilbert_f32: Array2<f32> = Array2::fromshape_fn((n, n), |(i, j)| hilbert[[i, j]] as f32);
+    let b_f32: Array1<f32> = Array1::fromshape_fn(n, |i| b[i] as f32);
 
     let x_ext = extended_solve::<f32, f64>(&hilbert_f32.view(), &b_f32.view())?;
 
@@ -83,9 +83,9 @@ fn main() -> LinalgResult<()> {
     println!("Extended Precision Matrix Multiplication");
     println!("-------------------------------------\n");
 
-    let a_f32 = Array2::from_shape_fn((3, 3), |(i, j)| 1.0 / ((i + j + 1) as f32));
+    let a_f32 = Array2::fromshape_fn((3, 3), |(i, j)| 1.0 / ((i + j + 1) as f32));
 
-    let b_f32 = Array2::from_shape_fn((3, 2), |(i, j)| ((i + 1) * (j + 1)) as f32);
+    let b_f32 = Array2::fromshape_fn((3, 2), |(i, j)| ((i + 1) * (j + 1)) as f32);
 
     println!("Matrix A (f32):");
     for i in 0..a_f32.nrows() {
@@ -153,7 +153,7 @@ fn main() -> LinalgResult<()> {
 
     // Convert to f32 for comparison
     let hilbert_det_f32: Array2<f32> =
-        Array2::from_shape_fn((n, n), |(i, j)| hilbert_det[[i, j]] as f32);
+        Array2::fromshape_fn((n, n), |(i, j)| hilbert_det[[i, j]] as f32);
 
     println!("Hilbert matrix of order {}:", n);
     for i in 0..n {
@@ -217,7 +217,7 @@ fn main() -> LinalgResult<()> {
     println!("-------------------------------------\n");
 
     // Create an ill-conditioned test matrix
-    let test_matrix_f32 = Array2::from_shape_fn((4, 4), |(i, j)| {
+    let test_matrix_f32 = Array2::fromshape_fn((4, 4), |(i, j)| {
         if i == j {
             1.0f32
         } else {

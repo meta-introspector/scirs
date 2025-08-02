@@ -341,7 +341,8 @@ fn compute_relative_error(_original: &[Complex64], reconstructed: &[Complex64]) 
 fn create_plots(
     signal: &[f64],
     full_magnitudes: &[f64],
-    sparse_result: &scirs2, _fft: :sparse_fft::SparseFFTResult,
+    sparse_result: &scirs2,
+    _fft: sparse_fft::SparseFFTResult,
 ) {
     // Create time domain plot
     let mut time_plot = Plot::new();
@@ -352,9 +353,9 @@ fn create_plots(
     time_plot.add_trace(time_trace);
     time_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("Time Domain Signal"))
-            .x_axis(Axis::new().title(Title::with_text("Time")))
-            .y_axis(Axis::new().title(Title::with_text("Amplitude"))),
+            .title(Title::withtext("Time Domain Signal"))
+            .x_axis(Axis::new().title(Title::withtext("Time")))
+            .y_axis(Axis::new().title(Title::withtext("Amplitude"))),
     );
 
     time_plot.write_html("sparse_fft_time_domain.html");
@@ -382,9 +383,9 @@ fn create_plots(
     freq_plot.add_trace(sparse_trace);
     freq_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("Frequency Domain Comparison"))
-            .x_axis(Axis::new().title(Title::with_text("Frequency Bin")))
-            .y_axis(Axis::new().title(Title::with_text("Magnitude"))),
+            .title(Title::withtext("Frequency Domain Comparison"))
+            .x_axis(Axis::new().title(Title::withtext("Frequency Bin")))
+            .y_axis(Axis::new().title(Title::withtext("Magnitude"))),
     );
 
     freq_plot.write_html("sparse_fft_frequency_domain.html");

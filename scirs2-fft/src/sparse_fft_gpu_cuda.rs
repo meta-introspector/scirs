@@ -53,7 +53,10 @@ pub struct GpuMemoryManager;
 
 impl GpuMemoryManager {
     pub fn allocate(
-        &self, _size: usize, _location: BufferLocation, _buffer_type: BufferType,
+        &self,
+        _size: usize,
+        _location: BufferLocation,
+        _buffer_type: BufferType,
     ) -> FFTResult<BufferDescriptor> {
         Err(FFTError::NotImplementedError(
             "GPU memory management needs to be implemented with scirs2-core::gpu abstractions"

@@ -1,10 +1,10 @@
-//! Example demonstrating memory-efficient STFT processing for large signals
-//!
-//! This example shows how to use the memory-efficient STFT implementation
-//! to process large signals without consuming excessive memory.
+// Example demonstrating memory-efficient STFT processing for large signals
+//
+// This example shows how to use the memory-efficient STFT implementation
+// to process large signals without consuming excessive memory.
 
-use scirs2__signal::stft::{MemoryEfficientStft, MemoryEfficientStftConfig, StftConfig};
-use scirs2__signal::window;
+use scirs2_signal::stft::{MemoryEfficientStft, MemoryEfficientStftConfig, StftConfig};
+use scirs2_signal::window;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

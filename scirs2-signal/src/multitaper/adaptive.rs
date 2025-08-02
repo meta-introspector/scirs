@@ -1,13 +1,13 @@
-//! Adaptive multitaper spectral estimation.
+// Adaptive multitaper spectral estimation.
 
+use super::utils::compute_fft;
+use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rand::Rng;
 use std::fmt::Debug;
-use super::utils::compute_fft;
-use super::windows::dpss;
 
 #[allow(unused_imports)]
 // PI is only used in doc examples
@@ -33,7 +33,7 @@ use super::windows::dpss;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::multitaper::adaptive_psd;
+/// use scirs2_signal::multitaper::adaptive_psd;
 /// use std::f64::consts::PI;
 ///
 /// // Generate a test signal (sinusoid with noise)

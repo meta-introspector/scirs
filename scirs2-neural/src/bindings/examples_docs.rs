@@ -51,9 +51,9 @@ int main() {{
         printf("Failed to create input tensor: %s\n", scirs2_get_error_string(result));
         scirs2_model_free(model);
     // Create output tensor
-    size_t output_shape[] = {{1, 1000}};
+    size_t outputshape[] = {{1, 1000}};
     scirs2_tensor_t output;
-    result = scirs2_tensor_create(output_shape, 2, 0, &output);
+    result = scirs2_tensor_create(outputshape, 2, 0, &output);
         printf("Failed to create output tensor: %s\n", scirs2_get_error_string(result));
         scirs2_tensor_free(&input);
     // Run inference
@@ -87,19 +87,19 @@ int main() {{
         std::cout << "Model loaded successfully" << std::endl;
         
         // Create input tensor
-        std::vector<size_t> input_shape = {{1, 3, 224, 224}};
-        scirs2::Tensor input(input_shape, 0); // dtype 0 = float32
+        std::vector<size_t> inputshape = {{1, 3, 224, 224}};
+        scirs2::Tensor input(inputshape, 0); // dtype 0 = float32
         // Fill input with sample data
         input.fill(0.5);
         // Run inference
         scirs2::Tensor output = model.predict(input);
         std::cout << "Prediction completed successfully" << std::endl;
         // Print output shape
-        const auto& output_shape = output.shape();
+        const auto& outputshape = output.shape();
         std::cout << "Output shape: [";
-        for (size_t i = 0; i < output_shape.size(); ++i) {{
-            std::cout << output_shape[i];
-            if (i < output_shape.size() - 1) std::cout << ", ";
+        for (size_t i = 0; i < outputshape.size(); ++i) {{
+            std::cout << outputshape[i];
+            if (i < outputshape.size() - 1) std::cout << ", ";
         }}
         std::cout << "]" << std::endl;
     }} catch (const scirs2::Exception& e) {{
@@ -206,7 +206,7 @@ void scirs2_tensor_free(scirs2_tensor_t* tensor);
 // Get tensor data pointer
 scirs2_error_t scirs2_tensor_get_data(scirs2_tensor_t* tensor, void** data);
 // Get tensor shape information
-scirs2_error_t scirs2_tensor_get_shape(scirs2_tensor_t* tensor, size_t** shape, size_t* ndim);
+scirs2_error_t scirs2_tensor_getshape(scirs2_tensor_t* tensor, size_t** shape, size_t* ndim);
 class Tensor {{
     Tensor();
     Tensor(const std::vector<size_t>& shape, int dtype);

@@ -43,11 +43,11 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for MaxP
         "MaxPool2D"
     }
 
-    fn input_shape(&self) -> Option<Vec<usize>> {
+    fn inputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
-    fn output_shape(&self) -> Option<Vec<usize>> {
+    fn outputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
@@ -104,11 +104,11 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Adap
         "AdaptiveAvgPool2D"
     }
 
-    fn input_shape(&self) -> Option<Vec<usize>> {
+    fn inputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
-    fn output_shape(&self) -> Option<Vec<usize>> {
+    fn outputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
@@ -142,11 +142,11 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Adap
         "AdaptiveMaxPool2D"
     }
 
-    fn input_shape(&self) -> Option<Vec<usize>> {
+    fn inputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
-    fn output_shape(&self) -> Option<Vec<usize>> {
+    fn outputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
@@ -178,11 +178,11 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Glob
         "GlobalAvgPool2D"
     }
 
-    fn input_shape(&self) -> Option<Vec<usize>> {
+    fn inputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
-    fn output_shape(&self) -> Option<Vec<usize>> {
+    fn outputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
@@ -216,11 +216,11 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Adap
         "AdaptiveAvgPool1D"
     }
 
-    fn input_shape(&self) -> Option<Vec<usize>> {
+    fn inputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
-    fn output_shape(&self) -> Option<Vec<usize>> {
+    fn outputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
@@ -253,11 +253,11 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Adap
         "AdaptiveMaxPool1D"
     }
 
-    fn input_shape(&self) -> Option<Vec<usize>> {
+    fn inputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
-    fn output_shape(&self) -> Option<Vec<usize>> {
+    fn outputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
@@ -290,11 +290,11 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Adap
         "AdaptiveAvgPool3D"
     }
 
-    fn input_shape(&self) -> Option<Vec<usize>> {
+    fn inputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
-    fn output_shape(&self) -> Option<Vec<usize>> {
+    fn outputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
@@ -327,11 +327,11 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Adap
         "AdaptiveMaxPool3D"
     }
 
-    fn input_shape(&self) -> Option<Vec<usize>> {
+    fn inputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
-    fn output_shape(&self) -> Option<Vec<usize>> {
+    fn outputshape(&self) -> Option<Vec<usize>> {
         None
     }
 

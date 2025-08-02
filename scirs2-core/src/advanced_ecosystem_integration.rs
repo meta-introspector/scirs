@@ -897,7 +897,7 @@ impl AdvancedEcosystemCoordinator {
 
     /// Process data through the ecosystem with intelligent multi-module coordination
     pub fn process_ecosystem(&self, input: AdvancedInput) -> CoreResult<AdvancedOutput> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Analyze input to determine if it requires multi-module processing
         let processing_plan = self.create_processing_plan(&input)?;
@@ -906,9 +906,13 @@ impl AdvancedEcosystemCoordinator {
             ProcessingStrategy::SingleModule => {
                 self.process_single_module(&input, &processing_plan.primary_module)?
             }
-            ProcessingStrategy::Sequential => {
-                self.process_single_module(&input, &processing_plan.module_chain.first().unwrap_or(&String::new()))?
-            }
+            ProcessingStrategy::Sequential => self.process_single_module(
+                &input,
+                processing_plan
+                    .module_chain
+                    .first()
+                    .unwrap_or(&String::new()),
+            )?,
             ProcessingStrategy::Parallel => {
                 self.process_parallel_modules(&input, &processing_plan.parallel_modules)?
             }
@@ -927,7 +931,10 @@ impl AdvancedEcosystemCoordinator {
     }
 
     /// Process data through multiple modules with cross-module optimization
-    pub fn process_with_config(&self, input: AdvancedInput, optimization_config: CrossModuleOptimizationConfig,
+    pub fn process_with_config(
+        &self,
+        input: AdvancedInput,
+        optimization_config: CrossModuleOptimizationConfig,
     ) -> CoreResult<AdvancedOutput> {
         let start_time = Instant::now();
 
@@ -1006,8 +1013,7 @@ impl AdvancedEcosystemCoordinator {
             println!("  🔧 Executing workflow stage: {}", stage.name);
 
             // Execute stage across multiple modules/nodes
-            let stage_result =
-                self.execute_workflow_stage(stage, &comm_channels)?;
+            let stage_result = self.execute_workflow_stage(stage, &comm_channels)?;
 
             // Update workflow state
             workflow_state.incorporate_stage_result(&stage_result)?;
@@ -1021,7 +1027,10 @@ impl AdvancedEcosystemCoordinator {
         }
 
         // Aggregate results
-        let final_result = AdvancedEcosystemCoordinator::aggregate_workflow_results(&stage_results, &workflow_state)?;
+        let final_result = AdvancedEcosystemCoordinator::aggregate_workflow_results(
+            &stage_results,
+            &workflow_state,
+        )?;
 
         println!(
             "✅ Distributed workflow completed in {:.2}s",
@@ -1168,20 +1177,25 @@ impl AdvancedEcosystemCoordinator {
 
             // Score based on performance metrics
             let performance = module.get_performance_metrics();
-            score += self.calculate_module_score_for_requirements(&performance, quality_requirements, priority.clone());
+            score += self.calculate_module_score_for_requirements(
+                &performance,
+                quality_requirements,
+                priority.clone(),
+            );
 
             // Score based on current resource usage
             let resource_usage = module.get_resource_usage();
             score += self.calculate_module_score_for_resource_usage(&resource_usage);
 
             // Score based on data size handling capability
-            let data_score = if capabilities.contains(&"large_data".to_string()) && data_size > 1000000 {
-                1.0
-            } else if data_size < 100000 {
-                0.8
-            } else {
-                0.5
-            };
+            let data_score =
+                if capabilities.contains(&"large_data".to_string()) && data_size > 1000000 {
+                    1.0
+                } else if data_size < 100000 {
+                    0.8
+                } else {
+                    0.5
+                };
             score += data_score;
 
             module_scores.push((module_name.clone(), score));
@@ -1201,7 +1215,11 @@ impl AdvancedEcosystemCoordinator {
     }
 
     #[allow(dead_code)]
-    fn calculate_module_suitability_score(&self, operation_type: &str, capabilities: &[String]) -> f64 {
+    fn calculate_module_suitability_score(
+        &self,
+        operation_type: &str,
+        capabilities: &[String],
+    ) -> f64 {
         match operation_type {
             "matrix_multiply" | "linear_algebra" => {
                 if capabilities.contains(&"gpu_acceleration".to_string()) {
@@ -1253,7 +1271,11 @@ impl AdvancedEcosystemCoordinator {
     }
 
     #[allow(dead_code)]
-    fn calculate_module_score_for_requirements(&self, performance: &ModulePerformanceMetrics, requirements: &QualityRequirements, priority: Priority
+    fn calculate_module_score_for_requirements(
+        &self,
+        performance: &ModulePerformanceMetrics,
+        requirements: &QualityRequirements,
+        priority: Priority,
     ) -> f64 {
         let mut score = 0.0;
 
@@ -1292,7 +1314,10 @@ impl AdvancedEcosystemCoordinator {
     }
 
     #[allow(dead_code)]
-    fn calculate_module_score_for_resource_usage(&self, resource_usage: &ModuleResourceUsage) -> f64 {
+    fn calculate_module_score_for_resource_usage(
+        &self,
+        resource_usage: &ModuleResourceUsage,
+    ) -> f64 {
         let mut score = 0.0;
 
         // Prefer modules with lower current resource usage
@@ -1308,7 +1333,11 @@ impl AdvancedEcosystemCoordinator {
     }
 
     #[allow(dead_code)]
-    fn calculate_capability_score(module_capabilities: &[String], required_size: usize, capabilities: &[String]) -> f64 {
+    fn calculate_capability_score(
+        _module_capabilities: &[String],
+        required_size: usize,
+        capabilities: &[String],
+    ) -> f64 {
         let data_size_mb = required_size as f64 / (1024.0 * 1024.0);
 
         if data_size_mb > 100.0 {
@@ -1343,7 +1372,8 @@ impl AdvancedEcosystemCoordinator {
             )))
         })?;
 
-        performance_monitor.record_operation_duration(operation_name, std::time::Duration::from_secs(1));
+        performance_monitor
+            .record_operation_duration(operation_name, std::time::Duration::from_secs(1));
         Ok(())
     }
 
@@ -1357,7 +1387,7 @@ impl AdvancedEcosystemCoordinator {
         })?;
 
         // Create ecosystem context for optimization
-        let ecosystem_context = self.create_ecosystem_context(&modules)?;
+        let _ecosystem_context = self.create_ecosystem_context(&modules)?;
 
         // Optimize each module for ecosystem coordination
         for (module_name, module) in modules.iter() {
@@ -1365,7 +1395,7 @@ impl AdvancedEcosystemCoordinator {
 
             // Get module's current performance and resource usage
             let _performance = module.get_performance_metrics();
-            let resource_usage = module.get_resource_usage();
+            let _resource_usage = module.get_resource_usage();
 
             // Identify optimization opportunities
             let optimizations: Vec<String> = vec![]; // Simplified - no optimizations for now
@@ -1445,7 +1475,8 @@ impl AdvancedEcosystemCoordinator {
         })
     }
 
-    fn select_modules_based_on_resources(_resource_usage: &ModuleResourceUsage,
+    fn select_modules_based_on_resources(
+        _resource_usage: &ModuleResourceUsage,
         _context: &EcosystemContext,
     ) -> CoreResult<Vec<OptimizationOpportunity>> {
         let opportunities = Vec::new();
@@ -1517,12 +1548,14 @@ impl AdvancedEcosystemCoordinator {
         Ok(opportunities)
     }
 
-    fn send_optimization_opportunities(&self, module_name: &str,
+    fn send_optimization_opportunities(
+        &self,
+        module_name: &str,
         opportunities: &[OptimizationOpportunity],
     ) -> CoreResult<()> {
         // Send optimization hints to the module
         for opportunity in opportunities {
-            let optimization_message = InterModuleMessage {
+            let _optimization_message = InterModuleMessage {
                 from: "ecosystem_coordinator".to_string(),
                 to: module_name.to_string(),
                 message_type: MessageType::OptimizationHint,
@@ -1628,7 +1661,9 @@ impl AdvancedEcosystemCoordinator {
         })
     }
 
-    fn select_modules_for_operation(&self, operation_type: &str,
+    fn select_modules_for_operation(
+        &self,
+        operation_type: &str,
         strategy: &ProcessingStrategy,
     ) -> CoreResult<(String, Vec<String>, Vec<String>)> {
         let modules = self.modules.read().map_err(|e| {
@@ -1656,7 +1691,9 @@ impl AdvancedEcosystemCoordinator {
         Ok((primary_module, module_chain, parallel_modules))
     }
 
-    fn select_primary_module(&self, operation_type: &str,
+    fn select_primary_module(
+        &self,
+        operation_type: &str,
         modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<String> {
         // Enhanced module selection logic
@@ -1677,9 +1714,7 @@ impl AdvancedEcosystemCoordinator {
         })
     }
 
-    fn score_module_capabilities(&self, operation_type: &str,
-        capabilities: &[String],
-    ) -> f64 {
+    fn score_module_capabilities(&self, operation_type: &str, capabilities: &[String]) -> f64 {
         let mut score: f64 = 0.0;
 
         // Direct capability match
@@ -1719,7 +1754,9 @@ impl AdvancedEcosystemCoordinator {
         score.min(1.0)
     }
 
-    fn create_processing_chain(&self, operation_type: &str,
+    fn create_processing_chain(
+        &self,
+        operation_type: &str,
         modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<Vec<String>> {
         // Create an optimal sequential processing chain
@@ -1755,7 +1792,9 @@ impl AdvancedEcosystemCoordinator {
         Ok(chain)
     }
 
-    fn select_parallel_modules(&self, operation_type: &str,
+    fn select_parallel_modules(
+        &self,
+        operation_type: &str,
         modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<Vec<String>> {
         // Select modules that can work in parallel
@@ -1854,7 +1893,10 @@ impl AdvancedEcosystemCoordinator {
         })
     }
 
-    fn process_single_module(&self, input: &AdvancedInput, module_name: &str,
+    fn process_single_module(
+        &self,
+        input: &AdvancedInput,
+        module_name: &str,
     ) -> CoreResult<AdvancedOutput> {
         let mut modules = self.modules.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -1871,7 +1913,10 @@ impl AdvancedEcosystemCoordinator {
         }
     }
 
-    fn process_module_chain(&self, input: &AdvancedInput, module_chain: &[String],
+    fn process_module_chain(
+        &self,
+        input: &AdvancedInput,
+        module_chain: &[String],
     ) -> CoreResult<AdvancedOutput> {
         let mut current_input = input.clone();
 
@@ -1890,7 +1935,10 @@ impl AdvancedEcosystemCoordinator {
         self.process_single_module(&current_input, &module_chain[module_chain.len() - 1])
     }
 
-    fn process_parallel_modules(&self, input: &AdvancedInput, parallel_modules: &[String],
+    fn process_parallel_modules(
+        &self,
+        input: &AdvancedInput,
+        parallel_modules: &[String],
     ) -> CoreResult<AdvancedOutput> {
         use std::thread;
 
@@ -1945,8 +1993,7 @@ impl AdvancedEcosystemCoordinator {
         })
     }
 
-    fn execute_plan(&self, _plan: &ProcessingPlan,
-    ) -> CoreResult<AdvancedOutput> {
+    fn execute_plan(&self, _plan: &ProcessingPlan) -> CoreResult<AdvancedOutput> {
         // Simplified distributed processing
         println!("🌐 Executing distributed pipeline...");
 
@@ -1958,17 +2005,15 @@ impl AdvancedEcosystemCoordinator {
         )))
     }
 
-    fn wait_for_duration(duration: Duration,
-    ) -> CoreResult<()> {
+    fn wait_for_duration(duration: Duration) -> CoreResult<()> {
         // Update metrics based on processing duration
-        println!(
-            "📊 Waiting for duration: {:?}",
-            duration
-        );
+        println!("📊 Waiting for duration: {duration:?}");
         Ok(())
     }
 
-    fn validate_plan_output(&self, _plan: &ProcessingPlan,
+    fn validate_plan_output(
+        &self,
+        _plan: &ProcessingPlan,
         output: &AdvancedOutput,
     ) -> CoreResult<()> {
         let mut status = self.status.write().map_err(|e| {
@@ -2011,13 +2056,18 @@ impl AdvancedEcosystemCoordinator {
     }
 
     /// Setup workflow communication channels
-    fn setup_workflow_communication(&self, _plan: &WorkflowExecutionPlan,
+    fn setup_workflow_communication(
+        &self,
+        _plan: &WorkflowExecutionPlan,
     ) -> CoreResult<Vec<String>> {
         Ok(vec!["channel1".to_string(), "channel2".to_string()])
     }
 
     /// Execute workflow stage
-    fn execute_workflow_stage(&self, stage: &WorkflowStage, _channels: &[String],
+    fn execute_workflow_stage(
+        &self,
+        stage: &WorkflowStage,
+        _channels: &[String],
     ) -> CoreResult<StageResult> {
         println!("    🔧 Executing workflow stage: {}", stage.name);
         Ok(StageResult {
@@ -2030,7 +2080,9 @@ impl AdvancedEcosystemCoordinator {
     }
 
     /// Aggregate workflow results
-    fn aggregate_workflow_results(stage_results: &[StageResult], state: &WorkflowState,
+    fn aggregate_workflow_results(
+        stage_results: &[StageResult],
+        _state: &WorkflowState,
     ) -> CoreResult<WorkflowResult> {
         let total_time = stage_results
             .iter()
@@ -2058,7 +2110,10 @@ impl AdvancedEcosystemCoordinator {
     }
 
     // Missing method implementation for the first impl block
-    pub fn create_optimized_pipeline(&self, _input: &AdvancedInput, _config: &CrossModuleOptimizationConfig,
+    pub fn create_optimized_pipeline(
+        &self,
+        _input: &AdvancedInput,
+        _config: &CrossModuleOptimizationConfig,
     ) -> CoreResult<OptimizedPipeline> {
         // Create optimized processing pipeline based on input characteristics
         let stages = vec![
@@ -2098,7 +2153,8 @@ impl AdvancedEcosystemCoordinator {
     pub fn apply_pre_stage_optimization(
         &self,
         data: AdvancedInput,
-        stage: &PipelineStage, _context: &OptimizationContext,
+        stage: &PipelineStage,
+        _context: &OptimizationContext,
     ) -> CoreResult<AdvancedInput> {
         // Pre-stage optimization logic
         println!("    ⚡ Applying pre-stage optimizations for {}", stage.name);
@@ -2225,7 +2281,10 @@ impl EcosystemPerformanceMonitor {
     }
 
     // Missing method implementation for the first impl block
-    pub fn create_optimized_pipeline(&self, _input: &AdvancedInput, _config: &CrossModuleOptimizationConfig,
+    pub fn create_optimized_pipeline(
+        &self,
+        _input: &AdvancedInput,
+        _config: &CrossModuleOptimizationConfig,
     ) -> CoreResult<OptimizedPipeline> {
         // Create optimized processing pipeline based on input characteristics
         let stages = vec![
@@ -2265,7 +2324,8 @@ impl EcosystemPerformanceMonitor {
     pub fn apply_pre_stage_optimization(
         &self,
         data: AdvancedInput,
-        stage: &PipelineStage, _context: &OptimizationContext,
+        stage: &PipelineStage,
+        _context: &OptimizationContext,
     ) -> CoreResult<AdvancedInput> {
         // Pre-stage optimization logic
         println!("    ⚡ Applying pre-stage optimizations for {}", stage.name);
@@ -2685,7 +2745,7 @@ impl ModuleCommunicationHub {
         let mut optimized = stages;
 
         // Identify parallel execution opportunities
-        let parallel_groups = self.identify_parallel_groups(&optimized, workflow)?;
+        let _parallel_groups = self.identify_parallel_groups(&optimized, workflow)?;
 
         // Reorder stages to maximize parallelism (simplified heuristic)
         optimized.sort_by_key(|stage| {
@@ -2799,7 +2859,12 @@ impl ModuleCommunicationHub {
 
         for stage in &workflow.stages {
             if !visited.contains(&stage.name)
-                && self.detect_cycle_recursive(&stage.name, workflow, &mut visited, &mut recursion_stack)?
+                && self.detect_cycle_recursive(
+                    &stage.name,
+                    workflow,
+                    &mut visited,
+                    &mut recursion_stack,
+                )?
             {
                 return Err(CoreError::InvalidInput(ErrorContext::new(format!(
                     "Circular dependency detected involving stage '{}'",
@@ -2813,7 +2878,12 @@ impl ModuleCommunicationHub {
 
     /// Recursive helper for cycle detection
     #[allow(clippy::only_used_in_recursion)]
-    fn detect_cycle_recursive(&self, stage_name: &str, workflow: &DistributedWorkflow, visited: &mut std::collections::HashSet<String>, recursion_stack: &mut std::collections::HashSet<String>,
+    fn detect_cycle_recursive(
+        &self,
+        stage_name: &str,
+        workflow: &DistributedWorkflow,
+        visited: &mut std::collections::HashSet<String>,
+        recursion_stack: &mut std::collections::HashSet<String>,
     ) -> CoreResult<bool> {
         visited.insert(stage_name.to_string());
         recursion_stack.insert(stage_name.to_string());

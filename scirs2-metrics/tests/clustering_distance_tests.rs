@@ -8,7 +8,7 @@ mod cluster_distance_tests {
     #[test]
     fn test_inter_cluster_distances() {
         // Create a simple dataset with two well-separated clusters
-        let x = Array2::from_shape_vec(
+        let x = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
@@ -38,7 +38,7 @@ mod cluster_distance_tests {
     #[test]
     fn test_intra_cluster_distances() {
         // Create a simple dataset with two clusters
-        let x = Array2::from_shape_vec(
+        let x = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 5.0, 6.0, 5.2, 5.8, 5.5, 6.2],
         )
@@ -68,7 +68,7 @@ mod cluster_distance_tests {
     #[test]
     fn test_distance_ratio_index() {
         // Create a dataset with well-separated clusters
-        let well_separated = Array2::from_shape_vec(
+        let well_separated = Array2::fromshape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
@@ -79,7 +79,7 @@ mod cluster_distance_tests {
         let labels = array![0, 0, 0, 1, 1, 1];
 
         // Create a dataset with poorly separated clusters
-        let poorly_separated = Array2::from_shape_vec(
+        let poorly_separated = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 3.0, 4.0, 3.2, 3.8, 3.5, 4.2],
         )
@@ -97,7 +97,7 @@ mod cluster_distance_tests {
     #[test]
     fn test_isolation_index() {
         // Create a dataset with well-isolated clusters
-        let well_isolated = Array2::from_shape_vec(
+        let well_isolated = Array2::fromshape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 10.0, 12.0, 10.2, 11.8, 10.5, 12.2,
@@ -108,7 +108,7 @@ mod cluster_distance_tests {
         let labels = array![0, 0, 0, 1, 1, 1];
 
         // Create a dataset with poorly isolated clusters
-        let poorly_isolated = Array2::from_shape_vec(
+        let poorly_isolated = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.5, 1.8, 1.2, 2.2, 3.0, 4.0, 3.2, 3.8, 3.5, 4.2],
         )
@@ -128,14 +128,14 @@ mod cluster_distance_tests {
         // Skip empty dataset test as it may be handled differently in different implementations
 
         // Invalid metric
-        let x = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let x = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let labels = array![0, 0, 1];
 
         let result = inter_cluster_distances(&x, &labels, "invalid_metric");
         assert!(result.is_err());
 
         // Mismatched dimensions
-        let x = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let x = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let labels = array![0, 0]; // Only 2 labels for 3 samples
 
         let result = inter_cluster_distances(&x, &labels, "euclidean");

@@ -424,7 +424,7 @@ fn test_mixed_precision_scenarios() {
 // Helper functions
 
 #[allow(dead_code)]
-fn create_test_tensor(_shape: Vec<usize>) -> Tensor<'static, f32> {
+fn create_test_tensor(shape: Vec<usize>) -> Tensor<'static, f32> {
     // This function cannot create tensors without a graph context
     // All tensor creation happens within the test framework itself
     // This stub is kept for compatibility but should not be called
@@ -432,7 +432,7 @@ fn create_test_tensor(_shape: Vec<usize>) -> Tensor<'static, f32> {
 }
 
 #[allow(dead_code)]
-fn create_uncertainty_tensor(_shape: Vec<usize>, _magnitude: f64) -> Tensor<'static, f32> {
+fn create_uncertainty_tensor(shape: Vec<usize>, _magnitude: f64) -> Tensor<'static, f32> {
     // This function cannot create tensors without a graph context
     // All tensor creation happens within the test framework itself
     // This stub is kept for compatibility but should not be called

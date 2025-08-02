@@ -1,7 +1,7 @@
-//! Advanced Mode Coordinator for Enhanced Signal Processing
-//!
-//! This module coordinates all Advanced mode enhancements across the signal processing
-//! suite, providing a unified interface for high-performance, validated implementations.
+// Advanced Mode Coordinator for Enhanced Signal Processing
+//
+// This module coordinates all Advanced mode enhancements across the signal processing
+// suite, providing a unified interface for high-performance, validated implementations.
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};

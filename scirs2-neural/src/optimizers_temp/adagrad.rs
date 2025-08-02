@@ -27,7 +27,7 @@ use scirs2__optim::optimizers as optim_optimizers;
 /// adagrad.update(&mut params, &grads).unwrap();
 pub struct Adagrad<F: Float + Debug> {
     /// Inner Adagrad optimizer from scirs2-optim
-    inner: optim_optimizers: Adagrad<F>,
+    inner: optim, optimizers: Adagrad<F>,
     /// Weight decay (L2 regularization)
     weight_decay: F,
 }
@@ -42,7 +42,7 @@ impl<F: Float + Debug> Adagrad<F> {
         let weight_decay = F::zero();
         
         Self {
-            inner: optim_optimizers: Adagrad::new_with_config(
+            inner: optim, optimizers: Adagrad::new_with_config(
                 _learning_rate,
                 epsilon,
                 weight_decay

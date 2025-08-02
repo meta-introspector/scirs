@@ -18,7 +18,7 @@ use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
-fn safe_i32_to_float<T: Float + FromPrimitive>(_value: i32) -> NdimageResult<T> {
+fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(_value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", _value))
     })
@@ -26,7 +26,7 @@ fn safe_i32_to_float<T: Float + FromPrimitive>(_value: i32) -> NdimageResult<T> 
 
 /// Helper function for safe float to usize conversion
 #[allow(dead_code)]
-fn safe_float_to_usize<T: Float>(_value: T) -> NdimageResult<usize> {
+fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     _value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert float to usize".to_string())
     })
@@ -34,7 +34,7 @@ fn safe_float_to_usize<T: Float>(_value: T) -> NdimageResult<usize> {
 
 /// Helper function for safe float to f64 conversion
 #[allow(dead_code)]
-fn safe_float_to_f64<T: Float>(_value: T) -> NdimageResult<f64> {
+fn safe_float_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
     _value
         .to_f64()
         .ok_or_else(|| NdimageError::ComputationError("Failed to convert float to f64".to_string()))
@@ -87,7 +87,7 @@ where
     let (batch_size, height, width) = batch.dim();
 
     // Create Gaussian kernel once for all images
-    let six = safe_f64, _to_float: :<T>(6.0)?;
+    let six = safe_f64, _to_float: <T>(6.0)?;
     let kernel_size = safe_float_to_usize((six * sigma).ceil())?;
     let kernel_size = kernel_size | 1; // Ensure odd size
     let kernel = create_gaussian_kernel_2d(sigma, kernel_size)?;
@@ -435,13 +435,13 @@ where
             let y = j as f64 - center;
             let dist_sq = x * x + y * y;
             let val = (-dist_sq / two_sigma_sq).exp();
-            kernel[[i, j]] = safe_f64, _to_float: :<T>(val)?;
+            kernel[[i, j]] = safe_f64, _to_float: <T>(val)?;
             sum += val;
         }
     }
 
     // Normalize
-    let sum_t = safe_f64, _to_float: :<T>(sum)?;
+    let sum_t = safe_f64, _to_float: <T>(sum)?;
     kernel.mapv_inplace(|v| v / sum_t);
 
     Ok(kernel)
@@ -457,7 +457,7 @@ where
     let neg_two = safe_i32_to_float(-2)?;
     let two = safe_i32_to_float(2)?;
 
-    let kernel_x = Array2::from_shape_vec(
+    let kernel_x = Array2::fromshape_vec(
         (3, 3),
         vec![
             neg_one,
@@ -475,7 +475,7 @@ where
         NdimageError::ComputationError(format!("Failed to create Sobel X kernel: {}", e))
     })?;
 
-    let kernel_y = Array2::from_shape_vec(
+    let kernel_y = Array2::fromshape_vec(
         (3, 3),
         vec![
             neg_one,
@@ -531,7 +531,7 @@ mod tests {
     fn test_convolve_batch() {
         let batch = arr3(&[[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]]);
 
-        let kernel = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0])
+        let kernel = Array2::fromshape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0])
             .expect("kernel creation should succeed");
 
         let config = BatchConfig {

@@ -1153,7 +1153,7 @@ impl PosTagger {
     }
 
     /// Tag text after tokenization
-    pub fn tag_text(&self, text: &str, tokenizer: &dyn Tokenizer) -> Result<PosTaggingResult> {
+    pub fn tagtext(&self, text: &str, tokenizer: &dyn Tokenizer) -> Result<PosTaggingResult> {
         let tokens = tokenizer.tokenize(text)?;
         Ok(self.tag_sequence(&tokens))
     }
@@ -1188,7 +1188,7 @@ impl PosTagger {
     }
 
     /// Batch tag multiple texts in parallel
-    pub fn tag_texts_parallel(
+    pub fn tagtexts_parallel(
         &self,
         texts: &[String],
         tokenizer: &dyn Tokenizer,
@@ -1201,7 +1201,7 @@ impl PosTagger {
         let tokenizer_boxed = tokenizer.clone_box();
 
         let results = parallel_ops::parallel_map_result(texts, move |text| {
-            tagger.tag_text(text, &*tokenizer_boxed).map_err(|e| {
+            tagger.tagtext(text, &*tokenizer_boxed).map_err(|e| {
                 scirs2_core::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(
                     format!("POS tagging error: {e}"),
                 ))
@@ -1404,7 +1404,7 @@ impl MorphologicalAnalyzer {
         }
 
         // Check word shape
-        let shape = self.get_word_shape(word);
+        let shape = self.get_wordshape(word);
         if let Some(tags) = self.shape_patterns.get(&shape) {
             for (tag, score) in tags {
                 *predictions.entry(tag.clone()).or_insert(0.0) += score * 0.2;
@@ -1437,7 +1437,7 @@ impl MorphologicalAnalyzer {
     }
 
     /// Get word shape pattern
-    fn get_word_shape(&self, word: &str) -> String {
+    fn get_wordshape(&self, word: &str) -> String {
         if word.is_empty() {
             return "empty".to_string();
         }
@@ -1664,8 +1664,8 @@ impl PosAwareLemmatizer {
     }
 
     /// Lemmatize text with automatic tokenization and POS tagging
-    pub fn lemmatize_text(&self, text: &str, tokenizer: &dyn Tokenizer) -> Result<Vec<String>> {
-        let pos_result = self.pos_tagger.tag_text(text, tokenizer)?;
+    pub fn lemmatizetext(&self, text: &str, tokenizer: &dyn Tokenizer) -> Result<Vec<String>> {
+        let pos_result = self.pos_tagger.tagtext(text, tokenizer)?;
 
         let lemmatized: Vec<String> = pos_result
             .tokens
@@ -1801,11 +1801,11 @@ mod tests {
     }
 
     #[test]
-    fn test_pos_tagger_text() {
+    fn test_pos_taggertext() {
         let tagger = PosTagger::new();
         let tokenizer = WordTokenizer::default();
 
-        let result = tagger.tag_text("The cat runs quickly", &tokenizer).unwrap();
+        let result = tagger.tagtext("The cat runs quickly", &tokenizer).unwrap();
 
         assert_eq!(result.tokens.len(), 4);
         assert_eq!(result.tags[0], PosTag::Other); // "The"
@@ -1864,12 +1864,12 @@ mod tests {
     }
 
     #[test]
-    fn test_pos_aware_lemmatizer_text() {
+    fn test_pos_aware_lemmatizertext() {
         let lemmatizer = PosAwareLemmatizer::new();
         let tokenizer = WordTokenizer::default();
 
         let result = lemmatizer
-            .lemmatize_text("The cats are running quickly", &tokenizer)
+            .lemmatizetext("The cats are running quickly", &tokenizer)
             .unwrap();
 
         assert_eq!(result, vec!["the", "cat", "be", "run", "quick"]);
@@ -2011,18 +2011,18 @@ mod tests {
     }
 
     #[test]
-    fn test_word_shape_detection() {
+    fn test_wordshape_detection() {
         let analyzer = MorphologicalAnalyzer::new();
 
-        assert_eq!(analyzer.get_word_shape("Hello"), "Title");
-        assert_eq!(analyzer.get_word_shape("WORLD"), "UPPER");
-        assert_eq!(analyzer.get_word_shape("hello"), "lower");
-        assert_eq!(analyzer.get_word_shape("CamelCase"), "CamelCase");
-        assert_eq!(analyzer.get_word_shape("well-known"), "with-dash");
-        assert_eq!(analyzer.get_word_shape("file_name"), "has_underscore");
-        assert_eq!(analyzer.get_word_shape("Dr."), "has.period");
-        assert_eq!(analyzer.get_word_shape("item123"), "123number");
-        assert_eq!(analyzer.get_word_shape(""), "empty");
+        assert_eq!(analyzer.get_wordshape("Hello"), "Title");
+        assert_eq!(analyzer.get_wordshape("WORLD"), "UPPER");
+        assert_eq!(analyzer.get_wordshape("hello"), "lower");
+        assert_eq!(analyzer.get_wordshape("CamelCase"), "CamelCase");
+        assert_eq!(analyzer.get_wordshape("well-known"), "with-dash");
+        assert_eq!(analyzer.get_wordshape("file_name"), "has_underscore");
+        assert_eq!(analyzer.get_wordshape("Dr."), "has.period");
+        assert_eq!(analyzer.get_wordshape("item123"), "123number");
+        assert_eq!(analyzer.get_wordshape(""), "empty");
     }
 
     #[test]

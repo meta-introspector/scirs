@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Creating test data...");
     let rows = 1000;
     let cols = 1000;
-    let data = Array2::<f64>::from_shape_fn((rows, cols), |(i, j)| (i * cols + j) as f64);
+    let data = Array2::<f64>::fromshape_fn((rows, cols), |(i, j)| (i * cols + j) as f64);
 
     // Create compressed memory-mapped array
     println!("Creating compressed memory-mapped array...");

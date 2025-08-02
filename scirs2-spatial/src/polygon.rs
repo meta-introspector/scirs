@@ -70,7 +70,7 @@ use std::f64::consts::PI;
 /// assert!(!outside);
 /// ```
 #[allow(dead_code)]
-pub fn point_in_polygon<T: Float>(_point: &[T], polygon: &ArrayView2<T>) -> bool {
+pub fn point_in_polygon<T: Float>(point: &[T], polygon: &ArrayView2<T>) -> bool {
     let x = _point[0];
     let y = _point[1];
     let n = polygon.shape()[0];
@@ -151,7 +151,7 @@ pub fn point_in_polygon<T: Float>(_point: &[T], polygon: &ArrayView2<T>) -> bool
 /// assert!(!not_on_boundary);
 /// ```
 #[allow(dead_code)]
-pub fn point_on_boundary<T: Float>(_point: &[T], polygon: &ArrayView2<T>, epsilon: T) -> bool {
+pub fn point_on_boundary<T: Float>(point: &[T], polygon: &ArrayView2<T>, epsilon: T) -> bool {
     let x = _point[0];
     let y = _point[1];
     let n = polygon.shape()[0];
@@ -240,7 +240,7 @@ pub fn point_on_boundary<T: Float>(_point: &[T], polygon: &ArrayView2<T>, epsilo
 /// assert!((area - 1.0).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn polygon_area<T: Float>(_polygon: &ArrayView2<T>) -> T {
+pub fn polygon_area<T: Float>(polygon: &ArrayView2<T>) -> T {
     let n = _polygon.shape()[0];
 
     if n < 3 {
@@ -292,7 +292,7 @@ pub fn polygon_area<T: Float>(_polygon: &ArrayView2<T>) -> T {
 /// assert!((centroid[1] - 0.5).abs() < 1e-10);
 /// ```
 #[allow(dead_code)]
-pub fn polygon_centroid<T: Float>(_polygon: &ArrayView2<T>) -> Vec<T> {
+pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
     let n = _polygon.shape()[0];
 
     if n < 3 {
@@ -466,7 +466,7 @@ pub fn polygon_contains_polygon<T: Float>(
 ///
 /// * `true` if the segments intersect, `false` otherwise
 #[allow(dead_code)]
-fn segments_intersect<T: Float>(_a1: &[T], a2: &[T], b1: &[T], b2: &[T]) -> bool {
+fn segments_intersect<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T]) -> bool {
     // Function to compute orientation of triplet (p, q, r)
     // Returns:
     // 0 -> collinear
@@ -534,7 +534,7 @@ fn segments_intersect<T: Float>(_a1: &[T], a2: &[T], b1: &[T], b2: &[T]) -> bool
 ///
 /// * `true` if the segments overlap, `false` otherwise
 #[allow(dead_code)]
-fn segments_overlap<T: Float>(_a1: &[T], a2: &[T], b1: &[T], b2: &[T], epsilon: T) -> bool {
+fn segments_overlap<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T], epsilon: T) -> bool {
     // Check if the segments are collinear
     let cross = (a2[0] - _a1[0]) * (b2[1] - b1[1]) - (a2[1] - _a1[1]) * (b2[0] - b1[0]);
 
@@ -587,7 +587,7 @@ fn segments_overlap<T: Float>(_a1: &[T], a2: &[T], b1: &[T], b2: &[T], epsilon: 
 /// assert!(!is_simple_polygon(&complex.view()));
 /// ```
 #[allow(dead_code)]
-pub fn is_simple_polygon<T: Float>(_polygon: &ArrayView2<T>) -> bool {
+pub fn is_simple_polygon<T: Float>(polygon: &ArrayView2<T>) -> bool {
     let n = _polygon.shape()[0];
 
     if n < 3 {
@@ -653,7 +653,7 @@ pub fn is_simple_polygon<T: Float>(_polygon: &ArrayView2<T>) -> bool {
 /// assert_eq!(hull.shape()[0], 4);
 /// ```
 #[allow(dead_code)]
-pub fn convex_hull_graham<T: Float + std::fmt::Debug>(_points: &ArrayView2<T>) -> Array2<T> {
+pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) -> Array2<T> {
     let n = _points.shape()[0];
 
     if n <= 3 {
@@ -873,7 +873,7 @@ fn douglas_peucker_recursive<T: Float>(
 
 /// Calculate the perpendicular distance from a point to a line segment
 #[allow(dead_code)]
-fn perpendicular_distance<T: Float>(_point: &[T; 2], line_start: &[T; 2], line_end: &[T; 2]) -> T {
+fn perpendicular_distance<T: Float>(point: &[T; 2], line_start: &[T; 2], line_end: &[T; 2]) -> T {
     let dx = line_end[0] - line_start[0];
     let dy = line_end[1] - line_start[1];
 
@@ -1018,7 +1018,7 @@ fn calculate_triangle_area<T: Float>(
 
 /// Calculate the area of a triangle given three points
 #[allow(dead_code)]
-fn triangle_area<T: Float>(_p1: &[T; 2], p2: &[T; 2], p3: &[T; 2]) -> T {
+fn triangle_area<T: Float>(p1: &[T; 2], p2: &[T; 2], p3: &[T; 2]) -> T {
     ((_p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - _p1[1]) + p3[0] * (_p1[1] - p2[1]))
         / (T::one() + T::one()))
     .abs()
@@ -1163,7 +1163,7 @@ mod tests {
         assert_relative_eq!(polygon_area(&triangle.view()), 0.5, epsilon = 1e-10);
 
         // L-shaped polygon
-        let l_shape = array![
+        let lshape = array![
             [0.0, 0.0],
             [2.0, 0.0],
             [2.0, 1.0],
@@ -1172,7 +1172,7 @@ mod tests {
             [0.0, 2.0],
         ];
 
-        assert_relative_eq!(polygon_area(&l_shape.view()), 3.0, epsilon = 1e-10);
+        assert_relative_eq!(polygon_area(&lshape.view()), 3.0, epsilon = 1e-10);
     }
 
     #[test]

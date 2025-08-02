@@ -118,7 +118,7 @@ where
     .unwrap();
 
     // Calculate residuals
-    let residuals = Array1::from_shape_fn(n, |i| ts[i] - trend[i]);
+    let residuals = Array1::fromshape_fn(n, |i| ts[i] - trend[i]);
 
     // Storage for bootstrap trend estimates
     let mut bootstrap_trends = Vec::with_capacity(num_bootstrap);
@@ -203,7 +203,7 @@ where
     let _alpha = F::one() - F::from_f64(options.level).unwrap();
 
     // Calculate residuals and estimate noise variance
-    let residuals = Array1::from_shape_fn(n, |i| ts[i] - trend[i]);
+    let residuals = Array1::fromshape_fn(n, |i| ts[i] - trend[i]);
 
     let noise_variance = if options.estimate_noise_variance {
         let sum_squared = residuals.iter().fold(F::zero(), |acc, &r| acc + r * r);
@@ -258,7 +258,7 @@ where
     let _alpha = F::one() - F::from_f64(options.level).unwrap();
 
     // Calculate residuals and estimate noise variance
-    let residuals = Array1::from_shape_fn(n, |i| ts[i] - trend[i]);
+    let residuals = Array1::fromshape_fn(n, |i| ts[i] - trend[i]);
 
     let noise_variance = if options.estimate_noise_variance {
         let sum_squared = residuals.iter().fold(F::zero(), |acc, &r| acc + r * r);

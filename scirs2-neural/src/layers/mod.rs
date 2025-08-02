@@ -85,12 +85,12 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     }
 
     /// Get the input shape if known
-    fn input_shape(&self) -> Option<Vec<usize>> {
+    fn inputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
     /// Get the output shape if known  
-    fn output_shape(&self) -> Option<Vec<usize>> {
+    fn outputshape(&self) -> Option<Vec<usize>> {
         None
     }
 
@@ -124,9 +124,9 @@ pub struct LayerInfo {
     /// Number of parameters in the layer
     pub parameter_count: usize,
     /// Input shape of the layer
-    pub input_shape: Option<Vec<usize>>,
+    pub inputshape: Option<Vec<usize>>,
     /// Output shape of the layer
-    pub output_shape: Option<Vec<usize>>,
+    pub outputshape: Option<Vec<usize>>,
 }
 
 /// Sequential container for neural network layers
@@ -206,8 +206,8 @@ impl<F: Float + Debug + ScalarOperand> Sequential<F> {
                 name: layer.name().unwrap_or(&format!("Layer_{i}")).to_string(),
                 layer_type: layer.layer_type().to_string(),
                 parameter_count: layer.parameter_count(),
-                input_shape: layer.input_shape(),
-                output_shape: layer.output_shape(),
+                inputshape: layer.inputshape(),
+                outputshape: layer.outputshape(),
             })
             .collect()
     }

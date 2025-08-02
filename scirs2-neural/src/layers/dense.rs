@@ -38,8 +38,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> std::fmt::Debug f
         f.debug_struct("Dense")
             .field("input_dim", &self.input_dim)
             .field("output_dim", &self.output_dim)
-            .field("weights_shape", &self.weights.shape())
-            .field("biases_shape", &self.biases.shape())
+            .field("weightsshape", &self.weights.shape())
+            .field("biasesshape", &self.biases.shape())
             .field("has_activation", &self.activation.is_some())
             .finish()
     }

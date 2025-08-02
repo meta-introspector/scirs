@@ -51,12 +51,12 @@ fn demonstrate_advanced_augmentation() -> Result<()> {
         .with_cutmix(1.0, (0.1, 0.5))
         .build();
     // Create sample image batch (NCHW format: batch=4, channels=3, height=32, width=32)
-    let images = Array4::<f64>::from_shape_fn((4, 3, 32, 32), |(b, c, h, w)| {
+    let images = Array4::<f64>::fromshape_fn((4, 3, 32, 32), |(b, c, h, w)| {
         (b + c + h + w) as f64 / 100.0
     })
     .into_dyn();
     let labels =
-        Array2::<f64>::from_shape_fn((4, 10), |(b, c)| if c == b % 10 { 1.0 } else { 0.0 })
+        Array2::<f64>::fromshape_fn((4, 10), |(b, c)| if c == b % 10 { 1.0 } else { 0.0 })
             .into_dyn();
     println!("Original images shape: {:?}", images.shape());
     println!("Original labels shape: {:?}", labels.shape());
@@ -149,7 +149,7 @@ fn demonstrate_model_compression() -> Result<()> {
         CalibrationMethod::MinMax,
     // Simulate layer activations
     let activations =
-        Array::from_shape_fn((100, 256), |(i, j)| ((i + j) as f64 / 10.0).sin() * 2.0).into_dyn();
+        Array::fromshape_fn((100, 256), |(i, j)| ((i + j) as f64 / 10.0).sin() * 2.0).into_dyn();
     quantizer.calibrate("conv1".to_string(), &activations)?;
     let quantized = quantizer.quantize_tensor("conv1", &activations)?;
     let _dequantized = quantizer.dequantize_tensor("conv1", &quantized)?;
@@ -162,7 +162,7 @@ fn demonstrate_model_compression() -> Result<()> {
     let mut pruner = ModelPruner::<f64>::new(PruningMethod::MagnitudeBased { threshold: 0.1 });
     // Simulate model weights
     let weights =
-        Array::from_shape_fn((128, 256), |(i, j)| ((i * j) as f64 / 1000.0).tanh()).into_dyn();
+        Array::fromshape_fn((128, 256), |(i, j)| ((i * j) as f64 / 1000.0).tanh()).into_dyn();
     let mask = pruner.generate_pruning_mask("fc1".to_string(), &weights)?;
     println!("   Weights shape: {:?}", weights.shape());
     println!("   Pruning mask shape: {:?}", mask.shape());
@@ -191,7 +191,7 @@ fn demonstrate_knowledge_distillation() -> Result<()> {
     let mut student_outputs = std::collections::HashMap::new();
     teacher_outputs.insert(
         "output".to_string(),
-        Array2::from_shape_fn(
+        Array2::fromshape_fn(
             (4, 10),
             |(b, c)| {
                 if c == b % 3 {
@@ -267,9 +267,9 @@ fn demonstrate_model_interpretation() -> Result<()> {
         baseline: BaselineMethod::Zero,
         num_steps: 50,
     // Simulate input data and gradients
-    let input = Array2::from_shape_fn((2, 10), |(i, j)| (i as f64 + j as f64) / 10.0).into_dyn();
+    let input = Array2::fromshape_fn((2, 10), |(i, j)| (i as f64 + j as f64) / 10.0).into_dyn();
     let gradients =
-        Array2::from_shape_fn((2, 10), |(i, j)| ((i + j) as f64 / 20.0).sin()).into_dyn();
+        Array2::fromshape_fn((2, 10), |(i, j)| ((i + j) as f64 / 20.0).sin()).into_dyn();
     // Cache gradients for attribution computation
     interpreter.cache_gradients("input_gradient".to_string(), gradients.clone());
     println!("1. Computing feature attributions...");
@@ -290,7 +290,7 @@ fn demonstrate_model_interpretation() -> Result<()> {
         integrated_grad.shape()
     // Analyze layer activations
     println!("\n2. Analyzing layer activations...");
-    let _layer_activations = Array2::from_shape_fn((20, 64), |(i, j)| {
+    let _layer_activations = Array2::fromshape_fn((20, 64), |(i, j)| {
         if (i + j) % 7 == 0 {
             0.0
         } else {

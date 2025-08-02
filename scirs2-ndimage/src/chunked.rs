@@ -63,7 +63,7 @@ where
     fn combine_chunks(
         &self,
         results: Vec<(Array<T, D>, ChunkPosition)>,
-        output_shape: &[usize],
+        outputshape: &[usize],
     ) -> NdimageResult<Array<T, D>>;
 }
 
@@ -79,19 +79,19 @@ where
     D: Dimension,
     P: ChunkProcessor<T, D>,
 {
-    let _shape = input._shape();
+    let shape = input.shape();
     let ndim = input.ndim();
     let element_size = std::mem::size_of::<T>();
 
     // Calculate chunk dimensions based on target size
-    let total_elements = _shape.iter().product::<usize>();
+    let total_elements = shape.iter().product::<usize>();
     let target_elements_per_chunk = config.chunk_size_bytes / element_size;
 
     if total_elements <= target_elements_per_chunk {
         // Array is small enough to process as a single chunk
         let position = ChunkPosition {
             start: vec![0; ndim],
-            end: _shape.to_vec(),
+            end: shape.to_vec(),
         };
         let result = processor.process_chunk(input.clone(), &position)?;
         return Ok(result);
@@ -99,11 +99,11 @@ where
 
     // Calculate chunk sizes for each dimension
     let chunk_sizes =
-        calculate_chunk_sizes(_shape, target_elements_per_chunk, config.min_chunk_size);
+        calculate_chunk_sizes(shape, target_elements_per_chunk, config.min_chunk_size);
     let overlap = processor.required_overlap().max(config.overlap);
 
     // Generate chunk positions
-    let chunks = generate_chunk_positions(_shape, &chunk_sizes, overlap);
+    let chunks = generate_chunk_positions(shape, &chunk_sizes, overlap);
 
     // Process chunks
     let results = if config.parallel && chunks.len() > 1 {
@@ -143,7 +143,7 @@ where
     };
 
     // Combine results
-    processor.combine_chunks(results_shape)
+    processor.combine_chunks(resultsshape)
 }
 
 /// Calculate optimal chunk sizes for each dimension
@@ -328,10 +328,10 @@ where
     fn combine_chunks(
         &self,
         results: Vec<(Array<T, D>, ChunkPosition)>,
-        output_shape: &[usize],
+        outputshape: &[usize],
     ) -> NdimageResult<Array<T, D>> {
         // Create output array
-        let mut output = Array::<T, IxDyn>::zeros(IxDyn(output_shape));
+        let mut output = Array::<T, IxDyn>::zeros(IxDyn(outputshape));
         let overlap = <Self as ChunkProcessor<T, D>>::required_overlap(self);
 
         // Copy chunks into output, handling overlap
@@ -351,7 +351,7 @@ where
                 } else {
                     start
                 };
-                let out_end = if end < output_shape[dim] {
+                let out_end = if end < outputshape[dim] {
                     end - overlap / 2
                 } else {
                     end
@@ -361,8 +361,8 @@ where
 
                 // Corresponding chunk region
                 let ch_start = if start > 0 { overlap / 2 } else { 0 };
-                let ch_end = chunk_result._shape()[dim]
-                    - if end < output_shape[dim] {
+                let ch_end = chunk_result.shape()[dim]
+                    - if end < outputshape[dim] {
                         overlap / 2
                     } else {
                         0
@@ -464,11 +464,11 @@ mod tests {
         fn combine_chunks(
             &self,
             results: Vec<(Array<T, D>, ChunkPosition)>,
-            output_shape: &[usize],
+            outputshape: &[usize],
         ) -> NdimageResult<Array<T, D>> {
             use ndarray::SliceInfoElem;
 
-            let mut output = Array::zeros(IxDyn(output_shape));
+            let mut output = Array::zeros(IxDyn(outputshape));
 
             for (chunk, position) in results {
                 let slice_info: Vec<SliceInfoElem> = position

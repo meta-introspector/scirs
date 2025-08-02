@@ -108,8 +108,8 @@ impl ExecutionTracer {
             timestamp: Instant::now(),
             event_type: EventType::OperationExecution {
                 operation: op_name.to_string(),
-                input_shapes: inputs.iter().map(|_t| vec![/* placeholder */]).collect(),
-                output_shape: vec![/* placeholder */],
+                inputshapes: inputs.iter().map(|_t| vec![/* placeholder */]).collect(),
+                outputshape: vec![/* placeholder */],
                 duration,
                 memory_usage: self.estimate_memory_usage(inputs, output),
             },
@@ -130,7 +130,7 @@ impl ExecutionTracer {
             timestamp: Instant::now(),
             event_type: EventType::GradientComputation {
                 target: target_name.to_string(),
-                gradient_shape: vec![/* placeholder */],
+                gradientshape: vec![/* placeholder */],
                 gradient_norm: self.compute_gradient_norm(gradient),
                 duration,
             },
@@ -391,7 +391,7 @@ impl ExecutionTracer {
     }
 
     #[allow(dead_code)]
-    fn compute_gradient_norm<F: Float>(&self_gradient: &Tensor<F>) -> f64 {
+    fn compute_gradient_norm<F: Float>(&self, gradient: &Tensor<F>) -> f64 {
         // Simplified implementation - would compute actual L2 norm
         1.0
     }
@@ -550,14 +550,14 @@ pub struct ExecutionEvent {
 pub enum EventType {
     OperationExecution {
         operation: String,
-        input_shapes: Vec<Vec<usize>>,
-        output_shape: Vec<usize>,
+        inputshapes: Vec<Vec<usize>>,
+        outputshape: Vec<usize>,
         duration: Duration,
         memory_usage: usize,
     },
     GradientComputation {
         target: String,
-        gradient_shape: Vec<usize>,
+        gradientshape: Vec<usize>,
         gradient_norm: f64,
         duration: Duration,
     },
@@ -881,8 +881,8 @@ mod tests {
             timestamp: Instant::now(),
             event_type: EventType::OperationExecution {
                 operation: "add".to_string(),
-                input_shapes: vec![vec![2, 2], vec![2, 2]],
-                output_shape: vec![2, 2],
+                inputshapes: vec![vec![2, 2], vec![2, 2]],
+                outputshape: vec![2, 2],
                 duration: Duration::from_millis(1),
                 memory_usage: 1024,
             },
@@ -906,8 +906,8 @@ mod tests {
                 timestamp: Instant::now(),
                 event_type: EventType::OperationExecution {
                     operation: "matmul".to_string(),
-                    input_shapes: vec![vec![100, 100], vec![100, 100]],
-                    output_shape: vec![100, 100],
+                    inputshapes: vec![vec![100, 100], vec![100, 100]],
+                    outputshape: vec![100, 100],
                     duration: Duration::from_millis(i + 1),
                     memory_usage: 40000,
                 },

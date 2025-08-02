@@ -22,12 +22,12 @@ mod advanced_indexing_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test data
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
                 ctx,
             );
 
             let mask = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2, 3]), vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0]).unwrap(),
                 ctx,
             );
 
@@ -47,13 +47,13 @@ mod advanced_indexing_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test data: [10, 20, 30, 40, 50]
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[5]), vec![10.0, 20.0, 30.0, 40.0, 50.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[5]), vec![10.0, 20.0, 30.0, 40.0, 50.0]).unwrap(),
                 ctx,
             );
 
             // Indices to take: [0, 2, 4, 1]
             let indices = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![0.0, 2.0, 4.0, 1.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[4]), vec![0.0, 2.0, 4.0, 1.0]).unwrap(),
                 ctx,
             );
 
@@ -77,17 +77,17 @@ mod advanced_indexing_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test tensors
             let condition = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 0.0, 1.0, 0.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[4]), vec![1.0, 0.0, 1.0, 0.0]).unwrap(),
                 ctx,
             );
 
             let x = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[4]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
                 ctx,
             );
 
             let y = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4]), vec![10.0, 20.0, 30.0, 40.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[4]), vec![10.0, 20.0, 30.0, 40.0]).unwrap(),
                 ctx,
             );
 
@@ -108,12 +108,12 @@ mod advanced_indexing_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create indices and updates
             let indices = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![0.0, 2.0, 1.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![0.0, 2.0, 1.0]).unwrap(),
                 ctx,
             );
 
             let updates = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![10.0, 30.0, 20.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![10.0, 30.0, 20.0]).unwrap(),
                 ctx,
             );
 
@@ -140,37 +140,37 @@ mod broadcasting_tests {
     #[test]
     fn test_broadcast_analysis() {
         // Test same shape (no broadcasting needed)
-        let left_shape = vec![3, 4];
-        let right_shape = vec![3, 4];
-        let info = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
+        let leftshape = vec![3, 4];
+        let rightshape = vec![3, 4];
+        let info = T::analyze_broadcast(&leftshape, &rightshape).unwrap();
 
         assert_eq!(info.strategy, T::BroadcastStrategy::NoOp);
         assert!(!info.left_needs_broadcast);
         assert!(!info.right_needs_broadcast);
-        assert_eq!(info.output_shape, vec![3, 4]);
+        assert_eq!(info.outputshape, vec![3, 4]);
     }
 
     #[test]
     fn test_broadcast_analysis_scalar() {
         // Test scalar broadcasting
-        let left_shape = vec![];
-        let right_shape = vec![3, 4];
-        let info = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
+        let leftshape = vec![];
+        let rightshape = vec![3, 4];
+        let info = T::analyze_broadcast(&leftshape, &rightshape).unwrap();
 
         assert_eq!(info.strategy, T::BroadcastStrategy::ScalarBroadcast);
         assert!(info.left_needs_broadcast);
         assert!(!info.right_needs_broadcast);
-        assert_eq!(info.output_shape, vec![3, 4]);
+        assert_eq!(info.outputshape, vec![3, 4]);
     }
 
     #[test]
     fn test_broadcast_analysis_compatible() {
         // Test compatible broadcasting
-        let left_shape = vec![1, 4];
-        let right_shape = vec![3, 1];
-        let info = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
+        let leftshape = vec![1, 4];
+        let rightshape = vec![3, 1];
+        let info = T::analyze_broadcast(&leftshape, &rightshape).unwrap();
 
-        assert_eq!(info.output_shape, vec![3, 4]);
+        assert_eq!(info.outputshape, vec![3, 4]);
         assert!(info.left_needs_broadcast);
         assert!(info.right_needs_broadcast);
     }
@@ -178,9 +178,9 @@ mod broadcasting_tests {
     #[test]
     fn test_broadcast_analysis_incompatible() {
         // Test incompatible broadcasting
-        let left_shape = vec![3, 4];
-        let right_shape = vec![2, 4];
-        let result = T::analyze_broadcast(&left_shape, &right_shape);
+        let leftshape = vec![3, 4];
+        let rightshape = vec![2, 4];
+        let result = T::analyze_broadcast(&leftshape, &rightshape);
 
         assert!(result.is_err());
     }
@@ -189,12 +189,12 @@ mod broadcasting_tests {
     fn test_broadcast_operations() {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 1]), vec![1.0, 2.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2, 1]), vec![1.0, 2.0]).unwrap(),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1, 3]), vec![10.0, 20.0, 30.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[1, 3]), vec![10.0, 20.0, 30.0]).unwrap(),
                 ctx,
             );
 
@@ -220,9 +220,9 @@ mod broadcasting_tests {
         assert_eq!(size, 0);
 
         // After some operations, cache should have entries
-        let left_shape = vec![2, 3];
-        let right_shape = vec![2, 3];
-        let _ = T::analyze_broadcast(&left_shape, &right_shape).unwrap();
+        let leftshape = vec![2, 3];
+        let rightshape = vec![2, 3];
+        let _ = T::analyze_broadcast(&leftshape, &rightshape).unwrap();
 
         let (size_) = T::get_broadcast_cache_stats();
         assert!(size > 0);
@@ -278,14 +278,14 @@ mod memory_optimization_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::ones(
                 &T::convert_to_tensor(
-                    Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
+                    Array::fromshape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
                     ctx,
                 ),
                 ctx,
             );
             let b = T::ones(
                 &T::convert_to_tensor(
-                    Array::from_shape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
+                    Array::fromshape_vec(IxDyn(&[2]), vec![100.0, 100.0]).unwrap(),
                     ctx,
                 ),
                 ctx,
@@ -331,12 +331,12 @@ mod memory_optimization_tests {
     fn test_inplace_operations() {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0]).unwrap(),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![4.0, 5.0, 6.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![4.0, 5.0, 6.0]).unwrap(),
                 ctx,
             );
 
@@ -416,12 +416,12 @@ mod efficient_operations_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create a 2x3 matrix
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
                 ctx,
             );
 
             // Reshape to 3x2
-            let reshaped = T::efficient_reshape_with_shape(&data, &[3, 2]);
+            let reshaped = T::efficient_reshape_withshape(&data, &[3, 2]);
             let reshaped_array = reshaped.eval(ctx).unwrap();
 
             assert_eq!(reshaped_array.shape(), &[3, 2]);
@@ -434,7 +434,7 @@ mod efficient_operations_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create a 4x4 matrix
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4, 4]), (0..16).map(|x| x as f32).collect()).unwrap(),
+                Array::fromshape_vec(IxDyn(&[4, 4]), (0..16).map(|x| x as f32).collect()).unwrap(),
                 ctx,
             );
 
@@ -457,12 +457,12 @@ mod efficient_operations_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test tensors
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2, 2]), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 2]), vec![5.0, 6.0, 7.0, 8.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2, 2]), vec![5.0, 6.0, 7.0, 8.0]).unwrap(),
                 ctx,
             );
 
@@ -499,12 +499,12 @@ mod property_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a + b = b + a
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![1.0, 2.0, 3.0]).unwrap(),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![4.0, 5.0, 6.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![4.0, 5.0, 6.0]).unwrap(),
                 ctx,
             );
 
@@ -525,17 +525,17 @@ mod property_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that (a * b) * c = a * (b * c)
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![2.0, 3.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![2.0, 3.0]).unwrap(),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![4.0, 5.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![4.0, 5.0]).unwrap(),
                 ctx,
             );
 
             let c = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![6.0, 7.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![6.0, 7.0]).unwrap(),
                 ctx,
             );
 
@@ -556,17 +556,17 @@ mod property_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a * (b + c) = a * b + a * c
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![2.0, 3.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![2.0, 3.0]).unwrap(),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![4.0, 5.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![4.0, 5.0]).unwrap(),
                 ctx,
             );
 
             let c = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![6.0, 7.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![6.0, 7.0]).unwrap(),
                 ctx,
             );
 
@@ -587,12 +587,12 @@ mod property_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a + 0 = a
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7]).unwrap(),
                 ctx,
             );
 
             let zero = T::zeros(
-                &T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![3.0]).unwrap(), ctx),
+                &T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![3.0]).unwrap(), ctx),
                 ctx,
             );
 
@@ -611,12 +611,12 @@ mod property_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test that a * 1 = a
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![1.5, -2.5, 3.7]).unwrap(),
                 ctx,
             );
 
             let one = T::ones(
-                &T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![3.0]).unwrap(), ctx),
+                &T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![3.0]).unwrap(), ctx),
                 ctx,
             );
 
@@ -642,12 +642,12 @@ mod numerical_stability_tests {
             // Test operations with large numbers
             let large_val = 1e10_f32;
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![large_val, large_val]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![large_val, large_val]).unwrap(),
                 ctx,
             );
 
             let b = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
                 ctx,
             );
 
@@ -667,7 +667,7 @@ mod numerical_stability_tests {
             // Test operations with very small numbers
             let small_val = 1e-10_f32;
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![small_val, small_val * 2.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![small_val, small_val * 2.0]).unwrap(),
                 ctx,
             );
 
@@ -685,12 +685,12 @@ mod numerical_stability_tests {
     fn test_zero_division_handling() {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             let a = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![1.0, 2.0]).unwrap(),
                 ctx,
             );
 
             let zero = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2]), vec![0.0, 0.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![0.0, 0.0]).unwrap(),
                 ctx,
             );
 
@@ -709,7 +709,7 @@ mod numerical_stability_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test gradient computation with challenging inputs
             let x = T::variable(
-                Array::from_shape_vec(IxDyn(&[2]), vec![1e-8_f32, 1e8_f32]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2]), vec![1e-8_f32, 1e8_f32]).unwrap(),
                 ctx,
             );
 
@@ -734,12 +734,12 @@ mod numerical_stability_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Test broadcasting with mixed scales
             let large = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[1, 3]), vec![1e6, 2e6, 3e6]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[1, 3]), vec![1e6, 2e6, 3e6]).unwrap(),
                 ctx,
             );
 
             let small = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[2, 1]), vec![1e-6, 2e-6]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2, 1]), vec![1e-6, 2e-6]).unwrap(),
                 ctx,
             );
 
@@ -784,7 +784,7 @@ mod integration_tests {
             let activated = T::relu(biased);
 
             // Use efficient operations
-            let reshaped = T::efficient_reshape_with_shape(&activated, &[32 * 64]);
+            let reshaped = T::efficient_reshape_withshape(&activated, &[32 * 64]);
             let result = T::reduce_sum(reshaped, &[0], false);
 
             // Verify result
@@ -817,13 +817,13 @@ mod integration_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create test data
             let data = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[4, 5]), (0..20).map(|x| x as f32).collect()).unwrap(),
+                Array::fromshape_vec(IxDyn(&[4, 5]), (0..20).map(|x| x as f32).collect()).unwrap(),
                 ctx,
             );
 
             // Create row indices
             let row_indices = T::convert_to_tensor(
-                Array::from_shape_vec(IxDyn(&[3]), vec![0.0, 2.0, 3.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[3]), vec![0.0, 2.0, 3.0]).unwrap(),
                 ctx,
             );
 
@@ -832,7 +832,7 @@ mod integration_tests {
 
             // Apply broadcasting operation
             let scalar =
-                T::convert_to_tensor(Array::from_shape_vec(IxDyn(&[1]), vec![10.0]).unwrap(), ctx);
+                T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![10.0]).unwrap(), ctx);
 
             let result = T::broadcast_mul(&selected_rows, &scalar);
             let result_array = result.eval(ctx).unwrap();
@@ -852,12 +852,12 @@ mod integration_tests {
         ag::run(|ctx: &mut ag::Context<'_, f32>| {
             // Create variable tensors
             let x = T::variable(
-                Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+                Array::fromshape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
                 ctx,
             );
 
             // Apply efficient operations
-            let reshaped = T::efficient_reshape_with_shape(&x, &[3, 2]);
+            let reshaped = T::efficient_reshape_withshape(&x, &[3, 2]);
             let checkpointed = T::checkpoint(&reshaped);
 
             // Slice operation

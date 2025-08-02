@@ -132,7 +132,7 @@ struct WorkStealingQueue<T> {
 }
 
 impl<T: Clone + Send> WorkStealingQueue<T> {
-    fn new(_num_cpus: :get: usize) -> Self {
+    fn new(_num_cpus: get: usize) -> Self {
         let thread_queues = (0..num_cpus::get)
             .map(|_| Arc::new(Mutex::new(Vec::new())))
             .collect();
@@ -178,7 +178,7 @@ where
     pub fn new() -> Self {
         Self {
             config: AdvancedParallelConfig::default(),
-            metrics: None_phantom: PhantomData,
+            metrics: None, phantom: PhantomData,
         }
     }
 
@@ -186,7 +186,7 @@ where
     pub fn with_config(_config: AdvancedParallelConfig) -> Self {
         Self {
             _config,
-            metrics: None_phantom: PhantomData,
+            metrics: None, phantom: PhantomData,
         }
     }
 
@@ -886,7 +886,7 @@ where
         data: &ArrayView2<F>,
         labels: &ArrayView1<F>,
         model_fn: impl Fn(&ArrayView2<F>, &ArrayView1<F>, &ArrayView2<F>) -> StatsResult<Array1<F>> + Send + Sync + Copy,
-        k: usize_shuffle: bool,
+        k: usize, shuffle: bool,
     ) -> StatsResult<CrossValidationResult<F>> {
         let n = data.nrows();
         let fold_size = n / k;

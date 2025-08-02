@@ -1026,7 +1026,7 @@ impl AdaptiveAlgorithmSelector {
         // Random point distances
         let bounds = self.get_data_bounds(_data);
         for _ in 0..sample_size {
-            let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
+            let random_point: Array1<f64> = Array1::fromshape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
             });
 

@@ -1,9 +1,9 @@
-//! B-spline filtering and signal processing.
-//!
-//! This module provides functionality for B-spline filtering, smoothing,
-//! and interpolation, useful for signal processing applications. B-splines
-//! are piecewise polynomial functions that provide a smooth approximation
-//! to a signal with continuous derivatives.
+// B-spline filtering and signal processing.
+//
+// This module provides functionality for B-spline filtering, smoothing,
+// and interpolation, useful for signal processing applications. B-splines
+// are piecewise polynomial functions that provide a smooth approximation
+// to a signal with continuous derivatives.
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
@@ -84,8 +84,8 @@ impl std::str::FromStr for SplineOrder {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spline::bspline_basis;
-/// use scirs2__signal::spline::SplineOrder;
+/// use scirs2_signal::spline::bspline_basis;
+/// use scirs2_signal::spline::SplineOrder;
 ///
 /// // Compute cubic B-spline basis at several points
 /// let x: Vec<f64> = (0..10).map(|i| i as f64 / 9.0).collect();
@@ -476,7 +476,7 @@ fn apply_anticausal_filter(c: &mut [f64], n: SplineOrder) {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spline::{bspline_filter, SplineOrder};
+/// use scirs2_signal::spline::{bspline_filter, SplineOrder};
 ///
 /// // Generate a noisy signal
 /// let signal = vec![1.0, 1.2, 0.9, 1.1, 0.95, 1.05, 0.9, 1.1];
@@ -503,7 +503,9 @@ where
         .collect::<SignalResult<Vec<f64>>>()?;
 
     if signal_f64.is_empty() {
-        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
+        return Err(SignalError::ValueError(
+            "Input _signal is empty".to_string(),
+        ));
     }
 
     // Apply causal and anti-causal filters
@@ -527,7 +529,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spline::{bspline_coefficients, SplineOrder};
+/// use scirs2_signal::spline::{bspline_coefficients, SplineOrder};
 ///
 /// // Generate a signal
 /// let signal = vec![1.0, 2.0, 1.5, 0.5, 1.0, 2.0, 1.5];
@@ -566,7 +568,9 @@ where
         .collect::<SignalResult<Vec<f64>>>()?;
 
     if signal_f64.is_empty() {
-        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
+        return Err(SignalError::ValueError(
+            "Input _signal is empty".to_string(),
+        ));
     }
 
     // Gain factor for the b-spline filter
@@ -605,7 +609,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spline::{bspline_coefficients, bspline_evaluate, SplineOrder};
+/// use scirs2_signal::spline::{bspline_coefficients, bspline_evaluate, SplineOrder};
 /// use ndarray::Array1;
 ///
 /// // Generate a signal
@@ -795,7 +799,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spline::{bspline_smooth, SplineOrder};
+/// use scirs2_signal::spline::{bspline_smooth, SplineOrder};
 ///
 /// // Generate a noisy signal
 /// let signal = vec![1.0, 1.2, 0.9, 1.1, 0.95, 1.05, 0.9, 1.1];
@@ -828,7 +832,9 @@ where
         .collect::<SignalResult<Vec<f64>>>()?;
 
     if signal_f64.is_empty() {
-        return Err(SignalError::ValueError("Input _signal is empty".to_string()));
+        return Err(SignalError::ValueError(
+            "Input _signal is empty".to_string(),
+        ));
     }
 
     let n = signal_f64.len();
@@ -881,7 +887,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::spline::{bspline_coefficients, bspline_derivative, SplineOrder};
+/// use scirs2_signal::spline::{bspline_coefficients, bspline_derivative, SplineOrder};
 ///
 /// // Generate a signal
 /// let signal = vec![1.0, 2.0, 1.5, 0.5, 1.0, 2.0, 1.5];
@@ -985,7 +991,7 @@ where
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_bspline_basis_cubic() {
         // Test cubic B-spline basis function

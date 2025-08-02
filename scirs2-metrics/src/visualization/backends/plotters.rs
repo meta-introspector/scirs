@@ -198,7 +198,7 @@ impl PlottersBackend {
         &self,
         root: &DrawingArea<DB, plotters::coord::Shift>,
         data: &VisualizationData,
-        metadata: &VisualizationMetadata_options: &VisualizationOptions,
+        metadata: &VisualizationMetadata, options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>>
     where
         DB::ErrorType: 'static,
@@ -269,7 +269,7 @@ impl PlottersBackend {
         &self,
         root: &DrawingArea<DB, plotters::coord::Shift>,
         data: &VisualizationData,
-        metadata: &VisualizationMetadata_options: &VisualizationOptions,
+        metadata: &VisualizationMetadata, options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>>
     where
         DB::ErrorType: 'static,
@@ -317,7 +317,7 @@ impl PlottersBackend {
         &self,
         root: &DrawingArea<DB, plotters::coord::Shift>,
         data: &VisualizationData,
-        metadata: &VisualizationMetadata_options: &VisualizationOptions,
+        metadata: &VisualizationMetadata, options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>>
     where
         DB::ErrorType: 'static,
@@ -355,7 +355,7 @@ impl PlottersBackend {
         &self,
         root: &DrawingArea<DB, plotters::coord::Shift>,
         data: &VisualizationData,
-        metadata: &VisualizationMetadata_options: &VisualizationOptions,
+        metadata: &VisualizationMetadata, options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>>
     where
         DB::ErrorType: 'static,
@@ -420,7 +420,7 @@ impl PlottersBackend {
         &self,
         root: &DrawingArea<DB, plotters::coord::Shift>,
         data: &VisualizationData,
-        metadata: &VisualizationMetadata_options: &VisualizationOptions,
+        metadata: &VisualizationMetadata, options: &VisualizationOptions,
     ) -> Result<(), Box<dyn Error>>
     where
         DB::ErrorType: 'static,

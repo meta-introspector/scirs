@@ -1,13 +1,14 @@
+use ndarray::s;
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
-use num__complex::Complex64;
-use rand::{Rng, SeedableRng};
+use ndarray::{ Array1, Array2};
+use num_complex::Complex64;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
-use rand__distr::Distribution;
-use rustfft::{FftPlanner, num_complex::Complex};
-use scirs2__linalg::{solve, vector_norm};
+use rand::{Rng, SeedableRng};
+use rand_distr::Distribution;
+use rustfft::{num_complex::Complex, FftPlanner};
+use scirs2_linalg::{solve, vector_norm};
 use std::cmp::min;
 
 // Sparse signal recovery module
@@ -540,8 +541,7 @@ pub fn cosamp(
         proxy_values.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
         // Get the indices of the 2K largest entries
-        let selected_indices: Vec<usize> =
-            proxy_values.iter().take(2 * k).map(|&(i_)| i).collect();
+        let selected_indices: Vec<usize> = proxy_values.iter().take(2 * k).map(|&(i_)| i).collect();
 
         // Merge with current support (non-zero indices in x)
         let mut support = Vec::new();
@@ -1118,7 +1118,8 @@ pub fn compressed_sensing_recover(
 /// * Recovered full signal
 #[allow(dead_code)]
 pub fn sparse_transform_recovery<F, G>(
-    y: &Array1<f64>, _transform_forward: F,
+    y: &Array1<f64>,
+    _transform_forward: F,
     transform_inverse: G,
     mask: Option<&Array1<f64>>,
     method: SparseRecoveryMethod,

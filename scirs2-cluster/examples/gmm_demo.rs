@@ -162,5 +162,5 @@ fn generate_gaussian_mixture_data() -> Array2<f64> {
         data.push(y);
     }
 
-    Array2::from_shape_vec((120, 2), data).unwrap()
+    Array2::fromshape_vec((120, 2), data).unwrap()
 }

@@ -226,7 +226,7 @@ fn get_compatibility_level(_score: f64) -> &'static str {
 }
 
 #[allow(dead_code)]
-fn print_migration_guidance(_report: &scirs2_interpolate: :CompatibilityReport) {
+fn print_migration_guidance(_report: &scirs2, interpolate: CompatibilityReport) {
     println!("   When migrating from SciPy to scirs2-_interpolate:");
 
     if _report.compatibility_score >= 0.90 {

@@ -707,7 +707,7 @@ pub struct TradeOffExplanation {
 
 #[allow(dead_code)]
 fn initialize_or_update_ai_state(
-    _previous_state: Option<AIProcessingState>, _shape: (usize, usize), _config: &AIAdaptiveConfig,
+    _previous_state: Option<AIProcessingState>, shape: (usize, usize), _config: &AIAdaptiveConfig,
 ) -> NdimageResult<AIProcessingState> {
     // Initialize AI processing _state
     Ok(AIProcessingState {
@@ -725,7 +725,7 @@ fn initialize_or_update_ai_state(
             image_type: PatternType::Unknown,
             user_preferences: HashMap::new(),
             available_resources: ResourceAvailability {
-                cpu_cores: num, _cpus: get(),
+                cpu_cores: num_cpus::get(),
                 memory_mb: 1024.0,
                 gpu_available: false,
                 quantum_available: false,
@@ -790,7 +790,7 @@ where
     features[1] = edge_density;
 
     // 3. Texture Analysis (Local Binary Patterns)
-    let texture_energy = analyze_texture_energy(image);
+    let texture_energy = analyzetexture_energy(image);
     features[2] = texture_energy;
 
     // 4. Frequency Domain Analysis
@@ -899,7 +899,7 @@ where
 }
 
 #[allow(dead_code)]
-fn analyze_texture_energy<T>(_image: &ArrayView2<T>) -> f64
+fn analyzetexture_energy<T>(_image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
 {
@@ -1318,7 +1318,7 @@ fn analyze_pattern_for_strategy(_pattern: &ImagePattern) -> HashMap<String, f64>
 
 #[allow(dead_code)]
 fn calculate_performance_weights(
-    state: &AIProcessingState_config: &AIAdaptiveConfig,
+    state: &AIProcessingState, config: &AIAdaptiveConfig,
 ) -> HashMap<String, f64> {
     let mut weights = HashMap::new();
 
@@ -1784,14 +1784,14 @@ fn update_strategy_selection_learning(
 
 #[allow(dead_code)]
 fn integrate_multimodal_knowledge(
-    strategy: ProcessingStrategy_pattern: &ImagePattern, _state: &mut AIProcessingState_config: &AIAdaptiveConfig,
+    strategy: ProcessingStrategy, pattern: &ImagePattern, _state: &mut AIProcessingState, config: &AIAdaptiveConfig,
 ) -> NdimageResult<ProcessingStrategy> {
     Ok(strategy)
 }
 
 #[allow(dead_code)]
 fn apply_predictive_processing(
-    _strategy: &ProcessingStrategy_state: &mut AIProcessingState, _config: &AIAdaptiveConfig,
+    _strategy: &ProcessingStrategy, state: &mut AIProcessingState, _config: &AIAdaptiveConfig,
 ) -> NdimageResult<HashMap<String, f64>> {
     Ok(HashMap::new())
 }
@@ -2298,7 +2298,7 @@ fn calculate_user_satisfaction(
 fn update_pipeline_performance(
     state: &mut AIProcessingState,
     strategy: &ProcessingStrategy,
-    metrics: &PerformanceMetrics_config: &AIAdaptiveConfig,
+    metrics: &PerformanceMetrics, config: &AIAdaptiveConfig,
 ) {
     // Update AI state with pipeline performance for continual learning
     let overall_score = metrics.quality * metrics.speed / 1000.0;
@@ -2330,7 +2330,7 @@ fn update_pipeline_performance(
 
 #[allow(dead_code)]
 fn evaluate_performance<T>(
-    _original: &ArrayView2<T>, _processed: &Array2<T>, _metrics: &PerformanceMetrics_strategy: &ProcessingStrategy, _config: &AIAdaptiveConfig,
+    _original: &ArrayView2<T>, _processed: &Array2<T>, _metrics: &PerformanceMetrics, strategy: &ProcessingStrategy, _config: &AIAdaptiveConfig,
 ) -> NdimageResult<PerformanceRecord>
 where
     T: Float + FromPrimitive + Copy,
@@ -2346,35 +2346,35 @@ where
 
 #[allow(dead_code)]
 fn update_continual_learning(
-    _state: &mut AIProcessingState_performance: &PerformanceRecord, _config: &AIAdaptiveConfig,
+    _state: &mut AIProcessingState, performance: &PerformanceRecord, _config: &AIAdaptiveConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_experience_replay(
-    _state: &mut AIProcessingState_pattern: &ImagePattern, _strategy: &ProcessingStrategy_performance: &PerformanceRecord, _config: &AIAdaptiveConfig,
+    _state: &mut AIProcessingState, pattern: &ImagePattern, _strategy: &ProcessingStrategy, performance: &PerformanceRecord, _config: &AIAdaptiveConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_transfer_learning(
-    _state: &mut AIProcessingState_pattern: &ImagePattern, _strategy: &ProcessingStrategy_config: &AIAdaptiveConfig,
+    _state: &mut AIProcessingState, pattern: &ImagePattern, _strategy: &ProcessingStrategy, config: &AIAdaptiveConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_few_shot_learning(
-    _state: &mut AIProcessingState_pattern: &ImagePattern, _strategy: &ProcessingStrategy_config: &AIAdaptiveConfig,
+    _state: &mut AIProcessingState, pattern: &ImagePattern, _strategy: &ProcessingStrategy, config: &AIAdaptiveConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn generate_processing_explanation(
-    _strategy: &ProcessingStrategy_performance: &PerformanceRecord, _state: &AIProcessingState_config: &AIAdaptiveConfig,
+    _strategy: &ProcessingStrategy, performance: &PerformanceRecord, _state: &AIProcessingState, config: &AIAdaptiveConfig,
 ) -> NdimageResult<ProcessingExplanation> {
     Ok(ProcessingExplanation {
         _strategy_explanation: "Applied AI-optimized processing _strategy based on learned patterns"
@@ -2408,7 +2408,7 @@ fn generate_processing_explanation(
 
 #[allow(dead_code)]
 fn optimize_resource_learning(
-    _state: &mut AIProcessingState_metrics: &PerformanceMetrics, _config: &AIAdaptiveConfig,
+    _state: &mut AIProcessingState, metrics: &PerformanceMetrics, _config: &AIAdaptiveConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
@@ -2434,7 +2434,7 @@ mod tests {
     #[test]
     fn test_ai_driven_adaptive_processing() {
         let image =
-            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+            Array2::fromshape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
 
         let config = AIAdaptiveConfig::default();
         let result = ai_driven_adaptive_processing(image.view(), &config, None);
@@ -2449,7 +2449,7 @@ mod tests {
     #[test]
     fn test_image_pattern_recognition() {
         let image =
-            Array2::from_shape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6])
+            Array2::fromshape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6])
                 .unwrap();
 
         let config = AIAdaptiveConfig::default();

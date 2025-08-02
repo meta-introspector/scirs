@@ -200,13 +200,13 @@ fn broadcast_to(a: &dyn ArrayProtocol, shape: &[usize]) -> CoreResult<Box<dyn Ar
             Ok(Box::new(NdarrayWrapper::new(array.clone())) as Box<dyn ArrayProtocol>)
         } else {
             // Implement basic broadcasting rules
-            let input_shape = array.shape();
-            let _ndim_diff = shape.len().saturating_sub(input_shape.len());
+            let inputshape = array.shape();
+            let _ndim_diff = shape.len().saturating_sub(inputshape.len());
 
             // Check if broadcasting is possible
             let mut can_broadcast = true;
-            for i in 0..input_shape.len() {
-                let input_dim = input_shape[input_shape.len() - 1 - i];
+            for i in 0..inputshape.len() {
+                let input_dim = inputshape[inputshape.len() - 1 - i];
                 let target_dim = shape[shape.len() - 1 - i];
                 if input_dim != 1 && input_dim != target_dim {
                     can_broadcast = false;
@@ -279,7 +279,8 @@ impl Node {
     /// Create a new leaf node.
     fn leaf(requires_grad: bool) -> Self {
         Self {
-            value: Rc::new(NdarrayWrapper::new(ndarray::Array0::<f64>::zeros(()))) as Rc<dyn ArrayProtocol>,
+            value: Rc::new(NdarrayWrapper::new(ndarray::Array0::<f64>::zeros(())))
+                as Rc<dyn ArrayProtocol>,
             grad: None,
             op: None,
             inputs: Vec::new(),
@@ -370,7 +371,7 @@ impl GradientTensor {
     /// Backward pass to compute gradients.
     pub fn backward(&self) -> CoreResult<()> {
         // Initialize gradient as ones with the same shape as value
-        let grad_shape = if let Some(array) = self
+        let gradshape = if let Some(array) = self
             .value()
             .as_any()
             .downcast_ref::<NdarrayWrapper<f64, IxDyn>>()
@@ -381,7 +382,7 @@ impl GradientTensor {
             ndarray::IxDyn(&[1])
         };
 
-        let grad_array = Array::<f64, IxDyn>::ones(grad_shape);
+        let grad_array = Array::<f64, IxDyn>::ones(gradshape);
         let grad = Rc::new(NdarrayWrapper::new(grad_array)) as Rc<dyn ArrayProtocol>;
 
         // Perform backward pass
@@ -527,10 +528,10 @@ impl GradientTensor {
 
                                 // Matrix multiplication: grad_a = grad_out @ b_t
                                 // Convert to Array2 for more deterministic dot behavior
-                                let grad_out_shape = grad_out_array_val.shape();
-                                let grad_out_rows = grad_out_shape[0];
-                                let grad_out_cols = if grad_out_shape.len() > 1 {
-                                    grad_out_shape.iter().skip(1).product()
+                                let grad_outshape = grad_out_array_val.shape();
+                                let grad_out_rows = grad_outshape[0];
+                                let grad_out_cols = if grad_outshape.len() > 1 {
+                                    grad_outshape.iter().skip(1).product()
                                 } else {
                                     1
                                 };
@@ -539,10 +540,10 @@ impl GradientTensor {
                                     .into_shape_with_order((grad_out_rows, grad_out_cols))
                                     .unwrap();
 
-                                let b_t_shape = b_t.shape();
-                                let b_t_rows = b_t_shape[0];
-                                let b_t_cols = if b_t_shape.len() > 1 {
-                                    b_t_shape.iter().skip(1).product()
+                                let b_tshape = b_t.shape();
+                                let b_t_rows = b_tshape[0];
+                                let b_t_cols = if b_tshape.len() > 1 {
+                                    b_tshape.iter().skip(1).product()
                                 } else {
                                     1
                                 };
@@ -598,10 +599,10 @@ impl GradientTensor {
 
                                 // Matrix multiplication: grad_b = a_t @ grad_out
                                 // Convert to Array2 for more deterministic dot behavior
-                                let grad_out_shape = grad_out_array_val.shape();
-                                let grad_out_rows = grad_out_shape[0];
-                                let grad_out_cols = if grad_out_shape.len() > 1 {
-                                    grad_out_shape.iter().skip(1).product()
+                                let grad_outshape = grad_out_array_val.shape();
+                                let grad_out_rows = grad_outshape[0];
+                                let grad_out_cols = if grad_outshape.len() > 1 {
+                                    grad_outshape.iter().skip(1).product()
                                 } else {
                                     1
                                 };
@@ -610,10 +611,10 @@ impl GradientTensor {
                                     .into_shape_with_order((grad_out_rows, grad_out_cols))
                                     .unwrap();
 
-                                let a_t_shape = a_t.shape();
-                                let a_t_rows = a_t_shape[0];
-                                let a_t_cols = if a_t_shape.len() > 1 {
-                                    a_t_shape.iter().skip(1).product()
+                                let a_tshape = a_t.shape();
+                                let a_t_rows = a_tshape[0];
+                                let a_t_cols = if a_tshape.len() > 1 {
+                                    a_tshape.iter().skip(1).product()
                                 } else {
                                     1
                                 };
@@ -1034,7 +1035,8 @@ impl Variable {
     {
         let tensor = GradientTensor::from_array(array, true);
         Self {
-            tensor, name: name.to_string(),
+            tensor,
+            name: name.to_string(),
         }
     }
 
@@ -1249,7 +1251,8 @@ pub struct Adam {
 
 impl Adam {
     /// Create a new Adam optimizer.
-    pub fn new(learning_rate: f64,
+    pub fn new(
+        learning_rate: f64,
         beta1: Option<f64>,
         beta2: Option<f64>,
         epsilon: Option<f64>,

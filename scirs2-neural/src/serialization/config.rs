@@ -48,7 +48,7 @@ pub struct Conv2DConfig {
 /// LayerNorm layer configuration
 pub struct LayerNormConfig {
     /// Normalized shape
-    pub normalized_shape: usize,
+    pub normalizedshape: usize,
     /// Epsilon for numerical stability
     pub eps: f64,
 /// BatchNorm layer configuration

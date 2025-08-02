@@ -30,7 +30,7 @@ use crate::gpu::{
         AutoTuner, KernelParameters, PerformanceMetrics, TuningResult, TuningSpace, TuningStrategy,
     },
     tensor_cores::{TensorCoreConfig, TensorCoreManager, TensorDataType, TensorOperation},
-    GpuBackend, GpuContext, GpuKernelHandle,
+    GpuBackend, GpuContext,
 };
 #[cfg(feature = "gpu")]
 use std::sync::{Arc, Mutex, RwLock};
@@ -2355,7 +2355,10 @@ mod gpu_implementation {
         }
 
         /// Optimize tensor operation with AI-driven approach
-        pub fn optimize_tensor_operation(&self, operation: &TensorOperation, gpu_context: &GpuContext,
+        pub fn optimize_tensor_operation(
+            &self,
+            operation: &TensorOperation,
+            gpu_context: &GpuContext,
         ) -> CoreResult<OptimizedTensorOperation> {
             // Get tensor core manager
             let tensor_managers = self.tensor_managers.read().map_err(|e| {
@@ -2396,7 +2399,11 @@ mod gpu_implementation {
         }
 
         /// Auto-tune kernel for optimal performance
-        pub fn auto_tune_kernel(&self, kernel: &str, tensor_size: &[usize], backend: GpuBackend,
+        pub fn auto_tune_kernel(
+            &self,
+            kernel: &str,
+            tensor_size: &[usize],
+            backend: GpuBackend,
         ) -> CoreResult<TuningResult> {
             // Get auto-tuner
             let auto_tuners = self.auto_tuners.read().map_err(|e| {
@@ -2471,7 +2478,11 @@ mod gpu_implementation {
         }
 
         /// Predict performance for a given configuration
-        pub fn predict_performance(&self, _operation: &TensorOperation, _config: &TensorCoreConfig, kernel_params: &KernelParameters,
+        pub fn predict_performance(
+            &self,
+            _operation: &TensorOperation,
+            _config: &TensorCoreConfig,
+            kernel_params: &KernelParameters,
         ) -> CoreResult<PerformancePrediction> {
             let performance_predictor = self.performance_predictor.read().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -2537,7 +2548,10 @@ mod gpu_implementation {
             smart_cache.lookup_configuration(operation)
         }
 
-        fn ai_optimize_operation(&self, operation: &TensorOperation, tensor_manager: &TensorCoreManager,
+        fn ai_optimize_operation(
+            &self,
+            operation: &TensorOperation,
+            tensor_manager: &TensorCoreManager,
         ) -> CoreResult<OptimizedTensorOperation> {
             let ai_optimizer = self.ai_optimizer.lock().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -2576,7 +2590,11 @@ mod gpu_implementation {
             analytics_engine.record_optimization(operation, result)
         }
 
-        fn generate_tuning_space(&self, backend: GpuBackend, kernel_name: &str, problem_size: &[usize],
+        fn generate_tuning_space(
+            &self,
+            backend: GpuBackend,
+            kernel_name: &str,
+            problem_size: &[usize],
         ) -> CoreResult<TuningSpace> {
             // Simplified implementation - in practice would use ML to generate optimal space
             let base_space = match kernel_name {
@@ -2599,7 +2617,11 @@ mod gpu_implementation {
             self.adapt_tuning_space(backend, base_space, problem_size)
         }
 
-        fn adapt_tuning_space(&self, _backend: GpuBackend, mut base_space: TuningSpace, problem_size: &[usize],
+        fn adapt_tuning_space(
+            &self,
+            _backend: GpuBackend,
+            mut base_space: TuningSpace,
+            problem_size: &[usize],
         ) -> CoreResult<TuningSpace> {
             // Adapt work group sizes based on problem size
             let total_problem_size = problem_size.iter().product::<usize>();
@@ -2626,20 +2648,20 @@ mod gpu_implementation {
             tensor_size: &[usize],
         ) -> CoreResult<TuningSpace> {
             use crate::gpu::auto_tuning::{CacheConfig, ParameterValue};
-            
+
             // Get device capabilities
             let tensor_managers = self.tensor_managers.read().map_err(|e| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                     "Failed to acquire tensor managers lock: {e}"
                 )))
             })?;
-            
+
             let tensor_manager = tensor_managers.get(&backend).ok_or_else(|| {
                 CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                     "Tensor manager not found for backend: {backend:?}"
                 )))
             })?;
-            
+
             // Create base tuning space
             let mut base_space = TuningSpace {
                 work_group_sizes: vec![
@@ -2661,7 +2683,7 @@ mod gpu_implementation {
                 ],
                 custom_spaces: HashMap::new(),
             };
-            
+
             // Add kernel-specific parameters
             if kernel.contains("gemm") || kernel.contains("matmul") {
                 base_space.custom_spaces.insert(
@@ -2683,10 +2705,10 @@ mod gpu_implementation {
                     ],
                 );
             }
-            
+
             // Adjust based on problem size
             let total_problem_size: usize = tensor_size.iter().product();
-            
+
             if total_problem_size < 1024 {
                 // Small problems - prefer smaller work groups
                 base_space
@@ -2698,7 +2720,7 @@ mod gpu_implementation {
                     .work_group_sizes
                     .retain(|&wgs| wgs[0] * wgs[1] * wgs[2] >= 64);
             }
-            
+
             Ok(base_space)
         }
 
@@ -2712,7 +2734,10 @@ mod gpu_implementation {
             ai_optimizer.learn_from_result(result)
         }
 
-        fn update_scheduling_policy(&self, backend: GpuBackend, kernel_name: &str,
+        fn update_scheduling_policy(
+            &self,
+            backend: GpuBackend,
+            kernel_name: &str,
             result: &TuningResult,
         ) -> CoreResult<()> {
             let mut adaptive_scheduler = self.adaptive_scheduler.lock().map_err(|e| {
@@ -2744,7 +2769,10 @@ mod gpu_implementation {
             monitoring.initialize_backend_monitoring(backend)
         }
 
-        fn optimize_for_energy_efficiency(&self, backend: GpuBackend, power_info: &PowerInformation,
+        fn optimize_for_energy_efficiency(
+            &self,
+            backend: GpuBackend,
+            power_info: &PowerInformation,
         ) -> CoreResult<EnergyOptimizationResult> {
             // Simplified energy optimization
             let power_savings = power_info.current_power_watts * 0.15; // 15% savings
@@ -2953,7 +2981,10 @@ mod gpu_implementation {
             })
         }
 
-        pub fn optimize_with_ai(&self, operation: &TensorOperation, tensor_manager: &TensorCoreManager,
+        pub fn optimize_with_ai(
+            &self,
+            operation: &TensorOperation,
+            tensor_manager: &TensorCoreManager,
         ) -> CoreResult<OptimizedTensorOperation> {
             // Extract features from operation
             let features = self.feature_extractor.extract_features(operation)?;
@@ -2996,7 +3027,10 @@ mod gpu_implementation {
             Ok(())
         }
 
-        fn generate_kernel_parameters(&self, _operation: &TensorOperation, _config: &TensorCoreConfig,
+        fn generate_kernel_parameters(
+            &self,
+            _operation: &TensorOperation,
+            _config: &TensorCoreConfig,
         ) -> CoreResult<KernelParameters> {
             // Simplified implementation
             Ok(KernelParameters::default())
@@ -3558,7 +3592,9 @@ mod gpu_implementation {
             })
         }
 
-        pub fn predict_performance(&self, kernel_params: &KernelParameters,
+        pub fn predict_performance(
+            &self,
+            kernel_params: &KernelParameters,
         ) -> CoreResult<PerformancePrediction> {
             Ok(PerformancePrediction {
                 predicted_execution_time: Duration::from_millis(50),
@@ -3582,7 +3618,11 @@ mod gpu_implementation {
             })
         }
 
-        pub fn update_scheduling_policy(&mut self, _backend: GpuBackend, _kernel: &str, _result: &TuningResult,
+        pub fn update_scheduling_policy(
+            &mut self,
+            _backend: GpuBackend,
+            _kernel: &str,
+            _result: &TuningResult,
         ) -> CoreResult<()> {
             // Simplified implementation
             Ok(())
@@ -3780,7 +3820,10 @@ mod gpu_implementation {
             })
         }
 
-        pub fn record_optimization(&mut self, operation: &TensorOperation, _result: &OptimizedTensorOperation,
+        pub fn record_optimization(
+            &mut self,
+            operation: &TensorOperation,
+            _result: &OptimizedTensorOperation,
         ) -> CoreResult<()> {
             // Simplified implementation
             Ok(())
@@ -4073,7 +4116,9 @@ mod gpu_implementation {
         }
 
         /// Perform quantum-inspired optimization step
-        pub fn optimize_step(&mut self, objective_function: &dyn Fn(&[f64]) -> f64,
+        pub fn optimize_step(
+            &mut self,
+            objective_function: &dyn Fn(&[f64]) -> f64,
             learning_rate: f64,
         ) -> CoreResult<OptimizationStep> {
             // Quantum-inspired parameter update using variational principles
@@ -4082,7 +4127,8 @@ mod gpu_implementation {
 
             // Estimate gradient using quantum-inspired finite differences
             for i in 0..new_params.len() {
-                let epsilon = 1e-8 * self.quantum_state.amplitudes[i % self.quantum_state.amplitudes.len()];
+                let epsilon =
+                    1e-8 * self.quantum_state.amplitudes[i % self.quantum_state.amplitudes.len()];
 
                 new_params[i] += epsilon;
                 let f_plus = objective_function(&new_params);
@@ -4192,7 +4238,7 @@ mod gpu_implementation {
             let mut uncertainty = 0.0;
 
             for (_, &grad) in gradient.iter().enumerate() {
-                if let Some(&amplitude) = self.quantum_state.amplitudes.get(0) {
+                if let Some(&amplitude) = self.quantum_state.amplitudes.first() {
                     // Heisenberg-like uncertainty relation
                     uncertainty += amplitude.abs() * grad.abs() * 0.1;
                 }
@@ -4202,7 +4248,11 @@ mod gpu_implementation {
         }
 
         /// Add entanglement pattern between parameters
-        pub fn add_entanglement(&mut self, param_indices: Vec<usize>, strength: f64, pattern_type: EntanglementType,
+        pub fn add_entanglement(
+            &mut self,
+            param_indices: Vec<usize>,
+            strength: f64,
+            pattern_type: EntanglementType,
         ) -> CoreResult<()> {
             let pattern = EntanglementPattern {
                 connected_params: param_indices,

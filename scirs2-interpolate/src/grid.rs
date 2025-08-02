@@ -102,7 +102,7 @@ where
 ///
 /// * `points` - Coordinates of scattered data points (n_points × n_dimensions)
 /// * `values` - Values at the scattered data points (n_points)
-/// * `grid_shape` - Shape of the output grid (number of points in each dimension)
+/// * `gridshape` - Shape of the output grid (number of points in each dimension)
 /// * `grid_bounds` - Min and max bounds for each dimension of the grid
 /// * `method` - Interpolation method to use
 /// * `fill_value` - Value to use for grid points outside the convex hull of input points
@@ -116,7 +116,7 @@ where
 pub fn resample_to_grid<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
-    grid_shape: &[usize],
+    gridshape: &[usize],
     grid_bounds: &[(F, F)],
     method: GridTransformMethod,
     fill_value: F,
@@ -148,18 +148,18 @@ where
         ));
     }
 
-    if grid_bounds.len() != grid_shape.len() {
+    if grid_bounds.len() != gridshape.len() {
         return Err(InterpolateError::invalid_input(
-            "Grid _bounds and _shape dimensions must match".to_string(),
+            "Grid _bounds and shape dimensions must match".to_string(),
         ));
     }
 
     // Create the regular grid
-    let grid_coords = create_regular_grid(grid_bounds, grid_shape)?;
+    let grid_coords = create_regular_grid(grid_bounds, gridshape)?;
 
-    // Create a multidimensional array with the specified _shape
-    let _shape: Vec<usize> = grid_shape.to_vec();
-    let mut grid_values = ArrayD::from_elem(_shape.clone(), fill_value);
+    // Create a multidimensional array with the specified shape
+    let shape: Vec<usize> = gridshape.to_vec();
+    let mut grid_values = ArrayD::from_elem(shape.clone(), fill_value);
 
     match method {
         GridTransformMethod::Nearest => {
@@ -191,7 +191,7 @@ where
     let n_dims = grid_coords.len();
 
     // For each grid point, find the nearest data point
-    let grid_shape: Vec<usize> = grid_coords.iter().map(|coord| coord.len()).collect();
+    let gridshape: Vec<usize> = grid_coords.iter().map(|coord| coord.len()).collect();
 
     // Generate all grid point coordinates
     let mut indices = vec![0; n_dims];
@@ -224,7 +224,7 @@ where
         grid_values[&indices[..]] = nearest_value;
 
         // Increment indices
-        if !increment_indices(&mut indices, &grid_shape) {
+        if !increment_indices(&mut indices, &gridshape) {
             break;
         }
     }
@@ -265,7 +265,7 @@ where
     )?;
 
     let n_dims = grid_coords.len();
-    let grid_shape: Vec<usize> = grid_coords.iter().map(|coord| coord.len()).collect();
+    let gridshape: Vec<usize> = grid_coords.iter().map(|coord| coord.len()).collect();
     let mut indices = vec![0; n_dims];
 
     loop {
@@ -284,7 +284,7 @@ where
         grid_values[&indices[..]] = interp_value;
 
         // Increment indices
-        if !increment_indices(&mut indices, &grid_shape) {
+        if !increment_indices(&mut indices, &gridshape) {
             break;
         }
     }
@@ -366,8 +366,8 @@ where
     }
 
     // Create destination grid shape
-    let dst_shape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
-    let mut dst_values = ArrayD::from_elem(dst_shape.clone(), fill_value);
+    let dstshape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
+    let mut dst_values = ArrayD::from_elem(dstshape.clone(), fill_value);
 
     match method {
         GridTransformMethod::Nearest => {
@@ -431,7 +431,7 @@ where
     D: ndarray::Dimension,
 {
     let n_dims = src_coords.len();
-    let dst_shape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
+    let dstshape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
     let mut indices = vec![0; n_dims];
 
     loop {
@@ -469,15 +469,15 @@ where
             // Use linear indexing for all cases to avoid generic dimension issues
             let linear_idx = ravel_multi_index(&src_indices, &src_values.shape());
             let src_value = src_values.as_slice().unwrap()[linear_idx];
-            let dst_linear_idx = ravel_multi_index(&indices, &dst_shape);
+            let dst_linear_idx = ravel_multi_index(&indices, &dstshape);
             dst_values.as_slice_mut().unwrap()[dst_linear_idx] = src_value;
         } else {
-            let dst_linear_idx = ravel_multi_index(&indices, &dst_shape);
+            let dst_linear_idx = ravel_multi_index(&indices, &dstshape);
             dst_values.as_slice_mut().unwrap()[dst_linear_idx] = fill_value;
         }
 
         // Increment indices
-        if !increment_indices(&mut indices, &dst_shape) {
+        if !increment_indices(&mut indices, &dstshape) {
             break;
         }
     }
@@ -499,7 +499,7 @@ where
     D: ndarray::Dimension,
 {
     let n_dims = src_coords.len();
-    let dst_shape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
+    let dstshape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
     let mut indices = vec![0; n_dims];
 
     loop {
@@ -516,7 +516,7 @@ where
         dst_values[&indices[..]] = interpolated_value;
 
         // Increment indices
-        if !increment_indices(&mut indices, &dst_shape) {
+        if !increment_indices(&mut indices, &dstshape) {
             break;
         }
     }

@@ -1,10 +1,10 @@
-//! Implementation of Kaiser window and Kaiser-Bessel derived window.
-//!
-//! The Kaiser window is a flexible window function with a parameter that controls
-//! the trade-off between the main lobe width and side lobe level.
+// Implementation of Kaiser window and Kaiser-Bessel derived window.
+//
+// The Kaiser window is a flexible window function with a parameter that controls
+// the trade-off between the main lobe width and side lobe level.
 
 use crate::error::SignalResult;
-use scirs2__special::i0;
+use scirs2_special::i0;
 use std::f64::consts::PI;
 
 #[allow(unused_imports)]
@@ -29,7 +29,7 @@ use std::f64::consts::PI;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::kaiser;
+/// use scirs2_signal::window::kaiser;
 ///
 /// let window = kaiser(10, 5.0, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -84,7 +84,7 @@ pub fn kaiser(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::window::kaiser_bessel_derived;
+/// use scirs2_signal::window::kaiser_bessel_derived;
 ///
 /// let window = kaiser_bessel_derived(10, 5.0, true).unwrap();
 /// assert_eq!(window.len(), 10);
@@ -116,14 +116,14 @@ pub fn kaiser_bessel_derived(m: usize, beta: f64, sym: bool) -> SignalResult<Vec
             for j in 1..(n / 2) {
                 let idx = j;
                 if idx < kaiser_win.len() {
-                    let angle = 2.0 * PI * i as f64 * j as f64 / n  as f64;
+                    let angle = 2.0 * PI * i as f64 * j as f64 / n as f64;
                     sum += 2.0 * kaiser_win[idx] * angle.cos();
                 }
             }
 
             // Add Nyquist
             if n / 2 < kaiser_win.len() {
-                let angle = PI * i  as f64;
+                let angle = PI * i as f64;
                 sum += kaiser_win[n / 2] * angle.cos();
             }
 
@@ -140,7 +140,7 @@ pub fn kaiser_bessel_derived(m: usize, beta: f64, sym: bool) -> SignalResult<Vec
             // Add all components
             for j in 0..n {
                 if j < kaiser_win.len() {
-                    let angle = 2.0 * PI * i as f64 * j as f64 / n  as f64;
+                    let angle = 2.0 * PI * i as f64 * j as f64 / n as f64;
                     sum += kaiser_win[j] * angle.cos();
                 }
             }
@@ -158,7 +158,7 @@ pub fn kaiser_bessel_derived(m: usize, beta: f64, sym: bool) -> SignalResult<Vec
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_kaiser_window() {
         let window = kaiser(10, 5.0, true).unwrap();

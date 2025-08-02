@@ -1,11 +1,11 @@
-//! Advanced Enhanced Parallel Filtering Operations Showcase
-//!
-//! This example demonstrates the most advanced parallel filtering capabilities
-//! including real-time streaming, multi-rate systems, sparse filtering, and
-//! high-performance spectral processing.
+// Advanced Enhanced Parallel Filtering Operations Showcase
+//
+// This example demonstrates the most advanced parallel filtering capabilities
+// including real-time streaming, multi-rate systems, sparse filtering, and
+// high-performance spectral processing.
 
-use num__complex::Complex64;
-use scirs2__signal::filter::{
+use num_complex::Complex64;
+use scirs2_signal::filter::{
     benchmark_parallel_filtering_operations, AdvancedParallelConfig, LockFreeStreamingFilter,
     ParallelMultiRateFilterBank, ParallelSpectralFilter, SparseParallelFilter,
 };

@@ -205,8 +205,8 @@ impl OptimizationVisualizer {
     }
 
     /// Create a new visualizer with custom configuration
-    pub fn with_config(_config: VisualizationConfig) -> Self {
-        Self { _config }
+    pub fn with_config(config: VisualizationConfig) -> Self {
+        Self { config }
     }
 
     /// Plot convergence curve (function value vs iteration)

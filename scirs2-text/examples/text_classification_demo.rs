@@ -1,6 +1,6 @@
 //! Text classification example
 
-use scirs2__text::{
+use scirs2_text::{
     TextClassificationMetrics, TextClassificationPipeline, TextDataset, TextFeatureSelector,
 };
 

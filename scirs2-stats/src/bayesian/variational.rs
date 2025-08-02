@@ -26,7 +26,7 @@ pub struct VariationalBayesianRegression {
     /// Prior parameters
     pub prior_mean_beta: Array1<f64>,
     pub prior_cov_beta: Array2<f64>,
-    pub prior_shape_tau: f64,
+    pub priorshape_tau: f64,
     pub prior_rate_tau: f64,
     /// Model dimensionality
     pub n_features: usize,
@@ -42,17 +42,17 @@ impl VariationalBayesianRegression {
         // Initialize with weakly informative priors
         let prior_mean_beta = Array1::zeros(n_features);
         let prior_cov_beta = Array2::eye(n_features) * 100.0; // Large variance = weak prior
-        let prior_shape_tau = 1e-3;
+        let priorshape_tau = 1e-3;
         let prior_rate_tau = 1e-3;
 
         Ok(Self {
             mean_beta: prior_mean_beta.clone(),
             cov_beta: prior_cov_beta.clone(),
-            shape_tau: prior_shape_tau,
+            shape_tau: priorshape_tau,
             rate_tau: prior_rate_tau,
             prior_mean_beta,
             prior_cov_beta,
-            prior_shape_tau,
+            priorshape_tau,
             prior_rate_tau,
             n_features,
             fit_intercept,
@@ -64,21 +64,21 @@ impl VariationalBayesianRegression {
         mut self,
         prior_mean_beta: Array1<f64>,
         prior_cov_beta: Array2<f64>,
-        prior_shape_tau: f64,
+        priorshape_tau: f64,
         prior_rate_tau: f64,
     ) -> Result<Self> {
         checkarray_finite(&prior_mean_beta, "prior_mean_beta")?;
         checkarray_finite(&prior_cov_beta, "prior_cov_beta")?;
-        check_positive(prior_shape_tau, "prior_shape_tau")?;
+        check_positive(priorshape_tau, "priorshape_tau")?;
         check_positive(prior_rate_tau, "prior_rate_tau")?;
 
         self.prior_mean_beta = prior_mean_beta.clone();
         self.prior_cov_beta = prior_cov_beta.clone();
-        self.prior_shape_tau = prior_shape_tau;
+        self.priorshape_tau = priorshape_tau;
         self.prior_rate_tau = prior_rate_tau;
         self.mean_beta = prior_mean_beta;
         self.cov_beta = prior_cov_beta;
-        self.shape_tau = prior_shape_tau;
+        self.shape_tau = priorshape_tau;
         self.rate_tau = prior_rate_tau;
 
         Ok(self)
@@ -211,7 +211,7 @@ impl VariationalBayesianRegression {
         yty: f64,
     ) -> Result<()> {
         // Shape parameter
-        self.shape_tau = self.prior_shape_tau + n_samples_ / 2.0;
+        self.shape_tau = self.priorshape_tau + n_samples_ / 2.0;
 
         // Rate parameter
         let expected_beta_outer = &self.cov_beta + outer_product(&self.mean_beta);
@@ -257,9 +257,9 @@ impl VariationalBayesianRegression {
             - 0.5 * (beta_quad + beta_trace);
 
         // E[log p(τ)]
-        let tau_prior_term = self.prior_shape_tau * self.prior_rate_tau.ln()
-            - lgamma(self.prior_shape_tau)
-            + (self.prior_shape_tau - 1.0) * expected_log_tau
+        let tau_prior_term = self.priorshape_tau * self.prior_rate_tau.ln()
+            - lgamma(self.priorshape_tau)
+            + (self.priorshape_tau - 1.0) * expected_log_tau
             - self.prior_rate_tau * expected_tau;
 
         // -E[log q(β)]
@@ -450,9 +450,9 @@ pub struct VariationalARD {
     pub shape_tau: f64,
     pub rate_tau: f64,
     /// Prior parameters
-    pub prior_shape_alpha: f64,
+    pub priorshape_alpha: f64,
     pub prior_rate_alpha: f64,
-    pub prior_shape_tau: f64,
+    pub priorshape_tau: f64,
     pub prior_rate_tau: f64,
     /// Model parameters
     pub n_features: usize,
@@ -465,21 +465,21 @@ impl VariationalARD {
         check_positive(n_features, "n_features")?;
 
         // Weakly informative priors
-        let prior_shape_alpha = 1e-3;
+        let priorshape_alpha = 1e-3;
         let prior_rate_alpha = 1e-3;
-        let prior_shape_tau = 1e-3;
+        let priorshape_tau = 1e-3;
         let prior_rate_tau = 1e-3;
 
         Ok(Self {
             mean_beta: Array1::zeros(n_features),
             var_beta: Array1::from_elem(n_features, 1.0),
-            shape_alpha: Array1::from_elem(n_features, prior_shape_alpha),
+            shape_alpha: Array1::from_elem(n_features, priorshape_alpha),
             rate_alpha: Array1::from_elem(n_features, prior_rate_alpha),
-            shape_tau: prior_shape_tau,
+            shape_tau: priorshape_tau,
             rate_tau: prior_rate_tau,
-            prior_shape_alpha,
+            priorshape_alpha,
             prior_rate_alpha,
-            prior_shape_tau,
+            priorshape_tau,
             prior_rate_tau,
             n_features,
             fit_intercept,
@@ -603,7 +603,7 @@ impl VariationalARD {
     /// Update variational distribution for α (precision parameters)
     fn update_alpha_ard(&mut self) -> Result<()> {
         for i in 0..self.n_features {
-            self.shape_alpha[i] = self.prior_shape_alpha + 0.5;
+            self.shape_alpha[i] = self.priorshape_alpha + 0.5;
             self.rate_alpha[i] =
                 self.prior_rate_alpha + 0.5 * (self.mean_beta[i].powi(2) + self.var_beta[i]);
         }
@@ -613,7 +613,7 @@ impl VariationalARD {
 
     /// Update variational distribution for τ (noise precision)
     fn update_tau_ard(&mut self, n_samples_: f64, xtx: &Array2<f64>, yty: f64) -> Result<()> {
-        self.shape_tau = self.prior_shape_tau + n_samples_ / 2.0;
+        self.shape_tau = self.priorshape_tau + n_samples_ / 2.0;
 
         let mut quadratic_term = 0.0;
         for i in 0..self.n_features {

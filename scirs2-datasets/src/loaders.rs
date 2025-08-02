@@ -24,7 +24,7 @@ pub fn load_csv_legacy<P: AsRef<Path>>(
 
 /// Load a dataset from a JSON file
 #[allow(dead_code)]
-pub fn load_json<P: AsRef<Path>>(_path: P) -> Result<Dataset> {
+pub fn load_json<P: AsRef<Path>>(path: P) -> Result<Dataset> {
     let file = File::open(_path).map_err(DatasetsError::IoError)?;
     let reader = BufReader::new(file);
 
@@ -36,7 +36,7 @@ pub fn load_json<P: AsRef<Path>>(_path: P) -> Result<Dataset> {
 
 /// Save a dataset to a JSON file
 #[allow(dead_code)]
-pub fn save_json<P: AsRef<Path>>(_dataset: &Dataset, path: P) -> Result<()> {
+pub fn save_json<P: AsRef<Path>>(dataset: &Dataset, path: P) -> Result<()> {
     let file = File::create(path).map_err(DatasetsError::IoError)?;
 
     serde_json::to_writer_pretty(file_dataset)
@@ -47,7 +47,7 @@ pub fn save_json<P: AsRef<Path>>(_dataset: &Dataset, path: P) -> Result<()> {
 
 /// Load raw data from a file
 #[allow(dead_code)]
-pub fn load_raw<P: AsRef<Path>>(_path: P) -> Result<Vec<u8>> {
+pub fn load_raw<P: AsRef<Path>>(path: P) -> Result<Vec<u8>> {
     let mut file = File::open(_path).map_err(DatasetsError::IoError)?;
     let mut buffer = Vec::new();
 
@@ -198,7 +198,7 @@ pub struct DatasetChunkIterator {
 
 impl DatasetChunkIterator {
     /// Create a new chunk iterator
-    pub fn new<P: AsRef<Path>>(_path: P, csv_config: CsvConfig, chunk_size: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, csv_config: CsvConfig, chunk_size: usize) -> Result<Self> {
         let file = File::open(_path).map_err(DatasetsError::IoError)?;
         let mut reader = ReaderBuilder::new()
             .has_headers(csv_config.has_header)
@@ -274,7 +274,7 @@ impl Iterator for DatasetChunkIterator {
                     let values: Vec<f64> = match record
                         .iter()
                         .map(|s| s.parse::<f64>())
-                        .collect::<std::result::Result<Vec<f64>_>>()
+                        .collect::<std::result::Result<Vec<f64>>>()
                     {
                         Ok(vals) => vals,
                         Err(e) => {
@@ -578,7 +578,7 @@ fn process_csv_chunk<P: AsRef<Path>>(
             let values: Vec<f64> = record
                 .iter()
                 .map(|s| s.parse::<f64>())
-                .collect::<std::result::Result<Vec<f64>_>>()
+                .collect::<std::result::Result<Vec<f64>>>()
                 .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to parse value: {e}")))?;
 
             // Write to shared arrays
@@ -636,7 +636,7 @@ fn load_csv_sequential<P: AsRef<Path>>(
         let values: Vec<f64> = record
             .iter()
             .map(|s| s.parse::<f64>())
-            .collect::<std::result::Result<Vec<f64>_>>()
+            .collect::<std::result::Result<Vec<f64>>>()
             .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to parse value: {e}")))?;
 
         {
@@ -667,7 +667,7 @@ fn load_csv_sequential<P: AsRef<Path>>(
 
 /// Enhanced CSV loader with improved configuration
 #[allow(dead_code)]
-pub fn load_csv<P: AsRef<Path>>(_path: P, config: CsvConfig) -> Result<Dataset> {
+pub fn load_csv<P: AsRef<Path>>(path: P, config: CsvConfig) -> Result<Dataset> {
     let file = File::open(_path).map_err(DatasetsError::IoError)?;
     let mut reader = ReaderBuilder::new()
         .has_headers(config.has_header)

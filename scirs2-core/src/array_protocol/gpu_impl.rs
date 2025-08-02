@@ -203,7 +203,9 @@ where
     T: std::ops::Div<f64, Output = T> + std::ops::Mul<Output = T> + std::ops::Add<Output = T>,
     D: Dimension + Clone + Send + Sync + 'static + ndarray::RemoveAxis,
 {
-    fn array_function(&self, func: &ArrayFunction,
+    fn array_function(
+        &self,
+        func: &ArrayFunction,
         _types: &[TypeId],
         args: &[Box<dyn Any>],
         kwargs: &HashMap<String, Box<dyn Any>>,
@@ -523,7 +525,8 @@ pub mod kernels {
         if a.shape() != b.shape() {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
                 "Shape mismatch: {:?} vs {:?}",
-                a.shape(), b.shape()
+                a.shape(),
+                b.shape()
             ))));
         }
 
@@ -559,7 +562,8 @@ pub mod kernels {
         if a.shape() != b.shape() {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
                 "Shape mismatch: {:?} vs {:?}",
-                a.shape(), b.shape()
+                a.shape(),
+                b.shape()
             ))));
         }
 
@@ -593,19 +597,19 @@ pub mod kernels {
         // For now, we just perform matrix multiplication on the CPU
 
         // Check that the shapes are compatible for matrix multiplication
-        let a_shape = a.shape();
-        let b_shape = b.shape();
+        let ashape = a.shape();
+        let bshape = b.shape();
 
-        if a_shape.len() != 2 || b_shape.len() != 2 || a_shape[1] != b_shape[0] {
+        if ashape.len() != 2 || bshape.len() != 2 || ashape[1] != bshape[0] {
             return Err(CoreError::ShapeError(ErrorContext::new(format!(
-                "Incompatible shapes for matmul: {a_shape:?} vs {b_shape:?}"
+                "Incompatible shapes for matmul: {ashape:?} vs {bshape:?}"
             ))));
         }
 
         // This is a simplified implementation for a GPU array
         // In a real implementation, this would use GPU-accelerated matrix multiplication
-        let m = a_shape[0];
-        let p = b_shape[1];
+        let m = ashape[0];
+        let p = bshape[1];
 
         // Just create a default result (all zeros) for demonstration purposes
         let result_data = Array::default((m, p));

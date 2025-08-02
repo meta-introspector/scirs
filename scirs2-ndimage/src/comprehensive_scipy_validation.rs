@@ -129,7 +129,7 @@ impl SciPyValidationSuite {
         self.add_result(validation);
 
         // Test case 2: Larger array with different sigma
-        let large_input = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64);
+        let large_input = Array2::fromshape_fn((10, 10), |(i, j)| (i + j) as f64);
 
         // Reference center values (approximate, computed with SciPy)
         let result_large = gaussian_filter(&large_input, 2.0, None, None)?;
@@ -397,7 +397,7 @@ impl SciPyValidationSuite {
     /// Validate measurement operations against analytical results
     pub fn validate_measurement_operations(&mut self) -> Result<()> {
         // Test 1: Center of mass for symmetric object
-        let symmetric = Array2::from_shape_fn((11, 11), |(i, j)| {
+        let symmetric = Array2::fromshape_fn((11, 11), |(i, j)| {
             let di = (i as f64 - 5.0).abs();
             let dj = (j as f64 - 5.0).abs();
             if di <= 2.0 && dj <= 2.0 {

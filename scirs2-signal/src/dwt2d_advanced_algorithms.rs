@@ -1,19 +1,19 @@
-//! Advanced 2D Wavelet Transform Algorithms
-//!
-//! This module provides state-of-the-art 2D DWT implementations including:
-//! - Directional wavelets for improved edge preservation
-//! - Undecimated 2D DWT for translation-invariant analysis
-//! - Dual-tree complex wavelets for improved directional selectivity
-//! - Adaptive wavelet selection based on image characteristics
-//! - Advanced boundary handling with edge-preserving methods
-//! - Multi-scale edge detection and preservation
-//! - Intelligent coefficient thresholding
+// Advanced 2D Wavelet Transform Algorithms
+//
+// This module provides state-of-the-art 2D DWT implementations including:
+// - Directional wavelets for improved edge preservation
+// - Undecimated 2D DWT for translation-invariant analysis
+// - Dual-tree complex wavelets for improved directional selectivity
+// - Adaptive wavelet selection based on image characteristics
+// - Advanced boundary handling with edge-preserving methods
+// - Multi-scale edge detection and preservation
+// - Intelligent coefficient thresholding
 
 use crate::dwt::{Wavelet, WaveletFilters};
-use crate::dwt2d__enhanced::{Dwt2dConfig, EnhancedDwt2dResult};
+use crate::dwt2d_enhanced::{Dwt2dConfig, EnhancedDwt2dResult};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, Array3};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
 use statrs::statistics::Statistics;
@@ -348,7 +348,7 @@ fn compute_directional_dwt2d(
 
                 if response > max_response {
                     max_response = response;
-                    best_orientation = (dir_idx as f64 * PI) / n_directions  as f64;
+                    best_orientation = (dir_idx as f64 * PI) / n_directions as f64;
                 }
             }
 
@@ -448,7 +448,7 @@ fn compute_edge_preservation_metrics(
     let noise_suppression = compute_noise_suppression(original, &reconstructed)?;
 
     // Texture preservation
-    let texture_preservation = compute_texture_preservation(original, &reconstructed)?;
+    let texture_preservation = computetexture_preservation(original, &reconstructed)?;
 
     Ok(EdgePreservationMetrics {
         edge_detection_score,
@@ -601,7 +601,7 @@ fn create_directional_filter_bank(
     let base_filters = wavelet.filters()?;
 
     for dir in 0..n_directions {
-        let angle = (dir as f64 * PI) / n_directions  as f64;
+        let angle = (dir as f64 * PI) / n_directions as f64;
         let directional_filter = create_steerable_filter(&base_filters, angle)?;
         filter_bank.push(directional_filter);
     }
@@ -611,7 +611,10 @@ fn create_directional_filter_bank(
 
 /// Create steerable filter for specific direction
 #[allow(dead_code)]
-fn create_steerable_filter(_base_filters: &WaveletFilters, angle: f64) -> SignalResult<Array2<f64>> {
+fn create_steerable_filter(
+    _base_filters: &WaveletFilters,
+    angle: f64,
+) -> SignalResult<Array2<f64>> {
     let filter_size = 7; // Standard size for directional _filters
     let mut filter = Array2::zeros((filter_size, filter_size));
     let center = filter_size / 2;
@@ -622,8 +625,8 @@ fn create_steerable_filter(_base_filters: &WaveletFilters, angle: f64) -> Signal
 
     for i in 0..filter_size {
         for j in 0..filter_size {
-            let x = i as f64 - center  as f64;
-            let y = j as f64 - center  as f64;
+            let x = i as f64 - center as f64;
+            let y = j as f64 - center as f64;
 
             // Rotate coordinates
             let x_rot = x * angle.cos() + y * angle.sin();
@@ -649,7 +652,10 @@ fn create_steerable_filter(_base_filters: &WaveletFilters, angle: f64) -> Signal
 // Additional helper function stubs (implementations would be quite extensive)
 
 #[allow(dead_code)]
-fn apply_directional_filter(_data: &Array2<f64>, filter: &Array2<f64>) -> SignalResult<Array2<f64>> {
+fn apply_directional_filter(
+    _data: &Array2<f64>,
+    filter: &Array2<f64>,
+) -> SignalResult<Array2<f64>> {
     // Stub implementation - would apply 2D convolution
     Ok(_data.clone())
 }
@@ -679,7 +685,9 @@ fn create_dual_tree_filters(_wavelet: Wavelet) -> SignalResult<(WaveletFilters, 
 
 #[allow(dead_code)]
 fn apply_tree_decomposition(
-    _data: &Array2<f64>, _filters: &WaveletFilters, _levels: usize,
+    _data: &Array2<f64>,
+    _filters: &WaveletFilters,
+    _levels: usize,
 ) -> SignalResult<Array3<f64>> {
     // Stub implementation
     Ok(Array3::zeros((1, 1, 1)))
@@ -687,7 +695,8 @@ fn apply_tree_decomposition(
 
 #[allow(dead_code)]
 fn compute_translation_invariance(
-    _data: &Array2<f64>, _coeffs: &[Array3<f64>],
+    _data: &Array2<f64>,
+    _coeffs: &[Array3<f64>],
 ) -> SignalResult<f64> {
     Ok(0.95) // Placeholder
 }
@@ -760,14 +769,16 @@ fn compute_edge_continuity(_edges1: &Array2<f64>, _edges2: &Array2<f64>) -> Sign
 
 #[allow(dead_code)]
 fn compute_noise_suppression(
-    _original: &Array2<f64>, _reconstructed: &Array2<f64>,
+    _original: &Array2<f64>,
+    _reconstructed: &Array2<f64>,
 ) -> SignalResult<f64> {
     Ok(0.88) // Placeholder
 }
 
 #[allow(dead_code)]
-fn compute_texture_preservation(
-    _original: &Array2<f64>, _reconstructed: &Array2<f64>,
+fn computetexture_preservation(
+    _original: &Array2<f64>,
+    _reconstructed: &Array2<f64>,
 ) -> SignalResult<f64> {
     Ok(0.92) // Placeholder
 }
@@ -780,7 +791,9 @@ fn find_scale_space_extrema(_coeffs: &Array3<f64>, scale: usize) -> Vec<(usize, 
 
 #[allow(dead_code)]
 fn update_local_frequency_map(
-    _freq_map: &mut Array2<f64>, _coeffs: &Array3<f64>, _level: usize,
+    _freq_map: &mut Array2<f64>,
+    _coeffs: &Array3<f64>,
+    _level: usize,
 ) -> SignalResult<()> {
     Ok(())
 }

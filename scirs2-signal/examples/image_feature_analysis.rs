@@ -2,7 +2,7 @@
 // for classification, segmentation, and analysis
 
 use ndarray::Array2;
-use scirs2__signal::image_features::{extract_image_features, ImageFeatureOptions};
+use scirs2_signal::image_features::{extract_image_features, ImageFeatureOptions};
 use std::collections::HashMap;
 
 #[allow(dead_code)]
@@ -355,7 +355,7 @@ fn texture_based_segmentation() {
 
             // Extract patch
             let patch =
-                Array2::from_shape_fn((patch_size, patch_size), |(pi, pj)| image[[i + pi, j + pj]]);
+                Array2::fromshape_fn((patch_size, patch_size), |(pi, pj)| image[[i + pi, j + pj]]);
 
             // Get features for this patch
             if let Ok(features) = extract_image_features(&patch, &options) {

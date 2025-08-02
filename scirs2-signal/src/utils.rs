@@ -1,13 +1,13 @@
-//! Utility functions for signal processing
-//!
-//! This module provides utility functions for signal processing,
-//! such as zero padding, normalization, and window functions.
+// Utility functions for signal processing
+//
+// This module provides utility functions for signal processing,
+// such as zero padding, normalization, and window functions.
 
+use super::*;
 use crate::error::{SignalError, SignalResult};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
-use super::*;
 
 #[allow(unused_imports)]
 /// Zero-pad a signal to a specified length.
@@ -26,7 +26,7 @@ use super::*;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::utils::zero_pad;
+/// use scirs2_signal::utils::zero_pad;
 ///
 /// // Pad a signal to length 10
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -218,7 +218,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::utils::get_window;
+/// use scirs2_signal::utils::get_window;
 ///
 /// // Create a Hamming window of length 10
 /// let window = get_window("hamming", 10, false).unwrap();
@@ -247,7 +247,7 @@ pub fn get_window(_window_type: &str, length: usize, periodic: bool) -> SignalRe
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::utils::normalize;
+/// use scirs2_signal::utils::normalize;
 ///
 /// // Normalize a signal to unit energy
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -329,7 +329,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::utils::is_real;
+/// use scirs2_signal::utils::is_real;
 ///
 /// // Create a real-valued complex signal
 /// let signal = vec![
@@ -361,8 +361,8 @@ pub fn is_real(x: &[num_complex::Complex64], tol: f64) -> bool {
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
-    
+    use approx::assert_relative_eq;
+
     #[test]
     fn test_zero_pad_constant() {
         // Test constant padding

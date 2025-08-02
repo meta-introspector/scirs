@@ -30,7 +30,7 @@ impl Default for OutOfCoreConfig {
         OutOfCoreConfig {
             chunk_size_mb: 100,
             use_mmap: true,
-            n_threads: num, _cpus: get(),
+            n_threads: num_cpus::get(),
             temp_dir: std::env::temp_dir().to_string_lossy().to_string(),
         }
     }
@@ -49,13 +49,13 @@ pub trait OutOfCoreTransformer: Send + Sync {
         I: Iterator<Item = Result<Array2<f64>>>;
 
     /// Get the expected shape of transformed data
-    fn get_transform_shape(&self, input_shape: (usize, usize)) -> (usize, usize);
+    fn get_transformshape(&self, inputshape: (usize, usize)) -> (usize, usize);
 }
 
 /// Reader for chunked array data from disk
 pub struct ChunkedArrayReader {
     file: BufReader<File>,
-    _shape: (usize, usize),
+    shape: (usize, usize),
     chunk_size: usize,
     current_row: usize,
     dtype_size: usize,
@@ -65,7 +65,7 @@ pub struct ChunkedArrayReader {
 
 impl ChunkedArrayReader {
     /// Create a new chunked array reader
-    pub fn new<P: AsRef<Path>>(_path: P, shape: (usize, usize), chunk_size: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, shape: (usize, usize), chunk_size: usize) -> Result<Self> {
         let file = File::open(_path).map_err(|e| {
             TransformError::TransformationError(format!("Failed to open file: {e}"))
         })?;
@@ -162,7 +162,7 @@ pub struct ChunkedArrayWriter {
 
 impl ChunkedArrayWriter {
     /// Create a new chunked array writer
-    pub fn new<P: AsRef<Path>>(_path: P, shape: (usize, usize)) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, shape: (usize, usize)) -> Result<Self> {
         let path_str = _path.as_ref().to_string_lossy().to_string();
         let file = File::create(&_path).map_err(|e| {
             TransformError::TransformationError(format!("Failed to create file: {e}"))
@@ -526,8 +526,8 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
         Ok(writer)
     }
 
-    fn get_transform_shape(&self, input_shape: (usize, usize)) -> (usize, usize) {
-        input_shape // Normalization doesn't change _shape
+    fn get_transformshape(&self, inputshape: (usize, usize)) -> (usize, usize) {
+        inputshape // Normalization doesn't change shape
     }
 }
 
@@ -646,9 +646,9 @@ mod tests {
     fn test_out_of_core_robust_scaling() {
         // Create test data with known quantiles
         let data = vec![
-            Array::from_shape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap(),
-            Array::from_shape_vec((3, 2), vec![4.0, 40.0, 5.0, 50.0, 6.0, 60.0]).unwrap(),
-            Array::from_shape_vec((3, 2), vec![7.0, 70.0, 8.0, 80.0, 9.0, 90.0]).unwrap(),
+            Array::fromshape_vec((3, 2), vec![1.0, 10.0, 2.0, 20.0, 3.0, 30.0]).unwrap(),
+            Array::fromshape_vec((3, 2), vec![4.0, 40.0, 5.0, 50.0, 6.0, 60.0]).unwrap(),
+            Array::fromshape_vec((3, 2), vec![7.0, 70.0, 8.0, 80.0, 9.0, 90.0]).unwrap(),
         ];
 
         // Create chunks iterator
@@ -678,9 +678,9 @@ mod tests {
     fn test_out_of_core_robust_transform() {
         // Create simple test data
         let fit_data = vec![
-            Array::from_shape_vec((2, 1), vec![1.0, 2.0]).unwrap(),
-            Array::from_shape_vec((2, 1), vec![3.0, 4.0]).unwrap(),
-            Array::from_shape_vec((1, 1), vec![5.0]).unwrap(),
+            Array::fromshape_vec((2, 1), vec![1.0, 2.0]).unwrap(),
+            Array::fromshape_vec((2, 1), vec![3.0, 4.0]).unwrap(),
+            Array::fromshape_vec((1, 1), vec![5.0]).unwrap(),
         ];
 
         let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust);
@@ -689,7 +689,7 @@ mod tests {
             .unwrap();
 
         // Transform new data
-        let transform_data = vec![Array::from_shape_vec((2, 1), vec![3.0, 6.0]).unwrap()];
+        let transform_data = vec![Array::fromshape_vec((2, 1), vec![3.0, 6.0]).unwrap()];
 
         let result = normalizer.transform_chunks(transform_data.into_iter().map(|chunk| Ok(chunk)));
         assert!(result.is_ok());

@@ -852,7 +852,7 @@ where
     F::zero()
 }
 #[allow(dead_code)]
-fn calculate_jarque_bera_statistic<F>(_ts: &Array1<F>, _mean: F_std: F) -> Result<F>
+fn calculate_jarque_bera_statistic<F>(_ts: &Array1<F>, _mean: F, std: F) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
@@ -880,14 +880,14 @@ where
     Ok(F::zero())
 }
 #[allow(dead_code)]
-fn calculate_dagostino_statistic<F>(_ts: &Array1<F>, _mean: F_std: F) -> Result<F>
+fn calculate_dagostino_statistic<F>(_ts: &Array1<F>, _mean: F, std: F) -> Result<F>
 where
     F: Float + FromPrimitive,
 {
     Ok(F::zero())
 }
 #[allow(dead_code)]
-fn calculate_normality_composite_score<F>(_jb: F_ad: F, _ks: F) -> F
+fn calculate_normality_composite_score<F>(_jb: F, ad: F, _ks: F) -> F
 where
     F: Float,
 {

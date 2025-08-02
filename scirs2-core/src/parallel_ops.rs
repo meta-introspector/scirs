@@ -198,8 +198,8 @@ pub fn par_range(start: usize, end: usize) -> impl ParallelIterator<Item = usize
 /// Helper function for parallel chunks processing
 #[cfg(feature = "parallel")]
 #[allow(dead_code)]
-pub fn par_chunks<T: Sync>(_slice: &[T], chunk_size: usize) -> rayon::slice::Chunks<'_, T> {
-    _slice.par_chunks(chunk_size)
+pub fn par_chunks<T: Sync>(slice: &[T], chunk_size: usize) -> rayon::slice::Chunks<'_, T> {
+    slice.par_chunks(chunk_size)
 }
 
 /// Sequential fallback for par_chunks
@@ -312,7 +312,7 @@ pub fn set_num_threads(num_threads: usize) {
 /// Sequential fallback does nothing
 #[cfg(not(feature = "parallel"))]
 #[allow(dead_code)]
-pub fn threads(usize: TypeName) {
+pub fn threads(_: usize) {
     // No-op for sequential fallback
 }
 

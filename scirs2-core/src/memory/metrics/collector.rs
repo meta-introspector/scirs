@@ -89,7 +89,8 @@ pub struct ComponentMemoryStats {
 
 /// Memory usage report
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "memory_metrics",
+#[cfg_attr(
+    feature = "memory_metrics",
     derive(serde::Serialize, serde::Deserialize)
 )]
 pub struct MemoryReport {

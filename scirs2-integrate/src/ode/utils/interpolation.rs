@@ -32,7 +32,7 @@ pub enum ContinuousOutputMethod {
 ///
 /// The index where value would be inserted to keep the array sorted
 #[allow(dead_code)]
-pub fn find_index<F: Float>(_sorted_array: &[F], value: F) -> usize {
+pub fn find_index<F: Float>(_sorted, array: &[F], value: F) -> usize {
     // Binary search
     let mut left = 0;
     let mut right = _sorted_array.len();

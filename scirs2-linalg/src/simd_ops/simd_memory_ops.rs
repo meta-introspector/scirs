@@ -312,7 +312,7 @@ impl CacheAwareMatrixOperations {
         k: usize,
         strategy: &PrefetchStrategy,
     ) {
-        let (prefetch_distance, hint) = match strategy {
+        let (_prefetch_distance, _hint) = match strategy {
             PrefetchStrategy::Conservative {
                 prefetch_distance,
                 prefetch_hint,

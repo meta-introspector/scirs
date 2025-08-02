@@ -576,7 +576,7 @@ where
 
 // Helper function to check Arnoldi convergence
 #[allow(dead_code)]
-fn check_arnoldi_convergence<F: Float>(_h_matrix: &Array2<F>, m: usize, k: usize, tol: F) -> bool {
+fn check_arnoldi_convergence<F: Float>(h_matrix: &Array2<F>, m: usize, k: usize, tol: F) -> bool {
     // Simple convergence check based on subdiagonal elements
     if m < k + 1 {
         return false;
@@ -586,8 +586,8 @@ fn check_arnoldi_convergence<F: Float>(_h_matrix: &Array2<F>, m: usize, k: usize
     (0..k).all(|i| {
         let row = m - 1 - i;
         let col = m - 2 - i;
-        if row < _h_matrix.nrows() && col < _h_matrix.ncols() {
-            _h_matrix[[row, col]].abs() < tol * F::from(10.0).unwrap()
+        if row < h_matrix.nrows() && col < h_matrix.ncols() {
+            h_matrix[[row, col]].abs() < tol * F::from(10.0).unwrap()
         } else {
             true
         }

@@ -52,7 +52,7 @@ pub struct Citation {
     /// URL
     pub url: Option<String>,
     /// Abstract
-    pub abstract_text: Option<String>,
+    pub abstracttext: Option<String>,
     /// Keywords
     pub keywords: Vec<String>,
     /// Notes
@@ -129,7 +129,7 @@ pub struct CitationStyle {
     /// Style description
     pub description: String,
     /// In-text citation format
-    pub in_text_format: InTextFormat,
+    pub intext_format: InTextFormat,
     /// Bibliography format
     pub bibliography_format: BibliographyFormat,
     /// Formatting rules
@@ -236,7 +236,7 @@ pub struct FormattingRules {
     /// Maximum authors to show
     pub max_authors: Option<usize>,
     /// Text to use for "et al."
-    pub et_al_text: String,
+    pub et_altext: String,
     /// Minimum authors before using et al.
     pub et_al_threshold: usize,
     /// Use title case for titles
@@ -637,7 +637,7 @@ impl CitationManager {
     }
     
     fn format_citation_with_style(&self, citation: &Citation, style: &CitationStyle) -> Result<String> {
-        match style.in_text_format {
+        match style.intext_format {
             InTextFormat::AuthorYear => self.format_author_year(citation, style),
             InTextFormat::Numbered => self.format_numbered(citation, style),
             InTextFormat::Superscript => self.format_superscript(citation, style),
@@ -653,12 +653,12 @@ impl CitationManager {
         Ok(format!("({}, {})", authors, year))
     }
     
-    fn format_numbered(&self, citation: &Citation_style: &CitationStyle) -> Result<String> {
+    fn format_numbered(&self, citation: &Citation, style: &CitationStyle) -> Result<String> {
         // In a real implementation, you'd need to assign numbers based on order
         Ok(format!("[{}]", 1)) // Placeholder
     }
     
-    fn format_superscript(&self, citation: &Citation_style: &CitationStyle) -> Result<String> {
+    fn format_superscript(&self, citation: &Citation, style: &CitationStyle) -> Result<String> {
         Ok("¹".to_string()) // Placeholder
     }
     
@@ -732,7 +732,7 @@ impl CitationManager {
         let mut result = formatted_authors.join(", ");
         
         if authors.len() > max_authors {
-            result.push_str(&format!(", {}", rules.et_al_text));
+            result.push_str(&format!(", {}", rules.et_altext));
         }
         
         result
@@ -871,7 +871,7 @@ impl CitationManager {
         CitationStyle {
             name: "APA".to_string(),
             description: "American Psychological Association style".to_string(),
-            in_text_format: InTextFormat::AuthorYear,
+            intext_format: InTextFormat::AuthorYear,
             bibliography_format: BibliographyFormat {
                 entry_separator: "\n".to_string(),
                 field_separators: {
@@ -893,7 +893,7 @@ impl CitationManager {
             },
             formatting_rules: FormattingRules {
                 max_authors: Some(7),
-                et_al_text: "et al.".to_string(),
+                et_altext: "et al.".to_string(),
                 et_al_threshold: 8,
                 title_case: false,
                 abbreviate_journals: false,
@@ -913,7 +913,7 @@ impl CitationManager {
         CitationStyle {
             name: "IEEE".to_string(),
             description: "Institute of Electrical and Electronics Engineers style".to_string(),
-            in_text_format: InTextFormat::Numbered,
+            intext_format: InTextFormat::Numbered,
             bibliography_format: BibliographyFormat {
                 entry_separator: "\n".to_string(),
                 field_separators: HashMap::new(),
@@ -930,7 +930,7 @@ impl CitationManager {
             },
             formatting_rules: FormattingRules {
                 max_authors: None,
-                et_al_text: "et al.".to_string(),
+                et_altext: "et al.".to_string(),
                 et_al_threshold: 7,
                 title_case: false,
                 abbreviate_journals: true,
@@ -950,7 +950,7 @@ impl CitationManager {
         CitationStyle {
             name: "ACM".to_string(),
             description: "Association for Computing Machinery style".to_string(),
-            in_text_format: InTextFormat::Numbered,
+            intext_format: InTextFormat::Numbered,
             bibliography_format: BibliographyFormat {
                 entry_separator: "\n".to_string(),
                 field_separators: HashMap::new(),
@@ -967,7 +967,7 @@ impl CitationManager {
             },
             formatting_rules: FormattingRules {
                 max_authors: None,
-                et_al_text: "et al.".to_string(),
+                et_altext: "et al.".to_string(),
                 et_al_threshold: 3,
                 title_case: true,
                 abbreviate_journals: false,
@@ -1058,7 +1058,7 @@ impl BibTeXProcessor {
             "mastersthesis" => PublicationType::MastersThesis,
             "techreport" => PublicationType::TechReport,
             "manual" => PublicationType::Manual,
-            "unpublished" => PublicationType::Unpublished_ =>, PublicationType::Misc,
+            "unpublished" => PublicationType::Unpublished_ => PublicationType::Misc,
         }
     }
     
@@ -1095,7 +1095,7 @@ impl BibTeXProcessor {
             pages: fields.get("pages").cloned(),
             doi: fields.get("doi").cloned(),
             url: fields.get("url").cloned(),
-            abstract_text: fields.get("abstract").cloned(),
+            abstracttext: fields.get("abstract").cloned(),
             keywords: Vec::new(),
             notes: fields.get("note").cloned(),
             custom_fields: HashMap::new(),
@@ -1221,7 +1221,7 @@ mod tests {
             pages: None,
             doi: None,
             url: None,
-            abstract_text: None,
+            abstracttext: None,
             keywords: Vec::new(),
             notes: None,
             custom_fields: HashMap::new(),
@@ -1259,7 +1259,7 @@ mod tests {
             pages: None,
             doi: None,
             url: None,
-            abstract_text: None,
+            abstracttext: None,
             keywords: vec!["optimization".to_string(), "machine learning".to_string()],
             notes: None,
             custom_fields: HashMap::new(),

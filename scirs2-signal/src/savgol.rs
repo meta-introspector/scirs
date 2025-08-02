@@ -1,10 +1,11 @@
-//! Savitzky-Golay filtering
-//!
-//! This module provides functions for Savitzky-Golay filtering, which is
-//! used for smoothing data and computing derivatives.
+use ndarray::s;
+// Savitzky-Golay filtering
+//
+// This module provides functions for Savitzky-Golay filtering, which is
+// used for smoothing data and computing derivatives.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, s};
+use ndarray::{ Array1, Array2, ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
@@ -34,7 +35,7 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::savgol_coeffs;
+/// use scirs2_signal::savgol_coeffs;
 ///
 /// // Create filter coefficients for a 5-point window, quadratic polynomial
 /// let coeffs = savgol_coeffs(5, 2, None, None, None, None).unwrap();
@@ -617,7 +618,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::savgol_filter;
+/// use scirs2_signal::savgol_filter;
 ///
 /// // Generate a noisy signal
 /// let x: Vec<f64> = (0..100).map(|i| i as f64 / 10.0 + (i as f64 / 5.0).sin()).collect();
@@ -830,7 +831,7 @@ where
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_savgol_coeffs_basic() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

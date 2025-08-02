@@ -321,7 +321,10 @@ impl GpuCompilerImpl for MetalCompiler {
         )))
     }
 
-    fn compile_typed(&self, _type_id: std::any::TypeId) -> Result<Arc<dyn GpuKernelImpl>, GpuError> {
+    fn compile_typed(
+        &self,
+        _type_id: std::any::TypeId,
+    ) -> Result<Arc<dyn GpuKernelImpl>, GpuError> {
         // For typed compilation, we would generate appropriate Metal shader code
         // based on the input/output types. For now, return a stub.
         Ok(Arc::new(MetalKernel::stub(
@@ -357,7 +360,9 @@ enum ScalarValue {
 
 impl MetalKernel {
     /// Create a new Metal kernel with a compiled pipeline
-    fn new(device: Device, command_queue: CommandQueue,
+    fn new(
+        device: Device,
+        command_queue: CommandQueue,
         pipeline: Arc<ComputePipelineState>,
     ) -> Self {
         Self {

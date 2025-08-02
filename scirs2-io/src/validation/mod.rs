@@ -191,7 +191,11 @@ pub fn calculate_file_checksum<P: AsRef<Path>>(
 ///
 /// `true` if the checksum matches, `false` otherwise
 #[allow(dead_code)]
-pub fn verify_checksum(_data: &[u8], expected_checksum: &str, algorithm: ChecksumAlgorithm) -> bool {
+pub fn verify_checksum(
+    _data: &[u8],
+    expected_checksum: &str,
+    algorithm: ChecksumAlgorithm,
+) -> bool {
     let calculated = calculate_checksum(_data, algorithm);
     calculated.eq_ignore_ascii_case(expected_checksum)
 }
@@ -292,7 +296,7 @@ pub fn save_integrity_metadata<P: AsRef<Path>>(
 ///
 /// The loaded integrity metadata
 #[allow(dead_code)]
-pub fn load_integrity_metadata<P: AsRef<Path>>(_path: P) -> Result<IntegrityMetadata> {
+pub fn load_integrity_metadata<P: AsRef<Path>>(path: P) -> Result<IntegrityMetadata> {
     let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
     let metadata: IntegrityMetadata = serde_json::from_reader(reader)
@@ -1106,13 +1110,13 @@ impl ManifestVerificationReport {
 
 /// Convenience function to calculate CRC32 checksum for a file
 #[allow(dead_code)]
-pub fn calculate_crc32<P: AsRef<Path>>(_path: P) -> Result<String> {
+pub fn calculate_crc32<P: AsRef<Path>>(path: P) -> Result<String> {
     calculate_file_checksum(_path, ChecksumAlgorithm::CRC32)
 }
 
 /// Convenience function to calculate SHA256 checksum for a file
 #[allow(dead_code)]
-pub fn calculate_sha256<P: AsRef<Path>>(_path: P) -> Result<String> {
+pub fn calculate_sha256<P: AsRef<Path>>(path: P) -> Result<String> {
     calculate_file_checksum(_path, ChecksumAlgorithm::SHA256)
 }
 

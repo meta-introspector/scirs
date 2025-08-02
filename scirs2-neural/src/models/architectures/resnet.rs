@@ -48,11 +48,11 @@ impl ResNetConfig {
             block: ResNetBlock::Basic,
             layers: vec![
                 ResNetLayer {
-                    blocks: 2_channels: 64,
+                    blocks: 2, channels: 64,
                     stride: 1,
                 },
                     _channels: 128,
-                    stride: 2_channels: 256,
+                    stride: 2, channels: 256,
                     _channels: 512,
             ],
             input_channels,

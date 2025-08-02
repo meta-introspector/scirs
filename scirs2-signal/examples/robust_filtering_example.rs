@@ -1,9 +1,9 @@
-//! Example demonstrating robust filtering techniques for outlier removal
-//!
-//! This example shows how to use various robust filtering methods
-//! to handle outliers and non-Gaussian noise in signals.
+// Example demonstrating robust filtering techniques for outlier removal
+//
+// This example shows how to use various robust filtering methods
+// to handle outliers and non-Gaussian noise in signals.
 
-use scirs2__signal::robust::{
+use scirs2_signal::robust::{
     alpha_trimmed_filter, hampel_filter, huber_filter, robust_filter_2d, winsorize_filter,
 };
 
@@ -84,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         1.1, 1.3, 1.2, 1.1, 1.0,
     ];
 
-    let image = Array2::from_shape_vec((5, 5), image_data.clone())?;
+    let image = Array2::fromshape_vec((5, 5), image_data.clone())?;
 
     println!("   Original 2D signal:");
     for row in image.outer_iter() {

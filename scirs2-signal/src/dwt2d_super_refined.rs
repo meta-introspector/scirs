@@ -1,19 +1,22 @@
-//! Advanced-refined 2D wavelet transforms with memory-efficient packet decomposition
-//!
-//! This module provides the most advanced 2D wavelet transform implementations with:
-//! - Memory-efficient streaming wavelet packet transforms
-//! - SIMD-accelerated lifting schemes for arbitrary wavelets
-//! - GPU-ready tile-based processing with automatic load balancing
-//! - Machine learning-guided adaptive decomposition strategies
-//! - Real-time denoising with perceptual quality optimization
-//! - Compression-aware coefficient quantization
-//! - Multi-scale edge detection and feature preservation
-//! - Advanced boundary condition handling with content-aware extension
+use ndarray::s;
+// Advanced-refined 2D wavelet transforms with memory-efficient packet decomposition
+//
+// This module provides the most advanced 2D wavelet transform implementations with:
+// - Memory-efficient streaming wavelet packet transforms
+// - SIMD-accelerated lifting schemes for arbitrary wavelets
+// - GPU-ready tile-based processing with automatic load balancing
+// - Machine learning-guided adaptive decomposition strategies
+// - Real-time denoising with perceptual quality optimization
+// - Compression-aware coefficient quantization
+// - Multi-scale edge detection and feature preservation
+// - Advanced boundary condition handling with content-aware extension
 
 use crate::dwt::{Wavelet, WaveletFilters};
-use crate::dwt2d__enhanced::{BoundaryMode, Dwt2dConfig, Dwt2dQualityMetrics, enhanced_dwt2d_decompose};
+use crate::dwt2d_enhanced::{
+    enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig, Dwt2dQualityMetrics,
+};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Array3, ArrayView1, s};
+use ndarray::{ Array1, Array2, Array3, ArrayView1};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use statrs::statistics::Statistics;
@@ -243,12 +246,12 @@ impl Default for AdvancedRefinedConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt2d_advanced_refined::{advanced_refined_wavelet_packet_2d, AdvancedRefinedConfig};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d_advanced_refined::{advanced_refined_wavelet_packet_2d, AdvancedRefinedConfig};
+/// use scirs2_signal::dwt::Wavelet;
 /// use ndarray::Array2;
 ///
 /// // Create test image
-/// let image = Array2::from_shape_fn((128, 128), |(i, j)| {
+/// let image = Array2::fromshape_fn((128, 128), |(i, j)| {
 ///     ((i as f64 / 8.0).sin() * (j as f64 / 8.0).cos() + 1.0) / 2.0
 /// });
 ///
@@ -619,7 +622,10 @@ fn validate_input_image(_image: &Array2<f64>, config: &AdvancedRefinedConfig) ->
 }
 
 #[allow(dead_code)]
-fn optimize_simd_configuration(_caps: &PlatformCapabilities, level: SimdLevel) -> SimdConfiguration {
+fn optimize_simd_configuration(
+    _caps: &PlatformCapabilities,
+    level: SimdLevel,
+) -> SimdConfiguration {
     let acceleration_factor = match level {
         SimdLevel::None => 1.0,
         SimdLevel::Basic => {
@@ -1036,7 +1042,7 @@ fn update_energy_map(
     level_energy: &Array2<f64>,
     level: usize,
 ) -> SignalResult<()> {
-    let scale_factor = 1.0 / (1 << level)  as f64; // Energy scaling by level
+    let scale_factor = 1.0 / (1 << level) as f64; // Energy scaling by level
 
     // Add scaled _energy to appropriate regions of the _energy _map
     for i in 0..level_energy.nrows().min(energy_map.nrows()) {
@@ -1256,7 +1262,10 @@ fn build_tree_recursive(
 
 /// Compute energy and entropy statistics for all nodes
 #[allow(dead_code)]
-fn compute_node_statistics(_nodes: &mut [TreeNode], coefficients: &Array3<f64>) -> SignalResult<()> {
+fn compute_node_statistics(
+    _nodes: &mut [TreeNode],
+    coefficients: &Array3<f64>,
+) -> SignalResult<()> {
     for node in _nodes.iter_mut() {
         // Extract coefficients for this node
         let node_coeffs = extract_node_coefficients(coefficients, node)?;
@@ -1332,7 +1341,10 @@ fn compute_shannon_entropy(_coefficients: &[f64]) -> SignalResult<f64> {
 
 /// Find optimal basis using dynamic programming with the specified cost function
 #[allow(dead_code)]
-fn find_optimal_basis(_nodes: &[TreeNode], cost_function: CostFunction) -> SignalResult<Vec<usize>> {
+fn find_optimal_basis(
+    _nodes: &[TreeNode],
+    cost_function: CostFunction,
+) -> SignalResult<Vec<usize>> {
     let mut optimal_basis = Vec::new();
     let mut visited = vec![false; _nodes.len()];
 
@@ -1423,7 +1435,10 @@ fn compute_node_cost(_node: &TreeNode, cost_function: CostFunction) -> f64 {
 
 /// Compute traversal statistics for the optimal tree
 #[allow(dead_code)]
-fn compute_traversal_statistics(_nodes: &[TreeNode], optimal_basis: &[usize]) -> TreeTraversalStats {
+fn compute_traversal_statistics(
+    _nodes: &[TreeNode],
+    optimal_basis: &[usize],
+) -> TreeTraversalStats {
     let total_nodes = _nodes.len();
     let leaf_nodes = optimal_basis.len();
 
@@ -1444,7 +1459,7 @@ fn compute_traversal_statistics(_nodes: &[TreeNode], optimal_basis: &[usize]) ->
         .iter()
         .map(|n| if n.level == 0 { 1.0 } else { 0.0 })
         .sum::<f64>();
-    let compressed_size = leaf_nodes  as f64;
+    let compressed_size = leaf_nodes as f64;
     let compression_ratio = if compressed_size > 0.0 {
         original_size / compressed_size
     } else {
@@ -1652,7 +1667,7 @@ fn compute_peak_snr(_image: &Array2<f64>, coefficients: &Array3<f64>) -> SignalR
         return Ok(f64::INFINITY);
     }
 
-    mse /= count  as f64;
+    mse /= count as f64;
 
     if mse < 1e-15 {
         return Ok(100.0); // Very high PSNR for near-perfect reconstruction
@@ -1880,8 +1895,8 @@ fn resize_image_bilinear(
 
     let mut resized = Array2::zeros((target_h, target_w));
 
-    let scale_y = src_h as f64 / target_h  as f64;
-    let scale_x = src_w as f64 / target_w  as f64;
+    let scale_y = src_h as f64 / target_h as f64;
+    let scale_x = src_w as f64 / target_w as f64;
 
     for i in 0..target_h {
         for j in 0..target_w {
@@ -1893,8 +1908,8 @@ fn resize_image_bilinear(
             let y1 = (y0 + 1).min(src_h - 1);
             let x1 = (x0 + 1).min(src_w - 1);
 
-            let dy = src_y - y0  as f64;
-            let dx = src_x - x0  as f64;
+            let dy = src_y - y0 as f64;
+            let dx = src_x - x0 as f64;
 
             // Bilinear interpolation
             let val = (1.0 - dy) * (1.0 - dx) * image[[y0, x0]]
@@ -1973,7 +1988,7 @@ fn compute_edge_correlation(_edges1: &Array2<f64>, edges2: &Array2<f64>) -> Sign
         return Ok(0.0);
     }
 
-    let n = count  as f64;
+    let n = count as f64;
     let mean1 = sum1 / n;
     let mean2 = sum2 / n;
 
@@ -2107,7 +2122,7 @@ mod tests {
 
     #[test]
     fn test_advanced_refined_wavelet_packet_2d() {
-        let image = Array2::from_shape_fn((64, 64), |(i, j)| {
+        let image = Array2::fromshape_fn((64, 64), |(i, j)| {
             ((i as f64 / 8.0).sin() * (j as f64 / 8.0).cos() + 1.0) / 2.0
         });
 

@@ -133,7 +133,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let multiclass_targets = Array1::from_vec(vec![0.0, 1.0, 2.0, 0.0, 1.0]);
 
         // One-hot encoded predictions (batch_size x num_classes)
-        let multiclass_predictions = Array2::<f64>::from_shape_vec(
+        let multiclass_predictions = Array2::<f64>::fromshape_vec(
             (5, 3),
             vec![
                 0.9, 0.1, 0.0, // Sample 1 (predicted class 0)

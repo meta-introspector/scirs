@@ -20,7 +20,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// * `input` - Input array to transform
 /// * `matrix` - Transformation matrix (ndim × ndim) defining the affine transformation
 /// * `offset` - Translation vector (optional, defaults to zeros)
-/// * `output_shape` - Shape of output array (optional, defaults to input shape)
+/// * `outputshape` - Shape of output array (optional, defaults to input shape)
 /// * `order` - Interpolation method (optional, defaults to Linear)
 ///   - `Nearest`: Fast but may introduce aliasing
 ///   - `Linear`: Good balance of speed and quality
@@ -71,7 +71,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use ndarray::{Array2, array};
 /// use scirs2__ndimage::interpolation::affine_transform;
 ///
-/// let input = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64);
+/// let input = Array2::fromshape_fn((10, 10), |(i, j)| (i + j) as f64);
 ///
 /// // Scale by 2x and translate by (5, 5)
 /// let scale_matrix = array![
@@ -93,7 +93,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use ndarray::{Array2, array};
 /// use scirs2__ndimage::interpolation::affine_transform;
 ///
-/// let square_image = Array2::from_shape_fn((20, 20), |(i, j)| {
+/// let square_image = Array2::fromshape_fn((20, 20), |(i, j)| {
 ///     if i >= 5 && i < 15 && j >= 5 && j < 15 { 1.0 } else { 0.0 }
 /// });
 ///
@@ -115,7 +115,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// use ndarray::{Array2, array};
 /// use scirs2__ndimage::interpolation::{affine_transform, BoundaryMode};
 ///
-/// let distorted = Array2::from_shape_fn((30, 40), |(i, j)| {
+/// let distorted = Array2::fromshape_fn((30, 40), |(i, j)| {
 ///     ((i as f64 / 5.0).sin() * (j as f64 / 5.0).cos()).abs()
 /// });
 ///
@@ -126,13 +126,13 @@ use crate::error::{NdimageError, NdimageResult};
 /// ];
 ///
 /// // Output to different size
-/// let output_shape = [50, 50];
+/// let outputshape = [50, 50];
 ///
 /// let rectified = affine_transform(
 ///     &distorted,
 ///     &rectify_matrix,
 ///     None,
-///     Some(&output_shape),
+///     Some(&outputshape),
 ///     None,
 ///     Some(BoundaryMode::Reflect),
 ///     None, None
@@ -146,12 +146,12 @@ use crate::error::{NdimageError, NdimageResult};
 /// use ndarray::{Array3, Array2};
 /// use scirs2__ndimage::interpolation::affine_transform;
 ///
-/// let volume = Array3::from_shape_fn((20, 20, 20), |(i, j, k)| {
+/// let volume = Array3::fromshape_fn((20, 20, 20), |(i, j, k)| {
 ///     ((i + j + k) as f64) / 60.0
 /// });
 ///
 /// // 3D rotation around z-axis
-/// let rotation_3d = Array2::from_shape_fn((3, 3), |(i, j)| {
+/// let rotation_3d = Array2::fromshape_fn((3, 3), |(i, j)| {
 ///     match (i, j) {
 ///         (0, 0) => 0.866, (0, 1) => -0.5, (0, 2) => 0.0,
 ///         (1, 0) => 0.5,   (1, 1) => 0.866, (1, 2) => 0.0,
@@ -180,7 +180,7 @@ pub fn affine_transform<T, D>(
     input: &Array<T, D>,
     matrix: &Array<T, ndarray::Ix2>,
     offset: Option<&Array<T, ndarray::Ix1>>,
-    output_shape: Option<&[usize]>,
+    outputshape: Option<&[usize]>,
     order: Option<InterpolationOrder>,
     mode: Option<BoundaryMode>,
     cval: Option<T>,
@@ -197,12 +197,12 @@ where
         ));
     }
 
-    if matrix._shape()[0] != input.ndim() || matrix._shape()[1] != input.ndim() {
+    if matrix.shape()[0] != input.ndim() || matrix.shape()[1] != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
-            "Matrix _shape must be ({0}, {0}) for input array of dimension {0}, got ({1}, {2})",
+            "Matrix shape must be ({0}, {0}) for input array of dimension {0}, got ({1}, {2})",
             input.ndim(),
-            matrix._shape()[0],
-            matrix._shape()[1]
+            matrix.shape()[0],
+            matrix.shape()[1]
         )));
     }
 
@@ -216,11 +216,11 @@ where
         }
     }
 
-    if let Some(_shape) = output_shape {
-        if _shape.len() != input.ndim() {
+    if let Some(shape) = outputshape {
+        if shape.len() != input.ndim() {
             return Err(NdimageError::DimensionError(format!(
-                "Output _shape length must match input dimensions (got {} expected {})",
-                _shape.len(),
+                "Output shape length must match input dimensions (got {} expected {})",
+                shape.len(),
                 input.ndim()
             )));
         }
@@ -231,15 +231,15 @@ where
     let const_val = cval.unwrap_or_else(|| T::zero());
     let _prefilter_input = prefilter.unwrap_or(true);
 
-    // Determine output _shape
-    let out_shape = if let Some(_shape) = output_shape {
-        _shape.to_vec()
+    // Determine output shape
+    let outshape = if let Some(shape) = outputshape {
+        shape.to_vec()
     } else {
-        input._shape().to_vec()
+        input.shape().to_vec()
     };
 
     // Create output array
-    let output = Array::zeros(ndarray::IxDyn(&out_shape));
+    let output = Array::zeros(ndarray::IxDyn(&outshape));
     let mut result_dyn = output.into_dyn();
     let input_dyn = input.clone().into_dyn();
 
@@ -322,7 +322,7 @@ where
 ///
 /// * `input` - Input array
 /// * `mapping` - Function mapping output coordinates to input coordinates
-/// * `output_shape` - Shape of the output array (default: same as input)
+/// * `outputshape` - Shape of the output array (default: same as input)
 /// * `order` - Interpolation order (default: Linear)
 /// * `mode` - Boundary handling mode (default: Constant)
 /// * `cval` - Value to use for constant mode (default: 0.0)
@@ -334,7 +334,7 @@ where
 #[allow(dead_code)]
 pub fn geometric_transform<T, D, F>(
     input: &Array<T, D>, _mapping: F,
-    output_shape: Option<&[usize]>,
+    outputshape: Option<&[usize]>,
     order: Option<InterpolationOrder>,
     mode: Option<BoundaryMode>,
     cval: Option<T>,
@@ -352,11 +352,11 @@ where
         ));
     }
 
-    if let Some(_shape) = output_shape {
-        if _shape.len() != input.ndim() {
+    if let Some(shape) = outputshape {
+        if shape.len() != input.ndim() {
             return Err(NdimageError::DimensionError(format!(
-                "Output _shape length must match input dimensions (got {} expected {})",
-                _shape.len(),
+                "Output shape length must match input dimensions (got {} expected {})",
+                shape.len(),
                 input.ndim()
             )));
         }

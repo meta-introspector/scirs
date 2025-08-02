@@ -30,19 +30,19 @@ where
     use ndarray::Zip;
 
     // Check dimensions
-    let a_shape = a.shape();
-    let b_shape = b.shape();
+    let ashape = a.shape();
+    let bshape = b.shape();
 
-    if a_shape[1] != b_shape[0] {
+    if ashape[1] != bshape[0] {
         return Err(LinalgError::ShapeError(format!(
             "Matrix dimensions incompatible for multiplication: {}x{} and {}x{}",
-            a_shape[0], a_shape[1], b_shape[0], b_shape[1]
+            ashape[0], ashape[1], bshape[0], bshape[1]
         )));
     }
 
-    let m = a_shape[0];
-    let n = b_shape[1];
-    let k = a_shape[1];
+    let m = ashape[0];
+    let n = bshape[1];
+    let k = ashape[1];
 
     // Convert to high precision
     let a_high = convert_2d::<A, H>(a);
@@ -175,19 +175,19 @@ where
     H: Float + Clone + NumCast + Debug + ToPrimitive + NumAssign + Zero,
 {
     // Check dimensions
-    let a_shape = a.shape();
-    let b_shape = b.shape();
+    let ashape = a.shape();
+    let bshape = b.shape();
 
-    if a_shape[1] != b_shape[0] {
+    if ashape[1] != bshape[0] {
         return Err(LinalgError::ShapeError(format!(
             "Matrix dimensions incompatible for multiplication: {}x{} and {}x{}",
-            a_shape[0], a_shape[1], b_shape[0], b_shape[1]
+            ashape[0], ashape[1], bshape[0], bshape[1]
         )));
     }
 
-    let m = a_shape[0];
-    let n = b_shape[1];
-    let k = a_shape[1];
+    let m = ashape[0];
+    let n = bshape[1];
+    let k = ashape[1];
 
     // Convert to high precision
     let a_high = convert_2d::<A, H>(a);

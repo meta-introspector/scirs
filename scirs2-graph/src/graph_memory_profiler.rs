@@ -844,7 +844,8 @@ impl AdvancedMemoryProfiler {
             let size_range = match allocation.size {
                 0..=1024 => "Small (<1KB)",
                 1025..=10240 => "Medium (1-10KB)",
-                10241..=102400 => "Large (10-100KB)"_ => "Very Large (>100KB)",
+                10241..=102400 => "Large (10-100KB)",
+                _ => "Very Large (>100KB)",
             };
 
             *distribution.entry(size_range.to_string()).or_insert(0) += 1;

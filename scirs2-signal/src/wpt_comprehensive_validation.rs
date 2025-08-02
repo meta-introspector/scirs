@@ -1,22 +1,22 @@
-//! Comprehensive Wavelet Packet Transform Validation Suite
-//!
-//! This module provides extensive validation of WPT implementations including:
-//! - Advanced energy and frame theory validation
-//! - Multi-scale orthogonality testing
-//! - Best basis algorithm validation
-//! - Adaptive threshold validation
-//! - Statistical significance testing
-//! - Cross-validation with reference implementations
-//! - Performance regression testing
+// Comprehensive Wavelet Packet Transform Validation Suite
+//
+// This module provides extensive validation of WPT implementations including:
+// - Advanced energy and frame theory validation
+// - Multi-scale orthogonality testing
+// - Best basis algorithm validation
+// - Adaptive threshold validation
+// - Statistical significance testing
+// - Cross-validation with reference implementations
+// - Performance regression testing
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::wpt::{WaveletPacketTree, reconstruct_from_nodes, wp_decompose};
-use crate::wpt__validation::WptValidationResult;
+use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
+use crate::wpt_validation::WptValidationResult;
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use rand::Rng;
 use rand::rngs::StdRng;
+use rand::Rng;
 use scirs2_core::parallel_ops::*;
 use std::f64::consts::PI;
 
@@ -461,15 +461,15 @@ fn run_basic_validation_suite(
     }
 
     // Aggregate results
-    let mean_energy_ratio = energy_ratios.iter().sum::<f64>() / energy_ratios.len()  as f64;
+    let mean_energy_ratio = energy_ratios.iter().sum::<f64>() / energy_ratios.len() as f64;
     let max_reconstruction_error = reconstruction_errors.iter().cloned().fold(0.0, f64::max);
     let mean_reconstruction_error =
-        reconstruction_errors.iter().sum::<f64>() / reconstruction_errors.len()  as f64;
+        reconstruction_errors.iter().sum::<f64>() / reconstruction_errors.len() as f64;
 
     // Calculate SNR
     let signal_power = 1.0; // Normalized signal power
     let noise_power = reconstruction_errors.iter().map(|&e| e * e).sum::<f64>()
-        / reconstruction_errors.len()  as f64;
+        / reconstruction_errors.len() as f64;
     let reconstruction_snr = 10.0 * (signal_power / (noise_power + 1e-15)).log10();
 
     // Basic parseval ratio (simplified)
@@ -480,7 +480,7 @@ fn run_basic_validation_suite(
         .iter()
         .map(|&r| (r - mean_energy_ratio).powi(2))
         .sum::<f64>()
-        / energy_ratios.len()  as f64;
+        / energy_ratios.len() as f64;
     let stability_score = (-energy_variance * 1000.0).exp().max(0.0).min(1.0);
 
     Ok(WptValidationResult {
@@ -526,7 +526,7 @@ fn validate_frame_properties(
     let frame_coherence = compute_frame_coherence(&frame_matrix)?;
 
     // Redundancy factor
-    let redundancy_factor = frame_matrix.ncols() as f64 / frame_matrix.nrows()  as f64;
+    let redundancy_factor = frame_matrix.ncols() as f64 / frame_matrix.nrows() as f64;
 
     // Reconstruction error bounds (theoretical)
     let A = eigenvalues.iter().cloned().fold(f64::MAX, f64::min);
@@ -616,7 +616,7 @@ fn validate_best_basis_algorithm(
 
     // Selection repeatability
     let selection_repeatability =
-        repeatability_scores.iter().sum::<f64>() / repeatability_scores.len()  as f64;
+        repeatability_scores.iter().sum::<f64>() / repeatability_scores.len() as f64;
 
     // Optimal basis metrics (using first analysis)
     let optimal_basis_metrics = analyze_optimal_basis(&convergence_analyses[0])?;
@@ -745,12 +745,13 @@ fn generate_test_signal(
             Array1::from_vec(
                 (0..length)
                     .map(|i| (2.0 * std::f64::consts::PI * freq * i as f64).sin())
-                    .collect()..)
+                    .collect()..,
+            )
         }
         TestSignalType::Chirp => Array1::from_vec(
             (0..length)
                 .map(|i| {
-                    let t = i as f64 / length  as f64;
+                    let t = i as f64 / length as f64;
                     (2.0 * std::f64::consts::PI * (0.1 + 0.4 * t) * i as f64).sin()
                 })
                 .collect(),
@@ -769,7 +770,7 @@ fn generate_test_signal(
             }
             signal
         }
-        _ => Array1::zeros(length)..// Placeholder for other types
+        _ => Array1::zeros(length).., // Placeholder for other types
     };
 
     Ok(signal)
@@ -910,7 +911,7 @@ fn compute_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
     let remaining_count = n - eigenvalues.len();
 
     if remaining_count > 0 {
-        let avg_remaining = remaining_trace / remaining_count  as f64;
+        let avg_remaining = remaining_trace / remaining_count as f64;
         for _ in 0..remaining_count {
             eigenvalues.push(avg_remaining);
         }
@@ -926,12 +927,12 @@ fn compute_eigenvalues(_matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
 fn analyze_eigenvalue_distribution(_eigenvalues: &[f64]) -> EigenvalueDistribution {
     let min_eigenvalue = _eigenvalues.iter().cloned().fold(f64::MAX, f64::min);
     let max_eigenvalue = _eigenvalues.iter().cloned().fold(0.0, f64::max);
-    let mean_eigenvalue = _eigenvalues.iter().sum::<f64>() / _eigenvalues.len()  as f64;
+    let mean_eigenvalue = _eigenvalues.iter().sum::<f64>() / _eigenvalues.len() as f64;
     let eigenvalue_variance = _eigenvalues
         .iter()
         .map(|&e| (e - mean_eigenvalue).powi(2))
         .sum::<f64>()
-        / _eigenvalues.len()  as f64;
+        / _eigenvalues.len() as f64;
     let near_zero_count = _eigenvalues.iter().filter(|&&e| e < 1e-10).count();
 
     EigenvalueDistribution {
@@ -1105,8 +1106,8 @@ fn generate_multiscale_test_signal(_length: usize) -> SignalResult<Array1<f64>> 
 
     // Add components at different scales
     for scale in 1..=4 {
-        let freq = 0.02 * scale  as f64;
-        let amplitude = 1.0 / scale  as f64;
+        let freq = 0.02 * scale as f64;
+        let amplitude = 1.0 / scale as f64;
         for i in 0.._length {
             signal[i] += amplitude * (2.0 * std::f64::consts::PI * freq * i as f64).sin();
         }
@@ -1176,8 +1177,8 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> SignalResult<f64> {
     }
 
     // Compute means
-    let mean_x = x.iter().take(n).sum::<f64>() / n  as f64;
-    let mean_y = y.iter().take(n).sum::<f64>() / n  as f64;
+    let mean_x = x.iter().take(n).sum::<f64>() / n as f64;
+    let mean_y = y.iter().take(n).sum::<f64>() / n as f64;
 
     // Compute covariance and variances
     let mut covariance = 0.0;
@@ -1193,9 +1194,9 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> SignalResult<f64> {
         var_y += dy * dy;
     }
 
-    covariance /= n  as f64;
-    var_x /= n  as f64;
-    var_y /= n  as f64;
+    covariance /= n as f64;
+    var_x /= n as f64;
+    var_y /= n as f64;
 
     // Compute correlation coefficient
     let denominator = (var_x * var_y).sqrt();
@@ -1210,12 +1211,12 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> SignalResult<f64> {
 fn compute_scale_consistency(_scale_energies: &[f64]) -> f64 {
     // Measure how consistently energy is distributed across scales
     let total_energy: f64 = _scale_energies.iter().sum();
-    let mean_energy = total_energy / _scale_energies.len()  as f64;
+    let mean_energy = total_energy / _scale_energies.len() as f64;
     let variance = _scale_energies
         .iter()
         .map(|&e| (e - mean_energy).powi(2))
         .sum::<f64>()
-        / _scale_energies.len()  as f64;
+        / _scale_energies.len() as f64;
 
     (-variance / (mean_energy * mean_energy + 1e-15)).exp()
 }
@@ -1282,7 +1283,7 @@ fn analyze_error_distribution(_errors: &[f64]) -> ErrorDistribution {
         };
     }
 
-    let n = _errors.len()  as f64;
+    let n = _errors.len() as f64;
     let mean_error = _errors.iter().sum::<f64>() / n;
 
     // Compute central moments
@@ -1347,12 +1348,12 @@ fn compute_confidence_intervals(
 
     // Energy conservation confidence interval
     let energy_conservation_ci = if !energy_ratios.is_empty() {
-        let mean = energy_ratios.iter().sum::<f64>() / energy_ratios.len()  as f64;
+        let mean = energy_ratios.iter().sum::<f64>() / energy_ratios.len() as f64;
         let variance = energy_ratios
             .iter()
             .map(|&x| (x - mean).powi(2))
             .sum::<f64>()
-            / energy_ratios.len()  as f64;
+            / energy_ratios.len() as f64;
         let std_error = (variance / energy_ratios.len() as f64).sqrt();
         let margin = z_score * std_error;
         (mean - margin, mean + margin)
@@ -1362,9 +1363,9 @@ fn compute_confidence_intervals(
 
     // Reconstruction error confidence interval
     let reconstruction_error_ci = if !errors.is_empty() {
-        let mean = errors.iter().sum::<f64>() / errors.len()  as f64;
+        let mean = errors.iter().sum::<f64>() / errors.len() as f64;
         let variance =
-            errors.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / errors.len()  as f64;
+            errors.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / errors.len() as f64;
         let std_error = (variance / errors.len() as f64).sqrt();
         let margin = z_score * std_error;
         (mean - margin, mean + margin)
@@ -1401,12 +1402,12 @@ fn run_hypothesis_tests(
 ) -> HypothesisTestResults {
     // Test 1: Perfect reconstruction (errors should be near zero)
     let perfect_reconstruction_pvalue = if !errors.is_empty() {
-        let mean_error = errors.iter().sum::<f64>() / errors.len()  as f64;
+        let mean_error = errors.iter().sum::<f64>() / errors.len() as f64;
         let error_variance = errors
             .iter()
             .map(|&e| (e - mean_error).powi(2))
             .sum::<f64>()
-            / errors.len()  as f64;
+            / errors.len() as f64;
 
         // One-sample t-test against zero
         let t_statistic = if error_variance > 1e-15 {
@@ -1432,8 +1433,11 @@ fn run_hypothesis_tests(
 
     // Test 2: Energy conservation (energy _ratios should be near 1)
     let energy_conservation_pvalue = if !energy_ratios.is_empty() {
-        let deviations: Vec<f64> = energy_ratios.iter().map((|&r| (r - 1.0) as f64).abs()).collect();
-        let mean_deviation = deviations.iter().sum::<f64>() / deviations.len()  as f64;
+        let deviations: Vec<f64> = energy_ratios
+            .iter()
+            .map((|&r| (r - 1.0) as f64).abs())
+            .collect();
+        let mean_deviation = deviations.iter().sum::<f64>() / deviations.len() as f64;
 
         // Test if mean deviation is significantly greater than tolerance
         if mean_deviation > tolerance * 5.0 {
@@ -1455,7 +1459,7 @@ fn run_hypothesis_tests(
             .iter()
             .map(|&r| (r - 1.0).powi(2))
             .sum::<f64>()
-            / energy_ratios.len()  as f64;
+            / energy_ratios.len() as f64;
 
         // High variance indicates poor orthogonality
         if variance > tolerance.powi(2) * 100.0 {
@@ -1496,7 +1500,8 @@ fn run_hypothesis_tests(
 
 #[allow(dead_code)]
 fn run_bootstrap_validation(
-    _errors: &[f64], _config: &ComprehensiveWptValidationConfig,
+    _errors: &[f64],
+    _config: &ComprehensiveWptValidationConfig,
 ) -> BootstrapValidation {
     // Placeholder implementation
     BootstrapValidation {
@@ -1554,7 +1559,7 @@ fn test_wavelet_consistency(_config: &ComprehensiveWptValidationConfig) -> Signa
             .map(|(&orig, &recon)| (orig - recon).powi(2))
             .sum::<f64>()
             .sqrt()
-            / signal.len()  as f64;
+            / signal.len() as f64;
 
         let reconstruction_score = (1.0 - reconstruction_error * 1000.0).max(0.0);
 
@@ -1569,12 +1574,12 @@ fn test_wavelet_consistency(_config: &ComprehensiveWptValidationConfig) -> Signa
 
     // Calculate consistency as the minimum score (worst case)
     // and variance (consistency across wavelets)
-    let mean_score = consistency_scores.iter().sum::<f64>() / consistency_scores.len()  as f64;
+    let mean_score = consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
     let variance = consistency_scores
         .iter()
         .map(|&score| (score - mean_score).powi(2))
         .sum::<f64>()
-        / consistency_scores.len()  as f64;
+        / consistency_scores.len() as f64;
 
     // High variance indicates inconsistency
     let consistency_penalty = (variance * 10.0).min(1.0);
@@ -1603,7 +1608,7 @@ fn test_signal_type_consistency(_config: &ComprehensiveWptValidationConfig) -> S
     // 3. Test with chirp signal (non-stationary)
     let chirp_signal: Vec<f64> = (0..signal_length)
         .map(|i| {
-            let t = i as f64 / signal_length  as f64;
+            let t = i as f64 / signal_length as f64;
             (2.0 * std::f64::consts::PI * t * (1.0 + 5.0 * t)).sin()
         })
         .collect();
@@ -1662,9 +1667,9 @@ fn test_signal_type_consistency(_config: &ComprehensiveWptValidationConfig) -> S
             .zip(reconstructed.iter())
             .map(|(&orig, &recon)| (orig - recon).powi(2))
             .sum::<f64>()
-            / signal.len()  as f64;
+            / signal.len() as f64;
 
-        let signal_power = original_energy / signal.len()  as f64;
+        let signal_power = original_energy / signal.len() as f64;
         let snr = if mse > 1e-12 && signal_power > 1e-12 {
             (signal_power / mse).log10() * 10.0
         } else {
@@ -1723,7 +1728,7 @@ fn test_signal_type_consistency(_config: &ComprehensiveWptValidationConfig) -> S
     }
 
     // Calculate overall consistency score
-    let mean_score = signal_scores.iter().sum::<f64>() / signal_scores.len()  as f64;
+    let mean_score = signal_scores.iter().sum::<f64>() / signal_scores.len() as f64;
     let min_score = signal_scores.iter().cloned().fold(1.0, f64::min);
 
     // Penalize if any signal type performs very poorly
@@ -1782,7 +1787,7 @@ fn test_extreme_conditions(_config: &ComprehensiveWptValidationConfig) -> Signal
                 .zip(reconstructed.iter())
                 .map(|(&orig, &recon)| (orig - recon).abs())
                 .sum::<f64>()
-                / tiny_signal.len()  as f64;
+                / tiny_signal.len() as f64;
             condition_scores.push((1.0 - error.min(1.0)).max(0.0));
         } else {
             condition_scores.push(0.0);
@@ -1803,7 +1808,7 @@ fn test_extreme_conditions(_config: &ComprehensiveWptValidationConfig) -> Signal
                 .zip(reconstructed.iter())
                 .map(|(&orig, &recon)| (orig - recon).powi(2))
                 .sum::<f64>()
-                / large_signal.len()  as f64;
+                / large_signal.len() as f64;
             let score = if mse < 1e-10 {
                 1.0
             } else {
@@ -1826,7 +1831,7 @@ fn test_extreme_conditions(_config: &ComprehensiveWptValidationConfig) -> Signal
                 .zip(reconstructed.iter())
                 .map(|(&orig, &recon)| (orig - recon).abs())
                 .sum::<f64>()
-                / constant_signal.len()  as f64;
+                / constant_signal.len() as f64;
             condition_scores.push((1.0 - error.min(1.0)).max(0.0));
         } else {
             condition_scores.push(0.0);
@@ -1902,7 +1907,7 @@ fn test_extreme_conditions(_config: &ComprehensiveWptValidationConfig) -> Signal
                     }
                 })
                 .sum::<f64>()
-                / tiny_values.len()  as f64;
+                / tiny_values.len() as f64;
             condition_scores.push((1.0 - relative_error.min(1.0)).max(0.0));
         } else {
             condition_scores.push(0.0);
@@ -1923,7 +1928,7 @@ fn test_extreme_conditions(_config: &ComprehensiveWptValidationConfig) -> Signal
                 .zip(reconstructed.iter())
                 .map(|(&orig, &recon)| ((orig - recon) / orig).abs())
                 .sum::<f64>()
-                / large_values.len()  as f64;
+                / large_values.len() as f64;
             condition_scores.push((1.0 - relative_error.min(1.0)).max(0.0));
         } else {
             condition_scores.push(0.0);
@@ -1941,7 +1946,7 @@ fn test_extreme_conditions(_config: &ComprehensiveWptValidationConfig) -> Signal
     let geometric_mean = condition_scores.iter()
         .map(|&score| score.max(1e-6).ln()) // Avoid log(0)
         .sum::<f64>()
-        / condition_scores.len()  as f64;
+        / condition_scores.len() as f64;
 
     let final_score = geometric_mean.exp().min(1.0);
 

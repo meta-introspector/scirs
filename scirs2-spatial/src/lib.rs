@@ -147,9 +147,9 @@
 // println!("Large alpha boundary edges: {}", boundary_large.len());
 //
 // // Find optimal alpha automatically
-// let (optimal_alpha, optimal_shape) = AlphaShape::find_optimal_alpha(&points, "area").unwrap();
+// let (optimal_alpha, optimalshape) = AlphaShape::find_optimal_alpha(&points, "area").unwrap();
 // println!("Optimal alpha: {:.3}", optimal_alpha);
-// println!("Shape area: {:.3}", optimal_shape.measure().unwrap());
+// println!("Shape area: {:.3}", optimalshape.measure().unwrap());
 // ```
 //
 // ### Halfspace Intersection
@@ -705,8 +705,8 @@ pub mod convex_hull;
 pub use convex_hull::{convex_hull, ConvexHull};
 
 // Alpha shapes
-pub mod alpha_shapes;
-pub use alpha_shapes::AlphaShape;
+pub mod alphashapes;
+pub use alphashapes::AlphaShape;
 
 // Halfspace intersection
 pub mod halfspace;

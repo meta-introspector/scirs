@@ -1,8 +1,8 @@
-//! Memory-efficient signal processing algorithms
-//!
-//! This module provides memory-optimized implementations for processing
-//! large signals that may not fit entirely in memory, using streaming
-//! algorithms, chunked processing, and advanced memory management.
+// Memory-efficient signal processing algorithms
+//
+// This module provides memory-optimized implementations for processing
+// large signals that may not fit entirely in memory, using streaming
+// algorithms, chunked processing, and advanced memory management.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
@@ -229,7 +229,7 @@ fn compute_fft_chunk(_data: &[f64], _chunk_size: usize) -> SignalResult<Vec<f64>
         let mut imag = 0.0;
 
         for j in 0..n {
-            let angle = -2.0 * PI * (k * j) as f64 / n  as f64;
+            let angle = -2.0 * PI * (k * j) as f64 / n as f64;
             real += signal[j] * angle.cos();
             imag += signal[j] * angle.sin();
         }
@@ -558,7 +558,7 @@ where
 
     // Normalize correlation values
     for val in &mut correlation_values {
-        *val /= sample_count  as f64;
+        *val /= sample_count as f64;
     }
 
     let lags: Vec<i32> = (-(max_lag as i32)..=(max_lag as i32)).collect();

@@ -838,7 +838,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
 
     fn update_vqe_parameters(
         &mut self,
-        parameters: &mut [f64], _energy: F_matrix: &ArrayView2<F>,
+        parameters: &mut [f64], _energy: F, matrix: &ArrayView2<F>,
     ) -> Result<()> {
         // Simplified parameter update using finite differences
         let learning_rate = 0.01;

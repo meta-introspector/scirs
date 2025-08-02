@@ -109,7 +109,7 @@ impl<
 {
     fn on_event(
         &mut self,
-        timing: scirs2_neural: callbacks::CallbackTiming,
+        timing: scirs2, neural: callbacks::CallbackTiming,
         context: &mut scirs2_neural::callbacks::CallbackContext<F>,
     ) -> scirs2_neural::error::Result<()> {
         // We only want to compute metrics after each epoch

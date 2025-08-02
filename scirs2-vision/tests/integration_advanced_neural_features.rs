@@ -328,7 +328,7 @@ fn test_advanced_features_error_handling() -> Result<()> {
 #[allow(dead_code)]
 fn create_test_image(_size: (usize, usize)) -> Array2<f32> {
     let (height, width) = _size;
-    Array2::from_shape_fn((height, width), |(y, x)| {
+    Array2::fromshape_fn((height, width), |(y, x)| {
         let fx = x as f32 / width as f32;
         let fy = y as f32 / height as f32;
 
@@ -387,7 +387,7 @@ fn create_synthetic_detections(_frame_idx: usize) -> Vec<Detection> {
         let bbox = TrackingBoundingBox::new(x, y, 40.0, 60.0, 0.8, obj_id);
 
         // Synthetic appearance feature
-        let feature = Array1::from_shape_fn(128, |i| {
+        let feature = Array1::fromshape_fn(128, |i| {
             ((obj_id as f32 + i as f32) * 0.1).sin() * 0.5 + 0.5
         });
 

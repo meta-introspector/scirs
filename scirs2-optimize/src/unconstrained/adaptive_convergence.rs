@@ -95,7 +95,7 @@ impl AdaptiveToleranceState {
             gradient_scale: 1.0,
             stagnant_nit: 0,
             problem_dim,
-            _options,
+            options: _options,
         }
     }
 

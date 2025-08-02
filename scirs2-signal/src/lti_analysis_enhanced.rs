@@ -1,17 +1,18 @@
-//! Enhanced LTI system analysis with controllability and observability
-//!
-//! This module provides comprehensive analysis tools for linear time-invariant
-//! systems including controllability, observability, stability analysis, and
-//! advanced system properties.
+use ndarray::s;
+// Enhanced LTI system analysis with controllability and observability
+//
+// This module provides comprehensive analysis tools for linear time-invariant
+// systems including controllability, observability, stability analysis, and
+// advanced system properties.
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::StateSpace;
-use ndarray::{Array1, Array2, array, s};
-use num__complex::Complex64;
-use rand::Rng;
+use ndarray::{array, Array1, Array2};
+use num_complex::Complex64;
 use rand::prelude::*;
-use scirs2_core::validation::{check_finite, check_shape};
-use scirs2__linalg::{eig, eigh, inv, matrix_norm, solve, svd};
+use rand::Rng;
+use scirs2_core::validation::{check_finite, checkshape};
+use scirs2_linalg::{eig, eigh, inv, matrix_norm, solve, svd};
 use std::f64::consts::PI;
 
 #[allow(unused_imports)]
@@ -26,7 +27,7 @@ fn vec_to_array2(_vec: &[f64], rows: usize, cols: usize) -> SignalResult<Array2<
             cols
         )));
     }
-    Ok(Array2::from_shape_vec((rows, cols), _vec.to_vec())
+    Ok(Array2::fromshape_vec((rows, cols), _vec.to_vec())
         .map_err(|e| SignalError::ComputationError(format!("Array creation failed: {}", e)))?)
 }
 
@@ -468,7 +469,7 @@ fn solve_continuous_lyapunov(a: &Array2<f64>, q: &Array2<f64>) -> SignalResult<A
     })?;
 
     // Reshape to matrix
-    Ok(Array2::from_shape_vec((n, n), x_vec.to_vec())?)
+    Ok(Array2::fromshape_vec((n, n), x_vec.to_vec())?)
 }
 
 /// Kronecker product
@@ -1020,10 +1021,10 @@ fn validate_state_space(_ss: &StateSpace) -> SignalResult<()> {
     let p = _ss.n_outputs;
 
     // Check dimensions
-    check_shape(&_ss.a, (n, n), "A matrix")?;
-    check_shape(&_ss.b, (n, m), "B matrix")?;
-    check_shape(&_ss.c, (p, n), "C matrix")?;
-    check_shape(&_ss.d, (p, m), "D matrix")?;
+    checkshape(&_ss.a, (n, n), "A matrix")?;
+    checkshape(&_ss.b, (n, m), "B matrix")?;
+    checkshape(&_ss.c, (p, n), "C matrix")?;
+    checkshape(&_ss.d, (p, m), "D matrix")?;
 
     // Check finite values
     check_finite(&_ss.a.as_slice().unwrap(), "A matrix")?;
@@ -1040,7 +1041,7 @@ pub fn controllability_canonical_form(_ss: &StateSpace) -> SignalResult<(StateSp
     let ctrl_matrix = build_controllability_matrix(&_ss.a, &_ss.b)?;
 
     // Find transformation matrix
-    let (u, s, vt) = svd(&ctrl_matrix.view(), true, None)
+    let (u, vt) = svd(&ctrl_matrix.view(), true, None)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
     let u = u.unwrap();
@@ -1080,7 +1081,7 @@ pub fn observability_canonical_form(_ss: &StateSpace) -> SignalResult<(StateSpac
     let obs_matrix = build_observability_matrix(&_ss.a, &_ss.c)?;
 
     // Find transformation matrix
-    let (u, s, vt) = svd(&obs_matrix.view(), true, None)
+    let (u, vt) = svd(&obs_matrix.view(), true, None)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
     let vt = vt.unwrap();
@@ -1703,9 +1704,9 @@ fn analyze_controllability_uncertainty(
     let confidence_interval = (measures[ci_lower_idx], measures[ci_upper_idx]);
 
     // Standard deviation
-    let mean: f64 = measures.iter().sum::<f64>() / measures.len()  as f64;
+    let mean: f64 = measures.iter().sum::<f64>() / measures.len() as f64;
     let variance: f64 =
-        measures.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / measures.len()  as f64;
+        measures.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / measures.len() as f64;
     let standard_deviation = variance.sqrt();
 
     Ok(UncertaintyBounds {

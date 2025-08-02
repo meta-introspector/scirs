@@ -1,19 +1,20 @@
-//! Advanced parametric spectral estimation methods
-//!
-//! This module provides state-of-the-art parametric spectral estimation including:
-//! - Vector autoregressive (VAR) models for multivariate signals
-//! - Kalman filter-based adaptive parameter estimation
-//! - Spectral factorization methods
-//! - High-resolution spectral estimation (MUSIC, ESPRIT)
-//! - Regularized parameter estimation for ill-conditioned problems
-//! - Cross-spectral density estimation for multi-channel signals
+use ndarray::s;
+// Advanced parametric spectral estimation methods
+//
+// This module provides state-of-the-art parametric spectral estimation including:
+// - Vector autoregressive (VAR) models for multivariate signals
+// - Kalman filter-based adaptive parameter estimation
+// - Spectral factorization methods
+// - High-resolution spectral estimation (MUSIC, ESPRIT)
+// - Regularized parameter estimation for ill-conditioned problems
+// - Cross-spectral density estimation for multi-channel signals
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Axis, s};
-use num__complex::Complex64;
+use ndarray::{ Array1, Array2, Axis};
+use num_complex::Complex64;
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::{check_finite, check_shape};
+use scirs2_core::validation::{check_finite, checkshape};
 use std::f64::consts::PI;
 
 #[allow(unused_imports)]
@@ -131,7 +132,7 @@ pub fn estimate_var_model(
         ));
     }
 
-    check_shape(data, (Some(n_vars), Some(n_obs)), "data")?;
+    checkshape(data, (Some(n_vars), Some(n_obs)), "data")?;
 
     // Check for finite values
     for i in 0..n_vars {
@@ -463,7 +464,7 @@ fn compute_covariance_matrix(_residuals: &Array2<f64>) -> SignalResult<Array2<f6
             for t in 0..n_obs {
                 cov += _residuals[[i, t]] * _residuals[[j, t]];
             }
-            cov_matrix[[i, j]] = cov / (n_obs - 1)  as f64;
+            cov_matrix[[i, j]] = cov / (n_obs - 1) as f64;
         }
     }
 
@@ -662,7 +663,10 @@ fn estimate_covariance_matrix_fb(
 
 /// ESPRIT (Estimation of Signal Parameters via Rotational Invariance Techniques)
 #[allow(dead_code)]
-fn esprit_estimation(_signal: &Array1<f64>, n_signals: usize) -> SignalResult<HighResolutionResult> {
+fn esprit_estimation(
+    _signal: &Array1<f64>,
+    n_signals: usize,
+) -> SignalResult<HighResolutionResult> {
     let n = _signal.len();
     let model_order = (n / 3).min(50);
 

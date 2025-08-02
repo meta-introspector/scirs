@@ -21,7 +21,7 @@ enum ConfigFormat {
 // Local implementations for serialization
 struct ConfigSerializer;
 impl ConfigSerializer {
-    fn to_json(_config: &ModelConfig_pretty: bool) -> Result<String> {
+    fn to_json(_config: &ModelConfig, pretty: bool) -> Result<String> {
         Ok(String::from("{\"\": \"Mock JSON\"}\n"))
     fn to_yaml(_config: &ModelConfig) -> Result<String> {
         Ok(String::from("mock: YAML\n"))

@@ -73,17 +73,17 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
                 )));
             }
         // Initialize weights with standard distribution
-        let weight_shape = IxDyn(&[config.num_embeddings, config.embedding_dim]);
+        let weightshape = IxDyn(&[config.num_embeddings, config.embedding_dim]);
         // Use standard distribution and scale it
         let mut rng = rng();
-        let mut weight = Array::from_shape_fn(weight_shape.clone(), |_| {
+        let mut weight = Array::fromshape_fn(weightshape.clone(), |_| {
             let value: f64 = rng.random::<f64>();
             // Scale to approximate normal distribution N(0, 1)
             let scaled_value = (value * 2.0 - 1.0) * 0.5;
             F::from(scaled_value).unwrap()
         });
         // Initialize gradients with zeros
-        let weight_grad = Array::zeros(weight_shape.clone());
+        let weight_grad = Array::zeros(weightshape.clone());
         // Set padding_idx embeddings to zero if specified
             let mut slice = weight.slice_mut(ndarray::s![idx, ..]);
             for item in slice.iter_mut() {
@@ -189,10 +189,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
             for &idx in indices.iter() {
                 counter[idx] += 1;
         // Create output array
-        let mut output_shape = Vec::with_capacity(indices.ndim() + 1);
-        output_shape.extend_from_slice(indices.shape());
-        output_shape.push(self.config.embedding_dim);
-        let mut output = Array::zeros(IxDyn(output_shape.as_slice()));
+        let mut outputshape = Vec::with_capacity(indices.ndim() + 1);
+        outputshape.extend_from_slice(indices.shape());
+        outputshape.push(self.config.embedding_dim);
+        let mut output = Array::zeros(IxDyn(outputshape.as_slice()));
         // Lookup embeddings
         let indices_flat = indices
             .view()
@@ -246,8 +246,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Embedding<F> {
         input: &Array<F, IxDyn>, _grad_output: &Array<F, IxDyn>,
         // Embedding has no meaningful upstream gradient since indices are discrete
         // Return zeros of the same shape as the input (indices)
-        let input_shape = &input.shape();
-        Ok(Array::zeros(IxDyn(input_shape)))
+        let inputshape = &input.shape();
+        Ok(Array::zeros(IxDyn(inputshape)))
     fn update(&mut self, learning_rate: F) -> Result<()> {
         // Update weights using accumulated gradients
         let lr = learning_rate;
@@ -287,9 +287,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> PositionalEmbedding<F> {
         if embedding_dim == 0 {
         if learned {
             // Initialize learned positional embeddings
-            let weight_shape = IxDyn(&[_max_seq_length, embedding_dim]);
-            let weight = Some(initializers::xavier_uniform::<F>(weight_shape.clone())?);
-            let weight_grad = Some(Array::zeros(weight_shape));
+            let weightshape = IxDyn(&[_max_seq_length, embedding_dim]);
+            let weight = Some(initializers::xavier_uniform::<F>(weightshape.clone())?);
+            let weight_grad = Some(Array::zeros(weightshape));
             Ok(Self {
                 _max_seq_length,
                 embedding_dim,
@@ -346,13 +346,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for PositionalEmbe
             // Need to broadcast positional embeddings to match input shape
             let mut output = input.clone();
             // Iterate over all batch elements and add positional embeddings
-            let batch_shape = &input.shape()[..seq_dim];
-            let batch_size: usize = batch_shape.iter().product();
+            let batchshape = &input.shape()[..seq_dim];
+            let batch_size: usize = batchshape.iter().product();
             for batch_idx in 0..batch_size {
                 // Calculate the multi-dimensional batch index
                 let mut multi_idx = Vec::with_capacity(seq_dim);
                 let mut remaining = batch_idx;
-                for &dim in batch_shape.iter().rev() {
+                for &dim in batchshape.iter().rev() {
                     multi_idx.push(remaining % dim);
                     remaining /= dim;
                 multi_idx.reverse();
@@ -431,9 +431,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> PatchEmbedding<F> {
         let _num_patches = n_h * n_w;
         // Initialize weights and bias
         // Weight shape: [embedding_dim, in_channels * patch_size.0 * patch_size.1]
-        let weight_shape = IxDyn(&[embedding_dim, in_channels * patch_size.0 * patch_size.1]);
-        let weight = initializers::xavier_uniform::<F>(weight_shape.clone())?;
-        let weight_grad = Arc::new(RwLock::new(Array::zeros(weight_shape)));
+        let weightshape = IxDyn(&[embedding_dim, in_channels * patch_size.0 * patch_size.1]);
+        let weight = initializers::xavier_uniform::<F>(weightshape.clone())?;
+        let weight_grad = Arc::new(RwLock::new(Array::zeros(weightshape)));
         // Bias and its gradient
         let (bias, bias_grad) = if use_bias {
             let bias = Some(Array::zeros(IxDyn(&[embedding_dim])));
@@ -642,7 +642,7 @@ mod tests {
         assert!(pos_emb_learned.weight.is_some());
         assert_eq!(pos_emb_learned.weight.as_ref().unwrap().shape(), &[10, 8]);
         // Create dummy input
-        let input = Array::from_shape_fn(IxDyn(&[2, 5, 8]), |_| 1.0f32);
+        let input = Array::fromshape_fn(IxDyn(&[2, 5, 8]), |_| 1.0f32);
         let output = pos_emb_learned.forward(&input).unwrap();
         assert_eq!(output.shape(), &[2, 5, 8]);
         // Test fixed sinusoidal positional embeddings
@@ -660,7 +660,7 @@ mod tests {
         assert_eq!(patch_emb.num_patches(), 16); // 4x4 patches of 8x8 in a 32x32 image
         // Create random input
         let mut rand_gen = rng();
-        let input = Array::from_shape_fn(IxDyn(&[2, 3, 32, 32]), |_| rand_gen.random::<f32>());
+        let input = Array::fromshape_fn(IxDyn(&[2, 3, 32, 32]), |_| rand_gen.random::<f32>());
         let output = patch_emb.forward(&input).unwrap();
         // Check output shape [batch_size, num_patches, embedding_dim]
         assert_eq!(output.shape(), &[2, 16, 96]);

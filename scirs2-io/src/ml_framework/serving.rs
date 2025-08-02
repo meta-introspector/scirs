@@ -1,7 +1,7 @@
 //! Model serving capabilities with REST API and gRPC support
 
 use crate::error::{IoError, Result};
-use crate::ml_framework::{MLModel, MLTensor, TensorMetadata, DataType};
+use crate::ml_framework::{DataType, MLModel, MLTensor, TensorMetadata};
 use ndarray::{ArrayD, IxDyn};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
@@ -463,8 +463,8 @@ impl ModelServer {
                 .unwrap_or_else(|| "Unknown".to_string()),
             framework: model.metadata.framework.clone(),
             version: model.metadata.model_version.clone(),
-            input_shapes: model.metadata.input_shapes.clone(),
-            output_shapes: model.metadata.output_shapes.clone(),
+            inputshapes: model.metadata.inputshapes.clone(),
+            outputshapes: model.metadata.outputshapes.clone(),
             parameters: model.weights.len(),
             loaded_at: Instant::now(), // Simplified
         }
@@ -495,8 +495,8 @@ pub struct ModelInfo {
     pub name: String,
     pub framework: String,
     pub version: Option<String>,
-    pub input_shapes: HashMap<String, Vec<usize>>,
-    pub output_shapes: HashMap<String, Vec<usize>>,
+    pub inputshapes: HashMap<String, Vec<usize>>,
+    pub outputshapes: HashMap<String, Vec<usize>>,
     pub parameters: usize,
     pub loaded_at: Instant,
 }
@@ -560,7 +560,7 @@ pub mod rest {
         shape: Vec<usize>,
         name: Option<String>,
     ) -> Result<MLTensor> {
-        let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
+        let array = ArrayD::fromshape_vec(IxDyn(&shape), data)
             .map_err(|e| IoError::Other(e.to_string()))?;
         Ok(MLTensor::new(array, name))
     }
@@ -631,7 +631,7 @@ pub mod grpc {
             })
             .collect();
 
-        let array = ArrayD::from_shape_vec(IxDyn(&shape), float_data)
+        let array = ArrayD::fromshape_vec(IxDyn(&shape), float_data)
             .map_err(|e| IoError::Other(e.to_string()))?;
 
         Ok(MLTensor::new(array, Some(grpc_tensor.name.clone())))

@@ -9,7 +9,6 @@ use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{Distribution as RandDistribution, Poisson as RandPoisson};
-use statrs::statistics::Statistics;
 
 /// Poisson distribution structure
 pub struct Poisson<F: Float> {

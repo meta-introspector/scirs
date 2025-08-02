@@ -590,7 +590,7 @@ where
     /// Create a local linear trend model
     pub fn local_linear_trend(_sigma_level: F, sigma_trend: F, sigma_obs: F) -> Result<Self> {
         // State: [_level_trend]
-        let transition_matrix = Array2::from_shape_vec(
+        let transition_matrix = Array2::fromshape_vec(
             (2, 2),
             vec![F::one(), F::one(), F::zero(), F::one()],
         )
@@ -598,7 +598,7 @@ where
             TimeSeriesError::InvalidInput(format!("Failed to create transition matrix: {e}"))
         })?;
 
-        let process_noise = Array2::from_shape_vec(
+        let process_noise = Array2::fromshape_vec(
             (2, 2),
             vec![
                 sigma_level * sigma_level,
@@ -617,7 +617,7 @@ where
         };
 
         let observation = ObservationModel {
-            observation_matrix: Array2::from_shape_vec((1, 2), vec![F::one(), F::zero()]).map_err(
+            observation_matrix: Array2::fromshape_vec((1, 2), vec![F::one(), F::zero()]).map_err(
                 |e| {
                     TimeSeriesError::InvalidInput(format!(
                         "Failed to create observation matrix: {e}"
@@ -926,7 +926,7 @@ where
 
         Ok(Self {
             _level: Some(level_transition),
-            trend: None_seasonal: Some(seasonal_transition),
+            trend: None, seasonal: Some(seasonal_transition),
             observation,
         })
     }

@@ -1,60 +1,60 @@
-//! Comprehensive Streaming Signal Processing Framework
-//!
-//! This module provides a unified framework for real-time signal processing
-//! that combines multiple streaming capabilities including filtering, spectral
-//! analysis, feature extraction, and adaptive processing.
-//!
-//! ## Features
-//!
-//! - **Real-time Filtering**: Low-latency IIR and FIR filtering
-//! - **Streaming Spectral Analysis**: STFT, spectrograms, and power spectral density
-//! - **Feature Extraction**: Real-time extraction of signal features
-//! - **Adaptive Processing**: Dynamic parameter adjustment based on signal characteristics
-//! - **Multi-channel Support**: Simultaneous processing of multiple signals
-//! - **Memory Efficient**: Bounded memory usage with configurable buffer sizes
-//! - **Low Latency**: Optimized for real-time applications
-//!
-//! ## Example Usage
-//!
-//! ```rust
-//! use ndarray::Array1;
-//! use scirs2__signal::streaming::{StreamingProcessor, StreamingConfig};
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!
-//! // Configure streaming processor
-//! let config = StreamingConfig {
-//!     sample_rate: 44100.0,
-//!     buffer_size: 512,
-//!     enable_spectral_analysis: true,
-//!     enable_feature_extraction: true,
-//!     ..Default::default()
-//! };
-//!
-//! let mut processor = StreamingProcessor::new(config)?;
-//!
-//! // Process real-time audio
-//! let audio_frame = Array1::from_vec(vec![0.0; 512]);
-//! let result = processor.process_frame(&audio_frame)?;
-//!
-//! println!("RMS: {:.3}", result.features.rms);
-//! println!("Spectral centroid: {:.3}", result.features.spectral_centroid);
-//! # Ok(())
-//! # }
-//! ```
+// Comprehensive Streaming Signal Processing Framework
+//
+// This module provides a unified framework for real-time signal processing
+// that combines multiple streaming capabilities including filtering, spectral
+// analysis, feature extraction, and adaptive processing.
+//
+// ## Features
+//
+// - **Real-time Filtering**: Low-latency IIR and FIR filtering
+// - **Streaming Spectral Analysis**: STFT, spectrograms, and power spectral density
+// - **Feature Extraction**: Real-time extraction of signal features
+// - **Adaptive Processing**: Dynamic parameter adjustment based on signal characteristics
+// - **Multi-channel Support**: Simultaneous processing of multiple signals
+// - **Memory Efficient**: Bounded memory usage with configurable buffer sizes
+// - **Low Latency**: Optimized for real-time applications
+//
+// ## Example Usage
+//
+// ```rust
+// use ndarray::Array1;
+// use scirs2_signal::streaming::{StreamingProcessor, StreamingConfig};
+// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//
+// // Configure streaming processor
+// let config = StreamingConfig {
+//     sample_rate: 44100.0,
+//     buffer_size: 512,
+//     enable_spectral_analysis: true,
+//     enable_feature_extraction: true,
+//     ..Default::default()
+// };
+//
+// let mut processor = StreamingProcessor::new(config)?;
+//
+// // Process real-time audio
+// let audio_frame = Array1::from_vec(vec![0.0; 512]);
+// let result = processor.process_frame(&audio_frame)?;
+//
+// println!("RMS: {:.3}", result.features.rms);
+// println!("Spectral centroid: {:.3}", result.features.spectral_centroid);
+// # Ok(())
+// # }
+// ```
 
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle__enhanced::WindowType;
-use crate::streaming__stft::{StreamingStft, StreamingStftConfig};
+use crate::lombscargle_enhanced::WindowType;
+use crate::streaming_stft::{StreamingStft, StreamingStftConfig};
+use crate::utilities::spectral::spectral_centroid;
+use crate::utilities::spectral::spectral_flux;
+use crate::utilities::spectral::spectral_rolloff;
 use ndarray::{Array1, Array2};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
 use statrs::statistics::Statistics;
 use std::collections::VecDeque;
 use std::f64::consts::PI;
-use crate::utilities::spectral::spectral_flux;
-use crate::utilities::spectral::spectral_centroid;
-use crate::utilities::spectral::spectral_rolloff;
 
 #[allow(unused_imports)]
 // TODO: sosfilt_zi function not implemented yet
@@ -564,7 +564,7 @@ impl StreamingProcessor {
             let n_freq = spectrum.len();
             let fs = self.config.sample_rate;
             let frequencies =
-                Array1::from_shape_fn(n_freq, |i| i as f64 * fs / (2.0 * (n_freq - 1) as f64));
+                Array1::fromshape_fn(n_freq, |i| i as f64 * fs / (2.0 * (n_freq - 1) as f64));
 
             // Compute magnitude spectrum
             let magnitude = spectrum.mapv(|c| c.norm());
@@ -957,9 +957,9 @@ fn create_mel_filter_bank(
         for k in left..=right {
             if k < n_fft {
                 if k < center {
-                    filter_bank[[m, k]] = (k - left) as f64 / (center - left)  as f64;
+                    filter_bank[[m, k]] = (k - left) as f64 / (center - left) as f64;
                 } else {
-                    filter_bank[[m, k]] = (right - k) as f64 / (right - center)  as f64;
+                    filter_bank[[m, k]] = (right - k) as f64 / (right - center) as f64;
                 }
             }
         }
@@ -1084,7 +1084,7 @@ mod tests {
 
         let mut processor = StreamingProcessor::new(config).unwrap();
 
-        let input = Array2::from_shape_fn((256, 2), |(i, ch)| (i as f64 + ch as f64).sin());
+        let input = Array2::fromshape_fn((256, 2), |(i, ch)| (i as f64 + ch as f64).sin());
 
         let results = processor.process_multichannel(&input).unwrap();
         assert_eq!(results.len(), 2);

@@ -203,7 +203,7 @@ impl<F: crate::traits::InterpolationFloat> RegularGridInterpolator<F> {
     /// ).unwrap();
     ///
     /// // Interpolate at multiple points
-    /// let xi = Array2::from_shape_vec((3, 2), vec![
+    /// let xi = Array2::fromshape_vec((3, 2), vec![
     ///     0.5, 0.5,
     ///     1.0, 0.0,
     ///     1.5, 0.5,
@@ -615,7 +615,7 @@ impl<
     /// };
     ///
     /// // Create scattered 3D data
-    /// let points = Array2::from_shape_vec((5, 3), vec![
+    /// let points = Array2::fromshape_vec((5, 3), vec![
     ///     0.0, 0.0, 0.0,
     ///     1.0, 0.0, 0.0,
     ///     0.0, 1.0, 0.0,
@@ -653,11 +653,11 @@ impl<
         let params = match params {
             Some(p) => p,
             None => match method {
-                ScatteredInterpolationMethod::Nearest =>, ScatteredInterpolatorParams::None,
-                ScatteredInterpolationMethod::IDW =>, ScatteredInterpolatorParams::IDW {
+                ScatteredInterpolationMethod::Nearest => ScatteredInterpolatorParams::None,
+                ScatteredInterpolationMethod::IDW => ScatteredInterpolatorParams::IDW {
                     power: F::from_f64(2.0).unwrap(),
                 },
-                ScatteredInterpolationMethod::RBF =>, ScatteredInterpolatorParams::RBF {
+                ScatteredInterpolationMethod::RBF => ScatteredInterpolatorParams::RBF {
                     epsilon: F::from_f64(1.0).unwrap(),
                     rbf_type: RBFType::Multiquadric,
                 },
@@ -763,7 +763,7 @@ impl<
     fn idw_interpolate(&self, point: &ArrayView1<F>) -> InterpolateResult<F> {
         // Get the power parameter
         let power = match self.params {
-            ScatteredInterpolatorParams::IDW { power } => power_ =>, F::from_f64(2.0).unwrap(), // Default to 2.0 if wrong params
+            ScatteredInterpolatorParams::IDW { power } => power_ => F::from_f64(2.0).unwrap(), // Default to 2.0 if wrong params
         };
 
         let mut sum_weights = F::from_f64(0.0).unwrap();
@@ -848,7 +848,7 @@ impl<
 
         // Evaluate at the query point (reshape 1D point to 2D for RBF interface)
         let binding = point.to_owned();
-        let point_2d = binding.to_shape((1, point.len())).unwrap();
+        let point_2d = binding.toshape((1, point.len())).unwrap();
         let result = rbf.evaluate(&point_2d.view())?;
         Ok(result[0])
     }
@@ -905,7 +905,7 @@ impl<
 ///
 /// // Interpolate at a point
 /// use ndarray::Array2;
-/// let points_to_interp = Array2::from_shape_vec((1, 2), vec![1.5, 2.5]).unwrap();
+/// let points_to_interp = Array2::fromshape_vec((1, 2), vec![1.5, 2.5]).unwrap();
 /// let result = interp.__call__(&points_to_interp.view()).unwrap();
 /// assert!((result[0] - 9.0).abs() < 1e-10);
 /// ```
@@ -976,8 +976,8 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
         RegularGridInterpolator::new(old_grid, old_values, method, ExtrapolateMode::Error)?;
 
     // Determine the shape of the output array
-    let out_shape: Vec<usize> = new_grid.iter().map(|x| x.len()).collect();
-    let n_dims = out_shape.len();
+    let outshape: Vec<usize> = new_grid.iter().map(|x| x.len()).collect();
+    let n_dims = outshape.len();
 
     // Create meshgrid of coordinates
     let mut indices = vec![Vec::<F>::new(); n_dims];
@@ -996,7 +996,7 @@ pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
     let total_points: usize = shape.iter().product();
 
     // Create the output array
-    let mut out_values = Array::zeros(IxDyn(&out_shape));
+    let mut out_values = Array::zeros(IxDyn(&outshape));
 
     // Create a 2D array of all points to interpolate
     let mut points = Array2::zeros((total_points, n_dims));
@@ -1074,12 +1074,12 @@ mod tests {
         .unwrap();
 
         // Test interpolation at grid points
-        let grid_point = Array2::from_shape_vec((1, 2), vec![1.0, 2.0]).unwrap();
+        let grid_point = Array2::fromshape_vec((1, 2), vec![1.0, 2.0]).unwrap();
         let result = interp.__call__(&grid_point.view()).unwrap();
         assert_abs_diff_eq!(result[0], 5.0, epsilon = 1e-10);
 
         // Test interpolation at non-grid points
-        let non_grid_point = Array2::from_shape_vec((1, 2), vec![1.5, 2.5]).unwrap();
+        let non_grid_point = Array2::fromshape_vec((1, 2), vec![1.5, 2.5]).unwrap();
         let result = interp.__call__(&non_grid_point.view()).unwrap();
 
         // For point (1.5, 2.5):
@@ -1095,7 +1095,7 @@ mod tests {
         assert_abs_diff_eq!(result[0], 9.0, epsilon = 1e-10);
 
         // Test multiple points at once
-        let multiple_points = Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 2.0, 2.0]).unwrap();
+        let multiple_points = Array2::fromshape_vec((2, 2), vec![1.0, 1.0, 2.0, 2.0]).unwrap();
         let result = interp.__call__(&multiple_points.view()).unwrap();
         assert_abs_diff_eq!(result[0], 2.0, epsilon = 1e-10);
         assert_abs_diff_eq!(result[1], 8.0, epsilon = 1e-10);
@@ -1109,7 +1109,7 @@ mod tests {
         )
         .unwrap();
 
-        let point = Array2::from_shape_vec((1, 2), vec![1.6, 1.7]).unwrap();
+        let point = Array2::fromshape_vec((1, 2), vec![1.6, 1.7]).unwrap();
         let result = interp_nearest.__call__(&point.view()).unwrap();
         // Point (1.6, 1.7) is closest to grid point (2,2) which has value 8.0
         assert_abs_diff_eq!(result[0], 8.0, epsilon = 1e-10);
@@ -1118,7 +1118,7 @@ mod tests {
     #[test]
     fn test_scattered_interpolator() {
         // Create scattered points in 2D
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5],
         )
@@ -1138,7 +1138,7 @@ mod tests {
         .unwrap();
 
         // Test interpolation at a point
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.0]).unwrap();
+        let test_point = Array2::fromshape_vec((1, 2), vec![0.5, 0.0]).unwrap();
         let result = interp.__call__(&test_point.view()).unwrap();
         // Value should be between 0.0 and 1.0, closer to 0.5
         assert!(result[0] > 0.0 && result[0] < 1.0);
@@ -1153,7 +1153,7 @@ mod tests {
         )
         .unwrap();
 
-        let test_point = Array2::from_shape_vec((1, 2), vec![0.6, 0.6]).unwrap();
+        let test_point = Array2::fromshape_vec((1, 2), vec![0.6, 0.6]).unwrap();
         let result = interp_nearest.__call__(&test_point.view()).unwrap();
         assert_abs_diff_eq!(result[0], 0.5, epsilon = 1e-10); // Should pick the center point
     }

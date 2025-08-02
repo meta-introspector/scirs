@@ -460,7 +460,7 @@ fn generate_synthetic_images(
     images
 // Generate synthetic text descriptions
 #[allow(dead_code)]
-fn generate_synthetic_text(
+fn generate_synthetictext(
     _vocab_size: usize,
     max_len: usize,
 ) -> (Array2<usize>, HashMap<usize, String>) {
@@ -530,20 +530,20 @@ fn main() {
     let embedding_dim = 16;
     let hidden_size = 32;
     let num_classes = 3; // Square, Circle, Triangle
-    let max_text_len = 10;
+    let maxtext_len = 10;
     // Generate synthetic data
     println!("Generating synthetic data...");
     let images = generate_synthetic_images(_num_samples, image_channels, image_height, image_width);
-    let (text_data, word_map) = generate_synthetic_text(_num_samples, vocab_size, max_text_len);
+    let (text_data, word_map) = generate_synthetictext(_num_samples, vocab_size, maxtext_len);
     let (_, labels) = generate_labels(_num_samples, num_classes);
     // Split into train and test sets (80% train, 20% test)
     let train_size = (_num_samples as f32 * 0.8) as usize;
     let test_size = _num_samples - train_size;
     let train_images = images.slice(s![0..train_size, .., .., ..]).to_owned();
-    let train_text = text_data.slice(s![0..train_size, ..]).to_owned();
+    let traintext = text_data.slice(s![0..train_size, ..]).to_owned();
     let train_labels = labels.slice(s![0..train_size]).to_owned();
     let test_images = images.slice(s![train_size.., .., .., ..]).to_owned();
-    let test_text = text_data.slice(s![train_size.., ..]).to_owned();
+    let testtext = text_data.slice(s![train_size.., ..]).to_owned();
     let test_labels = labels.slice(s![train_size..]).to_owned();
     println!(
         "Created dataset with {} training and {} test samples",
@@ -561,12 +561,12 @@ fn main() {
         num_classes,
     // Forward pass with train data (evaluation only, no training in this example)
     println!("Running forward pass on training data...");
-    let train_preds = model.forward(&train_images, &train_text);
+    let train_preds = model.forward(&train_images, &traintext);
     let train_accuracy = calculate_accuracy(&train_preds, &train_labels);
     println!("Training accuracy: {:.2}%", train_accuracy * 100.0);
     // Forward pass with test data
     println!("\nRunning forward pass on test data...");
-    let test_preds = model.forward(&test_images, &test_text);
+    let test_preds = model.forward(&test_images, &testtext);
     let test_accuracy = calculate_accuracy(&test_preds, &test_labels);
     println!("Test accuracy: {:.2}%", test_accuracy * 100.0);
     // Show some example predictions
@@ -589,8 +589,8 @@ fn main() {
         let pred_class = match pred_class_idx {
         // Get text description
         let mut description = String::new();
-        for t in 0..max_text_len {
-            let word_idx = test_text[[i, t]];
+        for t in 0..maxtext_len {
+            let word_idx = testtext[[i, t]];
             if word_idx > 0 {
                 // Skip padding
                 if t > 0 {

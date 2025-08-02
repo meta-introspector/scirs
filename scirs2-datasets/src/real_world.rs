@@ -1327,7 +1327,7 @@ impl RealWorldDatasets {
         let mut target = Array1::zeros(n_samples);
 
         let feature_names = vec![
-            "cap_shape".to_string(),
+            "capshape".to_string(),
             "cap_surface".to_string(),
             "cap_color".to_string(),
             "bruises".to_string(),
@@ -1336,7 +1336,7 @@ impl RealWorldDatasets {
             "gill_spacing".to_string(),
             "gill_size".to_string(),
             "gill_color".to_string(),
-            "stalk_shape".to_string(),
+            "stalkshape".to_string(),
             "stalk_root".to_string(),
             "stalk_surface_above_ring".to_string(),
             "stalk_surface_below_ring".to_string(),

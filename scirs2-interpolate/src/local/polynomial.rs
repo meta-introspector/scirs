@@ -354,7 +354,7 @@ where
 
         // Filter out points with zero weight (if using compactly supported weight function)
         let effective_radius = match self.config.weight_fn {
-            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.config.bandwidth_ =>, F::infinity(),
+            WeightFunction::WendlandC2 | WeightFunction::CubicSpline => self.config.bandwidth_ => F::infinity(),
         };
 
         let mut indices = Vec::new();
@@ -413,7 +413,7 @@ where
                         F::zero()
                     }
                 }
-                WeightFunction::InverseDistance =>, F::one() / (self.config.epsilon + r * r),
+                WeightFunction::InverseDistance => F::one() / (self.config.epsilon + r * r),
                 WeightFunction::CubicSpline => {
                     if r < F::from_f64(1.0 / 3.0).unwrap() {
                         let r2 = r * r;

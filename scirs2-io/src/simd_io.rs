@@ -27,9 +27,12 @@ impl SimdIoProcessor {
 
         // Use parallel processing for large arrays
         if _input.len() > 1000 {
-            output.iter_mut().zip(_input.iter()).for_each(|(out, &inp)| {
-                *out = inp as f32;
-            });
+            output
+                .iter_mut()
+                .zip(_input.iter())
+                .for_each(|(out, &inp)| {
+                    *out = inp as f32;
+                });
         } else {
             // Use sequential processing for small arrays
             for (out, &inp) in output.iter_mut().zip(_input.iter()) {
@@ -610,7 +613,7 @@ pub mod matrix_simd {
     }
 
     /// Legacy transpose function with SIMD operations
-    pub fn transpose_simd<T: Copy + Default + Send + Sync>(_input: &ArrayView2<T>) -> Array2<T> {
+    pub fn transpose_simd<T: Copy + Default + Send + Sync>(input: &ArrayView2<T>) -> Array2<T> {
         let processor = CacheOptimizedMatrixProcessor::new();
         processor.transpose_advanced_fast(_input)
     }
@@ -759,18 +762,18 @@ pub mod binary_simd {
     use super::*;
 
     /// Fast memory copy using SIMD alignment
-    pub fn fast_memcopy(_src: &[u8], dst: &mut [u8]) -> Result<()> {
-        if _src.len() != dst.len() {
+    pub fn fast_memcopy(src: &[u8], dst: &mut [u8]) -> Result<()> {
+        if src.len() != dst.len() {
             return Err(IoError::ValidationError(
                 "Source and destination lengths don't match".to_string(),
             ));
         }
 
         // Use parallel copy for large arrays
-        if _src.len() > 4096 {
-            dst.iter_mut().zip(_src.iter()).for_each(|(d, &s)| *d = s);
+        if src.len() > 4096 {
+            dst.iter_mut().zip(src.iter()).for_each(|(d, &s)| *d = s);
         } else {
-            dst.copy_from_slice(_src);
+            dst.copy_from_slice(src);
         }
 
         Ok(())
@@ -1277,7 +1280,8 @@ impl SimdIoAccelerator {
 
     /// Accelerated file writing with SIMD preprocessing
     pub fn preprocess_and_write_f64(
-        data: &ArrayView1<f64>, _path: &std::path::Path,
+        data: &ArrayView1<f64>,
+        _path: &std::path::Path,
         preprocessor: impl Fn(&ArrayView1<f64>) -> Array1<f64>,
     ) -> Result<()> {
         let processed = preprocessor(data);
@@ -1365,7 +1369,7 @@ mod tests {
     #[test]
     fn test_simd_matrix_transpose() {
         let processor = AdvancedSimdProcessor::new();
-        let input = Array2::from_shape_fn((100, 80), |(i, j)| (i * 80 + j) as f64);
+        let input = Array2::fromshape_fn((100, 80), |(i, j)| (i * 80 + j) as f64);
         let result = processor.transpose_matrix_simd(&input.view());
 
         assert_eq!(result.dim(), (80, 100));
@@ -1388,7 +1392,7 @@ mod tests {
         let processor = matrix_simd::CacheOptimizedMatrixProcessor::new();
 
         // Test optimized transpose
-        let input = Array2::from_shape_fn((64, 48), |(i, j)| (i * 48 + j) as f64);
+        let input = Array2::fromshape_fn((64, 48), |(i, j)| (i * 48 + j) as f64);
         let result = processor.transpose_advanced_fast(&input.view());
 
         assert_eq!(result.dim(), (48, 64));
@@ -1400,8 +1404,8 @@ mod tests {
     fn test_blocked_matrix_multiply() {
         let processor = matrix_simd::CacheOptimizedMatrixProcessor::new();
 
-        let a = Array2::from_shape_fn((32, 24), |(i, j)| (i + j) as f64);
-        let b = Array2::from_shape_fn((24, 16), |(i, j)| (i * j + 1) as f64);
+        let a = Array2::fromshape_fn((32, 24), |(i, j)| (i + j) as f64);
+        let b = Array2::fromshape_fn((24, 16), |(i, j)| (i * j + 1) as f64);
 
         let result = processor
             .matrix_multiply_blocked(&a.view(), &b.view())
@@ -1417,8 +1421,8 @@ mod tests {
     fn test_matrix_vector_multiply_simd() {
         let processor = matrix_simd::CacheOptimizedMatrixProcessor::new();
 
-        let matrix = Array2::from_shape_fn((10, 8), |(i, j)| (i + j + 1) as f64);
-        let vector = Array1::from_shape_fn(8, |i| (i + 1) as f64);
+        let matrix = Array2::fromshape_fn((10, 8), |(i, j)| (i + j + 1) as f64);
+        let vector = Array1::fromshape_fn(8, |i| (i + 1) as f64);
 
         let result = processor
             .matrix_vector_multiply_simd(&matrix.view(), &vector.view())

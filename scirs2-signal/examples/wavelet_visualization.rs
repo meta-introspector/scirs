@@ -1,8 +1,8 @@
-use ndarray::{s, Array2};
-use scirs2__signal::dwt::Wavelet;
-use scirs2__signal::dwt2d::{dwt2d_decompose, wavedec2};
-use scirs2__signal::swt2d::swt2d_decompose;
-use scirs2__signal::wavelet_vis::{
+use ndarray::{ Array2};
+use scirs2_signal::dwt::Wavelet;
+use scirs2_signal::dwt2d::{dwt2d_decompose, wavedec2};
+use scirs2_signal::swt2d::swt2d_decompose;
+use scirs2_signal::wavelet_vis::{
     arrange_coefficients_2d,
     // arrange_multilevel_coefficients_2d, // Will be used in a future refinement
     calculate_energy_2d,

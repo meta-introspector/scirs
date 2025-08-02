@@ -19,7 +19,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::compression::{compress_data, decompress_data, CompressionAlgorithm};
+//! use scirs2_io::compression::{compress_data, decompress_data, CompressionAlgorithm};
 //! use std::fs::File;
 //! use std::io::prelude::*;
 //!
@@ -110,7 +110,10 @@ impl CompressionAlgorithm {
 
 /// Convert a compression level (0-9) to the appropriate internal level for each algorithm
 #[allow(dead_code)]
-fn normalize_compression_level(_level: Option<u32>, algorithm: CompressionAlgorithm) -> Result<u32> {
+fn normalize_compression_level(
+    _level: Option<u32>,
+    algorithm: CompressionAlgorithm,
+) -> Result<u32> {
     let _level = _level.unwrap_or(6); // Default compression _level
 
     if _level > 9 {
@@ -795,13 +798,13 @@ pub fn global_handler() -> &'static TransparentFileHandler {
 
 /// Convenient function to read a file with automatic decompression using global handler
 #[allow(dead_code)]
-pub fn read_file_transparent<P: AsRef<Path>>(_path: P) -> Result<Vec<u8>> {
+pub fn read_file_transparent<P: AsRef<Path>>(path: P) -> Result<Vec<u8>> {
     global_handler().read_file(_path)
 }
 
 /// Convenient function to write a file with automatic compression using global handler
 #[allow(dead_code)]
-pub fn write_file_transparent<P: AsRef<Path>>(_path: P, data: &[u8]) -> Result<()> {
+pub fn write_file_transparent<P: AsRef<Path>>(path: P, data: &[u8]) -> Result<()> {
     global_handler().write_file(_path, data)
 }
 
@@ -816,7 +819,7 @@ pub fn copy_file_transparent<P: AsRef<Path>, Q: AsRef<Path>>(
 
 /// Convenient function to get file compression info using global handler
 #[allow(dead_code)]
-pub fn file_info_transparent<P: AsRef<Path>>(_path: P) -> Result<FileCompressionInfo> {
+pub fn file_info_transparent<P: AsRef<Path>>(path: P) -> Result<FileCompressionInfo> {
     global_handler().file_info(_path)
 }
 
@@ -1063,10 +1066,10 @@ fn decompress_delta_lz4(_data: &[u8]) -> Result<Vec<u8>> {
 // Parallel Compression/Decompression
 //
 
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
-use std::path::PathBuf;
 
 /// Configuration for parallel compression/decompression operations
 #[derive(Debug, Clone)]

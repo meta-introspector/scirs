@@ -396,8 +396,8 @@ where
             // Handle remaining pixels
             while x < width {
                 let mut result_value = match operation {
-                    MorphologicalOperation::Erosion =>, T::infinity(),
-                    MorphologicalOperation::Dilation =>, T::neg_infinity(),
+                    MorphologicalOperation::Erosion => T::infinity(),
+                    MorphologicalOperation::Dilation => T::neg_infinity(),
                 };
 
                 for &(dy, dx) in &se_offsets {

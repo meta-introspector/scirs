@@ -1,6 +1,6 @@
 use ndarray::Array2;
-use scirs2__signal::dwt::Wavelet;
-use scirs2__signal::swt2d::{iswt2d, swt2d, swt2d_decompose, swt2d_reconstruct};
+use scirs2_signal::dwt::Wavelet;
+use scirs2_signal::swt2d::{iswt2d, swt2d, swt2d_decompose, swt2d_reconstruct};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

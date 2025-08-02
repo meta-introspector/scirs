@@ -1,11 +1,11 @@
-//! Filter application and signal processing functions
-//!
-//! This module provides functions for applying filters to signals including
-//! forward-backward filtering (filtfilt), direct filtering (lfilter), minimum
-//! phase conversion, and matched filtering for signal detection.
+// Filter application and signal processing functions
+//
+// This module provides functions for applying filters to signals including
+// forward-backward filtering (filtfilt), direct filtering (lfilter), minimum
+// phase conversion, and matched filtering for signal detection.
 
 use crate::error::{SignalError, SignalResult};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast, Zero};
 use std::f64::consts::PI;
 use std::fmt::Debug;
@@ -30,8 +30,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::application::filtfilt;
-/// use scirs2__signal::filter::iir::butter;
+/// use scirs2_signal::filter::application::filtfilt;
+/// use scirs2_signal::filter::iir::butter;
 ///
 /// // Design a filter and apply it with zero phase delay
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -95,8 +95,8 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::application::lfilter;
-/// use scirs2__signal::filter::iir::butter;
+/// use scirs2_signal::filter::application::lfilter;
+/// use scirs2_signal::filter::iir::butter;
 ///
 /// // Design a filter and apply it to a signal
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -197,7 +197,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::application::minimum_phase;
+/// use scirs2_signal::filter::application::minimum_phase;
 ///
 /// // Convert a filter to minimum phase
 /// let b = vec![1.0, -2.0, 1.0]; // (z-1)^2, has zeros at z=1 (outside unit circle)
@@ -286,8 +286,8 @@ pub fn minimum_phase(b: &[f64], discrete_time: bool) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::application::group_delay;
-/// use scirs2__signal::filter::iir::butter;
+/// use scirs2_signal::filter::application::group_delay;
+/// use scirs2_signal::filter::iir::butter;
 ///
 /// // Compute group delay of a Butterworth filter
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
@@ -349,7 +349,7 @@ pub fn group_delay(b: &[f64], a: &[f64], w: &[f64]) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::application::matched_filter;
+/// use scirs2_signal::filter::application::matched_filter;
 ///
 /// // Design a matched filter for a simple pulse
 /// let template = vec![1.0, 1.0, 1.0, 0.0, 0.0];
@@ -398,7 +398,7 @@ pub fn matched_filter(_template: &[f64], normalize: bool) -> SignalResult<Vec<f6
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::application::matched_filter_detect;
+/// use scirs2_signal::filter::application::matched_filter_detect;
 ///
 /// let signal = vec![0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0];
 /// let template = vec![1.0, 1.0, 1.0];

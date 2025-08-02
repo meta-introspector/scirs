@@ -10,7 +10,7 @@
 //! use scirs2__cluster::hierarchy::{linkage, fcluster, LinkageMethod, Metric};
 //!
 //! // Example data
-//! let data = Array2::from_shape_vec((6, 2), vec![
+//! let data = Array2::fromshape_vec((6, 2), vec![
 //!     1.0, 2.0,
 //!     1.2, 1.8,
 //!     0.8, 1.9,
@@ -131,7 +131,7 @@ pub enum ClusterCriterion {
 
 /// Computes distances between observations
 #[allow(dead_code)]
-fn compute_distances<F: Float + FromPrimitive>(_data: ArrayView2<F>, metric: Metric) -> Array1<F> {
+fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metric) -> Array1<F> {
     let n_samples = _data.shape()[0];
     let n_features = _data.shape()[1];
 
@@ -334,7 +334,7 @@ pub fn linkage<
 /// use scirs2__cluster::hierarchy::{parallel_linkage, LinkageMethod, Metric};
 ///
 /// // Example data
-/// let data = Array2::from_shape_vec((6, 2), vec![
+/// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0,
 ///     1.2, 1.8,
 ///     0.8, 1.9,
@@ -466,7 +466,7 @@ pub fn fcluster<F: Float + FromPrimitive + PartialOrd + Debug>(
 /// use ndarray::Array2;
 /// use scirs2__cluster::hierarchy::{linkage, fcluster_generic, LinkageMethod, Metric, ClusterCriterion};
 ///
-/// let data = Array2::from_shape_vec((6, 2), vec![
+/// let data = Array2::fromshape_vec((6, 2), vec![
 ///     1.0, 2.0, 1.2, 1.8, 0.8, 1.9,
 ///     3.7, 4.2, 3.9, 3.9, 4.2, 4.1,
 /// ]).unwrap();
@@ -526,7 +526,7 @@ mod tests {
     #[test]
     fn test_linkage_simple() {
         // Simple dataset with two clear clusters
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
@@ -547,7 +547,7 @@ mod tests {
     #[test]
     fn test_fcluster() {
         // Create a simple linkage matrix
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
@@ -573,7 +573,7 @@ mod tests {
     fn test_distance_metrics() {
         // Test data
         let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         // Calculate distances with different metrics
         let euclidean_distances = compute_distances(data.view(), Metric::Euclidean);
@@ -607,7 +607,7 @@ mod tests {
     #[test]
     fn test_hierarchy_with_different_linkage_methods() {
         // Simple dataset
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
@@ -638,7 +638,7 @@ mod tests {
     #[test]
     fn test_fcluster_inconsistent_criterion() {
         // Create a simple linkage matrix
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )
@@ -659,7 +659,7 @@ mod tests {
 
     #[test]
     fn test_fcluster_generic_all_criteria() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 1.2, 1.8, 0.8, 1.9, 3.7, 4.2, 3.9, 3.9, 4.2, 4.1],
         )

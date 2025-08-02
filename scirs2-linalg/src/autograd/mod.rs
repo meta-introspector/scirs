@@ -92,7 +92,7 @@ pub mod helpers {
             eye_data[i * n + i] = F::one();
         }
         let eye = ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::from_shape_vec((n, n), eye_data).unwrap(),
+            ag::ndarray::Array2::fromshape_vec((n, n), eye_data).unwrap(),
             ctx,
         );
 
@@ -111,7 +111,7 @@ pub mod helpers {
             eye_data[i * n + i] = F::one();
         }
         ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::from_shape_vec((n, n), eye_data).unwrap(),
+            ag::ndarray::Array2::fromshape_vec((n, n), eye_data).unwrap(),
             ctx,
         )
     }
@@ -131,7 +131,7 @@ pub mod helpers {
         }
 
         ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::from_shape_vec((n, n), matrix_data).unwrap(),
+            ag::ndarray::Array2::fromshape_vec((n, n), matrix_data).unwrap(),
             ctx,
         )
     }
@@ -237,7 +237,7 @@ pub mod helpers {
         }
 
         let mut v = ag::tensor_ops::convert_to_tensor(
-            ag::ndarray::Array2::from_shape_vec((n, 1), v_data).unwrap(),
+            ag::ndarray::Array2::fromshape_vec((n, 1), v_data).unwrap(),
             ctx,
         );
 

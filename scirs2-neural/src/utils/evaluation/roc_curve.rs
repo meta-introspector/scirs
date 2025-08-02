@@ -179,15 +179,15 @@ impl<F: Float + Debug + Display> ROCCurve<F> {
         let mut result = String::with_capacity(width * height * 2);
 
         // Add title and AUC with coloring if enabled
-        if let Some(title_text) = title {
+        if let Some(titletext) = title {
             if color_options.enabled {
-                let styled_title = stylize(title_text, Style::Bold);
+                let styled_title = stylize(titletext, Style::Bold);
                 let auc_value = self.auc.to_f64().unwrap_or(0.0);
                 let colored_auc =
                     colored_metric_cell(format!("{:.3}", self.auc), auc_value, color_options);
                 result.push_str(&format!("{styled_title} (AUC = {colored_auc})\n\n"));
             } else {
-                result.push_str(&format!("{} (AUC = {:.3})\n\n", title_text, self.auc));
+                result.push_str(&format!("{} (AUC = {:.3})\n\n", titletext, self.auc));
             }
         } else if color_options.enabled {
             let styled_title = stylize("ROC Curve", Style::Bold);

@@ -1,16 +1,16 @@
-//! Parallel spectral analysis algorithms using Rayon for high-performance processing
-//!
-//! This module provides parallel implementations of spectral analysis algorithms
-//! that can significantly improve performance on multi-core systems when processing
-//! large datasets or multiple signals simultaneously.
+// Parallel spectral analysis algorithms using Rayon for high-performance processing
+//
+// This module provides parallel implementations of spectral analysis algorithms
+// that can significantly improve performance on multi-core systems when processing
+// large datasets or multiple signals simultaneously.
 
-use crate::window;
 use crate::error::{SignalError, SignalResult};
 use crate::filter::butter;
 use crate::hilbert::hilbert;
+use crate::window;
 use ndarray::Array2;
-use num__complex::Complex64;
-use rustfft::{FftPlanner, num_complex::Complex};
+use num_complex::Complex64;
+use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_core::parallel_ops::*;
 use std::f64::consts::PI;
 use std::sync::Arc;
@@ -413,7 +413,8 @@ impl ParallelSpectralProcessor {
         signal: &[f64],
         fs: f64,
         window_size: usize,
-        hop_size: usize, _window_type: Option<&str>,
+        hop_size: usize,
+        _window_type: Option<&str>,
     ) -> SignalResult<(Vec<f64>, Vec<f64>, Array2<f64>)> {
         let stft_result = self.single_stft(signal, window_size, hop_size)?;
 

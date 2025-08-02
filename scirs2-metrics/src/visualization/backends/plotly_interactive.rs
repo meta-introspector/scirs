@@ -45,14 +45,14 @@ impl PlotlyInteractiveBackend {
         let width = options.width;
         let height = options.height;
         let mut layout = Layout::new()
-            .title(plotly::common::Title::with_text(metadata.title.as_str()))
+            .title(plotly::common::Title::withtext(metadata.title.as_str()))
             .x_axis(
                 plotly::layout::Axis::new()
-                    .title(plotly::common::Title::with_text(metadata.x_label.as_str())),
+                    .title(plotly::common::Title::withtext(metadata.x_label.as_str())),
             )
             .y_axis(
                 plotly::layout::Axis::new()
-                    .title(plotly::common::Title::with_text(metadata.y_label.as_str())),
+                    .title(plotly::common::Title::withtext(metadata.y_label.as_str())),
             )
             .width(width)
             .height(height);
@@ -127,13 +127,13 @@ impl PlotlyInteractiveBackend {
                     let y = current_y[0];
 
                     // Collect metrics
-                    let mut metrics_text = format!("Threshold: {threshold}");
+                    let mut metricstext = format!("Threshold: {threshold}");
 
                     for (key, value) in &data.auxiliary_metadata {
                         if key.starts_with("metric_") {
                             let metric_name = key.strip_prefix("metric_").unwrap_or(key);
                             if metric_name != "threshold" {
-                                metrics_text.push_str(&format!("<br>{metric_name}: {value}"));
+                                metricstext.push_str(&format!("<br>{metric_name}: {value}"));
                             }
                         }
                     }
@@ -141,7 +141,7 @@ impl PlotlyInteractiveBackend {
                     let annotation = plotly::layout::Annotation::new()
                         .x(x)
                         .y(y)
-                        .text(&metrics_text)
+                        .text(&metricstext)
                         .show_arrow(true);
 
                     annotations.push(annotation);
@@ -248,14 +248,14 @@ impl super::PlottingBackend for PlotlyInteractiveBackend {
                 plot.add_trace(trace);
 
                 let layout = Layout::new()
-                    .title(plotly::common::Title::with_text(&metadata.title))
+                    .title(plotly::common::Title::withtext(&metadata.title))
                     .x_axis(
                         plotly::layout::Axis::new()
-                            .title(plotly::common::Title::with_text(&metadata.x_label)),
+                            .title(plotly::common::Title::withtext(&metadata.x_label)),
                     )
                     .y_axis(
                         plotly::layout::Axis::new()
-                            .title(plotly::common::Title::with_text(&metadata.y_label)),
+                            .title(plotly::common::Title::withtext(&metadata.y_label)),
                     )
                     .width(options.width)
                     .height(options.height);
@@ -278,13 +278,13 @@ impl super::PlottingBackend for PlotlyInteractiveBackend {
     }
 
     fn render_svg(
-        &self_data: &VisualizationData, _metadata: &VisualizationMetadata_options: &VisualizationOptions,
+        &self_data: &VisualizationData, _metadata: &VisualizationMetadata, options: &VisualizationOptions,
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         Err("SVG rendering not supported by Plotly interactive backend".into())
     }
 
     fn render_png(
-        &self_data: &VisualizationData, _metadata: &VisualizationMetadata_options: &VisualizationOptions,
+        &self_data: &VisualizationData, _metadata: &VisualizationMetadata, options: &VisualizationOptions,
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         Err("PNG rendering not supported by Plotly interactive backend".into())
     }

@@ -1,4 +1,4 @@
-//! Helper functions for wavelet transforms
+// Helper functions for wavelet transforms
 
 /// Helper function to calculate factorial
 #[allow(unused_imports)]

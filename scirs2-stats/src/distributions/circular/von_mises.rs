@@ -7,8 +7,9 @@
 use crate::error::{StatsError, StatsResult};
 use crate::traits::{CircularDistribution, Distribution};
 use ndarray::Array1;
+use num_traits::Float;
 use rand::rng;
-use rand_distr::{Distribution as RandDistribution, VonMises};
+use rand_distr::{Distribution as RandDistribution, VonMises as RandVonMises};
 use rand_distr::uniform::SampleUniform;
 use std::f64::consts::PI;
 use std::fmt::Debug;
@@ -148,7 +149,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
 /// This function calculates the CDF of the von Mises distribution
 /// It's complicated due to the lack of a simple closed-form expression
 #[allow(dead_code)]
-fn von_mises_cdf<F: Float + 'static>(_kappa: F, x: F) -> F {
+fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
     // Convert to f64 for calculation
     let kappa_f64 = _kappa.to_f64().unwrap();
     let x_f64 = x.to_f64().unwrap();
@@ -220,7 +221,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> Distributio
         let kappa_f64 = self.kappa.to_f64().unwrap();
         
         // Create distribution
-        let dist = match VonMises::new(mu_f64, kappa_f64) {
+        let dist = match RandVonMises::new(mu_f64, kappa_f64) {
             Ok(dist) => dist,
             Err(e) => return Err(StatsError::ComputationError(format!("Error creating VonMises distribution: {}", e))),
         };
@@ -281,7 +282,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
         let kappa_f64 = self.kappa.to_f64().unwrap();
         
         // Create distribution
-        let dist = match VonMises::new(mu_f64, kappa_f64) {
+        let dist = match RandVonMises::new(mu_f64, kappa_f64) {
             Ok(dist) => dist,
             Err(e) => return Err(StatsError::ComputationError(format!("Error creating VonMises distribution: {}", e))),
         };

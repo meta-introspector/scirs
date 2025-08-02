@@ -642,7 +642,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
                 data.push(value);
             }
         }
-        Array2::from_shape_vec((n_points, dimensions), data)
+        Array2::fromshape_vec((n_points, dimensions), data)
             .map_err(|e| InterpolateError::ShapeError(e.to_string()))
     }
 
@@ -957,7 +957,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
         CpuInfo {
             brand: "Unknown CPU".to_string(),
             architecture: std::env::consts::ARCH.to_string(),
-            logical_cores: num, _cpus: get(),
+            logical_cores: num_cpus::get(),
             physical_cores: num, _cpus: get_physical(),
             cache_sizes: vec![32_768, 262_144, 8_388_608], // Typical L1, L2, L3 sizes
             base_frequency: None,

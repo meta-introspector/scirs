@@ -910,7 +910,8 @@ pub fn get_global_memory_manager() -> FFTResult<Arc<Mutex<GPUMemoryManager>>> {
 /// Memory-efficient GPU sparse FFT computation
 #[allow(dead_code)]
 pub fn memory_efficient_gpu_sparse_fft<T>(
-    signal: &[T], _max_memory: usize,
+    signal: &[T],
+    _max_memory: usize,
 ) -> FFTResult<Vec<Complex64>>
 where
     T: Clone + 'static,

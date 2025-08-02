@@ -133,7 +133,7 @@ pub struct TestSummary {
 /// Enhanced property-based test framework
 pub struct PropertyBasedTestFramework<F> {
     config: PropertyTestConfig,
-    rng: StdRng_phantom: PhantomData<F>,
+    rng: StdRng, phantom: PhantomData<F>,
 }
 
 impl<F> PropertyBasedTestFramework<F>

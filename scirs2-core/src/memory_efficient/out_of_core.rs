@@ -79,7 +79,8 @@ where
             file_path: file_path.to_path_buf(),
             strategy,
             size,
-            is_temp: false, phantom: PhantomData,
+            is_temp: false,
+            phantom: PhantomData,
         })
     }
 
@@ -173,20 +174,20 @@ where
         // In a real implementation, we would seek to the correct position and read only the chunk
 
         // Create a new array with the proper shape for this chunk
-        let mut chunk_shape = self.shape.clone();
+        let mut chunkshape = self.shape.clone();
 
         // Adjust the first dimension for this chunk
-        if !chunk_shape.is_empty() {
-            let first_dim_size = self.size / chunk_shape.iter().skip(1).product::<usize>().max(1);
+        if !chunkshape.is_empty() {
+            let first_dim_size = self.size / chunkshape.iter().skip(1).product::<usize>().max(1);
             let first_dim_chunk_size =
-                actual_chunk_size / chunk_shape.iter().skip(1).product::<usize>().max(1);
-            chunk_shape[0] = first_dim_chunk_size.min(first_dim_size);
+                actual_chunk_size / chunkshape.iter().skip(1).product::<usize>().max(1);
+            chunkshape[0] = first_dim_chunk_size.min(first_dim_size);
         }
 
         // Extract just this chunk's data from the full array
         // This is inefficient; a better implementation would read directly from disk
         let cloned_array = fullarray.clone();
-        let chunk_dynamic = cloned_array.to_shape(chunk_shape).map_err(|e| {
+        let chunk_dynamic = cloned_array.to_shape(chunkshape).map_err(|e| {
             CoreError::DimensionError(
                 ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
@@ -210,8 +211,8 @@ where
         array: Array<A, ndarray::IxDyn>,
         context: &str,
     ) -> Result<Array<A, D>, CoreError> {
-        let source_shape = array.shape().to_vec();
-        let source_ndim = source_shape.len();
+        let sourceshape = array.shape().to_vec();
+        let source_ndim = sourceshape.len();
         let target_ndim = D::NDIM;
 
         // Handle dynamic dimension target first (IxDyn)
@@ -219,7 +220,7 @@ where
             return array.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(
                     ErrorContext::new(format!(
-                        "Failed to convert {context} array to dynamic dimension type. Source shape: {source_shape:?}"
+                        "Failed to convert {context} array to dynamic dimension type. Source shape: {sourceshape:?}"
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 )
@@ -235,7 +236,7 @@ where
                     ErrorContext::new(format!(
                         "Dimension conversion failed for {} array despite matching dimensions ({} -> {}). \
                          Source shape: {:?}, target dimension type: {}",
-                        context, source_ndim, target_ndim, source_shape, std::any::type_name::<D>()
+                        context, source_ndim, target_ndim, sourceshape, std::any::type_name::<D>()
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 )
@@ -258,7 +259,7 @@ where
                     CoreError::DimensionError(
                         ErrorContext::new(format!(
                             "Unexpected dimension conversion failure for {context} array with matching dimensions. \
-                             Source shape: {source_shape:?}"
+                             Source shape: {sourceshape:?}"
                         ))
                         .with_location(ErrorLocation::new(file!(), line!())),
                     )
@@ -274,27 +275,27 @@ where
         source_dims: usize,
         target_dims: usize,
     ) -> Result<Array<A, D>, CoreError> {
-        let source_shape = array.shape().to_vec();
+        let sourceshape = array.shape().to_vec();
 
         // Find and remove singleton dimensions
-        let mut squeezed_shape = Vec::new();
+        let mut squeezedshape = Vec::new();
         let mut removed_dims = 0;
         let dims_to_remove = source_dims - target_dims;
 
-        for &dim_size in &source_shape {
+        for &dim_size in &sourceshape {
             if dim_size == 1 && removed_dims < dims_to_remove {
                 // Skip singleton dimension
                 removed_dims += 1;
             } else {
-                squeezed_shape.push(dim_size);
+                squeezedshape.push(dim_size);
             }
         }
 
-        if squeezed_shape.len() != target_dims {
+        if squeezedshape.len() != target_dims {
             return Err(CoreError::DimensionError(
                 ErrorContext::new(format!(
-                    "Cannot squeeze {context} array from {source_dims} to {target_dims} dimensions. Source shape: {source_shape:?}, only {} singleton dimensions available",
-                    source_shape.iter().filter(|&&x| x == 1).count()
+                    "Cannot squeeze {context} array from {source_dims} to {target_dims} dimensions. Source shape: {sourceshape:?}, only {} singleton dimensions available",
+                    sourceshape.iter().filter(|&&x| x == 1).count()
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -302,11 +303,11 @@ where
 
         // Reshape to squeezed shape and convert
         array
-            .into_shape_with_order(ndarray::IxDyn(&squeezed_shape))
+            .into_shape_with_order(ndarray::IxDyn(&squeezedshape))
             .map_err(|_| {
                 CoreError::DimensionError(
                     ErrorContext::new(format!(
-                        "Cannot reshape {context} array from shape {source_shape:?} to squeezed shape {squeezed_shape:?}"
+                        "Cannot reshape {context} array from shape {sourceshape:?} to squeezed shape {squeezedshape:?}"
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 )
@@ -329,7 +330,7 @@ where
         source_dims: usize,
         target_dims: usize,
     ) -> Result<Array<A, D>, CoreError> {
-        let source_shape = array.shape().to_vec();
+        let sourceshape = array.shape().to_vec();
         let dims_to_add = target_dims - source_dims;
 
         if dims_to_add == 0 {
@@ -344,13 +345,13 @@ where
         }
 
         // Create expanded shape by adding singleton dimensions at the end
-        let mut expanded_shape = source_shape.clone();
-        expanded_shape.extend(std::iter::repeat(1).take(dims_to_add));
+        let mut expandedshape = sourceshape.clone();
+        expandedshape.extend(std::iter::repeat_n(1, dims_to_add));
 
         // Try to reshape to expanded shape
         match array
             .clone()
-            .into_shape_with_order(ndarray::IxDyn(&expanded_shape))
+            .into_shape_with_order(ndarray::IxDyn(&expandedshape))
         {
             Ok(reshaped) => reshaped.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(
@@ -362,15 +363,15 @@ where
             }),
             Err(_) => {
                 // Try adding singleton dimensions at the beginning instead
-                let mut alt_shape = vec![1; dims_to_add];
-                alt_shape.extend_from_slice(&source_shape);
+                let mut altshape = vec![1; dims_to_add];
+                altshape.extend_from_slice(&sourceshape);
 
                 array
-                    .into_shape_with_order(ndarray::IxDyn(&alt_shape))
+                    .into_shape_with_order(ndarray::IxDyn(&altshape))
                     .map_err(|_| {
                         CoreError::DimensionError(
                             ErrorContext::new(format!(
-                                "Cannot reshape {context} array from shape {source_shape:?} to any expanded shape"
+                                "Cannot reshape {context} array from shape {sourceshape:?} to any expanded shape"
                             ))
                             .with_location(ErrorLocation::new(file!(), line!())),
                         )

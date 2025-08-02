@@ -41,7 +41,7 @@ use crate::error::{ClusteringError, Result};
 /// use ndarray::{ArrayView1, Array1, Array2};
 /// use scirs2__cluster::metrics::davies_bouldin_score;
 ///
-/// let data = Array2::from_shape_vec((4, 2), vec![
+/// let data = Array2::fromshape_vec((4, 2), vec![
 ///     0.0, 0.0,
 ///     0.1, 0.1,
 ///     5.0, 5.0,
@@ -171,7 +171,7 @@ where
 /// use ndarray::{ArrayView1, Array1, Array2};
 /// use scirs2__cluster::metrics::calinski_harabasz_score;
 ///
-/// let data = Array2::from_shape_vec((4, 2), vec![
+/// let data = Array2::fromshape_vec((4, 2), vec![
 ///     0.0, 0.0,
 ///     0.1, 0.1,
 ///     5.0, 5.0,
@@ -295,7 +295,7 @@ where
 /// use ndarray::{ArrayView1, Array1, Array2};
 /// use scirs2__cluster::metrics::mean_silhouette_score;
 ///
-/// let data = Array2::from_shape_vec((4, 2), vec![
+/// let data = Array2::fromshape_vec((4, 2), vec![
 ///     0.0, 0.0,
 ///     0.1, 0.1,
 ///     5.0, 5.0,
@@ -2137,7 +2137,7 @@ pub mod advanced_stability {
                 }
 
                 // Cluster noisy data
-                if let Ok((_..noisy_labels)) = kmeans2(
+                if let Ok((_, noisy_labels)) = kmeans2(
                     noisy_data.view(),
                     n_clusters,
                     Some(100),
@@ -2732,7 +2732,7 @@ mod tests {
 
     #[test]
     fn test_davies_bouldin_score() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
@@ -2745,7 +2745,7 @@ mod tests {
 
     #[test]
     fn test_calinski_harabasz_score() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )

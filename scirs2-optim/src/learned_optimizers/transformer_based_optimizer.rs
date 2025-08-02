@@ -2939,7 +2939,7 @@ impl<T: Float + Send + Sync> LinearLayer<T> {
         // Xavier initialization
         let init_scale = T::from((2.0 / (_input_dim + output_dim) as f64).sqrt()).unwrap();
         
-        let weights = Array2::from_shape_fn((_input_dim, output_dim), |(i, j)| {
+        let weights = Array2::fromshape_fn((_input_dim, output_dim), |(i, j)| {
             T::from((i as f64 * 0.01 + j as f64 * 0.02 - 0.5)).unwrap() * init_scale
         });
         
@@ -3016,7 +3016,7 @@ impl<T: Float + Send + Sync> LayerNormalization<T> {
 impl<T: Float + Send + Sync> EmbeddingLayer<T> {
     fn new(_embedding_dim: usize, max_seq_length: usize) -> Result<Self> {
         let init_scale = T::from(0.02).unwrap();
-        let embedding_weights = Array2::from_shape_fn((max_seq_length, _embedding_dim), |(i, j)| {
+        let embedding_weights = Array2::fromshape_fn((max_seq_length, _embedding_dim), |(i, j)| {
             T::from((i as f64 * 0.01 + j as f64 * 0.02 - 0.5)).unwrap() * init_scale
         });
         
@@ -3308,19 +3308,19 @@ impl<T: Float + Send + Sync> MultiHeadAttention<T> {
         // Initialize weight matrices with Xavier initialization
         let init_scale = T::from((2.0 / model_dim as f64).sqrt()).unwrap();
         
-        let query_weights = Array2::from_shape_fn((model_dim, model_dim), |(i, j)| {
+        let query_weights = Array2::fromshape_fn((model_dim, model_dim), |(i, j)| {
             T::from((i + j) as f64 * 0.01).unwrap() * init_scale
         });
         
-        let key_weights = Array2::from_shape_fn((model_dim, model_dim), |(i, j)| {
+        let key_weights = Array2::fromshape_fn((model_dim, model_dim), |(i, j)| {
             T::from((i * 2 + j) as f64 * 0.01).unwrap() * init_scale
         });
         
-        let value_weights = Array2::from_shape_fn((model_dim, model_dim), |(i, j)| {
+        let value_weights = Array2::fromshape_fn((model_dim, model_dim), |(i, j)| {
             T::from((i + j * 2) as f64 * 0.01).unwrap() * init_scale
         });
         
-        let output_weights = Array2::from_shape_fn((model_dim, model_dim), |(i, j)| {
+        let output_weights = Array2::fromshape_fn((model_dim, model_dim), |(i, j)| {
             T::from((i + j + 1) as f64 * 0.01).unwrap() * init_scale
         });
         
@@ -3439,7 +3439,7 @@ impl<T: Float + Send + Sync> MultiHeadAttention<T> {
         }
         
         // Store attention weights for visualization
-        self.attention_weights = Some(Array3::from_shape_fn((1, seq_len, seq_len), |(_, i, j)| attention_weights[[i, j]]));
+        self.attention_weights = Some(Array3::fromshape_fn((1, seq_len, seq_len), |(_, i, j)| attention_weights[[i, j]]));
         
         Ok(output)
     }

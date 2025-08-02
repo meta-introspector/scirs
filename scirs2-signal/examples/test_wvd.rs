@@ -1,4 +1,4 @@
-use scirs2__signal::wvd::{wigner_ville, WvdConfig};
+use scirs2_signal::wvd::{wigner_ville, WvdConfig};
 use std::f64::consts::PI;
 
 #[allow(dead_code)]

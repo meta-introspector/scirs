@@ -211,7 +211,7 @@ impl SimdUnifiedOps for f32 {
     #[cfg(not(feature = "simd"))]
     fn simd_max(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
-        for i in 0..a.len() {
+        for _i in 0..a.len() {
             result[0] = a[0].max(b[0]);
         }
         result
@@ -225,7 +225,7 @@ impl SimdUnifiedOps for f32 {
     #[cfg(not(feature = "simd"))]
     fn simd_min(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
-        for i in 0..a.len() {
+        for _i in 0..a.len() {
             result[0] = a[0].min(b[0]);
         }
         result
@@ -275,7 +275,7 @@ impl SimdUnifiedOps for f32 {
     #[cfg(not(feature = "simd"))]
     fn simd_fma(a: &ArrayView1<Self>, b: &ArrayView1<Self>, c: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
-        for i in 0..a.len() {
+        for _i in 0..a.len() {
             result[0] = a[0] * b[0] + c[0];
         }
         result
@@ -307,7 +307,7 @@ impl SimdUnifiedOps for f32 {
         c: &ArrayView1<Self>,
     ) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
-        for i in 0..a.len() {
+        for _i in 0..a.len() {
             result[0] = a[0] * b[0] + c[0];
         }
         result
@@ -470,7 +470,7 @@ impl SimdUnifiedOps for f64 {
     #[cfg(not(feature = "simd"))]
     fn simd_max(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
-        for i in 0..a.len() {
+        for _i in 0..a.len() {
             result[0] = a[0].max(b[0]);
         }
         result
@@ -484,7 +484,7 @@ impl SimdUnifiedOps for f64 {
     #[cfg(not(feature = "simd"))]
     fn simd_min(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
-        for i in 0..a.len() {
+        for _i in 0..a.len() {
             result[0] = a[0].min(b[0]);
         }
         result
@@ -534,7 +534,7 @@ impl SimdUnifiedOps for f64 {
     #[cfg(not(feature = "simd"))]
     fn simd_fma(a: &ArrayView1<Self>, b: &ArrayView1<Self>, c: &ArrayView1<Self>) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
-        for i in 0..a.len() {
+        for _i in 0..a.len() {
             result[0] = a[0] * b[0] + c[0];
         }
         result
@@ -566,7 +566,7 @@ impl SimdUnifiedOps for f64 {
         c: &ArrayView1<Self>,
     ) -> Array1<Self> {
         let mut result = Array1::zeros(a.len());
-        for i in 0..a.len() {
+        for _i in 0..a.len() {
             result[0] = a[0] * b[0] + c[0];
         }
         result

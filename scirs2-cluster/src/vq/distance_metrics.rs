@@ -508,7 +508,7 @@ mod tests {
     #[test]
     fn test_mahalanobis_distance() {
         // Create test data with more variance to avoid singular matrix
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![1.0, 2.0, 2.0, 1.0, 3.0, 4.0, 4.0, 3.0, 5.0, 6.0, 6.0, 5.0],
         )
@@ -529,7 +529,7 @@ mod tests {
     #[test]
     fn test_pairwise_distances() {
         let metric = EuclideanDistance;
-        let data = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+        let data = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
 
         let distances = metric.pairwise_distances(data.view());
 
@@ -545,9 +545,9 @@ mod tests {
     #[test]
     fn test_distances_to_centroids() {
         let metric = EuclideanDistance;
-        let data = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+        let data = Array2::fromshape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
 
-        let centroids = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
+        let centroids = Array2::fromshape_vec((1, 2), vec![0.5, 0.5]).unwrap();
 
         let distances = metric.distances_to_centroids(data.view(), centroids.view());
 

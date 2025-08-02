@@ -66,7 +66,7 @@ struct RiffChunk {
 
 impl RiffChunk {
     /// Read a RIFF chunk from a reader
-    fn read<R: Read>(_reader: &mut R) -> std::io::Result<Self> {
+    fn read<R: Read>(reader: &mut R) -> std::io::Result<Self> {
         let mut id = [0u8; 4];
         _reader.read_exact(&mut id)?;
         let size = _reader.read_u32::<LittleEndian>()?;
@@ -100,7 +100,7 @@ impl RiffChunk {
 /// # Example
 ///
 /// ```no_run
-/// use scirs2__io::wavfile::read_wav;
+/// use scirs2_io::wavfile::read_wav;
 /// use std::path::Path;
 ///
 /// let (header, data) = read_wav(Path::new("audio.wav")).unwrap();
@@ -109,7 +109,7 @@ impl RiffChunk {
 /// println!("Samples per channel: {}", header.samples_per_channel);
 /// ```
 #[allow(dead_code)]
-pub fn read_wav<P: AsRef<Path>>(_path: P) -> Result<(WavHeader, ArrayD<f32>)> {
+pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
     let file = File::open(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut reader = BufReader::new(file);
 
@@ -309,7 +309,7 @@ pub fn read_wav<P: AsRef<Path>>(_path: P) -> Result<(WavHeader, ArrayD<f32>)> {
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2__io::wavfile::write_wav;
+/// use scirs2_io::wavfile::write_wav;
 /// use std::path::Path;
 ///
 /// // Create a simple sine wave
@@ -327,7 +327,7 @@ pub fn read_wav<P: AsRef<Path>>(_path: P) -> Result<(WavHeader, ArrayD<f32>)> {
 /// write_wav(Path::new("sine_wave.wav"), sample_rate, &samples.into_dyn()).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn write_wav<P: AsRef<Path>>(_path: P, sample_rate: u32, data: &ArrayD<f32>) -> Result<()> {
+pub fn write_wav<P: AsRef<Path>>(path: P, sample_rate: u32, data: &ArrayD<f32>) -> Result<()> {
     let file = File::create(_path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
 

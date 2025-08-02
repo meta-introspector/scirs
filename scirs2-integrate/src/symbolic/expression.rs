@@ -369,7 +369,7 @@ pub enum Pattern<F: IntegrateFloat> {
 
 /// Pattern matching for common mathematical expressions
 #[allow(dead_code)]
-pub fn match_pattern<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> Option<Pattern<F>> {
+pub fn match_pattern<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Option<Pattern<F>> {
     match _expr {
         // Match a^2 + b^2 (sum of squares)
         Add(a, b) => {
@@ -433,7 +433,7 @@ fn match_expressions<F: IntegrateFloat>(
 
 /// Apply pattern-based simplifications
 #[allow(dead_code)]
-pub fn pattern_simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
+pub fn pattern_simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
     if let Some(pattern) = match_pattern(_expr) {
         match pattern {
             Pattern::DifferenceOfSquares(a, b) => {
@@ -471,7 +471,7 @@ pub fn pattern_simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> Sym
 
 /// Simplify a symbolic expression
 #[allow(dead_code)]
-pub fn simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
+pub fn simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
     match _expr {
         // Identity simplifications
         Add(a, b) => {
@@ -606,7 +606,7 @@ pub fn simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExp
 
 /// Enhanced simplify that combines algebraic and pattern-based simplification
 #[allow(dead_code)]
-pub fn deep_simplify<F: IntegrateFloat>(_expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
+pub fn deep_simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
     // First apply algebraic simplification
     let algebraic_simplified = simplify(_expr);
     // Then apply pattern-based simplification

@@ -165,14 +165,14 @@ impl_max_pool_grad!(f64, max_pool_grad_f64);
 impl_max_pool_grad_grad!(f32, max_pool_grad_grad_f32);
 impl_max_pool_grad_grad!(f64, max_pool_grad_grad_f64);
 
-impl<T: Float>, crate::op::Op<T> for MaxPool2D {
+impl<T: Float> crate::op::Op<T> for MaxPool2D {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
-        let x_shape = x.shape();
-        let batch = x_shape[0];
-        let c = x_shape[1];
-        let xh = x_shape[2];
-        let xw = x_shape[3];
+        let xshape = x.shape();
+        let batch = xshape[0];
+        let c = xshape[1];
+        let xh = xshape[2];
+        let xw = xshape[3];
 
         let copied_x;
         let x = if x.is_standard_layout() {
@@ -219,9 +219,9 @@ impl<T: Float>, crate::op::Op<T> for MaxPool2D {
         };
         unsafe {
             let output =
-                NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), output);
+                NdArray::fromshape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), output);
             let indices =
-                NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), indices);
+                NdArray::fromshape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), indices);
             ctx.append_output(output);
             ctx.append_output(indices);
         }
@@ -244,15 +244,15 @@ impl<T: Float>, crate::op::Op<T> for MaxPool2D {
     }
 }
 
-impl<T: Float>, crate::op::Op<T> for MaxPool2DGrad {
+impl<T: Float> crate::op::Op<T> for MaxPool2DGrad {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let gy = &ctx.input(0);
         let argmax = &ctx.input(1);
-        let gy_shape = gy.shape();
-        let batch = gy_shape[0];
-        let c = gy_shape[1];
-        let yh = gy_shape[2];
-        let yw = gy_shape[3];
+        let gyshape = gy.shape();
+        let batch = gyshape[0];
+        let c = gyshape[1];
+        let yh = gyshape[2];
+        let yw = gyshape[3];
 
         let copied_gy;
         let gy = if gy.is_standard_layout() {
@@ -274,7 +274,7 @@ impl<T: Float>, crate::op::Op<T> for MaxPool2DGrad {
             ));
         };
         unsafe {
-            let gx = NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch, c, xh, xw]), gx);
+            let gx = NdArray::fromshape_vec_unchecked(ndarray::IxDyn(&[batch, c, xh, xw]), gx);
             ctx.append_output(gx);
         }
         Ok(())
@@ -296,10 +296,10 @@ impl<T: Float>, crate::op::Op<T> for MaxPool2DGrad {
     }
 }
 
-impl<T: Float>, crate::op::Op<T> for MaxPool2DGradGrad {
+impl<T: Float> crate::op::Op<T> for MaxPool2DGradGrad {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let ggx = &ctx.input(0);
-        let x_shape = ggx.shape();
+        let xshape = ggx.shape();
 
         let copied_ggx;
         let ggx = if ggx.is_standard_layout() {
@@ -309,10 +309,10 @@ impl<T: Float>, crate::op::Op<T> for MaxPool2DGradGrad {
             copied_ggx.as_ptr()
         };
 
-        let batch = x_shape[0];
-        let c = x_shape[1];
-        let xh = x_shape[2];
-        let xw = x_shape[3];
+        let batch = xshape[0];
+        let c = xshape[1];
+        let xh = xshape[2];
+        let xw = xshape[3];
         let yh = (xh + 2 * self.pad - self.size) / self.stride + 1;
         let yw = (xw + 2 * self.pad - self.size) / self.stride + 1;
         let argmax = &ctx.input(1);
@@ -326,7 +326,7 @@ impl<T: Float>, crate::op::Op<T> for MaxPool2DGradGrad {
                     "MaxPool2DGradGrad supports only f32 and f64".to_string(),
                 ));
             };
-            NdArray::from_shape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), ggy)
+            NdArray::fromshape_vec_unchecked(ndarray::IxDyn(&[batch, c, yh, yw]), ggy)
         };
         ctx.append_output(ggy);
         Ok(())

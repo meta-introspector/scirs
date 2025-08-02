@@ -72,7 +72,7 @@ fn demo_simd_activations() -> Result<()> {
     println!("\n⚡ SIMD Activation Functions Demo");
     println!("--------------------------------");
     // Create test data
-    let input = Array2::from_shape_fn((256, 512), |(i, j)| {
+    let input = Array2::fromshape_fn((256, 512), |(i, j)| {
         (i as f32 * 0.01 + j as f32 * 0.001).sin() * 2.0 - 1.0
     })
     .into_dyn();
@@ -134,9 +134,9 @@ fn demo_simd_matrix_operations() -> Result<()> {
     println!("\n🔢 SIMD Matrix Operations Demo");
     println!("-----------------------------");
     // Create test matrices
-    let a = Array2::from_shape_fn((128, 256), |(i, j)| (i + j) as f32 * 0.01).into_dyn();
+    let a = Array2::fromshape_fn((128, 256), |(i, j)| (i + j) as f32 * 0.01).into_dyn();
     let b =
-        Array2::from_shape_fn((256, 64), |(i, j)| (i as i32 - j as i32) as f32 * 0.01).into_dyn();
+        Array2::fromshape_fn((256, 64), |(i, j)| (i as i32 - j as i32) as f32 * 0.01).into_dyn();
     println!("Matrix A shape: {:?}", a.shape());
     println!("Matrix B shape: {:?}", b.shape());
     // Test matrix multiplication
@@ -172,10 +172,10 @@ fn demo_simd_matrix_operations() -> Result<()> {
 #[allow(dead_code)]
 fn demo_simd_normalization() -> Result<()> {
     println!("\n📊 SIMD Normalization Demo");
-    let input = Array2::from_shape_fn((32, 128), |(i, j)| {
+    let input = Array2::fromshape_fn((32, 128), |(i, j)| {
         (i as f32 + j as f32) * 0.1 + (i as f32 * j as f32).sin()
     // Test batch normalization
-    let mean = Array2::from_shape_fn((1, 128), |(_, j)| j as f32 * 0.01).into_dyn();
+    let mean = Array2::fromshape_fn((1, 128), |(_, j)| j as f32 * 0.01).into_dyn();
     let variance = Array2::from_elem((1, 128), 1.0).into_dyn();
     let gamma = Array2::from_elem((1, 128), 1.0).into_dyn();
     let beta = Array2::from_elem((1, 128), 0.0).into_dyn();
@@ -208,10 +208,10 @@ fn demo_simd_loss_functions() -> Result<()> {
     println!("\n📉 SIMD Loss Functions Demo");
     println!("---------------------------");
     // Create test data for classification
-    let predictions = Array2::from_shape_fn((64, 10), |(i, j)| {
+    let predictions = Array2::fromshape_fn((64, 10), |(i, j)| {
         let logit = (i + j) as f32 * 0.1;
         logit.exp() / (0..10).map(|k| ((i + k) as f32 * 0.1).exp()).sum::<f32>()
-    let targets = Array2::from_shape_fn((64, 10), |(i_)| {
+    let targets = Array2::fromshape_fn((64, 10), |(i_)| {
         let class = i % 10;
         if i % 10 == class {
             1.0
@@ -234,7 +234,7 @@ fn demo_simd_loss_functions() -> Result<()> {
     println!("MSE Loss: {:.6}", mse_loss);
     // Test softmax
     println!("\nTesting SIMD softmax...");
-    let logits = Array2::from_shape_fn((32, 10), |(i, j)| (i + j) as f32 * 0.1).into_dyn();
+    let logits = Array2::fromshape_fn((32, 10), |(i, j)| (i + j) as f32 * 0.1).into_dyn();
     let softmax_result = SIMDOperations::simd_softmax_f32(&logits, Some(1))?;
     let softmax_time = start.elapsed();
     println!("SIMD Softmax time: {:?}", softmax_time);
@@ -251,7 +251,7 @@ fn demo_performance_comparison() -> Result<()> {
     println!("------------------------");
     // Create large test data
     let size = 1000;
-    let input = Array2::from_shape_fn((size, size), |(i, j)| {
+    let input = Array2::fromshape_fn((size, size), |(i, j)| {
         (i as f32 * 0.001 + j as f32 * 0.001).sin()
         "Testing with {}x{} matrix ({} elements)",
         size,
@@ -288,12 +288,12 @@ fn demo_neural_network_forward_pass() -> Result<()> {
         input_size, hidden_size, output_size
     println!("Batch size: {}", batch_size);
     // Create input data
-    let input = Array2::from_shape_fn((batch_size, input_size), |(i, j)| {
+    let input = Array2::fromshape_fn((batch_size, input_size), |(i, j)| {
         (i as f32 * 0.01 + j as f32 * 0.001).sin()
     // Create weight matrices
-    let w1 = Array2::from_shape_fn((input_size, hidden_size), |(i, j)| {
+    let w1 = Array2::fromshape_fn((input_size, hidden_size), |(i, j)| {
         ((i + j) as f32 * 0.001).sin() * 0.1
-    let w2 = Array2::from_shape_fn((hidden_size, output_size), |(i, j)| {
+    let w2 = Array2::fromshape_fn((hidden_size, output_size), |(i, j)| {
         ((i as i32 - j as i32) as f32 * 0.001).cos() * 0.1
     println!("\nExecuting SIMD-accelerated forward pass...");
     let total_start = Instant::now();

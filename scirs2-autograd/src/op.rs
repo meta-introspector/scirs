@@ -15,7 +15,7 @@
 //! // Implements `Op` trait for `Sigmoid`.
 //! struct Sigmoid;
 //!
-//! impl<T: ag::Float>, ag::op::Op<T> for Sigmoid {
+//! impl<T: ag::Float> ag::op::Op<T> for Sigmoid {
 //!     fn compute(
 //!         &self,
 //!         ctx: &mut ag::op::ComputeContext<T>,

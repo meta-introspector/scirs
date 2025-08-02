@@ -533,7 +533,7 @@ where
 
 /// Compute the total robust cost
 #[allow(dead_code)]
-fn compute_robust_cost<L: RobustLoss>(_residuals: &Array1<f64>, loss: &L) -> f64 {
+fn compute_robust_cost<L: RobustLoss>(residuals: &Array1<f64>, loss: &L) -> f64 {
     _residuals.iter().map(|&r| loss.loss(r)).sum()
 }
 

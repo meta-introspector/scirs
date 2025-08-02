@@ -15,8 +15,8 @@ fn main() -> Result<()> {
     // TODO: Implement ConvNeXt models module and uncomment the following code
     /*
     // Create a random input tensor (batch_size=1, channels=3, height=224, width=224)
-    let input_shape = [1, 3, 224, 224];
-    let mut input = Array::<f32>::zeros(input_shape).into_dyn();
+    let inputshape = [1, 3, 224, 224];
+    let mut input = Array::<f32>::zeros(inputshape).into_dyn();
     // Fill with random values between 0 and 1
     for elem in input.iter_mut() {
         *elem = rand::random::<f32>();
@@ -58,7 +58,7 @@ fn main() -> Result<()> {
     println!("Output shape: {:?}", output_custom.shape());
     // Example of inference
     println!("\nInference example with ConvNeXt-Tiny:");
-    let inference_input = Array::<f32>::zeros(input_shape).into_dyn();
+    let inference_input = Array::<f32>::zeros(inputshape).into_dyn();
     let inference_output = convnext_tiny.forward(&inference_input)?;
     // Get top prediction (normally you'd have class labels)
     let mut max_val = f32::MIN;

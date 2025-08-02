@@ -622,7 +622,7 @@ where
 fn uniform_filter_nd_general<T, D>(
     input: &Array<T, D>,
     size: &[usize],
-    mode: &BorderMode_origin: &[isize],
+    mode: &BorderMode, origin: &[isize],
     pad_width: &[(usize, usize)],
     norm_factor: T,
 ) -> NdimageResult<Array<T, D>>
@@ -644,7 +644,7 @@ where
     let mut output = Array::<T, D>::zeros(input.raw_dim());
 
     // Get the shape of the input
-    let input_shape = input.shape();
+    let inputshape = input.shape();
 
     // Generate all possible coordinate combinations for the input
     let total_elements = input.len();
@@ -658,7 +658,7 @@ where
                 &padded_input,
                 size,
                 norm_factor,
-                input_shape,
+                inputshape,
             );
         }
     }
@@ -669,7 +669,7 @@ where
         &padded_input,
         size,
         norm_factor,
-        input_shape,
+        inputshape,
         &mut output,
     )
 }
@@ -681,7 +681,7 @@ fn uniform_filter_nd_sequential<T, D>(
     padded_input: &Array<T, D>,
     size: &[usize],
     norm_factor: T,
-    input_shape: &[usize],
+    inputshape: &[usize],
     output: &mut Array<T, D>,
 ) -> NdimageResult<Array<T, D>>
 where
@@ -691,18 +691,18 @@ where
     let ndim = _input.ndim();
 
     // Helper function to convert linear index to n-dimensional coordinates
-    fn index_to_coords(mut index: usize_shape: &[usize]) -> Vec<usize> {
-        let mut coords = vec![0; _shape.len()];
-        for i in (0.._shape.len()).rev() {
-            coords[i] = index % _shape[i];
-            index /= _shape[i];
+    fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
+        let mut coords = vec![0; shape.len()];
+        for i in (0..shape.len()).rev() {
+            coords[i] = index % shape[i];
+            index /= shape[i];
         }
         coords
     }
 
     // Iterate through each position in the _input array
     for linear_idx in 0.._input.len() {
-        let coords = index_to_coords(linear_idx, input_shape);
+        let coords = index_to_coords(linear_idx, inputshape);
 
         // Initialize sum
         let mut sum = T::zero();
@@ -752,7 +752,7 @@ fn uniform_filter_nd_parallel<T, D>(
     padded_input: &Array<T, D>,
     size: &[usize],
     norm_factor: T,
-    input_shape: &[usize],
+    inputshape: &[usize],
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Send + Sync,
@@ -764,11 +764,11 @@ where
     let total_elements = _input.len();
 
     // Helper function to convert linear index to n-dimensional coordinates
-    fn index_to_coords(mut index: usize_shape: &[usize]) -> Vec<usize> {
-        let mut coords = vec![0; _shape.len()];
-        for i in (0.._shape.len()).rev() {
-            coords[i] = index % _shape[i];
-            index /= _shape[i];
+    fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
+        let mut coords = vec![0; shape.len()];
+        for i in (0..shape.len()).rev() {
+            coords[i] = index % shape[i];
+            index /= shape[i];
         }
         coords
     }
@@ -777,7 +777,7 @@ where
     let results: Vec<T> = (0..total_elements)
         .into_par_iter()
         .map(|linear_idx| {
-            let coords = index_to_coords(linear_idx, input_shape);
+            let coords = index_to_coords(linear_idx, inputshape);
 
             // Initialize sum
             let mut sum = T::zero();
@@ -818,7 +818,7 @@ where
         .collect();
 
     // Convert results back to n-dimensional array
-    let output = Array::from_shape_vec(_input.raw_dim(), results)
+    let output = Array::fromshape_vec(_input.raw_dim(), results)
         .map_err(|_| NdimageError::DimensionError("Failed to create output array".into()))?;
 
     Ok(output)
@@ -1029,7 +1029,7 @@ where
         _ => {
             // For higher dimensions, we need to use a more general approach
             // Convert to dynamic dimension for processing
-            let input_shape = input.shape();
+            let inputshape = input.shape();
             let padded_input_dyn = padded_input.view().into_dyn();
             let mut output_dyn = output.view_mut().into_dyn();
 
@@ -1042,11 +1042,11 @@ where
                 size: usize,
                 axis: usize,
                 idx: &mut Vec<usize>,
-                input_shape: &[usize],
+                inputshape: &[usize],
                 dimension: usize,
                 norm_factor: T,
             ) {
-                if dimension == input_shape.len() {
+                if dimension == inputshape.len() {
                     // At leaf level, calculate the window sum along the axis
                     let mut sum = T::zero();
                     let mut temp_idx = idx.clone();
@@ -1071,13 +1071,13 @@ where
                         size,
                         axis,
                         idx,
-                        input_shape,
+                        inputshape,
                         dimension + 1,
                         norm_factor,
                     );
                 } else {
                     // Recurse on all other dimensions
-                    for i in 0..input_shape[dimension] {
+                    for i in 0..inputshape[dimension] {
                         idx[dimension] = i;
                         process_indices(
                             input_dyn,
@@ -1085,7 +1085,7 @@ where
                             size,
                             axis,
                             idx,
-                            input_shape,
+                            inputshape,
                             dimension + 1,
                             norm_factor,
                         );
@@ -1101,7 +1101,7 @@ where
                 size,
                 axis,
                 &mut idx,
-                input_shape,
+                inputshape,
                 0,
                 norm_factor,
             );

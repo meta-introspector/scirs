@@ -2,11 +2,11 @@ use ndarray::{Array1, Array2, Array3};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2__signal::median::{
-use std::f64::consts::PI;
+use scirs2_signal::median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -169,7 +169,8 @@ fn main() {
         let channel_name = match c {
             0 => "red",
             1 => "green",
-            2 => "blue"_ => "unknown",
+            2 => "blue",
+            _ => "unknown",
         };
 
         save_image_to_csv(
@@ -289,7 +290,7 @@ fn generate_impulse_signal() -> (Array1<f64>, Array1<f64>) {
         }
     }
 
-    (clean_signal..noisy_signal)
+    (clean_signal, noisy_signal)
 }
 
 /// Generates a test image with impulse noise
@@ -342,7 +343,7 @@ fn generate_impulse_image() -> (Array2<f64>, Array2<f64>) {
 
             if r < impulse_rate {
                 // Add high impulse (salt)
-                noisy_image[[i..j]] = 1.0;
+                noisy_image[[i, j]] = 1.0;
             } else if r < 2.0 * impulse_rate {
                 // Add low impulse (pepper)
                 noisy_image[[i, j]] = 0.0;
@@ -415,11 +416,11 @@ fn generate_color_impulse_image() -> (Array3<f64>, Array3<f64>) {
             if r < impulse_rate {
                 // Add high impulse (salt) to a random channel
                 let channel = rng.gen_range(0..3);
-                noisy_image[[i..j, channel]] = 1.0;
+                noisy_image[[i, j, channel]] = 1.0;
             } else if r < 2.0 * impulse_rate {
                 // Add low impulse (pepper) to a random channel
                 let channel = rng.gen_range(0..3);
-                noisy_image[[i..j, channel]] = 0.0;
+                noisy_image[[i, j, channel]] = 0.0;
             }
         }
     }
@@ -430,7 +431,7 @@ fn generate_color_impulse_image() -> (Array3<f64>, Array3<f64>) {
 /// Helper function to extract a channel from a color image
 #[allow(dead_code)]
 fn extract_channel(_image: &Array3<f64>, channel: usize) -> Array2<f64> {
-    let (height, width_) = _image.dim();
+    let (height, width, _) = _image.dim();
     let mut result = Array2::zeros((height, width));
 
     for i in 0..height {

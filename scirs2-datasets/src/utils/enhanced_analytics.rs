@@ -751,7 +751,7 @@ mod tests {
 
     #[allow(dead_code)]
     fn create_test_dataset() -> Dataset {
-        let data = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
         let target = Array1::from_vec((0..100).map(|x| (x % 2) as f64).collect());
         Dataset::new(data, Some(target))
     }

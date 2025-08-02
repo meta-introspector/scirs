@@ -790,7 +790,7 @@ impl SemanticHierarchical {
         }
 
         // Convert to linkage matrix
-        let linkage_matrix = Array2::from_shape_vec(
+        let linkage_matrix = Array2::fromshape_vec(
             (linkage_steps.len(), 4),
             linkage_steps.into_iter().flatten().collect(),
         )
@@ -977,7 +977,7 @@ impl TopicBasedClustering {
     }
 
     /// Get cluster assignments based on dominant topics
-    pub fn predict(&self, _text_repr: &TextRepresentation) -> Result<Array1<usize>> {
+    pub fn predict(&self, text_repr: &TextRepresentation) -> Result<Array1<usize>> {
         if let Some(ref doc_topics) = self.document_topic_distributions {
             let mut labels = Array1::zeros(doc_topics.nrows());
 
@@ -1104,7 +1104,7 @@ mod tests {
     #[test]
     fn test_semantic_kmeans_basic() {
         // Create sample TF-IDF vectors
-        let vectors = Array2::from_shape_vec(
+        let vectors = Array2::fromshape_vec(
             (4, 3),
             vec![1.0, 0.0, 0.0, 0.9, 0.1, 0.0, 0.0, 0.0, 1.0, 0.0, 0.1, 0.9],
         )
@@ -1141,11 +1141,11 @@ mod tests {
     }
 
     #[test]
-    fn test_text_preprocessing() {
+    fn testtext_preprocessing() {
         let config = SemanticClusteringConfig::default();
         let clusterer = SemanticKMeans::new(config);
 
-        let matrix = Array2::from_shape_vec((2, 3), vec![3.0, 4.0, 0.0, 1.0, 2.0, 2.0]).unwrap();
+        let matrix = Array2::fromshape_vec((2, 3), vec![3.0, 4.0, 0.0, 1.0, 2.0, 2.0]).unwrap();
 
         let normalized = clusterer.normalize_vectors(matrix).unwrap();
 
@@ -1159,7 +1159,7 @@ mod tests {
     #[test]
     fn test_topic_clustering_basic() {
         // Create sample document-term matrix
-        let matrix = Array2::from_shape_vec(
+        let matrix = Array2::fromshape_vec(
             (3, 4),
             vec![2.0, 0.0, 1.0, 0.0, 0.0, 3.0, 0.0, 1.0, 1.0, 1.0, 2.0, 1.0],
         )

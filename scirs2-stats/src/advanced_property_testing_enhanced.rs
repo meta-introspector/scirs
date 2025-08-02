@@ -1888,7 +1888,7 @@ impl RegressionDetector {
     }
 
     pub fn detect_regressions<F>(
-        &self, _function_name: &str, _baseline: &ComprehensivePropertyTestResult_current: &ComprehensivePropertyTestResult,
+        &self, _function_name: &str, _baseline: &ComprehensivePropertyTestResult, current: &ComprehensivePropertyTestResult,
     ) -> StatsResult<RegressionDetectionResult>
     where
         F: Float + NumCast + Copy + Send + Sync + Debug + 'static

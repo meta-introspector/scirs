@@ -98,23 +98,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 4: L-shaped domain
     println!("4. L-shaped Domain Mesh Generation");
-    let l_shape_domain = Domain::LShape {
+    let lshape_domain = Domain::LShape {
         width: 2.0,
         height: 2.0,
         notch_width: 1.0,
         notch_height: 1.0,
     };
 
-    let l_shape_mesh = generator.generate_mesh(&l_shape_domain, &boundary_spec)?;
+    let lshape_mesh = generator.generate_mesh(&lshape_domain, &boundary_spec)?;
 
     println!("   Generated L-shaped mesh:");
-    println!("   - Points: {}", l_shape_mesh.points.len());
-    println!("   - Elements: {}", l_shape_mesh.elements.len());
+    println!("   - Points: {}", lshape_mesh.points.len());
+    println!("   - Elements: {}", lshape_mesh.elements.len());
 
-    let l_shape_quality = generator.assess_mesh_quality(&l_shape_mesh);
-    println!("   - Quality score: {:.3}", l_shape_quality.quality_score);
-    println!("   - Min angle: {:.1}°", l_shape_quality.min_angle);
-    println!("   - Max angle: {:.1}°", l_shape_quality.max_angle);
+    let lshape_quality = generator.assess_mesh_quality(&lshape_mesh);
+    println!("   - Quality score: {:.3}", lshape_quality.quality_score);
+    println!("   - Min angle: {:.1}°", lshape_quality.min_angle);
+    println!("   - Max angle: {:.1}°", lshape_quality.max_angle);
     println!();
 
     // Example 5: Annulus (ring) mesh

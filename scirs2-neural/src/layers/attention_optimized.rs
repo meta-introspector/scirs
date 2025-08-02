@@ -34,13 +34,13 @@ where
             "Input must have at least 3 dimensions [batch, seq_len, features]".to_string(),
         ));
     }
-    let input_shape = input.shape();
-    let batch_size = input_shape[0];
-    let seq_len = input_shape[1];
+    let inputshape = input.shape();
+    let batch_size = inputshape[0];
+    let seq_len = inputshape[1];
     // Reshape input if necessary to 3D [batch, seq_len, features]
     let input_3d = if input.ndim() > 3 {
-        let flat_batch_size = input_shape.iter().take(input.ndim() - 2).product();
-        let features = input_shape[input.ndim() - 1];
+        let flat_batch_size = inputshape.iter().take(input.ndim() - 2).product();
+        let features = inputshape[input.ndim() - 1];
         input
             .clone()
             .into_shape_with_order(IxDyn(&[flat_batch_size, seq_len, features]))
@@ -53,7 +53,7 @@ where
     // Convert to 2D for efficient batched matrix multiplication
     let input_2d = input_3d
         .clone()
-        .into_shape((batch_size * seq_len, d_model))
+        .intoshape((batch_size * seq_len, d_model))
         .map_err(|e| {
             NeuralError::InferenceError(format!("Failed to reshape input for matmul: {}", e))
         })?;
@@ -73,21 +73,21 @@ where
     let k_proj_2d = input_2d_view.dot(&w_key_2d);  
     let v_proj_2d = input_2d_view.dot(&w_value_2d);
     // Reshape back to [batch, seq_len, d_model]
-    let q_proj = q_proj_2d.into_shape((batch_size, seq_len, d_model))
+    let q_proj = q_proj_2d.intoshape((batch_size, seq_len, d_model))
         .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape Q projection: {}", e)))?;
-    let k_proj = k_proj_2d.into_shape((batch_size, seq_len, d_model))
+    let k_proj = k_proj_2d.intoshape((batch_size, seq_len, d_model))
         .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape K projection: {}", e)))?;
-    let v_proj = v_proj_2d.into_shape((batch_size, seq_len, d_model))
+    let v_proj = v_proj_2d.intoshape((batch_size, seq_len, d_model))
         .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape V projection: {}", e)))?;
     // Reshape for multi-head attention: [batch, seq, d_model] -> [batch, seq, heads, head_dim]
     let num_heads = config.num_heads;
     let head_dim = config.head_dim;
     
-    let q_multihead = q_proj.into_shape((batch_size, seq_len, num_heads, head_dim))
+    let q_multihead = q_proj.intoshape((batch_size, seq_len, num_heads, head_dim))
         .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape Q for multihead: {}", e)))?;
-    let k_multihead = k_proj.into_shape((batch_size, seq_len, num_heads, head_dim))
+    let k_multihead = k_proj.intoshape((batch_size, seq_len, num_heads, head_dim))
         .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape K for multihead: {}", e)))?;
-    let v_multihead = v_proj.into_shape((batch_size, seq_len, num_heads, head_dim))
+    let v_multihead = v_proj.intoshape((batch_size, seq_len, num_heads, head_dim))
         .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape V for multihead: {}", e)))?;
     // Transpose for efficient attention computation: [batch, seq, heads, head_dim] -> [batch, heads, seq, head_dim]
     let q_transposed = q_multihead.permuted_axes([0, 2, 1, 3]);
@@ -146,7 +146,7 @@ where
                     attention_output[[b, h, i, d]] = output[[i, d]];
     // Transpose back and reshape: [batch, heads, seq, head_dim] -> [batch, seq, heads, head_dim] -> [batch, seq, d_model]
     let attention_output_transposed = attention_output.permuted_axes([0, 2, 1, 3]);
-    let attention_output_reshaped = attention_output_transposed.into_shape((batch_size, seq_len, d_model))
+    let attention_output_reshaped = attention_output_transposed.intoshape((batch_size, seq_len, d_model))
         .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape attention output: {}", e)))?;
     // Apply output projection using efficient matrix multiplication
     let attention_output_2d = attention_output_reshaped.view()
@@ -154,15 +154,15 @@ where
     let attention_output_2d_view = attention_output_2d.into_dimensionality::<ndarray::Ix2>()
         .map_err(|_| NeuralError::InferenceError("Failed to convert attention output to 2D view".to_string()))?;
     let output_2d = attention_output_2d_view.dot(&w_output_2d);
-    let output = output_2d.into_shape((batch_size, seq_len, d_model))
+    let output = output_2d.intoshape((batch_size, seq_len, d_model))
         .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape output: {}", e)))?
         .into_dyn();
     // Reshape output to match input shape if necessary
     if input.ndim() > 3 {
-        let mut original_shape = input_shape.to_vec();
-        original_shape[original_shape.len() - 1] = d_model;
+        let mut originalshape = inputshape.to_vec();
+        originalshape[originalshape.len() - 1] = d_model;
         output
-            .into_shape_with_order(IxDyn(&original_shape))
+            .into_shape_with_order(IxDyn(&originalshape))
                 NeuralError::InferenceError(format!("Failed to reshape output: {}", e))
             })
         Ok(output)

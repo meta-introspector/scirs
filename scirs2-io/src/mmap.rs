@@ -21,12 +21,12 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::mmap::{MmapArray, create_mmap_array};
+//! use scirs2_io::mmap::{MmapArray, create_mmap_array};
 //! use ndarray::Array2;
 //! use std::path::Path;
 //!
 //! // Create a large array file
-//! let data = Array2::from_shape_fn((1000, 1000), |(i, j)| (i + j) as f64);
+//! let data = Array2::fromshape_fn((1000, 1000), |(i, j)| (i + j) as f64);
 //! let file_path = Path::new("large_array.bin");
 //!
 //! // Write array to file
@@ -102,7 +102,7 @@ pub struct MmapConfig {
 
 impl<'a> MmapArrayBuilder<'a> {
     /// Create a new builder for the specified file path
-    pub fn new<P: AsRef<Path>>(_path: &'a P) -> Self {
+    pub fn new<P: AsRef<Path>>(path: &'a P) -> Self {
         Self {
             path: _path.as_ref(),
             create: true,
@@ -245,7 +245,7 @@ where
     T: bytemuck::Pod,
 {
     /// Open an existing memory-mapped array file for reading
-    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
 
@@ -400,7 +400,7 @@ where
             )));
         }
 
-        ArrayView::from_shape(IxDyn(shape), data_slice)
+        ArrayView::fromshape(IxDyn(shape), data_slice)
             .map_err(|e| IoError::FormatError(format!("Failed to create array view: {}", e)))
     }
 
@@ -420,7 +420,7 @@ where
     T: bytemuck::Pod,
 {
     /// Open an existing memory-mapped array file for read-write access
-    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -526,7 +526,7 @@ where
 
         let data_slice = self.as_slice_mut()?;
 
-        ArrayViewMut::from_shape(IxDyn(shape), data_slice)
+        ArrayViewMut::fromshape(IxDyn(shape), data_slice)
             .map_err(|e| IoError::FormatError(format!("Failed to create array view: {}", e)))
     }
 
@@ -671,7 +671,7 @@ mod tests {
         let file_path = temp_dir.path().join("test_convenience.bin");
 
         // Create test data
-        let original = Array2::from_shape_fn((100, 50), |(i, j)| (i + j) as f64);
+        let original = Array2::fromshape_fn((100, 50), |(i, j)| (i + j) as f64);
 
         // Write using convenience function
         create_mmap_array(&file_path, &original).unwrap();
@@ -698,8 +698,8 @@ mod tests {
 
         // Verify it was created correctly
         let mmap_array = MmapArray::<f64>::open(&file_path).unwrap();
-        let read_shape = mmap_array.shape().unwrap();
-        assert_eq!(read_shape, shape);
+        let readshape = mmap_array.shape().unwrap();
+        assert_eq!(readshape, shape);
         assert_eq!(mmap_array.len(), 100 * 200);
 
         let array_view = mmap_array.as_array_view(&shape).unwrap();

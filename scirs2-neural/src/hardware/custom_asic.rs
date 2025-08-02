@@ -254,7 +254,7 @@ impl CustomASIC {
                 unified_memory: true,
                 multi_device: false,
                 graph_optimization: true,
-                dynamic_shapes: true,
+                dynamicshapes: true,
                 custom_kernels: true,
             },
         }
@@ -288,14 +288,14 @@ impl CustomASIC {
                 program.add_instruction(ASICInstruction::Synchronize);
             }
             ASICOperation::Convolution {
-                input_shape,
-                kernel_shape,
+                inputshape,
+                kernelshape,
                 stride,
                 padding,
                 datatype,
             } => {
-                let (batch_size, input_channels, input_height, input_width) = *input_shape;
-                let (output_channels, kernel_channels, kernel_height, kernel_width) = *kernel_shape;
+                let (batch_size, input_channels, input_height, input_width) = *inputshape;
+                let (output_channels, kernel_channels, kernel_height, kernel_width) = *kernelshape;
                 let (stride_h, stride_w) = *stride;
                 let (padding_h, padding_w) = *padding;
                 // Validate dimensions
@@ -512,8 +512,8 @@ pub enum ASICOperation {
         n: usize,
         k: usize,
         datatype: DataType,
-        input_shape: (usize, usize, usize, usize),
-        kernel_shape: (usize, usize, usize, usize),
+        inputshape: (usize, usize, usize, usize),
+        kernelshape: (usize, usize, usize, usize),
         stride: (usize, usize),
         padding: (usize, usize),
         parameters: HashMap<String, f32>,
@@ -656,7 +656,7 @@ impl Accelerator for CustomASIC {
         Ok(data)
     fn execute_kernel(
         &self,
-        kernel: &dyn Kernel_inputs: &[&DeviceBuffer], _outputs: &mut [&mut DeviceBuffer],
+        kernel: &dyn Kernel, inputs: &[&DeviceBuffer], _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
         println!("Executing kernel: {} on Custom ASIC", kernel.name());
     fn synchronize(&self) -> Result<()> {

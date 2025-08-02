@@ -1,16 +1,16 @@
-//! System Identification Example
-//!
-//! This example demonstrates various system identification techniques
-//! available in the scirs2-signal crate for estimating mathematical
-//! models of dynamic systems from input-output data.
+// System Identification Example
+//
+// This example demonstrates various system identification techniques
+// available in the scirs2-signal crate for estimating mathematical
+// models of dynamic systems from input-output data.
 
-use scirs2__signal::parametric::{ARMethod, OrderSelection};
-use scirs2__signal::sysid::{
+use scirs2_signal::parametric::{ARMethod, OrderSelection};
+use scirs2_signal::sysid::{
     estimate_frequency_response, estimate_transfer_function, identify_ar_model,
     identify_arma_model, validate_model, FreqResponseMethod, RecursiveLeastSquares, SysIdConfig,
     TfEstimationMethod,
 };
-use scirs2__signal::waveforms::chirp;
+use scirs2_signal::waveforms::chirp;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

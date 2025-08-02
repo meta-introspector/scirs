@@ -69,7 +69,7 @@ pub struct AcceleratorFeatures {
     /// Supports graph optimization
     pub graph_optimization: bool,
     /// Supports dynamic shapes
-    pub dynamic_shapes: bool,
+    pub dynamicshapes: bool,
     /// Supports custom kernels
     pub custom_kernels: bool,
 /// Base trait for hardware accelerators
@@ -451,7 +451,7 @@ impl Default for CPUAccelerator {
                 compute_capability: (1, 0),
                 total_memory: 16 * 1024 * 1024 * 1024, // 16GB
                 memory_bandwidth: 50.0,
-                compute_units: num, _cpus: get() as u32,
+                compute_units: num_cpus::get() as u32,
                 peak_tflops_fp32: 0.5,
                 peak_tflops_fp16: 1.0,
                 peak_tflops_int8: 2.0,
@@ -462,7 +462,7 @@ impl Default for CPUAccelerator {
                     unified_memory: true,
                     multi_device: false,
                     graph_optimization: false,
-                    dynamic_shapes: true,
+                    dynamicshapes: true,
                     custom_kernels: true, // CPU supports custom kernels
                 },
             },
@@ -607,7 +607,7 @@ impl CUDAAccelerator {
                 unified_memory: true,
                 multi_device: true,
                 graph_optimization: true,
-                dynamic_shapes: true,
+                dynamicshapes: true,
                 custom_kernels: true,
         Ok(Self {
             capabilities,
@@ -742,7 +742,7 @@ impl FPGAAccelerator {
             peak_tflops_fp16: 10.0,
             peak_tflops_int8: 20.0,
                 graph_optimization: false,
-                dynamic_shapes: false,
+                dynamicshapes: false,
 impl Accelerator for FPGAAccelerator {
         AcceleratorType::FPGA
         println!("Initializing FPGA device {}", self.device_id);
@@ -868,7 +868,7 @@ impl IPUAccelerator {
             peak_tflops_fp32: 30.0,
             peak_tflops_fp16: 250.0, // Optimized for FP16
             peak_tflops_int8: 500.0,
-                dynamic_shapes: false, // IPU prefers static graphs
+                dynamicshapes: false, // IPU prefers static graphs
 impl Accelerator for IPUAccelerator {
         AcceleratorType::IPU
         println!("Initializing Graphcore IPU device {}", self.device_id);

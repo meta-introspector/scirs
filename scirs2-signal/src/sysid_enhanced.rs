@@ -1,27 +1,28 @@
-//! Enhanced System Identification with advanced algorithms
-//!
-//! This module provides advanced system identification methods including:
-//! - Recursive identification with forgetting factors
-//! - Multi-model adaptive estimation
-//! - Nonlinear system identification
-//! - Closed-loop identification
-//! - MIMO system identification
+use ndarray::s;
+// Enhanced System Identification with advanced algorithms
+//
+// This module provides advanced system identification methods including:
+// - Recursive identification with forgetting factors
+// - Multi-model adaptive estimation
+// - Nonlinear system identification
+// - Closed-loop identification
+// - MIMO system identification
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::{StateSpace, TransferFunction};
-use ndarray::{Array1, Array2, Axis, s};
-use num__complex::Complex64;
-use rand::Rng;
+use ndarray::{ Array1, Array2, Axis};
+use num_complex::Complex64;
 use rand::prelude::*;
-use scirs2_core::validation::check_shape;
+use rand::Rng;
+use scirs2_core::validation::checkshape;
 use statrs::statistics::Statistics;
 
+use crate::lti::design::tf;
 #[allow(unused_imports)]
 use crate::sysid_advanced::{
     identify_armax_complete, identify_bj_complete, identify_narx_complete, identify_oe_complete,
     identify_state_space_complete,
 };
-use crate::lti::design::tf;
 /// Enhanced system identification result
 #[derive(Debug, Clone)]
 pub struct EnhancedSysIdResult {
@@ -277,7 +278,7 @@ pub fn enhanced_system_identification(
     let start_time = std::time::Instant::now();
 
     // Enhanced input validation
-    check_shape(input, &[output.len()], "input and output")?;
+    checkshape(input, &[output.len()], "input and output")?;
 
     // Check if all values are finite
     if !input.iter().all(|&x: &f64| x.is_finite()) {
@@ -631,7 +632,7 @@ fn identify_arx(
 
     // Compute parameter statistics
     let residuals = &y - &phi.dot(&params);
-    let sigma2 = residuals.dot(&residuals) / (n - na - nb)  as f64;
+    let sigma2 = residuals.dot(&residuals) / (n - na - nb) as f64;
     let covariance = phi_t_phi.inv().unwrap() * sigma2;
     let std_errors = covariance.diag().map(|x| x.sqrt());
 
@@ -649,7 +650,7 @@ fn identify_arx(
     };
 
     let model = SystemModel::ARX { a, b, delay };
-    let cost = residuals.dot(&residuals) / n  as f64;
+    let cost = residuals.dot(&residuals) / n as f64;
 
     Ok((model, parameter_estimate, 1, true, cost))
 }
@@ -719,10 +720,10 @@ fn select_arx_orders(
                         &phi.t().dot(&y),
                     ) {
                         let residuals = &y - &phi.dot(&params);
-                        let sigma2 = residuals.dot(&residuals) / n  as f64;
+                        let sigma2 = residuals.dot(&residuals) / n as f64;
 
                         // AIC = n * ln(sigma2) + 2 * k
-                        let aic = n as f64 * sigma2.ln() + 2.0 * k  as f64;
+                        let aic = n as f64 * sigma2.ln() + 2.0 * k as f64;
 
                         if aic < best_aic {
                             best_aic = aic;
@@ -765,7 +766,7 @@ fn solve_regularized_ls(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1
 fn solve_using_svd(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // use ndarray__linalg::SVD; // TODO: Add ndarray-linalg dependency
 
-    let (u, s, vt) = a
+    let (u, vt) = a
         .svd(true, true)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
@@ -918,8 +919,8 @@ fn validate_model(
     };
 
     // Compute information criteria
-    let n = output.len()  as f64;
-    let k = get_model_parameters(model)  as f64;
+    let n = output.len() as f64;
+    let k = get_model_parameters(model) as f64;
     let sigma2 = (ss_res / n).max(1e-15); // Prevent log(0)
 
     let aic = n * sigma2.ln() + 2.0 * k;
@@ -1029,7 +1030,7 @@ fn enhanced_residual_analysis(
 
     let r_mean = residuals.mean().unwrap();
     let r_var =
-        residuals.iter().map(|&r| (r - r_mean).powi(2)).sum::<f64>() / residuals.len()  as f64;
+        residuals.iter().map(|&r| (r - r_mean).powi(2)).sum::<f64>() / residuals.len() as f64;
 
     for lag in 0..max_lag {
         let mut sum = 0.0;
@@ -1050,7 +1051,7 @@ fn enhanced_residual_analysis(
     // Compute cross-correlation with input
     let mut cross_correlation = Array1::zeros(max_lag);
     let i_mean = input.mean().unwrap();
-    let i_var = input.iter().map(|&i| (i - i_mean).powi(2)).sum::<f64>() / input.len()  as f64;
+    let i_var = input.iter().map(|&i| (i - i_mean).powi(2)).sum::<f64>() / input.len() as f64;
 
     for lag in 0..max_lag {
         let mut sum = 0.0;
@@ -1085,7 +1086,7 @@ fn enhanced_residual_analysis(
 /// Ljung-Box test for whiteness
 #[allow(dead_code)]
 fn ljung_box_test(_autocorr: &Array1<f64>) -> f64 {
-    let n = _autocorr.len()  as f64;
+    let n = _autocorr.len() as f64;
     let h = _autocorr.len().min(10); // Use up to 10 lags
 
     let mut lb_stat = 0.0;
@@ -1104,8 +1105,11 @@ fn ljung_box_test(_autocorr: &Array1<f64>) -> f64 {
 /// Cross-correlation independence test
 #[allow(dead_code)]
 fn cross_correlation_test(_cross_corr: &Array1<f64>) -> f64 {
-    let max_corr = _cross_corr.iter().map(|&x: &f64| x.abs()).fold(0.0, f64::max);
-    let n = _cross_corr.len()  as f64;
+    let max_corr = _cross_corr
+        .iter()
+        .map(|&x: &f64| x.abs())
+        .fold(0.0, f64::max);
+    let n = _cross_corr.len() as f64;
 
     // Approximate test statistic
     let test_stat = max_corr * n.sqrt();
@@ -1117,7 +1121,7 @@ fn cross_correlation_test(_cross_corr: &Array1<f64>) -> f64 {
 /// Jarque-Bera test for normality
 #[allow(dead_code)]
 fn jarque_bera_test(_data: &Array1<f64>) -> f64 {
-    let n = _data.len()  as f64;
+    let n = _data.len() as f64;
     let mean = _data.mean().unwrap();
 
     // Compute moments
@@ -1158,8 +1162,8 @@ fn chi_square_pvalue(x: f64, df: usize) -> f64 {
         (-x / 2.0).exp()
     } else {
         // Rough approximation using normal approximation
-        let mean = df  as f64;
-        let variance = 2.0 * df  as f64;
+        let mean = df as f64;
+        let variance = 2.0 * df as f64;
         let z = (x - mean) / variance.sqrt();
         1.0 - standard_normal_cdf(z)
     }
@@ -1788,7 +1792,8 @@ fn detect_outliers_mad(_data: &Array1<f64>, threshold: f64) -> Vec<bool> {
     let deviations: Vec<f64> = _data.iter().map(|&x| (x - median).abs()).collect();
     let mad = compute_median(&deviations) / 0.6745; // Scale for normal distribution
 
-    _data.iter()
+    _data
+        .iter()
         .map(|&x| (x - median).abs() > threshold * mad)
         .collect()
 }
@@ -1885,8 +1890,8 @@ pub fn advanced_model_selection(
 /// Compute penalized likelihood for model selection
 #[allow(dead_code)]
 fn compute_penalized_likelihood(_result: &EnhancedSysIdResult) -> f64 {
-    let n = _result.parameters.values.len()  as f64;
-    let k = get_model_parameters(&_result.model)  as f64;
+    let n = _result.parameters.values.len() as f64;
+    let k = get_model_parameters(&_result.model) as f64;
 
     // Use AICc (corrected AIC) for small samples
     _result.validation.aic + 2.0 * k * (k + 1.0) / (n - k - 1.0).max(1.0)
@@ -2023,7 +2028,7 @@ mod tests {
     #[test]
     fn test_cross_validation() {
         let n = 200;
-        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
+        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.1).sin());
         let mut output = Array1::zeros(n);
 
         // Generate ARMAX system
@@ -2047,7 +2052,7 @@ mod tests {
     #[test]
     fn test_robust_identification() {
         let n = 100;
-        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
+        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.1).sin());
         let mut output = Array1::zeros(n);
 
         // Generate system with outliers
@@ -2076,7 +2081,7 @@ mod tests {
     #[test]
     fn test_simd_optimization() {
         let n = 1000;
-        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.01).sin());
+        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.01).sin());
         let mut output = Array1::zeros(n);
 
         // Generate system
@@ -2101,14 +2106,14 @@ mod tests {
     #[test]
     fn test_mimo_identification() {
         let n = 100;
-        let inputs = Array2::from_shape_fn((n, 2), |(i, j)| {
+        let inputs = Array2::fromshape_fn((n, 2), |(i, j)| {
             if j == 0 {
                 (i as f64 * 0.1).sin()
             } else {
                 (i as f64 * 0.1).cos()
             }
         });
-        let outputs = Array2::from_shape_fn((n, 2), |(i, j)| {
+        let outputs = Array2::fromshape_fn((n, 2), |(i, j)| {
             if j == 0 {
                 if i > 0 {
                     0.8 * i as f64 + 0.2 * inputs[[i - 1, 0]]
@@ -2143,7 +2148,7 @@ mod tests {
         let mut identifier = AdaptiveIdentifier::new(EnhancedSysIdConfig::default());
 
         let n = 100;
-        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
+        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.1).sin());
         let mut output = Array1::zeros(n);
 
         // Generate changing system
@@ -2169,7 +2174,7 @@ mod tests {
     #[test]
     fn test_model_selection() {
         let n = 200;
-        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.05).sin());
+        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.05).sin());
         let mut output = Array1::zeros(n);
 
         // Generate ARMAX system
@@ -2528,7 +2533,7 @@ fn robust_outlier_removal(
 #[allow(dead_code)]
 fn estimate_signal_noise_ratio(_input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
     // Use simple linear regression to estimate noise level
-    let n = _input.len()  as f64;
+    let n = _input.len() as f64;
     let sum_x = _input.sum();
     let sum_y = output.sum();
     let sum_xx = _input.dot(_input);
@@ -2558,7 +2563,8 @@ fn estimate_signal_noise_ratio(_input: &Array1<f64>, output: &Array1<f64>) -> Si
 #[allow(dead_code)]
 fn select_optimal_method(
     input: &Array1<f64>,
-    output: &Array1<f64>, _config: &EnhancedSysIdConfig,
+    output: &Array1<f64>,
+    _config: &EnhancedSysIdConfig,
 ) -> SignalResult<IdentificationMethod> {
     let n = input.len();
 
@@ -2694,7 +2700,7 @@ fn identify_arx_model(
     let fit_percentage = (1.0 - residual_variance / output_variance).max(0.0) * 100.0;
 
     // Simple AIC calculation
-    let aic = (n_data as f64) * (residual_variance + 1e-15).ln() + 2.0 * n_params  as f64;
+    let aic = (n_data as f64) * (residual_variance + 1e-15).ln() + 2.0 * n_params as f64;
 
     // Simple BIC calculation
     let bic = (n_data as f64) * (residual_variance + 1e-15).ln()

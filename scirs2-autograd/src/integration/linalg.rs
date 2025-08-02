@@ -390,20 +390,20 @@ impl<'a, F: Float> LinalgContext<'a, F> {
     ) -> Result<Tensor<'a, F>, IntegrationError> {
         // Simplified matrix multiplication
         // In practice, would use optimized BLAS routines
-        let a_shape = a.shape();
-        let b_shape = b.shape();
+        let ashape = a.shape();
+        let bshape = b.shape();
 
-        if a_shape.len() < 2 || b_shape.len() < 2 {
+        if ashape.len() < 2 || bshape.len() < 2 {
             return Err(IntegrationError::TensorConversion(
                 "Tensors must be at least 2D for matrix multiplication".to_string(),
             ));
         }
 
-        let m = a_shape[a_shape.len() - 2];
-        let k = a_shape[a_shape.len() - 1];
-        let n = b_shape[b_shape.len() - 1];
+        let m = ashape[ashape.len() - 2];
+        let k = ashape[ashape.len() - 1];
+        let n = bshape[bshape.len() - 1];
 
-        if k != b_shape[b_shape.len() - 2] {
+        if k != bshape[bshape.len() - 2] {
             return Err(IntegrationError::TensorConversion(
                 "Matrix dimensions do not match for multiplication".to_string(),
             ));
@@ -537,23 +537,23 @@ impl<'a, F: Float> LinalgContext<'a, F> {
         a: &Tensor<'a, F>,
         b: &Tensor<'a, F>,
     ) -> Result<Tensor<'a, F>, IntegrationError> {
-        let a_shape = a.shape();
-        let b_shape = b.shape();
+        let ashape = a.shape();
+        let bshape = b.shape();
 
-        if a_shape.len() != 2 || a_shape[0] != a_shape[1] {
+        if ashape.len() != 2 || ashape[0] != ashape[1] {
             return Err(IntegrationError::TensorConversion(
                 "A matrix must be square".to_string(),
             ));
         }
 
-        if b_shape[0] != a_shape[0] {
+        if bshape[0] != ashape[0] {
             return Err(IntegrationError::TensorConversion(
                 "Dimension mismatch between A and b".to_string(),
             ));
         }
 
         let x_data = vec![F::zero(); b.data().len()];
-        Ok(Tensor::from_vec(x_data, b_shape.to_vec(), b.graph()))
+        Ok(Tensor::from_vec(x_data, bshape.to_vec(), b.graph()))
     }
 
     fn compute_norm(
@@ -663,25 +663,25 @@ impl<'a, F: Float> LinalgContext<'a, F> {
 
     // Cost estimation methods
     fn estimate_matmul_cost(&self, a: &Tensor<F>, b: &Tensor<F>) -> ComputationalCost {
-        let a_shape = a.shape();
-        let b_shape = b.shape();
+        let ashape = a.shape();
+        let bshape = b.shape();
 
         // Handle cases where tensors might have insufficient dimensions
-        let (m, k) = if a_shape.len() >= 2 {
+        let (m, k) = if ashape.len() >= 2 {
             (
-                a_shape[a_shape.len() - 2] as u64,
-                a_shape[a_shape.len() - 1] as u64,
+                ashape[ashape.len() - 2] as u64,
+                ashape[ashape.len() - 1] as u64,
             )
-        } else if a_shape.len() == 1 {
-            (1u64, a_shape[0] as u64)
+        } else if ashape.len() == 1 {
+            (1u64, ashape[0] as u64)
         } else {
             // For autograd tensors without shape info, provide default estimate
             // In a real implementation, this would need proper shape tracking
             (10u64, 10u64) // Default for test compatibility
         };
 
-        let n = if !b_shape.is_empty() {
-            b_shape[b_shape.len() - 1] as u64
+        let n = if !bshape.is_empty() {
+            bshape[bshape.len() - 1] as u64
         } else {
             // Default for autograd tensors
             10u64 // Default for test compatibility
@@ -987,7 +987,7 @@ pub fn create_matmul_context<'a, F: Float>(
 
 /// Create an SVD context
 #[allow(dead_code)]
-pub fn create_svd_context<F: Float>(_input: Tensor<F>, full_matrices: bool) -> LinalgContext<F> {
+pub fn create_svd_context<F: Float>(input: Tensor<F>, full_matrices: bool) -> LinalgContext<F> {
     LinalgContext::new(LinalgOperation::SVD)
         .add_input(_input)
         .add_parameter(

@@ -720,7 +720,7 @@ impl AdvancedUnifiedProcessor {
         operations
             .iter()
             .map(|op| match op {
-                AdvancedTimeSeriesOperation::MovingWindow =>, TimeSeriesOperation::MovingAverage,
+                AdvancedTimeSeriesOperation::MovingWindow => TimeSeriesOperation::MovingAverage,
             })
             .collect()
     }

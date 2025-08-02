@@ -31,13 +31,13 @@ pub fn matmul_forward<F: Float + Debug + Send + Sync + 'static>(
         ));
     }
 
-    let a_shape = a.shape();
-    let b_shape = b.shape();
+    let ashape = a.shape();
+    let bshape = b.shape();
 
-    if a_shape[a_shape.len() - 1] != b_shape[b_shape.len() - 2] {
+    if ashape[ashape.len() - 1] != bshape[bshape.len() - 2] {
         return Err(AutogradError::ShapeMismatch(format!(
             "Matrix multiplication dimension mismatch: {:?} and {:?}",
-            a_shape, b_shape
+            ashape, bshape
         )));
     }
 
@@ -99,14 +99,14 @@ pub fn matmul_backward<F: Float + Debug + Send + Sync + 'static>(
         ));
     }
 
-    let a_shape = a.shape();
-    let b_shape = b.shape();
-    let grad_shape = grad.shape();
+    let ashape = a.shape();
+    let bshape = b.shape();
+    let gradshape = grad.shape();
 
-    if grad_shape[0] != a_shape[0] || grad_shape[1] != b_shape[1] {
+    if gradshape[0] != ashape[0] || gradshape[1] != bshape[1] {
         return Err(AutogradError::ShapeMismatch(format!(
             "Gradient shape mismatch: {:?} for matmul of {:?} and {:?}",
-            grad_shape, a_shape, b_shape
+            gradshape, ashape, bshape
         )));
     }
 

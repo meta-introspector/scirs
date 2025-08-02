@@ -513,7 +513,7 @@ impl DistributedProcessor {
             }
         }
 
-        let data = Array2::from_shape_vec((total_samples, n_features), combined_data)
+        let data = Array2::fromshape_vec((total_samples, n_features), combined_data)
             .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
         let target = combined_target.map(Array1::from_vec);

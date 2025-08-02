@@ -30,7 +30,7 @@ pub enum AttributeValue {
 
 impl AttributeValue {
     /// Create a string attribute
-    pub fn string<S: Into<String>>(_value: S) -> Self {
+    pub fn string<S: Into<String>>(value: S) -> Self {
         AttributeValue::String(_value.into())
     }
 
@@ -50,7 +50,7 @@ impl AttributeValue {
     }
 
     /// Create a JSON attribute from any serializable type
-    pub fn json<T: Serialize>(_value: &T) -> Result<Self> {
+    pub fn json<T: Serialize>(value: &T) -> Result<Self> {
         let json_value =
             serde_json::to_value(_value).map_err(|_| GraphError::SerializationError {
                 format: "JSON".to_string(),

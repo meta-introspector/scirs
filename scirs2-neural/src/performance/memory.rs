@@ -107,11 +107,11 @@ impl MemoryEfficientProcessor {
         self.concatenate_results(gradients)
     /// Calculate optimal chunk size based on tensor dimensions and memory constraints
     pub fn calculate_optimal_chunk_size(
-        tensor_shape: &[usize],
+        tensorshape: &[usize],
         element_size: usize,
     ) -> usize {
         // Calculate memory per sample
-        let elements_per_sample = tensor_shape[1..].iter().product::<usize>();
+        let elements_per_sample = tensorshape[1..].iter().product::<usize>();
         let bytes_per_sample = elements_per_sample * element_size;
         // Reserve some memory for intermediate computations (factor of 3)
         let available_bytes = (self.max_memory_mb * 1024 * 1024) / 3;

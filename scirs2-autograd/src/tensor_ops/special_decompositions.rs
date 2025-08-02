@@ -77,7 +77,8 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for PolarExtractOp {
 
         match self.component {
             0 => ctx.append_output(u.into_dyn()),
-            1 => ctx.append_output(p.into_dyn(), _ => {
+            1 => ctx.append_output(p.into_dyn()),
+            _ => {
                 return Err(OpError::Other(
                     "Invalid component index for polar decomposition".into(),
                 ))
@@ -170,7 +171,8 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for SchurExtractOp {
 
         match self.component {
             0 => ctx.append_output(q.into_dyn()),
-            1 => ctx.append_output(t.into_dyn(), _ => {
+            1 => ctx.append_output(t.into_dyn()),
+            _ => {
                 return Err(OpError::Other(
                     "Invalid component index for Schur decomposition".into(),
                 ))

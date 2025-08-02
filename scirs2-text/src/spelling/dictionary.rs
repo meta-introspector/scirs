@@ -12,7 +12,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2_text::spelling::{DictionaryCorrector, SpellingCorrector};
+//! use scirs2text::spelling::{DictionaryCorrector, SpellingCorrector};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a dictionary-based spelling corrector with default settings
@@ -323,7 +323,7 @@ impl DictionaryCorrector {
     }
 
     /// Create a new dictionary-based spelling corrector with a custom metric
-    pub fn with_metric<M: StringMetric + Send + Sync + 'static>(_metric: M) -> Self {
+    pub fn with_metric<M: StringMetric + Send + Sync + 'static>(metric: M) -> Self {
         Self {
             dictionary: HashMap::new(),
             config: DictionaryCorrectorConfig::default(),
@@ -335,7 +335,7 @@ impl DictionaryCorrector {
     ///
     /// The file should contain one word per line, optionally followed by a frequency count.
     /// If no frequency is provided, a default value of 1 is used.
-    pub fn from_file<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path)
             .map_err(|e| TextError::IoError(format!("Failed to open dictionary file: {e}")))?;
 
@@ -587,7 +587,7 @@ mod tests {
     }
 
     #[test]
-    fn test_dictionary_corrector_correct_text() {
+    fn test_dictionary_corrector_correcttext() {
         let mut corrector = DictionaryCorrector::default();
 
         // Add required words to the dictionary with specific corrections
@@ -599,7 +599,7 @@ mod tests {
         let text = "I beleive the recieved information was corect.";
 
         // Create a custom corrector for the test to ensure consistent behavior
-        let corrected = corrector.correct_text(text).unwrap();
+        let corrected = corrector.correcttext(text).unwrap();
 
         // Check each word individually to be more robust
         assert!(corrected.contains("believe"));

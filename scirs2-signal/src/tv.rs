@@ -1,39 +1,39 @@
-//! Total Variation denoising module
-//!
-//! This module implements Total Variation (TV) denoising techniques for signal and image
-//! processing. TV denoising preserves sharp edges while removing noise by minimizing
-//! the total variation of the signal or image.
-//!
-//! The implementation includes:
-//! - 1D Total Variation denoising (Rudin-Osher-Fatemi model)
-//! - 2D Total Variation denoising for images
-//! - Anisotropic and isotropic TV variants
-//! - Accelerated optimization algorithms
-//!
-//! # Example
-//! ```
-//! use ndarray::Array1;
-//! use scirs2__signal::tv::{tv_denoise_1d, TvConfig};
-//! use rand::prelude::*;
-//!
-//! // Create a test signal with noise
-//! let n = 500;
-//! let mut clean_signal = Array1::zeros(n);
-//! for i in 100..400 {
-//!     clean_signal[i] = 1.0;
-//! }
-//!
-//! // Add noise
-//! let mut rng = rand::rng();
-//! let mut noisy_signal = clean_signal.clone();
-//! for i in 0..n {
-//!     noisy_signal[i] += 0.2 * rng.random_range(-1.0..1.0);
-//! }
-//!
-//! // Apply Total Variation denoising
-//! let config = TvConfig::default();
-//! let denoised = tv_denoise_1d(&noisy_signal, 0.5, &config).unwrap();
-//! ```
+// Total Variation denoising module
+//
+// This module implements Total Variation (TV) denoising techniques for signal and image
+// processing. TV denoising preserves sharp edges while removing noise by minimizing
+// the total variation of the signal or image.
+//
+// The implementation includes:
+// - 1D Total Variation denoising (Rudin-Osher-Fatemi model)
+// - 2D Total Variation denoising for images
+// - Anisotropic and isotropic TV variants
+// - Accelerated optimization algorithms
+//
+// # Example
+// ```
+// use ndarray::Array1;
+// use scirs2_signal::tv::{tv_denoise_1d, TvConfig};
+// use rand::prelude::*;
+//
+// // Create a test signal with noise
+// let n = 500;
+// let mut clean_signal = Array1::zeros(n);
+// for i in 100..400 {
+//     clean_signal[i] = 1.0;
+// }
+//
+// // Add noise
+// let mut rng = rand::rng();
+// let mut noisy_signal = clean_signal.clone();
+// for i in 0..n {
+//     noisy_signal[i] += 0.2 * rng.random_range(-1.0..1.0);
+// }
+//
+// // Apply Total Variation denoising
+// let config = TvConfig::default();
+// let denoised = tv_denoise_1d(&noisy_signal, 0.5, &config).unwrap();
+// ```
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, Array3, Axis};
@@ -102,7 +102,7 @@ impl Default for TvConfig {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::tv::{tv_denoise_1d, TvConfig};
+/// use scirs2_signal::tv::{tv_denoise_1d, TvConfig};
 ///
 /// let signal = Array1::from_vec(vec![1.2, 2.3, 3.1, 2.2, 1.3, 0.2, -0.3, -1.1]);
 /// let config = TvConfig::default();
@@ -347,9 +347,9 @@ fn compute_tv_gradient_1d(
 /// # Example
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::tv::{tv_denoise_2d, TvConfig};
+/// use scirs2_signal::tv::{tv_denoise_2d, TvConfig};
 ///
-/// let image = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
+/// let image = Array2::fromshape_fn((10, 10), |(i, j)| (i + j) as f64 / 20.0);
 /// let config = TvConfig::default();
 /// let denoised = tv_denoise_2d(&image, 0.5, &config).unwrap();
 /// ```

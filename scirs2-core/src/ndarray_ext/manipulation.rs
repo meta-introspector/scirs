@@ -467,25 +467,25 @@ where
     }
 
     // Get the shape of the first array as a reference
-    let first_shape = arrays[0].shape();
+    let firstshape = arrays[0].shape();
 
     // Calculate the total shape after concatenation
-    let mut total_shape = [first_shape[0], first_shape[1]];
+    let mut totalshape = [firstshape[0], firstshape[1]];
     for array in arrays.iter().skip(1) {
-        let current_shape = array.shape();
+        let currentshape = array.shape();
 
         // Ensure all arrays have compatible shapes
-        if axis == 0 && current_shape[1] != first_shape[1] {
+        if axis == 0 && currentshape[1] != firstshape[1] {
             return Err("All arrays must have the same number of columns for axis=0 concatenation");
-        } else if axis == 1 && current_shape[0] != first_shape[0] {
+        } else if axis == 1 && currentshape[0] != firstshape[0] {
             return Err("All arrays must have the same number of rows for axis=1 concatenation");
         }
 
-        total_shape[axis] += current_shape[axis];
+        totalshape[axis] += currentshape[axis];
     }
 
     // Create the result array
-    let mut result = Array::<T, Ix2>::zeros((total_shape[0], total_shape[1]));
+    let mut result = Array::<T, Ix2>::zeros((totalshape[0], totalshape[1]));
 
     // Fill the result array with data from the input arrays
     match axis {

@@ -197,7 +197,7 @@ impl CrossPlatformValidator {
             s if s >= 0.95 => CompatibilityRating::Excellent,
             s if s >= 0.85 => CompatibilityRating::Good,
             s if s >= 0.70 => CompatibilityRating::Fair,
-            s if s >= 0.50 => CompatibilityRating::Poor_ =>, CompatibilityRating::Incompatible,
+            s if s >= 0.50 => CompatibilityRating::Poor_ => CompatibilityRating::Incompatible,
         };
 
         // Generate platform-specific warnings
@@ -710,7 +710,7 @@ fn generate_outlier_data(n: usize) -> Array1<f64> {
 }
 
 #[allow(dead_code)]
-fn generate_aligned_data(_size: usize_alignment: usize) -> Array1<f64> {
+fn generate_aligned_data(_size: usize, alignment: usize) -> Array1<f64> {
     // Generate data with specific memory _alignment for SIMD testing
     Array1::from_shape_fn(_size, |i| (i as f64).sin())
 }

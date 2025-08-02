@@ -1,13 +1,14 @@
-//! Advanced filter design algorithms
-//!
-//! This module implements sophisticated filter design methods including Parks-McClellan
-//! optimal equiripple design, arbitrary magnitude response approximation, and advanced
-//! filter optimization techniques.
+use ndarray::s;
+// Advanced filter design algorithms
+//
+// This module implements sophisticated filter design methods including Parks-McClellan
+// optimal equiripple design, arbitrary magnitude response approximation, and advanced
+// filter optimization techniques.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
-use num__complex::Complex64;
-use scirs2__linalg::solve;
+use ndarray::{ Array1, Array2};
+use num_complex::Complex64;
+use scirs2_linalg::solve;
 use std::f64::consts::PI;
 
 #[allow(unused_imports)]
@@ -851,7 +852,7 @@ fn compute_frequency_response(
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_filter_order_estimation() {
         let spec = FilterSpec {

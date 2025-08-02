@@ -287,7 +287,7 @@ fn get_activation<F: Float + Debug + ScalarOperand + Send + Sync>(
         "relu" => Box::new(|x: F| x.max(F::zero())),
         "relu6" => Box::new(relu6),
         "hard_swish" => Box::new(hard_swish),
-        "hard_sigmoid" => Box::new(hard_sigmoid, _ =>, Box::new(|x: F| x.max(F::zero())), // Default to ReLU
+        "hard_sigmoid" => Box::new(hard_sigmoid, _ => Box::new(|x: F| x.max(F::zero())), // Default to ReLU
 /// Mobile Inverted Bottleneck Convolution block for MobileNetV2/V3
 struct InvertedResidualBlock<F: Float + Debug + ScalarOperand + Send + Sync> {
     /// Block configuration

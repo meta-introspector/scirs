@@ -385,7 +385,7 @@ where
     score_label.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
     // Count total positives and negatives
-    let positives: usize = y_true.iter().filter(|&&x| x >, T::zero()).count();
+    let positives: usize = y_true.iter().filter(|&&x| x > T::zero()).count();
     let negatives = y_true.len() - positives;
 
     if positives == 0 || negatives == 0 {
@@ -498,7 +498,7 @@ where
     score_label.sort_by(|(a_), (b_)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
     // Count total positives (anomalies)
-    let total_positives: usize = y_true.iter().filter(|&&x| x >, T::zero()).count();
+    let total_positives: usize = y_true.iter().filter(|&&x| x > T::zero()).count();
 
     if total_positives == 0 {
         return Err(MetricsError::InvalidInput(

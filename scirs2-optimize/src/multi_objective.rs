@@ -245,11 +245,11 @@ impl NSGAII {
 
         for _ in 0..self.config.population_size {
             let variables = if let Some((ref lower, ref upper)) = self.config.bounds {
-                Array1::from_shape_fn(self.n_variables, |i| {
+                Array1::fromshape_fn(self.n_variables, |i| {
                     lower[i] + rng.gen::<f64>() * (upper[i] - lower[i])
                 })
             } else {
-                Array1::from_shape_fn(self.n_variables, |_| rng.gen::<f64>() * 2.0 - 1.0)
+                Array1::fromshape_fn(self.n_variables, |_| rng.gen::<f64>() * 2.0 - 1.0)
             };
 
             let objectives = objective_fn(&variables.view());
@@ -940,11 +940,11 @@ impl NSGAIII {
 
         for _ in 0..self.config.population_size {
             let variables = if let Some((ref lower, ref upper)) = self.config.bounds {
-                Array1::from_shape_fn(self.n_variables, |i| {
+                Array1::fromshape_fn(self.n_variables, |i| {
                     lower[i] + rng.gen::<f64>() * (upper[i] - lower[i])
                 })
             } else {
-                Array1::from_shape_fn(self.n_variables, |_| rng.gen::<f64>() * 2.0 - 1.0)
+                Array1::fromshape_fn(self.n_variables, |_| rng.gen::<f64>() * 2.0 - 1.0)
             };
 
             let objectives = objective_fn(&variables.view());

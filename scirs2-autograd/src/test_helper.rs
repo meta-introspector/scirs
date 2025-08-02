@@ -167,7 +167,7 @@ pub fn gradient_check<F: Float>(
 
 /// Prints a summary of the model architecture to help with debugging.
 #[allow(dead_code)]
-pub fn print_model_summary<F: Float>(_model: &Tensor<F>) {
+pub fn print_model_summary<F: Float>(model: &Tensor<F>) {
     let _ = _model;
     // Implementation placeholder
     // In a real implementation, this would print a summary of the _model architecture
@@ -176,7 +176,7 @@ pub fn print_model_summary<F: Float>(_model: &Tensor<F>) {
 
 /// Helper function to profile memory usage of a model.
 #[allow(dead_code)]
-pub fn profile_memory_usage<F: Float>(_model: &Tensor<F>, inputs: &[Tensor<F>]) {
+pub fn profile_memory_usage<F: Float>(model: &Tensor<F>, inputs: &[Tensor<F>]) {
     let _ = (_model, inputs);
     // Implementation placeholder
     // In a real implementation, this would profile memory usage during forward and backward passes

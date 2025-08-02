@@ -62,7 +62,7 @@ fn setup_sample_cache_data(_batch_ops: &BatchOperations) {
         ("temp_file_002.tmp", create_binary_data(200)),
         ("large_dataset.dat", create_binary_data(1024)),
         ("model_weights.bin", create_binary_data(512)),
-        ("results_summary.txt", create_text_data()),
+        ("results_summary.txt", createtext_data()),
     ];
 
     for (name, data) in sample_datasets {
@@ -285,7 +285,7 @@ fn create_binary_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn create_text_data() -> Vec<u8> {
+fn createtext_data() -> Vec<u8> {
     "Experimental Results Summary\n\
      ============================\n\
      Total samples: 1000\n\

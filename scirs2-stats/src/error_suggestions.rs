@@ -4,7 +4,6 @@
 //! error patterns and provides detailed, actionable recovery suggestions.
 
 use crate::error::StatsError;
-use statrs::statistics::Statistics;
 use std::collections::HashMap;
 
 /// Error suggestion engine that provides intelligent recovery suggestions

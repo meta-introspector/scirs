@@ -1,9 +1,9 @@
-//! Spectral analysis functions
-//!
-//! This module provides functions for estimating power spectral densities and spectrograms.
+// Spectral analysis functions
+//
+// This module provides functions for estimating power spectral densities and spectrograms.
 
 use crate::error::{SignalError, SignalResult};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rand::Rng;
 use std::f64::consts::PI;
@@ -80,7 +80,7 @@ fn apply_detrend(x: &[f64], detrend_type: &str) -> SignalResult<Vec<f64>> {
     match detrend_type {
         "constant" => {
             // Remove mean
-            let mean = x.iter().sum::<f64>() / x.len()  as f64;
+            let mean = x.iter().sum::<f64>() / x.len() as f64;
             Ok(x.iter().map(|&v| v - mean).collect())
         }
         "linear" => {
@@ -99,7 +99,7 @@ fn apply_detrend(x: &[f64], detrend_type: &str) -> SignalResult<Vec<f64>> {
                 .sum::<f64>();
 
             let slope = (n as f64 * sum_xy - sum_x * sum_y) / (n as f64 * sum_xx - sum_x * sum_x);
-            let intercept = (sum_y - slope * sum_x) / n  as f64;
+            let intercept = (sum_y - slope * sum_x) / n as f64;
 
             // Remove trend
             Ok(x.iter()
@@ -397,7 +397,7 @@ where
 
     // Normalize by number of segments
     for psd in &mut psd_avg {
-        *psd /= num_segments  as f64;
+        *psd /= num_segments as f64;
     }
 
     // Apply scaling
@@ -742,7 +742,7 @@ where
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_periodogram_sine_wave() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

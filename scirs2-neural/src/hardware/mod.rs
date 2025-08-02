@@ -247,13 +247,13 @@ impl KernelFusion {
         // Simple heuristic: fuse element-wise operations with matching shapes
         kernel1.operation_type.is_element_wise()
             && kernel2.operation_type.is_element_wise()
-            && kernel1.output_shape == kernel2.input_shape
+            && kernel1.outputshape == kernel2.inputshape
 /// Kernel descriptor
 pub struct KernelDescriptor {
     pub name: String,
     pub operation_type: OperationType,
-    pub input_shape: Vec<usize>,
-    pub output_shape: Vec<usize>,
+    pub inputshape: Vec<usize>,
+    pub outputshape: Vec<usize>,
     pub memory_access_pattern: MemoryAccessPattern,
 /// Operation type
 #[derive(Debug, Clone, PartialEq)]
@@ -312,8 +312,8 @@ mod tests {
             KernelDescriptor {
                 name: "add".to_string(),
                 operation_type: OperationType::ElementWise(ElementWiseOp::Add),
-                input_shape: vec![32, 64],
-                output_shape: vec![32, 64],
+                inputshape: vec![32, 64],
+                outputshape: vec![32, 64],
                 memory_access_pattern: MemoryAccessPattern::Sequential,
             },
                 name: "relu".to_string(),

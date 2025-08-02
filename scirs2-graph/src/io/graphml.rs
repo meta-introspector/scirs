@@ -493,7 +493,7 @@ fn parse_key_definition(_line: &str) -> Result<Option<GraphMLKey>> {
 
 /// Parse a GraphML node element for undirected graphs
 #[allow(dead_code)]
-fn parse_node_element<N, E>(_line: &str_graph: &mut Graph<N, E>, line_num: usize) -> Result<()>
+fn parse_node_element<N, E>(_line: &str, graph: &mut Graph<N, E>, line_num: usize) -> Result<()>
 where
     N: Node + std::fmt::Debug + FromStr + Clone,
     E: EdgeWeight + std::marker::Copy + std::fmt::Debug + std::default::Default + FromStr,
@@ -518,7 +518,7 @@ where
 /// Parse a GraphML node element for directed graphs
 #[allow(dead_code)]
 fn parse_digraph_node_element<N, E>(
-    line: &str_graph: &mut DiGraph<N, E>,
+    line: &str, graph: &mut DiGraph<N, E>,
     line_num: usize,
 ) -> Result<()>
 where

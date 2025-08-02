@@ -723,7 +723,7 @@ impl MetadataIndex {
     }
 
     /// Search for metadata by text query
-    pub fn search_text(&self, field: &str, query: &str) -> HashSet<String> {
+    pub fn searchtext(&self, field: &str, query: &str) -> HashSet<String> {
         let key = format!("{field}:{}", query.to_lowercase());
         self.text_index.get(&key).cloned().unwrap_or_default()
     }

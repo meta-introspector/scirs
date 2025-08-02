@@ -426,7 +426,7 @@ mod tests {
     #[test]
     fn test_sr1_quadratic() {
         let quadratic = |x: &ArrayView1<f64>| -> f64 {
-            let a = Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
+            let a = Array2::fromshape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
             let b = Array1::from_vec(vec![-4.0, -6.0]);
             0.5 * x.dot(&a.dot(x)) + b.dot(x)
         };
@@ -445,7 +445,7 @@ mod tests {
     #[test]
     fn test_dfp_quadratic() {
         let quadratic = |x: &ArrayView1<f64>| -> f64 {
-            let a = Array2::from_shape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
+            let a = Array2::fromshape_vec((2, 2), vec![2.0, 0.0, 0.0, 3.0]).unwrap();
             let b = Array1::from_vec(vec![-4.0, -6.0]);
             0.5 * x.dot(&a.dot(x)) + b.dot(x)
         };

@@ -1,58 +1,58 @@
-//! 2D Stationary Wavelet Transform (SWT2D)
-//!
-//! This module provides implementations of the 2D Stationary Wavelet Transform (SWT2D),
-//! also known as the Undecimated Wavelet Transform or the à trous algorithm in two dimensions.
-//! Unlike the standard 2D Discrete Wavelet Transform (DWT2D), the SWT2D does not
-//! downsample the signal after filtering, which makes it translation invariant.
-//!
-//! The 2D SWT is particularly useful for applications such as:
-//! * Image denoising (often provides better results than DWT)
-//! * Texture analysis and classification
-//! * Edge and feature detection
-//! * Image fusion
-//! * Medical image processing
-//!
-//! # Performance Optimizations
-//!
-//! This implementation includes several optimizations for performance:
-//!
-//! 1. **Parallel Processing**: When compiled with the "parallel" feature,
-//!    row and column transforms can be computed in parallel using Rayon.
-//!
-//! 2. **Memory Efficiency**:
-//!    - Uses ndarray views for zero-copy operations
-//!    - Reuses filter arrays when possible
-//!
-//! # Examples
-//!
-//! Basic usage:
-//!
-//! ```
-//! use ndarray::Array2;
-//! use scirs2__signal::dwt::Wavelet;
-//! use scirs2__signal::swt2d::swt2d_decompose;
-//!
-//! // Create a simple "image"
-//! let mut image = Array2::zeros((8, 8));
-//! for i in 0..8 {
-//!     for j in 0..8 {
-//!         image[[i, j]] = (i * j) as f64;
-//!     }
-//! }
-//!
-//! // Perform 2D SWT using the Haar wavelet at level 1
-//! let result = swt2d_decompose(&image, Wavelet::Haar, 1, None).unwrap();
-//!
-//! // Verify that coefficients have the same shape as input
-//! assert_eq!(result.approx.shape(), image.shape());
-//! assert_eq!(result.detail_h.shape(), image.shape());
-//! assert_eq!(result.detail_v.shape(), image.shape());
-//! assert_eq!(result.detail_d.shape(), image.shape());
-//! ```
+// 2D Stationary Wavelet Transform (SWT2D)
+//
+// This module provides implementations of the 2D Stationary Wavelet Transform (SWT2D),
+// also known as the Undecimated Wavelet Transform or the à trous algorithm in two dimensions.
+// Unlike the standard 2D Discrete Wavelet Transform (DWT2D), the SWT2D does not
+// downsample the signal after filtering, which makes it translation invariant.
+//
+// The 2D SWT is particularly useful for applications such as:
+// * Image denoising (often provides better results than DWT)
+// * Texture analysis and classification
+// * Edge and feature detection
+// * Image fusion
+// * Medical image processing
+//
+// # Performance Optimizations
+//
+// This implementation includes several optimizations for performance:
+//
+// 1. **Parallel Processing**: When compiled with the "parallel" feature,
+//    row and column transforms can be computed in parallel using Rayon.
+//
+// 2. **Memory Efficiency**:
+//    - Uses ndarray views for zero-copy operations
+//    - Reuses filter arrays when possible
+//
+// # Examples
+//
+// Basic usage:
+//
+// ```
+// use ndarray::Array2;
+// use scirs2_signal::dwt::Wavelet;
+// use scirs2_signal::swt2d::swt2d_decompose;
+//
+// // Create a simple "image"
+// let mut image = Array2::zeros((8, 8));
+// for i in 0..8 {
+//     for j in 0..8 {
+//         image[[i, j]] = (i * j) as f64;
+//     }
+// }
+//
+// // Perform 2D SWT using the Haar wavelet at level 1
+// let result = swt2d_decompose(&image, Wavelet::Haar, 1, None).unwrap();
+//
+// // Verify that coefficients have the same shape as input
+// assert_eq!(result.approx.shape(), image.shape());
+// assert_eq!(result.detail_h.shape(), image.shape());
+// assert_eq!(result.detail_v.shape(), image.shape());
+// assert_eq!(result.detail_d.shape(), image.shape());
+// ```
 
-use crate::swt;
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
+use crate::swt;
 use ndarray::{Array2, Axis};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
@@ -98,11 +98,11 @@ pub struct Swt2dResult {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::swt2d::swt2d_decompose;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::swt2d::swt2d_decompose;
 ///
 /// // Create a simple 4x4 "image"
-/// let data = Array2::from_shape_vec((4, 4), vec![
+/// let data = Array2::fromshape_vec((4, 4), vec![
 ///     1.0, 2.0, 3.0, 4.0,
 ///     5.0, 6.0, 7.0, 8.0,
 ///     9.0, 10.0, 11.0, 12.0,
@@ -282,8 +282,8 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::swt2d::swt2d;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::swt2d::swt2d;
 ///
 /// // Create a simple 8x8 "image"
 /// let mut image = Array2::zeros((8, 8));
@@ -365,11 +365,11 @@ where
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::swt2d::{swt2d_decompose, swt2d_reconstruct};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::swt2d::{swt2d_decompose, swt2d_reconstruct};
 ///
 /// // Create a simple "image"
-/// let data = Array2::from_shape_vec((4, 4), vec![
+/// let data = Array2::fromshape_vec((4, 4), vec![
 ///     1.0, 2.0, 3.0, 4.0,
 ///     5.0, 6.0, 7.0, 8.0,
 ///     9.0, 10.0, 11.0, 12.0,
@@ -389,7 +389,8 @@ where
 pub fn swt2d_reconstruct(
     decomposition: &Swt2dResult,
     wavelet: Wavelet,
-    level: usize, _mode: Option<&str>,
+    level: usize,
+    _mode: Option<&str>,
 ) -> SignalResult<Array2<f64>> {
     if level < 1 {
         return Err(SignalError::ValueError(
@@ -550,8 +551,8 @@ pub fn swt2d_reconstruct(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::swt2d::{swt2d, iswt2d};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::swt2d::{swt2d, iswt2d};
 ///
 /// // Create a simple 8x8 "image"
 /// let mut image = Array2::zeros((8, 8));
@@ -648,7 +649,7 @@ mod tests {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let b = vec![0.5, 0.5];
         // Create a simple test image
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (4, 4),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,

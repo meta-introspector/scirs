@@ -116,10 +116,10 @@ impl<F: Float> AdamW<F> {
                     .get_array_by_id(vid)
                     .expect("variable array not found")
                     .borrow();
-                let var_shape = target_var.shape();
+                let varshape = target_var.shape();
                 (
-                    crate::ndarray_ext::zeros(var_shape), // First moment estimate
-                    crate::ndarray_ext::zeros(var_shape), // Second moment estimate
+                    crate::ndarray_ext::zeros(varshape), // First moment estimate
+                    crate::ndarray_ext::zeros(varshape), // Second moment estimate
                     crate::ndarray_ext::from_scalar(F::one()), // Timestep
                 )
             };
@@ -227,7 +227,7 @@ impl<F: Float> Optimizer<F> for AdamW<F> {
             eprintln!("Created AdamWOp with all 5 inputs");
 
             // Add the updated parameter to the result
-            ret.push(adamw_op);
+            ret.push(adamwop);
         }
         ret
     }

@@ -1057,8 +1057,8 @@ impl RansacMatcher {
 
 /// Estimate homography matrix from point correspondences using Direct Linear Transform (DLT)
 #[allow(dead_code)]
-fn estimate_homography(_src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
-    if _src_points.len() != dst_points.len() || _src_points.len() < 4 {
+fn estimate_homography(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
+    if src_points.len() != dst_points.len() || src_points.len() < 4 {
         return Err(VisionError::InvalidParameter(
             "Need at least 4 point correspondences".to_string(),
         ));
@@ -1098,10 +1098,10 @@ fn estimate_homography(_src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Res
     let h_vec = find_smallest_eigenvector_homography(&ata)?;
 
     // Reshape to 3x3 matrix
-    let mut h_norm = Array2::from_shape_vec((3, 3), h_vec)
+    let mut h_norm = Array2::fromshape_vec((3, 3), h_vec)
         .map_err(|e| VisionError::OperationError(format!("Failed to reshape homography: {e}")))?;
 
-    // Denormalize: H = T_dst^(-1) * H_norm * T_src
+    // Denormalize: H = T_dst^(-1) * H_norm * Tsrc
     let dst_inv = matrix_inverse_3x3(&dst_transform)?;
     h_norm = matrix_multiply_3x3(&dst_inv, &h_norm);
     let h = matrix_multiply_3x3(&h_norm, &src_transform);
@@ -1133,8 +1133,8 @@ fn apply_homography(h: &Array2<f32>, point: [f32; 2]) -> [f32; 2] {
 
 /// Estimate affine transformation from point correspondences using least squares
 #[allow(dead_code)]
-fn estimate_affine(_src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
-    if _src_points.len() != dst_points.len() || _src_points.len() < 3 {
+fn estimate_affine(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
+    if src_points.len() != dst_points.len() || src_points.len() < 3 {
         return Err(VisionError::InvalidParameter(
             "Need at least 3 point correspondences".to_string(),
         ));
@@ -1589,14 +1589,14 @@ fn estimate_fundamental_matrix(
     let f_vec = find_smallest_eigenvector_homography(&ata)?;
 
     // Reshape to 3x3 matrix
-    let mut f_norm = Array2::from_shape_vec((3, 3), f_vec).map_err(|e| {
+    let mut f_norm = Array2::fromshape_vec((3, 3), f_vec).map_err(|e| {
         VisionError::OperationError(format!("Failed to reshape fundamental matrix: {e}"))
     })?;
 
     // Enforce rank-2 constraint by setting smallest singular value to 0
     // (Simplified approach - in practice use proper SVD)
 
-    // Denormalize: F = T_dst^T * F_norm * T_src
+    // Denormalize: F = T_dst^T * F_norm * Tsrc
     let dst_t = transpose_3x3(&dst_transform);
     f_norm = matrix_multiply_3x3(&dst_t, &f_norm);
     let f = matrix_multiply_3x3(&f_norm, &src_transform);

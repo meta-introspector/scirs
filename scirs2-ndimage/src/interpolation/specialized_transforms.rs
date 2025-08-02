@@ -22,7 +22,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///
 /// * `input` - Input array (must be 2D)
 /// * `matrix` - 3x3 homogeneous transformation matrix
-/// * `output_shape` - Shape of the output array (default: same as input)
+/// * `outputshape` - Shape of the output array (default: same as input)
 /// * `order` - Interpolation order (default: Linear)
 /// * `mode` - Boundary handling mode (default: Constant)
 /// * `cval` - Value to use for constant mode (default: 0.0)
@@ -50,7 +50,7 @@ use crate::error::{NdimageError, NdimageResult};
 pub fn perspective_transform<T>(
     input: &Array2<T>,
     matrix: &Array2<T>,
-    output_shape: Option<&[usize]>,
+    outputshape: Option<&[usize]>,
     order: Option<InterpolationOrder>,
     mode: Option<BoundaryMode>,
     cval: Option<T>,
@@ -66,7 +66,7 @@ where
         + 'static,
 {
     // Validate inputs
-    if matrix._shape() != [3, 3] {
+    if matrix.shape() != [3, 3] {
         return Err(NdimageError::InvalidInput(
             "Perspective transformation requires a 3x3 matrix".into(),
         ));
@@ -76,26 +76,26 @@ where
     let boundary = mode.unwrap_or(BoundaryMode::Constant);
     let const_val = cval.unwrap_or_else(|| T::zero());
 
-    // Determine output _shape
-    let out_shape = if let Some(_shape) = output_shape {
-        if _shape.len() != 2 {
+    // Determine output shape
+    let outshape = if let Some(shape) = outputshape {
+        if shape.len() != 2 {
             return Err(NdimageError::DimensionError(
-                "Output _shape must be 2-dimensional".into(),
+                "Output shape must be 2-dimensional".into(),
             ));
         }
-        [_shape[0], _shape[1]]
+        [shape[0], shape[1]]
     } else {
-        [input._shape()[0], input._shape()[1]]
+        [input.shape()[0], input.shape()[1]]
     };
 
     // Create output array
-    let mut output = Array2::from_elem(out_shape, const_val);
+    let mut output = Array2::from_elem(outshape, const_val);
 
     // Convert input to dynamic for easier interpolation
     let input_dyn = input.clone().into_dyn();
 
     // Process each output pixel
-    let (height, width) = (out_shape[0], out_shape[1]);
+    let (height, width) = (outshape[0], outshape[1]);
 
     // For large images, use parallel processing
     if height * width > 10000 {
@@ -194,7 +194,7 @@ where
 /// * `input` - Input array (must be 2D)
 /// * `source_points` - Control points in the source image (Nx2 array)
 /// * `target_points` - Corresponding control points in the target image (Nx2 array)
-/// * `output_shape` - Shape of the output array (default: same as input)
+/// * `outputshape` - Shape of the output array (default: same as input)
 /// * `order` - Interpolation order (default: Linear)
 /// * `mode` - Boundary handling mode (default: Constant)
 /// * `cval` - Value to use for constant mode (default: 0.0)
@@ -208,7 +208,7 @@ pub fn thin_plate_spline_transform<T>(
     input: &Array2<T>,
     source_points: &Array2<T>,
     target_points: &Array2<T>,
-    output_shape: Option<&[usize]>,
+    outputshape: Option<&[usize]>,
     order: Option<InterpolationOrder>,
     mode: Option<BoundaryMode>,
     cval: Option<T>,
@@ -225,19 +225,19 @@ where
         + 'static,
 {
     // Validate inputs
-    if source_points._shape() != target_points._shape() {
+    if source_points.shape() != target_points.shape() {
         return Err(NdimageError::InvalidInput(
-            "Source and target _points must have the same _shape".into(),
+            "Source and target _points must have the same shape".into(),
         ));
     }
 
-    if source_points._shape()[1] != 2 || target_points._shape()[1] != 2 {
+    if source_points.shape()[1] != 2 || target_points.shape()[1] != 2 {
         return Err(NdimageError::InvalidInput(
             "Control _points must be Nx2 arrays".into(),
         ));
     }
 
-    let n_points = source_points._shape()[0];
+    let n_points = source_points.shape()[0];
     if n_points < 3 {
         return Err(NdimageError::InvalidInput(
             "At least 3 control _points are required for TPS".into(),
@@ -249,27 +249,27 @@ where
     let const_val = cval.unwrap_or_else(|| T::zero());
     let lambda = regularization.unwrap_or_else(|| T::zero());
 
-    // Determine output _shape
-    let out_shape = if let Some(_shape) = output_shape {
-        if _shape.len() != 2 {
+    // Determine output shape
+    let outshape = if let Some(shape) = outputshape {
+        if shape.len() != 2 {
             return Err(NdimageError::DimensionError(
-                "Output _shape must be 2-dimensional".into(),
+                "Output shape must be 2-dimensional".into(),
             ));
         }
-        [_shape[0], _shape[1]]
+        [shape[0], shape[1]]
     } else {
-        [input._shape()[0], input._shape()[1]]
+        [input.shape()[0], input.shape()[1]]
     };
 
     // Compute TPS coefficients
     let coeffs = compute_tps_coefficients(source_points, target_points, lambda)?;
 
     // Create output array
-    let mut output = Array2::from_elem(out_shape, const_val);
+    let mut output = Array2::from_elem(outshape, const_val);
     let input_dyn = input.clone().into_dyn();
 
     // Apply TPS transformation to each output pixel
-    let (height, width) = (out_shape[0], out_shape[1]);
+    let (height, width) = (outshape[0], outshape[1]);
 
     for y in 0..height {
         for x in 0..width {
@@ -360,7 +360,7 @@ where
 #[allow(dead_code)]
 fn apply_tps_mapping<T>(
     x: T,
-    y: T_control_points: &Array2<T>, _weights: &Array2<T>, _a_x: &T_a, _y: &T,
+    y: T_control, points: &Array2<T>, _weights: &Array2<T>, _a_x: &T_a, _y: &T,
 ) -> (T, T)
 where
     T: Float + FromPrimitive,
@@ -466,8 +466,8 @@ where
 
     for level in (0..num_levels - 1).rev() {
         // Upsample result to next level size
-        let target_shape = pyramid[level].dim();
-        let upsampled = upsample_array(&result, target_shape)?;
+        let targetshape = pyramid[level].dim();
+        let upsampled = upsample_array(&result, targetshape)?;
 
         // Apply transformation at this level
         result = transform_fn(&upsampled, level)?;
@@ -478,12 +478,12 @@ where
 
 /// Upsample an array to a target shape using bilinear interpolation
 #[allow(dead_code)]
-fn upsample_array<T>(_input: &Array2<T>, target_shape: (usize, usize)) -> NdimageResult<Array2<T>>
+fn upsample_array<T>(_input: &Array2<T>, targetshape: (usize, usize)) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let (src_h, src_w) = _input.dim();
-    let (dst_h, dst_w) = target_shape;
+    let (dst_h, dst_w) = targetshape;
 
     let mut output = Array2::zeros((dst_h, dst_w));
 

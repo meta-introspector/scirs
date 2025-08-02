@@ -9,7 +9,6 @@ use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{ChiSquared as RandChiSquared, Distribution};
-use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 
 /// Chi-square distribution structure

@@ -27,8 +27,8 @@ pub enum StructuringElement {
 ///
 /// * Result containing a binary kernel
 #[allow(dead_code)]
-fn create_structuring_element(_shape: StructuringElement) -> Result<Vec<Vec<bool>>> {
-    match _shape {
+fn create_structuring_element(shape: StructuringElement) -> Result<Vec<Vec<bool>>> {
+    match shape {
         StructuringElement::Rectangle(width, height) => {
             if width == 0 || height == 0 {
                 return Err(VisionError::InvalidParameter(
@@ -101,16 +101,16 @@ fn create_structuring_element(_shape: StructuringElement) -> Result<Vec<Vec<bool
 /// # Arguments
 ///
 /// * `img` - Input grayscale image
-/// * `kernel_shape` - Shape of the structuring element
+/// * `kernelshape` - Shape of the structuring element
 ///
 /// # Returns
 ///
 /// * Result containing the eroded image
 #[allow(dead_code)]
-pub fn erode(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
+pub fn erode(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
     let gray = _img.to_luma8();
     let (width, height) = gray.dimensions();
-    let kernel = create_structuring_element(kernel_shape)?;
+    let kernel = create_structuring_element(kernelshape)?;
 
     let kernel_height = kernel.len();
     let kernel_width = kernel[0].len();
@@ -163,16 +163,16 @@ pub fn erode(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<Dy
 /// # Arguments
 ///
 /// * `img` - Input grayscale image
-/// * `kernel_shape` - Shape of the structuring element
+/// * `kernelshape` - Shape of the structuring element
 ///
 /// # Returns
 ///
 /// * Result containing the dilated image
 #[allow(dead_code)]
-pub fn dilate(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
+pub fn dilate(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
     let gray = _img.to_luma8();
     let (width, height) = gray.dimensions();
-    let kernel = create_structuring_element(kernel_shape)?;
+    let kernel = create_structuring_element(kernelshape)?;
 
     let kernel_height = kernel.len();
     let kernel_width = kernel[0].len();
@@ -225,15 +225,15 @@ pub fn dilate(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<D
 /// # Arguments
 ///
 /// * `img` - Input grayscale image
-/// * `kernel_shape` - Shape of the structuring element
+/// * `kernelshape` - Shape of the structuring element
 ///
 /// # Returns
 ///
 /// * Result containing the opened image
 #[allow(dead_code)]
-pub fn opening(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
-    let eroded = erode(_img, kernel_shape)?;
-    dilate(&eroded, kernel_shape)
+pub fn opening(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
+    let eroded = erode(_img, kernelshape)?;
+    dilate(&eroded, kernelshape)
 }
 
 /// Apply morphological closing (dilation followed by erosion)
@@ -241,15 +241,15 @@ pub fn opening(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<
 /// # Arguments
 ///
 /// * `img` - Input grayscale image
-/// * `kernel_shape` - Shape of the structuring element
+/// * `kernelshape` - Shape of the structuring element
 ///
 /// # Returns
 ///
 /// * Result containing the closed image
 #[allow(dead_code)]
-pub fn closing(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
-    let dilated = dilate(_img, kernel_shape)?;
-    erode(&dilated, kernel_shape)
+pub fn closing(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
+    let dilated = dilate(_img, kernelshape)?;
+    erode(&dilated, kernelshape)
 }
 
 /// Apply morphological gradient (difference between dilation and erosion)
@@ -257,7 +257,7 @@ pub fn closing(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<
 /// # Arguments
 ///
 /// * `img` - Input grayscale image
-/// * `kernel_shape` - Shape of the structuring element
+/// * `kernelshape` - Shape of the structuring element
 ///
 /// # Returns
 ///
@@ -265,10 +265,10 @@ pub fn closing(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<
 #[allow(dead_code)]
 pub fn morphological_gradient(
     img: &DynamicImage,
-    kernel_shape: StructuringElement,
+    kernelshape: StructuringElement,
 ) -> Result<DynamicImage> {
-    let dilated = dilate(img, kernel_shape)?;
-    let eroded = erode(img, kernel_shape)?;
+    let dilated = dilate(img, kernelshape)?;
+    let eroded = erode(img, kernelshape)?;
 
     let dilated_gray = dilated.to_luma8();
     let eroded_gray = eroded.to_luma8();
@@ -298,14 +298,14 @@ pub fn morphological_gradient(
 /// # Arguments
 ///
 /// * `img` - Input grayscale image
-/// * `kernel_shape` - Shape of the structuring element
+/// * `kernelshape` - Shape of the structuring element
 ///
 /// # Returns
 ///
 /// * Result containing the top-hat transformed image
 #[allow(dead_code)]
-pub fn top_hat(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
-    let opened = opening(_img, kernel_shape)?;
+pub fn top_hat(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
+    let opened = opening(_img, kernelshape)?;
 
     let original = _img.to_luma8();
     let opened_gray = opened.to_luma8();
@@ -335,14 +335,14 @@ pub fn top_hat(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<
 /// # Arguments
 ///
 /// * `img` - Input grayscale image
-/// * `kernel_shape` - Shape of the structuring element
+/// * `kernelshape` - Shape of the structuring element
 ///
 /// # Returns
 ///
 /// * Result containing the black-hat transformed image
 #[allow(dead_code)]
-pub fn black_hat(_img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
-    let closed = closing(_img, kernel_shape)?;
+pub fn black_hat(_img: &DynamicImage, kernelshape: StructuringElement) -> Result<DynamicImage> {
+    let closed = closing(_img, kernelshape)?;
 
     let original = _img.to_luma8();
     let closed_gray = closed.to_luma8();

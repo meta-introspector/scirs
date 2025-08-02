@@ -114,7 +114,7 @@ where
             estimated_rank: None,
             is_symmetric: false,
             is_positive_definite: None,
-            machine_epsilon: machine, _epsilon: :<F>(),
+            machine_epsilon: machine, _epsilon: <F>(),
         }
     }
 }
@@ -493,7 +493,7 @@ where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     let regularization = match condition_report.stability_level {
-        StabilityLevel::Excellent | StabilityLevel::Good =>, F::zero(),
+        StabilityLevel::Excellent | StabilityLevel::Good => F::zero(),
         StabilityLevel::Marginal => {
             // Use moderate regularization
             let base_reg =
@@ -2023,9 +2023,9 @@ mod tests {
 
     #[test]
     fn test_symmetry_check() {
-        let symmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 2.0, 3.0])
+        let symmetric = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 2.0, 3.0])
             .expect("Failed to create symmetric matrix");
-        let asymmetric = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
+        let asymmetric = Array2::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0])
             .expect("Failed to create asymmetric matrix");
 
         assert!(check_symmetry(&symmetric.view()));
@@ -2066,7 +2066,7 @@ mod tests {
     #[test]
     #[cfg(feature = "linalg")]
     fn test_solve_with_monitoring() {
-        let matrix = Array2::from_shape_vec((2, 2), vec![2.0, 1.0, 1.0, 1.0])
+        let matrix = Array2::fromshape_vec((2, 2), vec![2.0, 1.0, 1.0, 1.0])
             .expect("Failed to create matrix");
         let rhs = Array1::from_vec(vec![3.0, 2.0]);
 
@@ -2089,7 +2089,7 @@ mod tests {
     #[test]
     fn test_enhanced_stability() {
         // Test enhanced matrix conditioning
-        let matrix = Array2::from_shape_vec((2, 2), vec![1e-15, 0.0, 0.0, 1.0]).unwrap();
+        let matrix = Array2::fromshape_vec((2, 2), vec![1e-15, 0.0, 0.0, 1.0]).unwrap();
         let assessment = assess_enhanced_matrix_condition(&matrix.view());
         assert!(assessment.is_ok());
 
@@ -2127,10 +2127,10 @@ where
     // More conservative stability classification for interpolation
     if enhanced_diagnostics.interpolation_risky {
         report.stability_level = match report.stability_level {
-            StabilityLevel::Excellent =>, StabilityLevel::Good,
-            StabilityLevel::Good =>, StabilityLevel::Marginal,
-            StabilityLevel::Marginal =>, StabilityLevel::Poor,
-            StabilityLevel::Poor =>, StabilityLevel::Poor,
+            StabilityLevel::Excellent => StabilityLevel::Good,
+            StabilityLevel::Good => StabilityLevel::Marginal,
+            StabilityLevel::Marginal => StabilityLevel::Poor,
+            StabilityLevel::Poor => StabilityLevel::Poor,
         };
     }
 

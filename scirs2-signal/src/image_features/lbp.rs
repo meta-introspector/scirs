@@ -1,4 +1,4 @@
-//! Local Binary Pattern (LBP) feature extraction for images
+// Local Binary Pattern (LBP) feature extraction for images
 
 use crate::error::SignalResult;
 use ndarray::Array2;

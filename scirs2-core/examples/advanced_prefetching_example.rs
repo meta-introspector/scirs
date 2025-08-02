@@ -34,19 +34,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create test data
     println!("Creating test datasets...");
     let matrix_size = 1000;
-    let matrix = Array2::<f64>::from_shape_fn((matrix_size, matrix_size), |(i, j)| {
+    let matrix = Array2::<f64>::fromshape_fn((matrix_size, matrix_size), |(i, j)| {
         (i * matrix_size + j) as f64
     });
 
     let tensor_size = 200;
     let tensor =
-        Array3::<f64>::from_shape_fn((tensor_size, tensor_size, tensor_size), |(i, j, k)| {
+        Array3::<f64>::fromshape_fn((tensor_size, tensor_size, tensor_size), |(i, j, k)| {
             (i * tensor_size * tensor_size + j * tensor_size + k) as f64
         });
 
     let weights_rows = 1000;
     let weights_cols = 500;
-    let weights = Array2::<f64>::from_shape_fn((weights_rows, weights_cols), |(i, j)| {
+    let weights = Array2::<f64>::fromshape_fn((weights_rows, weights_cols), |(i, j)| {
         ((i + j) % 100) as f64 / 100.0
     });
 

@@ -326,6 +326,11 @@ impl<T: GpuDataType> GpuPtr<T> {
     pub fn len(&self) -> usize {
         self.size
     }
+
+    /// Check if the pointer is empty (size is 0)
+    pub fn is_empty(&self) -> bool {
+        self.size == 0
+    }
 }
 
 /// Kernel argument types for GPU kernel execution
@@ -696,7 +701,10 @@ impl GpuContext {
     }
 
     /// Compile a kernel with metadata
-    fn compile_kernel_with_metadata(&self, source: &str, _metadata: &kernels::KernelMetadata,
+    fn compile_kernel_with_metadata(
+        &self,
+        source: &str,
+        _metadata: &kernels::KernelMetadata,
     ) -> Result<GpuKernelHandle, GpuError> {
         self.execute(|compiler| compiler.compile(source))
     }
@@ -716,7 +724,10 @@ impl GpuContext {
     }
 
     /// Launch a kernel with the given parameters
-    pub fn launch_kernel(&self, kernel_name: &str, grid_size: (usize, usize, usize),
+    pub fn launch_kernel(
+        &self,
+        kernel_name: &str,
+        grid_size: (usize, usize, usize),
         block_size: (usize, usize, usize),
         args: &[DynamicKernelArg],
     ) -> Result<(), GpuError> {
@@ -771,7 +782,11 @@ impl GpuContext {
 
     /// Execute a kernel with dynamic compilation and parameter passing
     /// This method is expected by scirs2-vision for GPU operations
-    pub fn execute_kernel(&self, source: &str, buffers: &[GpuBuffer<f32>], work_groups: (u32, u32, u32),
+    pub fn execute_kernel(
+        &self,
+        source: &str,
+        buffers: &[GpuBuffer<f32>],
+        work_groups: (u32, u32, u32),
         int_params: &[u32],
         float_params: &[f32],
     ) -> Result<(), GpuError> {
@@ -850,7 +865,12 @@ pub(crate) trait GpuCompilerImpl: Send + Sync {
     fn compile(&self, source: &str) -> Result<Arc<dyn GpuKernelImpl>, GpuError>;
 
     /// Compile a typed kernel
-    fn compile_typed(&self, name: &str, input_type: std::any::TypeId, output_type: std::any::TypeId) -> Arc<dyn GpuKernelImpl>;
+    fn compile_typed(
+        &self,
+        name: &str,
+        input_type: std::any::TypeId,
+        output_type: std::any::TypeId,
+    ) -> Arc<dyn GpuKernelImpl>;
 }
 
 /// GPU context implementation trait
@@ -933,7 +953,12 @@ impl GpuCompilerImpl for CpuCompiler {
         Ok(Arc::new(CpuKernel))
     }
 
-    fn compile_typed(&self, _name: &str, _input_type: std::any::TypeId, _output_type: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
+    fn compile_typed(
+        &self,
+        _name: &str,
+        _input_type: std::any::TypeId,
+        _output_type: std::any::TypeId,
+    ) -> Arc<dyn GpuKernelImpl> {
         // In a real implementation, we would select an appropriate implementation
         // For now, just return a dummy implementation
         Arc::new(CpuKernel)

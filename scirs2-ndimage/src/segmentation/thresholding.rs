@@ -9,7 +9,7 @@ use num_traits::{Float, FromPrimitive, NumAssign};
 
 /// Helper function for safe conversion from usize to float
 #[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(_value: usize) -> NdimageResult<T> {
+fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(_value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", _value))
     })
@@ -267,9 +267,9 @@ where
                         let dist = safe_usize_to_float(dist_sq as usize)?.sqrt();
 
                         // Gaussian weight
-                        let sigma = safe_usize_to_float(radius)? / safe_f64, _to_float: :<T>(2.0)?;
+                        let sigma = safe_usize_to_float(radius)? / safe_f64, _to_float: <T>(2.0)?;
                         let weight =
-                            (-dist * dist / (safe_f64, _to_float: :<T>(2.0)? * sigma * sigma)).exp();
+                            (-dist * dist / (safe_f64, _to_float: <T>(2.0)? * sigma * sigma)).exp();
 
                         weighted_sum += val * weight;
                         weight_sum += weight;

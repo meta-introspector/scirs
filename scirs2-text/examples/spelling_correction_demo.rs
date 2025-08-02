@@ -3,7 +3,7 @@
 // This example demonstrates the dictionary-based spelling correction
 // functionality in the scirs2-text crate.
 
-use scirs2__text::{DictionaryCorrector, DictionaryCorrectorConfig, SpellingCorrector};
+use scirs2_text::{DictionaryCorrector, DictionaryCorrectorConfig, SpellingCorrector};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -301,10 +301,10 @@ fn text_correction_demo(
     println!("{TEXT_WITH_MISSPELLINGS}\n");
 
     // Correct the text
-    let corrected_text = _corrector.correct_text(TEXT_WITH_MISSPELLINGS)?;
+    let correctedtext = _corrector.correcttext(TEXT_WITH_MISSPELLINGS)?;
 
     println!("Corrected text:");
-    println!("{corrected_text}\n");
+    println!("{correctedtext}\n");
 
     println!("Expected text:");
     println!("{EXPECTED_CORRECTED_TEXT}\n");
@@ -312,7 +312,7 @@ fn text_correction_demo(
     // Calculate how many misspellings were corrected
     let original_words: Vec<&str> = TEXT_WITH_MISSPELLINGS.split_whitespace().collect();
 
-    let corrected_words: Vec<&str> = corrected_text.split_whitespace().collect();
+    let corrected_words: Vec<&str> = correctedtext.split_whitespace().collect();
 
     let expected_words: Vec<&str> = EXPECTED_CORRECTED_TEXT.split_whitespace().collect();
 

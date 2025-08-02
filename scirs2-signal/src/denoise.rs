@@ -1,13 +1,14 @@
-//! Signal denoising
-//!
-//! This module provides functions for denoising signals using various methods,
-//! including wavelet-based denoising, Wiener filtering, and more.
+// Signal denoising
+//
+// This module provides functions for denoising signals using various methods,
+// including wavelet-based denoising, Wiener filtering, and more.
 
-use crate::dwt::{Wavelet, wavedec, waverec};
+use crate::dwt::{wavedec, waverec, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use rand::Rng;
 use scirs2_core::simd_ops::PlatformCapabilities;
+#[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
 use std::f64::consts::PI;
 use std::fmt::Debug;
@@ -56,8 +57,8 @@ pub enum ThresholdSelect {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::denoise::{denoise_wavelet, ThresholdMethod, ThresholdSelect};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::denoise::{denoise_wavelet, ThresholdMethod, ThresholdSelect};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 ///
 /// // Create a clean signal
@@ -217,7 +218,11 @@ fn garrote_threshold(_coeffs: &[f64], threshold: f64) -> Vec<f64> {
 
 /// Apply threshold to wavelet coefficients using specified method
 #[allow(dead_code)]
-pub fn threshold_coefficients(_coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
+pub fn threshold_coefficients(
+    _coeffs: &[f64],
+    threshold: f64,
+    method: ThresholdMethod,
+) -> Vec<f64> {
     // Check if all coefficients are finite
     for (i, &coeff) in _coeffs.iter().enumerate() {
         if !coeff.is_finite() {
@@ -238,6 +243,7 @@ pub fn threshold_coefficients(_coeffs: &[f64], threshold: f64, method: Threshold
 }
 
 /// SIMD-optimized threshold function for wavelet coefficients
+#[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
 fn simd_threshold_coefficients(
     coeffs: &[f64],
@@ -364,6 +370,7 @@ fn median_abs_deviation(_data: &[f64]) -> f64 {
 }
 
 /// SIMD-optimized median absolute deviation computation
+#[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
 fn simd_median_abs_deviation(_data: &[f64]) -> f64 {
     let caps = PlatformCapabilities::detect();
@@ -379,7 +386,6 @@ fn simd_median_abs_deviation(_data: &[f64]) -> f64 {
 #[cfg(target_arch = "x86_64")]
 #[allow(dead_code)]
 fn simd_mad_avx2(_data: &[f64]) -> f64 {
-
     let len = _data.len();
     let simd_len = len - (len % 4);
     let mut abs_values = vec![0.0; len];

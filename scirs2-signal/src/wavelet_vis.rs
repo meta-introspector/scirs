@@ -1,44 +1,47 @@
-//! Wavelet Coefficient Visualization Utilities
-//!
-//! This module provides utilities for visualizing and working with wavelet coefficients.
-//! These tools are particularly useful for examining the results of various wavelet transforms,
-//! including 1D DWT, 2D DWT, 1D SWT, and 2D SWT.
-//!
-//! The primary functions include:
-//! - Arranging coefficients in visually informative layouts
-//! - Normalizing coefficients for better visualization
-//! - Calculating energy distributions across subbands
-//! - Creating coefficient heatmaps
-//! - Creating visual representations of wavelet decompositions
-//!
-//! # Examples
-//!
-//! ```
-//! use ndarray::Array2;
-//! use scirs2__signal::dwt::Wavelet;
-//! use scirs2__signal::dwt2d::dwt2d_decompose;
-//! use scirs2__signal::wavelet_vis::arrange_coefficients_2d;
-//!
-//! // Create a simple test image
-//! let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
-//!
-//! // Perform 2D DWT decomposition
-//! let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
-//!
-//! // Arrange the coefficients in a visually informative layout
-//! let arranged = arrange_coefficients_2d(&decomp);
-//!
-//! // The arranged coefficients form a single 2D array with the
-//! // approximation coefficients in the top-left and the detail
-//! // coefficients in the other quadrants
-//! assert_eq!(arranged.shape(), image.shape());
-//! ```
+use ndarray::s;
+// Wavelet Coefficient Visualization Utilities
+//
+// This module provides utilities for visualizing and working with wavelet coefficients.
+// These tools are particularly useful for examining the results of various wavelet transforms,
+// including 1D DWT, 2D DWT, 1D SWT, and 2D SWT.
+//
+// The primary functions include:
+// - Arranging coefficients in visually informative layouts
+// - Normalizing coefficients for better visualization
+// - Calculating energy distributions across subbands
+// - Creating coefficient heatmaps
+// - Creating visual representations of wavelet decompositions
+//
+// # Examples
+//
+// ```
+// use ndarray::Array2;
+// use scirs2_signal::dwt::Wavelet;
+// use scirs2_signal::dwt2d::dwt2d_decompose;
+// use scirs2_signal::wavelet_vis::arrange_coefficients_2d;
+//
+// // Create a simple test image
+// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+//
+// // Perform 2D DWT decomposition
+// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
+//
+// // Arrange the coefficients in a visually informative layout
+// let arranged = arrange_coefficients_2d(&decomp);
+//
+// // The arranged coefficients form a single 2D array with the
+// // approximation coefficients in the top-left and the detail
+// // coefficients in the other quadrants
+// assert_eq!(arranged.shape(), image.shape());
+// ```
 
 use crate::dwt::Wavelet;
-use crate::dwt2d::{Dwt2dResult, dwt2d_decompose, wavedec2};
+use crate::dwt2d::{dwt2d_decompose, wavedec2, Dwt2dResult};
 use crate::error::{SignalError, SignalResult};
-use crate::swt2d::{Swt2dResult, swt2d_decompose};
-use ndarray::{Array2, s};
+use crate::swt2d::swt2d_decompose;
+#[cfg(feature = "parallel")]
+use crate::swt2d::Swt2dResult;
+use ndarray::{ Array2};
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -99,12 +102,12 @@ pub struct WaveletEnergy {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::dwt2d_decompose;
-/// use scirs2__signal::wavelet_vis::arrange_coefficients_2d;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::dwt2d_decompose;
+/// use scirs2_signal::wavelet_vis::arrange_coefficients_2d;
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D DWT decomposition
 /// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
@@ -175,9 +178,9 @@ pub fn arrange_coefficients_2d(_decomposition: &Dwt2dResult) -> Array2<f64> {
 ///
 /// ```no_run
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::wavedec2;
-/// use scirs2__signal::wavelet_vis::arrange_multilevel_coefficients_2d;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::wavedec2;
+/// use scirs2_signal::wavelet_vis::arrange_multilevel_coefficients_2d;
 ///
 /// // Create a simple test image (64x64 for 3 levels without overflow)
 /// let mut image = Array2::zeros((64, 64));
@@ -322,12 +325,12 @@ pub fn arrange_multilevel_coefficients_2d(
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::dwt2d_decompose;
-/// use scirs2__signal::wavelet_vis::calculate_energy_2d;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::dwt2d_decompose;
+/// use scirs2_signal::wavelet_vis::calculate_energy_2d;
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D DWT decomposition
 /// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
@@ -398,12 +401,12 @@ pub fn calculate_energy_2d(_decomposition: &Dwt2dResult) -> WaveletEnergy {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::swt2d::swt2d_decompose;
-/// use scirs2__signal::wavelet_vis::calculate_energy_swt2d;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::swt2d::swt2d_decompose;
+/// use scirs2_signal::wavelet_vis::calculate_energy_swt2d;
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D SWT decomposition
 /// let decomp = swt2d_decompose(&image, Wavelet::Haar, 1, None).unwrap();
@@ -414,6 +417,7 @@ pub fn calculate_energy_2d(_decomposition: &Dwt2dResult) -> WaveletEnergy {
 /// // Check that energy percentages sum to 100%
 /// assert!(((energy.approximation_percent + energy.detail_percent - 100.0) as f64).abs() < 1e-10);
 /// ```
+#[cfg(feature = "parallel")]
 #[allow(dead_code)]
 pub fn calculate_energy_swt2d(_decomposition: &Swt2dResult) -> WaveletEnergy {
     let approx = &_decomposition.approx;
@@ -473,8 +477,8 @@ pub fn calculate_energy_swt2d(_decomposition: &Swt2dResult) -> WaveletEnergy {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::{Wavelet, dwt_decompose};
-/// use scirs2__signal::wavelet_vis::calculate_energy_1d;
+/// use scirs2_signal::dwt::{Wavelet, dwt_decompose};
+/// use scirs2_signal::wavelet_vis::calculate_energy_1d;
 ///
 /// // Create a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -541,12 +545,12 @@ pub fn calculate_energy_1d(_approx: &[f64], detail: &[f64]) -> WaveletEnergy {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::dwt2d_decompose;
-/// use scirs2__signal::wavelet_vis::{normalize_coefficients, NormalizationStrategy};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::dwt2d_decompose;
+/// use scirs2_signal::wavelet_vis::{normalize_coefficients, NormalizationStrategy};
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D DWT decomposition
 /// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
@@ -698,12 +702,12 @@ pub enum NormalizationStrategy {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::dwt2d_decompose;
-/// use scirs2__signal::wavelet_vis::count_nonzero_coefficients;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::dwt2d_decompose;
+/// use scirs2_signal::wavelet_vis::count_nonzero_coefficients;
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D DWT decomposition
 /// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
@@ -802,12 +806,12 @@ pub struct WaveletCoeffCount {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::dwt2d::dwt2d_decompose;
-/// use scirs2__signal::wavelet_vis::{create_coefficient_heatmap, NormalizationStrategy, colormaps};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::dwt2d_decompose;
+/// use scirs2_signal::wavelet_vis::{create_coefficient_heatmap, NormalizationStrategy, colormaps};
 ///
 /// // Create a simple test image
-/// let image = Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
+/// let image = Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f64).collect()).unwrap();
 ///
 /// // Perform 2D DWT decomposition
 /// let decomp = dwt2d_decompose(&image, Wavelet::Haar, None).unwrap();
@@ -918,7 +922,7 @@ pub mod colormaps {
         };
 
         // Green is highest at midpoint
-        let g = ((255.0 * (1.0 - 2.0 * (x - 0.5) as f64).abs())) as u8;
+        let g = (255.0 * (1.0 - 2.0 * (x - 0.5) as f64).abs()) as u8;
 
         [r, g, b]
     }
@@ -1019,7 +1023,9 @@ mod tests {
         let energy = calculate_energy_2d(&decomp);
 
         // Check that energy percentages sum to 100%
-        assert!(((energy.approximation_percent + energy.detail_percent - 100.0) as f64).abs() < 1e-10);
+        assert!(
+            ((energy.approximation_percent + energy.detail_percent - 100.0) as f64).abs() < 1e-10
+        );
 
         // Check that detail energy is the sum of H, V, D energies
         let h_energy = energy.horizontal.unwrap();
@@ -1043,7 +1049,9 @@ mod tests {
         let energy = calculate_energy_swt2d(&decomp);
 
         // Check that energy percentages sum to 100%
-        assert!(((energy.approximation_percent + energy.detail_percent - 100.0) as f64).abs() < 1e-10);
+        assert!(
+            ((energy.approximation_percent + energy.detail_percent - 100.0) as f64).abs() < 1e-10
+        );
     }
 
     #[test]

@@ -11,7 +11,7 @@
 //! # Example
 //!
 //! ```
-//! use scirs2__text::spelling::{StatisticalCorrector, SpellingCorrector};
+//! use scirs2_text::spelling::{StatisticalCorrector, SpellingCorrector};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create a statistical spelling corrector
@@ -28,7 +28,7 @@
 //!
 //! // For text correction, just verify it runs without errors
 //! let text = "I recieved your mesage about the meeting.";
-//! let corrected = corrector.correct_text(_text)?;
+//! let corrected = corrector.correcttext(text)?;
 //! assert!(!corrected.is_empty());
 //! # Ok(())
 //! # }
@@ -137,7 +137,7 @@ impl Default for StatisticalCorrector {
         let mut language_model = NGramModel::new(3);
 
         // Add some sample text to bootstrap the language model
-        let sample_texts = [
+        let sampletexts = [
             "The quick brown fox jumps over the lazy dog.",
             "She sells seashells by the seashore.",
             "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
@@ -151,8 +151,8 @@ impl Default for StatisticalCorrector {
             // Add more sample texts to improve the language model
         ];
 
-        for text in &sample_texts {
-            language_model.add_text(text);
+        for text in &sampletexts {
+            language_model.addtext(text);
         }
 
         Self {
@@ -199,8 +199,8 @@ impl StatisticalCorrector {
     }
 
     /// Add text to train the language model
-    pub fn add_training_text(&mut self, text: &str) {
-        self.language_model.add_text(text);
+    pub fn add_trainingtext(&mut self, text: &str) {
+        self.language_model.addtext(text);
     }
 
     /// Set the language model
@@ -454,7 +454,7 @@ impl SpellingCorrector for StatisticalCorrector {
     }
 
     // Override the default implementation for more context-aware correction
-    fn correct_text(&self, text: &str) -> Result<String> {
+    fn correcttext(&self, text: &str) -> Result<String> {
         // Split the text into sentences
         let sentences: Vec<&str> = text
             .split(['.', '?', '!'])
@@ -494,9 +494,9 @@ mod tests {
         let mut corrector = StatisticalCorrector::default();
 
         // Add some training text to improve the language model
-        corrector.add_training_text("The quick brown fox jumps over the lazy dog.");
-        corrector.add_training_text("Programming languages like Python and Rust are popular.");
-        corrector.add_training_text("I received your message about the meeting tomorrow.");
+        corrector.add_trainingtext("The quick brown fox jumps over the lazy dog.");
+        corrector.add_trainingtext("Programming languages like Python and Rust are popular.");
+        corrector.add_trainingtext("I received your message about the meeting tomorrow.");
 
         // Add specific words to ensure consistent behavior in tests
         corrector.add_word("received", 100);
@@ -510,7 +510,7 @@ mod tests {
 
         // Test text correction
         let text = "I recieved your mesage about the meating tommorow.";
-        let corrected = corrector.correct_text(text).unwrap();
+        let corrected = corrector.correcttext(text).unwrap();
 
         // Check each word individually
         assert!(corrected.contains("received"));
@@ -524,10 +524,10 @@ mod tests {
         let mut corrector = StatisticalCorrector::default();
 
         // Add training text for context
-        corrector.add_training_text("I went to the bank to deposit money.");
-        corrector.add_training_text("The river bank was muddy after the rain.");
-        corrector.add_training_text("I need to address the issues in the meeting.");
-        corrector.add_training_text("What is your home address?");
+        corrector.add_trainingtext("I went to the bank to deposit money.");
+        corrector.add_trainingtext("The river bank was muddy after the rain.");
+        corrector.add_trainingtext("I need to address the issues in the meeting.");
+        corrector.add_trainingtext("What is your home address?");
 
         // Add explicit words for consistent testing
         corrector.add_word("bank", 100);
@@ -541,8 +541,8 @@ mod tests {
         let text1 = "I went to the bnk to deposit money.";
         let text2 = "The river bnk was muddy after the rain.";
 
-        let corrected1 = corrector.correct_text(text1).unwrap();
-        let corrected2 = corrector.correct_text(text2).unwrap();
+        let corrected1 = corrector.correcttext(text1).unwrap();
+        let corrected2 = corrector.correcttext(text2).unwrap();
 
         // Both should correct "bnk" to "bank" regardless of context
         assert!(corrected1.contains("bank"));

@@ -412,7 +412,7 @@ fn determine_overall_readiness(
 
     match needs_work_count {
         0 => OverallReadiness::Ready,
-        1..=2 => OverallReadiness::NearReady_ =>, OverallReadiness::NeedsWork,
+        1..=2 => OverallReadiness::NearReady_ => OverallReadiness::NeedsWork,
     }
 }
 

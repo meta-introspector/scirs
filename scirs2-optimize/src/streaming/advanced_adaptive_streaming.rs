@@ -474,7 +474,7 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
         let param_size = _initial_parameters.len();
 
         Self {
-            _parameters: _initial_parameters,
+            parameters: _initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),
@@ -899,12 +899,13 @@ impl NeuromorphicLearningSystem {
     }
 
     fn process_spike_update(
-        &mut self_parameters: &Array1<f64>,
+        &mut self,
+        parameters: &Array1<f64>,
         _data_point: &StreamingDataPoint,
         _context: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         // Placeholder for neuromorphic update
-        Ok(Array1::zeros(_parameters.len()))
+        Ok(Array1::zeros(parameters.len()))
     }
 }
 
@@ -925,12 +926,13 @@ impl QuantumInspiredVariational {
     }
 
     fn variational_update(
-        &mut self_parameters: &Array1<f64>,
+        &mut self,
+        parameters: &Array1<f64>,
         _data_point: &StreamingDataPoint,
         _context: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         // Placeholder for quantum variational update
-        Ok(Array1::zeros(_parameters.len()))
+        Ok(Array1::zeros(parameters.len()))
     }
 }
 
@@ -956,7 +958,8 @@ impl MetaLearningSelector {
     }
 
     fn select_algorithm(
-        &mut self_context: &Array1<f64>,
+        &mut self,
+        context: &Array1<f64>,
         _metrics: &HashMap<String, f64>,
     ) -> Result<OptimizationAlgorithm> {
         // Placeholder for meta-learning selection
@@ -981,11 +984,12 @@ impl FederatedLearningCoordinator {
     }
 
     fn aggregate_update(
-        &mut self_update1: &Array1<f64>,
+        &mut self,
+        update1: &Array1<f64>,
         _update2: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         // Placeholder for federated aggregation
-        Ok(Array1::zeros(_update1.len()))
+        Ok(Array1::zeros(update1.len()))
     }
 }
 
@@ -1001,7 +1005,7 @@ impl SelfOrganizingMemoryHierarchy {
         }
     }
 
-    fn consolidate_updates(&mut self_update: &Array1<f64>, _context: &Array1<f64>) -> Result<()> {
+    fn consolidate_updates(&mut self, update: &Array1<f64>, _context: &Array1<f64>) -> Result<()> {
         // Placeholder for memory consolidation
         Ok(())
     }
@@ -1060,7 +1064,8 @@ impl AdvancedPerformanceTracker {
     }
 
     fn update_metrics(
-        &mut self_parameters: &Array1<f64>,
+        &mut self,
+        parameters: &Array1<f64>,
         _data_point: &StreamingDataPoint_processing,
         _time: Duration,
     ) -> Result<()> {

@@ -20,7 +20,7 @@ pub fn lu_decomposition<T>(
 where
     T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
-    let (m, n) = matrix.global_shape();
+    let (m, n) = matrix.globalshape();
     
     if m != n {
         return Err(LinalgError::InvalidInput(
@@ -40,7 +40,7 @@ fn distributed_lu_partial_pivoting<T>(
 where
     T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
-    let (n_) = matrix.global_shape();
+    let (n_) = matrix.globalshape();
     let config = matrix.config.clone();
     
     // Initialize L and U matrices
@@ -51,8 +51,8 @@ where
     let mut u = matrix.clone();
     
     // Initialize L as identity matrix
-    for i in 0..l.local_shape().0 {
-        for j in 0..l.local_shape().1 {
+    for i in 0..l.localshape().0 {
+        for j in 0..l.localshape().1 {
             if i == j {
                 l.local_data_mut()[[i, j]] = T::one();
             } else {
@@ -100,7 +100,7 @@ fn distributed_householder_qr<T>(
 where
     T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
-    let (m, n) = matrix.global_shape();
+    let (m, n) = matrix.globalshape();
     let config = matrix.config.clone();
     
     // Initialize Q as identity and R as copy of A
@@ -139,7 +139,7 @@ pub fn cholesky_decomposition<T>(
 where
     T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
-    let (m, n) = matrix.global_shape();
+    let (m, n) = matrix.globalshape();
     
     if m != n {
         return Err(LinalgError::InvalidInput(
@@ -158,7 +158,7 @@ fn distributed_cholesky_block<T>(
 where
     T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
-    let n = matrix.global_shape().0;
+    let n = matrix.globalshape().0;
     let config = matrix.config.clone();
     let block_size = config.block_size;
     
@@ -217,7 +217,7 @@ fn distributed_two_phase_svd<T>(
 where
     T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
-    let (m, n) = matrix.global_shape();
+    let (m, n) = matrix.globalshape();
     let config = matrix.config.clone();
     
     // Phase 1: Reduce to bidiagonal form using QR/LQ
@@ -273,7 +273,7 @@ fn initialize_identity<T>(_matrix: &mut DistributedMatrix<T>) -> LinalgResult<()
 where
     T: Float + Send + Sync,
 {
-    let (rows, cols) = _matrix.local_shape();
+    let (rows, cols) = _matrix.localshape();
     for i in 0..rows {
         for j in 0..cols {
             if i == j {
@@ -296,7 +296,7 @@ where
 {
     // Compute Householder vector for column k
     // Simplified implementation
-    let (m_) = matrix.local_shape();
+    let (m_) = matrix.localshape();
     Ok(Array1::zeros(m))
 }
 
@@ -319,7 +319,7 @@ fn zero_upper_triangle<T>(_matrix: &mut DistributedMatrix<T>) -> LinalgResult<()
 where
     T: Float + Send + Sync,
 {
-    let (rows, cols) = _matrix.local_shape();
+    let (rows, cols) = _matrix.localshape();
     for i in 0..rows {
         for j in (i + 1)..cols {
             _matrix.local_data_mut()[[i, j]] = T::zero();
@@ -399,7 +399,7 @@ where
 {
     // Diagonalize bidiagonal matrix to get SVD
     // Simplified implementation
-    let (m, n) = matrix.global_shape();
+    let (m, n) = matrix.globalshape();
     let u = matrix.clone();
     let s = Array1::zeros(n.min(m));
     let vt = matrix.clone();
@@ -438,7 +438,7 @@ fn distributed_qr_eigenvalue_algorithm<T>(
 where
     T: Float + Send + Sync + serde::Serialize + for<'de>, serde::Deserialize<'de> + 'static,
 {
-    let (n_) = matrix.global_shape();
+    let (n_) = matrix.globalshape();
     let config = matrix.config.clone();
     
     let mut a = matrix.clone();
@@ -494,7 +494,7 @@ where
     T: Float + Send + Sync,
 {
     // Extract diagonal elements from distributed _matrix
-    let (m, n) = _matrix.local_shape();
+    let (m, n) = _matrix.localshape();
     let size = m.min(n);
     let mut diagonal = Array1::zeros(size);
     

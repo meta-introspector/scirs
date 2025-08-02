@@ -1,13 +1,13 @@
-//! Advanced interpolation methods for signal processing
-//!
-//! This module provides sophisticated interpolation algorithms including
-//! Gaussian process interpolation, Kriging, Radial Basis Functions (RBF),
-//! and minimum energy interpolation.
+// Advanced interpolation methods for signal processing
+//
+// This module provides sophisticated interpolation algorithms including
+// Gaussian process interpolation, Kriging, Radial Basis Functions (RBF),
+// and minimum energy interpolation.
 
 use crate::error::{SignalError, SignalResult};
 use crate::interpolate::core::InterpolationConfig;
 use ndarray::{Array1, Array2};
-use scirs2__linalg::{cholesky, solve, solve_triangular};
+use scirs2_linalg::{cholesky, solve, solve_triangular};
 
 #[allow(unused_imports)]
 /// Applies Gaussian process interpolation to fill missing values in a signal
@@ -31,7 +31,7 @@ use scirs2__linalg::{cholesky, solve, solve_triangular};
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__signal::interpolate::advanced::gaussian_process_interpolate;
+/// use scirs2_signal::interpolate::advanced::gaussian_process_interpolate;
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0, f64::NAN, 5.0]);
 /// let result = gaussian_process_interpolate(&signal, 2.0, 1.0, 0.01).unwrap();
@@ -174,7 +174,7 @@ pub fn gaussian_process_interpolate(
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__signal::interpolate::{advanced::kriging_interpolate, core::InterpolationConfig};
+/// use scirs2_signal::interpolate::{advanced::kriging_interpolate, core::InterpolationConfig};
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
 /// let config = InterpolationConfig::default();
@@ -300,7 +300,7 @@ where
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__signal::interpolate::{advanced::rbf_interpolate, core::InterpolationConfig};
+/// use scirs2_signal::interpolate::{advanced::rbf_interpolate, core::InterpolationConfig};
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
 /// let config = InterpolationConfig::default();
@@ -411,7 +411,7 @@ where
 ///
 /// ```rust
 /// use ndarray::Array1;
-/// use scirs2__signal::interpolate::{advanced::minimum_energy_interpolate, core::InterpolationConfig};
+/// use scirs2_signal::interpolate::{advanced::minimum_energy_interpolate, core::InterpolationConfig};
 ///
 /// let mut signal = Array1::from_vec(vec![1.0, f64::NAN, f64::NAN, 4.0]);
 /// let config = InterpolationConfig::default();

@@ -357,7 +357,7 @@ fn auto_arima(
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError_>(format!("{e}")))?;
 
     let config = ArimaConfig {
-        _p: params.pdq.0_d: params.pdq.1,
+        _p: params.pdq.0, d: params.pdq.1,
         _q: params.pdq.2,
         seasonal_p: params.seasonal_pdq.0,
         seasonal_d: params.seasonal_pdq.1,

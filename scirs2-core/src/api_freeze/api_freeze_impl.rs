@@ -36,7 +36,7 @@ fn initialize_api_freeze_impl() {
         .register_api("check_finite", "validation", v1_0_0)
         .register_api("check_array_finite", "validation", v1_0_0)
         .register_api("check_positive", "validation", v1_0_0)
-        .register_api("check_shape", "validation", v1_0_0)
+        .register_api("checkshape", "validation", v1_0_0)
         .register_api("check_in_bounds", "validation", v1_0_0);
 
     // Numeric operations

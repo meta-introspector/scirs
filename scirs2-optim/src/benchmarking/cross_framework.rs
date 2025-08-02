@@ -646,7 +646,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         // Parse results - simplified for now without serde_json
         let _results_json = String::from_utf8_lossy(&output.stdout);
-        // let results: HashMap<String, serde_json::Value> = serde, _json::from_str(&results_json)
+        // let results: HashMap<String, serde_json::Value> = serde_json:::from_str(&results_json)
         //     .map_err(|e| OptimError::InvalidConfig(format!("Failed to parse PyTorch results: {}", e)))?;
         let results: HashMap<String, HashMap<String, f64>> = HashMap::new(); // Placeholder
 
@@ -704,7 +704,7 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 
         // Parse results - simplified for now without serde_json
         let _results_json = String::from_utf8_lossy(&output.stdout);
-        // let results: HashMap<String, serde_json::Value> = serde, _json::from_str(&results_json)
+        // let results: HashMap<String, serde_json::Value> = serde_json:::from_str(&results_json)
         //     .map_err(|e| OptimError::InvalidConfig(format!("Failed to parse TensorFlow results: {}", e)))?;
         let results: HashMap<String, HashMap<String, f64>> = HashMap::new(); // Placeholder
 

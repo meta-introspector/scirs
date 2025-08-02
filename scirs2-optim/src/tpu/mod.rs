@@ -179,7 +179,7 @@ struct XLANode {
     inputs: Vec<XLAOperand>,
 
     /// Output shape
-    output_shape: XLAShape,
+    outputshape: XLAShape,
 
     /// Node metadata
     metadata: XLANodeMetadata,
@@ -572,13 +572,13 @@ struct CompiledComputation {
 #[derive(Debug, Clone)]
 struct IOSpecification {
     /// Input shapes
-    input_shapes: Vec<XLAShape>,
+    inputshapes: Vec<XLAShape>,
 
     /// Output shapes
-    output_shapes: Vec<XLAShape>,
+    outputshapes: Vec<XLAShape>,
 
     /// Parameter shapes
-    parameter_shapes: Vec<XLAShape>,
+    parametershapes: Vec<XLAShape>,
 }
 
 /// Performance characteristics
@@ -669,7 +669,7 @@ where
     }
 
     /// Compile optimizer step for TPU execution
-    pub fn compile_step(&mut self, input_shapes: &[XLAShape]) -> Result<String> {
+    pub fn compile_step(&mut self, inputshapes: &[XLAShape]) -> Result<String> {
         let compilation_id = format!("optimizer_step_{}", self.step_count);
 
         if self.computation_cache.contains_key(&compilation_id) {
@@ -679,7 +679,7 @@ where
         let start_time = std::time::Instant::now();
 
         // Build XLA computation
-        let computation = self.build_optimizer_computation(input_shapes)?;
+        let computation = self.build_optimizer_computation(inputshapes)?;
 
         // Apply optimization passes
         let optimized_computation = self.apply_optimization_passes(computation)?;
@@ -714,11 +714,11 @@ where
         let start_time = std::time::Instant::now();
 
         // Convert to XLA shapes
-        let param_shape = self.array_to_xla_shape(params)?;
-        let grad_shape = self.array_to_xla_shape(gradients)?;
+        let paramshape = self.array_to_xlashape(params)?;
+        let gradshape = self.array_to_xlashape(gradients)?;
 
         // Compile if needed
-        let computation_id = self.compile_step(&[param_shape, grad_shape])?;
+        let computation_id = self.compile_step(&[paramshape, gradshape])?;
 
         // Execute on TPU
         let result = if let Some(ref _pod_coordinator) = self.pod_coordinator {
@@ -744,14 +744,14 @@ where
 
     fn build_optimizer_computation(
         &self,
-        input_shapes: &[XLAShape],
+        inputshapes: &[XLAShape],
     ) -> Result<XLAComputationGraph> {
         // Simplified computation graph building
         // In a real implementation, this would build the full optimizer computation
         let mut graph = self.xla_graph.as_ref().unwrap().clone();
 
         // Add input placeholders
-        for (i, &shape) in input_shapes.iter().enumerate() {
+        for (i, &shape) in inputshapes.iter().enumerate() {
             let operand = XLAOperand { id: i, shape };
             graph.inputs.insert(format!("input_{}", i), operand);
         }
@@ -789,9 +789,9 @@ where
         );
 
         let io_spec = IOSpecification {
-            input_shapes: computation.inputs.values().map(|op| op.shape).collect(),
-            output_shapes: computation.outputs.iter().map(|op| op.shape).collect(),
-            parameter_shapes: Vec::new(),
+            inputshapes: computation.inputs.values().map(|op| op.shape).collect(),
+            outputshapes: computation.outputs.iter().map(|op| op.shape).collect(),
+            parametershapes: Vec::new(),
         };
 
         let perf_characteristics = PerformanceCharacteristics {
@@ -847,7 +847,7 @@ where
         ))
     }
 
-    fn array_to_xla_shape<S, DIM>(&self, array: &ArrayBase<S, DIM>) -> Result<XLAShape>
+    fn array_to_xlashape<S, DIM>(&self, array: &ArrayBase<S, DIM>) -> Result<XLAShape>
     where
         S: Data<Elem = A>,
         DIM: Dimension,
@@ -1116,7 +1116,7 @@ mod tests {
     }
 
     #[test]
-    fn test_xla_shape_creation() {
+    fn test_xlashape_creation() {
         let shape = XLAShape {
             dimensions: [10, 20, 1, 1],
             rank: 2,

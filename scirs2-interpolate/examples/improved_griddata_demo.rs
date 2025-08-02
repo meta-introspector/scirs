@@ -51,12 +51,12 @@ fn demonstrate_1d_linear() -> Result<(), Box<dyn std::error::Error>> {
     let x_data = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
     let y_data = vec![0.0, 1.0, 4.0, 9.0, 16.0, 25.0]; // x^2
 
-    let points = Array2::from_shape_vec((6, 1), x_data.clone())?;
+    let points = Array2::fromshape_vec((6, 1), x_data.clone())?;
     let values = Array1::from_vec(y_data.clone());
 
     // Create query points
     let query_x = vec![0.5, 1.5, 2.5, 3.5, 4.5];
-    let query_points = Array2::from_shape_vec((5, 1), query_x.clone())?;
+    let query_points = Array2::fromshape_vec((5, 1), query_x.clone())?;
 
     // Perform linear interpolation
     let results = griddata(
@@ -104,7 +104,7 @@ fn demonstrate_2d_triangulation() -> Result<(), Box<dyn std::error::Error>> {
         [0.5, 0.5], // Center
     ];
 
-    let points = Array2::from_shape_vec((9, 2), data_points.iter().flatten().cloned().collect())?;
+    let points = Array2::fromshape_vec((9, 2), data_points.iter().flatten().cloned().collect())?;
 
     let values = Array1::from_vec(data_points.iter().map(|&[x, y]| x + y).collect());
 
@@ -120,7 +120,7 @@ fn demonstrate_2d_triangulation() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     let query_points =
-        Array2::from_shape_vec((7, 2), query_data.iter().flatten().cloned().collect())?;
+        Array2::fromshape_vec((7, 2), query_data.iter().flatten().cloned().collect())?;
 
     // Perform 2D linear interpolation
     let results = griddata(
@@ -172,14 +172,14 @@ fn demonstrate_nd_interpolation() -> Result<(), Box<dyn std::error::Error>> {
         values_vec.push(x + y.abs() + z.abs()); // Test function
     }
 
-    let points = Array2::from_shape_vec((n_points, 3), points_vec)?;
+    let points = Array2::fromshape_vec((n_points, 3), points_vec)?;
     let values = Array1::from_vec(values_vec);
 
     // Create query points
     let query_data = vec![[0.25, 0.5, 0.0], [0.5, 0.0, 0.5], [0.75, -0.5, -0.5]];
 
     let query_points =
-        Array2::from_shape_vec((3, 3), query_data.iter().flatten().cloned().collect())?;
+        Array2::fromshape_vec((3, 3), query_data.iter().flatten().cloned().collect())?;
 
     // Perform 3D interpolation
     let results = griddata(
@@ -205,12 +205,12 @@ fn compare_interpolation_methods() -> Result<(), Box<dyn std::error::Error>> {
     // Create 2D test data
     let data_points = vec![[0.0, 0.0], [2.0, 0.0], [1.0, 1.5], [0.5, 1.0], [1.5, 0.5]];
 
-    let points = Array2::from_shape_vec((5, 2), data_points.iter().flatten().cloned().collect())?;
+    let points = Array2::fromshape_vec((5, 2), data_points.iter().flatten().cloned().collect())?;
 
     // Test function: f(x,y) = x² + y²
     let values = Array1::from_vec(data_points.iter().map(|&[x, y]| x * x + y * y).collect());
 
-    let query_point = Array2::from_shape_vec((1, 2), vec![1.0, 0.5])?;
+    let query_point = Array2::fromshape_vec((1, 2), vec![1.0, 0.5])?;
 
     // Compare different methods
     let methods = vec![
@@ -249,9 +249,9 @@ fn demonstrate_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Testing edge cases:");
 
     // Test 1: Single data point
-    let single_point = Array2::from_shape_vec((1, 2), vec![1.0, 1.0])?;
+    let single_point = Array2::fromshape_vec((1, 2), vec![1.0, 1.0])?;
     let single_value = Array1::from_vec(vec![5.0]);
-    let query = Array2::from_shape_vec((1, 2), vec![2.0, 2.0])?;
+    let query = Array2::fromshape_vec((1, 2), vec![2.0, 2.0])?;
 
     match griddata(
         &single_point.view(),
@@ -266,9 +266,9 @@ fn demonstrate_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Test 2: Collinear points in 2D
-    let collinear_points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0])?;
+    let collinear_points = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0])?;
     let collinear_values = Array1::from_vec(vec![0.0, 1.0, 2.0]);
-    let query_collinear = Array2::from_shape_vec((1, 2), vec![0.5, 0.5])?;
+    let query_collinear = Array2::fromshape_vec((1, 2), vec![0.5, 0.5])?;
 
     match griddata(
         &collinear_points.view(),
@@ -283,9 +283,9 @@ fn demonstrate_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Test 3: Outside convex hull
-    let triangle_points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0])?;
+    let triangle_points = Array2::fromshape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0])?;
     let triangle_values = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-    let outside_query = Array2::from_shape_vec((1, 2), vec![2.0, 2.0])?;
+    let outside_query = Array2::fromshape_vec((1, 2), vec![2.0, 2.0])?;
 
     match griddata(
         &triangle_points.view(),
@@ -300,7 +300,7 @@ fn demonstrate_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Test 4: Exact data point match
-    let exact_query = Array2::from_shape_vec((1, 2), vec![1.0, 0.0])?;
+    let exact_query = Array2::fromshape_vec((1, 2), vec![1.0, 0.0])?;
     match griddata(
         &triangle_points.view(),
         &triangle_values.view(),

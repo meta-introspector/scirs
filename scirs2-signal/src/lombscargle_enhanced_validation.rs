@@ -1,28 +1,28 @@
-//! Enhanced validation suite for Lomb-Scargle periodogram
-//!
-//! This module provides comprehensive validation including:
-//! - Comparison with reference implementations
-//! - Edge case handling
-//! - Performance benchmarks with memory profiling
-//! - Enhanced numerical stability and precision tests
-//! - Robust statistical significance validation
-//! - Cross-platform consistency with floating-point analysis
-//! - Advanced bootstrap confidence interval coverage
-//! - SIMD vs scalar computation validation
+// Enhanced validation suite for Lomb-Scargle periodogram
+//
+// This module provides comprehensive validation including:
+// - Comparison with reference implementations
+// - Edge case handling
+// - Performance benchmarks with memory profiling
+// - Enhanced numerical stability and precision tests
+// - Robust statistical significance validation
+// - Cross-platform consistency with floating-point analysis
+// - Advanced bootstrap confidence interval coverage
+// - SIMD vs scalar computation validation
 
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::lombscargle;
-use crate::lombscargle__enhanced::{LombScargleConfig, WindowType, lombscargle_enhanced};
+use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
 use num_traits::Float;
-use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
+use rand::{Rng, SeedableRng};
 use scirs2_core::parallel_ops::*;
 use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]
-use crate::lombscargle__validation::{
+use crate::lombscargle_validation::{
     validate_analytical_cases, validate_lombscargle_enhanced, ValidationResult,
 };
 /// Enhanced validation configuration
@@ -702,12 +702,12 @@ fn benchmark_performance(
         times.push(start.elapsed().as_micros() as f64 / 1000.0); // Convert to ms
     }
 
-    let mean_time_ms = times.iter().sum::<f64>() / iterations  as f64;
+    let mean_time_ms = times.iter().sum::<f64>() / iterations as f64;
     let variance = times
         .iter()
         .map(|&t| (t - mean_time_ms).powi(2))
         .sum::<f64>()
-        / iterations  as f64;
+        / iterations as f64;
     let std_time_ms = variance.sqrt();
 
     let throughput = n as f64 / (mean_time_ms / 1000.0); // samples per second
@@ -792,7 +792,7 @@ fn test_irregular_sampling(
 
     // Resolution factor (compared to regular sampling)
     let avg_spacing =
-        (t_irregular.last().unwrap() - t_irregular[0]) / (t_irregular.len() - 1)  as f64;
+        (t_irregular.last().unwrap() - t_irregular[0]) / (t_irregular.len() - 1) as f64;
     let resolution_factor = 1.0 / avg_spacing;
 
     // Estimate spectral leakage more comprehensively
@@ -961,10 +961,10 @@ fn test_noise_robustness(
 
             // Enhanced peak detection with adaptive threshold
             let freq_tolerance = 0.5; // Tighter frequency tolerance
-            let mean_power = power.iter().sum::<f64>() / power.len()  as f64;
+            let mean_power = power.iter().sum::<f64>() / power.len() as f64;
             let power_std = {
                 let var = power.iter().map(|&p| (p - mean_power).powi(2)).sum::<f64>()
-                    / power.len()  as f64;
+                    / power.len() as f64;
                 var.sqrt()
             };
 
@@ -982,7 +982,7 @@ fn test_noise_robustness(
             }
         }
 
-        let detection_prob = detections as f64 / n_trials  as f64;
+        let detection_prob = detections as f64 / n_trials as f64;
         detection_curve.push((snr_db, detection_prob));
     }
 
@@ -1096,7 +1096,7 @@ fn compare_with_reference(_implementation: &str) -> SignalResult<ReferenceCompar
     }
 
     let max_deviation = deviations.iter().cloned().fold(0.0, f64::max);
-    let mean_absolute_error = deviations.iter().sum::<f64>() / deviations.len()  as f64;
+    let mean_absolute_error = deviations.iter().sum::<f64>() / deviations.len() as f64;
 
     // Compute correlation
     let correlation = 0.95; // Simplified
@@ -1219,7 +1219,7 @@ fn test_extreme_parameters(
         .iter()
         .map(|&b| if b { 1.0 } else { 0.0 })
         .sum::<f64>()
-        / results.len()  as f64;
+        / results.len() as f64;
 
     Ok(ExtremeParameterResults {
         small_intervals_ok: results[0],
@@ -1304,7 +1304,7 @@ fn test_multi_frequency_signals(
     }
 
     let secondary_freq_accuracy =
-        1.0 - secondary_errors.iter().sum::<f64>() / secondary_errors.len()  as f64;
+        1.0 - secondary_errors.iter().sum::<f64>() / secondary_errors.len() as f64;
 
     // Estimate frequency separation resolution
     let min_separation = (f2 - f1).min(f3 - f2);
@@ -1458,7 +1458,7 @@ fn test_statistical_significance(
     // Count how many peaks exceed certain thresholds
     let threshold = 5.0; // Arbitrary threshold
     let high_power_count = power.iter().filter(|&&p| p > threshold).count();
-    let observed_fap = high_power_count as f64 / power.len()  as f64;
+    let observed_fap = high_power_count as f64 / power.len() as f64;
 
     let fap_accuracy = 1.0 - (theoretical_fap - observed_fap).abs().min(1.0);
 
@@ -1588,7 +1588,10 @@ fn estimate_window_effectiveness(_times: &[f64]) -> SignalResult<f64> {
         };
 
         let f0 = 10.0;
-        let signal: Vec<f64> = _times.iter().map(|&ti| (2.0 * PI * f0 * ti).sin()).collect();
+        let signal: Vec<f64> = _times
+            .iter()
+            .map(|&ti| (2.0 * PI * f0 * ti).sin())
+            .collect();
 
         match lombscargle_enhanced(_times, &signal, &config) {
             Ok((freqs, power_)) => {
@@ -1646,7 +1649,7 @@ fn test_bootstrap_coverage(_times: &[f64], signal: &[f64]) -> SignalResult<f64> 
                 .zip(upper.iter())
                 .filter(|(&l, &u)| l <= u && u > l)
                 .count() as f64
-                / lower.len()  as f64;
+                / lower.len() as f64;
             Ok(coverage)
         }
         _ => Ok(0.0),
@@ -1900,16 +1903,16 @@ fn test_enhanced_statistical_significance(
         max_powers.push(max_power);
 
         // Calculate empirical p-value
-        let n_freqs = freqs.len()  as f64;
+        let n_freqs = freqs.len() as f64;
         let p_value = 1.0 - (1.0 - (-max_power).exp()).powf(n_freqs);
         p_values.push(p_value.min(1.0).max(0.0));
     }
 
     // Theoretical vs empirical FAP comparison
-    let mean_max_power = max_powers.iter().sum::<f64>() / n_trials  as f64;
+    let mean_max_power = max_powers.iter().sum::<f64>() / n_trials as f64;
     let theoretical_fap = (-mean_max_power).exp();
     let empirical_fap =
-        max_powers.iter().filter(|&&p| p > mean_max_power).count() as f64 / n_trials  as f64;
+        max_powers.iter().filter(|&&p| p > mean_max_power).count() as f64 / n_trials as f64;
     let fap_theoretical_empirical_ratio = if empirical_fap > 1e-10 {
         (theoretical_fap / empirical_fap).min(10.0).max(0.1)
     } else {
@@ -1954,7 +1957,7 @@ fn kolmogorov_smirnov_uniformity_test(_p_values: &[f64]) -> f64 {
     let mut max_deviation = 0.0;
 
     for (i, &p) in sorted_p.iter().enumerate() {
-        let empirical_cdf = (i + 1) as f64 / n  as f64;
+        let empirical_cdf = (i + 1) as f64 / n as f64;
         let theoretical_cdf = p; // Uniform distribution CDF
         let deviation = (empirical_cdf - theoretical_cdf).abs();
         max_deviation = max_deviation.max(deviation);
@@ -1996,7 +1999,7 @@ fn estimate_statistical_power(_implementation: &str, times: &[f64]) -> SignalRes
             .zip(power.iter())
             .filter(|(&f_)| (f - f_signal).abs() < tolerance)
             .any(|(_, &p)| {
-                let mean_power = power.iter().sum::<f64>() / power.len()  as f64;
+                let mean_power = power.iter().sum::<f64>() / power.len() as f64;
                 let std_power = (power.iter().map(|&p| (p - mean_power).powi(2)).sum::<f64>()
                     / power.len() as f64)
                     .sqrt();
@@ -2037,13 +2040,13 @@ fn test_significance_calibration(_implementation: &str, times: &[f64]) -> Signal
             }
         }
 
-        let empirical_alpha = false_positives as f64 / n_trials  as f64;
+        let empirical_alpha = false_positives as f64 / n_trials as f64;
         let error = (empirical_alpha - alpha).abs() / alpha;
         calibration_errors.push(error);
     }
 
     // Return calibration accuracy (1 - mean relative error)
-    let mean_error = calibration_errors.iter().sum::<f64>() / calibration_errors.len()  as f64;
+    let mean_error = calibration_errors.iter().sum::<f64>() / calibration_errors.len() as f64;
     Ok(1.0 - mean_error.min(1.0))
 }
 
@@ -2120,8 +2123,8 @@ fn analyze_memory_usage(
             let _ = run_lombscargle(implementation, &t, &signal)?;
         }
 
-        let elapsed_ms = start_time.elapsed().as_millis()  as f64;
-        let avg_time_ms = elapsed_ms / n_runs  as f64;
+        let elapsed_ms = start_time.elapsed().as_millis() as f64;
+        let avg_time_ms = elapsed_ms / n_runs as f64;
         timing_measurements.push((size, avg_time_ms));
 
         // Estimate memory usage based on algorithmic complexity
@@ -2249,7 +2252,7 @@ fn calculate_fragmentation_score(_measurements: &[(usize, f64)]) -> f64 {
         let next = _measurements[i + 1];
 
         // Expected memory based on linear interpolation
-        let size_progress = (curr.0 - prev.0) as f64 / (next.0 - prev.0)  as f64;
+        let size_progress = (curr.0 - prev.0) as f64 / (next.0 - prev.0) as f64;
         let expected_memory = prev.1 + size_progress * (next.1 - prev.1);
 
         // Deviation from smooth growth
@@ -2261,7 +2264,7 @@ fn calculate_fragmentation_score(_measurements: &[(usize, f64)]) -> f64 {
         return 0.9;
     }
 
-    let avg_deviation = deviations.iter().sum::<f64>() / deviations.len()  as f64;
+    let avg_deviation = deviations.iter().sum::<f64>() / deviations.len() as f64;
     (1.0 - avg_deviation).max(0.0).min(1.0)
 }
 
@@ -2370,7 +2373,7 @@ fn measure_spectral_leakage(_freqs: &[f64], power: &[f64], target_freqs: &[f64])
         let mut sidelobe_power = 0.0;
         let mut sidelobe_count = 0;
 
-        for i in ((peak_idx - 10))..=(peak_idx + 10).min(power.len() - 1) {
+        for i in (peak_idx - 10)..=(peak_idx + 10).min(power.len() - 1) {
             if (i as i32 - peak_idx as i32).abs() > 2 {
                 sidelobe_power += power[i];
                 sidelobe_count += 1;
@@ -2378,7 +2381,7 @@ fn measure_spectral_leakage(_freqs: &[f64], power: &[f64], target_freqs: &[f64])
         }
 
         if sidelobe_count > 0 {
-            let avg_sidelobe = sidelobe_power / sidelobe_count  as f64;
+            let avg_sidelobe = sidelobe_power / sidelobe_count as f64;
             let leakage = avg_sidelobe / peak_power.max(1e-12);
             total_leakage += leakage;
         }
@@ -2764,12 +2767,12 @@ fn test_temporal_consistency(
         return Ok(0.0);
     }
 
-    let mean_freq = detected_freqs.iter().sum::<f64>() / detected_freqs.len()  as f64;
+    let mean_freq = detected_freqs.iter().sum::<f64>() / detected_freqs.len() as f64;
     let variance = detected_freqs
         .iter()
         .map(|&f| (f - mean_freq).powi(2))
         .sum::<f64>()
-        / detected_freqs.len()  as f64;
+        / detected_freqs.len() as f64;
 
     let consistency = 1.0 / (1.0 + variance / true_freq.powi(2));
     Ok(consistency)
@@ -2814,13 +2817,13 @@ fn test_frequency_stability(
     }
 
     // Calculate stability as inverse of relative standard deviation
-    let mean_freq = freq_estimates.iter().sum::<f64>() / freq_estimates.len()  as f64;
+    let mean_freq = freq_estimates.iter().sum::<f64>() / freq_estimates.len() as f64;
     let std_dev = {
         let variance = freq_estimates
             .iter()
             .map(|&f| (f - mean_freq).powi(2))
             .sum::<f64>()
-            / freq_estimates.len()  as f64;
+            / freq_estimates.len() as f64;
         variance.sqrt()
     };
 
@@ -2861,7 +2864,7 @@ fn test_edge_case_robustness(_implementation: &str) -> SignalResult<EdgeCaseRobu
         .iter()
         .map(|&b| if b { 1.0 } else { 0.0 })
         .sum::<f64>()
-        / results.len()  as f64;
+        / results.len() as f64;
 
     Ok(EdgeCaseRobustnessResults {
         empty_signal_handling: results[0],
@@ -2871,9 +2874,9 @@ fn test_edge_case_robustness(_implementation: &str) -> SignalResult<EdgeCaseRobu
         duplicate_time_handling: results[4],
         non_monotonic_handling: results[5],
         overall_robustness,
-            extreme_frequency_handling: 0.0,
-            numerical_edge_cases: 0.0
-        })
+        extreme_frequency_handling: 0.0,
+        numerical_edge_cases: 0.0,
+    })
 }
 
 /// Test empty signal handling
@@ -3049,8 +3052,13 @@ fn test_f32_f64_consistency(_implementation: &str, t: &[f64], signal: &[f64]) ->
     let (_, power_f64) = run_lombscargle(_implementation, t, signal)?;
 
     // Compute with f32-converted data
-    let (_, power_f32_converted) =
-        run_lombscargle(_implementation, &t_f64_from_f32, &signal_f64_from_f32, None, None)?;
+    let (_, power_f32_converted) = run_lombscargle(
+        _implementation,
+        &t_f64_from_f32,
+        &signal_f64_from_f32,
+        None,
+        None,
+    )?;
 
     // Calculate consistency metric
     let max_relative_error = power_f64
@@ -3215,7 +3223,7 @@ fn test_simd_scalar_consistency(
                 }
             }
         }
-        let scalar_time = start_scalar.elapsed().as_micros() as f64 / n_runs  as f64;
+        let scalar_time = start_scalar.elapsed().as_micros() as f64 / n_runs as f64;
 
         // Test SIMD-optimized computation (enhanced with default tolerance)
         let start_simd = std::time::Instant::now();
@@ -3232,7 +3240,7 @@ fn test_simd_scalar_consistency(
                 }
             }
         }
-        let simd_time = start_simd.elapsed().as_micros() as f64 / n_runs  as f64;
+        let simd_time = start_simd.elapsed().as_micros() as f64 / n_runs as f64;
 
         // Compare results if both succeeded
         if let (Some(scalar), Some(simd)) = (scalar_result, simd_result) {
@@ -3265,11 +3273,11 @@ fn test_simd_scalar_consistency(
     }
 
     let max_deviation = deviations.iter().cloned().fold(0.0, f64::max);
-    let mean_absolute_deviation = deviations.iter().sum::<f64>() / deviations.len()  as f64;
+    let mean_absolute_deviation = deviations.iter().sum::<f64>() / deviations.len() as f64;
 
     // Average performance ratio across different sizes
     let performance_ratio =
-        performance_ratios.iter().sum::<f64>() / performance_ratios.len()  as f64;
+        performance_ratios.iter().sum::<f64>() / performance_ratios.len() as f64;
 
     // SIMD utilization estimate based on performance gain and consistency
     let expected_simd_speedup = 2.0; // Conservative estimate
@@ -3351,7 +3359,7 @@ pub fn validate_against_scipy_reference() -> SignalResult<SciPyValidationResult>
             }
         }
 
-        validation_result.multi_frequency_detection = matches as f64 / expected_freqs.len()  as f64;
+        validation_result.multi_frequency_detection = matches as f64 / expected_freqs.len() as f64;
     }
 
     // Test case 3: Irregular sampling
@@ -3817,7 +3825,7 @@ fn test_cross_validation_extended(
     }
 
     result.kfold_score = if !kfold_errors.is_empty() {
-        let mean_error = kfold_errors.iter().sum::<f64>() / kfold_errors.len()  as f64;
+        let mean_error = kfold_errors.iter().sum::<f64>() / kfold_errors.len() as f64;
         (1.0 - mean_error.min(1.0)).max(0.0)
     } else {
         0.0
@@ -3857,7 +3865,7 @@ fn test_cross_validation_extended(
     }
 
     result.bootstrap_score = if !bootstrap_errors.is_empty() {
-        let mean_error = bootstrap_errors.iter().sum::<f64>() / bootstrap_errors.len()  as f64;
+        let mean_error = bootstrap_errors.iter().sum::<f64>() / bootstrap_errors.len() as f64;
         (1.0 - mean_error.min(1.0)).max(0.0)
     } else {
         0.0
@@ -3889,7 +3897,7 @@ fn test_cross_validation_extended(
     }
 
     result.loo_score = if !loo_errors.is_empty() {
-        let mean_error = loo_errors.iter().sum::<f64>() / loo_errors.len()  as f64;
+        let mean_error = loo_errors.iter().sum::<f64>() / loo_errors.len() as f64;
         (1.0 - mean_error.min(1.0)).max(0.0)
     } else {
         0.0
@@ -3924,7 +3932,7 @@ fn test_cross_validation_extended(
     }
 
     result.temporal_consistency = if !temporal_errors.is_empty() {
-        let mean_error = temporal_errors.iter().sum::<f64>() / temporal_errors.len()  as f64;
+        let mean_error = temporal_errors.iter().sum::<f64>() / temporal_errors.len() as f64;
         (1.0 - mean_error.min(1.0)).max(0.0)
     } else {
         0.0
@@ -3935,8 +3943,7 @@ fn test_cross_validation_extended(
     let mut freq_estimates = Vec::new();
 
     for _ in 0..n_realizations {
-        let realization_noise: Vec<f64> =
-            (0..n).map(|_| 0.1 * rng.gen_range(-1.0..1.0)).collect();
+        let realization_noise: Vec<f64> = (0..n).map(|_| 0.1 * rng.gen_range(-1.0..1.0)).collect();
 
         let realization_y: Vec<f64> = clean_signal
             .iter()
@@ -3957,12 +3964,12 @@ fn test_cross_validation_extended(
     }
 
     result.frequency_stability = if freq_estimates.len() > 1 {
-        let mean_freq = freq_estimates.iter().sum::<f64>() / freq_estimates.len()  as f64;
+        let mean_freq = freq_estimates.iter().sum::<f64>() / freq_estimates.len() as f64;
         let variance = freq_estimates
             .iter()
             .map(|&f| (f - mean_freq).powi(2))
             .sum::<f64>()
-            / (freq_estimates.len() - 1)  as f64;
+            / (freq_estimates.len() - 1) as f64;
         let std_dev = variance.sqrt();
 
         // Stability score inversely related to standard deviation
@@ -4099,7 +4106,7 @@ fn validate_non_uniform_sampling_patterns(
     results.burst_score = pattern_scores[3];
     results.clustered_score = pattern_scores[4];
 
-    results.overall_score = pattern_scores.iter().sum::<f64>() / pattern_scores.len()  as f64;
+    results.overall_score = pattern_scores.iter().sum::<f64>() / pattern_scores.len() as f64;
 
     Ok(results)
 }
@@ -4121,7 +4128,7 @@ fn validate_temporal_scale_invariance(
     }
 
     // Check consistency across scales
-    let mean_error = scale_errors.iter().sum::<f64>() / scale_errors.len()  as f64;
+    let mean_error = scale_errors.iter().sum::<f64>() / scale_errors.len() as f64;
     let max_error = scale_errors.iter().cloned().fold(0.0, f64::max);
 
     results.mean_scale_error = mean_error;
@@ -4202,7 +4209,7 @@ fn validate_harmonic_distortion_handling(
     } else {
         0.0
     };
-    results.harmonic_separation = separations.iter().sum::<f64>() / separations.len()  as f64;
+    results.harmonic_separation = separations.iter().sum::<f64>() / separations.len() as f64;
 
     Ok(results)
 }
@@ -4310,7 +4317,7 @@ fn validate_window_function_optimization(
     results.low_snr_optimization = optimization_scores[2];
     results.broadband_optimization = optimization_scores[3];
     results.optimal_selection_accuracy =
-        optimization_scores.iter().sum::<f64>() / optimization_scores.len()  as f64;
+        optimization_scores.iter().sum::<f64>() / optimization_scores.len() as f64;
 
     Ok(results)
 }
@@ -4415,7 +4422,7 @@ fn validate_real_world_signal_emulation(
     results.astronomical_accuracy = type_scores[2];
     results.communications_accuracy = type_scores[3];
     results.industrial_accuracy = type_scores[4];
-    results.realistic_signal_accuracy = type_scores.iter().sum::<f64>() / type_scores.len()  as f64;
+    results.realistic_signal_accuracy = type_scores.iter().sum::<f64>() / type_scores.len() as f64;
 
     Ok(results)
 }
@@ -4638,8 +4645,7 @@ pub fn validate_statistical_significance(
                 .iter()
                 .enumerate()
                 .map(|(i, &t)| {
-                    (2.0 * std::f64::consts::PI * f_true * t).sin()
-                        + 0.1 * rng.gen_range(-1.0..1.0)
+                    (2.0 * std::f64::consts::PI * f_true * t).sin() + 0.1 * rng.gen_range(-1.0..1.0)
                 })
                 .collect();
 
@@ -4661,8 +4667,8 @@ pub fn validate_statistical_significance(
         }
     }
 
-    result.false_positive_rate = false_positives as f64 / num_trials  as f64;
-    result.true_positive_rate = true_positives as f64 / (num_trials / 2)  as f64;
+    result.false_positive_rate = false_positives as f64 / num_trials as f64;
+    result.true_positive_rate = true_positives as f64 / (num_trials / 2) as f64;
     result.meets_alpha_criterion = result.false_positive_rate <= alpha;
 
     // Calculate statistical power
@@ -4773,7 +4779,7 @@ pub fn validate_parallel_consistency(
     }
 
     result.mean_consistency =
-        consistency_scores.iter().sum::<f64>() / consistency_scores.len()  as f64;
+        consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
     result.min_consistency = consistency_scores
         .iter()
         .fold(f64::INFINITY, |a, &b| a.min(b));
@@ -5055,9 +5061,9 @@ fn estimate_complexity(_timing_results: &[(usize, f64)]) -> f64 {
         return 1.0;
     }
 
-    let n1 = timing_results[0].0  as f64;
+    let n1 = timing_results[0].0 as f64;
     let t1 = timing_results[0].1;
-    let n2 = timing_results[1].0  as f64;
+    let n2 = timing_results[1].0 as f64;
     let t2 = timing_results[1].1;
 
     if n1 <= 0.0 || n2 <= 0.0 || t1 <= 0.0 || t2 <= 0.0 {
@@ -5074,9 +5080,9 @@ fn calculate_scaling_efficiency(_timing_results: &[(usize, f64)]) -> f64 {
         return 1.0;
     }
 
-    let baseline_efficiency = timing_results[0].1 / timing_results[0].0  as f64;
+    let baseline_efficiency = timing_results[0].1 / timing_results[0].0 as f64;
     let final_efficiency =
-        timing_results.last().unwrap().1 / timing_results.last().unwrap().0  as f64;
+        timing_results.last().unwrap().1 / timing_results.last().unwrap().0 as f64;
 
     baseline_efficiency / final_efficiency
 }
@@ -5085,8 +5091,8 @@ fn calculate_scaling_efficiency(_timing_results: &[(usize, f64)]) -> f64 {
 fn estimate_memory_scaling(_signal_sizes: &[usize]) -> SignalResult<f64> {
     // Estimate memory usage scaling (simplified)
     // For Lomb-Scargle, memory usage should be roughly O(N)
-    let min_size = _signal_sizes[0]  as f64;
-    let max_size = _signal_sizes.last().unwrap_or(&_signal_sizes[0])  as f64;
+    let min_size = _signal_sizes[0] as f64;
+    let max_size = _signal_sizes.last().unwrap_or(&_signal_sizes[0]) as f64;
 
     // Assume linear memory scaling for now
     Ok(max_size / min_size)
@@ -5098,7 +5104,7 @@ fn calculate_std_dev(_values: &[f64], mean: f64) -> f64 {
         return 0.0;
     }
 
-    let variance = _values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _values.len()  as f64;
+    let variance = _values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / _values.len() as f64;
 
     variance.sqrt()
 }
@@ -5164,7 +5170,9 @@ pub fn validate_edge_cases_comprehensive() -> SignalResult<EdgeCaseValidationRes
     let large_data: Vec<f64> = (0..100).map(|i| (i as f64 * 1e9).sin()).collect();
     match lombscargle(&large_time, &large_data, None, None, None, None, None, None) {
         Ok((freqs, power)) => {
-            if freqs.iter().all(|&f: &f64| f.is_finite()) && power.iter().all(|&p: &f64| p.is_finite()) {
+            if freqs.iter().all(|&f: &f64| f.is_finite())
+                && power.iter().all(|&p: &f64| p.is_finite())
+            {
                 tests_passed += 1;
                 result.large_values_stable = true;
             }
@@ -5178,7 +5186,9 @@ pub fn validate_edge_cases_comprehensive() -> SignalResult<EdgeCaseValidationRes
     let small_data: Vec<f64> = (0..100).map(|i| (i as f64).sin() * 1e-15).collect();
     match lombscargle(&small_time, &small_data, None, None, None, None, None, None) {
         Ok((freqs, power)) => {
-            if freqs.iter().all(|&f: &f64| f.is_finite()) && power.iter().all(|&p: &f64| p.is_finite()) {
+            if freqs.iter().all(|&f: &f64| f.is_finite())
+                && power.iter().all(|&p: &f64| p.is_finite())
+            {
                 tests_passed += 1;
                 result.small_values_stable = true;
             }
@@ -5229,7 +5239,9 @@ pub fn validate_edge_cases_comprehensive() -> SignalResult<EdgeCaseValidationRes
         None,
     ) {
         Ok((freqs, power)) => {
-            if freqs.iter().all(|&f: &f64| f.is_finite()) && power.iter().all(|&p: &f64| p.is_finite()) {
+            if freqs.iter().all(|&f: &f64| f.is_finite())
+                && power.iter().all(|&p: &f64| p.is_finite())
+            {
                 tests_passed += 1;
                 result.irregular_sampling_stable = true;
             }
@@ -5239,7 +5251,7 @@ pub fn validate_edge_cases_comprehensive() -> SignalResult<EdgeCaseValidationRes
 
     result.tests_passed = tests_passed;
     result.total_tests = total_tests;
-    result.success_rate = tests_passed as f64 / total_tests  as f64;
+    result.success_rate = tests_passed as f64 / total_tests as f64;
 
     Ok(result)
 }
@@ -5381,7 +5393,7 @@ pub fn run_advanced_comprehensive_lombscargle_validation(
         stability_result.overall_stability_score,
     ];
 
-    let overall_score = component_scores.iter().sum::<f64>() / component_scores.len()  as f64;
+    let overall_score = component_scores.iter().sum::<f64>() / component_scores.len() as f64;
 
     // Generate recommendations
     let recommendations = generate_lombscargle_recommendations(&component_scores);

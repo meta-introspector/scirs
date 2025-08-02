@@ -1,16 +1,17 @@
-//! Dual-Tree Complex Wavelet Transform (DTCWT)
-//!
-//! The Dual-Tree Complex Wavelet Transform provides:
-//! - Shift invariance (unlike standard DWT)
-//! - Directional selectivity for 2D signals
-//! - Perfect reconstruction
-//! - Complex coefficients with magnitude and phase information
-//! - 2x redundancy for improved analysis
+use ndarray::s;
+// Dual-Tree Complex Wavelet Transform (DTCWT)
+//
+// The Dual-Tree Complex Wavelet Transform provides:
+// - Shift invariance (unlike standard DWT)
+// - Directional selectivity for 2D signals
+// - Perfect reconstruction
+// - Complex coefficients with magnitude and phase information
+// - 2x redundancy for improved analysis
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Array3, s};
-use num__complex::Complex64;
+use ndarray::{ Array1, Array2, Array3};
+use num_complex::Complex64;
 use std::f64::consts::PI;
 
 #[allow(unused_imports)]
@@ -275,7 +276,7 @@ impl DtcwtProcessor {
 
         // Final lowpass coefficients
         let lowpass: Array2<Complex64> =
-            Array2::from_shape_fn((ya.nrows(), ya.ncols()), |(i, j)| {
+            Array2::fromshape_fn((ya.nrows(), ya.ncols()), |(i, j)| {
                 Complex64::new(ya[[i, j]], yb[[i, j]])
             });
 
@@ -324,7 +325,7 @@ impl DtcwtProcessor {
 
         // Average the two trees for final reconstruction
         let reconstructed: Array2<f64> =
-            Array2::from_shape_fn((ya.nrows(), ya.ncols()), |(i, j)| {
+            Array2::fromshape_fn((ya.nrows(), ya.ncols()), |(i, j)| {
                 (ya[[i, j]] + yb[[i, j]]) / 2.0
             });
 
@@ -909,7 +910,7 @@ fn create_dtcwt_filters(_filter_set: FilterSet) -> SignalResult<DtcwtFilters> {
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_dtcwt_processor_creation() {
         let config = DtcwtConfig::default();
@@ -961,7 +962,7 @@ use approx::assert_relative_eq;
         // Create test image
         let (rows, cols) = (32, 32);
         let image: Array2<f64> =
-            Array2::from_shape_fn((rows, cols), |(i, j)| ((i as f64 + j as f64) / 8.0).sin());
+            Array2::fromshape_fn((rows, cols), |(i, j)| ((i as f64 + j as f64) / 8.0).sin());
 
         // Forward transform
         let dtcwt_result = processor.dtcwt_2d_forward(&image).unwrap();

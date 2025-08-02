@@ -610,7 +610,7 @@ fn measure_scirs2_algorithm(_algorithm: &str, size: usize, graph_type: &str) -> 
 
 /// Measure scirs2-graph algorithm performance with advanced optimizations
 #[allow(dead_code)]
-fn measure_scirs2_algorithm_with_advanced<N: Node, E: scirs2_graph: EdgeWeight, Ix>(
+fn measure_scirs2_algorithm_with_advanced<N: Node, E: scirs2, graph: EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
 ) -> f64
@@ -668,7 +668,7 @@ where
 
 /// Measure scirs2-graph algorithm performance without advanced optimizations (standard mode)
 #[allow(dead_code)]
-fn measure_scirs2_algorithm_standard<N: Node, E: scirs2_graph: EdgeWeight, Ix>(
+fn measure_scirs2_algorithm_standard<N: Node, E: scirs2, graph: EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
 ) -> f64

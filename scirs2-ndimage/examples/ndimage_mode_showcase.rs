@@ -212,7 +212,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("==========================================");
 
     // Simulate a complex medical imaging pipeline
-    let medical_image = Array3::<f32>::from_shape_fn((512, 512, 64), |(i, j, k)| {
+    let medical_image = Array3::<f32>::fromshape_fn((512, 512, 64), |(i, j, k)| {
         // Synthetic medical image with structures
         let x = i as f32 / 512.0;
         let y = j as f32 / 512.0;

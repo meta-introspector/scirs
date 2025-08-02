@@ -29,7 +29,7 @@ use scirs2__optim::optimizers as optim_optimizers;
 /// adam.update(&mut params, &grads).unwrap();
 pub struct Adam<F: Float + Debug> {
     /// Inner Adam optimizer from scirs2-optim
-    inner: optim_optimizers: Adam<F>,
+    inner: optim, optimizers: Adam<F>,
     /// Weight decay (L2 regularization)
     weight_decay: F,
 }
@@ -43,7 +43,7 @@ impl<F: Float + Debug> Adam<F> {
     /// * `epsilon` - Small constant for numerical stability (default: 1e-8)
     pub fn new(_learning_rate: F, beta1: F, beta2: F, epsilon: F) -> Self {
         Self {
-            inner: optim_optimizers: Adam::new_with_config(
+            inner: optim, optimizers: Adam::new_with_config(
                 _learning_rate,
                 beta1,
                 beta2,

@@ -6,7 +6,7 @@
 
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
-use scirs2_core::validation::{check_positive, check_shape};
+use scirs2_core::validation::{check_positive, checkshape};
 use scirs2__linalg::eigh;
 
 use crate::error::{Result, TransformError};
@@ -270,7 +270,7 @@ impl SpectralEmbedding {
 
         // Validate inputs
         check_positive(self.n_components, "n_components")?;
-        check_shape(x, &[n_samples, n_features], "x")?;
+        checkshape(x, &[n_samples, n_features], "x")?;
 
         if self.n_components >= n_samples {
             return Err(TransformError::InvalidInput(format!(
@@ -491,7 +491,7 @@ mod tests {
     fn test_spectral_embedding_gaussian() {
         // Create a simple 2D dataset with two clusters
         let data = vec![1.0, 1.0, 1.1, 1.1, 1.2, 0.9, 5.0, 5.0, 5.1, 5.1, 4.9, 5.2];
-        let x = Array::from_shape_vec((6, 2), data).unwrap();
+        let x = Array::fromshape_vec((6, 2), data).unwrap();
 
         let mut spectral = SpectralEmbedding::new(2, AffinityMethod::Gaussian);
         let embedding = spectral.fit_transform(&x).unwrap();
@@ -522,7 +522,7 @@ mod tests {
     #[test]
     fn test_spectral_embedding_out_of_sample() {
         let x_train: Array2<f64> = Array::eye(5);
-        let x_test = Array::from_shape_vec(
+        let x_test = Array::fromshape_vec(
             (2, 5),
             vec![0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1, 0.0],
         )

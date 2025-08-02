@@ -58,17 +58,17 @@ where
     H: Float + Clone + NumCast + Debug + Zero + ToPrimitive + NumAssign,
 {
     // Check dimensions
-    let a_shape = a.shape();
-    if a_shape[0] != a_shape[1] {
+    let ashape = a.shape();
+    if ashape[0] != ashape[1] {
         return Err(LinalgError::ShapeError(format!(
-            "Matrix must be square, got shape {a_shape:?}"
+            "Matrix must be square, got shape {ashape:?}"
         )));
     }
 
-    if a_shape[0] != b.len() {
+    if ashape[0] != b.len() {
         return Err(LinalgError::ShapeError(format!(
             "Matrix rows ({}) must match vector length ({})",
-            a_shape[0],
+            ashape[0],
             b.len()
         )));
     }
@@ -78,7 +78,7 @@ where
     let b_high = convert::<B, H>(b);
 
     // Perform Gaussian elimination with partial pivoting in high precision
-    let n = a_shape[0];
+    let n = ashape[0];
     let mut aug = Array2::<H>::zeros((n, n + 1));
 
     // Create augmented matrix [A|b]

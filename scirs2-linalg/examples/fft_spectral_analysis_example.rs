@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Power-of-2 size for Cooley-Tukey
     let n_power2 = 16;
-    let signal_power2 = Array1::from_shape_fn(n_power2, |i| {
+    let signal_power2 = Array1::fromshape_fn(n_power2, |i| {
         Complex64::new((2.0 * PI * 3.0 * i as f64 / n_power2 as f64).sin(), 0.0)
     });
 
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Arbitrary size using mixed-radix (Bluestein's algorithm)
     let n_arbitrary = 15; // Not power of 2
-    let signal_arbitrary = Array1::from_shape_fn(n_arbitrary, |i| {
+    let signal_arbitrary = Array1::fromshape_fn(n_arbitrary, |i| {
         Complex64::new((2.0 * PI * 2.0 * i as f64 / n_arbitrary as f64).cos(), 0.0)
     });
 
@@ -72,7 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("------------------------------------------------");
 
     let n_real = 32;
-    let real_signal = Array1::from_shape_fn(n_real, |i| {
+    let real_signal = Array1::fromshape_fn(n_real, |i| {
         (2.0 * PI * 5.0 * i as f64 / n_real as f64).sin()
             + 0.5 * (2.0 * PI * 10.0 * i as f64 / n_real as f64).cos()
     });
@@ -108,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 2D FFT for image processing
     let (rows, cols) = (8, 8);
-    let image = Array2::from_shape_fn((rows, cols), |(i, j)| {
+    let image = Array2::fromshape_fn((rows, cols), |(i, j)| {
         let x = 2.0 * PI * (i as f64) / (rows as f64);
         let y = 2.0 * PI * (j as f64) / (cols as f64);
         Complex64::new(x.sin() * y.cos(), 0.0)
@@ -129,7 +129,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 3D FFT for volume processing
     let (depth, height, width) = (4, 4, 4);
-    let volume = Array3::from_shape_fn((depth, height, width), |(d, h, w)| {
+    let volume = Array3::fromshape_fn((depth, height, width), |(d, h, w)| {
         Complex64::new((d + h + w) as f64, 0.0)
     });
 
@@ -154,7 +154,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("--------------------------------------------------");
 
     let window_size = 32;
-    let test_signal = Array1::from_shape_fn(window_size, |i| {
+    let test_signal = Array1::fromshape_fn(window_size, |i| {
         (2.0 * PI * 7.5 * i as f64 / window_size as f64).sin() // Non-integer frequency
     });
 
@@ -208,7 +208,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n5. DISCRETE TRANSFORMS: DCT and DST for Compression");
     println!("---------------------------------------------------");
 
-    let dct_signal = Array1::from_shape_fn(16, |i| {
+    let dct_signal = Array1::fromshape_fn(16, |i| {
         if i < 8 {
             1.0
         } else {
@@ -238,7 +238,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     println!("\n   DST-I for boundary value problems:");
-    let dst_signal = Array1::from_shape_fn(8, |i| (i + 1) as f64);
+    let dst_signal = Array1::fromshape_fn(8, |i| (i + 1) as f64);
     let _dst_coeffs = dst_1d(&dst_signal.view())?;
     println!("     DST computed for {} samples", dst_signal.len());
 
@@ -246,7 +246,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n6. FFT CONVOLUTION: Fast Signal Processing");
     println!("------------------------------------------");
 
-    let signal = Array1::from_shape_fn(64, |i| {
+    let signal = Array1::fromshape_fn(64, |i| {
         if (20..=25).contains(&i) {
             1.0
         } else {
@@ -254,7 +254,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } // Pulse
     });
 
-    let kernel = Array1::from_shape_fn(8, |i| {
+    let kernel = Array1::fromshape_fn(8, |i| {
         (-0.5 * (i as f64 - 3.5).powi(2)).exp() // Gaussian kernel
     });
 
@@ -285,7 +285,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let n_samples = 512;
     let noise_level = 0.1;
 
-    let noisy_signal = Array1::from_shape_fn(n_samples, |i| {
+    let noisy_signal = Array1::fromshape_fn(n_samples, |i| {
         let t = i as f64 / fs;
         let signal = (2.0 * PI * 50.0 * t).sin() +     // 50 Hz
                      0.5 * (2.0 * PI * 120.0 * t).sin(); // 120 Hz
@@ -387,7 +387,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   FFT complexity scaling demonstration:");
 
     for &size in &test_sizes {
-        let test_data = Array1::from_shape_fn(size, |i| {
+        let test_data = Array1::fromshape_fn(size, |i| {
             Complex64::new((2.0 * PI * i as f64 / size as f64).sin(), 0.0)
         });
 

@@ -1,13 +1,14 @@
-//! Infomax and Extended Infomax implementations for ICA
-//!
-//! This module implements Infomax-based algorithms for blind source separation.
+use ndarray::s;
+// Infomax and Extended Infomax implementations for ICA
+//
+// This module implements Infomax-based algorithms for blind source separation.
 
-use crate::error::SignalResult;
-use ndarray::{Array2, s};
-use rand::SeedableRng;
-use rand__distr::{Distribution, Normal};
-use statrs::statistics::Statistics;
 use super::BssConfig;
+use crate::error::SignalResult;
+use ndarray::{ Array2};
+use rand::SeedableRng;
+use rand_distr::{Distribution, Normal};
+use statrs::statistics::Statistics;
 
 #[allow(unused_imports)]
 /// Implement Infomax algorithm for ICA

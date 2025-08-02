@@ -164,7 +164,7 @@ impl NetCDFFile {
     /// # Examples
     ///
     /// ```no_run
-    /// use scirs2__io::netcdf::NetCDFFile;
+    /// use scirs2_io::netcdf::NetCDFFile;
     ///
     /// // Open a NetCDF file for reading
     /// let nc = NetCDFFile::open("data.nc", None).unwrap();
@@ -175,7 +175,7 @@ impl NetCDFFile {
     /// // List the variables
     /// println!("Variables: {:?}", nc.variables());
     /// ```
-    pub fn open<P: AsRef<Path>>(_path: P, options: Option<NetCDFOptions>) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P, options: Option<NetCDFOptions>) -> Result<Self> {
         let opts = options.unwrap_or_default();
         let path_str = _path.as_ref().to_string_lossy().to_string();
 
@@ -218,7 +218,7 @@ impl NetCDFFile {
     /// # Returns
     ///
     /// * `Result<NetCDFFile>` - The created NetCDF file or an error
-    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
         Self::create_with_format(_path, NetCDFFormat::Classic)
     }
 
@@ -232,7 +232,7 @@ impl NetCDFFile {
     /// # Returns
     ///
     /// * `Result<NetCDFFile>` - The created NetCDF file or an error
-    pub fn create_with_format<P: AsRef<Path>>(_path: P, format: NetCDFFormat) -> Result<Self> {
+    pub fn create_with_format<P: AsRef<Path>>(path: P, format: NetCDFFormat) -> Result<Self> {
         let opts = NetCDFOptions {
             mode: "w".to_string(),
             format,
@@ -411,7 +411,7 @@ impl NetCDFFile {
             // Convert to requested type with proper type handling
             let data: Vec<T> = self.convert_data_type(&array_f64)?;
 
-            return Array::from_shape_vec(array_f64.shape(), data)
+            return Array::fromshape_vec(array_f64.shape(), data)
                 .map_err(|e| IoError::FormatError(format!("Failed to create array: {}", e)));
         }
 
@@ -419,7 +419,7 @@ impl NetCDFFile {
         let total_size = shape.iter().product();
         let data = vec![T::default(); total_size];
 
-        Array::from_shape_vec(shape, data)
+        Array::fromshape_vec(shape, data)
             .map_err(|e| IoError::FormatError(format!("Failed to create array: {}", e)))
     }
 
@@ -561,7 +561,8 @@ impl NetCDFFile {
     /// Process chunked data for optimal reading
     fn process_chunked_data(
         &self,
-        array_data: &ArrayD<f64>, _chunk_attr: &crate::hdf5::AttributeValue,
+        array_data: &ArrayD<f64>,
+        _chunk_attr: &crate::hdf5::AttributeValue,
     ) -> Result<()> {
         // In a full implementation, this would optimize chunk reading
         // For now, we return the _data as-is since HDF5 handles chunk decompression
@@ -672,23 +673,23 @@ impl NetCDFFile {
         let scale_factor =
             (target_elements as f64 / total_elements as f64).powf(1.0 / shape.len() as f64);
 
-        let mut chunk_shape: Vec<usize> = shape
+        let mut chunkshape: Vec<usize> = shape
             .iter()
             .map(|&dim| ((dim as f64 * scale_factor) as usize).max(1))
             .collect();
 
         // Ensure chunk doesn't exceed actual dimensions
         for (i, &max_dim) in shape.iter().enumerate() {
-            chunk_shape[i] = chunk_shape[i].min(max_dim);
+            chunkshape[i] = chunkshape[i].min(max_dim);
         }
 
         // For time series data (first dimension is often time), prefer larger time chunks
         if shape.len() >= 2 {
             let time_chunk = (target_elements / shape[1..].iter().product::<usize>()).max(1);
-            chunk_shape[0] = time_chunk.min(shape[0]);
+            chunkshape[0] = time_chunk.min(shape[0]);
         }
 
-        chunk_shape
+        chunkshape
     }
 
     /// Add a global attribute to the file
@@ -911,7 +912,7 @@ impl NetCDFFile {
 /// ```no_run
 /// use ndarray::array;
 /// use std::collections::HashMap;
-/// use scirs2__io::netcdf::{create_netcdf4_with_data};
+/// use scirs2_io::netcdf::{create_netcdf4_with_data};
 ///
 /// let mut datasets = HashMap::new();
 /// datasets.insert(
@@ -965,7 +966,7 @@ pub fn create_netcdf4_with_data<P: AsRef<Path>>(
 /// # Example
 ///
 /// ```no_run
-/// use scirs2__io::netcdf::read_netcdf;
+/// use scirs2_io::netcdf::read_netcdf;
 ///
 /// let file = read_netcdf("data.nc")?;
 /// println!("Dimensions: {:?}", file.dimensions());
@@ -973,7 +974,7 @@ pub fn create_netcdf4_with_data<P: AsRef<Path>>(
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn read_netcdf<P: AsRef<Path>>(_path: P) -> Result<NetCDFFile> {
+pub fn read_netcdf<P: AsRef<Path>>(path: P) -> Result<NetCDFFile> {
     let path_ref = _path.as_ref();
 
     // Try to open as NetCDF4/HDF5 first, then fall back to Classic

@@ -109,7 +109,7 @@ pub fn electrocardiogram() -> Result<Dataset> {
     let len = ecg_array.len();
 
     // Convert the 1D array to a 2D column vector using reshape which should be safer
-    let data = ecg_array.into_shape_with_order((len, 1)).unwrap();
+    let data = ecg_array.intoshape_with_order((len, 1)).unwrap();
 
     // Create the dataset
     let mut dataset = Dataset::new(data, None);

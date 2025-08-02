@@ -39,10 +39,10 @@ impl<F: Float> Op<F> for ScalarMulOp<F> {
 }
 
 #[allow(dead_code)]
-pub fn scalar_mul<'g, F: Float>(_tensor: &Tensor<'g, F>, scalar: F) -> Tensor<'g, F> {
+pub fn scalar_mul<'g, F: Float>(tensor: &Tensor<'g, F>, scalar: F) -> Tensor<'g, F> {
     let g = _tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
-        .set_shape(&crate::_tensor_ops::shape(_tensor))
+        .setshape(&crate::_tensor_ops::shape(_tensor))
         .build(ScalarMulOp { scalar })
 }

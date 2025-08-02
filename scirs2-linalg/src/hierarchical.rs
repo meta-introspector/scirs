@@ -162,7 +162,7 @@ where
     /// use ndarray::Array2;
     /// use scirs2_linalg::hierarchical::HMatrix;
     ///
-    /// let matrix = Array2::from_shape_fn((100, 100), |(i, j)| {
+    /// let matrix = Array2::fromshape_fn((100, 100), |(i, j)| {
     ///     1.0 / (1.0 + (i as f64 - j as f64).abs())
     /// });
     /// let h_matrix = HMatrix::from_dense(&matrix.view(), 1e-6, 20, 32).unwrap();
@@ -806,7 +806,7 @@ mod tests {
 
     #[test]
     fn test_hmatrix_memory_info() {
-        let matrix = Array2::from_shape_fn((128, 128), |(i, j)| {
+        let matrix = Array2::fromshape_fn((128, 128), |(i, j)| {
             1.0 / (1.0 + (i as f64 - j as f64).abs())
         });
 
@@ -821,7 +821,7 @@ mod tests {
     #[test]
     fn test_hss_matrix_basic() {
         // Create a simple HSS-like matrix
-        let matrix = Array2::from_shape_fn((16, 16), |(i, j)| {
+        let matrix = Array2::fromshape_fn((16, 16), |(i, j)| {
             if (i as i32 - j as i32).abs() <= 1 {
                 1.0 // Near diagonal
             } else {
@@ -832,7 +832,7 @@ mod tests {
         let hss_matrix = HSSMatrix::from_dense(&matrix.view(), 1e-6).unwrap();
 
         // Test matrix-vector multiplication
-        let x = Array1::from_shape_fn(16, |i| (i + 1) as f64);
+        let x = Array1::fromshape_fn(16, |i| (i + 1) as f64);
         let y_dense = matrix.dot(&x);
         let y_hss = hss_matrix.matvec(&x.view()).unwrap();
 

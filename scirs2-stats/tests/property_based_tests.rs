@@ -6,9 +6,8 @@
 //! Extended to include comprehensive testing of additional statistical operations,
 //! SIMD optimizations, and advanced mathematical properties.
 
-use approx::assert_relative_eq;
 use ndarray::{Array1, Array2};
-use quickcheck::{Arbitrary, Gen, QuickCheck, TestResult};
+use quickcheck::{Arbitrary, Gen, TestResult};
 use quickcheck_macros::quickcheck;
 use scirs2_stats::{
     corrcoef,
@@ -629,12 +628,12 @@ mod advanced_distribution_properties {
     }
 
     #[quickcheck]
-    fn gamma_distribution_properties(_shape: f64, scale: f64, x: f64) -> TestResult {
-        if !_shape.is_finite() || !scale.is_finite() || !x.is_finite() {
+    fn gamma_distribution_properties(shape: f64, scale: f64, x: f64) -> TestResult {
+        if !shape.is_finite() || !scale.is_finite() || !x.is_finite() {
             return TestResult::discard();
         }
 
-        if _shape <= 0.0 || scale <= 0.0 || _shape > 100.0 || scale > 100.0 {
+        if shape <= 0.0 || scale <= 0.0 || shape > 100.0 || scale > 100.0 {
             return TestResult::discard();
         }
 
@@ -642,7 +641,7 @@ mod advanced_distribution_properties {
             return TestResult::discard();
         }
 
-        match gamma(_shape, scale, 0.0) {
+        match gamma(shape, scale, 0.0) {
             Ok(dist) => {
                 let pdf_val = dist.pdf(x);
                 let cdf_val = dist.cdf(x);

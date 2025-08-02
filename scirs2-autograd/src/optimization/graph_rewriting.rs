@@ -367,7 +367,7 @@ pub struct RewriteCandidate<F: Float> {
     /// Nodes involved in the rewrite
     pub nodes: Vec<TensorID>,
     /// Expected benefit
-    pub benefit: f32_phantom: std::marker::PhantomData<F>,
+    pub benefit: f32, phantom: std::marker::PhantomData<F>,
 }
 
 /// Operation scheduler for optimizing execution order
@@ -512,7 +512,7 @@ pub fn estimate_fusion_benefit(_operations: &[&str]) -> f32 {
 
 /// Check if operations have compatible memory layouts
 #[allow(dead_code)]
-pub fn check_memory_layout_compatibility<F: Float>(_nodes: &[TensorID]) -> bool {
+pub fn check_memory_layout_compatibility<F: Float>(nodes: &[TensorID]) -> bool {
     // Check if all _nodes have compatible tensor layouts for fusion
     true
 }
@@ -587,7 +587,7 @@ mod tests {
         let pattern = RewritePattern {
             name: "test_pattern".to_string(),
             operations: vec!["Add".to_string(), "Mul".to_string()],
-            constraints: vec!["same_shape".to_string()],
+            constraints: vec!["sameshape".to_string()],
         };
         
         assert_eq!(pattern.name, "test_pattern");

@@ -1,6 +1,6 @@
 use ndarray::Array2;
-use scirs2__signal::dwt::Wavelet;
-use scirs2__signal::dwt2d_image::{compress_image, denoise_image, detect_edges, DenoisingMethod};
+use scirs2_signal::dwt::Wavelet;
+use scirs2_signal::dwt2d_image::{compress_image, denoise_image, detect_edges, DenoisingMethod};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

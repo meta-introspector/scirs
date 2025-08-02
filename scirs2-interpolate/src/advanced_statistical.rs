@@ -1112,7 +1112,7 @@ mod tests {
         let mut interpolator = make_fda_interpolator::<f64>(None);
 
         let x = Array1::from_vec(vec![0.0, 0.25, 0.5, 0.75, 1.0]);
-        let y = Array2::from_shape_vec(
+        let y = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 0.5, 0.25, 1.0, 1.0, 1.5, 2.25, 2.0, 4.0],
         )
@@ -1132,15 +1132,15 @@ mod tests {
         let mut interpolator = make_multi_output_interpolator::<f64>(2, 2, Some(4));
 
         let x =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let y =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0]).unwrap();
 
         let result = interpolator.fit(&x.view(), &y.view());
         assert!(result.is_ok());
 
-        let x_new = Array2::from_shape_vec((2, 2), vec![0.5, 0.5, 0.25, 0.75]).unwrap();
+        let x_new = Array2::fromshape_vec((2, 2), vec![0.5, 0.5, 0.25, 0.75]).unwrap();
 
         let predictions = interpolator.predict(&x_new.view()).unwrap();
         assert_eq!(predictions.nrows(), 2);

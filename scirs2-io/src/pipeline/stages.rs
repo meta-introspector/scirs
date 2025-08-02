@@ -638,7 +638,9 @@ pub struct FallbackErrorHandler<T: Any + Send + Sync + Clone + 'static> {
 
 impl<T: Any + Send + Sync + Clone + 'static> FallbackErrorHandler<T> {
     pub fn new(_fallback_value: T) -> Self {
-        Self { fallback_value: _fallback_value }
+        Self {
+            fallback_value: _fallback_value,
+        }
     }
 }
 

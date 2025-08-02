@@ -39,7 +39,7 @@ pub type CrossValidationFolds = Vec<(Vec<usize>, Vec<usize>)>;
 /// use ndarray::Array2;
 /// use scirs2__datasets::utils::{Dataset, train_test_split};
 ///
-/// let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+/// let data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
 /// let dataset = Dataset::new(data, None);
 ///
 /// let (train, test) = train_test_split(&dataset, 0.3, Some(42)).unwrap();

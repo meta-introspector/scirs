@@ -103,7 +103,9 @@ where
 /// SIMD-accelerated 2D inverse FFT
 #[allow(dead_code)]
 pub fn ifft2_simd<T>(
-    _x: &[T], _shape: Option<(usize, usize)>, _norm: Option<&str>,
+    _x: &[T],
+    shape: Option<(usize, usize)>,
+    _norm: Option<&str>,
 ) -> FFTResult<Array2<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -160,7 +162,10 @@ where
 /// SIMD-accelerated N-dimensional inverse FFT
 #[allow(dead_code)]
 pub fn ifftn_simd<T>(
-    _x: &[T], _shape: Option<&[usize]>, _axes: Option<&[usize]>, _norm: Option<&str>,
+    _x: &[T],
+    shape: Option<&[usize]>,
+    _axes: Option<&[usize]>,
+    _norm: Option<&str>,
 ) -> FFTResult<ArrayD<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,

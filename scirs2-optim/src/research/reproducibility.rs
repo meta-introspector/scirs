@@ -519,7 +519,7 @@ impl ReproducibilityManager {
     
     fn calculate_reproducibility_score(
         &self,
-        checklist: &ReproducibilityChecklist_environment: &EnvironmentSnapshot,
+        checklist: &ReproducibilityChecklist, environment: &EnvironmentSnapshot,
     ) -> (f64, Vec<ReproducibilityIssue>) {
         let mut score = 0.0;
         let mut issues = Vec::new();

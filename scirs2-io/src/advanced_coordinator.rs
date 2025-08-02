@@ -14,13 +14,13 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::error::{IoError, Result};
-use num_cpus;
 #[cfg(feature = "gpu")]
 use crate::gpu_io::GpuIoProcessor;
 use crate::neural_adaptive_io::{
     AdvancedIoProcessor, NeuralAdaptiveIoController, PerformanceFeedback, SystemMetrics,
 };
 use crate::quantum_inspired_io::{QuantumParallelProcessor, QuantumPerformanceStats};
+use num_cpus;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};
@@ -655,11 +655,7 @@ impl AdvancedCoordinator {
     }
 
     /// Assess quality metrics
-    fn assess_quality_metrics(
-        &self,
-        original: &[u8],
-        _processed: &[u8],
-    ) -> Result<QualityMetrics> {
+    fn assess_quality_metrics(&self, original: &[u8], _processed: &[u8]) -> Result<QualityMetrics> {
         Ok(QualityMetrics {
             data_integrity: 0.98,
             compression_efficiency: 0.85,

@@ -666,7 +666,7 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
     fn evaluate_extrapolation_quality(
         &self,
         method: ExtrapolationMethod,
-        x: T_result: T,
+        x: T, result: T,
     ) -> InterpolateResult<T> {
         // Simple scoring based on distance from domain and method stability
         let lower_bound = self.base_extrapolator.get_lower_bound();
@@ -682,12 +682,12 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
 
         // Score based on method characteristics and distance
         let base_score = match method {
-            ExtrapolationMethod::Linear =>, T::from(1.0).unwrap_or_default(), // Most stable
-            ExtrapolationMethod::Quadratic =>, T::from(2.0).unwrap_or_default(),
-            ExtrapolationMethod::Cubic =>, T::from(3.0).unwrap_or_default(),
-            ExtrapolationMethod::Akima =>, T::from(1.5).unwrap_or_default(), // Good stability
-            ExtrapolationMethod::Exponential =>, T::from(4.0).unwrap_or_default(),
-            ExtrapolationMethod::PowerLaw => T::from(4.0).unwrap_or_default(, _ =>, T::from(5.0).unwrap_or_default(), // Other methods
+            ExtrapolationMethod::Linear => T::from(1.0).unwrap_or_default(), // Most stable
+            ExtrapolationMethod::Quadratic => T::from(2.0).unwrap_or_default(),
+            ExtrapolationMethod::Cubic => T::from(3.0).unwrap_or_default(),
+            ExtrapolationMethod::Akima => T::from(1.5).unwrap_or_default(), // Good stability
+            ExtrapolationMethod::Exponential => T::from(4.0).unwrap_or_default(),
+            ExtrapolationMethod::PowerLaw => T::from(4.0).unwrap_or_default(, _ => T::from(5.0).unwrap_or_default(), // Other methods
         };
 
         // Penalize methods more as distance increases
@@ -748,7 +748,7 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
         coeffs: &Array1<T>,
         x_data: &Array1<T>,
         y_data: &Array1<T>,
-        x: T_config: &AutoregressiveExtrapolationConfig<T>,
+        x: T, config: &AutoregressiveExtrapolationConfig<T>,
     ) -> InterpolateResult<T> {
         let order = coeffs.len();
 
@@ -1376,8 +1376,8 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
         // Choose b1 to control asymptotic behavior
         // For decay: b1 > 0, for growth: b1 < 0
         let b1 = match direction {
-            ExtrapolationDirection::Lower =>, T::from(0.1).unwrap(), // Mild growth
-            ExtrapolationDirection::Upper =>, T::from(-0.1).unwrap(), // Mild decay
+            ExtrapolationDirection::Lower => T::from(0.1).unwrap(), // Mild growth
+            ExtrapolationDirection::Upper => T::from(-0.1).unwrap(), // Mild decay
         };
 
         let a1 = deriv + a0 * b1;

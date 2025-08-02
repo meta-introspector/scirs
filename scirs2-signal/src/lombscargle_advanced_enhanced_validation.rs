@@ -1,8 +1,8 @@
-//! Advanced-enhanced Lomb-Scargle validation in Advanced mode
-//!
-//! This module provides advanced validation capabilities for Lomb-Scargle periodogram
-//! implementation with comprehensive statistical testing, edge case validation,
-//! and enhanced numerical stability assessments.
+// Advanced-enhanced Lomb-Scargle validation in Advanced mode
+//
+// This module provides advanced validation capabilities for Lomb-Scargle periodogram
+// implementation with comprehensive statistical testing, edge case validation,
+// and enhanced numerical stability assessments.
 
 use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
@@ -440,7 +440,7 @@ fn analyze_performance_scaling() -> SignalResult<PerformanceScalingMetrics> {
             None,
             None,
         )?;
-        let elapsed = start.elapsed().as_millis()  as f64;
+        let elapsed = start.elapsed().as_millis() as f64;
         times.push(elapsed);
     }
 

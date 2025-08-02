@@ -771,8 +771,8 @@ impl GpuKernelExecutor {
         }
     }
 
-    pub fn initialize_kernels(&mut self_data_shape: (usize, usize)) -> Result<()> {
-        // Initialize GPU kernels based on data _shape and configuration
+    pub fn initialize_kernels(&mut self_datashape: (usize, usize)) -> Result<()> {
+        // Initialize GPU kernels based on data shape and configuration
         self.kernel_stats.kernels_initialized = true;
         Ok(())
     }

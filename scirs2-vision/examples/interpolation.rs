@@ -243,7 +243,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         // Draw method name
-        draw_text(&mut grid, name, x_offset + 10, y_offset + 20);
+        drawtext(&mut grid, name, x_offset + 10, y_offset + 20);
 
         // Update position
         col += 1;
@@ -368,7 +368,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         // Draw method name
-        draw_text(&mut grid, name, x_offset + 10, y_offset + 20);
+        drawtext(&mut grid, name, x_offset + 10, y_offset + 20);
     }
 
     // Save comparison grid
@@ -383,7 +383,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Draw simple text on an image
 #[allow(dead_code)]
-fn draw_text(_img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
+fn drawtext(_img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
     let color = image::Rgba([255, 255, 255, 255]);
     let shadow_color = image::Rgba([0, 0, 0, 192]);
 

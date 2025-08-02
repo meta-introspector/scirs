@@ -312,7 +312,7 @@ impl<F: Float + FromPrimitive> Default for SpectralClusteringOptions<F> {
 /// use scirs2__cluster::spectral::{spectral_clustering, SpectralClusteringOptions, AffinityMode};
 ///
 /// // Example data with two ring-shaped clusters
-/// let data = Array2::from_shape_vec((20, 2), vec![
+/// let data = Array2::fromshape_vec((20, 2), vec![
 ///     // First ring
 ///     1.0, 0.0,  0.87, 0.5,  0.5, 0.87,  0.0, 1.0,  -0.5, 0.87,
 ///     -0.87, 0.5,  -1.0, 0.0,  -0.87, -0.5,  -0.5, -0.87,  0.0, -1.0,
@@ -557,7 +557,7 @@ mod tests {
     #[test]
     fn test_spectral_clustering_basic() {
         // Create a dataset with 2 well-separated clusters
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![
                 // Cluster 1
@@ -610,7 +610,7 @@ mod tests {
     fn test_spectral_clustering_ring() {
         // Create two concentric ring-shaped clusters
         // This is a more realistic test that validates spectral clustering works
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (16, 2),
             vec![
                 // First ring (8 points)

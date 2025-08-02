@@ -154,7 +154,7 @@ impl OptimizationParams {
             ratio.sqrt()
         }
     }
-    
+
     /// Instance method to get scaling factor
     pub fn scaling_factor(&self, problem_size: usize) -> f64 {
         Self::get_scaling_factor(problem_size)
@@ -276,7 +276,7 @@ impl IoParams {
             enable_io_cache,
         }
     }
-    
+
     /// Generate I/O parameters from resources (alias for from_network)
     pub fn from_resources(network: &NetworkInfo, storage: &StorageInfo) -> Self {
         Self::from_network(network, storage)

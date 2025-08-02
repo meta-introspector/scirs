@@ -871,7 +871,7 @@ pub mod utils {
     use super::*;
     
     /// Check if Hessian is positive definite
-    pub fn is_positive_definite<T: Float>(_hessian: &HessianMatrix<T>) -> bool {
+    pub fn is_positive_definite<T: Float>(hessian: &HessianMatrix<T>) -> bool {
         if let Some(ref eigenvalues) = _hessian.eigenvalues {
             eigenvalues.iter().all(|&val| val > T::zero())
         } else if let Some(ref matrix) = _hessian.full_matrix {
@@ -883,7 +883,7 @@ pub mod utils {
     }
     
     /// Compute condition number from eigenvalues
-    pub fn condition_number<T: Float>(_eigenvalues: &Array1<T>) -> Option<T> {
+    pub fn condition_number<T: Float>(eigenvalues: &Array1<T>) -> Option<T> {
         if _eigenvalues.is_empty() {
             return None;
         }
@@ -909,7 +909,7 @@ pub mod utils {
     }
     
     /// Create identity Hessian (for initialization)
-    pub fn identity_hessian<T: Float>(_size: usize) -> HessianMatrix<T> {
+    pub fn identity_hessian<T: Float>(size: usize) -> HessianMatrix<T> {
         HessianMatrix {
             full_matrix: Some(Array2::eye(_size)),
             diagonal: None,
@@ -993,7 +993,7 @@ mod tests {
         let cond_num = utils::condition_number(&eigenvalues);
         assert_eq!(cond_num, Some(3.0));
         
-        let matrix = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0]).unwrap();
+        let matrix = Array2::fromshape_vec((2, 2), vec![1.0, 0.0, 0.0, 1.0]).unwrap();
         let sparsity = utils::sparsity_ratio(&matrix, 1e-10);
         assert_eq!(sparsity, 0.5); // 2 zeros out of 4 elements
         

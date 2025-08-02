@@ -1,56 +1,56 @@
-//! 2D Wavelet Packet Transform (WPT2D)
-//!
-//! This module provides implementations of the 2D Wavelet Packet Transform (WPT2D),
-//! which is a generalization of the 2D wavelet transform that offers richer signal
-//! analysis. Unlike standard wavelet transforms that decompose only the approximation
-//! coefficients, wavelet packets also decompose the detail coefficients, resulting
-//! in a full binary tree of subbands.
-//!
-//! The 2D WPT is useful for applications such as:
-//! * Texture analysis and classification
-//! * Feature extraction for pattern recognition
-//! * Image compression with adaptive basis selection
-//! * Image denoising with selective reconstruction
-//! * Edge detection with customized subband selection
-//!
-//! # Performance Optimizations
-//!
-//! This implementation includes several optimizations for performance:
-//!
-//! 1. **Parallel Processing**: When compiled with the "parallel" feature,
-//!    computations can be performed in parallel using Rayon.
-//!
-//! 2. **Memory Efficiency**:
-//!    - Uses ndarray views for zero-copy operations
-//!    - Shares filter coefficients across decomposition levels
-//!
-//! # Examples
-//!
-//! Basic usage:
-//!
-//! ```
-//! use ndarray::Array2;
-//! use scirs2__signal::dwt::Wavelet;
-//! use scirs2__signal::wpt2d::wpt2d_full;
-//!
-//! // Create a test image
-//! let mut image = Array2::zeros((64, 64));
-//! for i in 0..64 {
-//!     for j in 0..64 {
-//!         image[[i, j]] = (i * j) as f64 / 64.0;
-//!     }
-//! }
-//!
-//! // Perform 2D wavelet packet decomposition up to level 2
-//! let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).unwrap();
-//!
-//! // Access the packet at level 2, position (1, 2)
-//! // This corresponds to the pattern LH-HL
-//! let packet = decomp.get_packet(2, 1, 2).unwrap();
-//!
-//! // Reconstruct the original image
-//! let reconstructed = decomp.reconstruct().unwrap();
-//! ```
+// 2D Wavelet Packet Transform (WPT2D)
+//
+// This module provides implementations of the 2D Wavelet Packet Transform (WPT2D),
+// which is a generalization of the 2D wavelet transform that offers richer signal
+// analysis. Unlike standard wavelet transforms that decompose only the approximation
+// coefficients, wavelet packets also decompose the detail coefficients, resulting
+// in a full binary tree of subbands.
+//
+// The 2D WPT is useful for applications such as:
+// * Texture analysis and classification
+// * Feature extraction for pattern recognition
+// * Image compression with adaptive basis selection
+// * Image denoising with selective reconstruction
+// * Edge detection with customized subband selection
+//
+// # Performance Optimizations
+//
+// This implementation includes several optimizations for performance:
+//
+// 1. **Parallel Processing**: When compiled with the "parallel" feature,
+//    computations can be performed in parallel using Rayon.
+//
+// 2. **Memory Efficiency**:
+//    - Uses ndarray views for zero-copy operations
+//    - Shares filter coefficients across decomposition levels
+//
+// # Examples
+//
+// Basic usage:
+//
+// ```
+// use ndarray::Array2;
+// use scirs2_signal::dwt::Wavelet;
+// use scirs2_signal::wpt2d::wpt2d_full;
+//
+// // Create a test image
+// let mut image = Array2::zeros((64, 64));
+// for i in 0..64 {
+//     for j in 0..64 {
+//         image[[i, j]] = (i * j) as f64 / 64.0;
+//     }
+// }
+//
+// // Perform 2D wavelet packet decomposition up to level 2
+// let decomp = wpt2d_full(&image, Wavelet::Haar, 2, None).unwrap();
+//
+// // Access the packet at level 2, position (1, 2)
+// // This corresponds to the pattern LH-HL
+// let packet = decomp.get_packet(2, 1, 2).unwrap();
+//
+// // Reconstruct the original image
+// let reconstructed = decomp.reconstruct().unwrap();
+// ```
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
@@ -59,7 +59,6 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use crate::wpt2d::WaveletPacket2D;
 
 /// Type alias for 2D decomposition result (LL, LH, HL, HH)
 type Decompose2DResult = (Array2<f64>, Array2<f64>, Array2<f64>, Array2<f64>);
@@ -115,7 +114,7 @@ pub struct WaveletPacketTree2D {
     /// The collection of wavelet packets organized by (level, row, col)
     packets: HashMap<(usize, usize, usize), WaveletPacket2D>,
     /// The shape of the original signal
-    original_shape: (usize, usize),
+    originalshape: (usize, usize),
 }
 
 impl WaveletPacketTree2D {
@@ -132,7 +131,7 @@ impl WaveletPacketTree2D {
             _wavelet,
             max_level,
             packets,
-            original_shape: shape,
+            originalshape: shape,
         }
     }
 
@@ -184,8 +183,8 @@ impl WaveletPacketTree2D {
     }
 
     /// Returns the shape of the original signal.
-    pub fn original_shape(&self) -> (usize, usize) {
-        self.original_shape
+    pub fn originalshape(&self) -> (usize, usize) {
+        self.originalshape
     }
 
     /// Reconstructs the original signal from the full decomposition.
@@ -201,7 +200,7 @@ impl WaveletPacketTree2D {
         }
 
         let leaf_level = self.max_level;
-        let (rows, cols) = self.original_shape;
+        let (rows, cols) = self.originalshape;
 
         // Create result array for reconstruction
         let reconstructed = Array2::zeros((rows, cols));
@@ -239,7 +238,7 @@ impl WaveletPacketTree2D {
         let mut selective_tree = WaveletPacketTree2D::new(
             self.wavelet,
             self.max_level,
-            Array2::zeros(self.original_shape),
+            Array2::zeros(self.originalshape),
         );
 
         // Add the selected _packets to the new tree
@@ -274,8 +273,8 @@ impl WaveletPacketTree2D {
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::wpt2d::wpt2d_full;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::wpt2d::wpt2d_full;
 ///
 /// // Create a test image
 /// let mut image = Array2::zeros((16, 16));
@@ -621,8 +620,8 @@ fn apply_filter(_signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64>
 ///
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::dwt::Wavelet;
-/// use scirs2__signal::wpt2d::{wpt2d_selective, WaveletPacket2D};
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::wpt2d::{wpt2d_selective, WaveletPacket2D};
 ///
 /// // Create a test image
 /// let mut image = Array2::zeros((32, 32));

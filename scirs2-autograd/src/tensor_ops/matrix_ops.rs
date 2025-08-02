@@ -34,8 +34,8 @@ impl<F: Float> Op<F> for MatrixInverseOp {
         let inv = compute_inverse(&input_2d)?;
 
         // Verify the shape of the result
-        let result_shape = inv.shape();
-        println!("Matrix inverse result shape: {result_shape:?}");
+        let resultshape = inv.shape();
+        println!("Matrix inverse result shape: {resultshape:?}");
 
         // No need to reshape, just use the computed inverse directly
         // but make a deep copy of it to ensure we have a clean array
@@ -826,12 +826,12 @@ pub fn matrix_inverse<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _matrix.graph();
 
     // Get the shape tensor from the input
-    let matrix_shape = crate::tensor_ops::shape(_matrix);
+    let matrixshape = crate::tensor_ops::shape(_matrix);
 
     // Build the tensor with shape information
     Tensor::builder(g)
         .append_input(_matrix, false)
-        .set_shape(&matrix_shape)
+        .setshape(&matrixshape)
         .build(MatrixInverseOp)
 }
 
@@ -840,11 +840,11 @@ pub fn pseudo_inverse<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _matrix.graph();
 
     // Get the shape tensor from the input
-    let matrix_shape = crate::tensor_ops::shape(_matrix);
+    let matrixshape = crate::tensor_ops::shape(_matrix);
 
     Tensor::builder(g)
         .append_input(_matrix, false)
-        .set_shape(&matrix_shape)
+        .setshape(&matrixshape)
         .build(PseudoInverseOp)
 }
 
@@ -854,11 +854,11 @@ pub fn determinant<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F
 
     // For determinant, we're creating a scalar output (0-dimensional tensor)
     // We'll use zeros(0) to create a scalar tensor shape
-    let scalar_shape = crate::tensor__ops::zeros(&[0], g);
+    let scalarshape = crate::tensor__ops::zeros(&[0], g);
 
     Tensor::builder(g)
         .append_input(_matrix, false)
-        .set_shape(&scalar_shape)
+        .setshape(&scalarshape)
         .build(GeneralDeterminantOp)
 }
 
@@ -868,11 +868,11 @@ pub fn expm2<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
     matrix: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {
     let g = matrix.graph();
-    let matrix_shape = crate::tensor_ops::shape(matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     Tensor::builder(g)
         .append_input(matrix, false)
-        .set_shape(&matrix_shape)
+        .setshape(&matrixshape)
         .build(MatrixExp2Op)
 }
 
@@ -882,10 +882,10 @@ pub fn expm3<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
     matrix: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {
     let g = matrix.graph();
-    let matrix_shape = crate::tensor_ops::shape(matrix);
+    let matrixshape = crate::tensor_ops::shape(matrix);
 
     Tensor::builder(g)
         .append_input(matrix, false)
-        .set_shape(&matrix_shape)
+        .setshape(&matrixshape)
         .build(MatrixExp3Op)
 }

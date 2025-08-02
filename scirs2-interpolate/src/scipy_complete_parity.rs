@@ -647,14 +647,14 @@ impl<T: InterpolationFloat> SciPyCubicSpline<T> {
         let bc = bc_type.unwrap_or(SciPyBoundaryCondition::NotAKnot);
 
         let inner = match &bc {
-            SciPyBoundaryCondition::Natural =>, CubicSpline::new(x, y)?,
-            SciPyBoundaryCondition::NotAKnot =>, CubicSpline::new_not_a_knot(x, y)?,
+            SciPyBoundaryCondition::Natural => CubicSpline::new(x, y)?,
+            SciPyBoundaryCondition::NotAKnot => CubicSpline::new_not_a_knot(x, y)?,
             SciPyBoundaryCondition::Clamped(left, right) => {
                 let left_t = T::from_f64(*left).unwrap();
                 let right_t = T::from_f64(*right).unwrap();
                 CubicSpline::new_clamped(x, y, left_t, right_t)?
             }
-            SciPyBoundaryCondition::Periodic =>, CubicSpline::new_periodic(x, y)?,
+            SciPyBoundaryCondition::Periodic => CubicSpline::new_periodic(x, y)?,
             SciPyBoundaryCondition::Custom(_) => {
                 return Err(InterpolateError::NotImplemented(
                     "Custom boundary conditions not yet implemented".to_string(),

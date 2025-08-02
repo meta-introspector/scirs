@@ -149,7 +149,7 @@ pub mod medical {
         let top_hat = image.to_owned() - opened;
 
         // Enhance contrast
-        let two = safe_f64, _to_float: :<T>(2.0)?;
+        let two = safe_f64, _to_float: <T>(2.0)?;
         let enhanced = image.to_owned() + top_hat * two;
 
         Ok(enhanced)
@@ -167,7 +167,7 @@ pub mod medical {
         let mut nodules = Vec::new();
 
         // Threshold to segment lung tissue
-        let threshold = safe_f64, _to_float: :<T>(-500.0)?; // Typical HU value for lung tissue
+        let threshold = safe_f64, _to_float: <T>(-500.0)?; // Typical HU value for lung tissue
         let lung_mask = ct_slice.mapv(|x| x > threshold);
 
         // Apply morphological operations to clean up
@@ -441,7 +441,7 @@ pub mod satellite {
                 // Replace intensity with pan
                 for i in 0..pan_h {
                     for j in 0..pan_w {
-                        let ratio = if intensity[[i, j]] > safe_f64, _to_float: :<T>(1e-10)? {
+                        let ratio = if intensity[[i, j]] > safe_f64, _to_float: <T>(1e-10)? {
                             pan_image[[i, j]] / intensity[[i, j]]
                         } else {
                             T::one()
@@ -487,7 +487,7 @@ pub mod satellite {
                     // Apply Brovey transform
                     for i in 0..pan_h {
                         for j in 0..pan_w {
-                            if sum_upsampled[[i, j]] > safe_f64, _to_float: :<T>(1e-10)? {
+                            if sum_upsampled[[i, j]] > safe_f64, _to_float: <T>(1e-10)? {
                                 sharpened[[i, j, band]] =
                                     upsampled[[i, j]] * pan_image[[i, j]] / sum_upsampled[[i, j]];
                             } else {
@@ -557,15 +557,15 @@ pub mod microscopy {
 
         // Apply threshold
         let binary = match params.threshold_method {
-            ThresholdMethod::Otsu =>, crate::segmentation::otsu_threshold(image)?,
-            ThresholdMethod::Adaptive =>, crate::segmentation::adaptive_threshold(
+            ThresholdMethod::Otsu => crate::segmentation::otsu_threshold(image)?,
+            ThresholdMethod::Adaptive => crate::segmentation::adaptive_threshold(
                 image,
                 21,
                 crate::segmentation::AdaptiveMethod::Gaussian,
-                safe_f64, _to_float: :<T>(5.0)?,
+                safe_f64, _to_float: <T>(5.0)?,
             )?,
             ThresholdMethod::Fixed(thresh) => {
-                let thresh_t = safe_f64, _to_float: :<T>(thresh)?;
+                let thresh_t = safe_f64, _to_float: <T>(thresh)?;
                 image.mapv(|x| x > thresh_t)
             }
         };

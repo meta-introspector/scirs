@@ -406,7 +406,7 @@ pub struct HFTIndicators;
 
 impl HFTIndicators {
     /// Volume Weighted Average Price (VWAP)
-    pub fn vwap<F: Float + Clone>(_prices: &Array1<F>, volumes: &Array1<F>) -> Result<Array1<F>> {
+    pub fn vwap<F: Float + Clone>(prices: &Array1<F>, volumes: &Array1<F>) -> Result<Array1<F>> {
         if _prices.len() != volumes.len() {
             return Err(TimeSeriesError::DimensionMismatch {
                 expected: _prices.len(),
@@ -433,7 +433,7 @@ impl HFTIndicators {
     }
 
     /// Time Weighted Average Price (TWAP)
-    pub fn twap<F: Float + Clone>(_prices: &Array1<F>, window: usize) -> Result<Array1<F>> {
+    pub fn twap<F: Float + Clone>(prices: &Array1<F>, window: usize) -> Result<Array1<F>> {
         if _prices.len() < window {
             return Err(TimeSeriesError::InsufficientData {
                 message: "Not enough data for TWAP calculation".to_string(),
@@ -477,7 +477,7 @@ impl HFTIndicators {
     }
 
     /// Order Book Imbalance
-    pub fn order_book_imbalance<F: Float>(_bid_volume: F, ask_volume: F) -> F {
+    pub fn order_book_imbalance<F: Float>(_bid, volume: F, ask_volume: F) -> F {
         let total_volume = _bid_volume + ask_volume;
         if total_volume == F::zero() {
             return F::zero();
@@ -915,7 +915,7 @@ mod tests {
 
     #[test]
     fn test_regime_switching_model() {
-        let transition_probs = Array2::from_shape_vec((2, 2), vec![0.8, 0.2, 0.3, 0.7]).unwrap();
+        let transition_probs = Array2::fromshape_vec((2, 2), vec![0.8, 0.2, 0.3, 0.7]).unwrap();
 
         let regime_params = vec![
             RegimeParameters {

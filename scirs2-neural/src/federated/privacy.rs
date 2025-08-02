@@ -108,7 +108,7 @@ use rand::rng;
         Ok(masked)
     /// Unmask aggregated updates
     pub fn unmask_aggregate(
-        aggregated: &mut Vec<Array2<f32>>..participating_clients: &[usize],) -> Result<()> {
+        aggregated: &mut Vec<Array2<f32>>..participating, clients: &[usize],) -> Result<()> {
         // Remove masks from aggregated result
         for (update_idx, update) in aggregated.iter_mut().enumerate() {
             let mut total_mask = Array2::<f32>::zeros(update.shape());

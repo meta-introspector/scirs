@@ -815,7 +815,7 @@ mod tests {
 
     #[test]
     fn test_qr_decomposition() {
-        let matrix = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let matrix = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
 
         let q = qr_decomposition_orthogonal(&matrix).unwrap();
 

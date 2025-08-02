@@ -259,7 +259,7 @@ fn demonstrate_cross_domain_intelligence(_coordinator: &mut AdvancedCoordinator)
         ("Scientific Data", generate_scientific_domain_data(4000)),
         ("Financial Data", generate_financial_domain_data(3500)),
         ("Image Data", generate_image_domain_data(6000)),
-        ("Text Data", generate_text_domain_data(2800)),
+        ("Text Data", generatetext_domain_data(2800)),
         ("Sensor Data", generate_sensor_domain_data(4500)),
     ];
 
@@ -294,8 +294,8 @@ fn demonstrate_cross_domain_intelligence(_coordinator: &mut AdvancedCoordinator)
 
     // Analyze cross-domain patterns
     println!("🔍 Cross-Domain Analysis:");
-    let avg_efficiency =
-        domain_performances.iter().map(|(_, e_, _)| e_).sum::<f32>() / domain_performances.len() as f32;
+    let avg_efficiency = domain_performances.iter().map(|(_, e_, _)| e_).sum::<f32>()
+        / domain_performances.len() as f32;
     println!("   Average Cross-Domain Efficiency: {:.3}", avg_efficiency);
 
     // Find best performing domain
@@ -478,8 +478,8 @@ fn demonstrate_real_world_performance(_coordinator: &mut AdvancedCoordinator) ->
         (total_data_processed as f64) / (total_processing_time.as_secs_f64() * 1024.0 * 1024.0);
     println!("   Overall Throughput: {:.1} MB/s", overall_throughput);
 
-    let avg_efficiency =
-        performance_metrics.iter().map(|(_, _, e)| e).sum::<f32>() / performance_metrics.len() as f32;
+    let avg_efficiency = performance_metrics.iter().map(|(_, _, e)| e).sum::<f32>()
+        / performance_metrics.len() as f32;
     println!("   Average Efficiency: {:.3}", avg_efficiency);
 
     // Find best and worst performing scenarios
@@ -736,7 +736,7 @@ fn generate_image_domain_data(_size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_text_domain_data(_size: usize) -> Vec<u8> {
+fn generatetext_domain_data(_size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
             let char_code = (i % 94) + 32; // Printable ASCII

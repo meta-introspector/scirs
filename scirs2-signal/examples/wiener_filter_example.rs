@@ -2,8 +2,8 @@ use ndarray::{Array1, Array2};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2__signal::waveforms;
-use scirs2__signal::wiener::{
+use scirs2_signal::waveforms;
+use scirs2_signal::wiener::{
 use std::f64::consts::PI;
     iterative_wiener_filter, kalman_wiener_filter, psd_wiener_filter, spectral_subtraction,
     wiener_filter, wiener_filter_2d, wiener_filter_freq, wiener_filter_time, WienerConfig,

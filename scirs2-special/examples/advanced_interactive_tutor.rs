@@ -180,7 +180,7 @@ fn setup_user_profile() -> Result<UserProfile, Box<dyn std::error::Error>> {
     profile.learning_preferences.difficulty_preference = match assessment_score {
         0..=3 => DifficultyLevel::Beginner,
         4..=6 => DifficultyLevel::Intermediate,
-        7..=8 => DifficultyLevel::Advanced_ =>, DifficultyLevel::Expert,
+        7..=8 => DifficultyLevel::Advanced_ => DifficultyLevel::Expert,
     };
 
     println!("\n✅ Profile setup complete! Your learning journey begins now.");

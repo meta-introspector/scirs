@@ -14,7 +14,7 @@ pub struct LogSoftmax {
     pub axis: isize,
 }
 
-impl<T: Float>, op::Op<T> for LogSoftmax {
+impl<T: Float> op::Op<T> for LogSoftmax {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
         ctx.append_output(x - &crate::tensor_ops::math_ops::logsumexp_forward(x, self.axis, true));
@@ -30,7 +30,7 @@ impl<T: Float>, op::Op<T> for LogSoftmax {
     }
 }
 
-impl<T: Float>, op::Op<T> for SigmoidCrossEntropy {
+impl<T: Float> op::Op<T> for SigmoidCrossEntropy {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x: &NdArrayView<T> = &ctx.input(0);
         let t: &NdArrayView<T> = &ctx.input(1);
@@ -60,32 +60,32 @@ impl<T: Float>, op::Op<T> for SigmoidCrossEntropy {
     }
 }
 
-impl<T: Float>, op::Op<T> for SparseSoftmaxCrossEntropy {
+impl<T: Float> op::Op<T> for SparseSoftmaxCrossEntropy {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let (x, t) = (&ctx.input(0), &ctx.input(1));
-        let log_x: NdArray<T> = x - &tensor, _ops::math_ops::logsumexp_forward(x, 1, true);
+        let log_x: NdArray<T> = x - &tensor_ops::math_ops::logsumexp_forward(x, 1, true);
 
         // validation
         {
-            let t_shape = t.shape();
+            let tshape = t.shape();
             if log_x.ndim() != 2 {
                 return Err(op::OpError::IncompatibleShape(format!(
                     "SparseSoftmaxCrossEntropy: given first argument's ndim is not 2: shape={:?}",
                     log_x.shape()
                 )));
             }
-            let t_rank = t_shape.len();
+            let t_rank = tshape.len();
             if t_rank == 2 {
                 // example label shape: [batch_size, 1]
-                if t_shape[1] != 1 {
+                if tshape[1] != 1 {
                     return Err(op::OpError::IncompatibleShape(
-                        format!("SparseSoftmaxCrossEntropy: second argument's shape must be (batch_size, 1) or (batch_size,). given shape={t_shape:?}")
+                        format!("SparseSoftmaxCrossEntropy: second argument's shape must be (batch_size, 1) or (batch_size,). given shape={tshape:?}")
                     ));
                 }
             } else if t_rank != 1 {
                 // example label shape: [batch_size]
                 return Err(op::OpError::IncompatibleShape(
-                    format!("SparseSoftmaxCrossEntropy: second argument's shape must be (batch_size, 1) or (batch_size,). given shape={t_shape:?}")
+                    format!("SparseSoftmaxCrossEntropy: second argument's shape must be (batch_size, 1) or (batch_size,). given shape={tshape:?}")
                 ));
             }
         }
@@ -104,7 +104,7 @@ impl<T: Float>, op::Op<T> for SparseSoftmaxCrossEntropy {
                     )
                     .expect("Wrong label value")
             })
-            .into_shape_with_order(ndarray::IxDyn(&[log_x.shape()[0], 1]))
+            .intoshape_with_order(ndarray::IxDyn(&[log_x.shape()[0], 1]))
             .unwrap();
 
         ctx.append_output(ret);
@@ -136,7 +136,7 @@ impl<T: Float>, op::Op<T> for SparseSoftmaxCrossEntropy {
     }
 }
 
-impl<T: Float>, op::Op<T> for SparseSoftmaxCrossEntropyGrad {
+impl<T: Float> op::Op<T> for SparseSoftmaxCrossEntropyGrad {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let log_x = &ctx.input(0); // x is softmax
         let mut x = log_x.map(|a| a.exp());
@@ -157,10 +157,10 @@ impl<T: Float>, op::Op<T> for SparseSoftmaxCrossEntropyGrad {
     }
 }
 
-impl<T: Float>, op::Op<T> for SoftmaxCrossEntropy {
+impl<T: Float> op::Op<T> for SoftmaxCrossEntropy {
     fn compute(&self, ctx: &mut crate::op::ComputeContext<T>) -> Result<(), crate::op::OpError> {
         let x = &ctx.input(0);
-        let log_x: NdArray<T> = x - &tensor, _ops::math_ops::logsumexp_forward(x, 1, true);
+        let log_x: NdArray<T> = x - &tensor_ops::math_ops::logsumexp_forward(x, 1, true);
         // `t` must be one-hot
         let t = &ctx.input(1);
         assert_eq!(log_x.ndim(), 2, "x must be 2-ranked tensor");

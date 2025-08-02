@@ -703,7 +703,7 @@ pub mod checkpointing {
                     OptimError::InvalidConfig(format!("Failed to write param count: {e}"))
                 })?;
                 for (i, param) in group.params.iter().enumerate() {
-                    writeln!(writer, "param_{}_shape={:?}", i, param.shape()).map_err(|e| {
+                    writeln!(writer, "param_{}shape={:?}", i, param.shape()).map_err(|e| {
                         OptimError::InvalidConfig(format!("Failed to write param shape: {e}"))
                     })?;
                     write!(writer, "param_{}_data=", i).map_err(|e| {
@@ -738,7 +738,7 @@ pub mod checkpointing {
                         OptimError::InvalidConfig(format!("Failed to write state array count: {e}"))
                     })?;
                     for (i, array) in state_arrays.iter().enumerate() {
-                        writeln!(writer, "state_{}_shape={:?}", i, array.shape()).map_err(|e| {
+                        writeln!(writer, "state_{}shape={:?}", i, array.shape()).map_err(|e| {
                             OptimError::InvalidConfig(format!("Failed to write state shape: {e}"))
                         })?;
                         write!(writer, "state_{}_data=", i).map_err(|e| {
@@ -950,7 +950,7 @@ pub mod checkpointing {
                         })?;
 
                     let shape_str = shape_line
-                        .trim_start_matches(&format!("param_{}_shape=", i))
+                        .trim_start_matches(&format!("param_{}shape=", i))
                         .trim_start_matches('[')
                         .trim_end_matches(']');
 
@@ -982,7 +982,7 @@ pub mod checkpointing {
                         .collect::<Result<Vec<_>>>()?;
 
                     // Create array from shape and data with dynamic dimensions
-                    let array: Array<A, ndarray::IxDyn> = Array::from_shape_vec(shape, data)
+                    let array: Array<A, ndarray::IxDyn> = Array::fromshape_vec(shape, data)
                         .map_err(|e| {
                             OptimError::InvalidConfig(format!("Failed to create array: {e}"))
                         })?;
@@ -1036,7 +1036,7 @@ pub mod checkpointing {
                             })?;
 
                         let shape_str = shape_line
-                            .trim_start_matches(&format!("state_{}_shape=", i))
+                            .trim_start_matches(&format!("state_{}shape=", i))
                             .trim_start_matches('[')
                             .trim_end_matches(']');
 
@@ -1071,7 +1071,7 @@ pub mod checkpointing {
                             .collect::<Result<Vec<_>>>()?;
 
                         // Create array with dynamic dimensions
-                        let array = Array::from_shape_vec(shape, data).map_err(|e| {
+                        let array = Array::fromshape_vec(shape, data).map_err(|e| {
                             OptimError::InvalidConfig(format!("Failed to create state array: {e}"))
                         })?;
                         state_arrays.push(array);

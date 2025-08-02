@@ -1,16 +1,16 @@
-//! Validation utilities for Lomb-Scargle periodogram
-//!
-//! This module provides comprehensive validation functions for Lomb-Scargle
-//! implementations, including numerical stability checks, comparison with
-//! reference implementations, and edge case handling.
+// Validation utilities for Lomb-Scargle periodogram
+//
+// This module provides comprehensive validation functions for Lomb-Scargle
+// implementations, including numerical stability checks, comparison with
+// reference implementations, and edge case handling.
 
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::lombscargle;
-use crate::lombscargle__enhanced::{LombScargleConfig, WindowType, lombscargle_enhanced};
+use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
 use num_traits::Float;
-use rand::Rng;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
+use rand::Rng;
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -1254,7 +1254,7 @@ fn validate_with_trends(_implementation: &str, tolerance: f64) -> SignalResult<S
         .enumerate()
         .map(|(i, &ti)| {
             let periodic = (2.0 * PI * f_signal * ti).sin();
-            let linear_trend = 0.1 * i  as f64;
+            let linear_trend = 0.1 * i as f64;
             let quadratic_trend = 0.001 * (i as f64).powi(2);
             periodic + linear_trend + quadratic_trend
         })
@@ -1755,7 +1755,7 @@ fn test_white_noise_statistics() -> SignalResult<f64> {
     // For white noise with standard normalization, max power should follow exponential distribution
     // Use Kolmogorov-Smirnov test approximation
     max_powers.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let n = max_powers.len()  as f64;
+    let n = max_powers.len() as f64;
 
     let mut ks_statistic = 0.0;
     for (i, &power) in max_powers.iter().enumerate() {
@@ -1816,7 +1816,7 @@ fn test_false_alarm_rates() -> SignalResult<f64> {
         }
     }
 
-    let observed_fap = false_alarms as f64 / n_trials  as f64;
+    let observed_fap = false_alarms as f64 / n_trials as f64;
     let error = (observed_fap - fap_level).abs() / fap_level;
 
     Ok(error)
@@ -2513,7 +2513,7 @@ fn test_astronomical_scenarios(_tolerance: f64) -> SignalResult<f64> {
 
     // Test Lomb-Scargle on this data
     let result = lombscargle(
-        &times..&brightness,
+        &times, &brightness,
         None,
         Some("standard"),
         Some(true),
@@ -2576,7 +2576,7 @@ fn test_physiological_scenarios(_tolerance: f64) -> SignalResult<f64> {
         .collect();
 
     let result = lombscargle(
-        &t..&signal,
+        &t, &signal,
         None,
         Some("standard"),
         Some(true),
@@ -2660,7 +2660,7 @@ fn test_environmental_scenarios(_tolerance: f64) -> SignalResult<f64> {
     }
 
     let result = lombscargle(
-        &times..&temperatures,
+        &times, &temperatures,
         None,
         Some("standard"),
         Some(true),
@@ -2759,7 +2759,7 @@ fn test_nonparametric_properties(_tolerance: f64) -> SignalResult<f64> {
             .collect();
 
         match lombscargle(
-            &t..&signal,
+            &t, &signal,
             None,
             Some("standard"),
             Some(true),
@@ -2826,7 +2826,7 @@ fn test_bayesian_validation(_tolerance: f64) -> SignalResult<f64> {
         .collect();
 
     match lombscargle(
-        &t..&signal,
+        &t, &signal,
         None,
         Some("standard"),
         Some(true),
@@ -2851,7 +2851,7 @@ fn test_bayesian_validation(_tolerance: f64) -> SignalResult<f64> {
 
             // Check Bayesian information criterion approximation
             // Higher peak should correspond to better model evidence
-            let mean_power = power.iter().sum::<f64>() / power.len()  as f64;
+            let mean_power = power.iter().sum::<f64>() / power.len() as f64;
             let evidence_ratio = peak_power / mean_power;
 
             if evidence_ratio < 5.0 {
@@ -2923,7 +2923,7 @@ fn test_information_theory_metrics(_tolerance: f64) -> SignalResult<f64> {
     let signal_noise: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
 
     match lombscargle(
-        &t..&signal_noise,
+        &t, &signal_noise,
         None,
         Some("standard"),
         Some(true),
@@ -3549,9 +3549,9 @@ fn validate_against_scipy_reference(
     }
 
     let max_relative_error = relative_errors.iter().fold(0.0, |a, &b| a.max(b));
-    let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors.len()  as f64;
-    let mean_correlation = correlations.iter().sum::<f64>() / correlations.len()  as f64;
-    let mean_peak_accuracy = peak_accuracies.iter().sum::<f64>() / peak_accuracies.len()  as f64;
+    let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors.len() as f64;
+    let mean_correlation = correlations.iter().sum::<f64>() / correlations.len() as f64;
+    let mean_peak_accuracy = peak_accuracies.iter().sum::<f64>() / peak_accuracies.len() as f64;
 
     Ok(SciPyComparisonResult {
         max_relative_error,
@@ -3568,7 +3568,7 @@ fn scipy_reference_lombscargle(t: &[f64], y: &[f64], freqs: &[f64]) -> SignalRes
     let mut power = vec![0.0; freqs.len()];
 
     // Center the data
-    let y_mean = y.iter().sum::<f64>() / n  as f64;
+    let y_mean = y.iter().sum::<f64>() / n as f64;
     let y_centered: Vec<f64> = y.iter().map(|&yi| yi - y_mean).collect();
 
     for (i, &freq) in freqs.iter().enumerate() {
@@ -3629,7 +3629,7 @@ fn validate_noise_robustness(_config: &EnhancedValidationConfig) -> SignalResult
         let clean_signal: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * freq * ti).sin()).collect();
 
         // Add noise
-        let signal_power = clean_signal.iter().map(|&x| x * x).sum::<f64>() / n  as f64;
+        let signal_power = clean_signal.iter().map(|&x| x * x).sum::<f64>() / n as f64;
         let noise_power = signal_power / snr_linear;
         let noise_std = noise_power.sqrt();
 
@@ -3643,7 +3643,7 @@ fn validate_noise_robustness(_config: &EnhancedValidationConfig) -> SignalResult
         let freqs: Vec<f64> = (80..120).map(|i| i as f64 * 0.01).collect();
 
         // Compute periodogram
-        match lombscargle(&t..&noisy_signal, Some(&freqs)) {
+        match lombscargle(&t, &noisy_signal, Some(&freqs)) {
             Ok((_, power)) => {
                 // Find peak
                 let peak_idx = power
@@ -3675,7 +3675,7 @@ fn validate_noise_robustness(_config: &EnhancedValidationConfig) -> SignalResult
         }
     }
 
-    let mean_score = robustness_scores.iter().sum::<f64>() / robustness_scores.len()  as f64;
+    let mean_score = robustness_scores.iter().sum::<f64>() / robustness_scores.len() as f64;
     Ok(mean_score)
 }
 
@@ -3747,14 +3747,14 @@ fn validate_simd_consistency(_config: &EnhancedValidationConfig) -> SignalResult
         }
     }
 
-    let mean_score = consistency_scores.iter().sum::<f64>() / consistency_scores.len()  as f64;
+    let mean_score = consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
     Ok(mean_score)
 }
 
 /// Calculate correlation between two vectors
 #[allow(dead_code)]
 fn calculate_correlation(x: &[f64], y: &[f64]) -> f64 {
-    let n = x.len().min(y.len())  as f64;
+    let n = x.len().min(y.len()) as f64;
     let mean_x = x.iter().sum::<f64>() / n;
     let mean_y = y.iter().sum::<f64>() / n;
 

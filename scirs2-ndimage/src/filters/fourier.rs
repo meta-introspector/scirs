@@ -217,7 +217,7 @@ where
     // For higher dimensions, fall back to a general but simpler approach
     // Convert to 1D, apply filter, and reshape back
     let shape = _input.shape().to_vec();
-    let flat_input = _input.view().into_shape(_input.len())?;
+    let flat_input = _input.view().intoshape(_input.len())?;
 
     // Create equivalent 1D sigma (use geometric mean of all dimensions)
     let sigma_1d = {
@@ -233,7 +233,7 @@ where
     let filtered_1d = fourier_gaussian_1d(&flat_input, sigma_1d)?;
 
     // Reshape back to original dimensions
-    let result = filtered_1d.into_shape(shape)?;
+    let result = filtered_1d.intoshape(shape)?;
     Ok(result)
 }
 
@@ -539,7 +539,7 @@ where
 
     // For higher dimensions, use simplified approach
     let shape = _input.shape().to_vec();
-    let flat_input = _input.view().into_shape(_input.len())?;
+    let flat_input = _input.view().intoshape(_input.len())?;
 
     // Create equivalent 1D size (use geometric mean)
     let size_1d = {
@@ -552,7 +552,7 @@ where
     let filtered_1d = fourier_uniform_1d(&flat_input, size_1d)?;
 
     // Reshape back to original dimensions
-    let result = filtered_1d.into_shape(shape)?;
+    let result = filtered_1d.intoshape(shape)?;
     Ok(result)
 }
 
@@ -827,7 +827,7 @@ where
 
     // For higher dimensions, use simplified approach with radial symmetry
     let shape = input.shape().to_vec();
-    let flat_input = input.view().into_shape(input.len())?;
+    let flat_input = input.view().intoshape(input.len())?;
 
     // Create equivalent 1D size (use geometric mean)
     let size_1d = {
@@ -843,12 +843,12 @@ where
     let side_len = (flat_input.len() as f64).sqrt() as usize;
     let temp_2d = flat_input
         .view()
-        .into_shape((side_len, flat_input.len() / side_len))?;
+        .intoshape((side_len, flat_input.len() / side_len))?;
     let filtered_2d = fourier_ellipsoid_2d(&temp_2d, size_1d, size_1d, is_lowpass)?;
-    let filtered_1d = filtered_2d.into_shape(input.len())?;
+    let filtered_1d = filtered_2d.intoshape(input.len())?;
 
     // Reshape back to original dimensions
-    let result = filtered_1d.into_shape(shape)?;
+    let result = filtered_1d.intoshape(shape)?;
     Ok(result)
 }
 
@@ -1173,7 +1173,7 @@ where
 
     // For higher dimensions, use simplified approach
     let shape = _input.shape().to_vec();
-    let flat_input = _input.view().into_shape(_input.len())?;
+    let flat_input = _input.view().intoshape(_input.len())?;
 
     // Create equivalent 1D shift (use mean of all shifts)
     let shift_1d = {
@@ -1186,7 +1186,7 @@ where
     let shifted_1d = fourier_shift_1d(&flat_input, shift_1d)?;
 
     // Reshape back to original dimensions
-    let result = shifted_1d.into_shape(shape)?;
+    let result = shifted_1d.intoshape(shape)?;
     Ok(result)
 }
 

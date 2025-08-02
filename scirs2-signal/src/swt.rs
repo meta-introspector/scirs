@@ -1,16 +1,16 @@
-//! Stationary Wavelet Transform (SWT)
-//!
-//! This module provides implementations of the Stationary Wavelet Transform (SWT),
-//! also known as the Undecimated Wavelet Transform or the à trous algorithm.
-//! Unlike the standard Discrete Wavelet Transform (DWT), the SWT does not
-//! downsample the signal after filtering, which makes it translation invariant.
-//!
-//! The SWT is particularly useful for applications such as:
-//! * Denoising (often provides better results than DWT)
-//! * Feature extraction
-//! * Pattern recognition
-//! * Edge detection
-//! * Change point detection
+// Stationary Wavelet Transform (SWT)
+//
+// This module provides implementations of the Stationary Wavelet Transform (SWT),
+// also known as the Undecimated Wavelet Transform or the à trous algorithm.
+// Unlike the standard Discrete Wavelet Transform (DWT), the SWT does not
+// downsample the signal after filtering, which makes it translation invariant.
+//
+// The SWT is particularly useful for applications such as:
+// * Denoising (often provides better results than DWT)
+// * Feature extraction
+// * Pattern recognition
+// * Edge detection
+// * Change point detection
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
@@ -39,8 +39,8 @@ use std::fmt::Debug;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::swt::{swt_decompose};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::swt::{swt_decompose};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -157,8 +157,8 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::swt::{swt_decompose, swt_reconstruct};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::swt::{swt_decompose, swt_reconstruct};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Generate a simple signal (power of 2 length for simplicity)
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -276,8 +276,8 @@ pub fn swt_reconstruct(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::swt::{swt};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::swt::{swt};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -366,8 +366,8 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::swt::{swt, iswt};
-/// use scirs2__signal::dwt::Wavelet;
+/// use scirs2_signal::swt::{swt, iswt};
+/// use scirs2_signal::dwt::Wavelet;
 ///
 /// // Generate a simple signal (power of 2 length)
 /// let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];

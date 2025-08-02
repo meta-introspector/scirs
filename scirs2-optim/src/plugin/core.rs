@@ -30,7 +30,7 @@ pub trait OptimizerPlugin<A: Float>: Debug + Send + Sync {
     fn capabilities(&self) -> PluginCapabilities;
 
     /// Initialize optimizer with parameters
-    fn initialize(&mut self, param_shape: &[usize]) -> Result<()>;
+    fn initialize(&mut self, paramshape: &[usize]) -> Result<()>;
 
     /// Reset optimizer state
     fn reset(&mut self) -> Result<()>;

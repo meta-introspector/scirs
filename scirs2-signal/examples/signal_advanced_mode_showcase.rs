@@ -1,12 +1,12 @@
-//! Advanced Mode Showcase for scirs2-signal
-//!
-//! This example demonstrates the full capabilities of scirs2-signal in
-//! Advanced mode with enhanced spectral analysis, advanced wavelets,
-//! performance optimizations, and comprehensive validation.
+// Advanced Mode Showcase for scirs2-signal
+//
+// This example demonstrates the full capabilities of scirs2-signal in
+// Advanced mode with enhanced spectral analysis, advanced wavelets,
+// performance optimizations, and comprehensive validation.
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
-use scirs2__signal::{
+use scirs2_signal::{
     // Advanced 2D wavelet denoising
     advanced_wavelet_denoise_2d,
     // SIMD memory optimization
@@ -77,7 +77,7 @@ fn main() -> Result<(), SignalError> {
 fn demo_advanced_wavelet_denoising() -> SignalResult<()> {
     // Create a test image with known structure and noise
     let image_size = 128;
-    let clean_image = Array2::from_shape_fn((image_size, image_size), |(i, j)| {
+    let clean_image = Array2::fromshape_fn((image_size, image_size), |(i, j)| {
         // Create a synthetic image with edges and texture
         let x = i as f64 / image_size as f64;
         let y = j as f64 / image_size as f64;
@@ -93,7 +93,7 @@ fn demo_advanced_wavelet_denoising() -> SignalResult<()> {
     // Add Gaussian noise
     let noise_level = 0.2;
     let mut rng = rand::rng();
-    let noisy_image = Array2::from_shape_fn((image_size, image_size), |(i, j)| {
+    let noisy_image = Array2::fromshape_fn((image_size, image_size), |(i, j)| {
         clean_image[[i, j]] + noise_level * rng.gen_range(-1.0..1.0)
     });
 

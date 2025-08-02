@@ -131,8 +131,8 @@ fn demo_broadcasting() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     if can_broadcast {
-        let broadcast_shape = broadcasting::broadcast_shape(&shape1, &shape2)?;
-        println!("Broadcast shape: {:?}", broadcast_shape);
+        let broadcastshape = broadcasting::broadcastshape(&shape1, &shape2)?;
+        println!("Broadcast shape: {:?}", broadcastshape);
     }
 
     // Test various broadcasting scenarios
@@ -148,8 +148,8 @@ fn demo_broadcasting() -> Result<(), Box<dyn std::error::Error>> {
         let compatible = broadcasting::can_broadcast(&shape1, &shape2);
         print!("  {:?} × {:?}: {}", shape1, shape2, compatible);
         if compatible {
-            if let Ok(result_shape) = broadcasting::broadcast_shape(&shape1, &shape2) {
-                print!(" → {:?}", result_shape);
+            if let Ok(resultshape) = broadcasting::broadcastshape(&shape1, &shape2) {
+                print!(" → {:?}", resultshape);
             }
         }
         println!();

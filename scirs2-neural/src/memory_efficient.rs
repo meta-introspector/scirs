@@ -132,16 +132,16 @@ impl<F: Float + Debug + Clone + 'static> MemoryPool<F> {
         self.available_tensors.clear();
         self.current_pool_size = 0;
     /// Calculate memory usage for a tensor shape (assuming F is f32/f64)
-    fn calculate_bytes(_shape: &[usize]) -> usize {
-        let elements: usize = _shape.iter().product();
+    fn calculate_bytes(shape: &[usize]) -> usize {
+        let elements: usize = shape.iter().product();
         elements * std::mem::size_of::<F>()
     /// Get pool statistics
     pub fn get_pool_stats(&self) -> PoolStatistics {
         let total_tensors: usize = self.available_tensors.values().map(|v| v.len()).sum();
-        let unique_shapes = self.available_tensors.len();
+        let uniqueshapes = self.available_tensors.len();
         PoolStatistics {
             total_cached_tensors: total_tensors,
-            unique_shapes,
+            uniqueshapes,
             current_pool_size_mb: self.current_pool_size as f64 / (1024.0 * 1024.0),
             max_pool_size_mb: self.max_pool_size as f64 / (1024.0 * 1024.0),
 /// Statistics about the memory pool
@@ -149,7 +149,7 @@ pub struct PoolStatistics {
     /// Number of tensors currently cached
     pub total_cached_tensors: usize,
     /// Number of unique tensor shapes in the pool
-    pub unique_shapes: usize,
+    pub uniqueshapes: usize,
     /// Current pool size in MB
     pub current_pool_size_mb: f64,
     /// Maximum pool size in MB
@@ -232,16 +232,16 @@ impl<F: Float + Debug + Clone + 'static + ndarray::ScalarOperand> GradientCheckp
 pub struct InPlaceOperations;
 impl InPlaceOperations {
     /// In-place ReLU activation
-    pub fn relu_inplace<F: Float + Debug>(_array: &mut ArrayD<F>) {
+    pub fn relu_inplace<F: Float + Debug>(array: &mut ArrayD<F>) {
         _array.mapv_inplace(|x| x.max(F::zero()));
     /// In-place sigmoid activation
-    pub fn sigmoid_inplace<F: Float + Debug>(_array: &mut ArrayD<F>) {
+    pub fn sigmoid_inplace<F: Float + Debug>(array: &mut ArrayD<F>) {
         _array.mapv_inplace(|x| F::one() / (F::one() + (-x).exp()));
     /// In-place tanh activation
-    pub fn tanh_inplace<F: Float + Debug>(_array: &mut ArrayD<F>) {
+    pub fn tanh_inplace<F: Float + Debug>(array: &mut ArrayD<F>) {
         _array.mapv_inplace(|x| x.tanh());
     /// In-place addition
-    pub fn add_inplace<F: Float + Debug>(_target: &mut ArrayD<F>, source: &ArrayD<F>) -> Result<()> {
+    pub fn add_inplace<F: Float + Debug>(target: &mut ArrayD<F>, source: &ArrayD<F>) -> Result<()> {
         if target.shape() != source.shape() {
             return Err(NeuralError::ShapeMismatch(
                 "Arrays must have the same shape for in-place addition".to_string(),
@@ -249,7 +249,7 @@ impl InPlaceOperations {
         for (t, &s) in target.iter_mut().zip(source.iter()) {
             *t = *t + s;
     /// In-place scalar multiplication
-    pub fn scale_inplace<F: Float + Debug>(_array: &mut ArrayD<F>, factor: F) {
+    pub fn scale_inplace<F: Float + Debug>(array: &mut ArrayD<F>, factor: F) {
         _array.mapv_inplace(|x| x * factor);
     /// In-place normalization (subtract mean, divide by std)
     pub fn normalize_inplace<F: Float + Debug + Clone + num_traits::FromPrimitive>(
@@ -370,10 +370,10 @@ pub struct MemoryEfficientLayer {
 impl MemoryEfficientLayer {
     /// Create a new memory-efficient layer
     pub fn new(_input_size: usize, output_size: usize, chunk_size: Option<usize>) -> Result<Self> {
-        let _weights_shape = [input_size, output_size];
+        let _weightsshape = [input_size, output_size];
         let default_chunk_size = chunk_size.unwrap_or(1024);
         #[cfg(feature = "memory_efficient")]
-        let weights = ArrayD::zeros(IxDyn(&_weights_shape));
+        let weights = ArrayD::zeros(IxDyn(&_weightsshape));
         let bias = ndarray::Array1::zeros(output_size);
         // Buffer pool handles memory management
         #[cfg(feature = "memory_management")]
@@ -403,9 +403,9 @@ impl MemoryEfficientLayer {
         })
     /// Forward pass with memory-efficient chunk processing
     pub fn forward(&self, input: &ArrayD<f32>) -> Result<ArrayD<f32>> {
-        let input_shape = input.shape();
-        let batch_size = input_shape[0];
-        let _input_size = input_shape[1];
+        let inputshape = input.shape();
+        let batch_size = inputshape[0];
+        let _input_size = inputshape[1];
         let output_size = self.bias.len();
         // Create output array
         let mut output = Array::zeros((batch_size, output_size));
@@ -428,8 +428,8 @@ impl MemoryEfficientLayer {
         Ok(output.into_dyn())
     /// Memory-efficient forward pass for a single chunk
     fn forward_chunk(&self, input_chunk: &ArrayView<f32, IxDyn>) -> Result<ndarray::Array2<f32>> {
-        let chunk_shape = input_chunk.shape();
-        let chunk_batch_size = chunk_shape[0];
+        let chunkshape = input_chunk.shape();
+        let chunk_batch_size = chunkshape[0];
         // Use chunk-wise operation for memory efficiency
         {
             let weights = &self.weights;
@@ -502,7 +502,7 @@ mod tests {
         let tensor2 = pool.allocate(&[100, 100]);
         assert_eq!(tensor2.shape(), [100, 100]);
         let stats = pool.get_pool_stats();
-        assert_eq!(stats.unique_shapes, 1);
+        assert_eq!(stats.uniqueshapes, 1);
     fn test_gradient_checkpointing() {
         let mut checkpointing = GradientCheckpointing::<f64>::new(100.0); // 100MB threshold
         checkpointing.add_checkpoint_layer("layer1".to_string());

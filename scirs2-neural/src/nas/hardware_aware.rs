@@ -151,23 +151,23 @@ impl LatencyPredictor {
     pub fn predict_latency(
         &self,
         architecture: &Architecture,
-        input_shape: &[usize],
+        inputshape: &[usize],
     ) -> Result<f64> {
         let mut total_latency = 0.0;
-        let mut current_shape = input_shape.to_vec();
+        let mut currentshape = inputshape.to_vec();
         for layer in &architecture.layers {
-            let layer_latency = self.predict_layer_latency(layer, &current_shape)?;
+            let layer_latency = self.predict_layer_latency(layer, &currentshape)?;
             total_latency += layer_latency;
             // Update shape for next layer
-            current_shape = self.compute_output_shape(layer, &current_shape)?;
+            currentshape = self.compute_outputshape(layer, &currentshape)?;
         // Add overhead for model loading and initialization
         total_latency += self.compute_initialization_overhead(architecture)?;
         Ok(total_latency)
     /// Predict latency for a single layer
-    fn predict_layer_latency(&self, layer: &LayerType, input_shape: &[usize]) -> Result<f64> {
+    fn predict_layer_latency(&self, layer: &LayerType, inputshape: &[usize]) -> Result<f64> {
         let base_latency = match layer {
             LayerType::Dense(units) => {
-                let input_size: usize = input_shape.iter().product();
+                let input_size: usize = inputshape.iter().product();
                 let ops = input_size * units;
                 let base = self
                     .operation_latencies
@@ -180,14 +180,14 @@ impl LatencyPredictor {
                 kernel_size,
                 stride,
             } => {
-                if input_shape.len() < 3 {
+                if inputshape.len() < 3 {
                     return Err(crate::error::NeuralError::InvalidArgument(
                         "Conv2D requires 3D input".to_string(),
                     ));
                 }
-                let h = input_shape[0];
-                let w = input_shape[1];
-                let c = input_shape[2];
+                let h = inputshape[0];
+                let w = inputshape[1];
+                let c = inputshape[2];
                 let output_h = (h - kernel_size.0) / stride.0 + 1;
                 let output_w = (w - kernel_size.1) / stride.1 + 1;
                 let ops = output_h * output_w * filters * kernel_size.0 * kernel_size.1 * c;
@@ -203,7 +203,7 @@ impl LatencyPredictor {
                     .get("pooling")
                     .unwrap_or(0.05);
             LayerType::Activation(_) => {
-                let ops: usize = input_shape.iter().product();
+                let ops: usize = inputshape.iter().product();
                     .get("activation")
                     .unwrap_or(0.01);
             LayerType::BatchNorm | LayerType::LayerNorm => {
@@ -223,20 +223,20 @@ impl LatencyPredictor {
             _ => 1.0,
         Ok(base_latency * parallelization)
     /// Compute output shape after a layer
-    fn compute_output_shape(&self, layer: &LayerType, input_shape: &[usize]) -> Result<Vec<usize>> {
+    fn compute_outputshape(&self, layer: &LayerType, inputshape: &[usize]) -> Result<Vec<usize>> {
         match layer {
             LayerType::Dense(units) => Ok(vec![*units]),
-                let h = (input_shape[0] - kernel_size.0) / stride.0 + 1;
-                let w = (input_shape[1] - kernel_size.1) / stride.1 + 1;
+                let h = (inputshape[0] - kernel_size.0) / stride.0 + 1;
+                let w = (inputshape[1] - kernel_size.1) / stride.1 + 1;
                 Ok(vec![h, w, *filters])
-                    return Ok(input_shape.to_vec());
-                let h = (input_shape[0] - pool_size.0) / stride.0 + 1;
-                let w = (input_shape[1] - pool_size.1) / stride.1 + 1;
-                Ok(vec![h, w, input_shape[2]])
+                    return Ok(inputshape.to_vec());
+                let h = (inputshape[0] - pool_size.0) / stride.0 + 1;
+                let w = (inputshape[1] - pool_size.1) / stride.1 + 1;
+                Ok(vec![h, w, inputshape[2]])
             LayerType::Flatten => {
-                let total_size: usize = input_shape.iter().product();
+                let total_size: usize = inputshape.iter().product();
                 Ok(vec![total_size])
-            _ => Ok(input_shape.to_vec()), // Most layers preserve shape
+            _ => Ok(inputshape.to_vec()), // Most layers preserve shape
     /// Compute initialization overhead
     fn compute_initialization_overhead(&self, architecture: &Architecture) -> Result<f64> {
         let num_layers = architecture.layers.len() as f64;
@@ -258,7 +258,7 @@ impl MemoryPredictor {
         total_memory += self.compute_weights_memory(architecture)?;
         // Activations memory (peak usage)
         let mut max_activation_memory = 0.0;
-            let activation_memory = self.compute_activation_memory(&current_shape)?;
+            let activation_memory = self.compute_activation_memory(&currentshape)?;
             max_activation_memory = max_activation_memory.max(activation_memory);
         total_memory += max_activation_memory;
         // Add overhead for framework and OS
@@ -303,7 +303,7 @@ impl MemoryPredictor {
             HardwarePlatform::EdgeTPU => 30.0_ => 40.0,
         Ok(overhead_mb)
     /// Compute output shape (simplified version)
-            _ => Ok(input_shape.to_vec()),
+            _ => Ok(inputshape.to_vec()),
 /// Energy consumption predictor
 pub struct EnergyPredictor {
     power_characteristics: HashMap<String, f64>, // mW per operation
@@ -385,14 +385,14 @@ impl HardwareAwareSearch {
         let arch = architecture.to_architecture()?;
         let mut violations = HashMap::new();
         // Predict latency
-        let predicted_latency = self.latency_predictor.predict_latency(&arch, input_shape)?;
+        let predicted_latency = self.latency_predictor.predict_latency(&arch, inputshape)?;
         if let Some(max_latency) = self._constraints.max_latency_ms {
             let violation = (predicted_latency - max_latency).max(0.0) / max_latency;
             violations.insert("latency".to_string(), violation);
         // Predict memory usage
         let predicted_memory = self
             .memory_predictor
-            .predict_memory_usage(&arch, input_shape)?;
+            .predict_memory_usage(&arch, inputshape)?;
         if let Some(max_memory) = self._constraints.max_memory_mb {
             let violation = (predicted_memory - max_memory).max(0.0) / max_memory;
             violations.insert("memory".to_string(), violation);

@@ -533,7 +533,10 @@ where
     O: 'static + Send + Sync,
 {
     pub fn new(_first: Pipeline<I, M>, second: Pipeline<M, O>) -> Self {
-        Self { first: _first, second }
+        Self {
+            first: _first,
+            second,
+        }
     }
 
     pub fn execute(&self, input: I) -> Result<O> {

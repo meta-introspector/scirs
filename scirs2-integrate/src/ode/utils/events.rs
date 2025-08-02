@@ -380,7 +380,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
 
 /// Function to create a terminal event (one that stops integration when triggered)
 #[allow(dead_code)]
-pub fn terminal_event<F: IntegrateFloat>(_id: &str, direction: EventDirection) -> EventSpec<F> {
+pub fn terminal_event<F: IntegrateFloat>(id: &str, direction: EventDirection) -> EventSpec<F> {
     EventSpec {
         id: _id.to_string(),
         direction,

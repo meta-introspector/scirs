@@ -11,7 +11,6 @@ use std::fmt::Debug;
 
 // Import helper functions from the multivariate module
 use super::normal::{compute_cholesky, compute_inverse_from_cholesky};
-use statrs::statistics::Statistics;
 
 /// Implementation of the natural logarithm of the gamma function
 /// This is a workaround for the unstable gamma function in Rust

@@ -355,7 +355,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                         "Custom centroids dimensions don't match".to_string(),
                     ));
                 }
-                let converted_centroids = Array2::from_shape_fn(
+                let converted_centroids = Array2::fromshape_fn(
                     (self.k, data.ncols()),
                     |(i, j)| F::from(centroids[[i, j]]).unwrap_or_else(F::zero)
                 );
@@ -867,7 +867,7 @@ mod tests {
         let config = DistributedKMeansConfig::default();
         let kmeans = DistributedKMeans::<f64>::new(3, config).unwrap();
         
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (10, 2),
             (0..20).map(|x| x as f64).collect(),
         ).unwrap();
@@ -881,7 +881,7 @@ mod tests {
         let config = DistributedKMeansConfig::default();
         let kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
         
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0, 5.0, 5.0, 6.0, 6.0],
         ).unwrap();
@@ -900,14 +900,14 @@ mod tests {
         let mut kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
         
         // Set known centroids
-        let centroids = Array2::from_shape_vec(
+        let centroids = Array2::fromshape_vec(
             (2, 2),
             vec![0.0, 0.0, 10.0, 10.0],
         ).unwrap();
         kmeans.centroids = Some(centroids);
         
         // Test prediction
-        let test_data = Array2::from_shape_vec(
+        let test_data = Array2::fromshape_vec(
             (4, 2),
             vec![1.0, 1.0, 9.0, 9.0, -1.0, -1.0, 11.0, 11.0],
         ).unwrap();
@@ -930,17 +930,17 @@ mod tests {
         };
         let kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
         
-        let old_centroids = Array2::from_shape_vec(
+        let old_centroids = Array2::fromshape_vec(
             (2, 2),
             vec![0.0, 0.0, 1.0, 1.0],
         ).unwrap();
         
-        let new_centroids_converged = Array2::from_shape_vec(
+        let new_centroids_converged = Array2::fromshape_vec(
             (2, 2),
             vec![0.05, 0.05, 1.05, 1.05], // Small movement
         ).unwrap();
         
-        let new_centroids_not_converged = Array2::from_shape_vec(
+        let new_centroids_not_converged = Array2::fromshape_vec(
             (2, 2),
             vec![0.5, 0.5, 1.5, 1.5], // Large movement
         ).unwrap();

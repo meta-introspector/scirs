@@ -443,7 +443,7 @@ mod tests {
     #[test]
     fn test_pairwise_euclidean_simd() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let distances = pairwise_euclidean_simd(data.view());
 
@@ -460,9 +460,9 @@ mod tests {
     #[test]
     fn test_distance_to_centroids_simd() {
         let data =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
-        let centroids = Array2::from_shape_vec((2, 2), vec![0.5, 0.0, 0.5, 1.0]).unwrap();
+        let centroids = Array2::fromshape_vec((2, 2), vec![0.5, 0.0, 0.5, 1.0]).unwrap();
 
         let distances = distance_to_centroids_simd(data.view(), centroids.view()).unwrap();
 
@@ -475,7 +475,7 @@ mod tests {
 
     #[test]
     fn test_parallel_vs_standard() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 3),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,

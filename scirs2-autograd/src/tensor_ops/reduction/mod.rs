@@ -438,7 +438,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn add_n<'graph, A, F: Float>(_xs: &[A]) -> Tensor<'graph, F>
+pub fn add_n<'graph, A, F: Float>(xs: &[A]) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
 {
@@ -452,7 +452,7 @@ where
         for x in _xs {
             b = b.append_input(x.as_ref(), false);
         }
-        b.set_shape(&shape(_xs[0])).build(array_ops::AddN)
+        b.setshape(&shape(_xs[0])).build(array_ops::AddN)
     }
 }
 

@@ -977,7 +977,7 @@ pub mod feature_engineering {
                 FeatureType::StochasticOscillator => self.compute_stochastic_oscillator(data, 14),
                 FeatureType::PatternRecognition => self.compute_pattern_recognition(data),
                 FeatureType::MotifFrequency => self.compute_motif_frequency(data),
-                FeatureType::ShapeletDistance => self.compute_shapelet_distance(data),
+                FeatureType::ShapeletDistance => self.computeshapelet_distance(data),
             }
         }
 
@@ -1579,14 +1579,14 @@ pub mod feature_engineering {
         }
 
         /// Compute shapelet distance (simplified)
-        fn compute_shapelet_distance(&self, data: &[F]) -> Result<F> {
+        fn computeshapelet_distance(&self, data: &[F]) -> Result<F> {
             if data.len() < 4 {
                 return Ok(F::zero());
             }
 
             // Simple shapelet: use a canonical pattern (e.g., increasing trend)
             let shapelet_length = 4.min(data.len());
-            let canonical_shapelet: Vec<F> =
+            let canonicalshapelet: Vec<F> =
                 (0..shapelet_length).map(|i| F::from(i).unwrap()).collect();
 
             let mut min_distance = F::infinity();
@@ -1607,10 +1607,10 @@ pub mod feature_engineering {
                     var.sqrt()
                 };
 
-                let canonical_mean = canonical_shapelet.iter().fold(F::zero(), |acc, &x| acc + x)
+                let canonical_mean = canonicalshapelet.iter().fold(F::zero(), |acc, &x| acc + x)
                     / F::from(shapelet_length).unwrap();
                 let canonical_std = {
-                    let var = canonical_shapelet
+                    let var = canonicalshapelet
                         .iter()
                         .map(|&x| (x - canonical_mean) * (x - canonical_mean))
                         .fold(F::zero(), |acc, x| acc + x)
@@ -1627,7 +1627,7 @@ pub mod feature_engineering {
                         F::zero()
                     };
                     let norm_canonical = if canonical_std > F::zero() {
-                        (canonical_shapelet[j] - canonical_mean) / canonical_std
+                        (canonicalshapelet[j] - canonical_mean) / canonical_std
                     } else {
                         F::zero()
                     };

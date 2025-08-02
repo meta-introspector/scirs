@@ -339,7 +339,7 @@ impl<F: Float> NumericalAnalyzer<F> {
         match max_condition {
             x if x < 1e3 => ConditioningAssessment::WellConditioned,
             x if x < 1e6 => ConditioningAssessment::ModeratelyConditioned,
-            x if x < 1e12 => ConditioningAssessment::IllConditioned_ =>, ConditioningAssessment::SeverelyIllConditioned,
+            x if x < 1e12 => ConditioningAssessment::IllConditioned_ => ConditioningAssessment::SeverelyIllConditioned,
         }
     }
 
@@ -906,7 +906,7 @@ where
 /// Analyze error propagation through a computation
 #[allow(dead_code)]
 pub fn analyze_error_propagation<'a, F: Float, Func>(
-    _function: Func_input: &'a Tensor<'a, F>, _uncertainty: &'a Tensor<'a, F>,
+    _function: Func, input: &'a Tensor<'a, F>, _uncertainty: &'a Tensor<'a, F>,
 ) -> Result<ErrorPropagationAnalysis<'a, F>, StabilityError>
 where
     Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,

@@ -22,13 +22,16 @@ pub struct Dual {
 impl Dual {
     /// Create a new dual number
     pub fn new(_value: f64, derivative: f64) -> Self {
-        Self { _value, derivative }
+        Self {
+            value: _value,
+            derivative,
+        }
     }
 
     /// Create a dual number representing a constant (derivative = 0)
     pub fn constant(_value: f64) -> Self {
         Self {
-            _value,
+            value: _value,
             derivative: 0.0,
         }
     }
@@ -36,7 +39,7 @@ impl Dual {
     /// Create a dual number representing a variable (derivative = 1)
     pub fn variable(_value: f64) -> Self {
         Self {
-            _value,
+            value: _value,
             derivative: 1.0,
         }
     }
@@ -375,7 +378,7 @@ pub trait DualNumber: Clone + Copy {
 
 impl DualNumber for Dual {
     fn value(self) -> f64 {
-        self._value
+        self.value
     }
 
     fn derivative(self) -> f64 {
@@ -408,7 +411,7 @@ impl MultiDual {
     /// Create a new multi-dimensional dual number
     pub fn new(_value: f64, derivatives: Array1<f64>) -> Self {
         Self {
-            _value,
+            value: _value,
             derivatives,
         }
     }
@@ -416,7 +419,7 @@ impl MultiDual {
     /// Create a constant multi-dual (all derivatives = 0)
     pub fn constant(_value: f64, n_vars: usize) -> Self {
         Self {
-            _value,
+            value: _value,
             derivatives: Array1::zeros(n_vars),
         }
     }
@@ -426,7 +429,7 @@ impl MultiDual {
         let mut derivatives = Array1::zeros(n_vars);
         derivatives[var_index] = 1.0;
         Self {
-            _value,
+            value: _value,
             derivatives,
         }
     }

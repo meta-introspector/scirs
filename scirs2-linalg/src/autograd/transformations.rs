@@ -40,14 +40,14 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
         ));
     }
 
-    let a_shape = a.shape();
-    let x_shape = x.shape();
+    let ashape = a.shape();
+    let xshape = x.shape();
 
-    if a_shape[0] != x_shape[0] {
+    if ashape[0] != xshape[0] {
         return Err(scirs2_autograd::error::AutogradError::ShapeMismatch(
             format!(
                 "Number of rows in A ({}) must match length of x ({})",
-                a_shape[0], x_shape[0]
+                ashape[0], xshape[0]
             ),
         ));
     }
@@ -61,15 +61,15 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
     let a_t_data_2d = a_t
         .data
         .clone()
-        .into_shape((a_shape[1], a_shape[0]))
+        .intoshape((ashape[1], ashape[0]))
         .unwrap();
-    let a_data_2d = a.data.clone().into_shape((a_shape[0], a_shape[1])).unwrap();
+    let a_data_2d = a.data.clone().intoshape((ashape[0], ashape[1])).unwrap();
 
-    let mut a_t_a_data = Array2::<F>::zeros((a_shape[1], a_shape[1]));
-    for i in 0..a_shape[1] {
-        for j in 0..a_shape[1] {
+    let mut a_t_a_data = Array2::<F>::zeros((ashape[1], ashape[1]));
+    for i in 0..ashape[1] {
+        for j in 0..ashape[1] {
             let mut sum = F::zero();
-            for k in 0..a_shape[0] {
+            for k in 0..ashape[0] {
                 sum = sum + a_t_data_2d[[i, k]] * a_data_2d[[k, j]];
             }
             a_t_a_data[[i, j]] = sum;
@@ -81,7 +81,7 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
 
     // Compute (A^T A)^(-1)
     let a_t_a_inv_data = {
-        let n = a_shape[1];
+        let n = ashape[1];
         if n == 1 {
             // For 1x1 matrix, simple reciprocal
             let mut result = a_t_a.data.clone();
@@ -123,14 +123,14 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
     let a_t_data_2d = a_t
         .data
         .clone()
-        .into_shape((a_shape[1], a_shape[0]))
+        .intoshape((ashape[1], ashape[0]))
         .unwrap();
-    let x_data_1d = x.data.clone().into_shape(a_shape[0]).unwrap();
+    let x_data_1d = x.data.clone().intoshape(ashape[0]).unwrap();
 
-    let mut a_t_x_data = Array1::<F>::zeros(a_shape[1]);
-    for i in 0..a_shape[1] {
+    let mut a_t_x_data = Array1::<F>::zeros(ashape[1]);
+    for i in 0..ashape[1] {
         let mut sum = F::zero();
-        for k in 0..a_shape[0] {
+        for k in 0..ashape[0] {
             sum = sum + a_t_data_2d[[i, k]] * x_data_1d[k];
         }
         a_t_x_data[i] = sum;
@@ -143,14 +143,14 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
     let a_t_a_inv_data_2d = a_t_a_inv
         .data
         .clone()
-        .into_shape((a_shape[1], a_shape[1]))
+        .intoshape((ashape[1], ashape[1]))
         .unwrap();
-    let a_t_x_data_1d = a_t_x.data.clone().into_shape(a_shape[1]).unwrap();
+    let a_t_x_data_1d = a_t_x.data.clone().intoshape(ashape[1]).unwrap();
 
-    let mut temp_data = Array1::<F>::zeros(a_shape[1]);
-    for i in 0..a_shape[1] {
+    let mut temp_data = Array1::<F>::zeros(ashape[1]);
+    for i in 0..ashape[1] {
         let mut sum = F::zero();
-        for j in 0..a_shape[1] {
+        for j in 0..ashape[1] {
             sum = sum + a_t_a_inv_data_2d[[i, j]] * a_t_x_data_1d[j];
         }
         temp_data[i] = sum;
@@ -160,13 +160,13 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
     let temp = Tensor::new(temp_data, a.requires_grad || x.requires_grad);
 
     // Compute A (A^T A)^(-1) A^T x manually
-    let a_data_2d = a.data.clone().into_shape((a_shape[0], a_shape[1])).unwrap();
-    let temp_data_1d = temp.data.clone().into_shape(a_shape[1]).unwrap();
+    let a_data_2d = a.data.clone().intoshape((ashape[0], ashape[1])).unwrap();
+    let temp_data_1d = temp.data.clone().intoshape(ashape[1]).unwrap();
 
-    let mut result_data = Array1::<F>::zeros(a_shape[0]);
-    for i in 0..a_shape[0] {
+    let mut result_data = Array1::<F>::zeros(ashape[0]);
+    for i in 0..ashape[0] {
         let mut sum = F::zero();
-        for j in 0..a_shape[1] {
+        for j in 0..ashape[1] {
             sum = sum + a_data_2d[[i, j]] * temp_data_1d[j];
         }
         result_data[i] = sum;
@@ -189,8 +189,8 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
                     // A full implementation would require matrix calculus
 
                     // Return zeros for now - this is a placeholder
-                    let a_data_shape = a_data.shape();
-                    let mut grad_a = Array2::<F>::zeros((a_data_shape[0], a_data_shape[1]));
+                    let a_datashape = a_data.shape();
+                    let mut grad_a = Array2::<F>::zeros((a_datashape[0], a_datashape[1]));
                     Ok(grad_a.into_dyn())
                 })
                     as Box<dyn Fn(ndarray::Array<F, ndarray::IxDyn>) -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> + Send + Sync>,
@@ -272,7 +272,7 @@ pub fn rotation_matrix_2d<F: Float + Debug + Send + Sync + 'static>(
             Some(
                 Box::new(move |grad: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                     // Convert gradient to 2x2 shape
-                    let grad_2d = grad.clone().into_shape((2, 2)).unwrap();
+                    let grad_2d = grad.clone().intoshape((2, 2)).unwrap();
 
                     // Gradient of rotation matrix with respect to angle
                     // d/dθ [cos θ, -sin θ; sin θ, cos θ] = [-sin θ, -cos θ; cos θ, -sin θ]
@@ -345,7 +345,7 @@ pub fn scaling_matrix<F: Float + Debug + Send + Sync + 'static>(
             Some(
                 Box::new(move |grad: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                     // Convert gradient to nxn shape
-                    let grad_2d = grad.clone().into_shape((n, n)).unwrap();
+                    let grad_2d = grad.clone().intoshape((n, n)).unwrap();
 
                     // Gradient of scaling matrix with respect to scales
                     // is just the diagonal elements of the gradien
@@ -502,7 +502,7 @@ pub fn shear_matrix<F: Float + Debug + Send + Sync + 'static>(
             Some(
                 Box::new(move |grad: ndarray::Array<F, ndarray::IxDyn>| -> AutogradResult<ndarray::Array<F, ndarray::IxDyn>> {
                     // Convert gradient to nxn shape
-                    let grad_2d = grad.clone().into_shape((n, n)).unwrap();
+                    let grad_2d = grad.clone().intoshape((n, n)).unwrap();
 
                     // Gradient of shear matrix with respect to shear _factor
                     // is just the (dim1, dim2) element of the gradien

@@ -141,7 +141,7 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
         // CPU implementation
         let cpu_start = Instant::now();
         let cpu_result =
-            scirs2_fft::sparse, _fft::sparse_fft(&signal, sparsity, Some(algorithm), None).unwrap();
+            scirs2_fft::sparse_fft::sparse_fft(&signal, sparsity, Some(algorithm), None).unwrap();
         let cpu_time = cpu_start.elapsed().as_millis();
 
         // Evaluate CPU accuracy
@@ -243,16 +243,16 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
     // Set plot layouts
     time_domain_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("<b>Time Domain Signal</b>"))
-            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Sample")))
-            .y_axis(plotly::layout::Axis::new().title(Title::with_text("Amplitude"))),
+            .title(Title::withtext("<b>Time Domain Signal</b>"))
+            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Sample")))
+            .y_axis(plotly::layout::Axis::new().title(Title::withtext("Amplitude"))),
     );
 
     frequency_domain_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("<b>Frequency Domain Components</b>"))
-            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Frequency Bin")))
-            .y_axis(plotly::layout::Axis::new().title(Title::with_text("Magnitude"))),
+            .title(Title::withtext("<b>Frequency Domain Components</b>"))
+            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Frequency Bin")))
+            .y_axis(plotly::layout::Axis::new().title(Title::withtext("Magnitude"))),
     );
 
     // Save plots
@@ -518,13 +518,13 @@ fn run_iteration_comparison() {
     // Set plot layout
     plot.set_layout(
         Layout::new()
-            .title(Title::with_text(
+            .title(Title::withtext(
                 "<b>Effect of Iterations on Iterative Sparse FFT Accuracy</b>",
             ))
-            .x_axis(plotly::layout::Axis::new().title(Title::with_text("Number of Iterations")))
+            .x_axis(plotly::layout::Axis::new().title(Title::withtext("Number of Iterations")))
             .y_axis(
                 plotly::layout::Axis::new()
-                    .title(Title::with_text("Recall (%)"))
+                    .title(Title::withtext("Recall (%)"))
                     .range(vec![0.0, 100.0]),
             ),
     );

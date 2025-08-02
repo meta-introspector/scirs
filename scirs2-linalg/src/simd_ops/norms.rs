@@ -367,7 +367,7 @@ mod tests {
     fn test_simd_large_vector() {
         // Test with larger vector to exercise SIMD processing
         let size = 100;
-        let vector: Array1<f32> = Array1::from_shape_fn(size, |i| (i as f32) * 0.1);
+        let vector: Array1<f32> = Array1::fromshape_fn(size, |i| (i as f32) * 0.1);
 
         let result = simd_vector_norm_f32(&vector.view());
 

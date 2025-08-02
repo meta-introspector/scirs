@@ -238,7 +238,7 @@ mod tests {
     #[test]
     fn test_guided_filter_identity() {
         // When epsilon is very small and guide=input, output should be close to input
-        let input = Array2::from_shape_vec(
+        let input = Array2::fromshape_vec(
             (5, 5),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 2.0, 3.0, 4.0, 5.0, 6.0, 3.0, 4.0, 5.0, 6.0, 7.0, 4.0,
@@ -295,7 +295,7 @@ mod tests {
     #[test]
     fn test_fast_guided_filter() {
         let input =
-            Array2::from_shape_vec((8, 8), (0..64).map(|i| i as f32 / 64.0).collect()).unwrap();
+            Array2::fromshape_vec((8, 8), (0..64).map(|i| i as f32 / 64.0).collect()).unwrap();
 
         let normal = guided_filter(&input, &input, 2, 0.1).unwrap();
         let fast = fast_guided_filter(&input, &input, 2, 0.1, 2).unwrap();

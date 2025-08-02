@@ -329,7 +329,7 @@ impl<
     pub fn distributed_forecast(
         &mut self,
         data: &Array1<F>,
-        horizon: usize_method: &str,
+        horizon: usize, method: &str,
     ) -> Result<Array1<F>> {
         // Split data into chunks for parallel processing
         let chunk_size = self

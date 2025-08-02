@@ -1407,7 +1407,7 @@ where
 /// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create sample 2D spatial data
-/// let points = Array2::from_shape_vec((4, 2), vec![
+/// let points = Array2::fromshape_vec((4, 2), vec![
 ///     0.0, 0.0,
 ///     1.0, 0.0,
 ///     0.0, 1.0,
@@ -1430,7 +1430,7 @@ where
 #[allow(dead_code)]
 pub fn make_enhanced_kriging<F>(
     points: &ArrayView2<F>,
-    values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_sigma_sq: F,
+    values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_sigma, sq: F,
 ) -> InterpolateResult<EnhancedKriging<F>>
 where
     F: Float
@@ -1480,7 +1480,7 @@ where
 /// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create data with a linear trend: z = x + y + noise
-/// let points = Array2::from_shape_vec((6, 2), vec![
+/// let points = Array2::fromshape_vec((6, 2), vec![
 ///     0.0, 0.0,  // z ≈ 0
 ///     1.0, 0.0,  // z ≈ 1
 ///     0.0, 1.0,  // z ≈ 1
@@ -1505,7 +1505,7 @@ where
 #[allow(dead_code)]
 pub fn make_universal_kriging<F>(
     points: &ArrayView2<F>,
-    values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_sigma_sq: F_trend, _fn: TrendFunction,
+    values: &ArrayView1<F>, _cov_fn: CovarianceFunction_length, _scale: F_sigma, sq: F_trend, _fn: TrendFunction,
 ) -> InterpolateResult<EnhancedKriging<F>>
 where
     F: Float
@@ -1554,7 +1554,7 @@ where
 /// use scirs2__interpolate::advanced::kriging::CovarianceFunction;
 ///
 /// // Create noisy observational data
-/// let points = Array2::from_shape_vec((8, 1), vec![
+/// let points = Array2::fromshape_vec((8, 1), vec![
 ///     0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5
 /// ]).unwrap();
 /// let values = Array1::from_vec(vec![

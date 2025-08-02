@@ -354,7 +354,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("7. TEXTURE AND STATISTICAL ANALYSIS");
     println!("====================================");
 
-    let texture_image = generate_texture_image();
+    let texture_image = generatetexture_image();
 
     // Comprehensive texture analysis
     let texture_metrics = texture_analysis(
@@ -496,7 +496,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn generate_synthetic_medical_volume() -> Array3<f32> {
-    Array3::from_shape_fn((128, 128, 64), |(i, j, k)| {
+    Array3::fromshape_fn((128, 128, 64), |(i, j, k)| {
         let x = i as f32 / 128.0;
         let y = j as f32 / 128.0;
         let z = k as f32 / 64.0;
@@ -513,7 +513,7 @@ fn generate_synthetic_medical_volume() -> Array3<f32> {
 
 #[allow(dead_code)]
 fn generate_synthetic_microscopy_image() -> Array3<f32> {
-    Array3::from_shape_fn((256, 256, 3), |(i, j_channel)| {
+    Array3::fromshape_fn((256, 256, 3), |(i, j_channel)| {
         let x = i as f32 / 256.0;
         let y = j as f32 / 256.0;
 
@@ -528,7 +528,7 @@ fn generate_synthetic_microscopy_image() -> Array3<f32> {
 
 #[allow(dead_code)]
 fn generate_synthetic_satellite_image() -> Array3<f32> {
-    Array3::from_shape_fn((512, 512, 5), |(i, j, band)| {
+    Array3::fromshape_fn((512, 512, 5), |(i, j, band)| {
         let x = i as f32 / 512.0;
         let y = j as f32 / 512.0;
 
@@ -545,7 +545,7 @@ fn generate_synthetic_satellite_image() -> Array3<f32> {
 
 #[allow(dead_code)]
 fn generate_feature_rich_image() -> Array2<f32> {
-    Array2::from_shape_fn((256, 256), |(i, j)| {
+    Array2::fromshape_fn((256, 256), |(i, j)| {
         let x = i as f32 / 256.0;
         let y = j as f32 / 256.0;
 
@@ -568,7 +568,7 @@ fn generate_feature_rich_image() -> Array2<f32> {
 
 #[allow(dead_code)]
 fn generate_segmentation_test_image() -> Array2<f32> {
-    Array2::from_shape_fn((128, 128), |(i, j)| {
+    Array2::fromshape_fn((128, 128), |(i, j)| {
         let x = i as f32 / 128.0 - 0.5;
         let y = j as f32 / 128.0 - 0.5;
 
@@ -586,7 +586,7 @@ fn generate_segmentation_test_image() -> Array2<f32> {
 
 #[allow(dead_code)]
 fn generate_noisy_image() -> Array2<f32> {
-    Array2::from_shape_fn((128, 128), |(i, j)| {
+    Array2::fromshape_fn((128, 128), |(i, j)| {
         let x = i as f32 / 128.0;
         let y = j as f32 / 128.0;
 
@@ -598,8 +598,8 @@ fn generate_noisy_image() -> Array2<f32> {
 }
 
 #[allow(dead_code)]
-fn generate_texture_image() -> Array2<f32> {
-    Array2::from_shape_fn((128, 128), |(i, j)| {
+fn generatetexture_image() -> Array2<f32> {
+    Array2::fromshape_fn((128, 128), |(i, j)| {
         let x = i as f32;
         let y = j as f32;
 
@@ -614,7 +614,7 @@ fn generate_texture_image() -> Array2<f32> {
 
 #[allow(dead_code)]
 fn generate_reference_image() -> Array2<f32> {
-    Array2::from_shape_fn((64, 64), |(i, j)| {
+    Array2::fromshape_fn((64, 64), |(i, j)| {
         let x = i as f32 / 64.0;
         let y = j as f32 / 64.0;
 

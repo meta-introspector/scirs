@@ -693,10 +693,10 @@ where
             }
 
             // Calculate the shape for the packed data
-            let packed_shape = (shape.0, shape.1.div_ceil(2));
+            let packedshape = (shape.0, shape.1.div_ceil(2));
 
-            // Use to_shape instead of into_shape (deprecated)
-            let packed_reshaped = packed_data.into_shape_with_order(packed_shape).unwrap();
+            // Use toshape instead of intoshape (deprecated)
+            let packed_reshaped = packed_data.into_shape_with_order(packedshape).unwrap();
             (
                 QuantizedMatrix::new_i8(packed_reshaped, shape, QuantizedDataType::Int4),
                 params,
@@ -725,10 +725,10 @@ where
             }
 
             // Calculate the shape for the packed data
-            let packed_shape = (shape.0, shape.1.div_ceil(2));
+            let packedshape = (shape.0, shape.1.div_ceil(2));
 
-            // Use to_shape instead of into_shape (deprecated)
-            let packed_reshaped = packed_data.into_shape_with_order(packed_shape).unwrap();
+            // Use toshape instead of intoshape (deprecated)
+            let packed_reshaped = packed_data.into_shape_with_order(packedshape).unwrap();
             (
                 QuantizedMatrix::new_i8(packed_reshaped, shape, QuantizedDataType::UInt4),
                 params,
@@ -2144,7 +2144,7 @@ mod tests {
             data.push((i % 15) as f32 - 7.0); // Values between -7 and 7
         }
 
-        let matrix = Array2::from_shape_vec((rows, cols), data).unwrap();
+        let matrix = Array2::fromshape_vec((rows, cols), data).unwrap();
 
         // Quantize with 8-bit
         let (quantized8, _) = quantize_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric);
@@ -2213,7 +2213,7 @@ mod tests {
             data.push((i % 1000) as f32 / 100.0); // Various values
         }
 
-        let matrix = Array2::from_shape_vec((rows, cols), data).unwrap();
+        let matrix = Array2::fromshape_vec((rows, cols), data).unwrap();
 
         // Test different quantization methods
         let (int8_matrix, _) = quantize_matrix(&matrix.view(), 8, QuantizationMethod::Symmetric);

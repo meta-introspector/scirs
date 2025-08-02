@@ -6,7 +6,7 @@
 
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
 use num_traits::{Float, NumCast};
-use scirs2_core::validation::{check_positive, check_shape};
+use scirs2_core::validation::{check_positive, checkshape};
 use scirs2__linalg::{eigh, solve};
 use std::collections::BinaryHeap;
 
@@ -245,7 +245,7 @@ impl LLE {
         // Validate inputs
         check_positive(self.n_neighbors, "n_neighbors")?;
         check_positive(self.n_components, "n_components")?;
-        check_shape(x, &[n_samples, n_features], "x")?;
+        checkshape(x, &[n_samples, n_features], "x")?;
 
         if n_samples <= self.n_neighbors {
             return Err(TransformError::InvalidInput(format!(
@@ -507,7 +507,7 @@ mod tests {
             data.extend_from_slice(&[x, y, z]);
         }
 
-        let x = Array::from_shape_vec((n_points, 3), data).unwrap();
+        let x = Array::fromshape_vec((n_points, 3), data).unwrap();
 
         // Fit LLE
         let mut lle = LLE::new(10, 2);

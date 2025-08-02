@@ -126,7 +126,7 @@ fn bench_fft_multidim(c: &mut Criterion) {
     for shape in &config.sizes_nd {
         let total_size: usize = shape.iter().product();
         let data = Array1::from_shape_fn(total_size, |i| (i as f64).sin());
-        let data_nd = data.into_shape_with_order(shape.as_slice()).unwrap();
+        let data_nd = data.intoshape_with_order(shape.as_slice()).unwrap();
 
         group.bench_with_input(
             BenchmarkId::new("fftn", format!("{shape:?}")),

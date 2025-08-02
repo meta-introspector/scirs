@@ -85,7 +85,7 @@ where
 
     // Serialize to the target _format
     match to_format {
-        SerializationFormat::Json =>, serde_json::to_vec_pretty(&json_value)
+        SerializationFormat::Json => serde_json::to_vec_pretty(&json_value)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
         SerializationFormat::Yaml => {
             let yaml = serde_yaml::to_string(&json_value)
@@ -96,7 +96,7 @@ where
             // Convert through JSON for TOML
             let json = serde_json::to_string(&json_value)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
-            let toml_value: toml::Value = serde, _json::from_str(&json)
+            let toml_value: toml::Value = serde_json:::from_str(&json)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             let toml_str = toml::to_string_pretty(&toml_value)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
@@ -158,7 +158,7 @@ where
     T: Serialize,
 {
     match format {
-        SerializationFormat::Json =>, serde_json::to_vec_pretty(_data)
+        SerializationFormat::Json => serde_json::to_vec_pretty(_data)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
         SerializationFormat::Yaml => {
             let yaml = serde_yaml::to_string(_data)
@@ -195,7 +195,7 @@ where
     T: for<'de> Deserialize<'de>,
 {
     match format {
-        SerializationFormat::Json =>, serde_json::from_slice(_data)
+        SerializationFormat::Json => serde_json::from_slice(_data)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
         SerializationFormat::Yaml => {
             let yaml_str = std::str::from_utf8(_data)
@@ -208,7 +208,7 @@ where
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             toml::from_str(toml_str).map_err(|e| MetricsError::SerializationError(e.to_string()))
         }
-        SerializationFormat::Cbor =>, ciborium::de::from_reader(_data)
+        SerializationFormat::Cbor => ciborium::de::from_reader(_data)
             .map_err(|e| MetricsError::SerializationError(e.to_string())),
     }
 }

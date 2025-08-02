@@ -337,7 +337,10 @@ impl CudaContext {
     /// Load PTX module into CUDA context
     #[allow(dead_code)]
     #[cfg(feature = "cuda")]
-    fn load_ptx_module(device: &CudaDeviceHandle, ptx: Ptx, names: &[String]
+    fn load_ptx_module(
+        device: &CudaDeviceHandle,
+        ptx: Ptx,
+        names: &[String],
     ) -> Result<Arc<impl std::any::Any>, GpuError> {
         // For now, return a placeholder module since cudarc API varies by version
         // In a real implementation, this would use the appropriate cudarc method
@@ -349,8 +352,7 @@ impl CudaContext {
     /// Load PTX module into CUDA context (fallback)
     #[allow(dead_code)]
     #[cfg(not(feature = "cuda"))]
-    fn load_ptx_module(device: &i32, ptx: Ptx, names: &[String]
-    ) -> Result<CUmodule, GpuError> {
+    fn load_ptx_module(device: &i32, ptx: Ptx, names: &[String]) -> Result<CUmodule, GpuError> {
         // Fallback implementation: return non-null pointer
         Ok(0x2 as *mut c_void)
     }
@@ -651,8 +653,7 @@ impl GpuCompilerImpl for CudaCompiler {
         }))
     }
 
-    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId
-    ) -> Arc<dyn GpuKernelImpl> {
+    fn compile_typed(&self, name: &str, _type_id: std::any::TypeId) -> Arc<dyn GpuKernelImpl> {
         Arc::new(CudaKernelHandle {
             kernel_name: name.to_string(),
             compiled_kernels: Arc::clone(&self.compiled_kernels),
@@ -733,7 +734,9 @@ impl CudaKernelHandle {
 
     /// Simulate kernel execution with computation modeling
     #[cfg(not(feature = "cuda"))]
-    fn simulate_kernel_execution(&self, work_groups: [u32; 3],
+    fn simulate_kernel_execution(
+        &self,
+        work_groups: [u32; 3],
         params: &HashMap<String, KernelParam>,
     ) {
         // Advanced simulation that models actual computation
@@ -790,7 +793,9 @@ impl CudaKernelHandle {
 
     /// Estimate kernel execution time for simulation
     #[allow(dead_code)]
-    fn estimate_kernel_time(&self, total_threads: u64,
+    fn estimate_kernel_time(
+        &self,
+        total_threads: u64,
         params: &HashMap<String, KernelParam>,
     ) -> f64 {
         // Model execution time based on kernel type and complexity
@@ -1060,7 +1065,14 @@ impl CudaOperations {
     /// Perform matrix multiplication using cuBLAS
     #[allow(clippy::too_many_arguments)]
     #[allow(dead_code)]
-    pub(crate) fn gemm(&self, m: i32, n: i32, k: i32, lda: i32, ldb: i32, ldc: i32
+    pub(crate) fn gemm(
+        &self,
+        m: i32,
+        n: i32,
+        k: i32,
+        lda: i32,
+        ldb: i32,
+        ldc: i32,
     ) -> Result<(), GpuError> {
         // In real implementation: use cuBLAS cublasSgemm
         #[cfg(debug_assertions)]

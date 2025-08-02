@@ -1,14 +1,15 @@
-//! ARMA (Autoregressive Moving Average) model estimation and analysis
-//!
-//! This module implements ARMA model estimation methods including:
-//! - Maximum likelihood estimation
-//! - Hannan-Rissanen method
-//! - Innovation algorithm
-//! - Spectral analysis for ARMA models
+use ndarray::s;
+// ARMA (Autoregressive Moving Average) model estimation and analysis
+//
+// This module implements ARMA model estimation methods including:
+// - Maximum likelihood estimation
+// - Hannan-Rissanen method
+// - Innovation algorithm
+// - Spectral analysis for ARMA models
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
-use num__complex::Complex64;
+use ndarray::{ Array1, Array2};
+use num_complex::Complex64;
 use num_traits::Float;
 use scirs2_core::validation::check_finite;
 use statrs::statistics::Statistics;
@@ -161,7 +162,7 @@ fn hannan_rissanen(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<Ar
 
     // Compute final residuals and variance
     let residuals = compute_arma_residuals(_signal, &ar_coeffs, &ma_coeffs)?;
-    let variance = residuals.mapv(|r| r * r).sum() / (n - p - q)  as f64;
+    let variance = residuals.mapv(|r| r * r).sum() / (n - p - q) as f64;
 
     Ok(ArmaModel {
         ar_coeffs,
@@ -259,7 +260,7 @@ fn innovation_algorithm(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResu
         }
 
         // Compute variance
-        let variance = innovations.mapv(|e| e * e).sum() / (n - p - q)  as f64;
+        let variance = innovations.mapv(|e| e * e).sum() / (n - p - q) as f64;
 
         // Check convergence
         if (variance - prev_variance).abs() < tolerance {
@@ -276,7 +277,7 @@ fn innovation_algorithm(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResu
 
     // Final variance computation
     let residuals = compute_arma_residuals(&centered, &ar_coeffs, &ma_coeffs)?;
-    let variance = residuals.mapv(|r| r * r).sum() / (n - p - q)  as f64;
+    let variance = residuals.mapv(|r| r * r).sum() / (n - p - q) as f64;
 
     Ok(ArmaModel {
         ar_coeffs,
@@ -288,7 +289,11 @@ fn innovation_algorithm(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResu
 
 /// Conditional sum of squares estimation
 #[allow(dead_code)]
-fn conditional_sum_of_squares(_signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
+fn conditional_sum_of_squares(
+    _signal: &Array1<f64>,
+    p: usize,
+    q: usize,
+) -> SignalResult<ArmaModel> {
     let n = _signal.len();
 
     // Initialize with Hannan-Rissanen estimates
@@ -326,7 +331,7 @@ fn conditional_sum_of_squares(_signal: &Array1<f64>, p: usize, q: usize) -> Sign
                 }
                 grad += 2.0 * residuals[t] * deriv;
             }
-            ar_coeffs[i] -= step_size * grad / n  as f64;
+            ar_coeffs[i] -= step_size * grad / n as f64;
         }
 
         // Gradient with respect to MA parameters
@@ -337,7 +342,7 @@ fn conditional_sum_of_squares(_signal: &Array1<f64>, p: usize, q: usize) -> Sign
                     grad += 2.0 * residuals[t] * residuals[t - i];
                 }
             }
-            ma_coeffs[i] -= step_size * grad / n  as f64;
+            ma_coeffs[i] -= step_size * grad / n as f64;
         }
 
         prev_css = css;
@@ -345,7 +350,7 @@ fn conditional_sum_of_squares(_signal: &Array1<f64>, p: usize, q: usize) -> Sign
 
     // Final variance estimate
     let residuals = compute_arma_residuals(_signal, &ar_coeffs, &ma_coeffs)?;
-    let variance = residuals.mapv(|r| r * r).sum() / (n - p - q)  as f64;
+    let variance = residuals.mapv(|r| r * r).sum() / (n - p - q) as f64;
 
     Ok(ArmaModel {
         ar_coeffs,
@@ -432,7 +437,7 @@ fn yule_walker_ar(
         for i in 0..(n - k) {
             sum += signal[i] * signal[i + k];
         }
-        r[k] = sum / n  as f64;
+        r[k] = sum / n as f64;
     }
 
     // Form Toeplitz matrix
@@ -630,10 +635,10 @@ pub fn arma_forecast(
         forecasts[h] = forecast;
 
         // Extend arrays
-        extended_signal = extended_signal.clone().into_shape(n + h + 1).unwrap();
+        extended_signal = extended_signal.clone().intoshape(n + h + 1).unwrap();
         extended_signal[n + h] = forecast;
 
-        extended_residuals = extended_residuals.clone().into_shape(n + h + 1).unwrap();
+        extended_residuals = extended_residuals.clone().intoshape(n + h + 1).unwrap();
         extended_residuals[n + h] = 0.0; // Future residuals are zero in expectation
 
         // Forecast error variance (simplified - assumes normal innovations)
@@ -783,7 +788,7 @@ fn burg_method(_signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
         total_error *= 1.0 - k[m] * k[m];
     }
 
-    let variance = total_error / (n - p)  as f64;
+    let variance = total_error / (n - p) as f64;
 
     // Convert to standard AR representation [1, a1, a2, ..., ap]
     let mut final_ar_coeffs = Array1::zeros(p + 1);
@@ -854,7 +859,7 @@ fn modified_covariance_method(_signal: &Array1<f64>, p: usize) -> SignalResult<A
 
     // Compute prediction error variance
     let residuals = data_matrix.dot(&ar_params) + target_vector;
-    let variance = residuals.mapv(|r| r * r).sum() / matrix_size  as f64;
+    let variance = residuals.mapv(|r| r * r).sum() / matrix_size as f64;
 
     // No MA component for pure AR model
     let ma_coeffs = Array1::ones(1);
@@ -1025,7 +1030,7 @@ fn kalman_filter_estimation(_signal: &Array1<f64>, p: usize, q: usize) -> Signal
 
     // Final variance estimation
     let residuals = compute_arma_residuals(_signal, &ar_coeffs, &ma_coeffs)?;
-    variance = residuals.mapv(|r| r * r).sum() / (n - p - q)  as f64;
+    variance = residuals.mapv(|r| r * r).sum() / (n - p - q) as f64;
 
     Ok(ArmaModel {
         ar_coeffs,
@@ -1061,7 +1066,7 @@ fn solve_forward_prediction(_signal: &Array1<f64>, p: usize) -> SignalResult<Arm
     }
 
     let residuals = data_matrix.dot(&ar_params) - target_vector;
-    let variance = residuals.mapv(|r| r * r).sum() / (n - p)  as f64;
+    let variance = residuals.mapv(|r| r * r).sum() / (n - p) as f64;
 
     Ok(ArmaModel {
         ar_coeffs,
@@ -1097,7 +1102,7 @@ fn solve_backward_prediction(_signal: &Array1<f64>, p: usize) -> SignalResult<Ar
     }
 
     let residuals = data_matrix.dot(&ar_params) - target_vector;
-    let variance = residuals.mapv(|r| r * r).sum() / (n - p)  as f64;
+    let variance = residuals.mapv(|r| r * r).sum() / (n - p) as f64;
 
     Ok(ArmaModel {
         ar_coeffs,

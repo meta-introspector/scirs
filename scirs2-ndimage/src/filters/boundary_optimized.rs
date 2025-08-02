@@ -405,7 +405,7 @@ where
 #[allow(dead_code)]
 pub fn apply_filter2d_optimized<T, F>(
     input: &Array2<T>,
-    kernel_shape: (usize, usize),
+    kernelshape: (usize, usize),
     mode: BorderMode,
     cval: Option<T>,
     mut filter_fn: F,
@@ -415,7 +415,7 @@ where
     F: FnMut(&Boundary2D<T>, usize, usize, (usize, usize), (isize, isize)) -> T + Clone + Send,
 {
     let (h, w) = input.dim();
-    let (kh, kw) = kernel_shape;
+    let (kh, kw) = kernelshape;
     let kh_half = (kh / 2) as isize;
     let kw_half = (kw / 2) as isize;
 
@@ -434,7 +434,7 @@ where
             let mut row_result = Vec::with_capacity(w);
 
             for j in 0..w {
-                let val = filter_fn_clone(&boundary, i, j, kernel_shape, (kh_half, kw_half));
+                let val = filter_fn_clone(&boundary, i, j, kernelshape, (kh_half, kw_half));
                 row_result.push(val);
             }
 
@@ -452,7 +452,7 @@ where
         // Sequential processing
         for i in 0..h {
             for j in 0..w {
-                output[[i, j]] = filter_fn(&boundary, i, j, kernel_shape, (kh_half, kw_half));
+                output[[i, j]] = filter_fn(&boundary, i, j, kernelshape, (kh_half, kw_half));
             }
         }
     }

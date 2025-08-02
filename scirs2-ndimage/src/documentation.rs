@@ -91,7 +91,7 @@ impl DocumentationSite {
             functions: vec![
                 FunctionDoc {
                     name: "gaussian_filter".to_string(),
-                    signature: "pub fn gaussian_filter<T>(_input: &ArrayD<T>, sigma: f64) -> ArrayD<T>".to_string(),
+                    signature: "pub fn gaussian_filter<T>(input: &ArrayD<T>, sigma: f64) -> ArrayD<T>".to_string(),
                     description: "Apply Gaussian filter to n-dimensional array".to_string(),
                     parameters: vec![
                         Parameter {
@@ -123,7 +123,7 @@ assert_eq!(filtered.shape(), image.shape());"#.to_string(),
                 },
                 FunctionDoc {
                     name: "median_filter".to_string(),
-                    signature: "pub fn median_filter<T>(_input: &ArrayD<T>, size: usize) -> ArrayD<T>".to_string(),
+                    signature: "pub fn median_filter<T>(input: &ArrayD<T>, size: usize) -> ArrayD<T>".to_string(),
                     description: "Apply median filter to remove noise while preserving edges".to_string(),
                     parameters: vec![
                         Parameter {
@@ -168,7 +168,7 @@ let filtered = median_filter(&noisy_image, 3);
             functions: vec![
                 FunctionDoc {
                     name: "binary_erosion".to_string(),
-                    signature: "pub fn binary_erosion(_input: &ArrayD<bool>, structure: &ArrayD<bool>) -> ArrayD<bool>".to_string(),
+                    signature: "pub fn binary_erosion(input: &ArrayD<bool>, structure: &ArrayD<bool>) -> ArrayD<bool>".to_string(),
                     description: "Perform binary erosion operation".to_string(),
                     parameters: vec![
                         Parameter {
@@ -200,7 +200,7 @@ let eroded = binary_erosion(&binary_image, &structure);"#.to_string(),
                 },
                 FunctionDoc {
                     name: "distance_transform_edt".to_string(),
-                    signature: "pub fn distance_transform_edt(_input: &ArrayD<bool>) -> ArrayD<f64>".to_string(),
+                    signature: "pub fn distance_transform_edt(input: &ArrayD<bool>) -> ArrayD<f64>".to_string(),
                     description: "Compute Euclidean distance transform using optimized algorithm".to_string(),
                     parameters: vec![
                         Parameter {
@@ -239,7 +239,7 @@ let distances = distance_transform_edt(&binary_image);
             functions: vec![
                 FunctionDoc {
                     name: "affine_transform".to_string(),
-                    signature: "pub fn affine_transform<T>(_input: &ArrayD<T>, matrix: &Array2<f64>) -> ArrayD<T>".to_string(),
+                    signature: "pub fn affine_transform<T>(input: &ArrayD<T>, matrix: &Array2<f64>) -> ArrayD<T>".to_string(),
                     description: "Apply affine transformation to n-dimensional array".to_string(),
                     parameters: vec![
                         Parameter {
@@ -283,7 +283,7 @@ let rotated = affine_transform(&image, &rotation_matrix);"#.to_string(),
             description: "Statistical measurements and region analysis".to_string(),
             functions: vec![FunctionDoc {
                 name: "center_of_mass".to_string(),
-                signature: "pub fn center_of_mass<T>(_input: &ArrayD<T>) -> Vec<f64>".to_string(),
+                signature: "pub fn center_of_mass<T>(input: &ArrayD<T>) -> Vec<f64>".to_string(),
                 description: "Calculate center of mass of n-dimensional array".to_string(),
                 parameters: vec![Parameter {
                     name: "_input".to_string(),
@@ -687,8 +687,8 @@ let moments = compute_moments(&scientific_image);
 let hu_moments = compute_hu_moments(&moments);
 
 // Feature extraction for classification
-let texture_features = extract_texture_features(&scientific_image);
-let shape_features = extract_shape_features(&segmented);
+let texture_features = extracttexture_features(&scientific_image);
+let shape_features = extractshape_features(&segmented);
 
 println!("Analysis complete: {} regions found", regions.len());
 "#.to_string(),
@@ -1200,7 +1200,8 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
                 let difficulty_class = match tutorial.difficulty.as_str() {
                     "Beginner" => "difficulty-beginner",
                     "Intermediate" => "difficulty-intermediate",
-                    "Advanced" => "difficulty-advanced"_ => "difficulty-beginner",
+                    "Advanced" => "difficulty-advanced",
+                    _ => "difficulty-beginner",
                 };
 
                 format!(

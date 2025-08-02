@@ -100,7 +100,7 @@ fn bench_conjugate_gradient(c: &mut Criterion) {
                     .positive_definite();
 
                     // Convert to standard LinearOperator
-                    let quantized_linear_op = quantized_to_linear_operator(&quantized_op);
+                    let quantized_linear_op = quantized_to_linear_operator(&quantizedop);
 
                     bench.iter(|| {
                         black_box(conjugate_gradient(&quantized_linear_op, &b, 100, 1e-6).unwrap())
@@ -196,7 +196,7 @@ fn bench_conjugate_gradient(c: &mut Criterion) {
                     .positive_definite();
 
                     // Create a preconditioner
-                    let precond = quantized_jacobi_preconditioner(&quantized_op).unwrap();
+                    let precond = quantized_jacobi_preconditioner(&quantizedop).unwrap();
 
                     bench.iter(|| {
                         black_box(
@@ -267,7 +267,7 @@ fn bench_gmres(c: &mut Criterion) {
                     .unwrap();
 
                     // Convert to standard LinearOperator
-                    let quantized_linear_op = quantized_to_linear_operator(&quantized_op);
+                    let quantized_linear_op = quantized_to_linear_operator(&quantizedop);
 
                     bench.iter(|| {
                         black_box(gmres(&quantized_linear_op, &b, 100, 1e-6, Some(20)).unwrap())
@@ -437,7 +437,7 @@ fn bench_large_banded_matrix(c: &mut Criterion) {
                     .positive_definite();
 
             // Create a preconditioner
-            let precond = quantized_jacobi_preconditioner(&quantized_op).unwrap();
+            let precond = quantized_jacobi_preconditioner(&quantizedop).unwrap();
 
             bench.iter(|| {
                 black_box(

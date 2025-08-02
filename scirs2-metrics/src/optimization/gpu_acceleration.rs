@@ -1427,7 +1427,7 @@ impl MemoryPool {
     fn new(_total_size: usize) -> Self {
         Self {
             available_blocks: vec![MemoryBlock {
-                address: 0_size: _total_size,
+                address: 0, size: _total_size,
                 allocated_at: Instant::now(),
             }],
             allocated_blocks: Vec::new(),

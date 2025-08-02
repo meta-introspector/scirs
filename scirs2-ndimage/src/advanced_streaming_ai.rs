@@ -218,7 +218,7 @@ pub struct CacheMetadata {
 /// historical performance, and system conditions.
 #[allow(dead_code)]
 pub fn ai_predictive_chunking<T>(
-    data_shape: &[usize],
+    datashape: &[usize],
     content_analysis: &ContentAnalysis,
     ai_model: &mut PredictiveChunkingAI,
     config: &AIStreamConfig,
@@ -239,10 +239,10 @@ where
     let chunk_predictions = predict_chunk_configuration(&model_input, ai_model, config)?;
 
     // Validate and adjust predictions
-    let validated_chunks = validate_chunk_predictions(&chunk_predictions, data_shape, config)?;
+    let validated_chunks = validate_chunk_predictions(&chunk_predictions, datashape, config)?;
 
     // Generate chunk specifications
-    let chunk_specs = generate_chunk_specifications(&validated_chunks, data_shape, config)?;
+    let chunk_specs = generate_chunk_specifications(&validated_chunks, datashape, config)?;
 
     // Update AI _model with feedback
     update_ai_model_with_feedback(ai_model, &chunk_specs, config)?;
@@ -663,7 +663,7 @@ pub struct SystemConditions {
 
 #[allow(dead_code)]
 fn extract_content_features(
-    _analysis: &ContentAnalysis_config: &AIStreamConfig,
+    _analysis: &ContentAnalysis, config: &AIStreamConfig,
 ) -> NdimageResult<Array1<f64>> {
     // Implementation would extract ML features from content _analysis
     Ok(Array1::zeros(10))
@@ -687,7 +687,7 @@ fn predict_chunk_configuration(
 
 #[allow(dead_code)]
 fn validate_chunk_predictions(
-    _predictions: &Array1<f64>, _data_shape: &[usize], _config: &AIStreamConfig,
+    _predictions: &Array1<f64>, _datashape: &[usize], _config: &AIStreamConfig,
 ) -> NdimageResult<Array1<f64>> {
     // Implementation would validate and adjust _predictions
     Ok(Array1::zeros(5))
@@ -695,7 +695,7 @@ fn validate_chunk_predictions(
 
 #[allow(dead_code)]
 fn generate_chunk_specifications(
-    _validated_chunks: &Array1<f64>, _data_shape: &[usize], _config: &AIStreamConfig,
+    _validated_chunks: &Array1<f64>, _datashape: &[usize], _config: &AIStreamConfig,
 ) -> NdimageResult<Vec<ChunkSpecification>> {
     // Implementation would generate chunk specifications
     Ok(vec![ChunkSpecification {
@@ -735,7 +735,7 @@ where
 
 #[allow(dead_code)]
 fn detect_optimal_chunk_boundaries(
-    _analysis: &ContentAnalysis_target_size: usize, _config: &AIStreamConfig,
+    _analysis: &ContentAnalysis_target, size: usize, _config: &AIStreamConfig,
 ) -> NdimageResult<Vec<ChunkBoundary>> {
     // Implementation would detect optimal boundaries
     Ok(vec![ChunkBoundary {
@@ -747,7 +747,7 @@ fn detect_optimal_chunk_boundaries(
 
 #[allow(dead_code)]
 fn extract_chunk_with_overlap<T>(
-    _image: &ArrayView2<T>, _boundary: &ChunkBoundary_config: &AIStreamConfig,
+    _image: &ArrayView2<T>, _boundary: &ChunkBoundary, config: &AIStreamConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy + Zero,
@@ -758,7 +758,7 @@ where
 
 #[allow(dead_code)]
 fn compute_chunk_metadata<T>(
-    _chunk_data: &Array2<T>, _boundary: &ChunkBoundary_analysis: &ContentAnalysis,
+    _chunk_data: &Array2<T>, _boundary: &ChunkBoundary, analysis: &ContentAnalysis,
 ) -> NdimageResult<ChunkMetadata>
 where
     T: Float + FromPrimitive + Copy,
@@ -780,7 +780,7 @@ fn compute_processing_priority(_metadata: &ChunkMetadata) -> NdimageResult<f64> 
 
 #[allow(dead_code)]
 fn determine_overlap_strategy(
-    _metadata: &ChunkMetadata_config: &AIStreamConfig,
+    _metadata: &ChunkMetadata, config: &AIStreamConfig,
 ) -> NdimageResult<OverlapStrategy> {
     // Implementation would determine overlap strategy
     Ok(OverlapStrategy::Adaptive(0.1))
@@ -791,7 +791,7 @@ fn determine_overlap_strategy(
 
 #[allow(dead_code)]
 fn predict_memory_usage(
-    _current: &MemoryMetrics_model: &Array2<f64>, _config: &AIStreamConfig,
+    _current: &MemoryMetrics, model: &Array2<f64>, _config: &AIStreamConfig,
 ) -> NdimageResult<MemoryMetrics> {
     Ok(MemoryMetrics {
         peak_usage: 1024,
@@ -805,14 +805,14 @@ fn predict_memory_usage(
 
 #[allow(dead_code)]
 fn assess_memory_pressure_risk(
-    _forecast: &MemoryMetrics_config: &AIStreamConfig,
+    _forecast: &MemoryMetrics, config: &AIStreamConfig,
 ) -> NdimageResult<f64> {
     Ok(0.4)
 }
 
 #[allow(dead_code)]
 fn update_memory_prediction_model(
-    _model: &mut Array2<f64>, _current: &MemoryMetrics_forecast: &MemoryMetrics, _config: &AIStreamConfig,
+    _model: &mut Array2<f64>, _current: &MemoryMetrics, forecast: &MemoryMetrics, _config: &AIStreamConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
@@ -840,7 +840,7 @@ pub struct TaskAnalysis {
 
 #[allow(dead_code)]
 fn predict_worker_performance(
-    _analysis: &TaskAnalysis_history: &HashMap<usize, VecDeque<f64>>, _model: &Array2<f64>, _config: &AIStreamConfig,
+    _analysis: &TaskAnalysis, history: &HashMap<usize, VecDeque<f64>>, _model: &Array2<f64>, _config: &AIStreamConfig,
 ) -> NdimageResult<HashMap<usize, f64>> {
     Ok(HashMap::new())
 }
@@ -857,7 +857,7 @@ where
 
 #[allow(dead_code)]
 fn assign_tasks_reinforcement_learning<T>(
-    _tasks: &[ProcessingTask<T>], _predictions: &HashMap<usize, f64>, _assignments: &mut HashMap<usize, Vec<ProcessingTask<T>>>, _balancer: &AILoadBalancer_config: &AIStreamConfig,
+    _tasks: &[ProcessingTask<T>], _predictions: &HashMap<usize, f64>, _assignments: &mut HashMap<usize, Vec<ProcessingTask<T>>>, _balancer: &AILoadBalancer, config: &AIStreamConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy + Clone,
@@ -877,7 +877,7 @@ where
 
 #[allow(dead_code)]
 fn assign_tasks_hybrid_approach<T>(
-    _tasks: &[ProcessingTask<T>], _predictions: &HashMap<usize, f64>, _assignments: &mut HashMap<usize, Vec<ProcessingTask<T>>>, _balancer: &AILoadBalancer_config: &AIStreamConfig,
+    _tasks: &[ProcessingTask<T>], _predictions: &HashMap<usize, f64>, _assignments: &mut HashMap<usize, Vec<ProcessingTask<T>>>, _balancer: &AILoadBalancer, config: &AIStreamConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy + Clone,
@@ -887,14 +887,14 @@ where
 
 #[allow(dead_code)]
 fn update_load_balancer_state<T>(
-    _balancer: &mut AILoadBalancer_assignments: &HashMap<usize, Vec<ProcessingTask<T>>>, _config: &AIStreamConfig,
+    _balancer: &mut AILoadBalancer, assignments: &HashMap<usize, Vec<ProcessingTask<T>>>, _config: &AIStreamConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn update_access_patterns(
-    _manager: &mut IntelligentCacheManager_pattern: &CacheAccessPattern,
+    _manager: &mut IntelligentCacheManager, pattern: &CacheAccessPattern,
 ) -> NdimageResult<()> {
     Ok(())
 }
@@ -915,7 +915,7 @@ fn determine_prefetch_candidates(
 
 #[allow(dead_code)]
 fn evaluate_cache_replacement(
-    _cache_state: &Arc<RwLock<HashMap<String, CachedData>>>, _strategy: &CacheReplacementStrategy_predictions: &[String], _config: &AIStreamConfig,
+    _cache_state: &Arc<RwLock<HashMap<String, CachedData>>>, _strategy: &CacheReplacementStrategy, predictions: &[String], _config: &AIStreamConfig,
 ) -> NdimageResult<ReplacementDecision> {
     Ok(ReplacementDecision {
         evict_items: Vec::new(),
@@ -933,14 +933,14 @@ pub struct ReplacementDecision {
 
 #[allow(dead_code)]
 fn update_cache_prediction_model(
-    _manager: &mut IntelligentCacheManager_decision: &CacheManagementDecision, _config: &AIStreamConfig,
+    _manager: &mut IntelligentCacheManager, decision: &CacheManagementDecision, _config: &AIStreamConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
 #[allow(dead_code)]
 fn predict_bandwidth_availability(
-    _current: f64_conditions: &NetworkConditions, _history: &VecDeque<BandwidthMeasurement>, _config: &AIStreamConfig,
+    _current: f64, conditions: &NetworkConditions, _history: &VecDeque<BandwidthMeasurement>, _config: &AIStreamConfig,
 ) -> NdimageResult<f64> {
     Ok(1000.0)
 }
@@ -973,7 +973,7 @@ pub enum NetworkTrend {
 
 #[allow(dead_code)]
 fn optimize_streaming_parameters(
-    _bandwidth_forecast: &f64, _stability: &NetworkStabilityAnalysis_config: &AIStreamConfig,
+    _bandwidth_forecast: &f64, _stability: &NetworkStabilityAnalysis, config: &AIStreamConfig,
 ) -> NdimageResult<StreamingParameters> {
     Ok(StreamingParameters {
         chunk_size_multiplier: 1.0,
@@ -1043,7 +1043,7 @@ mod tests {
 
     #[test]
     fn test_ai_predictive_chunking() {
-        let data_shape = vec![1000, 1000];
+        let datashape = vec![1000, 1000];
         let content_analysis = ContentAnalysis {
             variance_map: Array2::zeros((100, 100)),
             edge_density: Array2::zeros((100, 100)),
@@ -1064,7 +1064,7 @@ mod tests {
         let config = AIStreamConfig::default();
 
         let result =
-            ai_predictive_chunking::<f64>(&data_shape, &content_analysis, &mut ai_model, &config)
+            ai_predictive_chunking::<f64>(&datashape, &content_analysis, &mut ai_model, &config)
                 .unwrap();
 
         assert!(!result.is_empty());
@@ -1074,7 +1074,7 @@ mod tests {
     #[test]
     fn test_content_aware_adaptive_chunking() {
         let image =
-            Array2::from_shape_vec((10, 10), (0..100).map(|x| x as f64 / 100.0).collect()).unwrap();
+            Array2::fromshape_vec((10, 10), (0..100).map(|x| x as f64 / 100.0).collect()).unwrap();
         let target_chunk_size = 25;
         let config = AIStreamConfig::default();
 

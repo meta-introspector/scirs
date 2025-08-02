@@ -166,7 +166,7 @@ where
     let mut parent: HashMap<N, N> = nodes.iter().map(|n| (n.clone(), n.clone())).collect();
     let mut rank: HashMap<N, usize> = nodes.iter().map(|n| (n.clone(), 0)).collect();
 
-    fn find<N: Node>(_parent: &mut HashMap<N, N>, node: &N) -> N {
+    fn find<N: Node>(parent: &mut HashMap<N, N>, node: &N) -> N {
         if _parent[node] != *node {
             let root = find(_parent, &_parent[node].clone());
             _parent.insert(node.clone(), root.clone());

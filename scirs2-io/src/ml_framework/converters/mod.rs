@@ -2,26 +2,26 @@
 #![allow(dead_code)]
 
 use crate::error::Result;
-use crate::ml_framework::types::{MLModel, MLTensor, MLFramework};
+use crate::ml_framework::types::{MLFramework, MLModel, MLTensor};
 use std::path::Path;
 
-pub mod pytorch;
-pub mod tensorflow;
-pub mod onnx;
-pub mod safetensors;
-pub mod jax;
-pub mod mxnet;
 pub mod coreml;
 pub mod huggingface;
+pub mod jax;
+pub mod mxnet;
+pub mod onnx;
+pub mod pytorch;
+pub mod safetensors;
+pub mod tensorflow;
 
-pub use pytorch::PyTorchConverter;
-pub use tensorflow::TensorFlowConverter;
-pub use onnx::ONNXConverter;
-pub use safetensors::SafeTensorsConverter;
-pub use jax::JAXConverter;
-pub use mxnet::MXNetConverter;
 pub use coreml::CoreMLConverter;
 pub use huggingface::HuggingFaceConverter;
+pub use jax::JAXConverter;
+pub use mxnet::MXNetConverter;
+pub use onnx::ONNXConverter;
+pub use pytorch::PyTorchConverter;
+pub use safetensors::SafeTensorsConverter;
+pub use tensorflow::TensorFlowConverter;
 
 /// Trait for ML framework converters
 pub trait MLFrameworkConverter {

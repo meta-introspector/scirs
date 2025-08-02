@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=========================\n");
 
     // Create a dataset with clusters of varying densities
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (30, 2),
         vec![
             // Dense cluster 1 (10 points, tight)

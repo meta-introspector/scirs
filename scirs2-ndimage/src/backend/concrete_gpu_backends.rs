@@ -318,7 +318,7 @@ impl CudaBackend {
 
         // Reshape result
         Ok(
-            Array::from_shape_vec((input_height, input_width), output_flat).map_err(|e| {
+            Array::fromshape_vec((input_height, input_width), output_flat).map_err(|e| {
                 NdimageError::InvalidInput(format!("Failed to reshape result: {}", e))
             })?,
         )
@@ -623,7 +623,7 @@ impl OpenCLBackend {
 
         // Reshape result
         Ok(
-            Array::from_shape_vec((input_height, input_width), output_flat).map_err(|e| {
+            Array::fromshape_vec((input_height, input_width), output_flat).map_err(|e| {
                 NdimageError::InvalidInput(format!("Failed to reshape result: {}", e))
             })?,
         )

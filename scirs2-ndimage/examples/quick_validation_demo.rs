@@ -23,8 +23,8 @@ fn demo_array_operations() {
     println!("=========================");
 
     // Create test arrays
-    let array1 = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
-    let array2 = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64 + 0.1);
+    let array1 = Array2::fromshape_fn((5, 5), |(i, j)| (i + j) as f64);
+    let array2 = Array2::fromshape_fn((5, 5), |(i, j)| (i + j) as f64 + 0.1);
 
     println!("Created test arrays:");
     println!("   Array 1: {}x{}", array1.nrows(), array1.ncols());

@@ -1,12 +1,13 @@
-//! Advanced Enhanced Lomb-Scargle Validation Suite
-//!
-//! This module provides complete implementation of critical validation functions
-//! that were previously stubs, with focus on real SciPy comparison, SIMD validation,
-//! memory profiling, and statistical validation.
+// Advanced Enhanced Lomb-Scargle Validation Suite
+//
+// This module provides complete implementation of critical validation functions
+// that were previously stubs, with focus on real SciPy comparison, SIMD validation,
+// memory profiling, and statistical validation.
 
 use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
-use crate::lombscargle__simd::simd_lombscargle;
+use crate::lombscargle_simd::simd_lombscargle;
+use ndarray::s;
 use ndarray::Array1;
 use num_traits::Float;
 use rand::Rng;
@@ -15,7 +16,6 @@ use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
-use ndarray::{s};
 
 #[allow(unused_imports)]
 /// Complete Advanced validation result with all implementations
@@ -353,7 +353,14 @@ fn validate_comprehensive_accuracy() -> SignalResult<ComprehensiveAccuracyResult
 
     for (signal_name, (t, y, true_freqs, true_powers)) in test_signals {
         // Compute Lomb-Scargle periodogram
-        let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
+        let (freqs, power) = lombscargle(
+            &t,
+            &y,
+            None,
+            Some("standard"),
+            Some(true, Some(false)),
+            Some(false),
+        )?;
 
         // Validate frequency accuracy
         let freq_accuracy = validate_frequency_detection(&freqs, &power, &true_freqs)?;
@@ -416,9 +423,7 @@ fn generate_comprehensive_test_signals(
     let f0 = 10.0;
     let y1: Array1<f64> =
         t.mapv(|ti| (2.0 * PI * f0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
-    signals.insert(
-        "single_tone".to_string()..(t.clone(), y1, vec![f0], vec![1.0]),
-    );
+    signals.insert("single_tone".to_string()..(t.clone(), y1, vec![f0], vec![1.0]));
 
     // 2. Multi-tone signal
     let f1 = 5.0;
@@ -430,9 +435,8 @@ fn generate_comprehensive_test_signals(
             + 0.5 * (2.0 * PI * f3 * ti).sin()
             + 0.1 * rng.random_range(-1.0..1.0)
     });
-    signals.insert(
-        "multi_tone".to_string()..(t.clone(), y2, vec![f1, f2, f3], vec![1.0, 0.7, 0.5]),
-    );
+    signals
+        .insert("multi_tone".to_string()..(t.clone(), y2, vec![f1, f2, f3], vec![1.0, 0.7, 0.5]));
 
     // 3. Close frequencies
     let fc1 = 12.0;
@@ -442,9 +446,7 @@ fn generate_comprehensive_test_signals(
             + 0.8 * (2.0 * PI * fc2 * ti).sin()
             + 0.1 * rng.random_range(-1.0..1.0)
     });
-    signals.insert(
-        "close_frequencies".to_string()..(t, y3, vec![fc1, fc2], vec![1.0, 0.8]),
-    );
+    signals.insert("close_frequencies".to_string()..(t, y3, vec![fc1, fc2], vec![1.0, 0.8]));
 
     Ok(signals)
 }
@@ -572,7 +574,14 @@ fn analyze_spectral_leakage() -> SignalResult<SpectralLeakageMetrics> {
     let f0 = 12.345; // Non-bin-centered frequency to test leakage
     let y: Array1<f64> = t.mapv(|ti| (2.0 * PI * f0 * ti).sin());
 
-    let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
+    let (freqs, power) = lombscargle(
+        &t,
+        &y,
+        None,
+        Some("standard"),
+        Some(true, Some(false)),
+        Some(false),
+    )?;
 
     // Find main lobe
     let peak_idx = power
@@ -632,7 +641,14 @@ fn test_dynamic_range_handling() -> SignalResult<DynamicRangeMetrics> {
         strong_amp * (2.0 * PI * f_strong * ti).sin() + weak_amp * (2.0 * PI * f_weak * ti).sin()
     });
 
-    let (freqs, power) = lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
+    let (freqs, power) = lombscargle(
+        &t,
+        &y,
+        None,
+        Some("standard"),
+        Some(true, Some(false)),
+        Some(false),
+    )?;
 
     // Find peaks
     let strong_peak_idx = find_peak_near_frequency(&freqs, &power, f_strong)?;
@@ -663,11 +679,24 @@ fn perform_scipy_comparison() -> SignalResult<ScipyComparisonResult> {
 
     for (t, y) in test_signals {
         // Compute our implementation
-        let (freqs_ours, power_ours) =
-            lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
+        let (freqs_ours, power_ours) = lombscargle(
+            &t,
+            &y,
+            None,
+            Some("standard"),
+            Some(true, Some(false)),
+            Some(false),
+        )?;
 
         // Simulate SciPy reference (in practice, this would call Python)
-        let (freqs_scipy, power_scipy) = simulate_scipy_lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
+        let (freqs_scipy, power_scipy) = simulate_scipy_lombscargle(
+            &t,
+            &y,
+            None,
+            Some("standard"),
+            Some(true, Some(false)),
+            Some(false),
+        )?;
 
         // Compare results
         let correlation = compute_correlation(&power_ours, &power_scipy);
@@ -682,9 +711,9 @@ fn perform_scipy_comparison() -> SignalResult<ScipyComparisonResult> {
         }
     }
 
-    let correlation = correlations.iter().sum::<f64>() / correlations.len()  as f64;
+    let correlation = correlations.iter().sum::<f64>() / correlations.len() as f64;
     let max_relative_error = relative_errors.iter().cloned().fold(0.0, f64::max);
-    let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors.len()  as f64;
+    let mean_relative_error = relative_errors.iter().sum::<f64>() / relative_errors.len() as f64;
 
     // Statistical tests
     let statistical_tests = perform_statistical_tests(&relative_errors)?;
@@ -745,7 +774,14 @@ fn simulate_scipy_lombscargle(
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     // In a real implementation, this would call SciPy via Python bindings
     // For now, add small perturbations to our results to simulate differences
-    let (freqs, mut power) = lombscargle(t, y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
+    let (freqs, mut power) = lombscargle(
+        t,
+        y,
+        None,
+        Some("standard"),
+        Some(true, Some(false)),
+        Some(false),
+    )?;
 
     // Add small random perturbations to simulate SciPy differences
     let mut rng = rand::rng();
@@ -765,14 +801,20 @@ fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidatio
     let n = 1024;
     let mut rng = rand::rng();
     let t: Array1<f64> =
-        Array1::from_shape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.random_range(-1.0..1.0));
+        Array1::fromshape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.random_range(-1.0..1.0));
     let y: Array1<f64> =
         t.mapv(|ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
 
     // Compute with scalar implementation
     let start_scalar = Instant::now();
-    let (freqs_scalar, power_scalar) =
-        lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
+    let (freqs_scalar, power_scalar) = lombscargle(
+        &t,
+        &y,
+        None,
+        Some("standard"),
+        Some(true, Some(false)),
+        Some(false),
+    )?;
     let scalar_time = start_scalar.elapsed();
 
     // Compute with SIMD implementation
@@ -888,16 +930,23 @@ fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
 
     for _ in 0..n_trials {
         let t = Array1::linspace(0.0, 10.0, n_samples);
-        let y: Array1<f64> = Array1::from_shape_fn(n_samples, |_| rng.random_range(-1.0..1.0));
+        let y: Array1<f64> = Array1::fromshape_fn(n_samples, |_| rng.random_range(-1.0..1.0));
 
-        let (_, power) = lombscargle(&t, &y, None, Some("standard"), Some(true, Some(false)), Some(false))?;
+        let (_, power) = lombscargle(
+            &t,
+            &y,
+            None,
+            Some("standard"),
+            Some(true, Some(false)),
+            Some(false),
+        )?;
 
         if power.iter().any(|&p| p > threshold) {
             false_alarms += 1;
         }
     }
 
-    let empirical_fap = false_alarms as f64 / n_trials  as f64;
+    let empirical_fap = false_alarms as f64 / n_trials as f64;
     let theoretical_fap = 0.05; // Expected 5% false alarm rate
     let fap_accuracy = 1.0 - (empirical_fap - theoretical_fap).abs() / theoretical_fap;
 
@@ -916,9 +965,16 @@ fn compare_with_theoretical_psd() -> SignalResult<PsdTheoreticalComparison> {
     let n = 512;
     let mut rng = rand::rng();
     let t = Array1::linspace(0.0, 10.0, n);
-    let white_noise: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(-1.0..1.0));
+    let white_noise: Array1<f64> = Array1::fromshape_fn(n, |_| rng.random_range(-1.0..1.0));
 
-    let (freqs, power) = lombscargle(&t, &white_noise, None, Some("psd"), Some(true, Some(false)), Some(false))?;
+    let (freqs, power) = lombscargle(
+        &t,
+        &white_noise,
+        None,
+        Some("psd"),
+        Some(true, Some(false)),
+        Some(false),
+    )?;
 
     // For white noise, PSD should be approximately flat
     let mean_power = power.mean().unwrap();
@@ -1248,7 +1304,11 @@ pub fn generate_advanced_lombscargle_report(_result: &AdvancedLombScargleResult)
     ));
     report.push_str(&format!(
         "- *Memory per Sample**: {:.3} KB\n",
-        _result.memory_profiling.efficiency_metrics.memory_per_sample * 1024.0
+        _result
+            .memory_profiling
+            .efficiency_metrics
+            .memory_per_sample
+            * 1024.0
     ));
     report.push_str(&format!(
         "- *Cache Hit Ratio**: {:.1}%\n",

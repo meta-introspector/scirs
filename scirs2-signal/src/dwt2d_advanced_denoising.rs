@@ -1,20 +1,21 @@
-//! Advanced 2D Wavelet Denoising Methods for Advanced Mode
-//!
-//! This module provides state-of-the-art 2D wavelet denoising techniques
-//! with SIMD optimization, adaptive thresholding, and multi-scale analysis.
-//! These methods are designed for production-quality image denoising with
-//! quantum-inspired optimization algorithms.
+use ndarray::s;
+// Advanced 2D Wavelet Denoising Methods for Advanced Mode
+//
+// This module provides state-of-the-art 2D wavelet denoising techniques
+// with SIMD optimization, adaptive thresholding, and multi-scale analysis.
+// These methods are designed for production-quality image denoising with
+// quantum-inspired optimization algorithms.
 
 use crate::dwt::Wavelet;
 use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
-use crate::dwt2d_boundary_enhanced::{BoundaryMode2D, dwt2d_decompose_enhanced};
+use crate::dwt2d_boundary_enhanced::{dwt2d_decompose_enhanced, BoundaryMode2D};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, ArrayView1, ArrayView2, s};
+use ndarray::{ Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
 use rand::Rng;
-use scirs2_core::Rng as CoreRng;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+use scirs2_core::Rng as CoreRng;
 use statrs::statistics::Statistics;
 
 #[allow(unused_imports)]
@@ -464,12 +465,12 @@ fn calculate_quantum_energy_states(_coeffs: &Array2<f64>) -> SignalResult<Vec<f6
 /// Calculate quantum coherence factor
 #[allow(dead_code)]
 fn calculate_quantum_coherence_factor(_energy_states: &[f64]) -> SignalResult<f64> {
-    let mean_energy = _energy_states.iter().sum::<f64>() / _energy_states.len()  as f64;
+    let mean_energy = _energy_states.iter().sum::<f64>() / _energy_states.len() as f64;
     let variance = _energy_states
         .iter()
         .map(|&e| (e - mean_energy).powi(2))
         .sum::<f64>()
-        / _energy_states.len()  as f64;
+        / _energy_states.len() as f64;
 
     // Coherence factor based on energy distribution
     let coherence = (-variance / (mean_energy + 1e-10)).exp();
@@ -547,7 +548,7 @@ fn calculate_adaptive_thresholds(
     for (level, coeffs) in decomposition.iter().skip(1).enumerate() {
         let threshold = match config.method {
             DenoisingMethod::ViShrink => {
-                let n = coeffs.len()  as f64;
+                let n = coeffs.len() as f64;
                 noise_variance.sqrt() * (2.0 * n.ln()).sqrt()
             }
             DenoisingMethod::BayesShrink => calculate_bayes_threshold(coeffs, noise_variance)?,
@@ -584,7 +585,7 @@ fn calculate_sure_threshold(_coeffs: &Array2<f64>, noise_variance: f64) -> Signa
     let mut sorted_coeffs = coeffs_vec.clone();
     sorted_coeffs.sort_by(|a, b| a.abs().partial_cmp(&b.abs()).unwrap());
 
-    let n = sorted_coeffs.len()  as f64;
+    let n = sorted_coeffs.len() as f64;
     let mut best_threshold = 0.0;
     let mut min_risk = f64::INFINITY;
 
@@ -604,7 +605,7 @@ fn calculate_sure_threshold(_coeffs: &Array2<f64>, noise_variance: f64) -> Signa
 /// Calculate SURE risk
 #[allow(dead_code)]
 fn calculate_sure_risk(_coeffs: &[f64], threshold: f64, noise_variance: f64) -> f64 {
-    let n = _coeffs.len()  as f64;
+    let n = _coeffs.len() as f64;
     let mut risk = n * noise_variance;
 
     for &coeff in _coeffs {
@@ -753,7 +754,7 @@ fn context_adaptive_enhancement(
 ) -> SignalResult<()> {
     // Calculate local _image features for context adaptation
     let edge_map = calculate_edge_map(original_image)?;
-    let texture_map = calculate_texture_map(original_image)?;
+    let texture_map = calculatetexture_map(original_image)?;
 
     // Adapt thresholds based on local context
     for coeffs in decomposition.iter_mut().skip(1) {
@@ -789,7 +790,7 @@ fn calculate_edge_map(_image: &ArrayView2<f64>) -> SignalResult<Array2<f64>> {
 
 /// Calculate texture map for context adaptation
 #[allow(dead_code)]
-fn calculate_texture_map(_image: &ArrayView2<f64>) -> SignalResult<Array2<f64>> {
+fn calculatetexture_map(_image: &ArrayView2<f64>) -> SignalResult<Array2<f64>> {
     let (rows, cols) = _image.dim();
     let mut texture_map = Array2::zeros((rows, cols));
 
@@ -812,7 +813,7 @@ fn calculate_texture_map(_image: &ArrayView2<f64>) -> SignalResult<Array2<f64>> 
                 }
             }
 
-            let mean = sum / count  as f64;
+            let mean = sum / count as f64;
             let variance = sum_sq / count as f64 - mean * mean;
             texture_map[[i, j]] = variance.sqrt();
         }
@@ -833,8 +834,8 @@ fn apply_context_adaptive_weights(
     let (edge_rows, edge_cols) = edge_map.dim();
 
     // Scale factors for edge and texture maps to match coefficient dimensions
-    let row_scale = edge_rows as f64 / rows  as f64;
-    let col_scale = edge_cols as f64 / cols  as f64;
+    let row_scale = edge_rows as f64 / rows as f64;
+    let col_scale = edge_cols as f64 / cols as f64;
 
     for i in 0..rows {
         for j in 0..cols {
@@ -987,7 +988,7 @@ fn estimate_noise_local_variance_2d(_image: &ArrayView2<f64>) -> SignalResult<f6
                 }
             }
 
-            let mean = sum / count  as f64;
+            let mean = sum / count as f64;
             let variance = sum_sq / count as f64 - mean * mean;
             local_variances.push(variance);
         }
@@ -1045,7 +1046,7 @@ fn calculate_denoising_metrics(
         .zip(denoised.iter())
         .map(|(&orig, &den)| (orig - den).powi(2))
         .sum::<f64>()
-        / (rows * cols)  as f64;
+        / (rows * cols) as f64;
 
     // PSNR calculation
     let max_val = original.iter().cloned().fold(0.0, f64::max);
@@ -1062,7 +1063,7 @@ fn calculate_denoising_metrics(
     let edge_preservation_index = calculate_edge_preservation_index(original, &denoised.view())?;
 
     // Texture preservation
-    let texture_preservation = calculate_texture_preservation(original, &denoised.view())?;
+    let texture_preservation = calculatetexture_preservation(original, &denoised.view())?;
 
     // Smoothness measure
     let smoothness = calculate_smoothness_measure(&denoised.view())?;
@@ -1094,7 +1095,7 @@ fn calculate_ssim_2d(_img1: &ArrayView2<f64>, img2: &ArrayView2<f64>) -> SignalR
         .zip(img2.iter())
         .map(|(&x1, &x2)| (x1 - mean1) * (x2 - mean2))
         .sum::<f64>()
-        / (_img1.len() - 1)  as f64;
+        / (_img1.len() - 1) as f64;
 
     let numerator = (2.0 * mean1 * mean2 + c1) * (2.0 * cov + c2);
     let denominator = (mean1.powi(2) + mean2.powi(2) + c1) * (var1 + var2 + c2);
@@ -1123,12 +1124,12 @@ fn calculate_edge_preservation_index(
 
 /// Calculate texture preservation
 #[allow(dead_code)]
-fn calculate_texture_preservation(
+fn calculatetexture_preservation(
     original: &ArrayView2<f64>,
     denoised: &ArrayView2<f64>,
 ) -> SignalResult<f64> {
-    let texture_orig = calculate_texture_map(original)?;
-    let texture_den = calculate_texture_map(denoised)?;
+    let texture_orig = calculatetexture_map(original)?;
+    let texture_den = calculatetexture_map(denoised)?;
 
     let correlation = texture_orig
         .iter()
@@ -1185,7 +1186,7 @@ pub fn context_adaptive_denoise(
 
     // Analyze regions for adaptive processing
     let edge_regions = calculate_edge_regions(image, region_mask)?;
-    let texture_regions = calculate_texture_regions(image, region_mask)?;
+    let texture_regions = calculatetexture_regions(image, region_mask)?;
 
     // Adjust denoising parameters based on region characteristics
     if edge_regions > 0.3 {
@@ -1219,11 +1220,11 @@ fn calculate_edge_regions(_image: &ArrayView2<f64>, mask: &ArrayView2<bool>) -> 
 
 /// Calculate texture region ratio
 #[allow(dead_code)]
-fn calculate_texture_regions(
+fn calculatetexture_regions(
     image: &ArrayView2<f64>,
     mask: &ArrayView2<bool>,
 ) -> SignalResult<f64> {
-    let texture_map = calculate_texture_map(image)?;
+    let texture_map = calculatetexture_map(image)?;
     let threshold = texture_map.mean().unwrap_or(0.0) * 1.5;
 
     let total_masked = mask.iter().filter(|&&m| m).count();

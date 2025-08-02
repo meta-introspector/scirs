@@ -425,7 +425,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_textrank_summarizer() {
+    fn testtextrank_summarizer() {
         let summarizer = TextRank::new(2);
         let text = "Machine learning is a subset of artificial intelligence. \
                     It enables computers to learn from data. \
@@ -484,7 +484,7 @@ mod tests {
     }
 
     #[test]
-    fn test_empty_text() {
+    fn test_emptytext() {
         let textrank = TextRank::new(3);
         let centroid = CentroidSummarizer::new(3);
         let keywords = KeywordExtractor::new(5);
@@ -495,11 +495,11 @@ mod tests {
     }
 
     #[test]
-    fn test_short_text() {
+    fn test_shorttext() {
         let summarizer = TextRank::new(5);
-        let short_text = "This is a short text.";
+        let shorttext = "This is a short text.";
 
-        let summary = summarizer.summarize(short_text).unwrap();
-        assert_eq!(summary, short_text);
+        let summary = summarizer.summarize(shorttext).unwrap();
+        assert_eq!(summary, shorttext);
     }
 }

@@ -118,15 +118,15 @@ impl<T: Float> Default for KahanSum<T> {
 /// This is an improved version of Kahan summation that handles the case
 /// where the next item to be added is larger in absolute value than the running sum.
 #[allow(dead_code)]
-pub fn neumaier_sum<T: Float>(_values: &[T]) -> T {
-    if _values.is_empty() {
+pub fn neumaier_sum<T: Float>(values: &[T]) -> T {
+    if values.is_empty() {
         return T::zero();
     }
 
-    let mut sum = _values[0];
+    let mut sum = values[0];
     let mut compensation = T::zero();
 
-    for &value in &_values[1..] {
+    for &value in &values[1..] {
         let t = sum + value;
         if sum.abs() >= value.abs() {
             compensation = compensation + ((sum - t) + value);
@@ -144,41 +144,41 @@ pub fn neumaier_sum<T: Float>(_values: &[T]) -> T {
 /// Recursively splits the array and sums pairs, reducing rounding error
 /// compared to sequential summation.
 #[allow(dead_code)]
-pub fn pairwise_sum<T: Float>(_values: &[T]) -> T {
+pub fn pairwise_sum<T: Float>(values: &[T]) -> T {
     const SEQUENTIAL_THRESHOLD: usize = 128;
 
-    match _values.len() {
+    match values.len() {
         0 => T::zero(),
-        1 => _values[0],
+        1 => values[0],
         n if n <= SEQUENTIAL_THRESHOLD => {
             // Use Kahan summation for small arrays
             let mut kahan = KahanSum::new();
-            for &v in _values {
+            for &v in values {
                 kahan.add(v);
             }
             kahan.sum()
         }
         n => {
             let mid = n / 2;
-            pairwise_sum(&_values[..mid]) + pairwise_sum(&_values[mid..])
+            pairwise_sum(&values[..mid]) + pairwise_sum(&values[mid..])
         }
     }
 }
 
 /// Stable mean calculation using compensated summation
 #[allow(dead_code)]
-pub fn stable_mean<T: Float>(_values: &[T]) -> CoreResult<T> {
-    if _values.is_empty() {
+pub fn stable_mean<T: Float>(values: &[T]) -> CoreResult<T> {
+    if values.is_empty() {
         return Err(CoreError::ValidationError(ErrorContext::new(
             "Cannot compute mean of empty array",
         )));
     }
 
-    let n = cast::<usize, T>(_values.len()).ok_or_else(|| {
+    let n = cast::<usize, T>(values.len()).ok_or_else(|| {
         CoreError::TypeError(ErrorContext::new("Failed to convert array length to float"))
     })?;
 
-    Ok(neumaier_sum(_values) / n)
+    Ok(neumaier_sum(values) / n)
 }
 
 /// Welford's online algorithm for computing variance
@@ -250,22 +250,22 @@ impl<T: Float> Default for WelfordVariance<T> {
 
 /// Stable two-pass algorithm for variance calculation
 #[allow(dead_code)]
-pub fn stable_variance<T: Float>(_values: &[T], ddof: usize) -> CoreResult<T> {
-    let n = _values.len();
+pub fn stable_variance<T: Float>(values: &[T], ddof: usize) -> CoreResult<T> {
+    let n = values.len();
     if n <= ddof {
         return Err(CoreError::ValidationError(ErrorContext::new(
-            "Not enough _values for the given degrees of freedom",
+            "Not enough values for the given degrees of freedom",
         )));
     }
 
     // First pass: compute mean with compensated summation
-    let mean = stable_mean(_values)?;
+    let mean = stable_mean(values)?;
 
     // Second pass: compute sum of squared deviations with compensation
     let mut sum_sq = T::zero();
     let mut compensation = T::zero();
 
-    for &value in _values {
+    for &value in values {
         let deviation = value - mean;
         let sq_deviation = deviation * deviation;
         let y = sq_deviation - compensation;
@@ -285,21 +285,21 @@ pub fn stable_variance<T: Float>(_values: &[T], ddof: usize) -> CoreResult<T> {
 ///
 /// This prevents overflow when computing the log of a sum of exponentials.
 #[allow(dead_code)]
-pub fn log_sum_exp<T: Float>(_values: &[T]) -> T {
-    if _values.is_empty() {
+pub fn log_sum_exp<T: Float>(values: &[T]) -> T {
+    if values.is_empty() {
         return T::neg_infinity();
     }
 
     // Find maximum value
-    let max_val = _values.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
+    let max_val = values.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
 
     if max_val.is_infinite() && max_val < T::zero() {
-        return max_val; // All _values are -inf
+        return max_val; // All values are -inf
     }
 
     // Compute log(sum(exp(x - max))) + max
     let mut sum = T::zero();
-    for &value in _values {
+    for &value in values {
         sum = sum + (value - max_val).exp();
     }
 
@@ -310,30 +310,30 @@ pub fn log_sum_exp<T: Float>(_values: &[T]) -> T {
 ///
 /// Computes softmax(x) = exp(x) / sum(exp(x)) in a numerically stable way.
 #[allow(dead_code)]
-pub fn stable_softmax<T: Float>(_values: &[T]) -> Vec<T> {
-    if _values.is_empty() {
+pub fn stable_softmax<T: Float>(values: &[T]) -> Vec<T> {
+    if values.is_empty() {
         return vec![];
     }
 
     // Find maximum for numerical stability
-    let max_val = _values.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
+    let max_val = values.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
 
     // Compute exp(x - max)
-    let mut exp_values = Vec::with_capacity(_values.len());
+    let mut expvalues = Vec::with_capacity(values.len());
     let mut sum = T::zero();
 
-    for &value in _values {
+    for &value in values {
         let exp_val = (value - max_val).exp();
-        exp_values.push(exp_val);
+        expvalues.push(exp_val);
         sum = sum + exp_val;
     }
 
     // Normalize
-    for exp_val in &mut exp_values {
+    for exp_val in &mut expvalues {
         *exp_val = *exp_val / sum;
     }
 
-    exp_values
+    expvalues
 }
 
 /// Stable computation of log(1 + x) for small x
@@ -394,13 +394,13 @@ pub fn hypot_stable<T: Float>(x: T, y: T) -> T {
 ///
 /// Reduces angle to [-π, π] range while preserving precision for large angles.
 #[allow(dead_code)]
-pub fn reduce_angle<T: Float>(_angle: T) -> T {
+pub fn reduce_angle<T: Float>(angle: T) -> T {
     let two_pi = cast::<f64, T>(2.0).unwrap_or(T::one())
         * cast::<f64, T>(std::f64::consts::PI).unwrap_or(T::one());
     let pi = cast::<f64, T>(std::f64::consts::PI).unwrap_or(T::one());
 
     // Use remainder to get value in (-2π, 2π)
-    let mut reduced = _angle % two_pi;
+    let mut reduced = angle % two_pi;
 
     // Normalize to [0, 2π)
     if reduced < T::zero() {
@@ -484,8 +484,8 @@ pub fn log_sigmoid_stable<T: Float>(x: T) -> T {
 
 /// Cross entropy loss with numerical stability
 #[allow(dead_code)]
-pub fn cross_entropy_stable<T: Float>(_predictions: &[T], targets: &[T]) -> CoreResult<T> {
-    if _predictions.len() != targets.len() {
+pub fn cross_entropy_stable<T: Float>(predictions: &[T], targets: &[T]) -> CoreResult<T> {
+    if predictions.len() != targets.len() {
         return Err(CoreError::ValidationError(ErrorContext::new(
             "Predictions and targets must have same length",
         )));
@@ -494,14 +494,14 @@ pub fn cross_entropy_stable<T: Float>(_predictions: &[T], targets: &[T]) -> Core
     let mut loss = T::zero();
     let epsilon = cast::<f64, T>(1e-15).unwrap_or(T::epsilon()); // Small value to prevent log(0)
 
-    for (pred, target) in _predictions.iter().zip(targets.iter()) {
+    for (pred, target) in predictions.iter().zip(targets.iter()) {
         // Clip _predictions to prevent log(0)
         let pred_clipped = pred.max(epsilon).min(T::one() - epsilon);
         loss = loss
             - (*target * pred_clipped.ln() + (T::one() - *target) * (T::one() - pred_clipped).ln());
     }
 
-    Ok(loss / cast::<usize, T>(_predictions.len()).unwrap_or(T::one()))
+    Ok(loss / cast::<usize, T>(predictions.len()).unwrap_or(T::one()))
 }
 
 /// Stable matrix norm computation
@@ -563,11 +563,11 @@ pub enum MatrixNorm {
 
 /// Stable L1 norm computation
 #[allow(dead_code)]
-fn stable_norm_1<T: Float>(_values: &[T]) -> T {
+fn stable_norm_1<T: Float>(values: &[T]) -> T {
     let mut sum = T::zero();
     let mut compensation = T::zero();
 
-    for &value in _values {
+    for &value in values {
         let abs_val = value.abs();
         let y = abs_val - compensation;
         let t = sum + y;
@@ -580,13 +580,13 @@ fn stable_norm_1<T: Float>(_values: &[T]) -> T {
 
 /// Stable L2 norm computation avoiding overflow/underflow
 #[allow(dead_code)]
-pub fn stable_norm_2<T: Float>(_values: &[T]) -> T {
-    if _values.is_empty() {
+pub fn stable_norm_2<T: Float>(values: &[T]) -> T {
+    if values.is_empty() {
         return T::zero();
     }
 
     // Find maximum absolute value for scaling
-    let max_abs = _values.iter().fold(T::zero(), |max, &x| max.max(x.abs()));
+    let max_abs = values.iter().fold(T::zero(), |max, &x| max.max(x.abs()));
 
     if max_abs.is_zero() {
         return T::zero();
@@ -594,7 +594,7 @@ pub fn stable_norm_2<T: Float>(_values: &[T]) -> T {
 
     // Compute scaled norm
     let mut sum = T::zero();
-    for &value in _values {
+    for &value in values {
         let scaled = value / max_abs;
         sum = sum + scaled * scaled;
     }
@@ -693,7 +693,7 @@ pub fn binomial_stable(n: u64, k: u64) -> CoreResult<f64> {
 
         for i in 0..k {
             result *= (n - i) as f64;
-            result /= (0 + 1) as f64;
+            result /= 1.0;
         }
 
         Ok(result)
@@ -890,8 +890,8 @@ mod tests {
         assert_relative_eq!(norm, expected, epsilon = 1e-10);
 
         // Test with very small values
-        let small_values = vec![1e-200, 1e-200, 1e-200];
-        let small_norm = stable_norm_2(&small_values);
+        let smallvalues = vec![1e-200, 1e-200, 1e-200];
+        let small_norm = stable_norm_2(&smallvalues);
         let expected_small = 3.0_f64.sqrt() * 1e-200;
         assert_relative_eq!(small_norm, expected_small, epsilon = 1e-10);
     }

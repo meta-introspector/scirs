@@ -123,13 +123,18 @@ impl PartialEq for IoError {
             (IoError::DeserializationError(a), IoError::DeserializationError(b)) => a == b,
             (IoError::CompressionError(a), IoError::CompressionError(b)) => a == b,
             (IoError::DecompressionError(a), IoError::DecompressionError(b)) => a == b,
-            (IoError::UnsupportedCompressionAlgorithm(a), IoError::UnsupportedCompressionAlgorithm(b)) => a == b,
+            (
+                IoError::UnsupportedCompressionAlgorithm(a),
+                IoError::UnsupportedCompressionAlgorithm(b),
+            ) => a == b,
             (IoError::UnsupportedFormat(a), IoError::UnsupportedFormat(b)) => a == b,
             (IoError::ConversionError(a), IoError::ConversionError(b)) => a == b,
             (IoError::FileNotFound(a), IoError::FileNotFound(b)) => a == b,
             (IoError::NotFound(a), IoError::NotFound(b)) => a == b,
             (IoError::ParseError(a), IoError::ParseError(b)) => a == b,
-            (IoError::Io(a), IoError::Io(b)) => a.kind() == b.kind() && a.to_string() == b.to_string(),
+            (IoError::Io(a), IoError::Io(b)) => {
+                a.kind() == b.kind() && a.to_string() == b.to_string()
+            }
             (IoError::ValidationError(a), IoError::ValidationError(b)) => a == b,
             (IoError::ChecksumError(a), IoError::ChecksumError(b)) => a == b,
             (IoError::IntegrityError(a), IoError::IntegrityError(b)) => a == b,
@@ -153,7 +158,7 @@ impl PartialOrd for IoError {
 impl Ord for IoError {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         use std::cmp::Ordering;
-        
+
         // Compare variants first by their order in the enum
         match (self, other) {
             // Same variants, compare contents
@@ -163,7 +168,10 @@ impl Ord for IoError {
             (IoError::DeserializationError(a), IoError::DeserializationError(b)) => a.cmp(b),
             (IoError::CompressionError(a), IoError::CompressionError(b)) => a.cmp(b),
             (IoError::DecompressionError(a), IoError::DecompressionError(b)) => a.cmp(b),
-            (IoError::UnsupportedCompressionAlgorithm(a), IoError::UnsupportedCompressionAlgorithm(b)) => a.cmp(b),
+            (
+                IoError::UnsupportedCompressionAlgorithm(a),
+                IoError::UnsupportedCompressionAlgorithm(b),
+            ) => a.cmp(b),
             (IoError::UnsupportedFormat(a), IoError::UnsupportedFormat(b)) => a.cmp(b),
             (IoError::ConversionError(a), IoError::ConversionError(b)) => a.cmp(b),
             (IoError::FileNotFound(a), IoError::FileNotFound(b)) => a.cmp(b),
@@ -175,7 +183,7 @@ impl Ord for IoError {
                     Ordering::Equal => a.to_string().cmp(&b.to_string()),
                     other => other,
                 }
-            },
+            }
             (IoError::ValidationError(a), IoError::ValidationError(b)) => a.cmp(b),
             (IoError::ChecksumError(a), IoError::ChecksumError(b)) => a.cmp(b),
             (IoError::IntegrityError(a), IoError::IntegrityError(b)) => a.cmp(b),
@@ -183,7 +191,7 @@ impl Ord for IoError {
             (IoError::NetworkError(a), IoError::NetworkError(b)) => a.cmp(b),
             (IoError::DatabaseError(a), IoError::DatabaseError(b)) => a.cmp(b),
             (IoError::Other(a), IoError::Other(b)) => a.cmp(b),
-            
+
             // Different variants, order by enum variant position
             (IoError::FileError(_), _) => Ordering::Less,
             (_, IoError::FileError(_)) => Ordering::Greater,

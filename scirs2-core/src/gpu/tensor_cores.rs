@@ -538,12 +538,22 @@ fn generate_tensor_core_gemm_kernel(
     let use_mixed_precision = manager.config().use_mixed_precision;
 
     match manager.backend {
-        GpuBackend::Cuda => {
-            generate_cuda_tensor_core_kernel(data_type.clone(), tile_size.0, m, n, k, use_mixed_precision)
-        }
-        GpuBackend::Rocm => {
-            generate_rocm_matrix_core_kernel(data_type.clone(), tile_size.0, m, n, k, use_mixed_precision)
-        }
+        GpuBackend::Cuda => generate_cuda_tensor_core_kernel(
+            data_type.clone(),
+            tile_size.0,
+            m,
+            n,
+            k,
+            use_mixed_precision,
+        ),
+        GpuBackend::Rocm => generate_rocm_matrix_core_kernel(
+            data_type.clone(),
+            tile_size.0,
+            m,
+            n,
+            k,
+            use_mixed_precision,
+        ),
         GpuBackend::Metal => generate_metal_mps_kernel(data_type.clone(), tile_size.0, m, n, k),
         _ => Err(TensorCoreError::UnsupportedOperation(
             TensorCoreOp::MatrixMultiply,
@@ -591,7 +601,12 @@ fn generate_metal_mps_kernel(
 
 /// Generate CUDA tensor core kernel
 #[allow(dead_code)]
-fn generate_cuda_kernel(data_type: TensorDataType, tile_size: (usize, usize), _m: usize, _n: usize, _k: usize,
+fn generate_cuda_kernel(
+    data_type: TensorDataType,
+    tile_size: (usize, usize),
+    _m: usize,
+    _n: usize,
+    _k: usize,
     use_mixed_precision: bool,
 ) -> Result<String, TensorCoreError> {
     let (tile_m, tile_n) = tile_size;
@@ -679,7 +694,12 @@ __global__ void tensor_core_gemm(
 
 /// Generate ROCm matrix core kernel
 #[allow(dead_code)]
-fn generate_rocm_kernel(data_type: TensorDataType, tile_size: (usize, usize), _m: usize, _n: usize, _k: usize,
+fn generate_rocm_kernel(
+    data_type: TensorDataType,
+    tile_size: (usize, usize),
+    _m: usize,
+    _n: usize,
+    _k: usize,
     use_mixed_precision: bool,
 ) -> Result<String, TensorCoreError> {
     let (tile_m, tile_n) = tile_size;
@@ -780,7 +800,12 @@ __global__ void matrix_core_gemm(
 
 /// Generate Metal Performance Shaders kernel
 #[allow(dead_code)]
-fn generate_metal_kernel(data_type: TensorDataType, tile_size: (usize, usize), _m: usize, _n: usize, _k: usize,
+fn generate_metal_kernel(
+    data_type: TensorDataType,
+    tile_size: (usize, usize),
+    _m: usize,
+    _n: usize,
+    _k: usize,
 ) -> Result<String, TensorCoreError> {
     let (tile_m, tile_n) = tile_size;
     let dtype_str = match data_type {
@@ -827,7 +852,10 @@ kernel void neural_engine_gemm(
 #[allow(dead_code)]
 fn execute_tensor_core_operation<T>(
     manager: &TensorCoreManager,
-    kernel_source: &str, a: &GpuBuffer<T>, b: &GpuBuffer<T>, c: &mut GpuBuffer<T>,
+    kernel_source: &str,
+    a: &GpuBuffer<T>,
+    b: &GpuBuffer<T>,
+    c: &mut GpuBuffer<T>,
     m: usize,
     n: usize,
     k: usize,
@@ -847,7 +875,10 @@ where
     let grid_dim_y = m.div_ceil(tile_size.0);
 
     eprintln!("Executing tensor core GEMM:");
-    eprintln!("  Kernel _source length: {} characters", kernel_source.len());
+    eprintln!(
+        "  Kernel _source length: {} characters",
+        kernel_source.len()
+    );
     eprintln!("  Dimensions: {m}x{n}x{k}");
     eprintln!("  Grid dimensions: {grid_dim_x}x{grid_dim_y}");
     eprintln!("  Tile size: {tile_size:?}");

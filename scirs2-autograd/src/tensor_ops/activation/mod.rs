@@ -384,7 +384,7 @@ where
     let g = y.graph();
     let op = xent_ops::SigmoidCrossEntropy;
     Tensor::builder(g)
-        .set_shape(&shape(y))
+        .setshape(&shape(y))
         .append_input(y.as_ref(), false)
         .append_input(t.as_ref(), false)
         .build(op)
@@ -527,7 +527,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn normalize<'graph, A, AT, F: Float>(_x: A, axes: &AT) -> Tensor<'graph, F>
+pub fn normalize<'graph, A, AT, F: Float>(x: A, axes: &AT) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,

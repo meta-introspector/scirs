@@ -100,14 +100,14 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> InMemoryDat
         // Get slices and convert to dynamic dimension arrays
         let x_slice = self.features.slice(ndarray::s![index, ..]);
         let y_slice = self.labels.slice(ndarray::s![index, ..]);
-        let x_shape = x_slice.shape().to_vec();
-        let y_shape = y_slice.shape().to_vec();
+        let xshape = x_slice.shape().to_vec();
+        let yshape = y_slice.shape().to_vec();
         let x = x_slice
             .to_owned()
-            .into_shape_with_order(IxDyn(&x_shape))
+            .into_shape_with_order(IxDyn(&xshape))
             .unwrap();
         let y = y_slice
-            .into_shape_with_order(IxDyn(&y_shape))
+            .into_shape_with_order(IxDyn(&yshape))
         Ok((x, y))
         Box::new(InMemoryDataset {
             features: self.features.clone(),

@@ -227,7 +227,7 @@ pub struct MemoryTrackerStats {
 
 /// Memory-efficient in-place operation that reuses tensor storage when possible
 pub struct InPlaceOp<F: Float> {
-    operation: InPlaceOperation_phantom: std::marker::PhantomData<F>,
+    operation: InPlaceOperation, phantom: std::marker::PhantomData<F>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -399,7 +399,7 @@ impl<F: Float> Op<F> for InPlaceOp<F> {
 
 /// Memory-efficient view operation that creates zero-copy views when possible
 pub struct ViewOp {
-    pub new_shape: Vec<usize>,
+    pub newshape: Vec<usize>,
 }
 
 impl<F: Float> Op<F> for ViewOp {
@@ -411,21 +411,21 @@ impl<F: Float> Op<F> for ViewOp {
         let input = ctx.input(0);
 
         // Try to create a view with the new shape
-        let input_shape = input.shape();
-        let input_size: usize = input_shape.iter().product();
-        let new_size: usize = self.new_shape.iter().product();
+        let inputshape = input.shape();
+        let input_size: usize = inputshape.iter().product();
+        let new_size: usize = self.newshape.iter().product();
 
         if input_size != new_size {
             return Err(OpError::IncompatibleShape(format!(
                 "Cannot reshape array of size {} into shape {:?} (size {})",
-                input_size, self.new_shape, new_size
+                input_size, self.newshape, new_size
             )));
         }
 
         // Create a reshaped view - this is zero-copy when possible
         let reshaped = input
             .view()
-            .into_shape_with_order(IxDyn(&self.new_shape))
+            .intoshape_with_order(IxDyn(&self.newshape))
             .map_err(|_| OpError::IncompatibleShape("Cannot create view with new shape".into()))?;
 
         ctx.append_output(reshaped.to_owned());
@@ -437,8 +437,8 @@ impl<F: Float> Op<F> for ViewOp {
         let input = ctx.input(0);
 
         // Gradient needs to be reshaped back to input shape
-        let input_shape = crate::tensor_ops::shape(input);
-        let reshaped_grad = crate::tensor_ops::reshape(gy, &input_shape);
+        let inputshape = crate::tensor_ops::shape(input);
+        let reshaped_grad = crate::tensor_ops::reshape(gy, &inputshape);
         ctx.append_input_grad(0, Some(reshaped_grad));
     }
 }
@@ -510,18 +510,18 @@ pub fn get_memory_tracking_stats() -> MemoryTrackerStats {
 
 /// Create a memory-efficient view of a tensor with a new shape
 #[allow(dead_code)]
-pub fn efficient_view<'g, F: Float>(_tensor: &Tensor<'g, F>, new_shape: &[usize]) -> Tensor<'g, F> {
+pub fn efficient_view<'g, F: Float>(tensor: &Tensor<'g, F>, newshape: &[usize]) -> Tensor<'g, F> {
     let g = _tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
         .build(ViewOp {
-            new_shape: new_shape.to_vec(),
+            newshape: newshape.to_vec(),
         })
 }
 
 /// Perform in-place addition to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_add<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn inplace_add<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _lhs.graph();
     Tensor::builder(g)
         .append_input(_lhs, false)
@@ -531,7 +531,7 @@ pub fn inplace_add<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> T
 
 /// Perform in-place subtraction to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_sub<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn inplace_sub<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _lhs.graph();
     Tensor::builder(g)
         .append_input(_lhs, false)
@@ -541,7 +541,7 @@ pub fn inplace_sub<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> T
 
 /// Perform in-place multiplication to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_mul<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn inplace_mul<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _lhs.graph();
     Tensor::builder(g)
         .append_input(_lhs, false)
@@ -551,7 +551,7 @@ pub fn inplace_mul<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> T
 
 /// Perform in-place division to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_div<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn inplace_div<'g, F: Float>(lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _lhs.graph();
     Tensor::builder(g)
         .append_input(_lhs, false)
@@ -561,7 +561,7 @@ pub fn inplace_div<'g, F: Float>(_lhs: &Tensor<'g, F>, rhs: &Tensor<'g, F>) -> T
 
 /// Perform in-place negation to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_neg<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn inplace_neg<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
@@ -570,7 +570,7 @@ pub fn inplace_neg<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 
 /// Perform in-place absolute value to reduce memory allocations
 #[allow(dead_code)]
-pub fn inplace_abs<'g, F: Float>(_tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn inplace_abs<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = _tensor.graph();
     Tensor::builder(g)
         .append_input(_tensor, false)
@@ -592,14 +592,14 @@ pub fn inplace_scalar_mul<'g, F: Float>(
 
 /// Memory-efficient tensor creation using the memory pool
 #[allow(dead_code)]
-pub fn efficient_zeros<'g, F: Float>(_shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
+pub fn efficient_zeros<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
     // For now, use the standard zeros implementation
     // In a full implementation, this would use the memory pool
     crate::tensor__ops::zeros(
         &crate::tensor_ops::convert_to_tensor(
-            ndarray::Array::from_shape_vec(
-                ndarray::IxDyn(&[_shape.len()]),
-                _shape
+            ndarray::Array::fromshape_vec(
+                ndarray::IxDyn(&[shape.len()]),
+                shape
                     .iter()
                     .map(|&x| F::from(x).unwrap())
                     .collect::<Vec<_>>(),
@@ -613,14 +613,14 @@ pub fn efficient_zeros<'g, F: Float>(_shape: &[usize], graph: &'g crate::Graph<F
 
 /// Memory-efficient tensor creation using the memory pool
 #[allow(dead_code)]
-pub fn efficient_ones<'g, F: Float>(_shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
+pub fn efficient_ones<'g, F: Float>(shape: &[usize], graph: &'g crate::Graph<F>) -> Tensor<'g, F> {
     // For now, use the standard ones implementation
     // In a full implementation, this would use the memory pool
     crate::tensor__ops::ones(
         &crate::tensor_ops::convert_to_tensor(
-            ndarray::Array::from_shape_vec(
-                ndarray::IxDyn(&[_shape.len()]),
-                _shape
+            ndarray::Array::fromshape_vec(
+                ndarray::IxDyn(&[shape.len()]),
+                shape
                     .iter()
                     .map(|&x| F::from(x).unwrap())
                     .collect::<Vec<_>>(),
@@ -738,13 +738,13 @@ mod tests {
     #[test]
     fn test_view_op() {
         let view_op = ViewOp {
-            new_shape: vec![2, 3],
+            newshape: vec![2, 3],
         };
         assert_eq!(
-            <ViewOp as crate::op::Op<f32>>::name(&view_op),
+            <ViewOp as crate::op::Op<f32>>::name(&viewop),
             "MemoryEfficientView"
         );
-        assert_eq!(view_op.new_shape, vec![2, 3]);
+        assert_eq!(view_op.newshape, vec![2, 3]);
     }
 
     #[test]

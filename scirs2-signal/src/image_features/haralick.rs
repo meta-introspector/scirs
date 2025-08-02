@@ -1,10 +1,10 @@
-//! Haralick texture feature extraction for images
+// Haralick texture feature extraction for images
 
+use super::types::ImageFeatureOptions;
+use super::utils::compute_glcm;
 use crate::error::SignalResult;
 use ndarray::Array2;
 use std::collections::HashMap;
-use super::types::ImageFeatureOptions;
-use super::utils::compute_glcm;
 
 #[allow(unused_imports)]
 /// Extract Haralick texture features from an image

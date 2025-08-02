@@ -97,7 +97,7 @@ fn main() {
 
     println!("Matrix-free operator result:");
     println!("x = {:?}", x);
-    println!("Op(x) = {:?}", y_op);
+    println!("Op(x) = {:?}", yop);
 
     // Get direct result from Toeplitz matrix
     let direct_y = toeplitz.matvec(&x.view()).unwrap();

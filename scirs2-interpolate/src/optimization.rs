@@ -365,7 +365,7 @@ where
         for &width in kernel_widths {
             let interpolator_fn = |x_train: &ArrayView1<T>, y_train: &ArrayView1<T>| {
                 // Convert 1D to 2D for RBF interpolator
-                let points_2d = Array2::from_shape_vec((x_train.len(), 1), x_train.to_vec())
+                let points_2d = Array2::fromshape_vec((x_train.len(), 1), x_train.to_vec())
                     .map_err(|e| {
                         InterpolateError::ComputationError(format!("Failed to reshape: {}", e))
                     })?;
@@ -751,7 +751,7 @@ where
 {
     fn evaluate(&self, x: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
         // Convert 1D to 2D for RBF interpolator
-        let points_2d = Array2::from_shape_vec((x.len(), 1), x.to_vec())
+        let points_2d = Array2::fromshape_vec((x.len(), 1), x.to_vec())
             .map_err(|e| InterpolateError::ComputationError(format!("Failed to reshape: {}", e)))?;
 
         self.interpolator.interpolate(&points_2d.view())

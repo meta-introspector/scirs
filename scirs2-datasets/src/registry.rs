@@ -238,7 +238,7 @@ impl DatasetRegistry {
     }
 
     /// Register a toy dataset (built-in datasets don't need URLs or hashes)
-    fn register_toy_dataset(&mut self, name: &str_description: &str) {
+    fn register_toy_dataset(&mut self, name: &str, description: &str) {
         let url = match name {
             "iris" => "builtin://iris",
             "boston" => "builtin://boston",

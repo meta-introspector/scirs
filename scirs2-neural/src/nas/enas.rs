@@ -252,7 +252,7 @@ impl SuperNetwork {
             LayerType::Activation(name) => {
                 let activation = match name.as_str() {
                     "relu" => Activation::ReLU,
-                    "swish" => Activation::Swish_ =>, Activation::ReLU,
+                    "swish" => Activation::Swish_ => Activation::ReLU,
                 };
                 Ok(activation.apply(&output))
             _ => Ok(output),

@@ -1458,7 +1458,7 @@ impl TensorCoreClustering {
                 .collect();
 
             // Extract cluster points
-            let cluster_data = Array2::from_shape_fn((cluster_points.len(), n_dims), |(i, j)| {
+            let cluster_data = Array2::fromshape_fn((cluster_points.len(), n_dims), |(i, j)| {
                 points[[cluster_points[i], j]]
             });
 

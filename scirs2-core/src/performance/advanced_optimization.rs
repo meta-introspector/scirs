@@ -399,6 +399,7 @@ impl Default for AdaptiveThresholds {
     }
 }
 
+#[allow(dead_code)]
 impl AdvancedPerformanceOptimizer {
     /// Create new performance optimizer
     pub fn new() -> Self {
@@ -422,7 +423,11 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Determine optimal settings for a given algorithm and input size
-    pub fn get_optimal_settings(&mut self, algorithm: &str, input_size: usize) -> OptimizationSettings {
+    pub fn get_optimal_settings(
+        &mut self,
+        algorithm: &str,
+        input_size: usize,
+    ) -> OptimizationSettings {
         // Check if we have historical data for similar operations
         if let Some(result) = self.find_similar_optimization(algorithm, input_size) {
             return result.optimal_settings.clone();
@@ -439,7 +444,10 @@ impl AdvancedPerformanceOptimizer {
         initial_settings
     }
 
-    fn find_similar_optimization(&self, algorithm: &str, input_size: usize,
+    fn find_similar_optimization(
+        &self,
+        algorithm: &str,
+        input_size: usize,
     ) -> Option<&OptimizationResult> {
         self.optimization_history
             .values()
@@ -447,7 +455,10 @@ impl AdvancedPerformanceOptimizer {
             .min_by_key(|result| (result.input_size as i64 - input_size as i64).abs())
     }
 
-    fn generate_initial_settings(&self, _algorithm: &str, input_size: usize,
+    fn generate_initial_settings(
+        &self,
+        _algorithm: &str,
+        input_size: usize,
     ) -> OptimizationSettings {
         let simd_instruction_set = self.profile.simd_capabilities.highest_available();
         let use_simd = input_size >= self.adaptive_thresholds.simd_threshold;
@@ -479,7 +490,10 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Run micro-benchmarks to optimize settings for a specific algorithm and input size
-    fn run_micro_benchmarks(&mut self, algorithm: &str, input_size: usize,
+    fn run_micro_benchmarks(
+        &mut self,
+        algorithm: &str,
+        input_size: usize,
         mut settings: OptimizationSettings,
     ) -> OptimizationSettings {
         let mut best_settings = settings.clone();
@@ -591,13 +605,14 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Benchmark a specific algorithm with given settings
-    fn benchmark_algorithm(&mut self, algorithm: &str, data_size: usize,
+    fn benchmark_algorithm(
+        &mut self,
+        algorithm: &str,
+        data_size: usize,
         settings: &OptimizationSettings,
     ) -> Option<f64> {
         match algorithm {
-            "vector_add" | "vector_addition" => {
-                self.benchmark_vector_addition(data_size, settings)
-            }
+            "vector_add" | "vector_addition" => self.benchmark_vector_addition(data_size, settings),
             "dot_product" | "vector_dot" => self.benchmark_dot_product(data_size, settings),
             "matrix_multiply" | "matrix_multiplication" => {
                 self.benchmark_matrix_multiplication(data_size, settings)
@@ -697,7 +712,10 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Generic benchmark for unknown algorithms
-    fn benchmark_generic_operation(&mut self, size: usize, _settings: &OptimizationSettings,
+    fn benchmark_generic_operation(
+        &mut self,
+        size: usize,
+        _settings: &OptimizationSettings,
     ) -> Option<f64> {
         use crate::performance::advanced_optimization::profiling::measure_performance;
 
@@ -724,7 +742,10 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Get performance recommendations for a specific workload
-    pub fn get_recommendations(&self, workload_type: WorkloadType, data_size: usize,
+    pub fn get_recommendations(
+        &self,
+        workload_type: WorkloadType,
+        data_size: usize,
     ) -> Vec<PerformanceRecommendation> {
         let mut recommendations = Vec::new();
 
@@ -758,7 +779,7 @@ impl AdvancedPerformanceOptimizer {
 
         recommendations
     }
-    
+
     fn is_simd_supported(&self, _simd_set: SimdInstructionSet) -> bool {
         // Placeholder implementation
         // In a real implementation, this would check CPU capabilities

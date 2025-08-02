@@ -8,12 +8,12 @@ use crate::error::Result;
 use crossbeam_channel::Receiver;
 #[cfg(feature = "async")]
 use futures::stream::{self, StreamExt};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 use std::time::Instant;
 #[cfg(feature = "async")]
 use tokio::runtime::Runtime;
-use std::path::PathBuf;
 
 /// Trait for pipeline executors
 pub trait PipelineExecutor<I, O> {
@@ -48,7 +48,9 @@ pub struct StreamingExecutor {
 
 impl StreamingExecutor {
     pub fn new(_chunk_size: usize) -> Self {
-        Self { chunk_size: _chunk_size }
+        Self {
+            chunk_size: _chunk_size,
+        }
     }
 }
 
@@ -181,7 +183,9 @@ pub struct DistributedExecutor {
 
 impl DistributedExecutor {
     pub fn new(_num_workers: usize) -> Self {
-        Self { num_workers: _num_workers }
+        Self {
+            num_workers: _num_workers,
+        }
     }
 }
 
@@ -548,7 +552,9 @@ pub enum Event {
 
 impl EventDrivenExecutor {
     pub fn new(_event_receiver: Receiver<Event>) -> Self {
-        Self { event_receiver: _event_receiver }
+        Self {
+            event_receiver: _event_receiver,
+        }
     }
 }
 
@@ -592,7 +598,9 @@ pub struct ParallelStageExecutor {
 
 impl ParallelStageExecutor {
     pub fn new(_max_parallelism: usize) -> Self {
-        Self { max_parallelism: _max_parallelism }
+        Self {
+            max_parallelism: _max_parallelism,
+        }
     }
 }
 

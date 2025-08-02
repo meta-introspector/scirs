@@ -822,13 +822,13 @@ impl ArchitectureController {
     /// Create new architecture controller
     pub fn new(_vocabulary: &ArchitectureVocabulary, hidden_size: usize) -> Self {
         Self {
-            lstm_weights: Array3::from_shape_fn((4, hidden_size, hidden_size), |_| {
+            lstm_weights: Array3::fromshape_fn((4, hidden_size, hidden_size), |_| {
                 (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
-            embedding_layer: Array2::from_shape_fn((hidden_size, _vocabulary.vocab_size), |_| {
+            embedding_layer: Array2::fromshape_fn((hidden_size, _vocabulary.vocab_size), |_| {
                 (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
-            output_layer: Array2::from_shape_fn((_vocabulary.vocab_size, hidden_size), |_| {
+            output_layer: Array2::fromshape_fn((_vocabulary.vocab_size, hidden_size), |_| {
                 (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
             controller_state: Array1::zeros(hidden_size),

@@ -463,7 +463,7 @@ pub fn has_identity(_op_name: &str) -> bool {
 
 /// Get the identity element for an operation
 #[allow(dead_code)]
-pub fn get_identity<F: Float>(_op_name: &str) -> Option<F> {
+pub fn get_identity<F: Float>(_op, name: &str) -> Option<F> {
     match _op_name {
         "Add" => Some(F::zero()),
         "Mul" => Some(F::one(), _ => None,

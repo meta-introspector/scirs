@@ -841,7 +841,7 @@ fn create_new_user(_learning_center: &mut LearningCenter) -> Result<(), Box<dyn 
         "1" => DifficultyLevel::Beginner,
         "2" => DifficultyLevel::Intermediate,
         "3" => DifficultyLevel::Advanced,
-        "4" => DifficultyLevel::Expert_ =>, DifficultyLevel::Intermediate,
+        "4" => DifficultyLevel::Expert_ => DifficultyLevel::Intermediate,
     };
 
     println!("\n🎯 What's your preferred learning style?");
@@ -857,7 +857,7 @@ fn create_new_user(_learning_center: &mut LearningCenter) -> Result<(), Box<dyn 
         "2" => LearningStyle::Analytical,
         "3" => LearningStyle::Practical,
         "4" => LearningStyle::Theoretical,
-        "5" => LearningStyle::Applied_ =>, LearningStyle::Practical,
+        "5" => LearningStyle::Applied_ => LearningStyle::Practical,
     };
 
     let profile = UserProfile {

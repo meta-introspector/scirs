@@ -274,7 +274,7 @@ where
         })?;
 
         Ok(VariableKnotSpline {
-            bspline: final_spline_knots: Array1::from(_knots),
+            bspline: final_spline, knots: Array1::from(_knots),
             strategy,
             rms_error: best_error,
         })
@@ -389,7 +389,7 @@ where
         )?;
 
         Ok(VariableKnotSpline {
-            bspline: final_spline_knots: Array1::from(best_knots),
+            bspline: final_spline, knots: Array1::from(best_knots),
             strategy,
             rms_error: best_error,
         })
@@ -468,7 +468,7 @@ where
         let rms_error = Self::calculate_rms_error(&final_spline, x, y)?;
 
         Ok(VariableKnotSpline {
-            bspline: final_spline_knots: Array1::from(_knots),
+            bspline: final_spline, knots: Array1::from(_knots),
             strategy,
             rms_error,
         })

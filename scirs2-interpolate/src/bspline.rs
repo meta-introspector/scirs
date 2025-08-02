@@ -168,11 +168,11 @@ where
     /// Ensure matrix buffer has sufficient capacity
     pub fn ensure_matrix_capacity(&self, rows: usize, cols: usize) {
         let mut matrix_buf = self.matrix_buf.borrow_mut();
-        let current_shape = matrix_buf.dim();
+        let currentshape = matrix_buf.dim();
 
-        if current_shape.0 < rows || current_shape.1 < cols {
-            let new_rows = rows.max(current_shape.0);
-            let new_cols = cols.max(current_shape.1);
+        if currentshape.0 < rows || currentshape.1 < cols {
+            let new_rows = rows.max(currentshape.0);
+            let new_cols = cols.max(currentshape.1);
             *matrix_buf = Array2::zeros((new_rows, new_cols));
 
             let mut stats = self.memory_stats.borrow_mut();

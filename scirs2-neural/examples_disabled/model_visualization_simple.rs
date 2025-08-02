@@ -20,7 +20,7 @@ fn main() -> Result<()> {
         Some(ModelVizOptions {
             width: 80,
             show_params: true,
-            show_shapes: true,
+            showshapes: true,
             show_properties: true,
             color_options: ColorOptions {
                 enabled: true,
@@ -39,7 +39,7 @@ fn main() -> Result<()> {
 }
 // Create a simple MLP model
 #[allow(dead_code)]
-fn create_mlp_model<R: rand::Rng>(_rng: &mut R) -> Result<Sequential<f64>> {
+fn create_mlp_model<R: rand::Rng>(rng: &mut R) -> Result<Sequential<f64>> {
     let mut model = Sequential::new();
     // Input layer is implicitly defined by the first layer
     // Hidden layers

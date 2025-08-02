@@ -16,7 +16,7 @@
 //! ## Examples
 //!
 //! ```rust,no_run
-//! use scirs2__io::out_of_core::{OutOfCoreArray, ChunkProcessor};
+//! use scirs2_io::out_of_core::{OutOfCoreArray, ChunkProcessor};
 //! use ndarray::Array2;
 //!
 //! // Create an out-of-core array
@@ -30,7 +30,7 @@
 //! })?;
 //!
 //! // Virtual array view
-//! let view = array.view_window([0, 0], [1000, 1000])?;
+//! let view = array.view_window(&[0, 0], &[1000, 1000])?;
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
 
@@ -40,12 +40,12 @@ use byteorder::{ByteOrder, LittleEndian};
 use memmap2::{Mmap, MmapMut, MmapOptions};
 use ndarray::{Array, ArrayView, Dimension, IxDyn};
 use scirs2_core::numeric::ScientificNumber;
+use statrs::statistics::Statistics;
 use std::collections::{HashMap, VecDeque};
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
-use statrs::statistics::Statistics;
 
 /// Out-of-core array configuration
 #[derive(Debug, Clone)]
@@ -85,7 +85,7 @@ struct ArrayMetadata {
     /// Element size in bytes
     element_size: usize,
     /// Chunk shape
-    chunk_shape: Vec<usize>,
+    chunkshape: Vec<usize>,
     /// Compression algorithm
     compression: Option<CompressionAlgorithm>,
     /// Total number of chunks
@@ -140,7 +140,7 @@ struct CachedChunk<T> {
 
 impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     /// Create a new out-of-core array
-    pub fn create<P: AsRef<Path>>(_path: P, shape: &[usize]) -> Result<Self> {
+    pub fn create<P: AsRef<Path>>(path: P, shape: &[usize]) -> Result<Self> {
         Self::create_with_config(_path, shape, OutOfCoreConfig::default())
     }
 
@@ -153,12 +153,12 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         let file_path = path.as_ref().to_path_buf();
 
         // Calculate chunk shape
-        let chunk_shape = Self::calculate_chunk_shape(shape, config.chunk_size);
+        let chunkshape = Self::calculate_chunkshape(shape, config.chunk_size);
 
         // Calculate total chunks
         let chunks_per_dim: Vec<_> = shape
             .iter()
-            .zip(&chunk_shape)
+            .zip(&chunkshape)
             .map(|(&dim, &chunk)| (dim + chunk - 1) / chunk)
             .collect();
         let num_chunks = chunks_per_dim.iter().product();
@@ -168,7 +168,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             shape: shape.to_vec(),
             dtype: std::any::type_name::<T>().to_string(),
             element_size: std::mem::size_of::<T>(),
-            chunk_shape,
+            chunkshape,
             compression: config.compression,
             num_chunks,
             chunk_offsets: vec![0; num_chunks],
@@ -214,12 +214,12 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Open an existing out-of-core array
-    pub fn open<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         Self::open_with_config(_path, OutOfCoreConfig::default())
     }
 
     /// Open with custom configuration
-    pub fn open_with_config<P: AsRef<Path>>(_path: P, config: OutOfCoreConfig) -> Result<Self> {
+    pub fn open_with_config<P: AsRef<Path>>(path: P, config: OutOfCoreConfig) -> Result<Self> {
         let file_path = _path.as_ref().to_path_buf();
 
         // Open file and read metadata
@@ -270,11 +270,11 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Calculate chunk shape based on target chunk size
-    fn calculate_chunk_shape(_shape: &[usize], target_size: usize) -> Vec<usize> {
-        let ndim = _shape.len();
+    fn calculate_chunkshape(shape: &[usize], target_size: usize) -> Vec<usize> {
+        let ndim = shape.len();
         let elements_per_dim = (target_size as f64).powf(1.0 / ndim as f64) as usize;
 
-        _shape
+        shape
             .iter()
             .map(|&dim| dim.min(elements_per_dim.max(1)))
             .collect()
@@ -311,7 +311,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         cursor += 4;
 
         // Chunk shape
-        for &dim in &metadata.chunk_shape {
+        for &dim in &metadata.chunkshape {
             LittleEndian::write_u64(&mut buffer[cursor..], dim as u64);
             cursor += 8;
         }
@@ -330,14 +330,16 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         };
         buffer[cursor] = compression_id;
 
-        _file.write_all(&buffer)
+        _file
+            .write_all(&buffer)
             .map_err(|e| IoError::FileError(format!("Failed to write metadata: {e}")))
     }
 
     /// Read metadata from file
     fn read_metadata(_file: &mut File) -> Result<ArrayMetadata> {
         let mut buffer = vec![0u8; Self::metadata_size()];
-        _file.read_exact(&mut buffer)
+        _file
+            .read_exact(&mut buffer)
             .map_err(|e| IoError::ParseError(format!("Failed to read metadata: {e}")))?;
 
         let mut cursor = 0;
@@ -372,9 +374,9 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         cursor += 4;
 
         // Chunk shape
-        let mut chunk_shape = Vec::with_capacity(ndim);
+        let mut chunkshape = Vec::with_capacity(ndim);
         for _ in 0..ndim {
-            chunk_shape.push(LittleEndian::read_u64(&buffer[cursor..]) as usize);
+            chunkshape.push(LittleEndian::read_u64(&buffer[cursor..]) as usize);
             cursor += 8;
         }
 
@@ -391,7 +393,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         // Calculate number of chunks
         let chunks_per_dim: Vec<_> = shape
             .iter()
-            .zip(&chunk_shape)
+            .zip(&chunkshape)
             .map(|(&dim, &chunk)| (dim + chunk - 1) / chunk)
             .collect();
         let num_chunks = chunks_per_dim.iter().product();
@@ -400,7 +402,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             shape,
             dtype: String::new(), // Type is known from T
             element_size,
-            chunk_shape,
+            chunkshape,
             compression,
             num_chunks,
             chunk_offsets: vec![0; num_chunks],
@@ -433,7 +435,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     /// Read chunk from disk
     fn read_chunk_from_disk(&self, chunk_id: usize) -> Result<Vec<T>> {
         if let Some(ref mmap) = self.mmap {
-            let chunk_size = self.metadata.chunk_shape.iter().product::<usize>();
+            let chunk_size = self.metadata.chunkshape.iter().product::<usize>();
             let offset = Self::metadata_size() + chunk_id * chunk_size * self.metadata.element_size;
 
             if let Some(compression) = self.metadata.compression {
@@ -443,7 +445,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
                 if compressed_size == 0 {
                     // Chunk hasn't been written yet, return zeros
-                    let chunk_size = self.metadata.chunk_shape.iter().product::<usize>();
+                    let chunk_size = self.metadata.chunkshape.iter().product::<usize>();
                     return Ok(vec![T::zero(); chunk_size]);
                 }
 
@@ -455,7 +457,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
                     })?;
 
                 // Convert bytes back to T values
-                let chunk_size = self.metadata.chunk_shape.iter().product::<usize>();
+                let chunk_size = self.metadata.chunkshape.iter().product::<usize>();
                 let mut data = Vec::with_capacity(chunk_size);
 
                 for i in 0..chunk_size {
@@ -532,7 +534,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             })?;
         } else {
             // Uncompressed data
-            let chunk_size = self.metadata.chunk_shape.iter().product::<usize>();
+            let chunk_size = self.metadata.chunkshape.iter().product::<usize>();
             let offset = Self::metadata_size() + chunk_id * chunk_size * self.metadata.element_size;
 
             file.seek(SeekFrom::Start(offset as u64))
@@ -598,9 +600,9 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
         for chunk_id in 0..self.metadata.num_chunks {
             let chunk_data = self.get_chunk(chunk_id)?;
-            let chunk_shape = self.get_chunk_shape(chunk_id);
+            let chunkshape = self.get_chunkshape(chunk_id);
 
-            let array_view = ArrayView::from_shape(chunk_shape, &chunk_data)
+            let array_view = ArrayView::fromshape(chunkshape, &chunk_data)
                 .map_err(|e| IoError::ParseError(format!("Failed to create array view: {}", e)))?;
 
             let result = processor(array_view)?;
@@ -611,7 +613,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     }
 
     /// Get shape of a specific chunk
-    fn get_chunk_shape(&self, chunk_id: usize) -> IxDyn {
+    fn get_chunkshape(&self, chunk_id: usize) -> IxDyn {
         // Calculate chunk coordinates
         let mut chunk_coords = Vec::with_capacity(self.metadata.shape.len());
         let mut temp_id = chunk_id;
@@ -620,7 +622,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             .metadata
             .shape
             .iter()
-            .zip(&self.metadata.chunk_shape)
+            .zip(&self.metadata.chunkshape)
             .map(|(&dim, &chunk)| (dim + chunk - 1) / chunk)
             .collect();
 
@@ -631,10 +633,10 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         chunk_coords.reverse();
 
         // Calculate actual chunk shape (may be smaller at boundaries)
-        let chunk_shape: Vec<_> = chunk_coords
+        let chunkshape: Vec<_> = chunk_coords
             .iter()
             .zip(&self.metadata.shape)
-            .zip(&self.metadata.chunk_shape)
+            .zip(&self.metadata.chunkshape)
             .map(|((&coord, &dim), &chunk_dim)| {
                 let start = coord * chunk_dim;
                 let end = ((coord + 1) * chunk_dim).min(dim);
@@ -642,7 +644,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             })
             .collect();
 
-        IxDyn(&chunk_shape)
+        IxDyn(&chunkshape)
     }
 
     /// Get a window view of the array
@@ -666,14 +668,14 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         // Determine which chunks overlap with the window
         let start_chunks: Vec<_> = start
             .iter()
-            .zip(&self.metadata.chunk_shape)
+            .zip(&self.metadata.chunkshape)
             .map(|(&s, &chunk)| s / chunk)
             .collect();
 
         let end_chunks: Vec<_> = start
             .iter()
             .zip(shape)
-            .zip(&self.metadata.chunk_shape)
+            .zip(&self.metadata.chunkshape)
             .map(|((&s, &sz), &chunk)| (s + sz - 1) / chunk)
             .collect();
 
@@ -700,12 +702,12 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
             // Get chunk data
             let chunk_data = self.get_chunk(chunk_id)?;
-            let chunk_shape = self.get_chunk_shape(chunk_id);
+            let chunkshape = self.get_chunkshape(chunk_id);
 
             // Calculate overlap region
             let chunk_start: Vec<_> = chunk_coords
                 .iter()
-                .zip(&self.metadata.chunk_shape)
+                .zip(&self.metadata.chunkshape)
                 .map(|(&coord, &size)| coord * size)
                 .collect();
 
@@ -718,7 +720,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
             let overlap_end: Vec<_> = chunk_start
                 .iter()
-                .zip(chunk_shape.slice())
+                .zip(chunkshape.slice())
                 .zip(window_start)
                 .zip(result.shape())
                 .map(|(((chunk_s, chunk_sz), win_s), win_sz)| {
@@ -729,13 +731,13 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             // Copy data if there's overlap
             if overlap_start.iter().zip(&overlap_end).all(|(s, e)| s < e) {
                 // Calculate source indices in chunk
-                let chunk_src_start: Vec<_> = overlap_start
+                let chunksrc_start: Vec<_> = overlap_start
                     .iter()
                     .zip(&chunk_start)
                     .map(|(overlap, chunk)| overlap - chunk)
                     .collect();
 
-                let chunk_src_end: Vec<_> = overlap_end
+                let chunksrc_end: Vec<_> = overlap_end
                     .iter()
                     .zip(&chunk_start)
                     .map(|(overlap, chunk)| overlap - chunk)
@@ -757,9 +759,9 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
                 // Perform the copy for each element in the overlap region
                 self.copy_chunk_region(
                     &chunk_data,
-                    chunk_shape.slice(),
-                    &chunk_src_start,
-                    &chunk_src_end,
+                    chunkshape.slice(),
+                    &chunksrc_start,
+                    &chunksrc_end,
                     result,
                     &result_dst_start,
                     &result_dst_end,
@@ -781,7 +783,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             .metadata
             .shape
             .iter()
-            .zip(&self.metadata.chunk_shape)
+            .zip(&self.metadata.chunkshape)
             .map(|(&dim, &chunk)| (dim + chunk - 1) / chunk)
             .collect();
 
@@ -800,14 +802,15 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     fn copy_chunk_region(
         &self,
         chunk_data: &[T],
-        chunk_shape: &[usize],
+        chunkshape: &[usize],
         src_start: &[usize],
         src_end: &[usize],
         result: &mut Array<T, IxDyn>,
-        dst_start: &[usize], _dst_end: &[usize],
+        dst_start: &[usize],
+        _dst_end: &[usize],
     ) -> Result<()> {
         // For simplicity, handle only 1D and 2D cases
-        match chunk_shape.len() {
+        match chunkshape.len() {
             1 => {
                 let src_len = src_end[0] - src_start[0];
                 for i in 0..src_len {
@@ -819,7 +822,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             2 => {
                 for i in 0..(src_end[0] - src_start[0]) {
                     for j in 0..(src_end[1] - src_start[1]) {
-                        let src_idx = (src_start[0] + i) * chunk_shape[1] + (src_start[1] + j);
+                        let src_idx = (src_start[0] + i) * chunkshape[1] + (src_start[1] + j);
                         let dst_idx = [dst_start[0] + i, dst_start[1] + j];
                         result[&dst_idx[..]] = chunk_data[src_idx];
                     }
@@ -872,14 +875,14 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         // 1. Determine which chunks are affected
         let start_chunks: Vec<_> = start
             .iter()
-            .zip(&self.metadata.chunk_shape)
+            .zip(&self.metadata.chunkshape)
             .map(|(&s, &chunk)| s / chunk)
             .collect();
 
         let end_chunks: Vec<_> = start
             .iter()
             .zip(data.shape())
-            .zip(&self.metadata.chunk_shape)
+            .zip(&self.metadata.chunkshape)
             .map(|((&s, &sz), &chunk)| (s + sz - 1) / chunk)
             .collect();
 
@@ -891,12 +894,12 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
             // 3. Read the chunk (or get from cache)
             let mut chunk_data = self.get_chunk(chunk_id)?;
-            let chunk_shape = self.get_chunk_shape(chunk_id);
+            let chunkshape = self.get_chunkshape(chunk_id);
 
             // Calculate chunk start position in global coordinates
             let chunk_start: Vec<_> = chunk_coords
                 .iter()
-                .zip(&self.metadata.chunk_shape)
+                .zip(&self.metadata.chunkshape)
                 .map(|(&coord, &size)| coord * size)
                 .collect();
 
@@ -909,7 +912,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
             let overlap_end: Vec<_> = chunk_start
                 .iter()
-                .zip(chunk_shape.slice())
+                .zip(chunkshape.slice())
                 .zip(start)
                 .zip(data.shape())
                 .map(|(((chunk_s, chunk_sz), win_s), win_sz)| {
@@ -921,7 +924,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             if overlap_start.iter().zip(&overlap_end).all(|(s, e)| s < e) {
                 self.write_to_chunk_region(
                     &mut chunk_data,
-                    chunk_shape.slice(),
+                    chunkshape.slice(),
                     &chunk_start,
                     &overlap_start,
                     &overlap_end,
@@ -965,7 +968,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
     fn write_to_chunk_region(
         &self,
         chunk_data: &mut [T],
-        chunk_shape: &[usize],
+        chunkshape: &[usize],
         chunk_start: &[usize],
         overlap_start: &[usize],
         overlap_end: &[usize],
@@ -986,7 +989,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             .collect();
 
         // For simplicity, handle only 1D and 2D cases
-        match chunk_shape.len() {
+        match chunkshape.len() {
             1 => {
                 let len = overlap_end[0] - overlap_start[0];
                 for i in 0..len {
@@ -998,7 +1001,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             2 => {
                 for i in 0..(overlap_end[0] - overlap_start[0]) {
                     for j in 0..(overlap_end[1] - overlap_start[1]) {
-                        let chunk_idx = (chunk_local_start[0] + i) * chunk_shape[1]
+                        let chunk_idx = (chunk_local_start[0] + i) * chunkshape[1]
                             + (chunk_local_start[1] + j);
                         let source_idx = [source_local_start[0] + i, source_local_start[1] + j];
                         chunk_data[chunk_idx] = source_data[&source_idx[..]];
@@ -1059,7 +1062,8 @@ impl<T: ScientificNumber + Ord + Clone> OutOfCoreSorter<T> {
         Ok(Self {
             temp_dir: _temp_dir,
             chunk_size,
-            chunk_files: Vec::new(), _phantom: std::marker::PhantomData,
+            chunk_files: Vec::new(),
+            _phantom: std::marker::PhantomData,
         })
     }
 
@@ -1163,16 +1167,16 @@ impl<T: Clone> VirtualArray<T> {
         }
 
         // Validate shapes
-        let first_shape = _arrays[0].shape();
+        let firstshape = _arrays[0].shape();
         for array in &_arrays[1..] {
             let shape = array.shape();
-            if shape.len() != first_shape.len() {
+            if shape.len() != firstshape.len() {
                 return Err(IoError::ParseError(
                     "Inconsistent array dimensions".to_string(),
                 ));
             }
 
-            for (i, (&a, &b)) in shape.iter().zip(first_shape).enumerate() {
+            for (i, (&a, &b)) in shape.iter().zip(firstshape).enumerate() {
                 if i != axis && a != b {
                     return Err(IoError::ParseError(format!(
                         "Inconsistent shape along axis {}: {} vs {}",
@@ -1183,7 +1187,7 @@ impl<T: Clone> VirtualArray<T> {
         }
 
         // Calculate total shape
-        let mut shape = first_shape.to_vec();
+        let mut shape = firstshape.to_vec();
         shape[axis] = _arrays.iter().map(|a| a.shape()[axis]).sum();
 
         Ok(Self {
@@ -1217,10 +1221,10 @@ impl<T: Clone> VirtualArray<T> {
                 let mut local_region_start = start.to_vec();
                 local_region_start[self.axis] = local_start;
 
-                let mut local_region_shape = shape.to_vec();
-                local_region_shape[self.axis] = local_end - local_start;
+                let mut local_regionshape = shape.to_vec();
+                local_regionshape[self.axis] = local_end - local_start;
 
-                let part = array.read_region(&local_region_start, &local_region_shape)?;
+                let part = array.read_region(&local_region_start, &local_regionshape)?;
                 result_parts.push(part);
             }
 
@@ -1245,7 +1249,7 @@ impl<T: Clone> VirtualArray<T> {
 /// Sliding window iterator for out-of-core processing
 pub struct SlidingWindow<'a, T> {
     array: &'a OutOfCoreArray<T>,
-    window_shape: Vec<usize>,
+    windowshape: Vec<usize>,
     stride: Vec<usize>,
     current_position: Vec<usize>,
 }
@@ -1254,16 +1258,16 @@ impl<'a, T: ScientificNumber + Clone> SlidingWindow<'a, T> {
     /// Create a new sliding window iterator
     pub fn new(
         array: &'a OutOfCoreArray<T>,
-        window_shape: Vec<usize>,
+        windowshape: Vec<usize>,
         stride: Vec<usize>,
     ) -> Result<Self> {
-        if window_shape.len() != array.shape().len() || stride.len() != array.shape().len() {
+        if windowshape.len() != array.shape().len() || stride.len() != array.shape().len() {
             return Err(IoError::ParseError("Dimension mismatch".to_string()));
         }
 
         Ok(Self {
             array,
-            window_shape,
+            windowshape,
             stride,
             current_position: vec![0; array.shape().len()],
         })
@@ -1276,7 +1280,7 @@ impl<T: ScientificNumber + Clone> Iterator for SlidingWindow<'_, T> {
     fn next(&mut self) -> Option<Self::Item> {
         // Check if we've reached the end
         for (i, &pos) in self.current_position.iter().enumerate() {
-            if pos + self.window_shape[i] > self.array.shape()[i] {
+            if pos + self.windowshape[i] > self.array.shape()[i] {
                 return None;
             }
         }
@@ -1284,14 +1288,14 @@ impl<T: ScientificNumber + Clone> Iterator for SlidingWindow<'_, T> {
         // Get current window
         let window = self
             .array
-            .view_window(&self.current_position, &self.window_shape);
+            .view_window(&self.current_position, &self.windowshape);
 
         // Advance position
         let mut carry = true;
         for i in (0..self.current_position.len()).rev() {
             if carry {
                 self.current_position[i] += self.stride[i];
-                if self.current_position[i] + self.window_shape[i] <= self.array.shape()[i] {
+                if self.current_position[i] + self.windowshape[i] <= self.array.shape()[i] {
                     carry = false;
                 } else if i > 0 {
                     self.current_position[i] = 0;
@@ -1309,7 +1313,7 @@ trait ScientificNumberWrite {
 }
 
 trait ScientificNumberRead: Sized {
-    fn read_le<R: Read>(_reader: &mut R) -> Result<Self>;
+    fn read_le<R: Read>(reader: &mut R) -> Result<Self>;
 }
 
 impl<T: ScientificNumber> ScientificNumberWrite for T {
@@ -1322,7 +1326,7 @@ impl<T: ScientificNumber> ScientificNumberWrite for T {
 }
 
 impl<T: ScientificNumber> ScientificNumberRead for T {
-    fn read_le<R: Read>(_reader: &mut R) -> Result<Self> {
+    fn read_le<R: Read>(reader: &mut R) -> Result<Self> {
         let size = std::mem::size_of::<T>();
         let mut bytes = vec![0u8; size];
         _reader
@@ -1352,12 +1356,12 @@ mod tests {
     #[test]
     fn test_chunk_calculation() {
         let shape = vec![10000, 5000, 100];
-        let chunk_shape = OutOfCoreArray::<f64>::calculate_chunk_shape(&shape, 1_000_000);
+        let chunkshape = OutOfCoreArray::<f64>::calculate_chunkshape(&shape, 1_000_000);
 
-        let chunk_elements: usize = chunk_shape.iter().product();
+        let chunk_elements: usize = chunkshape.iter().product();
         assert!(chunk_elements <= 1_000_000);
 
-        for (&dim, &chunk) in shape.iter().zip(&chunk_shape) {
+        for (&dim, &chunk) in shape.iter().zip(&chunkshape) {
             assert!(chunk <= dim);
             assert!(chunk > 0);
         }

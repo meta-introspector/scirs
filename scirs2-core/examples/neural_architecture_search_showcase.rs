@@ -867,7 +867,7 @@ mod tests {
                 },
             ],
             globalconfig: GlobalConfig {
-                input_shape: vec![784],
+                inputshape: vec![784],
                 output_size: 10,
                 learning_rate: 0.001,
                 batch_size: 32,

@@ -368,7 +368,7 @@ where
     }
 
     // Construct the full array from all elements
-    let array = ArrayBase::from_shape_vec(IxDyn(&metadata.shape), all_elements)
+    let array = ArrayBase::fromshape_vec(IxDyn(&metadata.shape), all_elements)
         .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
     Ok((array, metadata))
@@ -676,6 +676,6 @@ where
     };
 
     // Create array from the decompressed data without additional copying
-    ndarray::Array::from_shape_vec(IxDyn(&compressed.metadata.shape), decompressed_data)
+    ndarray::Array::fromshape_vec(IxDyn(&compressed.metadata.shape), decompressed_data)
         .map_err(|e| IoError::DeserializationError(e.to_string()))
 }

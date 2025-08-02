@@ -1,12 +1,12 @@
-//! Linear Time-Invariant (LTI) System Response Analysis
-//!
-//! This module provides functions for analyzing LTI system responses,
-//! including time-domain responses (impulse and step responses) and
-//! frequency-domain responses (Bode plots, Nyquist plots).
+// Linear Time-Invariant (LTI) System Response Analysis
+//
+// This module provides functions for analyzing LTI system responses,
+// including time-domain responses (impulse and step responses) and
+// frequency-domain responses (Bode plots, Nyquist plots).
 
 use crate::error::{SignalError, SignalResult};
-use crate::lti::{LtiSystem, TransferFunction};
 use crate::lti::design::tf;
+use crate::lti::{LtiSystem, TransferFunction};
 
 #[allow(unused_imports)]
 /// Calculate the impulse response of an LTI system
@@ -23,8 +23,8 @@ use crate::lti::design::tf;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::lti::TransferFunction;
-/// use scirs2__signal::lti_response::impulse_response;
+/// use scirs2_signal::lti::TransferFunction;
+/// use scirs2_signal::lti_response::impulse_response;
 ///
 /// // Create a simple first-order system: H(s) = 1 / (s + 1)
 /// let system = TransferFunction::new(
@@ -47,7 +47,7 @@ use crate::lti::design::tf;
 /// assert!(response.iter().all(|x| x.is_finite()));
 /// ```
 #[allow(dead_code)]
-pub fn impulse_response<T: LtiSystem>(_system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
+pub fn impulse_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
     _system.impulse_response(t)
 }
 
@@ -65,8 +65,8 @@ pub fn impulse_response<T: LtiSystem>(_system: &T, t: &[f64]) -> SignalResult<Ve
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::lti::TransferFunction;
-/// use scirs2__signal::lti_response::step_response;
+/// use scirs2_signal::lti::TransferFunction;
+/// use scirs2_signal::lti_response::step_response;
 ///
 /// // Create a simple first-order system: H(s) = 1 / (s + 1)
 /// let system = TransferFunction::new(
@@ -89,7 +89,7 @@ pub fn impulse_response<T: LtiSystem>(_system: &T, t: &[f64]) -> SignalResult<Ve
 /// assert!(response.iter().all(|x| x.is_finite()));
 /// ```
 #[allow(dead_code)]
-pub fn step_response<T: LtiSystem>(_system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
+pub fn step_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
     _system.step_response(t)
 }
 
@@ -108,8 +108,8 @@ pub fn step_response<T: LtiSystem>(_system: &T, t: &[f64]) -> SignalResult<Vec<f
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::lti::TransferFunction;
-/// use scirs2__signal::lti_response::lsim;
+/// use scirs2_signal::lti::TransferFunction;
+/// use scirs2_signal::lti_response::lsim;
 ///
 /// // Create a simple first-order system: H(s) = 1 / (s + 1)
 /// let system = TransferFunction::new(
@@ -131,7 +131,7 @@ pub fn step_response<T: LtiSystem>(_system: &T, t: &[f64]) -> SignalResult<Vec<f
 /// assert!(y.iter().all(|&val: &f64| val.is_finite()));
 /// ```
 #[allow(dead_code)]
-pub fn lsim<T: LtiSystem>(_system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<f64>> {
+pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<f64>> {
     if t.is_empty() || u.is_empty() {
         return Ok(Vec::new());
     }

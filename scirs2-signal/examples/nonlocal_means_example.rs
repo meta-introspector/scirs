@@ -1,13 +1,13 @@
 use ndarray::{Array1, Array2, Array3};
-use rand::{rng, Rng};
+use rand::{self as rng, Rng};
 use std::fs::File;
 use std::io::Write;
 
-use scirs2__signal::nlm::{
-use std::f64::consts::PI;
+use scirs2_signal::nlm::{
     nlm_block_matching_2d, nlm_color_image, nlm_denoise_1d, nlm_denoise_2d, nlm_multiscale_2d,
     NlmConfig,
 };
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {
@@ -127,7 +127,8 @@ fn main() {
         let channel_name = match c {
             0 => "red",
             1 => "green",
-            2 => "blue"_ => "unknown",
+            2 => "blue",
+            _ => "unknown",
         };
 
         save_image_to_csv(
@@ -226,7 +227,7 @@ fn generate_test_signal() -> (Array1<f64>, Array1<f64>) {
         noisy_signal[i] += noise_level * rng.gen_range(-1.0..1.0);
     }
 
-    (clean_signal..noisy_signal)
+    (clean_signal, noisy_signal)
 }
 
 /// Generates a test 2D image with additive noise

@@ -1387,7 +1387,7 @@ pub fn add_time_series_noise(
             }
             _ => {
                 return Err(DatasetsError::InvalidFormat(format!(
-                    "Unknown noise type: {noise_type}. Supported _types: gaussian, spikes, drift, seasonal, autocorrelated, heteroscedastic"
+                    "Unknown noise type: {noise_type}. Supported , types: gaussian, spikes, drift, seasonal, autocorrelated, heteroscedastic"
                 )));
             }
         }
@@ -1640,7 +1640,7 @@ fn make_classification_gpu_impl(
     }
 
     // Convert to ndarray
-    let data = Array2::from_shape_vec((n_samples, n_features), all_data)
+    let data = Array2::fromshape_vec((n_samples, n_features), all_data)
         .map_err(|e| DatasetsError::Other(format!("Failed to create data array: {e}")))?;
 
     let target = Array1::from_vec(all_targets);
@@ -1925,7 +1925,7 @@ fn make_regression_gpu_impl(
     }
 
     // Convert to ndarray
-    let data = Array2::from_shape_vec((n_samples, n_features), all_data)
+    let data = Array2::fromshape_vec((n_samples, n_features), all_data)
         .map_err(|e| DatasetsError::Other(format!("Failed to create data array: {e}")))?;
 
     let target = Array1::from_vec(all_targets);
@@ -3250,7 +3250,7 @@ mod tests {
 
     #[test]
     fn test_inject_missing_data_invalid_params() {
-        let mut data = Array2::from_shape_vec((5, 3), vec![1.0; 15]).unwrap();
+        let mut data = Array2::fromshape_vec((5, 3), vec![1.0; 15]).unwrap();
 
         // Test invalid missing rate
         assert!(inject_missing_data(&mut data, -0.1, MissingPattern::MCAR, None).is_err());
@@ -3260,7 +3260,7 @@ mod tests {
     #[test]
     fn test_inject_missing_data_mcar() {
         let mut data =
-            Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+            Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let original_data = data.clone();
 
         let missing_mask =
@@ -3282,7 +3282,7 @@ mod tests {
 
     #[test]
     fn test_inject_outliers_invalid_params() {
-        let mut data = Array2::from_shape_vec((5, 3), vec![1.0; 15]).unwrap();
+        let mut data = Array2::fromshape_vec((5, 3), vec![1.0; 15]).unwrap();
 
         // Test invalid outlier rate
         assert!(inject_outliers(&mut data, -0.1, OutlierType::Point, 2.0, None).is_err());
@@ -3295,7 +3295,7 @@ mod tests {
 
     #[test]
     fn test_inject_outliers_point() {
-        let mut data = Array2::from_shape_vec((20, 2), vec![1.0; 40]).unwrap();
+        let mut data = Array2::fromshape_vec((20, 2), vec![1.0; 40]).unwrap();
 
         let outlier_mask =
             inject_outliers(&mut data, 0.2, OutlierType::Point, 3.0, Some(42)).unwrap();
@@ -3416,7 +3416,7 @@ mod tests {
 
     #[test]
     fn test_missing_patterns() {
-        let data = Array2::from_shape_vec((20, 4), (0..80).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((20, 4), (0..80).map(|x| x as f64).collect()).unwrap();
 
         // Test different missing patterns
         for pattern in [

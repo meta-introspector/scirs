@@ -22,7 +22,7 @@
 //! use ndarray::Array2;
 //!
 //! // Create sample data
-//! let data = Array2::from_shape_vec((1000, 2), (0..2000).map(|x| x as f64).collect()).unwrap();
+//! let data = Array2::fromshape_vec((1000, 2), (0..2000).map(|x| x as f64).collect()).unwrap();
 //!
 //! // Configure distributed clustering
 //! let config = DistributedKMeansConfig {

@@ -1,4 +1,4 @@
-//! Type definitions for image feature extraction
+// Type definitions for image feature extraction
 
 /// Image feature extraction options
 #[allow(unused_imports)]

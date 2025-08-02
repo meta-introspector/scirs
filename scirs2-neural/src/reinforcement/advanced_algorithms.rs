@@ -219,7 +219,7 @@ impl TD3 {
         use rand__distr::{Distribution, Normal};
         let mut rng = rng();
         let normal = Normal::new(0.0, std).unwrap();
-        Array1::from_shape_fn(size, |_| normal.sample(&mut rng))
+        Array1::fromshape_fn(size, |_| normal.sample(&mut rng))
     /// Clip actions to valid range
     fn clip_action(&self, action: &Array1<f32>) -> Array1<f32> {
         Array1::from_iter(action.iter().enumerate().map(|(i, &a)| {

@@ -695,7 +695,7 @@ impl LargeScaleTestUtils {
             }
 
             Ok(TestResult::success(
-                result.std::time::Duration::from_secs(1),
+                std::time::Duration::from_secs(1),
                 result.chunks_processed,
             ))
         });
@@ -726,7 +726,7 @@ impl LargeScaleTestUtils {
             }
 
             Ok(TestResult::success(
-                result.std::time::Duration::from_secs(1),
+                std::time::Duration::from_secs(1),
                 result.chunks_processed,
             ))
         });
@@ -754,7 +754,7 @@ impl LargeScaleTestUtils {
             }
 
             Ok(TestResult::success(
-                result.std::time::Duration::from_secs(1),
+                std::time::Duration::from_secs(1),
                 result.chunks_processed,
             ))
         });

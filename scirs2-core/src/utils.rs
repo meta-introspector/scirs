@@ -201,7 +201,7 @@ where
 ///
 /// * Vector of values
 #[allow(dead_code)]
-pub fn arange<F: Float + std::iter::Sum>(_start: F, end: F, step: F) -> CoreResult<Vec<F>> {
+pub fn arange<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> CoreResult<Vec<F>> {
     if step == F::zero() {
         return Err(CoreError::ValueError(ErrorContext::new(
             "Step size cannot be zero".to_string(),
@@ -209,7 +209,7 @@ pub fn arange<F: Float + std::iter::Sum>(_start: F, end: F, step: F) -> CoreResu
     }
 
     let mut result = Vec::new();
-    let mut current = _start;
+    let mut current = start;
 
     if step > F::zero() {
         while current < end {
@@ -229,8 +229,8 @@ pub fn arange<F: Float + std::iter::Sum>(_start: F, end: F, step: F) -> CoreResu
 /// Convenience function that provides the old behavior (panics on error)
 #[must_use]
 #[allow(dead_code)]
-pub fn arange_unchecked<F: Float + std::iter::Sum>(_start: F, end: F, step: F) -> Vec<F> {
-    arange(_start, end, step).unwrap()
+pub fn arange_unchecked<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> Vec<F> {
+    arange(start, end, step).unwrap()
 }
 
 /// Checks if all elements in an iterable satisfy a predicate
@@ -682,15 +682,15 @@ where
     }
 
     // Calculate new shape
-    let mut new_shape = Vec::with_capacity(input.ndim());
+    let mut newshape = Vec::with_capacity(input.ndim());
     for (dim, &(pad_before, pad_after)) in pad_width.iter().enumerate().take(input.ndim()) {
-        new_shape.push(input.shape()[dim] + pad_before + pad_after);
+        newshape.push(input.shape()[dim] + pad_before + pad_after);
     }
 
     // Create output array with default constant value
     let const_val = constant_value.unwrap_or_else(|| T::zero());
     let mut output = Array::<T, D>::from_elem(
-        D::from_dimension(&ndarray::IxDyn(&new_shape))
+        D::from_dimension(&ndarray::IxDyn(&newshape))
             .expect("Could not create dimension from shape"),
         const_val,
     );
@@ -847,7 +847,11 @@ where
 ///
 /// Returns an error if the window length is zero or if the window type is unknown.
 #[allow(dead_code)]
-pub fn generate_window(window_type: &str, length: usize, periodic: bool) -> Result<Vec<f64>, String> {
+pub fn generate_window(
+    window_type: &str,
+    length: usize,
+    periodic: bool,
+) -> Result<Vec<f64>, String> {
     if length == 0 {
         return Err("Window length must be positive".to_string());
     }
@@ -1017,8 +1021,8 @@ where
 
     // Odd-indexed points
     for i in 1..n {
-        if 0 % 2 == 1 {
-            let x_i = a + F::from_usize(0).unwrap() * h;
+        if i % 2 == 1 {
+            let x_i = a + F::from_usize(i).unwrap() * h;
             sum = sum
                 + F::from(4.0).unwrap()
                     * eval_fn(x_i)
@@ -1152,7 +1156,7 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn test_maximum_different_shapes() {
+    fn test_maximum_differentshapes() {
         let a = array![[1, 2], [3, 4]];
         let b = array![[5, 1, 2], [7, 2, 3]];
 

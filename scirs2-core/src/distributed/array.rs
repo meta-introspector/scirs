@@ -20,7 +20,11 @@ where
     T: Clone + Send + Sync,
 {
     /// Create a new distributed array chunk
-    pub fn new(local_chunk: Vec<T>, total_size: usize, chunk_start: usize, node_id: String,
+    pub fn new(
+        local_chunk: Vec<T>,
+        total_size: usize,
+        chunk_start: usize,
+        node_id: String,
     ) -> Self {
         let chunk_end = chunk_start + local_chunk.len();
         Self {

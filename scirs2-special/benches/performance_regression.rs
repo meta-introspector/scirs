@@ -147,7 +147,7 @@ fn memory_intensive_benchmarks(c: &mut Criterion) {
     group.bench_function("matrix_gamma_operations", |b| {
         b.iter(|| {
             let matrix =
-                Array2::from_shape_fn((100, 100), |(i, j)| 1.0 + (i * 100 + j) as f64 * 0.01);
+                Array2::fromshape_fn((100, 100), |(i, j)| 1.0 + (i * 100 + j) as f64 * 0.01);
 
             let mut result = Array2::zeros((100, 100));
             for ((i, j), &val) in matrix.indexed_iter() {

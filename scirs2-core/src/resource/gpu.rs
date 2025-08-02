@@ -244,7 +244,7 @@ impl GpuInfo {
     pub fn is_ml_capable(&self) -> bool {
         self.is_compute_capable() && (self.features.tensor_cores || self.features.half_precision)
     }
-    
+
     /// Create GpuInfo from PCI IDs
     pub fn create_from_pci_ids(vendor_id: &str, device_id: &str) -> Self {
         let vendor = match vendor_id {
@@ -253,7 +253,7 @@ impl GpuInfo {
             "8086" => GpuVendor::Intel,
             _ => GpuVendor::Unknown,
         };
-        
+
         // Default GPU info based on vendor
         // In a real implementation, this would look up specific device info
         Self {

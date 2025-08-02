@@ -235,9 +235,9 @@ fn create_plots(
     // Set layout
     time_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("Time Domain Signal Comparison"))
-            .x_axis(Axis::new().title(Title::with_text("Sample Index")))
-            .y_axis(Axis::new().title(Title::with_text("Amplitude"))),
+            .title(Title::withtext("Time Domain Signal Comparison"))
+            .x_axis(Axis::new().title(Title::withtext("Sample Index")))
+            .y_axis(Axis::new().title(Title::withtext("Amplitude"))),
     );
 
     // Save the plot
@@ -284,9 +284,9 @@ fn create_plots(
     // Set layout
     highres_plot.set_layout(
         Layout::new()
-            .title(Title::with_text("High-Resolution Reconstruction"))
-            .x_axis(Axis::new().title(Title::with_text("Sample Index")))
-            .y_axis(Axis::new().title(Title::with_text("Amplitude"))),
+            .title(Title::withtext("High-Resolution Reconstruction"))
+            .x_axis(Axis::new().title(Title::withtext("Sample Index")))
+            .y_axis(Axis::new().title(Title::withtext("Amplitude"))),
     );
 
     // Save the plot

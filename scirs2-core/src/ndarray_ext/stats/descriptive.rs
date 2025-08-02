@@ -888,12 +888,12 @@ where
             }
 
             // Create output shape by removing the specified axis
-            let mut output_shape = array.shape().to_vec();
-            output_shape.remove(ax.index());
+            let mut outputshape = array.shape().to_vec();
+            outputshape.remove(ax.index());
 
             // Handle case where removing axis results in scalar
-            if output_shape.is_empty() {
-                output_shape.push(1);
+            if outputshape.is_empty() {
+                outputshape.push(1);
             }
 
             // Calculate mean along specified axis using ndarray's mean_axis
@@ -1019,12 +1019,12 @@ where
             }
 
             // Create output shape by removing the specified axis
-            let mut output_shape = array.shape().to_vec();
-            output_shape.remove(ax.index());
+            let mut outputshape = array.shape().to_vec();
+            outputshape.remove(ax.index());
 
             // Handle case where removing axis results in scalar
-            if output_shape.is_empty() {
-                output_shape.push(1);
+            if outputshape.is_empty() {
+                outputshape.push(1);
             }
 
             // Calculate variance along specified axis using ndarray's var_axis
@@ -1128,12 +1128,12 @@ where
             }
 
             // Create output shape by removing the specified axis
-            let mut output_shape = array.shape().to_vec();
-            output_shape.remove(ax.index());
+            let mut outputshape = array.shape().to_vec();
+            outputshape.remove(ax.index());
 
             // Handle case where removing axis results in scalar
-            if output_shape.is_empty() {
-                output_shape.push(1);
+            if outputshape.is_empty() {
+                outputshape.push(1);
             }
 
             // Use ndarray's fold_axis to compute minimum along specified axis
@@ -1194,12 +1194,12 @@ where
             }
 
             // Create output shape by removing the specified axis
-            let mut output_shape = array.shape().to_vec();
-            output_shape.remove(ax.index());
+            let mut outputshape = array.shape().to_vec();
+            outputshape.remove(ax.index());
 
             // Handle case where removing axis results in scalar
-            if output_shape.is_empty() {
-                output_shape.push(1);
+            if outputshape.is_empty() {
+                outputshape.push(1);
             }
 
             // Use ndarray's fold_axis to compute maximum along specified axis

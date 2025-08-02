@@ -1,16 +1,16 @@
-//! System design and interconnection functions for LTI systems
-//!
-//! This module provides functions for creating LTI systems in different representations
-//! and connecting them in various configurations:
-//! - System creation helpers (tf, zpk, ss)
-//! - System interconnections (series, parallel, feedback)
-//! - System transformations (continuous to discrete)
-//! - Sensitivity function analysis
-//! - Polynomial utility functions
+// System design and interconnection functions for LTI systems
+//
+// This module provides functions for creating LTI systems in different representations
+// and connecting them in various configurations:
+// - System creation helpers (tf, zpk, ss)
+// - System interconnections (series, parallel, feedback)
+// - System transformations (continuous to discrete)
+// - Sensitivity function analysis
+// - Polynomial utility functions
 
-use crate::error::{SignalError, SignalResult};
-use num__complex::Complex64;
 use super::systems::{LtiSystem, StateSpace, TransferFunction, ZerosPoleGain};
+use crate::error::{SignalError, SignalResult};
+use num_complex::Complex64;
 
 #[allow(unused_imports)]
 /// Create a transfer function system from numerator and denominator coefficients
@@ -31,7 +31,7 @@ use super::systems::{LtiSystem, StateSpace, TransferFunction, ZerosPoleGain};
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::tf;
+/// use scirs2_signal::lti::design::tf;
 ///
 /// // Create H(s) = (s + 1) / (s^2 + 2s + 1)
 /// let sys = tf(vec![1.0, 1.0], vec![1.0, 2.0, 1.0], None).unwrap();
@@ -61,7 +61,7 @@ pub fn tf(_num: Vec<f64>, den: Vec<f64>, dt: Option<bool>) -> SignalResult<Trans
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::zpk;
+/// use scirs2_signal::lti::design::zpk;
 ///
 /// // Create H(s) = 2 * (s + 1) / (s + 2)(s + 3)
 /// let sys = zpk(
@@ -102,7 +102,7 @@ pub fn zpk(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::ss;
+/// use scirs2_signal::lti::design::ss;
 ///
 /// // Create a simple integrator: dx/dt = u, y = x
 /// let sys = ss(
@@ -141,13 +141,13 @@ pub fn ss(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::{tf, c2d};
+/// use scirs2_signal::lti::design::{tf, c2d};
 ///
 /// let sys_ct = tf(vec![1.0], vec![1.0, 1.0], Some(false)).unwrap();
 /// let sys_dt = c2d(&sys_ct, 0.1).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn c2d<T: LtiSystem>(_system: &T, _dt: f64) -> SignalResult<StateSpace> {
+pub fn c2d<T: LtiSystem>(system: &T, _dt: f64) -> SignalResult<StateSpace> {
     // Convert to state-space first
     let ss_sys = _system.to_ss()?;
 
@@ -190,14 +190,14 @@ pub fn c2d<T: LtiSystem>(_system: &T, _dt: f64) -> SignalResult<StateSpace> {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::{tf, series};
+/// use scirs2_signal::lti::design::{tf, series};
 ///
 /// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();   // 1/(s+1)
 /// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();   // 2/(s+2)
 /// let series_sys = series(&g1, &g2).unwrap();              // 2/((s+1)(s+2))
 /// ```
 #[allow(dead_code)]
-pub fn series<T1: LtiSystem, T2: LtiSystem>(_g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
+pub fn series<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
     let tf1 = _g1.to_tf()?;
     let tf2 = g2.to_tf()?;
 
@@ -233,14 +233,14 @@ pub fn series<T1: LtiSystem, T2: LtiSystem>(_g1: &T1, g2: &T2) -> SignalResult<T
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::{tf, parallel};
+/// use scirs2_signal::lti::design::{tf, parallel};
 ///
 /// let g1 = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();   // 1/(s+1)
 /// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();   // 2/(s+2)
 /// let parallel_sys = parallel(&g1, &g2).unwrap();          // (3s+4)/((s+1)(s+2))
 /// ```
 #[allow(dead_code)]
-pub fn parallel<T1: LtiSystem, T2: LtiSystem>(_g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
+pub fn parallel<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
     let tf1 = _g1.to_tf()?;
     let tf2 = g2.to_tf()?;
 
@@ -279,7 +279,7 @@ pub fn parallel<T1: LtiSystem, T2: LtiSystem>(_g1: &T1, g2: &T2) -> SignalResult
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::{tf, feedback};
+/// use scirs2_signal::lti::design::{tf, feedback};
 ///
 /// let g = tf(vec![1.0], vec![1.0, 1.0], None).unwrap();
 /// let h = tf(vec![1.0], vec![1.0], None).unwrap(); // Unity feedback
@@ -345,7 +345,7 @@ pub fn feedback<T1: LtiSystem>(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::{tf, sensitivity};
+/// use scirs2_signal::lti::design::{tf, sensitivity};
 ///
 /// let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap();
 /// let sens = sensitivity(&g, None).unwrap(); // Unity feedback
@@ -403,7 +403,7 @@ pub fn sensitivity<T1: LtiSystem>(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::{tf, complementary_sensitivity};
+/// use scirs2_signal::lti::design::{tf, complementary_sensitivity};
 ///
 /// let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap();
 /// let comp_sens = complementary_sensitivity(&g, None).unwrap(); // Unity feedback
@@ -460,7 +460,7 @@ pub fn complementary_sensitivity<T1: LtiSystem>(
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::multiply_polynomials;
+/// use scirs2_signal::lti::design::multiply_polynomials;
 ///
 /// let p1 = vec![1.0, 2.0]; // x + 2
 /// let p2 = vec![1.0, 3.0]; // x + 3
@@ -502,7 +502,7 @@ pub fn multiply_polynomials(_p1: &[f64], p2: &[f64]) -> Vec<f64> {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::add_polynomials;
+/// use scirs2_signal::lti::design::add_polynomials;
 ///
 /// let p1 = vec![1.0, 2.0]; // x + 2
 /// let p2 = vec![1.0, 3.0]; // x + 3
@@ -547,7 +547,7 @@ pub fn add_polynomials(_p1: &[f64], p2: &[f64]) -> Vec<f64> {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::design::subtract_polynomials;
+/// use scirs2_signal::lti::design::subtract_polynomials;
 ///
 /// let p1 = vec![2.0, 5.0]; // 2x + 5
 /// let p2 = vec![1.0, 3.0]; // x + 3
@@ -588,7 +588,10 @@ pub fn subtract_polynomials(_p1: &[f64], p2: &[f64]) -> Vec<f64> {
 ///
 /// Tuple of (quotient, remainder) polynomial coefficients
 #[allow(dead_code)]
-pub fn divide_polynomials(_dividend: &[f64], divisor: &[f64]) -> SignalResult<(Vec<f64>, Vec<f64>)> {
+pub fn divide_polynomials(
+    _dividend: &[f64],
+    divisor: &[f64],
+) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     if divisor.is_empty() || divisor.iter().all(|&x: &f64| x.abs() < 1e-10) {
         return Err(SignalError::ValueError(
             "Cannot divide by zero polynomial".to_string(),
@@ -698,9 +701,9 @@ pub fn polynomial_derivative(_coeffs: &[f64]) -> Vec<f64> {
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
-use crate::lti::{tf, TransferFunction};
-use crate::lti::design::tf;
+    use crate::lti::design::tf;
+    use crate::lti::{tf, TransferFunction};
+    use approx::assert_relative_eq;
     #[test]
     fn test_system_creation() {
         // Test transfer function creation

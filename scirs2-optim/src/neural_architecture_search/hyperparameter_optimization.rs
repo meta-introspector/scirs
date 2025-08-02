@@ -1885,7 +1885,7 @@ impl<T: Float + Send + Sync> ParameterSpaceManager<T> {
 }
 
 impl<T: Float + Send + Sync> EvaluationScheduler<T> {
-    fn new(_config: SchedulerConfig_constraints: ResourceConstraints<T>) -> Result<Self> {
+    fn new(config: SchedulerConfig, constraints: ResourceConstraints<T>) -> Result<Self> {
         Ok(Self {
             pending_queue: VecDeque::new(),
             running_evaluations: HashMap::new(),

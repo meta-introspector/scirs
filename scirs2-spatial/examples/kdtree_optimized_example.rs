@@ -86,7 +86,7 @@ fn demo_batch_nearest_neighbor() {
         }
     }
     let points =
-        Array2::from_shape_vec((100, 2), grid_points.into_iter().flatten().collect()).unwrap();
+        Array2::fromshape_vec((100, 2), grid_points.into_iter().flatten().collect()).unwrap();
 
     // Build KD-tree
     let kdtree = KDTree::new(&points).unwrap();

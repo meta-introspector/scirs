@@ -1,7 +1,7 @@
-//! Tests for the wavelets module
+// Tests for the wavelets module
 
-use std::f64::consts::PI;
 use super::*;
+use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 #[test]

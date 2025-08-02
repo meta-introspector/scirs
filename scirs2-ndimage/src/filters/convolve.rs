@@ -384,7 +384,7 @@ where
             // Handle border mode
             let value = if input_idx < 0 || input_idx >= input_len as isize {
                 match mode {
-                    BorderMode::Constant =>, T::zero(),
+                    BorderMode::Constant => T::zero(),
                     BorderMode::Nearest => {
                         if input_idx < 0 {
                             input[0]
@@ -499,7 +499,7 @@ where
     }
 
     match mode {
-        BorderMode::Constant =>, T::zero(),
+        BorderMode::Constant => T::zero(),
         BorderMode::Nearest => {
             let clamped_z = z.max(0).min(depth as isize - 1) as usize;
             let clamped_y = y.max(0).min(height as isize - 1) as usize;
@@ -563,8 +563,8 @@ where
     D: Dimension + 'static,
     E: Dimension + 'static,
 {
-    let input_shape = input.shape();
-    let weights_shape = weights.shape();
+    let inputshape = input.shape();
+    let weightsshape = weights.shape();
     let ndim = input.ndim();
 
     if ndim != weights.ndim() {
@@ -573,24 +573,24 @@ where
         ));
     }
 
-    if weights_shape.iter().any(|&s| s == 0) {
+    if weightsshape.iter().any(|&s| s == 0) {
         return Err(NdimageError::InvalidInput(
             "Kernel cannot have zero dimensions".into(),
         ));
     }
 
     // Calculate half sizes for centering the kernel
-    let half_sizes: Vec<usize> = weights_shape.iter().map(|&s| s / 2).collect();
+    let half_sizes: Vec<usize> = weightsshape.iter().map(|&s| s / 2).collect();
 
     let mut output = Array::zeros(input.raw_dim());
 
     // Iterate over all output positions
-    for out_indices in ndarray::indices(input_shape) {
+    for out_indices in ndarray::indices(inputshape) {
         let out_coords: Vec<usize> = out_indices.slice().to_vec();
         let mut sum = T::zero();
 
         // Iterate over all kernel positions
-        for weight_indices in ndarray::indices(weights_shape) {
+        for weight_indices in ndarray::indices(weightsshape) {
             let weight_coords: Vec<usize> = weight_indices.slice().to_vec();
 
             // Calculate input coordinates
@@ -638,7 +638,7 @@ where
     }
 
     match mode {
-        BorderMode::Constant =>, T::zero(),
+        BorderMode::Constant => T::zero(),
         BorderMode::Nearest => _input[ndarray::IxDyn(&clamped_coords)],
         BorderMode::Reflect => {
             let mut reflected_coords = vec![0usize; ndim];

@@ -31,7 +31,7 @@ pub struct HyperParameter<F: Float + fmt::Debug + fmt::Display + FromPrimitive> 
 
 impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
     /// Create a new continuous hyperparameter
-    pub fn new<S: Into<String>>(_name: S, value: F, min_value: F, max_value: F) -> Self {
+    pub fn new<S: Into<String>>(name: S, value: F, min_value: F, max_value: F) -> Self {
         Self {
             _name: _name.into(),
             _value,
@@ -63,7 +63,7 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameter<F> {
     }
 
     /// Create a new categorical hyperparameter
-    pub fn categorical<S: Into<String>>(_name: S, value: F, values: Vec<F>) -> Result<Self> {
+    pub fn categorical<S: Into<String>>(name: S, value: F, values: Vec<F>) -> Result<Self> {
         if values.is_empty() {
             return Err(MetricsError::InvalidArgument(
                 "Categorical values cannot be empty".to_string(),
@@ -426,8 +426,8 @@ impl<F: Float + fmt::Debug + fmt::Display + FromPrimitive> HyperParameterTuner<F
             self.metric_name.clone(),
             self.mode,
             self.best_value.unwrap_or_else(|| match self.mode {
-                OptimizationMode::Maximize =>, F::neg_infinity(),
-                OptimizationMode::Minimize =>, F::infinity(),
+                OptimizationMode::Maximize => F::neg_infinity(),
+                OptimizationMode::Minimize => F::infinity(),
             }),
             self.best_params.clone(),
         );

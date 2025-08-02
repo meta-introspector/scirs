@@ -1,36 +1,37 @@
-//! Robust Filtering module
-//!
-//! This module implements robust filtering techniques for handling outliers
-//! and non-Gaussian noise in signal and image processing applications.
-//!
-//! Robust filters are designed to be insensitive to outliers and provide
-//! better performance than traditional linear filters when dealing with
-//! impulsive noise or contaminated data.
-//!
-//! The implementation includes:
-//! - Alpha-trimmed mean filtering
-//! - Hampel filter for outlier detection and replacement
-//! - Winsorized filtering
-//! - Huber loss-based robust filtering
-//! - Adaptive robust filtering
-//!
-//! # Example
-//! ```
-//! use ndarray::Array1;
-//! use scirs2__signal::robust::{alpha_trimmed_filter, hampel_filter};
-//!
-//! // Create a test signal with outliers
-//! let signal = Array1::from_vec(vec![1.0, 1.2, 1.1, 10.0, 1.3, 1.2, -5.0, 1.1]);
-//!
-//! // Apply alpha-trimmed mean filter
-//! let filtered = alpha_trimmed_filter(&signal, 5, 0.2).unwrap();
-//!
-//! // Apply Hampel filter for outlier detection
-//! let (cleaned, outliers) = hampel_filter(&signal, 5, 3.0).unwrap();
-//! ```
+use ndarray::s;
+// Robust Filtering module
+//
+// This module implements robust filtering techniques for handling outliers
+// and non-Gaussian noise in signal and image processing applications.
+//
+// Robust filters are designed to be insensitive to outliers and provide
+// better performance than traditional linear filters when dealing with
+// impulsive noise or contaminated data.
+//
+// The implementation includes:
+// - Alpha-trimmed mean filtering
+// - Hampel filter for outlier detection and replacement
+// - Winsorized filtering
+// - Huber loss-based robust filtering
+// - Adaptive robust filtering
+//
+// # Example
+// ```
+// use ndarray::Array1;
+// use scirs2_signal::robust::{alpha_trimmed_filter, hampel_filter};
+//
+// // Create a test signal with outliers
+// let signal = Array1::from_vec(vec![1.0, 1.2, 1.1, 10.0, 1.3, 1.2, -5.0, 1.1]);
+//
+// // Apply alpha-trimmed mean filter
+// let filtered = alpha_trimmed_filter(&signal, 5, 0.2).unwrap();
+//
+// // Apply Hampel filter for outlier detection
+// let (cleaned, outliers) = hampel_filter(&signal, 5, 3.0).unwrap();
+// ```
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
+use ndarray::{ Array1, Array2};
 
 #[allow(unused_imports)]
 /// Configuration for robust filtering algorithms
@@ -89,7 +90,7 @@ pub enum EdgeMode {
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::robust::alpha_trimmed_filter;
+/// use scirs2_signal::robust::alpha_trimmed_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let filtered = alpha_trimmed_filter(&signal, 3, 0.2).unwrap();
@@ -186,7 +187,7 @@ pub fn alpha_trimmed_filter(
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::robust::hampel_filter;
+/// use scirs2_signal::robust::hampel_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let (filtered, outliers) = hampel_filter(&signal, 3, 3.0).unwrap();
@@ -295,7 +296,7 @@ pub fn hampel_filter(
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::robust::winsorize_filter;
+/// use scirs2_signal::robust::winsorize_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let filtered = winsorize_filter(&signal, 3, 10.0).unwrap();
@@ -391,7 +392,7 @@ pub fn winsorize_filter(
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::robust::huber_filter;
+/// use scirs2_signal::robust::huber_filter;
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let filtered = huber_filter(&signal, 3, 1.35).unwrap();
@@ -584,7 +585,7 @@ mod tests {
     #[test]
     fn test_robust_filter_2d() {
         let image =
-            Array2::from_shape_vec((3, 3), vec![1.0, 1.2, 1.1, 1.1, 10.0, 1.2, 1.3, 1.2, 1.1])
+            Array2::fromshape_vec((3, 3), vec![1.0, 1.2, 1.1, 1.1, 10.0, 1.2, 1.3, 1.2, 1.1])
                 .unwrap();
 
         let filtered = robust_filter_2d(&image, alpha_trimmed_filter, 3, 0.2).unwrap();

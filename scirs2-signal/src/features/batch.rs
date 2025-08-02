@@ -1,17 +1,18 @@
+use ndarray::s;
 use crate::error::{SignalError, SignalResult};
 use crate::features::options::FeatureOptions;
-use ndarray::{Array2, s};
+use ndarray::{ Array2};
 use num_traits::{Float, NumCast};
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-#[allow(unused_imports)]
-use crate::utilities::spectral::spectral_centroid;
 use crate::features::{
     entropy::extract_entropy_features, peaks::extract_peak_features,
     spectral::extract_spectral_features, statistical::extract_statistical_features,
     trend::extract_trend_features, zero_crossing::extract_zero_crossing_features,
 };
+#[allow(unused_imports)]
+use crate::utilities::spectral::spectral_centroid;
 /// Run feature extraction on a time series
 ///
 /// # Arguments
@@ -26,7 +27,7 @@ use crate::features::{
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::features::{extract_features, FeatureOptions};
+/// use scirs2_signal::features::{extract_features, FeatureOptions};
 /// use std::f64::consts::PI;
 ///
 /// // Generate a sinusoidal signal
@@ -124,7 +125,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::features::{extract_features_batch, FeatureOptions};
+/// use scirs2_signal::features::{extract_features_batch, FeatureOptions};
 /// use std::f64::consts::PI;
 /// use ndarray::Array2;
 ///

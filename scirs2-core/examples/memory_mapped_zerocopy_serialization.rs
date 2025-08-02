@@ -108,7 +108,7 @@ fn custom_type_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>
     let size = 10;
     println!("Creating a {}x{} array of complex numbers", size, size);
 
-    let data = Array2::<Complex64>::from_shape_fn((size, size), |(i, j)| {
+    let data = Array2::<Complex64>::fromshape_fn((size, size), |(i, j)| {
         // Create a spiral pattern for visually interesting values
         let distance = ((i as f64 - size as f64 / 2.0).powi(2)
             + (j as f64 - size as f64 / 2.0).powi(2))
@@ -369,7 +369,7 @@ fn multidimensional_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::E
     println!("---------------------------------");
 
     // Create a 3D array (5x5x5)
-    let data = Array3::<i32>::from_shape_fn((5, 5, 5), |(i, j, k)| (i * 25 + j * 5 + k) as i32);
+    let data = Array3::<i32>::fromshape_fn((5, 5, 5), |(i, j, k)| (i * 25 + j * 5 + k) as i32);
     println!("Created a 3D array with shape {:?}", data.shape());
 
     // Set up file path for saving
@@ -403,7 +403,7 @@ fn multidimensional_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::E
 
     // Create a dynamic-dimension array
     println!("\nCreating and saving a dynamic-dimension array...");
-    let dyn_data = Array::from_shape_fn(IxDyn(&[3, 4, 2, 5]), |idx| {
+    let dyn_data = Array::fromshape_fn(IxDyn(&[3, 4, 2, 5]), |idx| {
         // Convert multidimensional index to a single value for this example
         let mut val = 0;
         let mut factor = 1;
@@ -457,7 +457,7 @@ fn performance_comparison(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
 
     // Create a large 2D array (1000x1000) for performance testing
     let size = 1000;
-    let data = Array2::<f64>::from_shape_fn((size, size), |(i, j)| (i * size + j) as f64);
+    let data = Array2::<f64>::fromshape_fn((size, size), |(i, j)| (i * size + j) as f64);
     println!("Created a {}x{} array for performance testing", size, size);
 
     // Calculate memory size
@@ -597,7 +597,7 @@ fn updating_data_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
     println!("------------------------");
 
     // Create a 2D array (10x10)
-    let data = Array2::<f32>::from_shape_fn((10, 10), |(i, j)| (i * 10 + j) as f32);
+    let data = Array2::<f32>::fromshape_fn((10, 10), |(i, j)| (i * 10 + j) as f32);
     println!("Created a 10x10 array");
 
     // Set up file path for saving

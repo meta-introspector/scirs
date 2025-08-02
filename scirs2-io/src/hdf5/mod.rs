@@ -383,7 +383,7 @@ pub struct FileStats {
 
 impl HDF5File {
     /// Create a new HDF5 file
-    pub fn create<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path_str = _path.as_ref().to_string_lossy().to_string();
 
         #[cfg(feature = "hdf5")]
@@ -410,7 +410,7 @@ impl HDF5File {
     }
 
     /// Open an existing HDF5 file
-    pub fn open<P: AsRef<Path>>(_path: P, mode: FileMode) -> Result<Self> {
+    pub fn open<P: AsRef<Path>>(path: P, mode: FileMode) -> Result<Self> {
         let path_str = _path.as_ref().to_string_lossy().to_string();
 
         #[cfg(feature = "hdf5")]
@@ -699,7 +699,9 @@ impl HDF5File {
             }
             _ => {
                 // Fallback: treat as string
-                let value: String = _attr.read_scalar().unwrap_or_else(|_| "unknown".to_string());
+                let value: String = _attr
+                    .read_scalar()
+                    .unwrap_or_else(|_| "unknown".to_string());
                 Ok(AttributeValue::String(value))
             }
         }
@@ -795,7 +797,7 @@ impl HDF5File {
                 } else {
                     // For multidimensional arrays, we need to reshape the data
                     let array_data =
-                        ndarray::Array::from_shape_vec(ndarray::IxDyn(&shape), flat_data).map_err(
+                        ndarray::Array::fromshape_vec(ndarray::IxDyn(&shape), flat_data).map_err(
                             |e| IoError::FormatError(format!("Failed to reshape data: {e}")),
                         )?;
 
@@ -859,7 +861,7 @@ impl HDF5File {
                     })?;
 
                     let shape = IxDyn(&dataset.shape);
-                    return ArrayD::from_shape_vec(shape, data)
+                    return ArrayD::fromshape_vec(shape, data)
                         .map_err(|e| IoError::FormatError(e.to_string()));
                 }
             }
@@ -869,13 +871,13 @@ impl HDF5File {
         match &dataset.data {
             DataArray::Float(data) => {
                 let shape = IxDyn(&dataset.shape);
-                ArrayD::from_shape_vec(shape, data.clone())
+                ArrayD::fromshape_vec(shape, data.clone())
                     .map_err(|e| IoError::FormatError(e.to_string()))
             }
             DataArray::Integer(data) => {
                 let float_data: Vec<f64> = data.iter().map(|&x| x as f64).collect();
                 let shape = IxDyn(&dataset.shape);
-                ArrayD::from_shape_vec(shape, float_data)
+                ArrayD::fromshape_vec(shape, float_data)
                     .map_err(|e| IoError::FormatError(e.to_string()))
             }
             _ => Err(IoError::FormatError(
@@ -1045,14 +1047,14 @@ impl HDF5File {
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::hdf5::read_hdf5;
+/// use scirs2_io::hdf5::read_hdf5;
 ///
 /// let root_group = read_hdf5("data.h5")?;
 /// println!("Groups: {:?}", root_group.groups.keys().collect::<Vec<_>>());
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn read_hdf5<P: AsRef<Path>>(_path: P) -> Result<Group> {
+pub fn read_hdf5<P: AsRef<Path>>(path: P) -> Result<Group> {
     let file = HDF5File::open(_path, FileMode::ReadOnly)?;
     Ok(file.root)
 }
@@ -1067,7 +1069,7 @@ pub fn read_hdf5<P: AsRef<Path>>(_path: P) -> Result<Group> {
 /// ```no_run
 /// use ndarray::array;
 /// use std::collections::HashMap;
-/// use scirs2__io::hdf5::write_hdf5;
+/// use scirs2_io::hdf5::write_hdf5;
 ///
 /// let mut datasets = HashMap::new();
 /// datasets.insert("data/temperature".to_string(), array![[1.0, 2.0], [3.0, 4.0]].into_dyn());
@@ -1077,7 +1079,7 @@ pub fn read_hdf5<P: AsRef<Path>>(_path: P) -> Result<Group> {
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
 #[allow(dead_code)]
-pub fn write_hdf5<P: AsRef<Path>>(_path: P, datasets: HashMap<String, ArrayD<f64>>) -> Result<()> {
+pub fn write_hdf5<P: AsRef<Path>>(path: P, datasets: HashMap<String, ArrayD<f64>>) -> Result<()> {
     let mut file = HDF5File::create(_path)?;
 
     for (dataset_path, array) in datasets {
@@ -1097,7 +1099,7 @@ pub fn write_hdf5<P: AsRef<Path>>(_path: P, datasets: HashMap<String, ArrayD<f64
 ///
 /// # Example
 /// ```no_run
-/// use scirs2__io::hdf5::{create_hdf5_with_structure, AttributeValue};
+/// use scirs2_io::hdf5::{create_hdf5_with_structure, AttributeValue};
 /// use ndarray::array;
 ///
 /// create_hdf5_with_structure("structured.h5", |file| {

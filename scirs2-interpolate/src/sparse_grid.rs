@@ -454,7 +454,7 @@ where
     /// Compute hierarchical surplus for a point
     fn compute_hierarchical_surplus(
         &self_coords: &[F],
-        value: F_multi_idx: &MultiIndex,
+        value: F_multi, idx: &MultiIndex,
     ) -> InterpolateResult<F> {
         // Simplified surplus computation
         // In a full implementation, this would compute the hierarchical surplus

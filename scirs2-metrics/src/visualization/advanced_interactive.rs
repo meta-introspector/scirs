@@ -754,7 +754,7 @@ pub enum ResponseAction {
     /// Update widget data
     UpdateData {
         widget_id: String,
-        data: serde_json: Value,
+        data: serde, json: Value,
     },
     /// Trigger another event
     TriggerEvent { event: WidgetEvent },
@@ -770,7 +770,7 @@ pub enum ResponseAction {
     /// Update dashboard state
     UpdateState {
         key: String,
-        value: serde_json: Value,
+        value: serde, json: Value,
     },
 }
 
@@ -1406,7 +1406,7 @@ pub struct RenderingCapabilities {
     /// Supports hardware acceleration
     pub hardware_acceleration: bool,
     /// Maximum texture size
-    pub max_texture_size: Option<u32>,
+    pub maxtexture_size: Option<u32>,
     /// Supported shader versions
     pub shader_versions: Vec<String>,
 }
@@ -1618,7 +1618,7 @@ pub struct StateChange {
     /// Old value
     pub old_value: Option<serde_json::Value>,
     /// New value
-    pub new_value: serde, _json: Value,
+    pub new_value: serde_json:: Value,
     /// Author
     pub author: String,
     /// Timestamp
@@ -2531,7 +2531,7 @@ impl DefaultRenderingEngine {
                 webgl_support: false,
                 webgl_version: None,
                 hardware_acceleration: false,
-                max_texture_size: None,
+                maxtexture_size: None,
                 shader_versions: Vec::new(),
             },
         }
@@ -2763,7 +2763,7 @@ impl ConflictResolver for DefaultConflictResolver {
         local.version != remote.version
     }
 
-    fn merge_changes(&self, base: &SharedState_changes: &[StateChange]) -> Result<SharedState> {
+    fn merge_changes(&self, base: &SharedState, changes: &[StateChange]) -> Result<SharedState> {
         // Simple implementation
         Ok(base.clone())
     }

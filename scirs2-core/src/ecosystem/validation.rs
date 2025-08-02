@@ -22,6 +22,7 @@ pub struct EcosystemValidator {
     policies: Arc<RwLock<ValidationPolicies>>,
 }
 
+#[allow(dead_code)]
 impl EcosystemValidator {
     /// Create new ecosystem validator
     pub fn new() -> CoreResult<Self> {
@@ -110,8 +111,7 @@ impl EcosystemValidator {
         }
 
         // Validate inter-module compatibility
-        let compatibilityresult =
-            self.validate_inter_module_compatibility(&registry, &policies)?;
+        let compatibilityresult = self.validate_inter_module_compatibility(&registry, &policies)?;
         result.add_compatibilityresult(compatibilityresult);
 
         // Validate API stability
@@ -232,7 +232,11 @@ impl EcosystemValidator {
         Ok(result)
     }
 
-    fn validate_dependency_policies(&self, module: &ModuleInfo, dep: &DependencyInfo, _policies: &ValidationPolicies,
+    fn validate_dependency_policies(
+        &self,
+        module: &ModuleInfo,
+        dep: &DependencyInfo,
+        _policies: &ValidationPolicies,
     ) -> CoreResult<DependencyValidationResult> {
         let mut result = DependencyValidationResult::new(dep.name.clone());
 
@@ -310,7 +314,10 @@ impl EcosystemValidator {
         Ok(result)
     }
 
-    fn check_module_compatibility(&self, module_a: &ModuleInfo, module_b: &ModuleInfo,
+    fn check_module_compatibility(
+        &self,
+        module_a: &ModuleInfo,
+        module_b: &ModuleInfo,
         _policies: &ValidationPolicies,
     ) -> CoreResult<ModuleCompatibility> {
         // Check version compatibility
@@ -443,7 +450,9 @@ impl EcosystemValidator {
     }
 
     #[allow(dead_code)]
-    fn surface(&self, api_surface: &ApiSurface,
+    fn surface(
+        &self,
+        api_surface: &ApiSurface,
         _policies: &ValidationPolicies,
     ) -> CoreResult<ApiValidationResult> {
         let mut result = ApiValidationResult::new();
@@ -500,7 +509,9 @@ impl EcosystemValidator {
 
     // Helper methods
     #[allow(dead_code)]
-    fn check_circular_dependencies(&self, module_name: &str,
+    fn check_circular_dependencies(
+        &self,
+        module_name: &str,
         dependencies: &[DependencyInfo],
     ) -> CoreResult<bool> {
         // Simple circular dependency detection
@@ -512,7 +523,10 @@ impl EcosystemValidator {
         Ok(false)
     }
 
-    fn check_version_compatibility(&self, version_a: &Version, version_b: &Version,
+    fn check_version_compatibility(
+        &self,
+        version_a: &Version,
+        version_b: &Version,
         _policies: &ValidationPolicies,
     ) -> bool {
         if _policies.strict_version_matching {
@@ -529,7 +543,10 @@ impl EcosystemValidator {
         Ok(api_a.public_apis.len() == api_b.public_apis.len())
     }
 
-    fn check_feature_compatibility(&self, _features_a: &[String], _features_b: &[String],
+    fn check_feature_compatibility(
+        &self,
+        _features_a: &[String],
+        _features_b: &[String],
     ) -> CoreResult<bool> {
         // Check for conflicting features
         // In _a real implementation, would check for conflicts
@@ -537,7 +554,11 @@ impl EcosystemValidator {
         Ok(true)
     }
 
-    fn validate_api_policies(&self, previous: &ApiSurface, current: &ApiSurface, _policies: &ValidationPolicies,
+    fn validate_api_policies(
+        &self,
+        previous: &ApiSurface,
+        current: &ApiSurface,
+        _policies: &ValidationPolicies,
     ) -> CoreResult<ApiStabilityCheck> {
         let mut breaking_changes = Vec::new();
 
@@ -599,8 +620,7 @@ impl EcosystemValidator {
         Ok(api.since_version.is_some())
     }
 
-    fn req(&self, _module: &ModuleInfo, _version_req: &VersionRequirement,
-    ) -> CoreResult<bool> {
+    fn req(&self, _module: &ModuleInfo, _version_req: &VersionRequirement) -> CoreResult<bool> {
         // In a real implementation, this would check against vulnerability databases
         Ok(false)
     }
@@ -635,37 +655,37 @@ impl EcosystemValidator {
         let validationresult = self.validate_ecosystem()?;
         Ok(EcosystemHealth::from_validationresult(&validationresult))
     }
-    
+
     pub fn has_circular_dependency(&self, _module: &str, _dependency: &str) -> bool {
         // Placeholder implementation
         false
     }
-    
+
     pub fn are_versions_compatible(&self, _version_a: &str, _version_b: &str) -> bool {
         // Placeholder implementation
         true
     }
-    
+
     pub fn are_apis_compatible(&self, _api_a: &ApiSurface, _api_b: &ApiSurface) -> bool {
         // Placeholder implementation
         true
     }
-    
+
     pub fn are_features_compatible(&self, _features_a: &[String], _features_b: &[String]) -> bool {
         // Placeholder implementation
         true
     }
-    
+
     pub fn check_api_stability(&self, _module: &str) -> ApiStabilityCheck {
         // Placeholder implementation
         ApiStabilityCheck::new(true, vec![])
     }
-    
+
     pub fn is_api_properly_versioned(&self, _api_surface: &ApiSurface) -> bool {
         // Placeholder implementation
         true
     }
-    
+
     pub fn has_known_vulnerabilities(&self, _module: &str) -> bool {
         // Placeholder implementation
         false
@@ -822,15 +842,12 @@ impl CompatibilityMatrix {
         }
     }
 
-    pub fn b(&mut self, module_a: &str, module_b: &str,
-        compatibility: ModuleCompatibility,
-    ) {
+    pub fn b(&mut self, module_a: &str, module_b: &str, compatibility: ModuleCompatibility) {
         self.matrix
             .insert((module_a.to_string(), module_b.to_string()), compatibility);
     }
 
-    pub fn b_2(&self, module_a: &str, module_b: &str,
-    ) -> Option<&ModuleCompatibility> {
+    pub fn b_2(&self, module_a: &str, module_b: &str) -> Option<&ModuleCompatibility> {
         self.matrix
             .get(&(module_a.to_string(), module_b.to_string()))
     }
@@ -855,7 +872,7 @@ impl ModuleCompatibility {
             reason: String::new(),
         }
     }
-    
+
     pub fn incompatible(reason: String) -> Self {
         Self {
             compatible: false,
@@ -927,7 +944,7 @@ impl CachedValidationResult {
     pub fn age(&self, max_age: Duration) -> bool {
         self.timestamp.elapsed() < max_age
     }
-    
+
     pub fn is_recent(&self, max_age: Duration) -> bool {
         self.age(max_age)
     }
@@ -994,7 +1011,7 @@ impl EcosystemValidationResult {
         self.moduleresults.insert(module_name, result);
         self.update_overall_status();
     }
-    
+
     pub fn add_moduleresult(&mut self, module_name: String, result: ModuleValidationResult) {
         self.moduleresults.insert(module_name, result);
         self.update_overall_status();
@@ -1296,7 +1313,7 @@ impl ApiValidationResult {
     pub fn name(&mut self, api_name: String) {
         self.documentation_issues.push(api_name);
     }
-    
+
     pub fn add_documentation_issue(&mut self, api_name: String) {
         self.documentation_issues.push(api_name);
     }
@@ -1304,7 +1321,7 @@ impl ApiValidationResult {
     pub fn name_2(&mut self, api_name: String) {
         self.semver_violations.push(api_name);
     }
-    
+
     pub fn add_semver_violation(&mut self, api_name: String) {
         self.semver_violations.push(api_name);
     }
@@ -1312,7 +1329,7 @@ impl ApiValidationResult {
     pub fn name_3(&mut self, api_name: String, issue: String) {
         self.deprecation_issues.insert(api_name, issue);
     }
-    
+
     pub fn add_deprecation_issue(&mut self, api_name: String, issue: String) {
         self.deprecation_issues.insert(api_name, issue);
     }
@@ -1380,7 +1397,7 @@ impl ApiStabilityCheck {
     pub fn breaking_changes(&self) -> &[String] {
         &self.breaking_changes
     }
-    
+
     pub fn is_valid(&self) -> bool {
         self.is_stable && self.breaking_changes.is_empty()
     }

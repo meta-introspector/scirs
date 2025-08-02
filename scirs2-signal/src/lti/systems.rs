@@ -1,15 +1,14 @@
-//! Core LTI system representations and implementations
-//!
-//! This module provides the fundamental types for representing Linear Time-Invariant (LTI) systems:
-//! - Transfer function representation (numerator/denominator polynomials)
-//! - Zero-pole-gain representation (zeros, poles, and gain)
-//! - State-space representation (A, B, C, D matrices)
-//!
-//! All system representations implement the `LtiSystem` trait for common operations.
+// Core LTI system representations and implementations
+//
+// This module provides the fundamental types for representing Linear Time-Invariant (LTI) systems:
+// - Transfer function representation (numerator/denominator polynomials)
+// - Zero-pole-gain representation (zeros, poles, and gain)
+// - State-space representation (A, B, C, D matrices)
+//
+// All system representations implement the `LtiSystem` trait for common operations.
 
 use crate::error::{SignalError, SignalResult};
-use crate::lti::TransferFunction;
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::Zero;
 
 #[allow(unused_imports)]
@@ -83,7 +82,7 @@ pub trait LtiSystem {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::systems::TransferFunction;
+/// use scirs2_signal::lti::systems::TransferFunction;
 ///
 /// // Create H(s) = (s + 2) / (s^2 + 3s + 2)
 /// let tf = TransferFunction::new(
@@ -120,7 +119,7 @@ impl TransferFunction {
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2__signal::lti::systems::TransferFunction;
+    /// use scirs2_signal::lti::systems::TransferFunction;
     ///
     /// // Create a simple first-order continuous-time system: H(s) = 1 / (s + 1)
     /// let tf = TransferFunction::new(vec![1.0], vec![1.0, 1.0], None).unwrap();
@@ -450,7 +449,7 @@ impl LtiSystem for TransferFunction {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::systems::ZerosPoleGain;
+/// use scirs2_signal::lti::systems::ZerosPoleGain;
 ///
 /// // Create H(s) = 2 * (s + 1) / (s + 2)
 /// let zpk = ZerosPoleGain::new(
@@ -492,7 +491,7 @@ impl ZerosPoleGain {
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2__signal::lti::systems::ZerosPoleGain;
+    /// use scirs2_signal::lti::systems::ZerosPoleGain;
     ///
     /// // Create a simple first-order continuous-time system: H(s) = 1 / (s + 1)
     /// let zpk = ZerosPoleGain::new(
@@ -652,7 +651,7 @@ impl LtiSystem for ZerosPoleGain {
 /// # Examples
 ///
 /// ```rust
-/// use scirs2__signal::lti::systems::StateSpace;
+/// use scirs2_signal::lti::systems::StateSpace;
 ///
 /// // Create a simple integrator: dx/dt = u, y = x
 /// let ss = StateSpace::new(
@@ -708,7 +707,7 @@ impl StateSpace {
     /// # Examples
     ///
     /// ```rust
-    /// use scirs2__signal::lti::systems::StateSpace;
+    /// use scirs2_signal::lti::systems::StateSpace;
     ///
     /// // Create a simple first-order system: dx/dt = -x + u, y = x
     /// let ss = StateSpace::new(
@@ -924,8 +923,8 @@ impl LtiSystem for StateSpace {
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
-use crate::lti::design::tf;
+    use crate::lti::design::tf;
+    use approx::assert_relative_eq;
     #[test]
     fn test_transfer_function_creation() {
         let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];

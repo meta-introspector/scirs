@@ -1,15 +1,16 @@
-//! Parallel filtering operations using scirs2-core parallel abstractions
-//!
-//! This module provides parallel implementations of filtering operations
-//! for improved performance on multi-core systems.
+use ndarray::s;
+// Parallel filtering operations using scirs2-core parallel abstractions
+//
+// This module provides parallel implementations of filtering operations
+// for improved performance on multi-core systems.
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use crate::savgol::savgol_coeffs;
-use ndarray::{Array1, Array2, ArrayView1, s};
+use ndarray::{ Array1, Array2, ArrayView1};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
-use rustfft::{FftPlanner, num_complex::Complex};
+use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::f64::consts::PI;
@@ -18,8 +19,10 @@ use std::fmt::Debug;
 #[allow(unused_imports)]
 // Temporary replacement for par_iter_with_setup
 fn par_iter_with_setup<I, IT, S, F, R, RF, E>(
-    items: I, _setup: S,
-    map_fn: F, _reduce_fn: RF,
+    items: I,
+    _setup: S,
+    map_fn: F,
+    _reduce_fn: RF,
 ) -> Result<Vec<R>, E>
 where
     I: IntoIterator<Item = IT>,
@@ -884,7 +887,8 @@ pub fn parallel_wavelet_filter_bank(
                     &dummy_denominator,
                     &signal_array,
                     chunk_size,
-                ).map(|result| result.to_vec())
+                )
+                .map(|result| result.to_vec())
             },
             |outputs, filter_result| {
                 outputs.push(filter_result?);
@@ -1804,7 +1808,10 @@ where
     // Check if all values are finite
     for (i, &val) in x_array.iter().enumerate() {
         if !val.is_finite() {
-            return Err(SignalError::ValueError(format!("x_array[{}] is not finite: {}", i, val)));
+            return Err(SignalError::ValueError(format!(
+                "x_array[{}] is not finite: {}",
+                i, val
+            )));
         }
     }
 
@@ -1839,7 +1846,9 @@ where
 
     let filtered_chunks: Vec<Vec<f64>> = parallel_map(&chunks, |chunk: &ArrayView1<f64>| {
         sequential_lfilter(&b_norm, &a_norm, &chunk.to_vec())
-    }).into_iter().collect::<Result<Vec<_>, SignalError>>()?;
+    })
+    .into_iter()
+    .collect::<Result<Vec<_>, SignalError>>()?;
 
     // Combine results with overlap removal
     let mut result = Vec::with_capacity(n);
@@ -1951,7 +1960,9 @@ pub fn parallel_group_delay(
             delays.push(delay);
         }
         Ok(delays)
-    }).into_iter().collect::<Result<Vec<_>, SignalError>>()?;
+    })
+    .into_iter()
+    .collect::<Result<Vec<_>, SignalError>>()?;
 
     Ok(delay_chunks.into_iter().flatten().collect())
 }
@@ -1999,7 +2010,9 @@ pub fn parallel_matched_filter(
 
     let result_chunks: Vec<Vec<f64>> = parallel_map(&chunks, |chunk| {
         compute_matched_filter_chunk(template, chunk, normalize)
-    }).into_iter().collect::<Result<Vec<_>, SignalError>>()?;
+    })
+    .into_iter()
+    .collect::<Result<Vec<_>, SignalError>>()?;
 
     // Combine results
     let mut result = Vec::new();

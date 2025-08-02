@@ -58,7 +58,12 @@ impl ErrorLocation {
     /// Create a new error location with function and column information
     #[must_use]
     #[inline]
-    pub const fn new_full(file: &'static str, line: u32, column: u32, function: &'static str) -> Self {
+    pub const fn new_full(
+        file: &'static str,
+        line: u32,
+        column: u32,
+        function: &'static str,
+    ) -> Self {
         Self {
             file,
             line,
@@ -102,9 +107,9 @@ pub struct ErrorContext {
 impl ErrorContext {
     /// Create a new error context
     #[must_use]
-    pub fn new<S: Into<String>>(_message: S) -> Self {
+    pub fn new<S: Into<String>>(message: S) -> Self {
         Self {
-            message: _message.into(),
+            message: message.into(),
             location: None,
             cause: None,
         }
@@ -409,8 +414,8 @@ macro_rules! computation_error {
 ///
 /// Returns `CoreError::DomainError` if the condition is false.
 #[allow(dead_code)]
-pub fn check_domain<S: Into<String>>(_condition: bool, message: S) -> CoreResult<()> {
-    if _condition {
+pub fn check_domain<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
+    if condition {
         Ok(())
     } else {
         Err(CoreError::DomainError(
@@ -435,8 +440,8 @@ pub fn check_domain<S: Into<String>>(_condition: bool, message: S) -> CoreResult
 ///
 /// Returns `CoreError::DimensionError` if the condition is false.
 #[allow(dead_code)]
-pub fn check_dimensions<S: Into<String>>(_condition: bool, message: S) -> CoreResult<()> {
-    if _condition {
+pub fn check_dimensions<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
+    if condition {
         Ok(())
     } else {
         Err(CoreError::DimensionError(
@@ -461,8 +466,8 @@ pub fn check_dimensions<S: Into<String>>(_condition: bool, message: S) -> CoreRe
 ///
 /// Returns `CoreError::ValueError` if the condition is false.
 #[allow(dead_code)]
-pub fn check_value<S: Into<String>>(_condition: bool, message: S) -> CoreResult<()> {
-    if _condition {
+pub fn check_value<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
+    if condition {
         Ok(())
     } else {
         Err(CoreError::ValueError(

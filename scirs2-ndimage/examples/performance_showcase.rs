@@ -24,7 +24,7 @@ fn main() {
         println!("Testing {} arrays:", label);
 
         // Create test image with interesting structure
-        let input = Array2::from_shape_fn((rows, cols), |(i, j)| {
+        let input = Array2::fromshape_fn((rows, cols), |(i, j)| {
             let x = i as f64 / rows as f64;
             let y = j as f64 / cols as f64;
             (x * y).sin() * 100.0 + (x + y).cos() * 50.0

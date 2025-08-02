@@ -754,7 +754,7 @@ mod tests {
     }
 
     #[test]
-    fn test_text_generation_evaluation() {
+    fn testtext_generation_evaluation() {
         let metrics = TextGenerationMetrics::new();
 
         let references = vec![
@@ -777,7 +777,7 @@ mod tests {
     }
 
     #[test]
-    fn test_text_classification_evaluation() {
+    fn testtext_classification_evaluation() {
         let metrics = TextClassificationMetrics::new();
 
         let y_true = Array1::from_vec(vec![0, 1, 2, 0, 1, 2]);

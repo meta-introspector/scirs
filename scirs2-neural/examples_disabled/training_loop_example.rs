@@ -28,11 +28,11 @@ fn main() -> Result<()> {
         n_samples, n_features, n_classes
     );
     // Generate random features
-    let features = Array::from_shape_fn(IxDyn(&[n_samples, n_features]), |_| {
+    let features = Array::fromshape_fn(IxDyn(&[n_samples, n_features]), |_| {
         rand::random::<f32>() * 2.0 - 1.0
     });
     // Generate random labels (integers 0 to n_classes-1)
-    let labels = Array::from_shape_fn(IxDyn(&[n_samples, 1]), |_| {
+    let labels = Array::fromshape_fn(IxDyn(&[n_samples, 1]), |_| {
         (rand::random::<f32>() * n_classes as f32).floor()
     // Create dataset
     let dataset = InMemoryDataset::new(features, labels)?;

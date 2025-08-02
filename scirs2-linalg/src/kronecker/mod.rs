@@ -1442,12 +1442,12 @@ mod tests {
 
         // Create sample activations and gradients for 2 layers
         // Layer 1: 10 inputs -> 20 outputs, so acts should be Nx10, grads should be Nx20
-        let layer1_acts = Array2::from_shape_fn((5, 10), |(i, j)| (i + j) as f64 * 0.1);
-        let layer1_grads = Array2::from_shape_fn((5, 20), |(i, j)| (i + j) as f64 * 0.01);
+        let layer1_acts = Array2::fromshape_fn((5, 10), |(i, j)| (i + j) as f64 * 0.1);
+        let layer1_grads = Array2::fromshape_fn((5, 20), |(i, j)| (i + j) as f64 * 0.01);
 
         // Layer 2: 20 inputs -> 10 outputs, so acts should be Nx20, grads should be Nx10
-        let layer2_acts = Array2::from_shape_fn((5, 20), |(i, j)| (i + j) as f64 * 0.05);
-        let layer2_grads = Array2::from_shape_fn((5, 10), |(i, j)| (i + j) as f64 * 0.02);
+        let layer2_acts = Array2::fromshape_fn((5, 20), |(i, j)| (i + j) as f64 * 0.05);
+        let layer2_grads = Array2::fromshape_fn((5, 10), |(i, j)| (i + j) as f64 * 0.02);
 
         let activations = vec![layer1_acts.view(), layer2_acts.view()];
         let gradients = vec![layer1_grads.view(), layer2_grads.view()];

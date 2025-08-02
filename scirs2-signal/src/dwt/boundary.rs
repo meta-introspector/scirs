@@ -1,8 +1,8 @@
-//! Signal boundary extension methods
-//!
-//! This module provides methods for extending signals at boundaries to handle edge effects
-//! when applying wavelet transforms. Different extension modes are supported, including
-//! symmetric, periodic, reflect, constant, and zero padding.
+// Signal boundary extension methods
+//
+// This module provides methods for extending signals at boundaries to handle edge effects
+// when applying wavelet transforms. Different extension modes are supported, including
+// symmetric, periodic, reflect, constant, and zero padding.
 
 use crate::error::{SignalError, SignalResult};
 
@@ -22,7 +22,7 @@ use crate::error::{SignalError, SignalResult};
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::extend_signal;
+/// use scirs2_signal::dwt::extend_signal;
 ///
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 /// let extended = extend_signal(&signal, 4, "symmetric").unwrap();

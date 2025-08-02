@@ -72,7 +72,7 @@ mod tests {
     #[test]
     fn test_module_integration() {
         // Test that all major functionality is accessible through the module
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
@@ -115,7 +115,7 @@ mod tests {
         use crate::utils::*;
 
         let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         let targets = ndarray::Array1::from(vec![0.0, 0.0, 1.0, 1.0]);
 
         // These should all work exactly as they did before refactoring
@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn test_cross_validation_compatibility() {
         // Test cross-validation functionality that spans multiple modules
-        let data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+        let data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let targets = ndarray::Array1::from((0..10).map(|x| (x % 3) as f64).collect::<Vec<_>>());
 
         let dataset = Dataset::new(data, Some(targets.clone()));

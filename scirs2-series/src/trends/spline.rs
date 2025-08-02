@@ -272,7 +272,7 @@ where
 fn fit_bspline<F>(
     ts: &Array1<F>,
     knots: &[usize],
-    degree: usize_extrapolate: bool,
+    degree: usize, extrapolate: bool,
 ) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -309,7 +309,7 @@ fn fit_pspline<F>(
     ts: &Array1<F>,
     knots: &[usize],
     degree: usize,
-    lambda: F_extrapolate: bool,
+    lambda: F, extrapolate: bool,
 ) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,

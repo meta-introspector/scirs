@@ -18,7 +18,7 @@ pub struct Publication {
     /// Publication title
     pub title: String,
     /// Publication abstract
-    pub abstract_text: String,
+    pub abstracttext: String,
     /// Authors
     pub authors: Vec<Author>,
     /// Publication type
@@ -369,7 +369,7 @@ pub struct Review {
     /// Detailed scores
     pub detailed_scores: HashMap<String, f64>,
     /// Written review
-    pub review_text: String,
+    pub reviewtext: String,
     /// Strengths
     pub strengths: Vec<String>,
     /// Weaknesses
@@ -572,7 +572,7 @@ impl Publication {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             _title: _title.to_string(),
-            abstract_text: String::new(),
+            abstracttext: String::new(),
             authors: Vec::new(),
             publication_type: PublicationType::ConferencePaper,
             venue: None,
@@ -589,8 +589,8 @@ impl Publication {
     }
     
     /// Set publication abstract
-    pub fn abstract_text(mut self, abstract_text: &str) -> Self {
-        self.abstract_text = abstract_text.to_string();
+    pub fn abstracttext(mut self, abstracttext: &str) -> Self {
+        self.abstracttext = abstracttext.to_string();
         self.modified_at = Utc::now();
         self
     }
@@ -665,9 +665,9 @@ impl Publication {
         latex.push_str("\\maketitle\n\n");
         
         // Abstract
-        if !self.abstract_text.is_empty() {
+        if !self.abstracttext.is_empty() {
             latex.push_str("\\begin{abstract}\n");
-            latex.push_str(&self.abstract_text);
+            latex.push_str(&self.abstracttext);
             latex.push_str("\n\\end{abstract}\n\n");
         }
         
@@ -756,9 +756,9 @@ impl Publication {
         }
         
         // Abstract
-        if !self.abstract_text.is_empty() {
+        if !self.abstracttext.is_empty() {
             markdown.push_str("## Abstract\n\n");
-            markdown.push_str(&self.abstract_text);
+            markdown.push_str(&self.abstracttext);
             markdown.push_str("\n\n");
         }
         
@@ -985,8 +985,8 @@ impl PublicationGenerator {
         let mut publication = Publication::new("Generated Publication");
         
         // Generate abstract from experiments
-        let abstract_text = self.generate_abstract(experiments)?;
-        publication.abstract_text = abstract_text;
+        let abstracttext = self.generate_abstract(experiments)?;
+        publication.abstracttext = abstracttext;
         
         // Generate sections
         for section_template in &template.sections {
@@ -999,20 +999,20 @@ impl PublicationGenerator {
     
     fn generate_abstract(&self, experiments: &[Experiment]) -> Result<String> {
         // Generate abstract based on experiments
-        let mut abstract_text = String::new();
+        let mut abstracttext = String::new();
         
-        abstract_text.push_str("This paper presents experimental results comparing various optimization algorithms. ");
+        abstracttext.push_str("This paper presents experimental results comparing various optimization algorithms. ");
         
         if !experiments.is_empty() {
-            abstract_text.push_str(&format!(
+            abstracttext.push_str(&format!(
                 "We conducted {} experiments evaluating the performance of different optimizers. ",
                 experiments.len()
             ));
         }
         
-        abstract_text.push_str("Our results demonstrate significant differences in convergence behavior and final performance across different optimization methods.");
+        abstracttext.push_str("Our results demonstrate significant differences in convergence behavior and final performance across different optimization methods.");
         
-        Ok(abstract_text)
+        Ok(abstracttext)
     }
     
     fn generate_section(&self, template: &SectionTemplate, experiments: &[Experiment]) -> Result<ManuscriptSection> {
@@ -1096,12 +1096,12 @@ mod tests {
     #[test]
     fn test_publication_creation() {
         let publication = Publication::new("Test Publication")
-            .abstract_text("Test abstract")
+            .abstracttext("Test abstract")
             .publication_type(PublicationType::ConferencePaper)
             .keywords(vec!["optimization".to_string(), "machine learning".to_string()]);
             
         assert_eq!(publication.title, "Test Publication");
-        assert_eq!(publication.abstract_text, "Test abstract");
+        assert_eq!(publication.abstracttext, "Test abstract");
         assert_eq!(publication.publication_type, PublicationType::ConferencePaper);
         assert_eq!(publication.keywords.len(), 2);
     }
@@ -1129,7 +1129,7 @@ mod tests {
     #[test]
     fn test_markdown_generation() {
         let mut publication = Publication::new("Test Paper");
-        publication.abstract_text = "This is a test abstract.".to_string();
+        publication.abstracttext = "This is a test abstract.".to_string();
         publication.keywords = vec!["test".to_string(), "paper".to_string()];
         
         let markdown = publication.generate_markdown().unwrap();

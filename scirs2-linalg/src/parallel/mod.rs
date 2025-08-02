@@ -2279,7 +2279,7 @@ pub mod affinity {
         }
 
         /// Apply affinity settings to current thread (platform-specific)
-        pub fn apply_current_thread_affinity(&self, affinity: &CoreAffinity) -> Result<(), String> {
+        pub fn apply_current_thread_affinity(&self, _affinity: &CoreAffinity) -> Result<(), String> {
             // Note: This is a simplified implementation
             // In a real implementation, you would use platform-specific APIs:
             // - On Linux: sched_setaffinity, pthread_setaffinity_np

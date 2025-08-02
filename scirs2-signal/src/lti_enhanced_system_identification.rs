@@ -1,25 +1,26 @@
-//! Enhanced System Identification with Advanced-level capabilities
-//!
-//! This module provides state-of-the-art system identification techniques combining:
-//! - Quantum-inspired optimization algorithms for parameter estimation
-//! - Neuromorphic-hybrid identification with adaptive learning
-//! - Advanced-high-resolution frequency domain identification
-//! - Advanced uncertainty quantification with Bayesian neural networks
-//! - Real-time multi-scale temporal identification
-//! - SIMD-accelerated matrix-free iterative solvers
-//! - Distributed consensus-based identification for networked systems
+use ndarray::s;
+// Enhanced System Identification with Advanced-level capabilities
+//
+// This module provides state-of-the-art system identification techniques combining:
+// - Quantum-inspired optimization algorithms for parameter estimation
+// - Neuromorphic-hybrid identification with adaptive learning
+// - Advanced-high-resolution frequency domain identification
+// - Advanced uncertainty quantification with Bayesian neural networks
+// - Real-time multi-scale temporal identification
+// - SIMD-accelerated matrix-free iterative solvers
+// - Distributed consensus-based identification for networked systems
 
 use crate::error::{SignalError, SignalResult};
+use crate::lti::design::tf;
 use crate::lti::{LtiSystem, StateSpace, TransferFunction};
-use ndarray::{Array1, Array2, s};
-use num__complex::Complex64;
+use ndarray::{ Array1, Array2};
+use num_complex::Complex64;
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::validation::{check_finite, check_positive, checkshape};
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::f64::consts::PI;
-use crate::lti::design::tf;
 
 #[allow(unused_imports)]
 /// Advanced-enhanced system identification result with quantum-inspired optimization
@@ -337,7 +338,7 @@ pub fn advanced_enhanced_system_identification(
     // Validate inputs
     check_finite(&input.to_vec(), "input")?;
     check_finite(&output.to_vec(), "output")?;
-    check_shape(input, (output.len(), None), "input and output length")?;
+    checkshape(input, (output.len(), None), "input and output length")?;
     check_positive(config.max_order, "max_order")?;
 
     let n_samples = input.len();
@@ -639,8 +640,8 @@ fn perform_advanced_validation(
     let normalized_rmse = rmse / output_range;
 
     // Information criteria
-    let n = output.len()  as f64;
-    let k = (2 * model.order)  as f64;
+    let n = output.len() as f64;
+    let k = (2 * model.order) as f64;
     let aic = n * mse.ln() + 2.0 * k;
     let bic = n * mse.ln() + k * n.ln();
     let hannan_quinn = n * mse.ln() + 2.0 * k * (n.ln()).ln();
@@ -793,7 +794,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 #[allow(dead_code)]
 fn initialize_quantum_states(_n_params: usize) -> Array2<Complex64> {
     // Initialize quantum superposition states
-    Array2::from_shape_fn((_n_params, 8), |(i, j)| {
+    Array2::fromshape_fn((_n_params, 8), |(i, j)| {
         Complex64::new(
             (i as f64 * 0.1 + j as f64 * 0.05).cos(),
             (i as f64 * 0.1 + j as f64 * 0.05).sin(),
@@ -984,7 +985,7 @@ fn simulate_model_response(
 
 #[allow(dead_code)]
 fn compute_mse(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
-    let n = _actual.len()  as f64;
+    let n = _actual.len() as f64;
     _actual
         .iter()
         .zip(predicted.iter())
@@ -995,7 +996,7 @@ fn compute_mse(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
 
 #[allow(dead_code)]
 fn compute_mae(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
-    let n = _actual.len()  as f64;
+    let n = _actual.len() as f64;
     _actual
         .iter()
         .zip(predicted.iter())
@@ -1031,7 +1032,7 @@ fn compute_r_squared(_actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
 #[allow(dead_code)]
 fn compute_variance(_data: &Array1<f64>) -> f64 {
     let mean = _data.mean().unwrap_or(0.0);
-    let n = _data.len()  as f64;
+    let n = _data.len() as f64;
     _data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n
 }
 
@@ -1044,8 +1045,8 @@ fn compute_aic(
     if let Some(tf) = &model.transfer_function {
         let predicted = simulate_model_response(tf, input)?;
         let mse = compute_mse(output, &predicted);
-        let n = output.len()  as f64;
-        let k = (2 * model.order)  as f64;
+        let n = output.len() as f64;
+        let k = (2 * model.order) as f64;
         Ok(n * mse.ln() + 2.0 * k)
     } else {
         Ok(f64::INFINITY)
@@ -1061,8 +1062,8 @@ fn compute_bic(
     if let Some(tf) = &model.transfer_function {
         let predicted = simulate_model_response(tf, input)?;
         let mse = compute_mse(output, &predicted);
-        let n = output.len()  as f64;
-        let k = (2 * model.order)  as f64;
+        let n = output.len() as f64;
+        let k = (2 * model.order) as f64;
         Ok(n * mse.ln() + k * n.ln())
     } else {
         Ok(f64::INFINITY)
@@ -1135,7 +1136,7 @@ fn analyze_complexity_accuracy_tradeoff(
     let mut pareto_frontier = Vec::new();
 
     for (&order, _criteria) in order_criteria.iter() {
-        let complexity = order  as f64;
+        let complexity = order as f64;
         let accuracy = 1.0 / (1.0 + _criteria.cross_validation_score); // Higher is better
         pareto_frontier.push((complexity, accuracy));
     }
@@ -1206,7 +1207,7 @@ fn analyze_convergence(
 ) -> SignalResult<ConvergenceInfo> {
     // Simplified convergence analysis
     let avg_uncertainty =
-        parameters.iter().map(|p| p.standard_error).sum::<f64>() / parameters.len()  as f64;
+        parameters.iter().map(|p| p.standard_error).sum::<f64>() / parameters.len() as f64;
 
     Ok(ConvergenceInfo {
         converged: avg_uncertainty < config.convergence_tolerance * 10.0,
@@ -1233,7 +1234,7 @@ fn setup_real_time_adaptation(
     let adaptive_coefficients = Array2::ones((n, n_params));
 
     // Learning curve (placeholder)
-    let learning_curve = Array1::from_shape_fn(n, |i| (-0.01 * i as f64).exp());
+    let learning_curve = Array1::fromshape_fn(n, |i| (-0.01 * i as f64).exp());
 
     // Change detection (simplified)
     let change_detection = ChangeDetectionResults {
@@ -1244,7 +1245,7 @@ fn setup_real_time_adaptation(
     };
 
     // Forgetting factor evolution
-    let forgetting_factor_evolution = Array1::from_shape_fn(n, |_| 0.995);
+    let forgetting_factor_evolution = Array1::fromshape_fn(n, |_| 0.995);
 
     Ok(AdaptationResults {
         adaptive_coefficients,
@@ -1340,7 +1341,7 @@ fn estimate_noise_robustness(
     // Simplified noise robustness estimate
     let predicted = simulate_model_response(tf, input)?;
     let noise_level = compute_mse(output, &predicted).sqrt();
-    let signal_level = output.iter().map(|x| x.abs()).sum::<f64>() / output.len()  as f64;
+    let signal_level = output.iter().map(|x| x.abs()).sum::<f64>() / output.len() as f64;
 
     if signal_level > 1e-12 {
         Ok((signal_level / noise_level).min(100.0))
@@ -1355,7 +1356,7 @@ fn compute_model_confidence(_parameters: &[ParameterWithUncertainty]) -> f64 {
         .iter()
         .map(|p| p.standard_error / (p.value.abs() + 1e-12))
         .sum::<f64>()
-        / _parameters.len()  as f64;
+        / _parameters.len() as f64;
 
     (1.0 - avg_relative_uncertainty).max(0.0).min(1.0)
 }
@@ -1397,7 +1398,7 @@ fn compute_fft_padded(_signal: &Array1<f64>, nfft: usize) -> Vec<Complex64> {
     }
 
     // Apply DFT (simplified implementation)
-    let n = fft_result.len()  as f64;
+    let n = fft_result.len() as f64;
     for k in 0..nfft {
         let mut sum = Complex64::new(0.0, 0.0);
         for n_idx in 0.._signal.len().min(nfft) {
@@ -1417,8 +1418,8 @@ mod tests {
     fn test_advanced_enhanced_system_identification() {
         // Create test signals
         let n = 100;
-        let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
-        let output = Array1::from_shape_fn(n, |i| (i as f64 * 0.1 + 0.5).sin() * 0.8);
+        let input = Array1::fromshape_fn(n, |i| (i as f64 * 0.1).sin());
+        let output = Array1::fromshape_fn(n, |i| (i as f64 * 0.1 + 0.5).sin() * 0.8);
 
         let config = AdvancedEnhancedSysIdConfig {
             max_order: 5,
@@ -1469,7 +1470,7 @@ mod tests {
             confidence_score: 0.9,
         };
 
-        let input = Array1::from_shape_fn(50, |i| (i as f64 * 0.1).sin());
+        let input = Array1::fromshape_fn(50, |i| (i as f64 * 0.1).sin());
         let output =
             simulate_model_response(model.transfer_function.as_ref().unwrap(), &input).unwrap();
 
@@ -1484,8 +1485,8 @@ mod tests {
 
     #[test]
     fn test_structure_selection() {
-        let input = Array1::from_shape_fn(50, |i| (i as f64 * 0.1).sin());
-        let output = Array1::from_shape_fn(50, |i| (i as f64 * 0.1 + 0.2).cos());
+        let input = Array1::fromshape_fn(50, |i| (i as f64 * 0.1).sin());
+        let output = Array1::fromshape_fn(50, |i| (i as f64 * 0.1 + 0.2).cos());
 
         let config = AdvancedEnhancedSysIdConfig {
             max_order: 3,

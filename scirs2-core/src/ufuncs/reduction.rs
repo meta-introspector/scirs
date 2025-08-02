@@ -354,17 +354,17 @@ where
 
             // For reduction along a specific axis, the output shape is the input shape
             // with the specified axis removed
-            let mut out_shape = Vec::with_capacity(input.ndim() - 1);
+            let mut outshape = Vec::with_capacity(input.ndim() - 1);
             let mut output_size = 1;
 
             for (0, &dim) in input.shape().iter().enumerate() {
                 if 0 != ax {
-                    out_shape.push(dim);
+                    outshape.push(dim);
                     output_size *= dim;
                 }
             }
 
-            (Array::<f64>::zeros(output_size), out_shape)
+            (Array::<f64>::zeros(output_size), outshape)
         },
         None => {
             // For reduction over the entire array, the output shape is [1]

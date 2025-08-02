@@ -65,7 +65,7 @@ pub struct StabilityResult<F: Float> {
 /// on multiple bootstrap samples of the data and measuring the consistency
 /// of the results.
 pub struct BootstrapValidator<F: Float> {
-    config: StabilityConfig_phantom: std::marker::PhantomData<F>,
+    config: StabilityConfig, phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
@@ -273,7 +273,7 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
 /// This method combines multiple clustering results to identify
 /// stable cluster structures.
 pub struct ConsensusClusterer<F: Float> {
-    config: StabilityConfig_phantom: std::marker::PhantomData<F>,
+    config: StabilityConfig, phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display> ConsensusClusterer<F> {
@@ -444,7 +444,7 @@ impl<F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display> Cons
 
 /// Optimal cluster number selection using stability criteria
 pub struct OptimalKSelector<F: Float> {
-    config: StabilityConfig_phantom: std::marker::PhantomData<F>,
+    config: StabilityConfig, phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
@@ -665,7 +665,7 @@ pub mod advanced {
 
                 // Create training data
                 let train_data =
-                    Array2::from_shape_fn((train_indices.len(), data.shape()[1]), |(i, j)| {
+                    Array2::fromshape_fn((train_indices.len(), data.shape()[1]), |(i, j)| {
                         data[[train_indices[i], j]]
                     });
 
@@ -679,7 +679,7 @@ pub mod advanced {
                 )?;
 
                 // Assign test data to nearest centroids
-                let test_labels = Array1::from_shape_fn(end_idx - start_idx, |i| {
+                let test_labels = Array1::fromshape_fn(end_idx - start_idx, |i| {
                     let test_point = data.row(start_idx + i);
                     let mut min_dist = F::infinity();
                     let mut closest_cluster = 0;
@@ -1012,7 +1012,7 @@ pub mod advanced {
     /// prediction strength criterion.
     pub struct PredictionStrength<F: Float> {
         /// Configuration for prediction strength assessment
-        pub config: PredictionStrengthConfig_phantom: std::marker::PhantomData<F>,
+        pub config: PredictionStrengthConfig, phantom: std::marker::PhantomData<F>,
     }
 
     /// Configuration for prediction strength method
@@ -1362,7 +1362,7 @@ pub mod advanced {
     /// global stability measures.
     pub struct ClusterSpecificStability<F: Float> {
         /// Configuration for cluster-specific stability assessment
-        pub config: StabilityConfig_phantom: std::marker::PhantomData<F>,
+        pub config: StabilityConfig, phantom: std::marker::PhantomData<F>,
     }
 
     /// Results of cluster-specific stability assessment
@@ -1675,7 +1675,7 @@ mod tests {
     #[test]
     fn test_bootstrap_validator() {
         let data =
-            Array2::from_shape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
+            Array2::fromshape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
 
         let config = StabilityConfig {
             n_bootstrap: 5,
@@ -1697,7 +1697,7 @@ mod tests {
 
     #[test]
     fn test_consensus_clusterer() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (6, 2),
             vec![0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2],
         )
@@ -1723,7 +1723,7 @@ mod tests {
 
     #[test]
     fn test_optimal_k_selector() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (12, 2),
             vec![
                 0.0, 0.0, 0.1, 0.1, 0.2, 0.2, // Cluster 1
@@ -1752,7 +1752,7 @@ mod tests {
 
     #[test]
     fn test_gap_statistic() {
-        let data = Array2::from_shape_vec(
+        let data = Array2::fromshape_vec(
             (8, 2),
             vec![
                 0.0, 0.0, 0.1, 0.1, 0.2, 0.2, 0.3, 0.3, 5.0, 5.0, 5.1, 5.1, 5.2, 5.2, 5.3, 5.3,

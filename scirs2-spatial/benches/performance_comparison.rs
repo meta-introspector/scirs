@@ -60,7 +60,7 @@ impl DatasetGenerator {
     /// Generate uniformly distributed data
     pub fn generate_uniform_data(&self, n_points: usize, dimensions: usize) -> Array2<f64> {
         let mut rng = StdRng::seed_from_u64(self.seed);
-        Array2::from_shape_fn((n_points, dimensions), |_| rng.gen_range(-100.0..100.0))
+        Array2::fromshape_fn((n_points, dimensions), |_| rng.gen_range(-100.0..100.0))
     }
 
     /// Generate data with outliers (common in spatial analysis)

@@ -328,17 +328,17 @@ pub mod data_validation {
     }
 
     /// Validate array shapes match requirements
-    pub fn validate_shape_compatibility(
-        actual_shape: &[usize],
-        expected_shape: &[Option<usize>],
+    pub fn validateshape_compatibility(
+        actualshape: &[usize],
+        expectedshape: &[Option<usize>],
         array_name: &str,
     ) -> StatsResult<()> {
-        if actual_shape.len() != expected_shape.len() {
+        if actualshape.len() != expectedshape.len() {
             return Err(EnhancedError::new(
                 StatsError::dimension_mismatch(format!(
                     "Expected {}-dimensional array, got {}-dimensional",
-                    expected_shape.len(),
-                    actual_shape.len()
+                    expectedshape.len(),
+                    actualshape.len()
                 )),
                 format!("Shape mismatch for {}", array_name),
             )
@@ -350,7 +350,7 @@ pub mod data_validation {
             .into_error());
         }
 
-        for (i, (&actual, &expected)) in actual_shape.iter().zip(expected_shape.iter()).enumerate()
+        for (i, (&actual, &expected)) in actualshape.iter().zip(expectedshape.iter()).enumerate()
         {
             if let Some(expected_dim) = expected {
                 if actual != expected_dim {
@@ -359,7 +359,7 @@ pub mod data_validation {
                             "Dimension {} mismatch: expected {}, got {}",
                             i, expected_dim, actual
                         )),
-                        format!("Invalid _shape for {}", array_name),
+                        format!("Invalid shape for {}", array_name),
                     )
                     .with_suggestions(vec![
                         format!("Ensure dimension {} has size {}", i, expected_dim),

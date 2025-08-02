@@ -45,7 +45,7 @@ impl From<NdimageError> for PyError {
             },
             NdimageError::DimensionError(msg) => PyError {
                 _error_type: "ValueError".to_string(),
-                message: format!("Dimension _error: {}", msg),
+                message: format!("Dimension , error: {}", msg),
                 context: None,
             },
             NdimageError::ComputationError(msg) => PyError {

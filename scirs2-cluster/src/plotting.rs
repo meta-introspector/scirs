@@ -76,7 +76,8 @@ pub fn plot_dendrogram<P: AsRef<Path>>(
 
     match output_config.format {
         PlotFormat::PNG => plot_dendrogram_png(dendrogram_plot, _path, output_config),
-        PlotFormat::SVG => plot_dendrogram_svg(dendrogram_plot, _path, output_config, _ => Err(ClusteringError::ComputationError(
+        PlotFormat::SVG => plot_dendrogram_svg(dendrogram_plot, _path, output_config),
+        _ => Err(ClusteringError::ComputationError(
             "Unsupported output format for plotters dendrogram".to_string(),
         )),
     }
@@ -262,7 +263,8 @@ pub fn plot_scatter_2d<P: AsRef<Path>>(
 
     match output_config.format {
         PlotFormat::PNG => plot_scatter_2d_png(scatter_plot, _path, output_config),
-        PlotFormat::SVG => plot_scatter_2d_svg(scatter_plot, _path, output_config, _ => Err(ClusteringError::ComputationError(
+        PlotFormat::SVG => plot_scatter_2d_svg(scatter_plot, _path, output_config),
+        _ => Err(ClusteringError::ComputationError(
             "Unsupported output format for plotters backend".to_string(),
         )),
     }
@@ -486,7 +488,7 @@ impl InteractiveClusteringApp {
 
 #[cfg(feature = "egui")]
 impl eframe::App for InteractiveClusteringApp {
-    fn update(&mut self, ctx: &egui::Context_frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::SidePanel::left("controls").show(ctx, |ui| {
             ui.heading("Clustering Visualization");
             ui.separator();
@@ -703,7 +705,8 @@ pub fn plot_scatter_3d<P: AsRef<Path>>(
 
     match output_config.format {
         PlotFormat::PNG => plot_scatter_3d_png(scatter_plot, _path, output_config),
-        PlotFormat::SVG => plot_scatter_3d_svg(scatter_plot, _path, output_config, _ => Err(ClusteringError::ComputationError(
+        PlotFormat::SVG => plot_scatter_3d_svg(scatter_plot, _path, output_config),
+        _ => Err(ClusteringError::ComputationError(
             "Unsupported output format for 3D plotters backend".to_string(),
         )),
     }

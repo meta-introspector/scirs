@@ -164,9 +164,9 @@ where
     H: Float + Clone + NumCast + Debug + ToPrimitive + NumAssign + Zero + Send + Sync,
 {
     // Choose implementation based on matrix size and available features
-    let a_shape = a.shape();
-    let b_shape = b.shape();
-    let total_elements = a_shape[0] * a_shape[1] + b_shape[0] * b_shape[1];
+    let ashape = a.shape();
+    let bshape = b.shape();
+    let total_elements = ashape[0] * ashape[1] + bshape[0] * bshape[1];
 
     // For smaller matrices, use f32-optimized basic implementation
     if total_elements < 10000 {

@@ -58,7 +58,7 @@ pub struct MemoryMappedCorpus {
 
 impl MemoryMappedCorpus {
     /// Create a new memory-mapped corpus from a file
-    pub fn from_file<P: AsRef<Path>>(_path: P) -> Result<Self> {
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(_path)
             .map_err(|e| TextError::IoError(format!("Failed to open file: {e}")))?;
 
@@ -339,7 +339,7 @@ pub struct ChunkedCorpusReader {
 
 impl ChunkedCorpusReader {
     /// Create a new chunked reader
-    pub fn new<P: AsRef<Path>>(_path: P, chunk_size: usize) -> Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, chunk_size: usize) -> Result<Self> {
         let file = File::open(_path)
             .map_err(|e| TextError::IoError(format!("Failed to open file: {e}")))?;
 
@@ -421,7 +421,7 @@ pub struct MultiFileCorpus {
 
 impl MultiFileCorpus {
     /// Create corpus from multiple files
-    pub fn from_files<P: AsRef<Path>>(_paths: &[P]) -> Result<Self> {
+    pub fn from_files<P: AsRef<Path>>(paths: &[P]) -> Result<Self> {
         let mut files = Vec::new();
         let mut file_boundaries = vec![0];
         let mut total_documents = 0;
@@ -604,7 +604,7 @@ pub struct CorpusIndex {
 
 impl CorpusIndex {
     /// Build index from corpus
-    pub fn build<T: Tokenizer>(_corpus: &MemoryMappedCorpus, tokenizer: &T) -> Result<Self> {
+    pub fn build<T: Tokenizer>(corpus: &MemoryMappedCorpus, tokenizer: &T) -> Result<Self> {
         let mut word_to_docs = std::collections::HashMap::new();
         let mut doc_to_words = Vec::new();
 

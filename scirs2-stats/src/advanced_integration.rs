@@ -12,7 +12,6 @@ use crate::mcmc::{GibbsSampler, MultivariateNormalGibbs};
 use crate::multivariate::{FactorAnalysis, FactorAnalysisResult, PCAResult, PCA};
 use crate::qmc::{halton, latin_hypercube, sobol};
 use crate::survival::{CoxPHModel, KaplanMeierEstimator};
-use statrs::statistics::Statistics;
 
 /// Comprehensive Bayesian analysis workflow
 #[derive(Debug, Clone)]
@@ -706,7 +705,7 @@ impl QMCWorkflow {
         }
 
         // Coefficient of variation of minimum distances
-        let mean_dist = min_distances.clone().mean();
+        let mean_dist = min_distances.mean().unwrap();
         let var_dist = min_distances.var(1.0);
         let uniformity = 1.0 / (var_dist.sqrt() / mean_dist); // Inverse CV
 

@@ -194,17 +194,17 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
     }
 
     // Feature detection templates
-    let edge_template = Array2::from_shape_vec(
+    let edge_template = Array2::fromshape_vec(
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
     .unwrap();
 
     let corner_template =
-        Array2::from_shape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
+        Array2::fromshape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
             .unwrap();
 
-    let blob_template = Array2::from_shape_vec(
+    let blob_template = Array2::fromshape_vec(
         (5, 5),
         vec![
             0.0, 0.2, 0.5, 0.2, 0.0, 0.2, 0.8, 1.0, 0.8, 0.2, 0.5, 1.0, 1.0, 1.0, 0.5, 0.2, 0.8,
@@ -691,7 +691,7 @@ fn create_gaussian_kernel(_size: usize, sigma: f64) -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_edge_kernel() -> Array2<f64> {
-    Array2::from_shape_vec(
+    Array2::fromshape_vec(
         (3, 3),
         vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
     )
@@ -700,7 +700,7 @@ fn create_edge_kernel() -> Array2<f64> {
 
 #[allow(dead_code)]
 fn create_enhancement_kernel() -> Array2<f64> {
-    Array2::from_shape_vec(
+    Array2::fromshape_vec(
         (3, 3),
         vec![0.0, -1.0, 0.0, -1.0, 5.0, -1.0, 0.0, -1.0, 0.0],
     )

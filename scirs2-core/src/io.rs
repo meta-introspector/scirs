@@ -22,8 +22,8 @@ use crate::error::CoreResult;
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be opened.
 #[allow(dead_code)]
-pub fn open_file<P: AsRef<Path>>(_path: P) -> CoreResult<BufReader<File>> {
-    let file = File::open(_path.as_ref())?;
+pub fn open_file<P: AsRef<Path>>(path: P) -> CoreResult<BufReader<File>> {
+    let file = File::open(path.as_ref())?;
     Ok(BufReader::new(file))
 }
 
@@ -41,8 +41,8 @@ pub fn open_file<P: AsRef<Path>>(_path: P) -> CoreResult<BufReader<File>> {
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be opened.
 #[allow(dead_code)]
-pub fn create_file<P: AsRef<Path>>(_path: P) -> CoreResult<BufWriter<File>> {
-    let file = File::create(_path.as_ref())?;
+pub fn create_file<P: AsRef<Path>>(path: P) -> CoreResult<BufWriter<File>> {
+    let file = File::create(path.as_ref())?;
     Ok(BufWriter::new(file))
 }
 
@@ -60,8 +60,8 @@ pub fn create_file<P: AsRef<Path>>(_path: P) -> CoreResult<BufWriter<File>> {
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be read.
 #[allow(dead_code)]
-pub fn read_to_string<P: AsRef<Path>>(_path: P) -> CoreResult<String> {
-    let mut file = open_file(_path)?;
+pub fn read_to_string<P: AsRef<Path>>(path: P) -> CoreResult<String> {
+    let mut file = open_file(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
     Ok(contents)
@@ -81,8 +81,8 @@ pub fn read_to_string<P: AsRef<Path>>(_path: P) -> CoreResult<String> {
 /// # Errors
 /// Returns `CoreError::IoError` if the file could not be read.
 #[allow(dead_code)]
-pub fn read_to_bytes<P: AsRef<Path>>(_path: P) -> CoreResult<Vec<u8>> {
-    let mut file = open_file(_path)?;
+pub fn read_to_bytes<P: AsRef<Path>>(path: P) -> CoreResult<Vec<u8>> {
+    let mut file = open_file(path)?;
     let mut contents = Vec::new();
     file.read_to_end(&mut contents)?;
     Ok(contents)
@@ -100,8 +100,8 @@ pub fn read_to_bytes<P: AsRef<Path>>(_path: P) -> CoreResult<Vec<u8>> {
 /// * `Ok(())` if the file was written successfully
 /// * `Err(CoreError::IoError)` if the file could not be written
 #[allow(dead_code)]
-pub fn write_string<P: AsRef<Path>, S: AsRef<str>>(_path: P, contents: S) -> CoreResult<()> {
-    let mut file = create_file(_path)?;
+pub fn write_string<P: AsRef<Path>, S: AsRef<str>>(path: P, contents: S) -> CoreResult<()> {
+    let mut file = create_file(path)?;
     file.write_all(contents.as_ref().as_bytes())?;
     file.flush()?;
     Ok(())
@@ -119,8 +119,8 @@ pub fn write_string<P: AsRef<Path>, S: AsRef<str>>(_path: P, contents: S) -> Cor
 /// * `Ok(())` if the file was written successfully
 /// * `Err(CoreError::IoError)` if the file could not be written
 #[allow(dead_code)]
-pub fn write_bytes<P: AsRef<Path>, B: AsRef<[u8]>>(_path: P, contents: B) -> CoreResult<()> {
-    let mut file = create_file(_path)?;
+pub fn write_bytes<P: AsRef<Path>, B: AsRef<[u8]>>(path: P, contents: B) -> CoreResult<()> {
+    let mut file = create_file(path)?;
     file.write_all(contents.as_ref())?;
     file.flush()?;
     Ok(())
@@ -138,12 +138,12 @@ pub fn write_bytes<P: AsRef<Path>, B: AsRef<[u8]>>(_path: P, contents: B) -> Cor
 /// * `Ok(())` if the file was read successfully
 /// * `Err(CoreError::IoError)` if the file could not be read
 #[allow(dead_code)]
-pub fn read_lines<P, F>(_path: P, mut callback: F) -> CoreResult<()>
+pub fn read_lines<P, F>(path: P, mut callback: F) -> CoreResult<()>
 where
     P: AsRef<Path>,
     F: FnMut(String) -> CoreResult<()>,
 {
-    let file = open_file(_path)?;
+    let file = open_file(path)?;
     for line in file.lines() {
         let line = line?;
         callback(line)?;
@@ -163,8 +163,8 @@ where
 /// * `false` if the file does not exist
 #[must_use]
 #[allow(dead_code)]
-pub fn file_exists<P: AsRef<Path>>(_path: P) -> bool {
-    _path.as_ref().exists() && _path.as_ref().is_file()
+pub fn file_exists<P: AsRef<Path>>(path: P) -> bool {
+    path.as_ref().exists() && path.as_ref().is_file()
 }
 
 /// Checks if a directory exists
@@ -179,8 +179,8 @@ pub fn file_exists<P: AsRef<Path>>(_path: P) -> bool {
 /// * `false` if the directory does not exist
 #[must_use]
 #[allow(dead_code)]
-pub fn directory_exists<P: AsRef<Path>>(_path: P) -> bool {
-    _path.as_ref().exists() && _path.as_ref().is_dir()
+pub fn directory_exists<P: AsRef<Path>>(path: P) -> bool {
+    path.as_ref().exists() && path.as_ref().is_dir()
 }
 
 /// Creates a directory if it doesn't exist
@@ -194,9 +194,9 @@ pub fn directory_exists<P: AsRef<Path>>(_path: P) -> bool {
 /// * `Ok(())` if the directory was created successfully or already exists
 /// * `Err(CoreError::IoError)` if the directory could not be created
 #[allow(dead_code)]
-pub fn create_directory<P: AsRef<Path>>(_path: P) -> CoreResult<()> {
-    if !directory_exists(&_path) {
-        std::fs::create_dir_all(_path.as_ref())?;
+pub fn create_directory<P: AsRef<Path>>(path: P) -> CoreResult<()> {
+    if !directory_exists(&path) {
+        std::fs::create_dir_all(path.as_ref())?;
     }
     Ok(())
 }
@@ -215,8 +215,8 @@ pub fn create_directory<P: AsRef<Path>>(_path: P) -> CoreResult<()> {
 /// # Errors
 /// Returns `CoreError::IoError` if the file size could not be determined.
 #[allow(dead_code)]
-pub fn filesize<P: AsRef<Path>>(_path: P) -> CoreResult<u64> {
-    let metadata = std::fs::metadata(_path.as_ref())?;
+pub fn filesize<P: AsRef<Path>>(path: P) -> CoreResult<u64> {
+    let metadata = std::fs::metadata(path.as_ref())?;
     Ok(metadata.len())
 }
 
@@ -259,41 +259,41 @@ mod tests {
     #[test]
     fn test_read_write_string() {
         let dir = tempdir().unwrap();
-        let file_path = dir.path().join("test.txt");
+        let filepath = dir.path().join("test.txt");
 
         let test_str = "Hello, world!";
-        write_string(&file_path, test_str).unwrap();
+        write_string(&filepath, test_str).unwrap();
 
-        let contents = read_to_string(&file_path).unwrap();
+        let contents = read_to_string(&filepath).unwrap();
         assert_eq!(contents, test_str);
     }
 
     #[test]
     fn test_read_write_bytes() {
         let dir = tempdir().unwrap();
-        let file_path = dir.path().join("test.bin");
+        let filepath = dir.path().join("test.bin");
 
         let test_bytes = vec![1, 2, 3, 4, 5];
-        write_bytes(&file_path, &test_bytes).unwrap();
+        write_bytes(&filepath, &test_bytes).unwrap();
 
-        let contents = read_to_bytes(&file_path).unwrap();
+        let contents = read_to_bytes(&filepath).unwrap();
         assert_eq!(contents, test_bytes);
     }
 
     #[test]
     fn test_read_lines() {
         let dir = tempdir().unwrap();
-        let file_path = dir.path().join("test_lines.txt");
+        let filepath = dir.path().join("test_lines.txt");
 
         {
-            let mut file = File::create(&file_path).unwrap();
+            let mut file = File::create(&filepath).unwrap();
             writeln!(file, "Line 1").unwrap();
             writeln!(file, "Line 2").unwrap();
             writeln!(file, "Line 3").unwrap();
         }
 
         let mut lines = Vec::new();
-        read_lines(&file_path, |line| {
+        read_lines(&filepath, |line| {
             lines.push(line);
             Ok(())
         })
@@ -305,48 +305,48 @@ mod tests {
     #[test]
     fn test_file_exists() {
         let dir = tempdir().unwrap();
-        let file_path = dir.path().join("test_exists.txt");
+        let filepath = dir.path().join("test_exists.txt");
 
-        assert!(!file_exists(&file_path));
+        assert!(!file_exists(&filepath));
 
-        File::create(&file_path).unwrap();
+        File::create(&filepath).unwrap();
 
-        assert!(file_exists(&file_path));
+        assert!(file_exists(&filepath));
     }
 
     #[test]
     fn test_directory_exists() {
         let dir = tempdir().unwrap();
-        let dir_path = dir.path().join("test_dir");
+        let dirpath = dir.path().join("test_dir");
 
-        assert!(!directory_exists(&dir_path));
+        assert!(!directory_exists(&dirpath));
 
-        std::fs::create_dir(&dir_path).unwrap();
+        std::fs::create_dir(&dirpath).unwrap();
 
-        assert!(directory_exists(&dir_path));
+        assert!(directory_exists(&dirpath));
     }
 
     #[test]
     fn test_create_directory() {
         let dir = tempdir().unwrap();
-        let dir_path = dir.path().join("test_create_dir");
+        let dirpath = dir.path().join("test_create_dir");
 
-        assert!(!directory_exists(&dir_path));
+        assert!(!directory_exists(&dirpath));
 
-        create_directory(&dir_path).unwrap();
+        create_directory(&dirpath).unwrap();
 
-        assert!(directory_exists(&dir_path));
+        assert!(directory_exists(&dirpath));
     }
 
     #[test]
     fn test_filesize() {
         let dir = tempdir().unwrap();
-        let file_path = dir.path().join("testsize.txt");
+        let filepath = dir.path().join("testsize.txt");
 
         let test_str = "Hello, world!";
-        write_string(&file_path, test_str).unwrap();
+        write_string(&filepath, test_str).unwrap();
 
-        let size = filesize(&file_path).unwrap();
+        let size = filesize(&filepath).unwrap();
         assert_eq!(size, test_str.len() as u64);
     }
 

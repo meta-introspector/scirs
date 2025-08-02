@@ -1,8 +1,9 @@
-use crate::wavelets;
+use ndarray::s;
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, s};
-use num__complex::Complex64;
+use crate::wavelets;
+use ndarray::{ Array1, Array2};
+use num_complex::Complex64;
 use num_traits::Float;
 use std::f64::consts::PI;
 
@@ -76,8 +77,8 @@ pub struct SynchroCwtResult {
 ///
 /// ```
 /// use ndarray::{Array1, Array2};
-/// use scirs2__signal::sswt::{synchrosqueezed_cwt, SynchroCwtConfig};
-/// use scirs2__signal::wavelets;
+/// use scirs2_signal::sswt::{synchrosqueezed_cwt, SynchroCwtConfig};
+/// use scirs2_signal::wavelets;
 ///
 /// // Create a chirp signal
 /// let t = Array1::linspace(0.0, 10.0, 1000);
@@ -259,7 +260,8 @@ fn perform_synchrosqueezing(
     omega: &Array2<f64>,
     scales: &Array1<f64>,
     frequencies: &Array1<f64>,
-    gamma: f64, _center_frequency: f64, // Unused but kept for API compatibility
+    gamma: f64,
+    _center_frequency: f64, // Unused but kept for API compatibility
 ) -> SignalResult<Array2<Complex64>> {
     let n_freqs = frequencies.len();
     let n_samples = cwt.shape()[1];
@@ -332,7 +334,7 @@ fn find_closest_freq_bin(_freq: f64, frequencies: &Array1<f64>) -> usize {
 /// # Example
 ///
 /// ```
-/// use scirs2__signal::sswt::log_scales;
+/// use scirs2_signal::sswt::log_scales;
 ///
 /// let scales = log_scales(1.0, 64.0, 32);
 /// assert_eq!(scales.len(), 32);
@@ -367,7 +369,7 @@ pub fn log_scales(_min_scale: f64, max_scale: f64, n_scales: usize) -> Array1<f6
 /// # Example
 ///
 /// ```
-/// use scirs2__signal::sswt::frequency_bins;
+/// use scirs2_signal::sswt::frequency_bins;
 ///
 /// let freqs = frequency_bins(1.0, 64.0, 64);
 /// assert_eq!(freqs.len(), 64);
@@ -524,7 +526,7 @@ pub fn reconstruct_from_ridge(
 
 #[cfg(test)]
 mod tests {
-use approx::assert_relative_eq;
+    use approx::assert_relative_eq;
     #[test]
     fn test_log_scales() {
         let scales = log_scales(1.0, 64.0, 4);

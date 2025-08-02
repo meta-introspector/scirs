@@ -425,16 +425,16 @@ impl SafeArrayOps {
     }
 
     /// Safe array copying with size validation
-    pub fn safe_copy<T: Copy>(_src: &[T], dst: &mut [T]) -> CoreResult<()> {
-        if _src.len() != dst.len() {
+    pub fn safe_copy<T: Copy>(src: &[T], dst: &mut [T]) -> CoreResult<()> {
+        if src.len() != dst.len() {
             return Err(CoreError::DimensionError(ErrorContext::new(format!(
                 "Source and destination arrays have different lengths: {} vs {}",
-                _src.len(),
+                src.len(),
                 dst.len()
             ))));
         }
 
-        dst.copy_from_slice(_src);
+        dst.copy_from_slice(src);
         Ok(())
     }
 }

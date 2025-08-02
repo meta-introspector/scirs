@@ -92,7 +92,7 @@ pub struct ReportConfig {
     /// Include quality metrics
     pub include_quality_metrics: bool,
     /// Include texture analysis
-    pub include_texture_analysis: bool,
+    pub includetexture_analysis: bool,
     /// Include histograms
     pub include_histograms: bool,
     /// Include profile plots
@@ -115,7 +115,7 @@ impl Default for ReportConfig {
             author: "SciRS2 Image Analysis".to_string(),
             include_statistics: true,
             include_quality_metrics: true,
-            include_texture_analysis: true,
+            includetexture_analysis: true,
             include_histograms: true,
             include_profiles: true,
             format: ReportFormat::Markdown,
@@ -241,7 +241,7 @@ where
             for (i, &count) in histogram.iter().enumerate() {
                 let bar_length = (count as f64 / max_count as f64 * 50.0) as usize;
                 let bin_center =
-                    min_val + (safe_usize_to_float(i)? + safe_f64, _to_float: :<T>(0.5)?) * bin_size;
+                    min_val + (safe_usize_to_float(i)? + safe_f64, _to_float: <T>(0.5)?) * bin_size;
 
                 writeln!(
                     &mut plot,
@@ -264,7 +264,7 @@ where
             for (i, &count) in histogram.iter().enumerate() {
                 let bar_length = (count as f64 / max_count as f64 * 50.0) as usize;
                 let bin_center =
-                    min_val + (safe_usize_to_float(i)? + safe_f64, _to_float: :<T>(0.5)?) * bin_size;
+                    min_val + (safe_usize_to_float(i)? + safe_f64, _to_float: <T>(0.5)?) * bin_size;
 
                 writeln!(
                     &mut plot,
@@ -330,7 +330,7 @@ where
 
                 for (i, (&x, &y)) in x_data.iter().zip(y_data.iter()).enumerate() {
                     let px = ((x - x_min) / x_range * safe_usize_to_float(config.width - 100)?
-                        + safe_f64, _to_float: :<T>(50.0)?)
+                        + safe_f64, _to_float: <T>(50.0)?)
                     .to_f64()
                     .unwrap_or(0.0);
                     let py = (config.height as f64 - 50.0)
@@ -607,9 +607,9 @@ where
     }
 
     // Texture analysis
-    if config.include_texture_analysis {
+    if config.includetexture_analysis {
         if let Some(_metrics) = texture_metrics {
-            add_texture_metrics(&mut report, _metrics, config.format)?;
+            addtexture_metrics(&mut report, _metrics, config.format)?;
         }
     }
 
@@ -934,7 +934,7 @@ where
 }
 
 #[allow(dead_code)]
-fn add_texture_metrics<T>(
+fn addtexture_metrics<T>(
     report: &mut String,
     metrics: &TextureMetrics<T>,
     format: ReportFormat,
@@ -1318,7 +1318,7 @@ where
     let mut _levels = Vec::new();
     for i in 0..num_levels {
         let t = i as f64 / (num_levels - 1) as f64;
-        let level = min_val + (max_val - min_val) * safe_f64, _to_float: :<T>(t)?;
+        let level = min_val + (max_val - min_val) * safe_f64, _to_float: <T>(t)?;
         _levels.push(level);
     }
 
@@ -1346,7 +1346,7 @@ where
                 for i in 0..height - 1 {
                     for j in 0..width - 1 {
                         let val = data[[i, j]];
-                        let threshold = (max_val - min_val) * safe_f64, _to_float: :<T>(0.02)?; // 2% tolerance
+                        let threshold = (max_val - min_val) * safe_f64, _to_float: <T>(0.02)?; // 2% tolerance
 
                         if (val - level).abs() < threshold {
                             let x = (j as f64 / width as f64) * config.width as f64;

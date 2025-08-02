@@ -71,7 +71,7 @@ where
     /// use scirs2__interpolate::advanced::thinplate::ThinPlateSpline;
     ///
     /// // Create 2D scattered data
-    /// let points = Array2::from_shape_vec((4, 2), vec![
+    /// let points = Array2::fromshape_vec((4, 2), vec![
     ///     0.0, 0.0,
     ///     0.0, 1.0,
     ///     1.0, 0.0,
@@ -85,7 +85,7 @@ where
     /// let tps = ThinPlateSpline::<f64>::new(&points.view(), &values.view(), 0.0).unwrap();
     ///
     /// // Interpolate at a new point
-    /// let new_point = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
+    /// let new_point = Array2::fromshape_vec((1, 2), vec![0.5, 0.5]).unwrap();
     /// let result = tps.evaluate(&new_point.view()).unwrap();
     /// // The thin-plate spline interpolation may not match exactly due to numerical issues
     /// // For this example, we check that the result is reasonable (between 0 and 2)
@@ -370,7 +370,7 @@ mod tests {
     fn test_thinplate_exact_fit() {
         // Create 2D scattered data
         let points =
-            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0]).unwrap();
 
         // Function values: f(x,y) = x^2 + y^2
         let values = array![0.0, 1.0, 1.0, 2.0];
@@ -399,7 +399,7 @@ mod tests {
     #[test]
     fn test_thinplate_smoothing() {
         // Create 2D scattered data with noise
-        let points = Array2::from_shape_vec(
+        let points = Array2::fromshape_vec(
             (5, 2),
             vec![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.5, 0.5],
         )

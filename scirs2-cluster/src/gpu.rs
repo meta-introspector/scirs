@@ -1697,13 +1697,13 @@ pub struct GpuArray<F: Float> {
 
 impl<F: Float + FromPrimitive> GpuArray<F> {
     /// Allocate GPU memory for array
-    pub fn allocate(_shape: &[usize]) -> Result<Self> {
-        let size = _shape.iter().product();
+    pub fn allocate(shape: &[usize]) -> Result<Self> {
+        let size = shape.iter().product();
 
         // Stub implementation - would allocate actual GPU memory
         Ok(Self {
             device_ptr: 0,
-            _shape: _shape.to_vec(),
+            shape: shape.to_vec(),
             size_phantom: std::marker::PhantomData,
         })
     }
@@ -2320,7 +2320,7 @@ pub mod benchmark {
         /// Algorithm type
         pub algorithm: String,
         /// Data size parameters
-        pub data_shape: (usize, usize),
+        pub datashape: (usize, usize),
         /// GPU backend used
         pub backend: GpuBackend,
         /// Average execution time
@@ -2443,7 +2443,7 @@ pub mod benchmark {
             Ok(BenchmarkResult {
                 name: format!("GPU K-means ({}, {})", data.nrows(), data.ncols()),
                 algorithm: "K-means".to_string(),
-                data_shape: (data.nrows(), data.ncols()),
+                datashape: (data.nrows(), data.ncols()),
                 backend: self.context.get_config().backend,
                 avg_time,
                 std_time,
@@ -2462,7 +2462,7 @@ pub mod benchmark {
             let mut rng = rand::rng();
             let normal = Normal::new(0.0, 1.0);
 
-            Array2::from_shape_fn((n_samples, n_features), |_| normal.sample(&mut rng))
+            Array2::fromshape_fn((n_samples, n_features), |_| normal.sample(&mut rng))
         }
 
         /// Estimate memory bandwidth utilization
@@ -2513,7 +2513,7 @@ pub mod benchmark {
             Ok(BenchmarkResult {
                 name: format!("GPU Distance Matrix ({}, {})", n_samples, n_features),
                 algorithm: "Distance Matrix".to_string(),
-                data_shape: data_size,
+                datashape: data_size,
                 backend: self.context.get_config().backend,
                 avg_time,
                 std_time: Duration::from_secs(0), // Simplified
@@ -2560,7 +2560,7 @@ pub mod benchmark {
                      Memory Bandwidth: {:.2} GB/s\n\
                      GPU Utilization: {:.1}%\n\n",
                     result.algorithm,
-                    result.data_shape,
+                    result.datashape,
                     result.backend,
                     result.avg_time.as_secs_f64() * 1000.0,
                     result.throughput_samples_per_sec,
@@ -3078,12 +3078,12 @@ pub mod accelerated {
                     "Large dense dataset ({} samples, {:.1}% sparsity) suits multi-threaded CPU",
                     data_chars.n_samples, data_chars.sparsity * 100.0
                 ),
-                    fallback_options: vec![ExecutionTarget::Cpu { num_threads: 1 }],
+                    fallback_options: vec![ExecutionTarget::Cpu { num, threads: 1 }],
                 }
             } else {
                 // Default to single-threaded CPU for small/sparse data
                 AlgorithmRecommendation {
-                    target: ExecutionTarget::Cpu { num_threads: 1 },
+                    target: ExecutionTarget::Cpu { num, threads: 1 },
                     confidence: 0.75,
                     expected_performance: ExpectedPerformance {
                         execution_time: computational_intensity / 1e5,
@@ -3163,7 +3163,7 @@ pub mod accelerated {
                         reasoning:
                             "Large dataset requires multi-threaded CPU with memory optimization"
                                 .to_string(),
-                        fallback_options: vec![ExecutionTarget::Cpu { num_threads: 1 }],
+                        fallback_options: vec![ExecutionTarget::Cpu { num, threads: 1 }],
                     }
                 }
             } else {
@@ -3181,7 +3181,7 @@ pub mod accelerated {
                     },
                     reasoning: "Medium-sized dataset suitable for moderate CPU parallelism"
                         .to_string(),
-                    fallback_options: vec![ExecutionTarget::Cpu { num_threads: 1 }],
+                    fallback_options: vec![ExecutionTarget::Cpu { num, threads: 1 }],
                 }
             }
         }
@@ -3254,7 +3254,7 @@ pub mod accelerated {
                     "DBSCAN on {} _samples with eps={:.3} using optimized neighbor search",
                     data_chars.n_samples, eps
                 ),
-                fallback_options: vec![ExecutionTarget::Cpu { num_threads: 1 }],
+                fallback_options: vec![ExecutionTarget::Cpu { num, threads: 1 }],
             }
         }
 
@@ -3314,7 +3314,7 @@ pub mod accelerated {
                     accuracy_impact: 0.0,
                 },
                 reasoning: "Based on cached performance profile - CPU is optimal".to_string(),
-                fallback_options: vec![ExecutionTarget::Cpu { num_threads: 1 }],
+                fallback_options: vec![ExecutionTarget::Cpu { num, threads: 1 }],
             }
         }
 

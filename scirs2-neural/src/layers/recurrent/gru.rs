@@ -187,26 +187,26 @@ impl<F: Float + Debug + ScalarOperand + 'static> GRU<F> {
         x: &ArrayView<F, IxDyn>,
         h: &ArrayView<F, IxDyn>,
     ) -> Result<GruForwardOutput<F>> {
-        let x_shape = x.shape();
-        let h_shape = h.shape();
-        let batch_size = x_shape[0];
+        let xshape = x.shape();
+        let hshape = h.shape();
+        let batch_size = xshape[0];
         // Validate shapes
-        if x_shape[1] != self.input_size {
+        if xshape[1] != self.input_size {
             return Err(NeuralError::InferenceError(format!(
                 "Input feature dimension mismatch: expected {}, got {}",
-                self.input_size, x_shape[1]
+                self.input_size, xshape[1]
             )));
         }
-        if h_shape[1] != self.hidden_size {
+        if hshape[1] != self.hidden_size {
             return Err(NeuralError::InferenceError(format!(
                 "Hidden state dimension mismatch: expected {}, got {}",
-                self.hidden_size, h_shape[1]
+                self.hidden_size, hshape[1]
             )));
         }
-        if x_shape[0] != h_shape[0] {
+        if xshape[0] != hshape[0] {
             return Err(NeuralError::InferenceError(format!(
                 "Batch size mismatch: input has {}, hidden state has {}",
-                x_shape[0], h_shape[0]
+                xshape[0], hshape[0]
             )));
         }
         // Initialize gates
@@ -277,15 +277,15 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<
         // Cache input for backward pass
         *self.input_cache.write().unwrap() = Some(input.clone());
         // Validate input shape
-        let input_shape = input.shape();
-        if input_shape.len() != 3 {
+        let inputshape = input.shape();
+        if inputshape.len() != 3 {
             return Err(NeuralError::InferenceError(format!(
-                "Expected 3D input [batch_size, seq_len, features], got {input_shape:?}"
+                "Expected 3D input [batch_size, seq_len, features], got {inputshape:?}"
             )));
         }
-        let batch_size = input_shape[0];
-        let seq_len = input_shape[1];
-        let features = input_shape[2];
+        let batch_size = inputshape[0];
+        let seq_len = inputshape[1];
+        let features = inputshape[2];
         if features != self.input_size {
             return Err(NeuralError::InferenceError(format!(
                 "Input features dimension mismatch: expected {}, got {}",
@@ -410,7 +410,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
             )));
         }
 
-        let expected_shapes = [
+        let expectedshapes = [
             self.weight_ir.shape(),
             self.weight_hr.shape(),
             self.bias_ir.shape(),
@@ -425,7 +425,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
             self.bias_hn.shape(),
         ];
 
-        for (i, (param, expected)) in params.iter().zip(expected_shapes.iter()).enumerate() {
+        for (i, (param, expected)) in params.iter().zip(expectedshapes.iter()).enumerate() {
             if param.shape() != *expected {
                 return Err(NeuralError::InvalidArchitecture(format!(
                     "Parameter {} shape mismatch: expected {:?}, got {:?}",
@@ -462,7 +462,7 @@ mod tests {
     use ndarray_rand::rand::SeedableRng;
 
     #[test]
-    fn test_gru_shape() {
+    fn test_grushape() {
         // Create a GRU layer
         let mut rng = SmallRng::seed_from_u64(42);
         let gru = GRU::<f64>::new(

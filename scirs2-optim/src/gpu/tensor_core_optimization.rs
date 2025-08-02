@@ -470,7 +470,7 @@ impl TensorCoreOptimizer {
             }
 
             let (m, k_a) = a.dim();
-            let (k_b, n) = b_sparse.dense_shape();
+            let (k_b, n) = b_sparse.denseshape();
 
             if k_a != k_b {
                 return Err(GpuOptimError::InvalidParameters(
@@ -750,7 +750,7 @@ impl TensorCoreOptimizer {
 
         // Determine optimal layout based on access _pattern
         let layout = match access_pattern.pattern_type {
-            AccessPatternType::Sequential =>, MatrixLayout::RowMajor,
+            AccessPatternType::Sequential => MatrixLayout::RowMajor,
             AccessPatternType::Strided => {
                 if access_pattern.stride_y > access_pattern.stride_x {
                     MatrixLayout::ColumnMajor
@@ -1108,7 +1108,7 @@ impl TensorCoreOptimizer {
         &self,
         m: usize,
         n: usize,
-        k: usize_precision: TensorCorePrecision,
+        k: usize, precision: TensorCorePrecision,
     ) -> f64 {
         let tile_m = self.config.wmma_tile_m;
         let tile_n = self.config.wmma_tile_n;
@@ -1372,7 +1372,7 @@ impl<T: Float + Send + Sync> SparseTensorCoreMatrix<T> {
     }
 
     /// Get dense shape
-    pub fn dense_shape(&self) -> (usize, usize) {
+    pub fn denseshape(&self) -> (usize, usize) {
         (self.dense_m, self.dense_n)
     }
 
@@ -2090,10 +2090,10 @@ mod tests {
     fn test_sparse_tensor_core_matrix() {
         use ndarray::Array2;
 
-        let dense = Array2::from_shape_vec((4, 8), (0..32).map(|x| x as f32).collect()).unwrap();
+        let dense = Array2::fromshape_vec((4, 8), (0..32).map(|x| x as f32).collect()).unwrap();
         let sparse = SparseTensorCoreMatrix::from_dense(&dense);
 
-        assert_eq!(sparse.dense_shape(), (4, 8));
+        assert_eq!(sparse.denseshape(), (4, 8));
         assert!(sparse.sparsity_ratio() > 0.0);
         assert!(sparse.sparsity_ratio() <= 1.0);
     }

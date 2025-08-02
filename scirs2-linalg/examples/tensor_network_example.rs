@@ -20,7 +20,7 @@ fn main() -> scirs2_linalg::error::LinalgResult<()> {
     println!("-----------------------");
 
     // Create a 2×3 matrix A
-    let data_a = ArrayD::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+    let data_a = ArrayD::fromshape_vec(IxDyn(&[2, 3]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
         .map_err(|e| scirs2_linalg::error::LinalgError::ShapeError(e.to_string()))?;
     let indices_a = vec!["i".to_string(), "j".to_string()];
     let tensor_a = TensorNode::new(data_a, indices_a)?;
@@ -32,7 +32,7 @@ fn main() -> scirs2_linalg::error::LinalgResult<()> {
     );
 
     // Create a 3×4 matrix B
-    let data_b = ArrayD::from_shape_vec(
+    let data_b = ArrayD::fromshape_vec(
         IxDyn(&[3, 4]),
         vec![
             1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
@@ -50,7 +50,7 @@ fn main() -> scirs2_linalg::error::LinalgResult<()> {
 
     // Create a 4×2 matrix C
     let data_c =
-        ArrayD::from_shape_vec(IxDyn(&[4, 2]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+        ArrayD::fromshape_vec(IxDyn(&[4, 2]), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
             .map_err(|e| scirs2_linalg::error::LinalgError::ShapeError(e.to_string()))?;
     let indices_c = vec!["k".to_string(), "l".to_string()];
     let tensor_c = TensorNode::new(data_c, indices_c)?;
@@ -93,12 +93,12 @@ fn main() -> scirs2_linalg::error::LinalgResult<()> {
     // Outer product
     println!("* Outer product of small tensors:");
     let v1 = TensorNode::new(
-        ArrayD::from_shape_vec(IxDyn(&[2]), vec![1.0, 2.0])
+        ArrayD::fromshape_vec(IxDyn(&[2]), vec![1.0, 2.0])
             .map_err(|e| scirs2_linalg::error::LinalgError::ShapeError(e.to_string()))?,
         vec!["i".to_string()],
     )?;
     let v2 = TensorNode::new(
-        ArrayD::from_shape_vec(IxDyn(&[3]), vec![3.0, 4.0, 5.0])
+        ArrayD::fromshape_vec(IxDyn(&[3]), vec![3.0, 4.0, 5.0])
             .map_err(|e| scirs2_linalg::error::LinalgError::ShapeError(e.to_string()))?,
         vec!["j".to_string()],
     )?;
@@ -124,7 +124,7 @@ fn main() -> scirs2_linalg::error::LinalgResult<()> {
     // Trace operation
     println!("* Trace operation on a matrix:");
     let matrix = TensorNode::new(
-        ArrayD::from_shape_vec(
+        ArrayD::fromshape_vec(
             IxDyn(&[3, 3]),
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
         )
@@ -170,9 +170,9 @@ fn main() -> scirs2_linalg::error::LinalgResult<()> {
     println!("  This is equivalent to matrix chain multiplication A@B@C");
 
     // Comparing with direct matrix multiplication
-    let expected_shape = vec![2, 2];
-    println!("  Expected shape: {:?}", expected_shape);
-    assert_eq!(result.shape(), expected_shape);
+    let expectedshape = vec![2, 2];
+    println!("  Expected shape: {:?}", expectedshape);
+    assert_eq!(result.shape(), expectedshape);
 
     // Print some values
     println!("  Some values from the result:");

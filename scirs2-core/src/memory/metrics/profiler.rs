@@ -57,7 +57,8 @@ impl Default for MemoryProfilerConfig {
 
 /// Profiling session information
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "memory_metrics",
+#[cfg_attr(
+    feature = "memory_metrics",
     derive(serde::Serialize, serde::Deserialize)
 )]
 pub struct ProfilingSession {
@@ -252,7 +253,8 @@ impl MemoryProfiler {
         };
 
         let performance_impact = self.analyze_performance_impact(&memory_report, &pattern_analysis);
-        let summary = self.generate_profiling_summary(&memory_report, &leak_results, &pattern_analysis);
+        let summary =
+            self.generate_profiling_summary(&memory_report, &leak_results, &pattern_analysis);
 
         let result = ProfilingResult {
             session: updated_session,
@@ -354,7 +356,10 @@ impl MemoryProfiler {
     }
 
     /// Analyze performance impact based on memory patterns
-    fn analyze_performance_impact(&self, memory_report: &MemoryReport, pattern_analysis: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
+    fn analyze_performance_impact(
+        &self,
+        memory_report: &MemoryReport,
+        pattern_analysis: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
     ) -> PerformanceImpactAnalysis {
         // Calculate performance metrics based on allocation patterns
         let total_allocations = memory_report.total_allocation_count;
@@ -411,7 +416,8 @@ impl MemoryProfiler {
     }
 
     /// Generate profiling summary with insights and recommendations
-    fn generate_profiling_summary(&self, 
+    fn generate_profiling_summary(
+        &self,
         memory_report: &MemoryReport,
         leak_results: &[crate::memory::metrics::analytics::LeakDetectionResult],
         pattern_analysis: &[crate::memory::metrics::analytics::MemoryPatternAnalysis],
@@ -506,7 +512,10 @@ impl MemoryProfiler {
     }
 
     /// Save profiling result to file
-    fn save_result_to_file(&self, result: &ProfilingResult, file_path: &str
+    fn save_result_to_file(
+        &self,
+        result: &ProfilingResult,
+        file_path: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
         #[cfg(feature = "memory_metrics")]
         {

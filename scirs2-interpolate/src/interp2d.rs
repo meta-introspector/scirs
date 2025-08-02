@@ -70,7 +70,7 @@ where
     /// let y = array![0.0, 1.0];
     ///
     /// // Define function z = x + y on the grid
-    /// let z = Array2::from_shape_fn((2, 3), |(i, j)| {
+    /// let z = Array2::fromshape_fn((2, 3), |(i, j)| {
     ///     y[i] + x[j]
     /// });
     ///
@@ -143,7 +143,7 @@ where
     ///
     /// let x = array![0.0, 1.0, 2.0];
     /// let y = array![0.0, 1.0];
-    /// let z = Array2::from_shape_fn((2, 3), |(i, j)| {
+    /// let z = Array2::fromshape_fn((2, 3), |(i, j)| {
     ///     y[i] + x[j] // z = x + y
     /// });
     ///
@@ -299,7 +299,7 @@ where
 
 /// Check if array is sorted in ascending order
 #[allow(dead_code)]
-fn is_sorted<F: PartialOrd>(_arr: &ArrayView1<F>) -> bool {
+fn is_sorted<F: PartialOrd>(arr: &ArrayView1<F>) -> bool {
     for window in _arr.windows(2) {
         if window[0] > window[1] {
             return false;
@@ -310,7 +310,7 @@ fn is_sorted<F: PartialOrd>(_arr: &ArrayView1<F>) -> bool {
 
 /// Find interval containing the value using binary search
 #[allow(dead_code)]
-fn find_interval<F: PartialOrd>(_arr: &ArrayView1<F>, value: F) -> usize {
+fn find_interval<F: PartialOrd>(arr: &ArrayView1<F>, value: F) -> usize {
     // Convert to slice to use binary_search_by
     let slice: &[F] = _arr.as_slice().unwrap();
     match slice.binary_search_by(|x| x.partial_cmp(&value).unwrap()) {
@@ -339,7 +339,7 @@ fn find_interval<F: PartialOrd>(_arr: &ArrayView1<F>, value: F) -> usize {
 ///
 /// let x = array![0.0, 1.0, 2.0];
 /// let y = array![0.0, 1.0];
-/// let z = Array2::from_shape_fn((2, 3), |(i, j)| {
+/// let z = Array2::fromshape_fn((2, 3), |(i, j)| {
 ///     y[i] * x[j] // z = x * y
 /// });
 ///
@@ -371,7 +371,7 @@ mod tests {
         // Create a simple 2x3 grid where z = x + y
         let x = array![0.0, 1.0, 2.0];
         let y = array![0.0, 1.0];
-        let z = Array2::from_shape_fn((2, 3), |(i, j)| y[i] + x[j]);
+        let z = Array2::fromshape_fn((2, 3), |(i, j)| y[i] + x[j]);
 
         let interp = Interp2d::new(&x.view(), &y.view(), &z.view(), Interp2dKind::Linear)?;
 
@@ -393,7 +393,7 @@ mod tests {
         // Create a 4x4 grid for cubic interpolation
         let x = array![0.0, 1.0, 2.0, 3.0];
         let y = array![0.0, 1.0, 2.0, 3.0];
-        let z = Array2::from_shape_fn((4, 4), |(i, j)| {
+        let z = Array2::fromshape_fn((4, 4), |(i, j)| {
             let x_val = x[j];
             let y_val = y[i];
             x_val * x_val + y_val * y_val // z = x² + y²
@@ -417,7 +417,7 @@ mod tests {
     fn test_grid_evaluation() -> InterpolateResult<()> {
         let x = array![0.0, 1.0];
         let y = array![0.0, 1.0];
-        let z = Array2::from_shape_fn((2, 2), |(i, j)| y[i] + x[j]);
+        let z = Array2::fromshape_fn((2, 2), |(i, j)| y[i] + x[j]);
 
         let interp = Interp2d::new(&x.view(), &y.view(), &z.view(), Interp2dKind::Linear)?;
 

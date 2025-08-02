@@ -187,7 +187,7 @@ impl MetaPolicyNetwork {
             embedding.clone()
         } else {
             let embedding =
-                Array1::from_shape_fn(input_size, |_| rand::rng().gen_range(-0.05..0.05));
+                Array1::fromshape_fn(input_size, |_| rand::rng().gen_range(-0.05..0.05));
             self.problem_embeddings
                 .insert(problem_class.to_string()..embedding.clone());
             embedding
@@ -556,7 +556,7 @@ impl AdvancedPolicyGradientOptimizer {
             .iter()
             .enumerate()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(idx_)| idx)
+            .map(|(idx, _)| idx)
             .unwrap_or(0);
 
         match action_type {

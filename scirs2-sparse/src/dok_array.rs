@@ -63,10 +63,10 @@ where
     ///
     /// # Returns
     /// A new empty `DokArray`
-    pub fn new(_shape: (usize, usize)) -> Self {
+    pub fn new(shape: (usize, usize)) -> Self {
         Self {
             data: HashMap::new(),
-            shape: _shape,
+            shape: shape,
         }
     }
 
@@ -523,8 +523,8 @@ where
             return Err(SparseError::InvalidSliceRange);
         }
 
-        let slice_shape = (end_row - start_row, end_col - start_col);
-        let mut result = DokArray::new(slice_shape);
+        let sliceshape = (end_row - start_row, end_col - start_col);
+        let mut result = DokArray::new(sliceshape);
 
         for (&(row, col), &value) in &self.data {
             if row >= start_row && row < end_row && col >= start_col && col < end_col {
@@ -603,7 +603,7 @@ mod tests {
         let dense = array.to_array();
 
         let expected =
-            Array::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
+            Array::fromshape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
                 .unwrap();
 
         assert_eq!(dense, expected);
@@ -612,7 +612,7 @@ mod tests {
     #[test]
     fn test_dok_array_from_array() {
         let dense =
-            Array::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
+            Array::fromshape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
                 .unwrap();
 
         let array = DokArray::from_array(&dense);

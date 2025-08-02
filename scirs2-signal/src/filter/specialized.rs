@@ -1,16 +1,16 @@
-//! Specialized filter designs
-//!
-//! This module provides specialized filter designs including notch filters, comb filters,
-//! allpass filters, and other special-purpose filters for specific signal processing
-//! applications such as noise removal, echo cancellation, and phase shifting.
+// Specialized filter designs
+//
+// This module provides specialized filter designs including notch filters, comb filters,
+// allpass filters, and other special-purpose filters for specific signal processing
+// applications such as noise removal, echo cancellation, and phase shifting.
 
-use crate::error::{SignalError, SignalResult};
-use crate::lti::TransferFunction;
-use num__complex::Complex64;
-use std::f64::consts::PI;
-use super::common::{FilterCoefficients, validation::validate_cutoff_frequency};
+use super::common::{validation::validate_cutoff_frequency, FilterCoefficients};
 use super::transform::zpk_to_tf;
+use crate::error::{SignalError, SignalResult};
 use crate::lti::design::tf as design_tf;
+use crate::lti::TransferFunction;
+use num_complex::Complex64;
+use std::f64::consts::PI;
 
 #[allow(unused_imports)]
 /// Design a notch filter to remove a specific frequency
@@ -31,7 +31,7 @@ use crate::lti::design::tf as design_tf;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::specialized::notch_filter;
+/// use scirs2_signal::filter::specialized::notch_filter;
 ///
 /// // Remove 60 Hz interference from signal sampled at 1000 Hz
 /// // Normalized frequency = 60 / (1000/2) = 0.12
@@ -90,7 +90,7 @@ pub fn notch_filter(_notch_freq: f64, quality_factor: f64) -> SignalResult<Filte
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::specialized::comb_filter;
+/// use scirs2_signal::filter::specialized::comb_filter;
 ///
 /// // Create echo effect with 100-sample delay
 /// let (b, a) = comb_filter(100, 0.5, 1.0).unwrap();
@@ -156,7 +156,7 @@ pub fn comb_filter(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::specialized::allpass_filter;
+/// use scirs2_signal::filter::specialized::allpass_filter;
 ///
 /// // Create allpass filter with 90-degree phase shift around 0.2 normalized frequency
 /// let (b, a) = allpass_filter(0.2, 0.9).unwrap();
@@ -249,7 +249,7 @@ pub fn allpass_second_order(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::specialized::hilbert_filter;
+/// use scirs2_signal::filter::specialized::hilbert_filter;
 ///
 /// // Design 65-tap Hilbert transformer
 /// let h = hilbert_filter(65).unwrap();
@@ -313,7 +313,7 @@ pub fn hilbert_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::specialized::differentiator_filter;
+/// use scirs2_signal::filter::specialized::differentiator_filter;
 ///
 /// // Design 21-tap differentiator
 /// let h = differentiator_filter(21).unwrap();
@@ -371,7 +371,7 @@ pub fn differentiator_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::specialized::integrator_filter;
+/// use scirs2_signal::filter::specialized::integrator_filter;
 ///
 /// // Design 21-tap integrator
 /// let h = integrator_filter(21).unwrap();
@@ -410,7 +410,7 @@ pub fn integrator_filter(_num_taps: usize) -> SignalResult<Vec<f64>> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::specialized::fractional_delay_filter;
+/// use scirs2_signal::filter::specialized::fractional_delay_filter;
 ///
 /// // Design filter with 2.5 sample delay
 /// let h = fractional_delay_filter(2.5, 21).unwrap();
@@ -471,7 +471,7 @@ pub fn fractional_delay_filter(_delay: f64, num_taps: usize) -> SignalResult<Vec
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::specialized::dc_blocker;
+/// use scirs2_signal::filter::specialized::dc_blocker;
 ///
 /// // Design DC blocker with very low cutoff
 /// let (b, a) = dc_blocker(0.995).unwrap();
@@ -509,7 +509,7 @@ pub fn dc_blocker(_pole_location: f64) -> SignalResult<FilterCoefficients> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::filter::specialized::peak_filter;
+/// use scirs2_signal::filter::specialized::peak_filter;
 ///
 /// // Boost 6 dB at 0.3 normalized frequency with 1 octave bandwidth
 /// let (b, a) = peak_filter(0.3, 6.0, 1.0).unwrap();

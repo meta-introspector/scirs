@@ -28,7 +28,7 @@ impl<F: Float + Debug + ScalarOperand> ModelCheckpoint<F> {
     /// * `filepath` - Directory or file path to save the model
     /// * `save_best_only` - Whether to save only the best model based on the monitored metric
     #[allow(dead_code)]
-    pub fn new<P: AsRef<Path>>(_filepath: P, save_best_only: bool) -> Self {
+    pub fn new<P: AsRef<Path>>(filepath: P, save_best_only: bool) -> Self {
         Self {
             _filepath: _filepath.as_ref().to_path_buf(),
             save_best_only,

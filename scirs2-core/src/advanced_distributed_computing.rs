@@ -2267,7 +2267,7 @@ impl AdvancedDistributedComputer {
 
         // Submit each group to optimal nodes
         for (resource_profile, task_group) in task_groups {
-            let suitable_nodes = self.find_nodes_for_profile(&resource_profile)?;
+            let _suitable_nodes = self.find_nodes_for_profile(&resource_profile)?;
 
             for (task, _task_analysis) in task_group {
                 let task_id = self.submit_task(task)?;
@@ -2285,7 +2285,10 @@ impl AdvancedDistributedComputer {
     }
 
     /// Submit a task with fault tolerance and automatic retry
-    pub fn submit_with_fault_tolerance(&self, task: DistributedTask, fault_tolerance_config: FaultToleranceConfig,
+    pub fn submit_with_fault_tolerance(
+        &self,
+        task: DistributedTask,
+        fault_tolerance_config: FaultToleranceConfig,
     ) -> CoreResult<TaskId> {
         // Create fault-tolerant wrapper around the task
         let fault_tolerant_task = self.wrap_with_fault_tolerance(task, fault_tolerance_config)?;
@@ -2437,7 +2440,7 @@ impl AdvancedDistributedComputer {
         };
 
         // Calculate parallelization potential
-        let parallelization_factor = self.estimate_parallelization_potential(task)?;
+        let _parallelization_factor = self.estimate_parallelization_potential(task)?;
 
         Ok(TaskRequirements {
             min_cpu_cores: (compute_complexity * 16.0) as u32,
@@ -2688,7 +2691,10 @@ impl AdvancedDistributedComputer {
         ])
     }
 
-    fn wrap_with_fault_tolerance(&self, task: DistributedTask, _config: FaultToleranceConfig,
+    fn wrap_with_fault_tolerance(
+        &self,
+        task: DistributedTask,
+        _config: FaultToleranceConfig,
     ) -> CoreResult<DistributedTask> {
         let fault_tolerant_task = task;
         // Note: Task struct doesn't support fault tolerance fields directly
@@ -2706,7 +2712,8 @@ impl AdvancedDistributedComputer {
         })?;
 
         stats.total_tasks_processed += 1;
-        stats.avg_task_completion_time = (stats.avg_task_completion_time + std::time::Duration::from_secs(1)) / 2;
+        stats.avg_task_completion_time =
+            (stats.avg_task_completion_time + std::time::Duration::from_secs(1)) / 2;
         // Note: last_update field not available in ClusterStatistics
 
         Ok(())
@@ -2742,11 +2749,11 @@ impl ClusterManager {
         Ok(())
     }
 
-    pub fn scale_nodes(&self, target_nodes: usize) -> CoreResult<()> {
+    pub fn scale_nodes(&self, _target_nodes: usize) -> CoreResult<()> {
         println!("📈 Scaling cluster...");
         Ok(())
     }
-    
+
     /// Scale cluster to target number of nodes
     pub fn scale_to(&self, target_nodes: usize) -> CoreResult<()> {
         self.scale_nodes(target_nodes)

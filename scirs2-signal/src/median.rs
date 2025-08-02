@@ -1,32 +1,33 @@
-//! Median Filtering module
-//!
-//! This module implements median filtering techniques for signal and image processing.
-//! Median filtering is particularly effective at removing salt-and-pepper and
-//! impulse noise while preserving edges.
-//!
-//! The implementation includes:
-//! - 1D Median filtering for signals
-//! - 2D Median filtering for images
-//! - Weighted median filtering
-//! - Adaptive median filtering
-//! - Edge-preserving median filtering variants
-//!
-//! # Example
-//! ```
-//! use ndarray::Array1;
-//! use scirs2__signal::median::{median_filter_1d, MedianConfig};
-//!
-//! // Create a test signal with impulse noise
-//! let mut signal = Array1::from_vec(vec![1.0, 1.2, 1.1, 5.0, 1.3, 1.2, 0.0, 1.1]);
-//!
-//! // Apply median filter with window size 3
-//! let config = MedianConfig::default();
-//! let filtered = median_filter_1d(&signal, 3, &config).unwrap();
-//! // The outliers (5.0 and 0.0) will be replaced with median values
-//! ```
+use ndarray::s;
+// Median Filtering module
+//
+// This module implements median filtering techniques for signal and image processing.
+// Median filtering is particularly effective at removing salt-and-pepper and
+// impulse noise while preserving edges.
+//
+// The implementation includes:
+// - 1D Median filtering for signals
+// - 2D Median filtering for images
+// - Weighted median filtering
+// - Adaptive median filtering
+// - Edge-preserving median filtering variants
+//
+// # Example
+// ```
+// use ndarray::Array1;
+// use scirs2_signal::median::{median_filter_1d, MedianConfig};
+//
+// // Create a test signal with impulse noise
+// let mut signal = Array1::from_vec(vec![1.0, 1.2, 1.1, 5.0, 1.3, 1.2, 0.0, 1.1]);
+//
+// // Apply median filter with window size 3
+// let config = MedianConfig::default();
+// let filtered = median_filter_1d(&signal, 3, &config).unwrap();
+// // The outliers (5.0 and 0.0) will be replaced with median values
+// ```
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, Array3, Axis, s};
+use ndarray::{ Array1, Array2, Array3, Axis};
 
 #[allow(unused_imports)]
 /// Edge handling mode for median filtering
@@ -96,7 +97,7 @@ impl Default for MedianConfig {
 /// # Example
 /// ```
 /// use ndarray::Array1;
-/// use scirs2__signal::median::{median_filter_1d, MedianConfig};
+/// use scirs2_signal::median::{median_filter_1d, MedianConfig};
 ///
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 5.0, 1.1, 1.3, 0.0, 1.2]);
 /// let config = MedianConfig::default();
@@ -317,9 +318,9 @@ fn adaptive_median_filter_1d(
 /// # Example
 /// ```
 /// use ndarray::Array2;
-/// use scirs2__signal::median::{median_filter_2d, MedianConfig};
+/// use scirs2_signal::median::{median_filter_2d, MedianConfig};
 ///
-/// let image = Array2::from_shape_fn((5, 5), |(i, j)| {
+/// let image = Array2::fromshape_fn((5, 5), |(i, j)| {
 ///     if i == 2 && j == 2 { 100.0 } else { 1.0 }  // Center pixel is an outlier
 /// });
 /// let config = MedianConfig::default();
@@ -886,43 +887,43 @@ pub fn hybrid_median_filter_2d(
             }
 
             // Extract pixels from different structural elements
-            let mut plus_shape = Vec::new(); // + shape
-            let mut cross_shape = Vec::new(); // X shape
+            let mut plusshape = Vec::new(); // + shape
+            let mut crossshape = Vec::new(); // X shape
 
             for k in 0..(2 * half_kernel + 1) {
                 // Horizontal line (part of + shape)
-                plus_shape.push(padded_image[[window_i_start + half_kernel, window_j_start + k]]);
+                plusshape.push(padded_image[[window_i_start + half_kernel, window_j_start + k]]);
 
                 // Vertical line (part of + shape)
-                plus_shape.push(padded_image[[window_i_start + k, window_j_start + half_kernel]]);
+                plusshape.push(padded_image[[window_i_start + k, window_j_start + half_kernel]]);
 
                 // Diagonal 1 (part of X shape)
                 if k < kernel_size {
                     let diag_i = window_i_start + k;
                     let diag_j = window_j_start + k;
-                    cross_shape.push(padded_image[[diag_i, diag_j]]);
+                    crossshape.push(padded_image[[diag_i, diag_j]]);
                 }
 
                 // Diagonal 2 (part of X shape)
                 if k < kernel_size {
                     let diag_i = window_i_start + k;
                     let diag_j = window_j_start + kernel_size - 1 - k;
-                    cross_shape.push(padded_image[[diag_i, diag_j]]);
+                    crossshape.push(padded_image[[diag_i, diag_j]]);
                 }
             }
 
             // Remove duplicate center pixel
-            if !plus_shape.is_empty() {
-                plus_shape.pop();
+            if !plusshape.is_empty() {
+                plusshape.pop();
             }
 
             // Sort the values from each shape
-            plus_shape.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-            cross_shape.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            plusshape.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            crossshape.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
             // Get median for each shape
-            let plus_median = plus_shape[plus_shape.len() / 2];
-            let cross_median = cross_shape[cross_shape.len() / 2];
+            let plus_median = plusshape[plusshape.len() / 2];
+            let cross_median = crossshape[crossshape.len() / 2];
 
             // Get the original pixel value
             let orig_value =

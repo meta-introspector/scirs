@@ -1,6 +1,6 @@
-//! Continuous wavelet transform implementation details
+// Continuous wavelet transform implementation details
 
-use num__complex::Complex64;
+use num_complex::Complex64;
 
 /// Helper function to convolve real signal with complex filter using 'same' mode
 ///

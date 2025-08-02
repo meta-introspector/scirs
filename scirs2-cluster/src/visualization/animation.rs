@@ -562,7 +562,7 @@ fn calculate_max_centroid_movement(
 fn interpolate_frames(
     frame1: &AnimationFrame,
     frame2: &AnimationFrame,
-    t: f64_config: &IterativeAnimationConfig,
+    t: f64, config: &IterativeAnimationConfig,
 ) -> Result<AnimationFrame> {
     let t = apply_easing(t, EasingFunction::EaseInOut);
 
@@ -663,9 +663,9 @@ mod tests {
         let mut recorder = IterativeAnimationRecorder::new(config);
 
         let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+            Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-        let centroids = Array2::from_shape_vec((2, 2), vec![2.0, 3.0, 6.0, 7.0]).unwrap();
+        let centroids = Array2::fromshape_vec((2, 2), vec![2.0, 3.0, 6.0, 7.0]).unwrap();
 
         recorder
             .record_frame(data.view(), &labels, Some(&centroids), Some(10.0))

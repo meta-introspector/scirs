@@ -529,7 +529,7 @@ pub fn optimize_graph_with_config<F: Float>(
 
 /// Apply only constant folding optimization
 #[allow(dead_code)]
-pub fn apply_constant_folding<F: Float>(_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+pub fn apply_constant_folding<F: Float>(graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
     let config = OptimizationConfig {
         constant_folding: true,
         cse: false,
@@ -567,7 +567,7 @@ pub fn apply_dead_code_elimination<F: Float>(
 
 /// Apply common subexpression elimination
 #[allow(dead_code)]
-pub fn apply_cse<F: Float>(_graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
+pub fn apply_cse<F: Float>(graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
     let config = OptimizationConfig {
         constant_folding: false,
         cse: true,

@@ -14,7 +14,7 @@ fn main() {
     println!("=== Feature Extraction Utilities Demonstration ===\n");
 
     // Create a sample dataset for demonstration
-    let data = Array2::from_shape_vec(
+    let data = Array2::fromshape_vec(
         (6, 2),
         vec![
             1.0, 10.0, // Normal data
@@ -47,7 +47,7 @@ fn main() {
 
     // Demonstrate Polynomial Features
     println!("=== Polynomial Feature Generation ==============");
-    let small_data = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 2.0, 3.0, 3.0, 4.0]).unwrap();
+    let small_data = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 2.0, 3.0, 3.0, 4.0]).unwrap();
 
     println!("Small dataset for polynomial demonstration:");
     print_data_matrix(&small_data, &["x1", "x2"]);
@@ -63,7 +63,7 @@ fn main() {
 
     // Demonstrate Statistical Feature Extraction
     println!("=== Statistical Feature Extraction =============");
-    let stats_data = Array2::from_shape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+    let stats_data = Array2::fromshape_vec((5, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
 
     let stats_features = statistical_features(&stats_data).unwrap();
     println!("Statistical features for data [1, 2, 3, 4, 5]:");
@@ -74,7 +74,7 @@ fn main() {
     // Demonstrate Binning/Discretization
     println!("=== Feature Binning/Discretization =============");
     let binning_data =
-        Array2::from_shape_vec((8, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        Array2::fromshape_vec((8, 1), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
 
     println!("Original data for binning: [1, 2, 3, 4, 5, 6, 7, 8]");
 
@@ -135,7 +135,7 @@ fn main() {
 
     // Comparison of scaling methods with outliers
     println!("=== Scaling Methods Comparison (with outliers) =");
-    let outlier_data = Array2::from_shape_vec(
+    let outlier_data = Array2::fromshape_vec(
         (5, 1),
         vec![1.0, 2.0, 3.0, 4.0, 100.0], // 100.0 is a severe outlier
     )

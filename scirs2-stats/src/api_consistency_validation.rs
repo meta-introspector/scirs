@@ -12,7 +12,6 @@
 //! - SciPy compatibility verification
 
 use crate::error::StatsResult;
-use ndarray::ArrayView1;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::{HashMap, HashSet};
@@ -1316,7 +1315,7 @@ mod tests {
 
     #[test]
     fn test_function_registry() {
-        let mut registry = FunctionRegistry::new();
+        let registry = FunctionRegistry::new();
 
         let function_sig = FunctionSignature {
             name: "mean".to_string(),

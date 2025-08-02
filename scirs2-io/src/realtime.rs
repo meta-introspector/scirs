@@ -525,7 +525,7 @@ struct WebSocketConnection {
 impl WebSocketConnection {
     fn new(_config: &StreamConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             ws_stream: None,
             connected: false,
         }
@@ -611,7 +611,7 @@ impl StreamConnection for WebSocketConnection {
 
         if let Some(ws_stream) = &mut self.ws_stream {
             let message = match self.config.format {
-                DataFormat::Binary =>, Message::Binary(data.to_vec()),
+                DataFormat::Binary => Message::Binary(data.to_vec()),
                 DataFormat::Json => {
                     Message::Text(String::from_utf8(data.to_vec()).map_err(|e| {
                         IoError::ParseError(format!("Invalid UTF-8 for JSON: {}", e))
@@ -661,7 +661,7 @@ struct TcpConnection {
 impl TcpConnection {
     fn new(_config: &StreamConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             stream: None,
             connected: false,
         }
@@ -780,7 +780,7 @@ struct SSEConnection {
 impl SSEConnection {
     fn new(_config: &StreamConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             connected: false,
             event_buffer: VecDeque::new(),
             #[cfg(feature = "sse")]
@@ -936,7 +936,7 @@ struct GrpcStreamConnection {
 impl GrpcStreamConnection {
     fn new(_config: &StreamConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             connected: false,
             sequence_id: 0,
             #[cfg(feature = "grpc")]
@@ -1102,7 +1102,7 @@ impl MqttConnection {
         );
 
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             client_id,
             topic: "scirs2/data".to_string(),
             qos: 1, // At least once delivery
@@ -1247,7 +1247,8 @@ impl StreamConnection for MqttConnection {
                 let qos = match self.qos {
                     0 => rumqttc::QoS::AtMostOnce,
                     1 => rumqttc::QoS::AtLeastOnce,
-                    2 => rumqttc::QoS::ExactlyOnce_ =>, rumqttc::QoS::AtLeastOnce,
+                    2 => rumqttc::QoS::ExactlyOnce,
+                    _ => rumqttc::QoS::AtLeastOnce,
                 };
 
                 client
@@ -1301,7 +1302,7 @@ struct UdpConnection {
 impl UdpConnection {
     fn new(_config: &StreamConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             socket: None,
             remote_addr: None,
             connected: false,
@@ -1451,10 +1452,10 @@ pub enum SyncStrategy {
 
 impl StreamSynchronizer {
     /// Create a new synchronizer
-    pub fn new(_sync_strategy: SyncStrategy) -> Self {
+    pub fn new(sync_strategy: SyncStrategy) -> Self {
         Self {
             streams: Vec::new(),
-            _sync_strategy,
+            sync_strategy,
             buffer_size: 1000,
             output_rate: None,
         }
@@ -1641,9 +1642,9 @@ struct BufferStats {
 
 impl<T: Clone> TimeSeriesBuffer<T> {
     /// Create a new time series buffer
-    pub fn new(_max_size: usize) -> Self {
+    pub fn new(max_size: usize) -> Self {
         Self {
-            _max_size,
+            max_size,
             window_duration: None,
             data: VecDeque::with_capacity(_max_size),
             stats: BufferStats::default(),
@@ -1743,13 +1744,13 @@ pub struct AggregationResult {
 
 impl<T: Clone + Send + 'static> StreamAggregator<T> {
     /// Create a new aggregator
-    pub fn new(_window: Duration) -> (Self, mpsc::Receiver<AggregationResult>) {
+    pub fn new(window: Duration) -> (Self, mpsc::Receiver<AggregationResult>) {
         let (tx, rx) = mpsc::channel(100);
 
         let aggregator = Self {
-            _window,
+            window,
             current_window: Vec::new(),
-            _window_start: Instant::now(),
+            window_start: Instant::now(),
             aggregators: Vec::new(),
             results_tx: tx,
         };
@@ -1810,7 +1811,6 @@ impl<T: Clone + Send + 'static> StreamAggregator<T> {
 
 // Add async_trait to dependencies
 use async_trait;
-use std::path::PathBuf;
 use statrs::statistics::Statistics;
 
 #[cfg(test)]

@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create model
     let model = EfficientNet::<f32>::efficientnet_b0(input_channels, num_classes)?;
     // Create dummy input (batch_size=1, channels=3, height=224, width=224)
-    let input = Array::from_shape_fn(IxDyn(&[1, input_channels, 224, 224]), |_| {
+    let input = Array::fromshape_fn(IxDyn(&[1, input_channels, 224, 224]), |_| {
         rand::random::<f32>()
     });
     println!("Input shape: {:?}", input.shape());
@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nCreating EfficientNet-B3 model...");
     let model_b3 = EfficientNet::<f32>::efficientnet_b3(input_channels, num_classes)?;
     // Create dummy input with higher resolution for B3 (300x300)
-    let input_b3 = Array::from_shape_fn(IxDyn(&[1, input_channels, 300, 300]), |_| {
+    let input_b3 = Array::fromshape_fn(IxDyn(&[1, input_channels, 300, 300]), |_| {
     println!("Input shape for B3: {:?}", input_b3.shape());
     let output_b3 = model_b3.forward(&input_b3)?;
     println!("Output shape for B3: {:?}", output_b3.shape());
@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     custom_config.resolution = 32; // For CIFAR-10 size images
     let custom_model = EfficientNet::<f32>::new(custom_config)?;
     // Create dummy input for small images (32x32)
-    let small_input = Array::from_shape_fn(IxDyn(&[1, input_channels, 32, 32]), |_| {
+    let small_input = Array::fromshape_fn(IxDyn(&[1, input_channels, 32, 32]), |_| {
     println!("Custom input shape: {:?}", small_input.shape());
     let custom_output = custom_model.forward(&small_input)?;
     println!("Custom output shape: {:?}", custom_output.shape());

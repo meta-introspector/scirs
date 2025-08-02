@@ -441,7 +441,7 @@ where
 
     // Convert to ndarray
     let linkage_array =
-        Array2::from_shape_vec((linkage.len(), 4), linkage.into_iter().flatten().collect())
+        Array2::fromshape_vec((linkage.len(), 4), linkage.into_iter().flatten().collect())
             .map_err(|_| {
                 ClusteringError::ComputationError("Failed to create linkage matrix".to_string())
             })?;
@@ -807,7 +807,7 @@ mod tests {
 
     #[test]
     fn test_dtw_k_medoids() {
-        let time_series = Array2::from_shape_vec(
+        let time_series = Array2::fromshape_vec(
             (4, 5),
             vec![
                 1.0, 2.0, 3.0, 2.0, 1.0, 1.1, 2.1, 3.1, 2.1, 1.1, 5.0, 6.0, 7.0, 6.0, 5.0, 5.1,
@@ -838,7 +838,7 @@ mod tests {
 
     #[test]
     fn test_dtw_barycenter_averaging() {
-        let time_series = Array2::from_shape_vec(
+        let time_series = Array2::fromshape_vec(
             (3, 4),
             vec![1.0, 2.0, 3.0, 2.0, 1.1, 2.1, 3.1, 2.1, 0.9, 1.9, 2.9, 1.9],
         )
@@ -860,7 +860,7 @@ mod tests {
         assert_eq!(config.n_clusters, 3);
         assert_eq!(config.max_iterations, 100);
 
-        let time_series = Array2::from_shape_vec(
+        let time_series = Array2::fromshape_vec(
             (4, 5),
             vec![
                 1.0, 2.0, 3.0, 2.0, 1.0, 1.1, 2.1, 3.1, 2.1, 1.1, 5.0, 6.0, 7.0, 6.0, 5.0, 5.1,

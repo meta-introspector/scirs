@@ -1,8 +1,8 @@
-//! Utility functions for wavelet transforms
-//!
-//! This module provides various utilities for working with wavelets,
-//! such as calculating filter norms, checking properties, and other
-//! common operations used across the wavelet transform modules.
+// Utility functions for wavelet transforms
+//
+// This module provides various utilities for working with wavelets,
+// such as calculating filter norms, checking properties, and other
+// common operations used across the wavelet transform modules.
 
 use crate::error::SignalResult;
 use crate::dwt::Wavelet;
@@ -24,7 +24,7 @@ use super::filters::WaveletFilters;
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::utils::filter_energy;
+/// use scirs2_signal::dwt::utils::filter_energy;
 ///
 /// let filter = vec![0.7071067811865475, 0.7071067811865475];
 /// let energy = filter_energy(&filter);
@@ -54,7 +54,7 @@ pub fn filter_energy(_filter: &[f64]) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::{Wavelet, utils::check_perfect_reconstruction};
+/// use scirs2_signal::dwt::{Wavelet, utils::check_perfect_reconstruction};
 ///
 /// let wavelet = Wavelet::Haar;
 /// let filters = wavelet.filters().unwrap();
@@ -131,7 +131,7 @@ pub fn check_perfect_reconstruction(
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::{Wavelet, utils::center_frequency};
+/// use scirs2_signal::dwt::{Wavelet, utils::center_frequency};
 ///
 /// let wavelet = Wavelet::Haar;
 /// let filters = wavelet.filters().unwrap();
@@ -194,7 +194,7 @@ pub fn center_frequency(_filter: &[f64]) -> f64 {
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::{Wavelet, utils::estimate_vanishing_moments};
+/// use scirs2_signal::dwt::{Wavelet, utils::estimate_vanishing_moments};
 ///
 /// let wavelet = Wavelet::DB(4);
 /// let filters = wavelet.filters().unwrap();
@@ -239,7 +239,7 @@ pub fn estimate_vanishing_moments(_highpass_filter: &[f64], tol: Option<f64>) ->
 /// # Examples
 ///
 /// ```
-/// use scirs2__signal::dwt::utils::effective_filter_length;
+/// use scirs2_signal::dwt::utils::effective_filter_length;
 ///
 /// let filter = vec![0.0, 0.0, 0.2, 0.6, 0.2, 0.0];
 /// let length = effective_filter_length(&filter, None);

@@ -84,7 +84,7 @@ fn demonstrate_large_dataset_handling() -> Result<(), Box<dyn std::error::Error>
 
     // Create a large 2D array (simulate scientific data)
     println!("  🏗️  Creating large dataset (2000 x 1000 = 2M elements)...");
-    let large_data = Array2::from_shape_fn((2000, 1000), |(i, j)| {
+    let large_data = Array2::fromshape_fn((2000, 1000), |(i, j)| {
         // Simulate some scientific function
         let x = i as f64 / 2000.0;
         let y = j as f64 / 1000.0;
@@ -211,7 +211,7 @@ fn demonstrate_performance_benefits() -> Result<(), Box<dyn std::error::Error>> 
     let file_path = temp_dir.path().join("performance_test.bin");
 
     // Create moderately large dataset
-    let data = Array2::from_shape_fn((1000, 500), |(i, j)| (i * j) as f64);
+    let data = Array2::fromshape_fn((1000, 500), |(i, j)| (i * j) as f64);
     let data_size_mb = (data.len() * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0);
 
     println!(
@@ -280,7 +280,7 @@ fn demonstrate_multidimensional_arrays() -> Result<(), Box<dyn std::error::Error
 
     // 3D array example (simulate a data cube)
     println!("  🧊 3D array example (20x30x40 data cube):");
-    let data_3d = Array3::from_shape_fn((20, 30, 40), |(x, y, z)| {
+    let data_3d = Array3::fromshape_fn((20, 30, 40), |(x, y, z)| {
         (x as f64).sin() + (y as f64).cos() + (z as f64).tan()
     });
 
@@ -302,7 +302,7 @@ fn demonstrate_multidimensional_arrays() -> Result<(), Box<dyn std::error::Error
 
     // Large 1D array example
     println!("  📊 Large 1D array example (10M elements):");
-    let large_1d = Array1::from_shape_fn(10_000_000, |i| (i as f64).sqrt());
+    let large_1d = Array1::fromshape_fn(10_000_000, |i| (i as f64).sqrt());
     let file_1d = temp_dir.path().join("large_1d.bin");
 
     let write_start = Instant::now();

@@ -51,7 +51,7 @@ fn main() {
 
     // First layer parameters
     let w1_array =
-        Array2::<f64>::from_shape_fn((2, 4), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
+        Array2::<f64>::fromshape_fn((2, 4), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
     let b1_array = Array1::<f64>::zeros(4);
     println!(
         "Layer 1: {} -> {}",
@@ -61,7 +61,7 @@ fn main() {
 
     // Second layer parameters
     let w2_array =
-        Array2::<f64>::from_shape_fn((4, 1), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
+        Array2::<f64>::fromshape_fn((4, 1), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
     let b2_array = Array1::<f64>::zeros(1);
     println!(
         "Layer 2: {} -> {}",
@@ -309,7 +309,7 @@ fn main() {
     let mut model = Sequential::new("XorModel", Vec::new());
 
     // Add layers
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::withshape(
         "fc1",
         input_dim,
         hidden_dim,
@@ -317,7 +317,7 @@ fn main() {
         Some(ActivationFunc::Sigmoid),
     )));
 
-    model.add_layer(Box::new(Linear::with_shape(
+    model.add_layer(Box::new(Linear::withshape(
         "fc2",
         hidden_dim,
         output_dim,

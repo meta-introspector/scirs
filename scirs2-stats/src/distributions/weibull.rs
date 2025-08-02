@@ -7,7 +7,6 @@ use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{Distribution, Uniform as RandUniform};
-use statrs::statistics::Statistics;
 
 /// Weibull distribution structure
 ///
@@ -45,9 +44,9 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// ```
-    pub fn new(_shape: F, scale: F, loc: F) -> StatsResult<Self> {
+    pub fn new(shape: F, scale: F, loc: F) -> StatsResult<Self> {
         // Validate parameters
-        if _shape <= F::zero() {
+        if shape <= F::zero() {
             return Err(StatsError::DomainError(
                 "Shape parameter must be positive".to_string(),
             ));
@@ -70,7 +69,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
         };
 
         Ok(Weibull {
-            shape: _shape,
+            shape,
             scale,
             loc,
             rand_distr,
@@ -111,8 +110,8 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
         let x_pow = x_scaled.powf(shape_minus_one);
 
         // Calculate exp(-(x/scale)^shape)
-        let x_pow_shape = x_scaled.powf(self.shape);
-        let exp_term = (-x_pow_shape).exp();
+        let x_powshape = x_scaled.powf(self.shape);
+        let exp_term = (-x_powshape).exp();
 
         // PDF = (shape/scale) * (x/scale)^(shape-1) * exp(-(x/scale)^shape)
         (self.shape / self.scale) * x_pow * exp_term
@@ -148,8 +147,8 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
 
         // Calculate 1 - exp(-(x/scale)^shape)
         let x_scaled = x_shifted / self.scale;
-        let x_pow_shape = x_scaled.powf(self.shape);
-        F::one() - (-x_pow_shape).exp()
+        let x_powshape = x_scaled.powf(self.shape);
+        F::one() - (-x_powshape).exp()
     }
 
     /// Inverse of the cumulative distribution function (quantile function)
@@ -411,11 +410,11 @@ fn gamma_function<F: Float + NumCast>(x: F) -> F {
 /// assert!((pdf_at_one - 0.73575888).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn weibull<F>(_shape: F, scale: F, loc: F) -> StatsResult<Weibull<F>>
+pub fn weibull<F>(shape: F, scale: F, loc: F) -> StatsResult<Weibull<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    Weibull::new(_shape, scale, loc)
+    Weibull::new(shape, scale, loc)
 }
 
 /// Implementation of SampleableDistribution for Weibull
