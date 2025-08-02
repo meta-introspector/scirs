@@ -259,7 +259,10 @@ impl AdvancedErrorRecovery {
     }
 
     /// Generate context-aware recovery suggestions
-    pub fn generate_suggestions(_error: &StatsError, context: &AdvancedErrorContext) -> Vec<String> {
+    pub fn generate_suggestions(
+        _error: &StatsError,
+        context: &AdvancedErrorContext,
+    ) -> Vec<String> {
         let mut suggestions = Vec::new();
 
         // Data size-based suggestions

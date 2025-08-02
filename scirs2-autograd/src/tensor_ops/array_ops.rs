@@ -91,7 +91,7 @@ pub struct InferBinOpShape;
 
 pub struct Assign;
 
-impl<T: Float>, op::Op<T> for Assign {
+impl<T: Float> op::Op<T> for Assign {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let input1 = ctx.input(1).to_owned();
         ctx.input_mut(0).assign(&input1);
@@ -105,7 +105,7 @@ impl<T: Float>, op::Op<T> for Assign {
     }
 }
 
-impl<T: Float>, op::Op<T> for InferBinOpShape {
+impl<T: Float> op::Op<T> for InferBinOpShape {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let a_shape_float = ctx.input(0);
         let b_shape_float = ctx.input(1);
@@ -150,7 +150,7 @@ impl<T: Float>, op::Op<T> for InferBinOpShape {
     }
 }
 
-impl<T: Float>, op::Op<T> for Shape {
+impl<T: Float> op::Op<T> for Shape {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = &ctx.input(0);
         let shape_vec = ndarray_ext::shape_of_view(x);
@@ -165,7 +165,7 @@ impl<T: Float>, op::Op<T> for Shape {
     }
 }
 
-impl<T: Float>, op::Op<T> for Rank {
+impl<T: Float> op::Op<T> for Rank {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let ret = NdArray::from_elem(ndarray::IxDyn(&[]), T::from(x.ndim()).unwrap());
@@ -178,7 +178,7 @@ impl<T: Float>, op::Op<T> for Rank {
     }
 }
 
-impl<T: Float>, op::Op<T> for Size {
+impl<T: Float> op::Op<T> for Size {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let x = ctx.input(0);
         let ret = NdArray::from_elem(ndarray::IxDyn(&[]), T::from(x.len()).unwrap());

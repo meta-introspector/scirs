@@ -47,7 +47,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(7) => statistical_mechanics_mesoscopic()?,
             Ok(8) => nonlinear_optics_solitons()?,
             Ok(9) => cosmic_ray_physics()?,
-            Ok(10) => quantum_information_experiments()?_ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(10) => quantum_information_experiments()?,
+            _ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 
@@ -1977,7 +1978,7 @@ fn parameter_uncertainty_mass(_m1: f64_m2: f64, distance: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn parameter_uncertainty_distance(_m1: f64_m2: f64, distance: f64) -> f64 {
+fn parameter_uncertainty_distance(_m1: f64, _m2: f64, distance: f64) -> f64 {
     // Simplified distance uncertainty
     0.5 * (distance / 100.0).sqrt()
 }
@@ -2059,12 +2060,13 @@ fn hydrogen_wavelength(_n1: i32, n2: i32) -> f64 {
 fn sodium_d_line_wavelength(_line: &str) -> f64 {
     match _line {
         "D₁" => 589.6,
-        "D₂" => 589.0_ => 589.3,
+        "D₂" => 589.3,
+        _ => 589.0, // Default sodium D-line wavelength
     }
 }
 
 #[allow(dead_code)]
-fn fine_structure_splitting(n: i32_l: i32) -> f64 {
+fn fine_structure_splitting(n: i32, _l: i32) -> f64 {
     // Simplified fine structure splitting in meV
     let alpha = 1.0 / 137.0;
     let rydberg_ev = 13.6;

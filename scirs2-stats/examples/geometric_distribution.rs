@@ -1,4 +1,4 @@
-use scirs2__stats::distributions::geometric::Geometric;
+use scirs2_stats::distributions::geometric::Geometric;
 use statrs::statistics::Statistics;
 use std::error::Error;
 

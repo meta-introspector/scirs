@@ -94,7 +94,7 @@ pub enum ParallelStrategy {
 }
 
 /// Memory configuration for large-scale processing
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct MemoryConfig {
     /// Available system RAM (bytes)
     pub system_ram: usize,
@@ -505,7 +505,8 @@ pub struct AdvancedParallelProcessor<F> {
     thread_pool: Option<ThreadPool>,
     performance_monitor: Arc<PerformanceMonitor>,
     memory_manager: Arc<MemoryManager>,
-    gpu_context: Option<GpuContext>, _phantom: PhantomData<F>,
+    gpu_context: Option<GpuContext>,
+    _phantom: PhantomData<F>,
 }
 
 /// Advanced thread pool with work stealing and adaptive scaling
@@ -653,11 +654,12 @@ where
         };
 
         Self {
-            _config,
+            config: _config,
             thread_pool,
             performance_monitor,
             memory_manager,
-            gpu_context_phantom: PhantomData,
+            gpu_context: None,
+            _phantom: PhantomData,
         }
     }
 
@@ -717,7 +719,7 @@ where
 
         // Process in parallel chunks
         let results: Vec<_> = (0..num_threads)
-            .into_par.iter()
+            .into_par_iter()
             .map(|thread_id| {
                 let start_row = thread_id * chunk_size;
                 let end_row = ((thread_id + 1) * chunk_size).min(rows);
@@ -735,7 +737,7 @@ where
 
         // For simplicity, return first successful result
         // In practice, would combine results appropriately
-        results.into().iter().next().ok_or_else(|| {
+        results.into_iter().next().ok_or_else(|| {
             StatsError::ComputationError("No successful parallel results".to_string())
         })
     }
@@ -1047,9 +1049,13 @@ impl ThreadPool {
 }
 
 impl Worker {
-    fn new(_id: usize, _work_queue: Arc<Mutex<VecDeque<Task>>>, _shutdown: Arc<AtomicBool>) -> Self {
+    fn new(
+        _id: usize,
+        _work_queue: Arc<Mutex<VecDeque<Task>>>,
+        _shutdown: Arc<AtomicBool>,
+    ) -> Self {
         Self {
-            _id,
+            id: _id,
             thread: None, // Would spawn actual worker thread
             local_queue: VecDeque::new(),
             numa_node: None,

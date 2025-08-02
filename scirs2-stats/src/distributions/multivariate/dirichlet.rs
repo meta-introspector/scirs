@@ -99,7 +99,7 @@ impl Dirichlet {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::dirichlet::Dirichlet;
+    /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// // Create a 3D Dirichlet distribution with symmetric parameters (equivalent to a uniform distribution over the simplex)
     /// let alpha = array![1.0, 1.0, 1.0];
@@ -136,7 +136,7 @@ impl Dirichlet {
         log_norm_const -= lgamma(alpha_sum);
 
         Ok(Dirichlet {
-            _alpha: alpha_owned,
+            alpha: alpha_owned,
             dim,
             log_norm_const,
         })
@@ -156,7 +156,7 @@ impl Dirichlet {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::dirichlet::Dirichlet;
+    /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 1.0, 1.0];
     /// let dirichlet = Dirichlet::new(alpha).unwrap();
@@ -209,7 +209,7 @@ impl Dirichlet {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::dirichlet::Dirichlet;
+    /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 1.0, 1.0];
     /// let dirichlet = Dirichlet::new(alpha).unwrap();
@@ -263,7 +263,7 @@ impl Dirichlet {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::dirichlet::Dirichlet;
+    /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 2.0, 3.0];
     /// let dirichlet = Dirichlet::new(alpha).unwrap();
@@ -313,7 +313,7 @@ impl Dirichlet {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::dirichlet::Dirichlet;
+    /// use scirs2_stats::distributions::multivariate::dirichlet::Dirichlet;
     ///
     /// let alpha = array![1.0, 2.0, 3.0];
     /// let dirichlet = Dirichlet::new(alpha).unwrap();
@@ -344,7 +344,7 @@ impl Dirichlet {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distributions::multivariate;
+/// use scirs2_stats::distributions::multivariate;
 ///
 /// let alpha = array![1.0, 1.0, 1.0];
 /// let dirichlet = multivariate::dirichlet(&alpha).unwrap();

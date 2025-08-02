@@ -58,7 +58,7 @@ impl FastaRecord {
     /// Create a new FASTA record
     pub fn new(_id: String, sequence: String) -> Self {
         Self {
-            _id,
+            id: _id,
             description: None,
             sequence,
         }
@@ -67,7 +67,7 @@ impl FastaRecord {
     /// Create a new FASTA record with description
     pub fn with_description(_id: String, description: String, sequence: String) -> Self {
         Self {
-            _id,
+            id: _id,
             description: Some(description),
             sequence,
         }
@@ -302,7 +302,7 @@ impl FastqRecord {
         }
 
         Ok(Self {
-            _id,
+            id: _id,
             description: None,
             sequence,
             quality,

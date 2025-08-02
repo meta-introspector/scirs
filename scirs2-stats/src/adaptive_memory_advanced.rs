@@ -804,7 +804,8 @@ pub struct AdaptiveMemoryManager<F> {
     pressure_monitor: Arc<PressureMonitor>,
     out_of_core_manager: Arc<OutOfCoreManager>,
     gc_manager: Arc<GCManager>,
-    performance_monitor: Arc<MemoryPerformanceMonitor>, _phantom: PhantomData<F>,
+    performance_monitor: Arc<MemoryPerformanceMonitor>,
+    _phantom: PhantomData<F>,
 }
 
 /// Memory pool for efficient allocation
@@ -1769,7 +1770,7 @@ where
         let performance_monitor = Arc::new(MemoryPerformanceMonitor::new());
 
         Self {
-            _config,
+            config: _config,
             memory_pools,
             cache_manager,
             numa_manager,
@@ -1777,7 +1778,8 @@ where
             pressure_monitor,
             out_of_core_manager,
             gc_manager,
-            performance_monitor_phantom: PhantomData,
+            performance_monitor,
+            _phantom: PhantomData,
         }
     }
 
@@ -2141,7 +2143,7 @@ pub struct GCResult {
 impl MemoryPool {
     fn new(_chunk_size: usize, strategy: AllocationStrategy) -> Self {
         Self {
-            _chunk_size,
+            chunk_size: _chunk_size,
             available_chunks: Mutex::new(VecDeque::new()),
             allocated_chunks: AtomicUsize::new(0),
             total_chunks: AtomicUsize::new(0),
@@ -2402,7 +2404,7 @@ impl PredictiveEngine {
 impl FeatureExtractor {
     fn new(_config: &FeatureExtractionConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             feature_cache: RwLock::new(HashMap::new()),
             normalization_params: RwLock::new(HashMap::new()),
         }
@@ -2428,7 +2430,7 @@ impl PressureMonitor {
 impl ResponseEngine {
     fn new(_strategies: &ResponseStrategies) -> Self {
         Self {
-            _strategies: _strategies.clone(),
+            strategies: _strategies.clone(),
             active_responses: RwLock::new(Vec::new()),
             response_queue: Mutex::new(VecDeque::new()),
         }
@@ -2438,7 +2440,7 @@ impl ResponseEngine {
 impl OutOfCoreManager {
     fn new(_config: &OutOfCoreConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             chunk_scheduler: ChunkScheduler::new(_config.scheduling_strategy),
             storage_manager: StorageManager::new(&_config.storage_config),
             compression_engine: CompressionEngine::new(&_config.compression_config),
@@ -2522,7 +2524,7 @@ impl FileSystemOptimizer {
 impl IOSchedulerManager {
     fn new(_scheduler_type: IOScheduler) -> Self {
         Self {
-            _scheduler_type,
+            scheduler_type: _scheduler_type,
             queue_depth: 32,
             batch_size: 16,
         }
@@ -2532,7 +2534,7 @@ impl IOSchedulerManager {
 impl CompressionEngine {
     fn new(_config: &CompressionConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             compressors: HashMap::new(),
             compression_stats: RwLock::new(CompressionStatistics {
                 total_compressions: 0,
@@ -2550,7 +2552,7 @@ impl CompressionEngine {
 impl GCManager {
     fn new(_config: &GarbageCollectionConfig) -> Self {
         Self {
-            _config: _config.clone(),
+            config: _config.clone(),
             gc_scheduler: GCScheduler::new(_config),
             reference_tracker: ReferenceTracker::new(),
             workload_analyzer: WorkloadAnalyzer::new(&_config.workload_awareness),

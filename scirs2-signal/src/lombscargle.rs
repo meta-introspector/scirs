@@ -213,7 +213,8 @@ where
         "standard" => NormalizationMethod::Standard,
         "model" => NormalizationMethod::Model,
         "log" => NormalizationMethod::Log,
-        "psd" => NormalizationMethod::Psd_ => {
+        "psd" => NormalizationMethod::Psd,
+        _ => {
             return Err(SignalError::ValueError(format!(
                 "Invalid normalization _method. Valid options are 'standard', 'model', 'log', or 'psd', got {}",
                 normalization.unwrap_or("standard")
@@ -377,7 +378,8 @@ impl std::str::FromStr for AutoFreqMethod {
         match s.to_lowercase().as_str() {
             "fft" => Ok(AutoFreqMethod::Fft),
             "linear" => Ok(AutoFreqMethod::Linear),
-            "log" => Ok(AutoFreqMethod::Log, _ => Err(SignalError::ValueError(format!(
+            "log" => Ok(AutoFreqMethod::Log),
+            _ => Err(SignalError::ValueError(format!(
                 "Invalid frequency method: '{}'. Valid options are: 'fft', 'linear', 'log'",
                 s
             ))),
@@ -714,7 +716,8 @@ pub fn significance_levels(
             .map(|&p| -(n_samples as f64) * (1.0 - p).ln())
             .collect(),
         "log" => power.iter().map(|&p| p.exp()).collect(),
-        "psd" => power.iter().map(|&p| p * 2.0 / n_samples as f64).collect(, _ => {
+        "psd" => power.iter().map(|&p| p * 2.0 / n_samples as f64).collect(),
+        _ => {
             return Err(SignalError::ValueError(format!(
                 "Invalid normalization method: {}. Valid options are 'standard', 'model', 'log', or 'psd'",
                 normalization
@@ -735,7 +738,8 @@ pub fn significance_levels(
             "standard" => threshold,
             "model" => 1.0 - (-threshold / n_samples as f64).exp(),
             "log" => threshold.ln(),
-            "psd" => threshold * n_samples as f64 / 2.0_ => unreachable!(), // Already validated above
+            "psd" => threshold * n_samples as f64 / 2.0,
+            _ => unreachable!(), // Already validated above
         };
 
         sig_levels.push(power_threshold);

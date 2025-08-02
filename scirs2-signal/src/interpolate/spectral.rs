@@ -391,9 +391,9 @@ pub fn auto_interpolate(
 
 pub mod resampling {
     /// Advanced resampling utilities for signal interpolation and sample rate conversion
-    //!
-    //! This module provides high-quality resampling algorithms based on windowed sinc
-    //! interpolation, polyphase filtering, and other advanced signal processing techniques.
+    //
+    // This module provides high-quality resampling algorithms based on windowed sinc
+    // interpolation, polyphase filtering, and other advanced signal processing techniques.
 
 
     /// Configuration for high-quality resampling
@@ -521,7 +521,7 @@ pub mod resampling {
     }
 
     /// Evaluates the sinc kernel at a fractional position
-    fn evaluate_sinc_kernel(_kernel: &[f64], position: f64_cutoff: f64) -> f64 {
+    fn evaluate_sinc_kernel(_kernel: &[f64], position: f64, _cutoff: f64) -> f64 {
         let idx = position.round() as i32 + _kernel.len() as i32 / 2;
 
         if idx >= 0 && (idx as usize) < _kernel.len() {
@@ -568,13 +568,13 @@ pub mod resampling {
 
 pub mod polynomial {
     /// Polynomial interpolation methods and utilities
-    //!
-    //! This module provides various polynomial interpolation techniques including
-    //! Lagrange interpolation, Newton's method, Chebyshev interpolation, and
-    //! least-squares polynomial fitting.
+    ///
+    /// This module provides various polynomial interpolation techniques including
+    /// Lagrange interpolation, Newton's method, Chebyshev interpolation, and
+    /// least-squares polynomial fitting.
 
-use ndarray::Array2;
-    use scirs2__linalg::solve;
+    use ndarray::{Array1, Array2};
+    use scirs2_linalg::solve;
 
     /// Lagrange polynomial interpolation
     ///
@@ -699,10 +699,10 @@ use ndarray::Array2;
     /// # Returns
     ///
     /// * Polynomial values at the specified points
-    pub fn polynomial_eval(_coeffs: &[f64], x: &[f64]) -> Vec<f64> {
+    pub fn polynomial_eval(coeffs: &[f64], x: &[f64]) -> Vec<f64> {
         x.iter()
             .map(|&xi| {
-                _coeffs
+                coeffs
                     .iter()
                     .enumerate()
                     .map(|(j, &coeff)| coeff * xi.powi(j as i32))
@@ -855,7 +855,7 @@ mod tests {
         let signal = Array1::from_vec(vec![1.0, 2.0, f64::NAN, 4.0, 5.0, 6.0, f64::NAN, 8.0]);
         let config = InterpolationConfig::default();
 
-        let (result_method) = auto_interpolate(&signal, &config, true).unwrap();
+        let (result, _method) = auto_interpolate(&signal, &config, true).unwrap();
 
         // All values should be valid
         assert!(result.iter().all(|&x| !x.is_nan()));
@@ -868,7 +868,7 @@ mod tests {
 
         let result1 = sinc_interpolate(&signal, 0.4).unwrap();
         let result2 = spectral_interpolate(&signal, &config).unwrap();
-        let (result3_) = auto_interpolate(&signal, &config, false).unwrap();
+        let (result3, _) = auto_interpolate(&signal, &config, false).unwrap();
 
         assert_eq!(result1, signal);
         assert_eq!(result2, signal);

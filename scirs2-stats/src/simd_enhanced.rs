@@ -26,7 +26,8 @@ pub struct AdvancedEnhancedSimdProcessor<F> {
     /// Performance statistics
     performance_stats: Arc<RwLock<PerformanceStatistics>>,
     /// Algorithm selection cache
-    algorithm_cache: Arc<RwLock<HashMap<String, OptimalAlgorithm>>>, _phantom: PhantomData<F>,
+    algorithm_cache: Arc<RwLock<HashMap<String, OptimalAlgorithm>>>,
+    _phantom: PhantomData<F>,
 }
 
 /// Detected CPU capabilities for SIMD optimization
@@ -267,9 +268,10 @@ where
 
         Ok(Self {
             cpu_features,
-            _config,
+            config: _config,
             performance_stats: Arc::new(RwLock::new(PerformanceStatistics::default())),
-            algorithm_cache: Arc::new(RwLock::new(HashMap::new())), _phantom: PhantomData,
+            algorithm_cache: Arc::new(RwLock::new(HashMap::new())),
+            _phantom: PhantomData,
         })
     }
 

@@ -511,7 +511,8 @@ pub fn mls_sequence(
         28 => vec![25, 28],
         29 => vec![27, 29],
         30 => vec![7, 28, 29, 30],
-        31 => vec![28, 31]_ => {
+        31 => vec![28, 31],
+        _ => {
             return Err(SignalError::ValueError(
                 "Invalid register _length".to_string(),
             ))
@@ -813,7 +814,8 @@ pub fn synchronized_sweep(
                 })
                 .collect()
         }
-        "logarithmic" | "exponential" => exponential_sweep(&t, f1, f2, duration)?_ => {
+        "logarithmic" | "exponential" => exponential_sweep(&t, f1, f2, duration)?,
+        _ => {
             return Err(SignalError::ValueError(format!(
                 "Unknown sweep method: {}. Use 'linear' or 'logarithmic'",
                 method

@@ -3,7 +3,7 @@
 //! This example demonstrates how to work with animated images and sequences
 
 use ndarray::Array3;
-use scirs2__io::image::{
+use scirs2_io::image::{
     save_image, AnimationData, ColorMode, ImageData, ImageFormat, ImageMetadata,
 };
 use std::error::Error;

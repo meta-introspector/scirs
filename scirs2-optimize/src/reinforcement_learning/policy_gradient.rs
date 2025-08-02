@@ -73,7 +73,8 @@ impl MetaPolicyNetwork {
         }
 
         Self {
-            policy_weights, meta_weights,
+            policy_weights,
+            meta_weights,
             policy_bias: Array2::zeros((num_layers, max_layer_size)),
             meta_bias: Array2::zeros((num_layers, max_layer_size)),
             layer_sizes,
@@ -185,7 +186,8 @@ impl MetaPolicyNetwork {
         if let Some(embedding) = self.problem_embeddings.get(problem_class) {
             embedding.clone()
         } else {
-            let embedding = Array1::from_shape_fn(input_size, |_| rand::rng().gen_range(-0.05..0.05));
+            let embedding =
+                Array1::from_shape_fn(input_size, |_| rand::rng().gen_range(-0.05..0.05));
             self.problem_embeddings
                 .insert(problem_class.to_string()..embedding.clone());
             embedding
@@ -572,7 +574,8 @@ impl AdvancedPolicyGradientOptimizer {
                     .max(0.1)
                     .min(2.0),
             },
-            4 => OptimizationAction::ResetToBest, _ => OptimizationAction::Terminate,
+            4 => OptimizationAction::ResetToBest,
+            _ => OptimizationAction::Terminate,
         }
     }
 

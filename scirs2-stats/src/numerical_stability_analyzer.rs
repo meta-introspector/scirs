@@ -234,7 +234,7 @@ impl NumericalStabilityAnalyzer {
     /// Create a new numerical stability analyzer
     pub fn new(_config: StabilityConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             analysis_results: HashMap::new(),
         }
     }

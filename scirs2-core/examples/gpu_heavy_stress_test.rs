@@ -58,7 +58,7 @@ fn run_gpu_stress_test() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn ctx( &GpuContext) -> Result<(), GpuError> {
+fn test_large_matrix_operations(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("Test 1: Large Matrix Operations");
     println!("================================");
 
@@ -122,7 +122,7 @@ fn ctx( &GpuContext) -> Result<(), GpuError> {
 
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn ctx( &GpuContext) -> Result<(), GpuError> {
+fn test_massive_data_transfer(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("\nTest 2: Massive Data Transfer");
     println!("==============================");
 
@@ -160,7 +160,7 @@ fn ctx( &GpuContext) -> Result<(), GpuError> {
 
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn ctx( &GpuContext) -> Result<(), GpuError> {
+fn test_intensive_computation_loop(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("\nTest 3: Intensive Computation Loop");
     println!("===================================");
 

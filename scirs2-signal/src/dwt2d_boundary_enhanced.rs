@@ -257,7 +257,7 @@ where
         BoundaryMode2D::Symmetric => "symmetric",
         BoundaryMode2D::Periodic => "periodic",
         BoundaryMode2D::Zero => "zero",
-        BoundaryMode2D::Constant => "constant"_ => "symmetric", // Default fallback
+        BoundaryMode2D::Constant => "constant", // Default fallback
     };
 
     let decomposition = dwt2d_decompose(&extended_data, wavelet, Some(boundary_mode_str))?;
@@ -294,7 +294,7 @@ pub fn dwt2d_reconstruct_enhanced(
         BoundaryMode2D::Symmetric => "symmetric",
         BoundaryMode2D::Periodic => "periodic",
         BoundaryMode2D::Zero => "zero",
-        BoundaryMode2D::Constant => "constant"_ => "symmetric",
+        BoundaryMode2D::Constant => "constant",
     };
 
     let dwt_result = crate::dwt2d::Dwt2dResult {
@@ -1034,7 +1034,8 @@ fn get_wavelet_filter_length(_wavelet: Wavelet) -> usize {
         Wavelet::DB(n) => 2 * n,
         Wavelet::BiorNrNd { nr, nd } => 2 * (nr.max(nd) + 1),
         Wavelet::Coif(n) | Wavelet::Coiflet(n) => 6 * n,
-        Wavelet::Sym(n) => 2 * n_ => 8, // Default conservative estimate
+        Wavelet::Sym(n) => 2 * n, // Default conservative estimate
+        _ => 8, // Default conservative estimate
     }
 }
 
@@ -1084,7 +1085,7 @@ where
 /// Compute boundary quality metrics
 #[allow(dead_code)]
 fn compute_boundary_quality<T>(
-    _decomposition: &DWT2DDecomposition_boundary_info: &BoundaryInfo2D,
+    _decomposition: &DWT2DDecomposition, _boundary_info: &BoundaryInfo2D,
 ) -> SignalResult<BoundaryQualityMetrics>
 where
     T: Float + NumCast + Debug + Zero + Copy,

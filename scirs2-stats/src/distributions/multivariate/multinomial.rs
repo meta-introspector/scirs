@@ -10,8 +10,8 @@ use ndarray::{Array1, ArrayBase, Data, Ix1};
 use rand::rng;
 use scirs2_core::validation::{check_probabilities, check_probabilities_sum_to_one};
 use scirs2_core::Rng;
-use std::fmt::Debug;
 use statrs::statistics::Statistics;
+use std::fmt::Debug;
 
 /// Implementation of the factorial function
 #[allow(dead_code)]
@@ -69,7 +69,7 @@ impl Multinomial {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::multinomial::Multinomial;
+    /// use scirs2_stats::distributions::multivariate::multinomial::Multinomial;
     ///
     /// // Create a multinomial distribution for a 3-sided die rolled 10 times
     /// let n = 10;
@@ -118,7 +118,7 @@ impl Multinomial {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::multinomial::Multinomial;
+    /// use scirs2_stats::distributions::multivariate::multinomial::Multinomial;
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
@@ -188,7 +188,7 @@ impl Multinomial {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::multinomial::Multinomial;
+    /// use scirs2_stats::distributions::multivariate::multinomial::Multinomial;
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
@@ -264,7 +264,7 @@ impl Multinomial {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::multinomial::Multinomial;
+    /// use scirs2_stats::distributions::multivariate::multinomial::Multinomial;
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
@@ -318,7 +318,7 @@ impl Multinomial {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::multinomial::Multinomial;
+    /// use scirs2_stats::distributions::multivariate::multinomial::Multinomial;
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
@@ -343,7 +343,7 @@ impl Multinomial {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::multinomial::Multinomial;
+    /// use scirs2_stats::distributions::multivariate::multinomial::Multinomial;
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
@@ -367,7 +367,7 @@ impl Multinomial {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::multinomial::Multinomial;
+    /// use scirs2_stats::distributions::multivariate::multinomial::Multinomial;
     ///
     /// let n = 10;
     /// let p = array![0.2, 0.3, 0.5];
@@ -415,7 +415,7 @@ impl Multinomial {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distributions::multivariate;
+/// use scirs2_stats::distributions::multivariate;
 ///
 /// let n = 10;
 /// let p = array![0.2, 0.3, 0.5]; // Probabilities for each outcome

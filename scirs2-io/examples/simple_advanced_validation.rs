@@ -3,9 +3,9 @@
 //! A minimal test to validate that the advanced mode implementations
 //! compile correctly and core functionality works as expected.
 
-use scirs2__io::advanced_coordinator::AdvancedCoordinator;
-use scirs2__io::enhanced_algorithms::AdvancedPatternRecognizer;
-use scirs2__io::error::Result;
+use scirs2_io::advanced_coordinator::AdvancedCoordinator;
+use scirs2_io::enhanced_algorithms::AdvancedPatternRecognizer;
+use scirs2_io::error::Result;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {

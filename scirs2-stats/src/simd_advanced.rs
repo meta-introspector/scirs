@@ -100,7 +100,8 @@ pub enum MemoryPattern {
 pub struct AdvancedSimdProcessor<F> {
     config: AdvancedSimdConfig,
     vector_strategy: VectorStrategy,
-    memory_pattern: MemoryPattern, _phantom: PhantomData<F>,
+    memory_pattern: MemoryPattern,
+    _phantom: PhantomData<F>,
 }
 
 /// Advanced statistics result with performance metrics
@@ -153,7 +154,8 @@ where
         Self {
             config,
             vector_strategy,
-            memory_pattern_phantom: PhantomData,
+            memory_pattern,
+            _phantom: PhantomData,
         }
     }
 
@@ -163,9 +165,10 @@ where
         let memory_pattern = Self::select_optimal_memory_pattern(&_config);
 
         Self {
-            _config,
+            config: _config,
             vector_strategy,
-            memory_pattern_phantom: PhantomData,
+            memory_pattern,
+            _phantom: PhantomData,
         }
     }
 

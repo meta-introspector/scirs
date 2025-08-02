@@ -223,7 +223,7 @@ where
             Some(Options {
                 bounds: options.bounds.clone().map(|b| {
                     Bounds::from_vecs(
-                        b.iter().map(|&(lb_)| Some(lb)).collect(),
+                        b.iter().map(|&(lb, _)| Some(lb)).collect(),
                         b.iter().map(|&(_, ub)| Some(ub)).collect(),
                     )
                     .unwrap()
@@ -265,7 +265,7 @@ where
             Some(Options {
                 bounds: self.options.bounds.clone().map(|b| {
                     Bounds::from_vecs(
-                        b.iter().map(|&(lb_)| Some(lb)).collect(),
+                        b.iter().map(|&(lb, _)| Some(lb)).collect(),
                         b.iter().map(|&(_, ub)| Some(ub)).collect(),
                     )
                     .unwrap()

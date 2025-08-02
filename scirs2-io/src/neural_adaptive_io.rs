@@ -593,8 +593,8 @@ impl NeuralAdaptiveIoController {
             // Use the last 10 entries for training
             let recent_entries: Vec<_> = history.iter().rev().take(10).collect();
 
-            for (metrics_decisions, feedback) in recent_entries {
-                let input = metrics_decisions.to_input_vector();
+            for (metrics, decisions, feedback) in recent_entries {
+                let input = metrics.to_input_vector();
                 let current_output = network.forward(&input).unwrap_or_else(|_| Array1::zeros(5));
                 let target = feedback.to_target_vector(baseline_throughput);
 
@@ -614,7 +614,7 @@ impl NeuralAdaptiveIoController {
             .iter()
             .rev()
             .take(50)
-            .map(|(__, feedback)| feedback.throughput_mbps)
+            .map(|(_, _, feedback)| feedback.throughput_mbps)
             .collect();
 
         let avg_recent_performance = if !recent_performance.is_empty() {
@@ -908,7 +908,7 @@ impl ReinforcementLearningAgent {
     /// Get current learning statistics
     pub fn get_learning_stats(&self) -> ReinforcementLearningStats {
         let avg_reward = if !self.action_history.is_empty() {
-            self.action_history.iter().map(|(__, r)| r).sum::<f32>()
+            self.action_history.iter().map(|(_, _, r)| r).sum::<f32>()
                 / self.action_history.len() as f32
         } else {
             0.0
@@ -972,7 +972,7 @@ impl EnsembleNeuralNetwork {
         let network_performance = vec![1.0; num_networks];
 
         Self {
-            _networks,
+            networks: _networks,
             ensemble_weights,
             network_performance,
         }

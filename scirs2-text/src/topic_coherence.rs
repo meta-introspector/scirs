@@ -21,7 +21,8 @@ pub struct TopicCoherence {
 impl Default for TopicCoherence {
     fn default() -> Self {
         Self {
-            window_size: 10_min, _count: 5, // Kept for API compatibility
+            window_size: 10_min,
+            _count: 5, // Kept for API compatibility
             epsilon: 1e-12,
         }
     }
@@ -49,13 +50,7 @@ impl TopicCoherence {
         // Get top words for each topic
         let top_words_per_topic: Vec<Vec<String>> = topics
             .iter()
-            .map(|topic| {
-                topic
-                    .top_words
-                    .iter()
-                    .map(|(word_)| word.clone())
-                    .collect()
-            })
+            .map(|topic| topic.top_words.iter().map(|(word_)| word.clone()).collect())
             .collect();
 
         // Calculate segmented document frequency

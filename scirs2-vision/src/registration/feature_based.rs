@@ -340,7 +340,8 @@ fn detect_fast_keypoints(
     image: &image::GrayImage,
     threshold: u8,
     max_features: usize,
-    scale: f32_level: usize,
+    scale: f32,
+    level: usize,
 ) -> Result<Vec<Keypoint>> {
     let (width, height) = image.dimensions();
     let mut keypoints = Vec::new();
@@ -1018,7 +1019,7 @@ fn apply_cross_check_simd(
 
             // Use SIMD-accelerated distance computation
             let reverse_distances = compute_hamming_distances_simd(desc2, descriptors1);
-            let (best_idx_best_dist_second_best_dist) =
+            let (best_idx, _best_dist, _second_best_dist) =
                 find_best_matches_simd(&reverse_distances);
 
             if best_idx == Some(match_item.query_idx) {
@@ -1186,7 +1187,7 @@ fn build_pyramid(_image: &DynamicImage, levels: usize) -> Vec<DynamicImage> {
         let new_height = height / 2;
 
         let downsampled =
-            prev.resize_exact(new_width, new_height_image::imageops::FilterType::Lanczos3);
+            prev.resize_exact(new_width, new_height, image::imageops::FilterType::Lanczos3);
 
         pyramid.push(downsampled);
     }
@@ -1262,7 +1263,7 @@ fn compute_ncc(_reference: &GrayImage, template: &GrayImage, offset_x: u32, offs
     for _y in 0..template_height {
         for _x in 0..template_width {
             let ref_val = _reference.get_pixel(offset_x + _x, offset_y + _y)[0] as f64;
-            let template_val = template.get_pixel(_x_y)[0] as f64;
+            let template_val = template.get_pixel(_x, _y)[0] as f64;
 
             ref_sum += ref_val;
             template_sum += template_val;
@@ -1294,8 +1295,8 @@ mod tests {
     use super::*;
     use image::{ImageBuffer, Luma};
 
-    fn create_test_image(_width: u32, height: u32, pattern: u8) -> DynamicImage {
-        let img = ImageBuffer::from_fn(_width, height, |x, y| {
+    fn create_test_image(width: u32, height: u32, pattern: u8) -> DynamicImage {
+        let img = ImageBuffer::from_fn(width, height, |x, y| {
             Luma([((x + y + pattern as u32) % 256) as u8])
         });
         DynamicImage::ImageLuma8(img)

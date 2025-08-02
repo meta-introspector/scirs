@@ -20,7 +20,7 @@ pub fn ttest_ind_simd<F, D1, D2>(
 where
     F: Float + NumCast + SimdUnifiedOps,
     D1: Data<Elem = F>,
-    D2: Data<Elem = F> + std::fmt::Display,
+    D2: Data<Elem = F>,
 {
     if a.is_empty() || b.is_empty() {
         return Err(StatsError::invalid_argument("Arrays cannot be empty"));
@@ -112,7 +112,7 @@ where
 pub fn corrcoef_matrix_simd<F, D>(_data: &ArrayBase<D, Ix2>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + FromPrimitive + Clone,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let (n_samples_, n_features) = _data.dim();
 
@@ -190,7 +190,7 @@ pub fn robust_statistics_simd<F, D>(_data: &ArrayBase<D, Ix1>) -> StatsResult<(F
 // (median, mad, iqr)
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     if _data.is_empty() {
         return Err(StatsError::invalid_argument("Data cannot be empty"));
@@ -256,7 +256,7 @@ pub fn bootstrap_mean_simd<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     if data.is_empty() {
         return Err(StatsError::invalid_argument("Data cannot be empty"));
@@ -292,7 +292,7 @@ where
         let bootstrap_mean = if n > 16 {
             F::simd_sum(&bootstrap_sample.view()) / F::from(n).unwrap()
         } else {
-            bootstrap_sample.iter().fold(F::zero()..|acc, &x| acc + x) / F::from(n).unwrap()
+            bootstrap_sample.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(n).unwrap()
         };
 
         bootstrap_means[i] = bootstrap_mean;
@@ -313,7 +313,7 @@ pub fn linear_regression_simd<F, D1, D2>(
 where
     F: Float + NumCast + SimdUnifiedOps,
     D1: Data<Elem = F>,
-    D2: Data<Elem = F> + std::fmt::Display,
+    D2: Data<Elem = F>,
 {
     if x.len() != y.len() {
         return Err(StatsError::dimension_mismatch(

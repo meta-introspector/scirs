@@ -240,8 +240,8 @@ pub fn quantiles_simd<F, D1, D2>(
 ) -> StatsResult<ndarray::Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
-    D1: DataMut<Elem = F> + std::fmt::Display,
-    D2: Data<Elem = F> + std::fmt::Display,
+    D1: DataMut<Elem = F>,
+    D2: Data<Elem = F>,
 {
     let n = x.len();
     if n == 0 {

@@ -190,7 +190,8 @@ impl GpuDevice {
 
     pub fn compile_kernel(
         &self,
-        source: &str, _entry_point: &str,
+        source: &str,
+        _entry_point: &str,
     ) -> Result<GpuKernelHandle, GpuError> {
         self.context.execute(|compiler| compiler.compile(source))
     }
@@ -244,21 +245,29 @@ impl GpuDevice {
     }
 
     pub fn set_kernel_arg<T: GpuDataType>(
-        &self, _kernel: &GpuKernelHandle, _index: usize, _buffer: &GpuBuffer<T>,
+        &self,
+        _kernel: &GpuKernelHandle,
+        _index: usize,
+        _buffer: &GpuBuffer<T>,
     ) -> Result<(), GpuError> {
         // Set _kernel argument implementation for GPU
         Ok(())
     }
 
     pub fn set_kernel_arg_scalar<T>(
-        &self, _kernel: &GpuKernelHandle, _index: usize, _value: &T,
+        &self,
+        _kernel: &GpuKernelHandle,
+        _index: usize,
+        _value: &T,
     ) -> Result<(), GpuError> {
         // Set scalar _kernel argument implementation for GPU
         Ok(())
     }
 
     pub fn dispatch_kernel(
-        &self, kernel: &GpuKernelHandle, _global_size: [u32; 3],
+        &self,
+        kernel: &GpuKernelHandle,
+        _global_size: [u32; 3],
     ) -> Result<(), GpuError> {
         // Dispatch kernel implementation for GPU
         Ok(())
@@ -308,7 +317,9 @@ impl GpuDevice {
     }
 
     pub fn compile_kernel(
-        &self, source: &str, _entry_point: &str,
+        &self,
+        source: &str,
+        _entry_point: &str,
     ) -> Result<GpuKernelHandle, GpuError> {
         Ok(GpuKernelHandle)
     }
@@ -319,7 +330,11 @@ impl GpuDevice {
     }
 
     pub fn execute_kernel_with_args(
-        &self, kernel: &GpuKernelHandle, _global_size: &[usize], _local_size: &[usize], _args: &[Box<dyn std::any::Any>],
+        &self,
+        kernel: &GpuKernelHandle,
+        _global_size: &[usize],
+        _local_size: &[usize],
+        _args: &[Box<dyn std::any::Any>],
     ) -> Result<(), GpuError> {
         // CPU fallback - just return success
         Ok(())
@@ -356,21 +371,29 @@ impl GpuDevice {
     }
 
     pub fn set_kernel_arg<T: GpuDataType>(
-        &self, _kernel: &GpuKernelHandle, _index: usize, _buffer: &GpuBuffer<T>,
+        &self,
+        _kernel: &GpuKernelHandle,
+        _index: usize,
+        _buffer: &GpuBuffer<T>,
     ) -> Result<(), GpuError> {
         // No-op for CPU fallback
         Ok(())
     }
 
     pub fn set_kernel_arg_scalar<T>(
-        &self, _kernel: &GpuKernelHandle, _index: usize, _value: &T,
+        &self,
+        _kernel: &GpuKernelHandle,
+        _index: usize,
+        _value: &T,
     ) -> Result<(), GpuError> {
         // No-op for CPU fallback
         Ok(())
     }
 
     pub fn dispatch_kernel(
-        &self, kernel: &GpuKernelHandle, _global_size: [u32; 3],
+        &self,
+        kernel: &GpuKernelHandle,
+        _global_size: [u32; 3],
     ) -> Result<(), GpuError> {
         // Dispatch kernel implementation for GPU
         Ok(())
@@ -835,7 +858,8 @@ impl SpMVKernel {
     #[allow(dead_code)]
     fn execute_cpu_fallback<T>(
         &self,
-        rows: usize, _cols: usize,
+        rows: usize,
+        _cols: usize,
         indptr: &GpuBuffer<usize>,
         indices: &GpuBuffer<usize>,
         data: &GpuBuffer<T>,
@@ -1552,7 +1576,8 @@ impl SpMSKernel {
     #[allow(dead_code)]
     fn execute_spmm_cpu_fallback<T>(
         &self,
-        a_rows: usize, _a_cols: usize,
+        a_rows: usize,
+        _a_cols: usize,
         b_cols: usize,
         a_indptr: &GpuBuffer<usize>,
         a_indices: &GpuBuffer<usize>,
@@ -2258,7 +2283,9 @@ where
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
 fn gpu_sparse_matvec_impl_wrapper<T, S>(
-    _matrix: &S, _x: &ArrayView1<T>, _options: &GpuOptions,
+    _matrix: &S,
+    _x: &ArrayView1<T>,
+    _options: &GpuOptions,
 ) -> Result<Array1<T>, String>
 where
     T: Float + Debug + Copy + 'static + Send + Sync,
@@ -2383,7 +2410,9 @@ where
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
 fn gpu_sym_sparse_matvec_impl_wrapper<T>(
-    _matrix: &SymCsrMatrix<T>, _x: &ArrayView1<T>, _options: &GpuOptions,
+    _matrix: &SymCsrMatrix<T>,
+    _x: &ArrayView1<T>,
+    _options: &GpuOptions,
 ) -> Result<Array1<T>, String>
 where
     T: Float + Debug + Copy + 'static + Send + Sync,
@@ -3064,7 +3093,8 @@ impl OptimizedGpuOps {
     fn gpu_conjugate_gradient<T>(
         &mut self,
         matrix: &CsrArray<T>,
-        b: &ArrayView1<T>, _preconditioner: Option<&CsrArray<T>>,
+        b: &ArrayView1<T>,
+        _preconditioner: Option<&CsrArray<T>>,
         max_iter: usize,
         tol: f64,
     ) -> SparseResult<Array1<T>>
@@ -3135,7 +3165,8 @@ impl OptimizedGpuOps {
     fn gpu_bicgstab<T>(
         &mut self,
         matrix: &CsrArray<T>,
-        b: &ArrayView1<T>, _preconditioner: Option<&CsrArray<T>>,
+        b: &ArrayView1<T>,
+        _preconditioner: Option<&CsrArray<T>>,
         max_iter: usize,
         tol: f64,
     ) -> SparseResult<Array1<T>>
@@ -3246,7 +3277,8 @@ impl OptimizedGpuOps {
     fn gpu_gmres<T>(
         &mut self,
         matrix: &CsrArray<T>,
-        b: &ArrayView1<T>, _preconditioner: Option<&CsrArray<T>>,
+        b: &ArrayView1<T>,
+        _preconditioner: Option<&CsrArray<T>>,
         max_iter: usize,
         tol: f64,
     ) -> SparseResult<Array1<T>>
@@ -3807,7 +3839,15 @@ fn execute_symmetric_spmv_kernel(
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
 fn execute_spmv_kernel(
-    _device: &GpuDevice, _kernel: &GpuKernelHandle, _rows: usize, _indptr_buffer: &GpuBuffer<u32>, _indices_buffer: &GpuBuffer<u32>, _data_buffer: &GpuBuffer<f32>, _x_buffer: &GpuBuffer<f32>, _y_buffer: &GpuBuffer<f32>, _workgroup_size: [u32; 3],
+    _device: &GpuDevice,
+    _kernel: &GpuKernelHandle,
+    _rows: usize,
+    _indptr_buffer: &GpuBuffer<u32>,
+    _indices_buffer: &GpuBuffer<u32>,
+    _data_buffer: &GpuBuffer<f32>,
+    _x_buffer: &GpuBuffer<f32>,
+    _y_buffer: &GpuBuffer<f32>,
+    _workgroup_size: [u32; 3],
 ) -> Result<(), GpuError> {
     Err(GpuError::other("GPU feature not enabled".to_string()))
 }
@@ -3815,7 +3855,15 @@ fn execute_spmv_kernel(
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
 fn execute_symmetric_spmv_kernel(
-    _device: &GpuDevice, _kernel: &GpuKernelHandle, _rows: usize, _indptr_buffer: &GpuBuffer<u32>, _indices_buffer: &GpuBuffer<u32>, _data_buffer: &GpuBuffer<f32>, _x_buffer: &GpuBuffer<f32>, _y_buffer: &GpuBuffer<f32>, _workgroup_size: [u32; 3],
+    _device: &GpuDevice,
+    _kernel: &GpuKernelHandle,
+    _rows: usize,
+    _indptr_buffer: &GpuBuffer<u32>,
+    _indices_buffer: &GpuBuffer<u32>,
+    _data_buffer: &GpuBuffer<f32>,
+    _x_buffer: &GpuBuffer<f32>,
+    _y_buffer: &GpuBuffer<f32>,
+    _workgroup_size: [u32; 3],
 ) -> Result<(), GpuError> {
     Err(GpuError::other("GPU feature not enabled".to_string()))
 }

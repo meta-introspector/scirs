@@ -38,7 +38,8 @@ where
     /// Convergence diagnostics
     diagnostics: ConvergenceDiagnostics<F>,
     /// Performance monitoring
-    performance_monitor: PerformanceMonitor, _phantom: PhantomData<F>,
+    performance_monitor: PerformanceMonitor,
+    _phantom: PhantomData<F>,
 }
 
 /// Advanced-advanced target distribution interface
@@ -88,7 +89,7 @@ where
     /// Support parallel evaluation of multiple points
     fn batch_log_density(&self, x_batch: &Array2<F>) -> Array1<F> {
         let mut results = Array1::zeros(x_batch.nrows());
-        for (i, x) in x_batch.outer.iter().enumerate() {
+        for (i, x) in x_batch.outer_iter().enumerate() {
             results[i] = self.log_density(&x.to_owned());
         }
         results
@@ -437,12 +438,13 @@ where
         let performance_monitor = PerformanceMonitor::new();
 
         Ok(Self {
-            _target,
+            target: _target,
             config,
             chains,
             adaptation_state,
             diagnostics,
-            performance_monitor_phantom: PhantomData,
+            performance_monitor,
+            _phantom: PhantomData,
         })
     }
 
@@ -514,7 +516,7 @@ where
             SamplingMethod::Langevin { .. } => {
                 // Fallback to basic Metropolis-Hastings
                 self.metropolis_iteration(iteration)
-            },
+            }
             SamplingMethod::MultipleTryMetropolis { .. } => self.metropolis_iteration(iteration),
             SamplingMethod::ZigZag { .. } => self.metropolis_iteration(iteration),
             SamplingMethod::BouncyParticle { .. } => self.metropolis_iteration(iteration),
@@ -622,7 +624,9 @@ where
 
     /// Compute energy difference for Metropolis acceptance
     fn compute_energy_difference(
-        &self, _old_pos: &Array1<F>, _new_pos: &Array1<F>,
+        &self,
+        _old_pos: &Array1<F>,
+        _new_pos: &Array1<F>,
         old_momentum: &Array1<F>,
         new_momentum: &Array1<F>,
         old_log_density: F,
@@ -782,7 +786,7 @@ where
 {
     fn new(_id: usize, dim: usize, config: &AdvancedAdvancedConfig<F>) -> StatsResult<Self> {
         Ok(Self {
-            _id,
+            id: _id,
             current_position: Array1::zeros(dim),
             current_log_density: F::zero(),
             current_gradient: None,
@@ -902,8 +906,15 @@ mod tests {
     use ndarray::array;
 
     // Simple target distribution for testing
+    #[derive(Debug)]
     struct StandardNormal {
         dim: usize,
+    }
+
+    impl std::fmt::Display for StandardNormal {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "StandardNormal(dim={})", self.dim)
+        }
     }
 
     impl AdvancedTarget<f64> for StandardNormal {

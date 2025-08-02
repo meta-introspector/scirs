@@ -53,7 +53,6 @@
 //! ```
 
 
-use crate::error::{SignalError, SignalResult};
 use crate::dwt::Wavelet;
 use crate::lti::design::tf;
 use crate::utilities::spectral::spectral_flux;

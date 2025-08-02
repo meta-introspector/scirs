@@ -72,14 +72,16 @@ where
     /// Create new advanced-optimized SIMD statistics computer
     pub fn new() -> Self {
         Self {
-            config: AdvancedSimdConfig::default(), _phantom: PhantomData,
+            config: AdvancedSimdConfig::default(),
+            _phantom: PhantomData,
         }
     }
 
     /// Create with custom configuration
     pub fn with_config(_config: AdvancedSimdConfig) -> Self {
         Self {
-            _config_phantom: PhantomData,
+            config: _config,
+            _phantom: PhantomData,
         }
     }
 

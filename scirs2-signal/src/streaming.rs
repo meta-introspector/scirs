@@ -329,7 +329,7 @@ impl StreamingProcessor {
         let stft_processors = if _config.enable_spectral_analysis {
             (0.._config.num_channels)
                 .map(|_| StreamingStft::new(stft_config.clone()))
-                .collect::<Result<Vec<_>_>>()?
+                .collect::<Result<Vec<_>, _>>()?
         } else {
             Vec::new()
         };

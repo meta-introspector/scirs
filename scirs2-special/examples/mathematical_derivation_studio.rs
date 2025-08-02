@@ -38,7 +38,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(5) => elliptic_integral_connections()?,
             Ok(6) => wright_function_asymptotic_analysis()?,
             Ok(7) => information_theory_inequalities()?,
-            Ok(8) => quantum_mechanics_applications()?_ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(8) => quantum_mechanics_applications()?,
+            _ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 

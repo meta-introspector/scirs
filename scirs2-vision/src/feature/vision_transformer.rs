@@ -936,7 +936,7 @@ impl SwinTransformerBlock {
 
 impl WindowAttention {
     /// Forward pass with window-based attention
-    fn forward(&self, input: &Array2<f32>, _height: usize_width: usize) -> Result<Array2<f32>> {
+    fn forward(&self, input: &Array2<f32>, _height: usize, _width: usize) -> Result<Array2<f32>> {
         // For simplicity, apply regular attention (window partitioning would be more complex)
         self.attention.forward(input)
     }

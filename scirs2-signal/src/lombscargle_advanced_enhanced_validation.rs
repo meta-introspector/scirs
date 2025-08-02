@@ -5,7 +5,6 @@
 //! and enhanced numerical stability assessments.
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
 use ndarray::Array1;
 use rand::Rng;

@@ -266,7 +266,8 @@ pub struct CoxProportionalHazards<F> {
     /// Configuration
     pub config: CoxConfig,
     /// Convergence information
-    pub convergence_info: Option<CoxConvergenceInfo>, _phantom: PhantomData<F>,
+    pub convergence_info: Option<CoxConvergenceInfo>,
+    _phantom: PhantomData<F>,
 }
 
 /// Cox regression configuration
@@ -323,8 +324,9 @@ where
             coefficients: None,
             standard_errors: None,
             baseline_hazard: None,
-            _config,
-            convergence_info: None, _phantom: PhantomData,
+            config: _config,
+            convergence_info: None,
+            _phantom: PhantomData,
         }
     }
 
@@ -385,7 +387,7 @@ where
         }
 
         // Compute standard errors from Hessian
-        let (__, hessian) = self.compute_partial_likelihood_derivatives(
+        let (_, _, hessian) = self.compute_partial_likelihood_derivatives(
             &durations_f64,
             event_observed,
             &covariates_f64,

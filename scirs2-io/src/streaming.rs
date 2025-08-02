@@ -668,7 +668,7 @@ mod tests {
         let config = StreamingConfig::new().chunk_size(100);
 
         let (total_size, stats) =
-            process_file_chunked(&file_path, config, |chunk_chunk_id| -> Result<usize> {
+            process_file_chunked(&file_path, config, |chunk, _chunk_id| -> Result<usize> {
                 Ok(chunk.len())
             })
             .unwrap();

@@ -126,8 +126,7 @@ impl<T: Float + Send + Sync + 'static, D: crate::distance::Distance<T> + 'static
 
         // Get the backward directed Hausdorff distance using the points_tree
         // We perform the backward direction by simply reversing the query
-        let (dist_backward__, _, _) =
-            points_tree.directed_hausdorff_distance(_points, seed)?;
+        let (dist_backward__, _, _) = points_tree.directed_hausdorff_distance(_points, seed)?;
 
         // Return the maximum of the two directed distances
         Ok(if dist_forward__ > dist_backward__ {

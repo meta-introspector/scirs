@@ -307,7 +307,12 @@ where
     /// Process a chunk of matrix multiplication
     #[allow(dead_code)]
     fn process_chunk_matmul<S1, S2>(
-        &mut self, _a: &S1, _b_csc: &S2, _row_start: usize, _row_end: usize, _b_cols: usize,
+        &mut self,
+        _a: &S1,
+        _b_csc: &S2,
+        _row_start: usize,
+        _row_end: usize,
+        _b_cols: usize,
     ) -> SparseResult<ChunkResult<T>>
     where
         S1: SparseArray<T>,

@@ -11,8 +11,8 @@
 use ndarray::{Array1, ArrayView1};
 use rand::Rng;
 use scirs2_core::error::CoreResult as Result;
-use std::collections::VecDeque;
 use statrs::statistics::Statistics;
+use std::collections::VecDeque;
 
 /// Advanced Multi-Timescale STDP with Metaplasticity
 #[derive(Debug, Clone)]
@@ -204,7 +204,7 @@ impl AdvancedAdvancedSTDP {
         self.calcium_concentration = self.calcium_concentration.min(1.0);
     }
 
-    fn update_metaplasticity(&mut self_current_time: f64, objective_improvement: f64) {
+    fn update_metaplasticity(&mut self, current_time: f64, objective_improvement: f64) {
         // Store recent activity
         self.recent_activity.push_back(objective_improvement);
         if self.recent_activity.len() > 1000 {
@@ -230,7 +230,7 @@ impl AdvancedAdvancedSTDP {
         }
     }
 
-    fn update_homeostasis(&mut self_pre_spike: bool, post_spike: bool, dt: f64) {
+    fn update_homeostasis(&mut self, pre_spike: bool, post_spike: bool, dt: f64) {
         // Update current firing rate estimate
         let spike_rate = if post_spike { 1.0 / dt } else { 0.0 };
         self.current_firing_rate = 0.999 * self.current_firing_rate + 0.001 * spike_rate;
@@ -314,7 +314,8 @@ impl AdvancedAdvancedSTDP {
     fn compute_bcm_plasticity(
         &self,
         pre_spike: bool,
-        post_spike: bool, _current_weight: f64,
+        post_spike: bool,
+        _current_weight: f64,
     ) -> f64 {
         if !pre_spike && !post_spike {
             return 0.0;
@@ -502,7 +503,7 @@ impl AdvancedSTDPNetwork {
 
             // Create STDP rules for connections from previous layer
             if layer_idx > 0 {
-                let prev_size = layer_sizes[layer_idx - 1];
+                let prev_size = _layer_sizes[layer_idx - 1];
                 let mut layer_rules = Vec::new();
 
                 for _i in 0..size {
@@ -518,7 +519,7 @@ impl AdvancedSTDPNetwork {
             }
         }
 
-        let input_size = layer_sizes[0];
+        let input_size = _layer_sizes[0];
 
         Self {
             layers,
@@ -605,7 +606,8 @@ impl AdvancedSTDPNetwork {
 
     fn encode_parameters_to_spikes(
         &self,
-        params: &Array1<f64>, _current_time: f64,
+        params: &Array1<f64>,
+        _current_time: f64,
     ) -> Vec<Vec<bool>> {
         let mut spike_patterns = Vec::new();
 
@@ -712,7 +714,7 @@ impl AdvancedSTDPNetwork {
         Ok(())
     }
 
-    fn decode_parameters_from_network(&self_current_time: f64) -> Array1<f64> {
+    fn decode_parameters_from_network(&self, current_time: f64) -> Array1<f64> {
         let mut updates = Array1::zeros(self.current_params.len());
 
         // Use firing rates from first layer as parameter updates
@@ -739,7 +741,7 @@ impl AdvancedSTDPNetwork {
         base_step * improvement_factor * decay_factor
     }
 
-    fn update_network_statistics(&mut self_current_time: f64) {
+    fn update_network_statistics(&mut self, current_time: f64) {
         // Compute average plasticity
         let mut total_plasticity = 0.0;
         let mut count = 0;
@@ -820,17 +822,17 @@ pub fn advanced_stdp_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     max_nit: usize,
-    network_config: Option<(Vec<usize>, f64, f64)>, // (layer_sizes, target_rate, learning_rate)
+    network_config: Option<(Vec<usize>, f64, f64)>, // (_layer_sizes, target_rate, learning_rate)
 ) -> Result<Array1<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
-    let (layer_sizes, target_rate, learning_rate) = network_config.unwrap_or_else(|| {
+    let (_layer_sizes, target_rate, learning_rate) = network_config.unwrap_or_else(|| {
         let input_size = initial_params.len();
         (vec![input_size, input_size * 2, input_size], 5.0, 0.01)
     });
 
-    let mut network = AdvancedSTDPNetwork::new(layer_sizes, target_rate, learning_rate);
+    let mut network = AdvancedSTDPNetwork::new(_layer_sizes, target_rate, learning_rate);
     network.optimize(objective, initial_params, max_nit, 0.001)
 }
 
@@ -857,8 +859,8 @@ mod tests {
 
     #[test]
     fn test_advanced_stdp_network() {
-        let layer_sizes = vec![3, 5, 3];
-        let network = AdvancedSTDPNetwork::new(layer_sizes, 5.0, 0.01);
+        let _layer_sizes = vec![3, 5, 3];
+        let network = AdvancedSTDPNetwork::new(_layer_sizes, 5.0, 0.01);
 
         assert_eq!(network.layers.len(), 3);
         assert_eq!(network.layers[0].size, 3);

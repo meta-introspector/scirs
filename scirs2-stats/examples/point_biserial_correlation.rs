@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__stats::{point_biserial, point_biserialr};
+use scirs2_stats::{point_biserial, point_biserialr};
 
 #[allow(dead_code)]
 fn main() {

@@ -592,8 +592,7 @@ impl ConvexHull {
             let simplices = vec![vec![0, 1], vec![1, 2], vec![2, 0]];
 
             // Build dummy Qhull instance
-            let _points_vec: Vec<Vec<f64>> =
-                (0..npoints).map(|i| points.row(i).to_vec()).collect();
+            let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| points.row(i).to_vec()).collect();
 
             let qh = match Qh::builder()
                 .compute(false)  // Don't actually compute the hull
@@ -635,8 +634,7 @@ impl ConvexHull {
             }
 
             // Build dummy Qhull instance
-            let _points_vec: Vec<Vec<f64>> =
-                (0..npoints).map(|i| points.row(i).to_vec()).collect();
+            let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| points.row(i).to_vec()).collect();
 
             let qh = match Qh::builder()
                 .compute(false)  // Don't actually compute the hull
@@ -677,8 +675,7 @@ impl ConvexHull {
             let simplices = vec![vec![0, 1, 2], vec![0, 1, 3], vec![0, 2, 3], vec![1, 2, 3]];
 
             // Build dummy Qhull instance
-            let _points_vec: Vec<Vec<f64>> =
-                (0..npoints).map(|i| points.row(i).to_vec()).collect();
+            let _points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| points.row(i).to_vec()).collect();
 
             let qh = match Qh::builder()
                 .compute(false)  // Don't actually compute the hull

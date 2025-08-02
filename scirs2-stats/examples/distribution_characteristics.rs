@@ -1,8 +1,8 @@
 use ndarray::array;
-use scirs2__stats::distribution_characteristics::{
+use scirs2_stats::distribution_characteristics::{
     cross_entropy, entropy, kl_divergence, kurtosis_ci, mode, skewness_ci, ModeMethod,
 };
-use scirs2__stats::skew;
+use scirs2_stats::skew;
 
 #[allow(dead_code)]
 fn main() {
@@ -90,9 +90,9 @@ fn main() {
     let left_skewed = array![0.0f64, 7.0, 7.5, 8.0, 9.0];
 
     // Calculate direct skewness values
-    let _skew_sym = skew(&symmetric.view(), false).unwrap();
-    let _skew_right = skew(&right_skewed.view(), false).unwrap();
-    let _skew_left = skew(&left_skewed.view(), false).unwrap();
+    let _skew_sym = skew(&symmetric.view(), false, None).unwrap();
+    let _skew_right = skew(&right_skewed.view(), false, None).unwrap();
+    let _skew_left = skew(&left_skewed.view(), false, None).unwrap();
 
     // Calculate skewness with confidence intervals
     let skew_ci_sym = skewness_ci(&symmetric.view(), false, None, Some(1000), Some(42)).unwrap();

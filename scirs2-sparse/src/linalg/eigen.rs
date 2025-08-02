@@ -1454,7 +1454,8 @@ where
     // Solve tridiagonal eigenvalue problem
     let alpha_vec: Vec<T> = alpha.slice(s![..j]).to_vec();
     let beta_vec: Vec<T> = beta.slice(s![1..j]).to_vec();
-    let (mut eigenvalues, _eigenvectors) = solve_tridiagonal_eigenproblem(&alpha_vec, &beta_vec, k)?;
+    let (mut eigenvalues, _eigenvectors) =
+        solve_tridiagonal_eigenproblem(&alpha_vec, &beta_vec, k)?;
 
     // Transform eigenvalues back: lambda = sigma + 1/mu
     for eval in eigenvalues.iter_mut() {
@@ -3166,7 +3167,10 @@ where
         + 'static
         + std::iter::Sum,
 {
-    pub fn new(_shifted_matrix: &SymCsrMatrix<T>, b_matrix: &SymCsrMatrix<T>) -> SparseResult<Self> {
+    pub fn new(
+        _shifted_matrix: &SymCsrMatrix<T>,
+        b_matrix: &SymCsrMatrix<T>,
+    ) -> SparseResult<Self> {
         let shifted_solver = EnhancedShiftInvertSolver::with_factorization(_shifted_matrix)?;
 
         Ok(Self {
@@ -3238,7 +3242,10 @@ where
         + 'static
         + std::iter::Sum,
 {
-    pub fn new(_shifted_matrix: &SymCsrMatrix<T>, a_matrix: &SymCsrMatrix<T>) -> SparseResult<Self> {
+    pub fn new(
+        _shifted_matrix: &SymCsrMatrix<T>,
+        a_matrix: &SymCsrMatrix<T>,
+    ) -> SparseResult<Self> {
         let shifted_solver = EnhancedShiftInvertSolver::with_factorization(_shifted_matrix)?;
 
         Ok(Self {

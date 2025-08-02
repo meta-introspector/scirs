@@ -1,4 +1,4 @@
-use scirs2__stats::distributions::logistic::Logistic;
+use scirs2_stats::distributions::logistic::Logistic;
 use statrs::statistics::Statistics;
 use std::error::Error;
 

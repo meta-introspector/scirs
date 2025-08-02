@@ -191,7 +191,8 @@ impl NMF {
     fn initialize_matrices(&self, v: &Array2<f64>) -> Result<(Array2<f64>, Array2<f64>)> {
         match self.init.as_str() {
             "random" => Ok(self.random_initialization(v)),
-            "nndsvd" => self.nndsvd_initialization(v, _ => Ok(self.random_initialization(v)),
+            "nndsvd" => self.nndsvd_initialization(v),
+            _ => Ok(self.random_initialization(v)),
         }
     }
 

@@ -390,7 +390,9 @@ impl HybridSpatialOptimizer {
                 gradient: None, // Quantum gradients computed differently
                 convergence_info: QuantumConvergenceInfo {
                     ground_energy: vqe_result.ground_energy,
-                    quantum_variance: HybridSpatialOptimizer::calculate_quantum_variance(&vqe_result.ground_state),
+                    quantum_variance: HybridSpatialOptimizer::calculate_quantum_variance(
+                        &vqe_result.ground_state,
+                    ),
                     entanglement_entropy: vqe_result.spatial_features.entanglement_entropy,
                 },
             })

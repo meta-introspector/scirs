@@ -190,7 +190,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         }
 
         // Create cache
-        let cache = Arc::new(RwLock::new(ChunkCache {
+        let cache = Arc::new(RwLock::new(ChunkCache::<T> {
             max_size_bytes: config.cache_size_bytes,
             current_size_bytes: 0,
             chunks: HashMap::new(),
@@ -203,7 +203,13 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             mmap: None,
             mmap_mut: None,
             config,
-            cache_phantom: std::marker::PhantomData,
+            cache: Arc::new(std::sync::RwLock::new(ChunkCache::<T> {
+                max_size_bytes: 128 * 1024 * 1024, // 128MB default
+                current_size_bytes: 0,
+                chunks: HashMap::new(),
+                lru_queue: VecDeque::new(),
+            })),
+            _phantom: std::marker::PhantomData,
         })
     }
 
@@ -230,7 +236,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         };
 
         // Create cache
-        let cache = Arc::new(RwLock::new(ChunkCache {
+        let cache = Arc::new(RwLock::new(ChunkCache::<T> {
             max_size_bytes: config.cache_size_bytes,
             current_size_bytes: 0,
             chunks: HashMap::new(),
@@ -243,7 +249,8 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             mmap: Some(mmap),
             mmap_mut: None,
             config,
-            cache_phantom: std::marker::PhantomData,
+            cache,
+            _phantom: std::marker::PhantomData,
         })
     }
 
@@ -1180,7 +1187,7 @@ impl<T: Clone> VirtualArray<T> {
         shape[axis] = _arrays.iter().map(|a| a.shape()[axis]).sum();
 
         Ok(Self {
-            _arrays,
+            arrays: _arrays,
             shape,
             axis,
         })
@@ -1250,7 +1257,7 @@ impl<'a, T: ScientificNumber + Clone> SlidingWindow<'a, T> {
         window_shape: Vec<usize>,
         stride: Vec<usize>,
     ) -> Result<Self> {
-        if window_shape.len() != array._shape().len() || stride.len() != array._shape().len() {
+        if window_shape.len() != array.shape().len() || stride.len() != array.shape().len() {
             return Err(IoError::ParseError("Dimension mismatch".to_string()));
         }
 
@@ -1258,7 +1265,7 @@ impl<'a, T: ScientificNumber + Clone> SlidingWindow<'a, T> {
             array,
             window_shape,
             stride,
-            current_position: vec![0; array._shape().len()],
+            current_position: vec![0; array.shape().len()],
         })
     }
 }

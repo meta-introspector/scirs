@@ -944,7 +944,7 @@ fn bit_reverse_simd(_data: &mut Array1<Complex64>) -> SignalResult<()> {
 
 #[allow(dead_code)]
 fn perform_radix4_butterfly_avx2(
-    _data: &mut Array1<Complex64>, _start: usize_step: usize,
+    _data: &mut Array1<Complex64>, _start: usize, _step: usize,
 ) -> SignalResult<()> {
     // Simplified radix-4 butterfly - would use actual AVX2 intrinsics
     Ok(())

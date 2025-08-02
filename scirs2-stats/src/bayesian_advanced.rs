@@ -402,7 +402,8 @@ pub struct AdvancedBayesianRegression<F> {
     /// MCMC configuration
     pub mcmc_config: MCMCConfig,
     /// Variational inference configuration
-    pub vi_config: VIConfig, _phantom: PhantomData<F>,
+    pub vi_config: VIConfig,
+    _phantom: PhantomData<F>,
 }
 
 /// MCMC configuration for non-conjugate models
@@ -645,7 +646,7 @@ where
 
         // Fit each model and compute criteria
         for model in &self.models {
-            let model_result = self.fit_single_model(model, x, y)?;
+            let model_result = Self::fit_single_model(model, x, y)?;
 
             let mut model_ic_values = HashMap::new();
 
@@ -671,7 +672,7 @@ where
             // Sort by criterion (lower is better for most criteria)
             model_scores.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-            let ranking: Vec<String> = model_scores.into().iter().map(|(id_)| id_).collect();
+            let ranking: Vec<String> = model_scores.into_iter().map(|(id_, _)| id_).collect();
             rankings.insert(*criterion, ranking);
         }
 
@@ -775,7 +776,8 @@ where
     fn cross_validate_model(
         &self,
         model: &BayesianModel<F>,
-        x: &ArrayView2<F>, _y: &ArrayView1<F>,
+        x: &ArrayView2<F>,
+        _y: &ArrayView1<F>,
     ) -> StatsResult<CrossValidationResult<F>> {
         let k = self.cv_config.k_folds;
         let fold_scores = Array1::ones(k);
@@ -1110,7 +1112,7 @@ where
             .collect();
 
         Ok(Self {
-            _architecture,
+            architecture: _architecture,
             activations,
             weight_priors,
             bias_priors,
@@ -1234,7 +1236,8 @@ where
     /// Make predictions with uncertainty quantification
     pub fn predict_with_uncertainty(
         &self,
-        x: &ArrayView2<F>, _n_samples_: usize,
+        x: &ArrayView2<F>,
+        _n_samples_: usize,
     ) -> StatsResult<(Array2<F>, Array2<F>)> {
         checkarray_finite(x, "x")?;
 

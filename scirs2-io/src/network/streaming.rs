@@ -85,7 +85,7 @@ impl<R: Read> ProgressReader<R> {
     /// Create a new progress reader
     pub fn new(_inner: R) -> Self {
         Self {
-            _inner,
+            inner: _inner,
             bytes_read: 0,
             total_bytes: None,
             progress_callback: None,
@@ -178,7 +178,7 @@ impl<W: Write> ProgressWriter<W> {
     /// Create a new progress writer
     pub fn new(_inner: W) -> Self {
         Self {
-            _inner,
+            inner: _inner,
             bytes_written: 0,
             total_bytes: None,
             progress_callback: None,

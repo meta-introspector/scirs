@@ -89,7 +89,7 @@ where
 
     for _ in 0..20 {
         let x_new = x + alpha * direction;
-        let phi = _fun(&x_new.view()).into();
+        let phi = fun(&x_new.view()).into();
 
         if phi > phi0 + c1 * alpha * dphi0 || (phi >= phi_lo && alpha_lo > 0.0) {
             return zoom(
@@ -98,7 +98,7 @@ where
             );
         }
 
-        let grad_new = grad_fun(&x_new.view());
+        let grad_new = gradfun(&x_new.view());
         let dphi = grad_new.dot(direction);
 
         if dphi.abs() <= -c2 * dphi0 {
@@ -147,13 +147,13 @@ where
     for _ in 0..10 {
         let alpha = 0.5 * (alpha_lo + alpha_hi);
         let x_new = x + alpha * direction;
-        let phi = _fun(&x_new.view()).into();
+        let phi = fun(&x_new.view()).into();
 
         if phi > phi0 + c1 * alpha * dphi0 || phi >= phi_lo {
             alpha_hi = alpha;
             _phi_hi = phi;
         } else {
-            let grad_new = grad_fun(&x_new.view());
+            let grad_new = gradfun(&x_new.view());
             let dphi = grad_new.dot(direction);
 
             if dphi.abs() <= -c2 * dphi0 {

@@ -9,8 +9,8 @@ use crate::unified_error_handling::global_error_handler;
 use ndarray::{Array1, Array2};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::validation::*;
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 /// Advanced QMC sequence types
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -302,7 +302,11 @@ impl AdvancedQMCGenerator {
     }
 
     /// Initialize Sobol state (enhanced version)
-    fn init_sobol_state(_dimension: usize, scramble: bool, seed: Option<u64>) -> Result<SobolState> {
+    fn init_sobol_state(
+        _dimension: usize,
+        scramble: bool,
+        seed: Option<u64>,
+    ) -> Result<SobolState> {
         // Use Joe-Kuo direction numbers for better quality
         let direction_numbers = Self::load_joe_kuo_direction_numbers(_dimension)?;
 
@@ -971,7 +975,7 @@ impl AdvancedQMCGenerator {
             let mut matrix = Array2::zeros((base as usize, base as usize));
             for i in 0..base as usize {
                 let j = rng.gen_range(0..base as usize);
-                matrix[[i..j]] = 1;
+                matrix[[i, j]] = 1;
             }
             matrices.push(matrix);
         }
@@ -1006,7 +1010,7 @@ impl StratifiedSampler {
 
         Ok(Self {
             config,
-            _dimension,
+            dimension: _dimension,
             strata_counts: HashMap::new(),
         })
     }
@@ -1073,7 +1077,7 @@ impl StratifiedSampler {
         while sample_idx < n_samples_ {
             let random_stratum_idx = rng.gen_range(0..total_strata);
             let stratum_indices = self.linear_to_multi_index(random_stratum_idx);
-            let point = self.sample_within_stratum(&stratum_indices..&mut rng)?;
+            let point = self.sample_within_stratum(&stratum_indices, &mut rng)?;
 
             for (dim, &val) in point.iter().enumerate() {
                 _samples[[sample_idx, dim]] = val;
@@ -1183,7 +1187,7 @@ mod tests {
 
         // Basic uniformity check
         for j in 0..3 {
-            let column_mean = samples.column(j).mean().unwrap();
+            let column_mean = samples.column(j).mean();
             assert!((column_mean - 0.5).abs() < 0.2); // Reasonable uniformity
         }
     }

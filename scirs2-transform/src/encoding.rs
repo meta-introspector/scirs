@@ -248,7 +248,8 @@ impl OneHotEncoder {
             // Determine how many categories to keep
             let (start_idx, n_output_cats) = match &self.drop {
                 Some(strategy) if strategy == "first" => (1, n_cats.saturating_sub(1)),
-                Some(strategy) if strategy == "if_binary" && n_cats == 2 => (0, 1, _ => (0, n_cats),
+                Some(strategy) if strategy == "if_binary" && n_cats == 2 => (0, 1),
+                _ => (0, n_cats),
             };
 
             for (cat_idx, &category) in feature_categories.iter().enumerate() {
@@ -424,7 +425,8 @@ impl OneHotEncoder {
             // Determine which categories to include based on drop strategy
             let (start_idx, n_output_cats) = match &self.drop {
                 Some(strategy) if strategy == "first" => (1, n_cats.saturating_sub(1)),
-                Some(strategy) if strategy == "if_binary" && n_cats == 2 => (0, 1, _ => (0, n_cats),
+                Some(strategy) if strategy == "if_binary" && n_cats == 2 => (0, 1),
+                _ => (0, n_cats),
             };
 
             for &category in feature_categories
@@ -794,7 +796,8 @@ impl TargetEncoder {
                         }
                     }
                     "count" => targets.len() as f64,
-                    "sum" => targets.iter().sum::<f64>(, _ => unreachable!(),
+                    "sum" => targets.iter().sum::<f64>(),
+                    _ => unreachable!(),
                 };
 
                 category_encoding.insert(*category, encoded_value);
@@ -1026,7 +1029,8 @@ impl TargetEncoder {
                             }
                         }
                         "count" => targets.len() as f64,
-                        "sum" => targets.iter().sum::<f64>(, _ => unreachable!(),
+                        "sum" => targets.iter().sum::<f64>(),
+                    _ => unreachable!(),
                     };
 
                     category_encoding.insert(*category, encoded_value);

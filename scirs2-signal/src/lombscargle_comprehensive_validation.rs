@@ -8,7 +8,6 @@
 //! - Statistical significance testing
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use crate::lombscargle::{AutoFreqMethod, lombscargle};
 use rand::Rng;
 use std::f64::consts::PI;
@@ -666,7 +665,8 @@ fn generate_lombscargle_test_signal(
             &config.amplitudes,
             config.noise_level,
         ),
-        LombScargleTestSignalType::PureNoise => generate_pure_noise(&times, config.noise_level, _ => generate_single_sinusoid(
+        LombScargleTestSignalType::PureNoise => generate_pure_noise(&times, config.noise_level),
+        _ => generate_single_sinusoid(
             &times,
             &config.true_frequencies,
             &config.amplitudes,
@@ -894,7 +894,7 @@ fn test_false_alarm_probability(_significance_level: f64, _n_trials: usize) -> S
 }
 
 #[allow(dead_code)]
-fn test_statistical_power(_config: &TestSignalConfig_n_trials: usize) -> SignalResult<f64> {
+fn test_statistical_power(_config: &TestSignalConfig, _n_trials: usize) -> SignalResult<f64> {
     Ok(0.85) // Placeholder
 }
 

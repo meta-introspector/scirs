@@ -108,8 +108,10 @@ where
 /// The interquartile range
 #[allow(dead_code)]
 pub fn iqr_simd<F, D>(
-    x: &mut ArrayBase<D, Ix1>, _rng: F,
-    interpolation: &str, _keep_dims: bool,
+    x: &mut ArrayBase<D, Ix1>,
+    _rng: F,
+    interpolation: &str,
+    _keep_dims: bool,
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,

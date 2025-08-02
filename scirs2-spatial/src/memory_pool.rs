@@ -431,7 +431,7 @@ impl DistancePool {
     }
 
     /// Detect current NUMA node using platform-specific APIs
-    fn detect_numa_node(&self) -> i32 {
+    fn detect_numa_node() -> i32 {
         #[cfg(target_os = "linux")]
         {
             Self::detect_numa_node_linux().unwrap_or(0)
@@ -448,7 +448,7 @@ impl DistancePool {
 
     /// Linux-specific NUMA node detection
     #[cfg(target_os = "linux")]
-    fn detect_numa_node_linux(&self) -> Option<i32> {
+    fn detect_numa_node_linux() -> Option<i32> {
         // Try to get current thread's NUMA node
         let _tid = unsafe { libc::gettid() };
 
@@ -505,7 +505,7 @@ impl DistancePool {
 
     /// Windows-specific NUMA node detection
     #[cfg(target_os = "windows")]
-    fn detect_numa_node_windows(&self) -> Option<i32> {
+    fn detect_numa_node_windows() -> Option<i32> {
         // In a real implementation, this would use Windows NUMA APIs
         // such as GetNumaProcessorNode, GetCurrentProcessorNumber, etc.
         // For now, return 0 as fallback
@@ -513,7 +513,7 @@ impl DistancePool {
     }
 
     /// Get NUMA topology information
-    pub fn get_numa_topology(&self) -> NumaTopology {
+    pub fn get_numa_topology() -> NumaTopology {
         #[cfg(target_os = "linux")]
         {
             Self::get_numa_topology_linux()
@@ -529,7 +529,7 @@ impl DistancePool {
     }
 
     #[cfg(target_os = "linux")]
-    fn get_numa_topology_linux(&self) -> NumaTopology {
+    fn get_numa_topology_linux() -> NumaTopology {
         let mut topology = NumaTopology::default();
 
         // Try to read NUMA information from /sys/devices/system/node/
@@ -639,7 +639,7 @@ impl DistancePool {
     }
 
     #[cfg(target_os = "windows")]
-    fn get_numa_topology_windows(&self) -> NumaTopology {
+    fn get_numa_topology_windows() -> NumaTopology {
         // Windows NUMA topology detection would go here
         // Using GetLogicalProcessorInformation and related APIs
         NumaTopology::default()
@@ -773,7 +773,7 @@ pub struct DistanceBuffer<'a> {
 impl<'a> DistanceBuffer<'a> {
     fn new(_buffer: Box<[f64]>, pool: &'a DistancePool) -> Self {
         Self {
-            _buffer: Some(_buffer),
+            buffer: Some(_buffer),
             pool,
         }
     }
@@ -821,7 +821,7 @@ pub struct IndexBuffer<'a> {
 impl<'a> IndexBuffer<'a> {
     fn new(_buffer: Box<[usize]>, pool: &'a DistancePool) -> Self {
         Self {
-            _buffer: Some(_buffer),
+            buffer: Some(_buffer),
             pool,
         }
     }
@@ -864,7 +864,7 @@ pub struct MatrixBuffer<'a> {
 impl<'a> MatrixBuffer<'a> {
     fn new(_matrix: Array2<f64>, pool: &'a DistancePool) -> Self {
         Self {
-            _matrix: Some(_matrix),
+            matrix: Some(_matrix),
             pool,
         }
     }
@@ -908,9 +908,9 @@ impl ClusteringArena {
     }
 
     /// Create arena with custom configuration
-    pub fn with_config(_config: MemoryPoolConfig) -> Self {
+    pub fn with_config(config: MemoryPoolConfig) -> Self {
         Self {
-            _config,
+            config,
             current_block: Mutex::new(None),
             full_blocks: Mutex::new(Vec::new()),
             stats: ArenaStatistics::new(),
@@ -993,14 +993,14 @@ unsafe impl Send for ArenaBlock {}
 unsafe impl Sync for ArenaBlock {}
 
 impl ArenaBlock {
-    fn new(_size: usize) -> Self {
-        let layout = Layout::from_size_align(_size, 64).unwrap(); // 64-byte aligned
+    fn new(size: usize) -> Self {
+        let layout = Layout::from_size_align(size, 64).unwrap(); // 64-byte aligned
         let memory =
             unsafe { NonNull::new(System.alloc(layout)).expect("Failed to allocate arena block") };
 
         Self {
             memory,
-            _size,
+            size,
             offset: 0,
         }
     }
@@ -1044,10 +1044,11 @@ pub struct ArenaVec<T> {
 }
 
 impl<T> ArenaVec<T> {
-    fn new(_ptr: *mut T, len: usize) -> Self {
+    fn new(ptr: *mut T, len: usize) -> Self {
         Self {
-            _ptr,
-            len_phantom: std::marker::PhantomData,
+            ptr,
+            len,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -1299,12 +1300,12 @@ impl NumaTopology {
 
     /// Check if a specific NUMA node exists
     pub fn has_node(&self, _node_id: u32) -> bool {
-        self.nodes.iter().any(|node| node._id == _node_id)
+        self.nodes.iter().any(|node| node.id == _node_id)
     }
 
     /// Get memory information for a specific node
     pub fn get_node_info(&self, _node_id: u32) -> Option<&NumaNode> {
-        self.nodes.iter().find(|node| node._id == _node_id)
+        self.nodes.iter().find(|node| node.id == _node_id)
     }
 }
 

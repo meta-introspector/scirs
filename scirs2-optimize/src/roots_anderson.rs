@@ -11,7 +11,8 @@ use ndarray::{Array1, Array2, ArrayBase, Data, Ix1};
 #[allow(dead_code)]
 pub fn root_anderson<F, J, S>(
     func: F,
-    x0: &ArrayBase<S, Ix1>, _jacobian_fn: Option<J>,
+    x0: &ArrayBase<S, Ix1>,
+    _jacobian_fn: Option<J>,
     options: &Options,
 ) -> OptimizeResult<OptimizeResults<f64>>
 where

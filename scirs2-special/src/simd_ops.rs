@@ -393,7 +393,8 @@ pub fn gamma_f64_parallel(_input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>
 
     // Use parallel processing for large arrays
     if len > 1000 {
-        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut()) {
+        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut())
+        {
             output_slice
                 .par_iter_mut()
                 .zip(input_slice.par_iter())
@@ -403,9 +404,11 @@ pub fn gamma_f64_parallel(_input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>
         } else {
             // Fallback for non-contiguous arrays
             use ndarray::Zip;
-            Zip::from(&mut output).and(_input).par_for_each(|out, &inp| {
-                *out = crate::gamma::gamma(inp);
-            });
+            Zip::from(&mut output)
+                .and(_input)
+                .par_for_each(|out, &inp| {
+                    *out = crate::gamma::gamma(inp);
+                });
         }
     } else {
         // Use sequential processing for small arrays
@@ -426,7 +429,8 @@ pub fn j0_f64_parallel(_input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 
     // Use parallel processing for large arrays
     if len > 1000 {
-        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut()) {
+        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut())
+        {
             output_slice
                 .par_iter_mut()
                 .zip(input_slice.par_iter())
@@ -436,9 +440,11 @@ pub fn j0_f64_parallel(_input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
         } else {
             // Fallback for non-contiguous arrays
             use ndarray::Zip;
-            Zip::from(&mut output).and(_input).par_for_each(|out, &inp| {
-                *out = crate::bessel::j0(inp);
-            });
+            Zip::from(&mut output)
+                .and(_input)
+                .par_for_each(|out, &inp| {
+                    *out = crate::bessel::j0(inp);
+                });
         }
     } else {
         // Use sequential processing for small arrays
@@ -466,7 +472,8 @@ pub fn gamma_f32_simd_parallel(_input: &ArrayView1<f32>) -> SpecialResult<Array1
         let _remainder = len % SIMD_CHUNK_SIZE;
 
         // For very large arrays, use a simpler parallel approach without complex SIMD chunking
-        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut()) {
+        if let (Some(input_slice), Some(output_slice)) = (_input.as_slice(), output.as_slice_mut())
+        {
             output_slice
                 .par_iter_mut()
                 .zip(input_slice.par_iter())
@@ -476,9 +483,11 @@ pub fn gamma_f32_simd_parallel(_input: &ArrayView1<f32>) -> SpecialResult<Array1
         } else {
             // Fallback for non-contiguous arrays
             use ndarray::Zip;
-            Zip::from(&mut output).and(_input).par_for_each(|out, &inp| {
-                *out = crate::gamma::gamma(inp as f64) as f32;
-            });
+            Zip::from(&mut output)
+                .and(_input)
+                .par_for_each(|out, &inp| {
+                    *out = crate::gamma::gamma(inp as f64) as f32;
+                });
         }
     } else if len > 1000 {
         // Use SIMD for medium arrays
@@ -522,7 +531,8 @@ pub fn benchmark_parallel_performance(_size: usize) -> SpecialResult<()> {
     println!("  Speedup:    {:.2}x", speedup);
 
     // Test Bessel J0 as well
-    let bessel_data: Array1<f64> = Array1::from_vec((0.._size).map(|i| (i as f64) * 0.01).collect());
+    let bessel_data: Array1<f64> =
+        Array1::from_vec((0.._size).map(|i| (i as f64) * 0.01).collect());
 
     let start = Instant::now();
     let _sequential: Array1<f64> = bessel_data.mapv(crate::bessel::j0);

@@ -12,8 +12,8 @@
 //! - Emergent behavior detection and system evolution
 //! - Real-time performance monitoring and self-optimization
 
-use scirs2__io::advanced_coordinator::AdvancedCoordinator;
-use scirs2__io::error::Result;
+use scirs2_io::advanced_coordinator::AdvancedCoordinator;
+use scirs2_io::error::Result;
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
@@ -168,7 +168,7 @@ fn demonstrate_multi_modal_processing(_coordinator: &mut AdvancedCoordinator) ->
     println!("   Efficiency Improvement: {:.1}%", improvement);
 
     let avg_time =
-        results.iter().map(|(__, t)| t.as_millis()).sum::<u128>() / results.len() as u128;
+        results.iter().map(|(_, _, t)| t.as_millis()).sum::<u128>() / results.len() as u128;
     println!("   Average Processing Time: {} ms", avg_time);
     println!();
 
@@ -295,7 +295,7 @@ fn demonstrate_cross_domain_intelligence(_coordinator: &mut AdvancedCoordinator)
     // Analyze cross-domain patterns
     println!("🔍 Cross-Domain Analysis:");
     let avg_efficiency =
-        domain_performances.iter().map(|(_, e_)| e).sum::<f32>() / domain_performances.len() as f32;
+        domain_performances.iter().map(|(_, e_, _)| e_).sum::<f32>() / domain_performances.len() as f32;
     println!("   Average Cross-Domain Efficiency: {:.3}", avg_efficiency);
 
     // Find best performing domain
@@ -310,7 +310,7 @@ fn demonstrate_cross_domain_intelligence(_coordinator: &mut AdvancedCoordinator)
 
     // Count strategy diversity
     let unique_strategies: std::collections::HashSet<_> =
-        domain_performances.iter().map(|(__, s)| s).collect();
+        domain_performances.iter().map(|(_, _, s)| s).collect();
     println!(
         "   Strategy Diversity: {} different strategies",
         unique_strategies.len()
@@ -479,7 +479,7 @@ fn demonstrate_real_world_performance(_coordinator: &mut AdvancedCoordinator) ->
     println!("   Overall Throughput: {:.1} MB/s", overall_throughput);
 
     let avg_efficiency =
-        performance_metrics.iter().map(|(__, e)| e).sum::<f32>() / performance_metrics.len() as f32;
+        performance_metrics.iter().map(|(_, _, e)| e).sum::<f32>() / performance_metrics.len() as f32;
     println!("   Average Efficiency: {:.3}", avg_efficiency);
 
     // Find best and worst performing scenarios
@@ -858,7 +858,7 @@ fn generate_backup_process_data(_size: usize) -> Vec<u8> {
 fn generate_ml_dataset_data(_size: usize) -> Vec<u8> {
     (0.._size)
         .map(|i| {
-            let feature = ""(i as f32 / 100.0).sin() * (i as f32 / 200.0).cos() * 127.0 + 128.0;
+            let feature = (i as f32 / 100.0).sin() * (i as f32 / 200.0).cos() * 127.0 + 128.0;
             let noise = ((i * 7) % 20) as f32;
             (feature + noise) as u8
         })

@@ -8,11 +8,11 @@ use crate::api_standardization::{NullHandling, ResultMetadata, StandardizedConfi
 use crate::error::StatsResult;
 // Array1 import removed - not used in this module
 use num_traits::{Float, NumCast};
+use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use statrs::statistics::Statistics;
 
 /// Enhanced fluent API configuration with intelligent defaults
 #[derive(Debug, Clone)]

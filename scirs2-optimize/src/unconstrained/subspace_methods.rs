@@ -842,13 +842,13 @@ where
     let mut grad = Array1::zeros(n);
     let eps = 1e-8;
 
-    let f0 = _fun(&x.view());
+    let f0 = fun(&x.view());
     *nfev += 1;
 
     for i in 0..n {
         let mut x_plus = x.clone();
         x_plus[i] += eps;
-        let f_plus = _fun(&x_plus.view());
+        let f_plus = fun(&x_plus.view());
         *nfev += 1;
 
         grad[i] = (f_plus - f0) / eps;

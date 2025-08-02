@@ -1523,7 +1523,8 @@ impl DerivationStudio {
             "1" => self.verify_gamma_identities()?,
             "2" => self.verify_bessel_properties()?,
             "3" => self.verify_error_function_series()?,
-            "4" => self.verify_asymptotic_approximations()?_ => return Ok(()),
+            "4" => self.verify_asymptotic_approximations()?,
+            _ => return Ok(()),
         }
 
         Ok(())
@@ -1684,7 +1685,8 @@ impl DerivationStudio {
             "1" => self.function_comparison_plots()?,
             "2" => self.complex_function_visualization()?,
             "3" => self.series_convergence_animation()?,
-            "4" => self.asymptotic_behavior_comparison()?_ => return Ok(()),
+            "4" => self.asymptotic_behavior_comparison()?,
+            _ => return Ok(()),
         }
 
         Ok(())

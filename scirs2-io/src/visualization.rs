@@ -1148,6 +1148,7 @@ impl VisualizationExporter for D3Exporter {
     }
 
     fn to_string(
+        &self,
         _data: &[DataSeries],
         config: &PlotConfig,
         _metadata: &Metadata,
@@ -1217,6 +1218,7 @@ impl VisualizationExporter for BokehExporter {
     }
 
     fn to_string(
+        &self,
         _data: &[DataSeries],
         config: &PlotConfig,
         _metadata: &Metadata,

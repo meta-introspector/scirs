@@ -348,7 +348,12 @@ where
 /// assert!(has_path(&graph, 0, 2, false).unwrap());
 /// ```
 #[allow(dead_code)]
-pub fn has_path<T, S>(_graph: &S, source: usize, target: usize, directed: bool) -> SparseResult<bool>
+pub fn has_path<T, S>(
+    _graph: &S,
+    source: usize,
+    target: usize,
+    directed: bool,
+) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
     S: SparseArray<T>,

@@ -1,7 +1,6 @@
 //! Color-specific feature extraction for images
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use ndarray::Array2;
 use std::collections::HashMap;
 use std::fmt::Debug;

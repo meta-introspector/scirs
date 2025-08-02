@@ -7,7 +7,7 @@
 
 use crate::dwt::Wavelet;
 use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
-use crate::dwt2d_boundary__enhanced::{BoundaryMode2D, dwt2d_decompose_enhanced};
+use crate::dwt2d_boundary_enhanced::{BoundaryMode2D, dwt2d_decompose_enhanced};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, ArrayView1, ArrayView2, s};
 use num_traits::Float;
@@ -551,7 +551,8 @@ fn calculate_adaptive_thresholds(
                 noise_variance.sqrt() * (2.0 * n.ln()).sqrt()
             }
             DenoisingMethod::BayesShrink => calculate_bayes_threshold(coeffs, noise_variance)?,
-            DenoisingMethod::SureShrink => calculate_sure_threshold(coeffs, noise_variance)?_ => {
+            DenoisingMethod::SureShrink => calculate_sure_threshold(coeffs, noise_variance)?,
+            _ => {
                 // Default to BayesShrink
                 calculate_bayes_threshold(coeffs, noise_variance)?
             }

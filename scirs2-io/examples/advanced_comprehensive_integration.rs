@@ -8,11 +8,11 @@
 //! - Advanced pattern recognition driving system-wide optimizations
 //! - Real-time performance intelligence and autonomous improvement
 
-use scirs2__io::advanced_coordinator::AdvancedCoordinator;
-use scirs2__io::enhanced_algorithms::AdvancedPatternRecognizer;
-use scirs2__io::error::Result;
-use scirs2__io::neural_adaptive_io::NeuralAdaptiveIoController;
-use scirs2__io::quantum_inspired_io::QuantumParallelProcessor;
+use scirs2_io::advanced_coordinator::AdvancedCoordinator;
+use scirs2_io::enhanced_algorithms::AdvancedPatternRecognizer;
+use scirs2_io::error::Result;
+use scirs2_io::neural_adaptive_io::NeuralAdaptiveIoController;
+use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
@@ -431,7 +431,8 @@ fn generate_mixed_pattern_data(_size: usize) -> Vec<u8> {
         let value = match i % 4 {
             0 => (i % 256) as u8,
             1 => rand::random::<u8>(),
-            2 => ((i / 4) % 256) as u8_ => 128,
+            2 => ((i / 4) % 256) as u8,
+            _ => 128,
         };
         data.push(value);
     }
@@ -504,7 +505,8 @@ fn generate_hybrid_domain_data(_size: usize) -> Vec<u8> {
         .map(|i| match i % 5 {
             0..=1 => generate_scientific_data(1)[0],
             2 => generate_financial_data(1)[0],
-            3 => generate_image_like_data(1)[0]_ => generate_network_data(1)[0],
+            3 => generate_image_like_data(1)[0],
+            _ => generate_network_data(1)[0],
         })
         .collect()
 }
@@ -540,7 +542,8 @@ fn generate_varied_workload(_size: usize) -> Vec<u8> {
             1 => generate_random_data(1)[0],
             2 => generate_sequential_data(1)[0],
             3 => generate_fractal_data(1)[0],
-            4 => generate_scientific_data(1)[0]_ => generate_network_data(1)[0],
+            4 => generate_scientific_data(1)[0],
+            _ => generate_network_data(1)[0],
         };
         data.push(value);
     }

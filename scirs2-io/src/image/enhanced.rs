@@ -226,8 +226,8 @@ impl EnhancedImageProcessor {
         .map_err(|e| IoError::FormatError(e.to_string()))?;
 
         let mut new_metadata = image.metadata.clone();
-        new_metadata._width = new_width;
-        new_metadata._height = new_height;
+        new_metadata.width = new_width;
+        new_metadata.height = new_height;
 
         Ok(ImageData {
             data: resized_data,
@@ -246,7 +246,7 @@ impl EnhancedImageProcessor {
         let path = path.as_ref();
         let compression = compression.unwrap_or(self.compression.clone());
 
-        let (height, width_) = image.data.dim();
+        let (height, width_, _) = image.data.dim();
         let raw_data = image.data.iter().cloned().collect::<Vec<u8>>();
 
         let img_buffer = image::RgbImage::from_raw(width_ as u32, height as u32, raw_data)
@@ -427,7 +427,7 @@ impl EnhancedImageProcessor {
 
     /// Apply Gaussian blur filter
     pub fn gaussian_blur(&self, image: &ImageData, radius: f32) -> Result<ImageData> {
-        let (height, width_) = image.data.dim();
+        let (height, width_, _) = image.data.dim();
         let raw_data = image.data.iter().cloned().collect::<Vec<u8>>();
 
         let img_buffer = image::RgbImage::from_raw(width_ as u32, height as u32, raw_data)
@@ -522,8 +522,8 @@ impl ImagePyramid {
 
         for level in 0..self.num_levels() {
             if let Some(level_image) = self.get_level(level) {
-                let width_diff = level_image.metadata._width.abs_diff(target_width);
-                let height_diff = level_image.metadata._height.abs_diff(target_height);
+                let width_diff = level_image.metadata.width.abs_diff(target_width);
+                let height_diff = level_image.metadata.height.abs_diff(target_height);
                 let total_diff = width_diff + height_diff;
 
                 if total_diff < best_diff {

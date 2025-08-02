@@ -144,7 +144,7 @@ impl SobolSequence {
         };
 
         Ok(Self {
-            _dimension,
+            dimension: _dimension,
             direction_numbers,
             current_index: 0,
             scramble,
@@ -266,7 +266,7 @@ impl SobolSequence {
             // Generate random permutation matrix for each bit level
             for i in 0..32 {
                 let j = rng.gen_range(0..32);
-                matrix[[i..j]] = 1;
+                matrix[[i, j]] = 1;
             }
 
             matrices.push(matrix);
@@ -320,7 +320,7 @@ impl HaltonSequence {
         };
 
         Ok(Self {
-            _dimension,
+            dimension: _dimension,
             bases,
             current_index: 0,
             scramble,
@@ -381,7 +381,11 @@ impl HaltonSequence {
     }
 
     /// Compute scrambled radical inverse
-    fn scrambled_radical_inverse(_index: usize, base: u32, permutation: &[u32]) -> StatsResult<f64> {
+    fn scrambled_radical_inverse(
+        _index: usize,
+        base: u32,
+        permutation: &[u32],
+    ) -> StatsResult<f64> {
         let mut result = 0.0;
         let mut fraction = 1.0 / base as f64;
         let mut i = _index;

@@ -11,8 +11,8 @@ use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::Rng;
-use std::collections::{HashMap, VecDeque};
 use statrs::statistics::Statistics;
+use std::collections::{HashMap, VecDeque};
 
 /// Neural Adaptive Optimizer with dynamic strategy learning
 #[derive(Debug, Clone)]
@@ -918,7 +918,8 @@ impl OptimizationNetwork {
             _architecture.input_size,
             input_activation,
         );
-        let output_layer = NeuralLayer::new(prev_size, _architecture.output_size, output_activation);
+        let output_layer =
+            NeuralLayer::new(prev_size, _architecture.output_size, output_activation);
 
         let recurrent_connections = if _architecture.use_recurrent {
             RecurrentConnections::new(prev_size)
@@ -1206,7 +1207,7 @@ impl StrategySelector {
             selection_network: Array2::from_shape_fn((num_strategies, _hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            strategy_embeddings: Array2::from_shape_fn((num_strategies, hidden_size), |_| {
+            strategy_embeddings: Array2::from_shape_fn((num_strategies, _hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             strategy_weights: Array1::from_elem(num_strategies, 1.0 / num_strategies as f64),
@@ -1254,7 +1255,7 @@ impl StrategySelector {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .unwrap_or(0);
 
         Ok(self.available_strategies[selected_idx].clone())
@@ -1263,7 +1264,7 @@ impl StrategySelector {
     /// Reinforce current strategy
     pub fn reinforce_current(&mut self, strength: f64) -> OptimizeResult<()> {
         // Increase weight of current best strategy
-        if let Some((best_idx_)) = self
+        if let Some((best_idx, _)) = self
             .strategy_weights
             .iter()
             .enumerate()
@@ -1473,10 +1474,10 @@ impl PerformancePredictor {
             prediction_network: Array2::from_shape_fn((1, _hidden_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
-            feature_extractor: FeatureExtractor::new(hidden_size),
+            feature_extractor: FeatureExtractor::new(_hidden_size),
             prediction_horizon: 5,
             prediction_accuracy: 0.5,
-            confidence_estimator: ConfidenceEstimator::new(hidden_size),
+            confidence_estimator: ConfidenceEstimator::new(_hidden_size),
         }
     }
 
@@ -1505,8 +1506,8 @@ impl FeatureExtractor {
             extraction_layers: vec![Array2::from_shape_fn((_feature_dim, _feature_dim), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 0.1
             })],
-            feature_dim,
-            temporal_features: TemporalFeatures::new(feature_dim),
+            feature_dim: _feature_dim,
+            temporal_features: TemporalFeatures::new(_feature_dim),
         }
     }
 
@@ -1628,7 +1629,9 @@ impl LearnedOptimizer for NeuralAdaptiveOptimizer {
     }
 
     fn adapt_to_problem(
-        &mut self_problem: &OptimizationProblem_initial, _params: &ArrayView1<f64>,
+        &mut self,
+        _problem: &OptimizationProblem,
+        _params: &ArrayView1<f64>,
     ) -> OptimizeResult<()> {
         // Adaptation happens dynamically during optimization
         Ok(())
@@ -1717,6 +1720,7 @@ impl LearnedOptimizer for NeuralAdaptiveOptimizer {
 
 impl NeuralAdaptiveOptimizer {
     fn create_trajectory_from_task(
+        &self,
         &self_task: &TrainingTask,
     ) -> OptimizeResult<OptimizationTrajectory> {
         // Simplified trajectory creation

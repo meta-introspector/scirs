@@ -120,10 +120,10 @@ impl PerfectReconstructionFilterBank {
         design_method: PrFilterDesign,
     ) -> SignalResult<(Array2<f64>, Array2<f64>)> {
         match design_method {
-            PrFilterDesign::Orthogonal =>, Self::design_orthogonal_filters(config),
-            PrFilterDesign::Biorthogonal =>, Self::design_biorthogonal_filters(config),
-            PrFilterDesign::LinearPhase =>, Self::design_linear_phase_filters(config),
-            PrFilterDesign::ModulatedDft =>, Self::design_modulated_dft_filters(config),
+            PrFilterDesign::Orthogonal => Self::design_orthogonal_filters(config),
+            PrFilterDesign::Biorthogonal => Self::design_biorthogonal_filters(config),
+            PrFilterDesign::LinearPhase => Self::design_linear_phase_filters(config),
+            PrFilterDesign::ModulatedDft => Self::design_modulated_dft_filters(config),
             PrFilterDesign::CustomPrototype(ref prototype) => {
                 Self::design_from_prototype(config, prototype)
             }

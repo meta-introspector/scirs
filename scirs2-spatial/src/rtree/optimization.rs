@@ -34,8 +34,8 @@ impl<T: Clone> RTree<T> {
         self.clear();
 
         // Re-insert all data points (bulk loading would be more efficient)
-        for (point, _, data_index) in data_points {
-            self.insert(point, data_index)?;
+        for (point, data, _) in data_points {
+            self.insert(point, data)?;
         }
 
         // Verify integrity

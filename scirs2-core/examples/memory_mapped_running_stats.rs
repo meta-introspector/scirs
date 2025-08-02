@@ -14,13 +14,13 @@ use ndarray::{Array1, ArrayView1};
 use scirs2_core::memory_efficient::{
     create_mmap, AccessMode, ChunkingStrategy, MemoryMappedArray, MemoryMappedChunks,
 };
+use statrs::statistics::Statistics;
 #[cfg(feature = "memory_efficient")]
 use std::path::Path;
 #[cfg(feature = "memory_efficient")]
 use std::time::Instant;
 #[cfg(feature = "memory_efficient")]
 use tempfile::tempdir;
-use statrs::statistics::Statistics;
 
 #[cfg(not(feature = "memory_efficient"))]
 #[allow(dead_code)]
@@ -137,7 +137,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Create a large dataset for demonstration purposes
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn dir( &Path,
+fn create_large_dataset(
+    temp_dir: &Path,
 ) -> Result<MemoryMappedArray<f64>, Box<dyn std::error::Error>> {
     println!("\n1. Creating Large Dataset");
     println!("------------------------");

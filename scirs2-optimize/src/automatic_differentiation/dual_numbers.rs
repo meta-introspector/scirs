@@ -374,7 +374,7 @@ pub trait DualNumber: Clone + Copy {
 }
 
 impl DualNumber for Dual {
-    fn _value(self) -> f64 {
+    fn value(self) -> f64 {
         self._value
     }
 
@@ -407,7 +407,10 @@ pub struct MultiDual {
 impl MultiDual {
     /// Create a new multi-dimensional dual number
     pub fn new(_value: f64, derivatives: Array1<f64>) -> Self {
-        Self { _value, derivatives }
+        Self {
+            _value,
+            derivatives,
+        }
     }
 
     /// Create a constant multi-dual (all derivatives = 0)
@@ -422,7 +425,10 @@ impl MultiDual {
     pub fn variable(_value: f64, var_index: usize, n_vars: usize) -> Self {
         let mut derivatives = Array1::zeros(n_vars);
         derivatives[var_index] = 1.0;
-        Self { _value, derivatives }
+        Self {
+            _value,
+            derivatives,
+        }
     }
 
     /// Get the function value

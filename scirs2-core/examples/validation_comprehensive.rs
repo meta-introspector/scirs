@@ -455,7 +455,7 @@ fn custom_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     struct EmailValidator;
 
     impl ValidationRule for EmailValidator {
-        fn path( &str) -> Result<(), String> {
+        fn validate_path(_path: &str) -> Result<(), String> {
             if let Some(email) = value.as_str() {
                 if email.contains('@') && email.contains('.') {
                     Ok(())

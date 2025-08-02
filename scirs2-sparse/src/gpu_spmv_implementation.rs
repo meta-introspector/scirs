@@ -31,7 +31,10 @@ impl GpuSpMV {
             SparseError::ComputationError(format!("Failed to initialize GPU device: {e}"))
         })?;
 
-        Ok(Self { device, backend: _backend })
+        Ok(Self {
+            device,
+            backend: _backend,
+        })
     }
 
     /// Initialize the best available GPU backend

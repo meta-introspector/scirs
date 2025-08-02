@@ -590,7 +590,7 @@ pub fn run_enhanced_modern_validation(
 /// Run core WPT validation
 #[allow(dead_code)]
 fn run_core_validation(
-    signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
+    signal: &[f64], _wavelet: &Wavelet, _max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<WptValidationResult> {
     // This would use the existing WPT validation functions
     // For now, create a placeholder with realistic values
@@ -622,7 +622,7 @@ fn run_core_validation(
 /// Run GPU acceleration validation
 #[allow(dead_code)]
 fn run_gpu_validation(
-    _signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
+    _signal: &[f64], _wavelet: &Wavelet, _max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<GpuValidationResult> {
     // GPU validation implementation would go here
     Ok(create_placeholder_gpu_validation())
@@ -631,7 +631,7 @@ fn run_gpu_validation(
 /// Run streaming performance validation
 #[allow(dead_code)]
 fn run_streaming_validation(
-    signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
+    signal: &[f64], _wavelet: &Wavelet, _max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<StreamingValidationResult> {
     let _start_time = Instant::now();
 
@@ -721,7 +721,7 @@ fn run_streaming_validation(
 /// Run anomaly detection
 #[allow(dead_code)]
 fn run_anomaly_detection(
-    signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
+    signal: &[f64], _wavelet: &Wavelet, _max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<AnomalyDetectionResult> {
     // Simple anomaly detection based on statistical analysis
     let mean = signal.iter().sum::<f64>() / signal.len()  as f64;
@@ -764,7 +764,7 @@ fn run_anomaly_detection(
 /// Run cross-framework compatibility validation
 #[allow(dead_code)]
 fn run_cross_framework_validation(
-    _signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
+    _signal: &[f64], _wavelet: &Wavelet, _max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<CrossFrameworkValidationResult> {
     Ok(create_placeholder_cross_framework_validation())
 }
@@ -806,7 +806,7 @@ fn run_precision_validation(
 /// Run edge case validation
 #[allow(dead_code)]
 fn run_edge_case_validation(
-    _signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
+    _signal: &[f64], _wavelet: &Wavelet, _max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<EdgeCaseValidationResult> {
     Ok(create_placeholder_edge_case_validation())
 }
@@ -814,7 +814,7 @@ fn run_edge_case_validation(
 /// Run resource validation
 #[allow(dead_code)]
 fn run_resource_validation(
-    signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
+    signal: &[f64], _wavelet: &Wavelet, _max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<ResourceValidationResult> {
     // Simple memory tracking simulation
     let estimated_memory = signal.len() * 8 * 4; // Rough estimate
@@ -841,7 +841,7 @@ fn run_resource_validation(
 /// Run optimization validation
 #[allow(dead_code)]
 fn run_optimization_validation(
-    _signal: &[f64], _wavelet: &Wavelet_max_depth: usize, _config: &EnhancedModernValidationConfig,
+    _signal: &[f64], _wavelet: &Wavelet, _max_depth: usize, _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<OptimizationValidationResult> {
     Ok(create_placeholder_optimization_validation())
 }

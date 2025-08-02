@@ -262,7 +262,9 @@ impl ReedsSheppPlanner {
     ///
     /// * A new ReedsSheppPlanner instance
     pub fn new(_turning_radius: f64) -> Self {
-        Self { turning_radius: _turning_radius }
+        Self {
+            turning_radius: _turning_radius,
+        }
     }
 
     /// Plan a Reeds-Shepp path between two poses
@@ -320,7 +322,7 @@ impl ReedsSheppPlanner {
                 let path_length: f64 = segments.iter().map(|s| s.length).sum();
                 if path_length < best_length {
                     best_length = path_length;
-                    let path_type = self.determine_path_type(&segments);
+                    let path_type = ReedsSheppPlanner::determine_path_type(&segments);
                     best_path = Some(ReedsSheppPath::new(
                         _start,
                         goal,

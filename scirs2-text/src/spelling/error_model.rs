@@ -70,7 +70,8 @@ impl Default for ErrorModel {
             p_deletion: 0.25,
             p_insertion: 0.25,
             p_substitution: 0.25,
-            p_transposition: 0.25_char, _confusion: HashMap::new(),
+            p_transposition: 0.25_char,
+            _confusion: HashMap::new(),
             max_edit_distance: 2, // Default max distance
         }
     }
@@ -90,7 +91,8 @@ impl ErrorModel {
             p_deletion: p_deletion / total,
             p_insertion: p_insertion / total,
             p_substitution: p_substitution / total,
-            p_transposition: p_transposition / total_char, _confusion: HashMap::new(),
+            p_transposition: p_transposition / total_char,
+            _confusion: HashMap::new(),
             max_edit_distance: 2,
         }
     }

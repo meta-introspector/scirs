@@ -59,7 +59,7 @@
 
 use crate::lti::TransferFunction;
 use num__complex::Complex64;
-use crate::lti::design::tf;
+use crate::lti::design::tf as design_tf;
 
 // Re-export all public modules
 #[allow(unused_imports)]

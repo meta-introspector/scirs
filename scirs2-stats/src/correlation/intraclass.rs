@@ -25,7 +25,7 @@ use num_traits::{Float, NumCast};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::icc;
+/// use scirs2_stats::icc;
 ///
 /// // Create data for 5 subjects measured by 3 raters
 /// let data = array![

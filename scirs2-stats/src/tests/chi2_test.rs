@@ -40,7 +40,7 @@ pub struct ChiSquareResult<F> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::tests::chi2_test::chi2_gof;
+/// use scirs2_stats::tests::chi2_test::chi2_gof;
 ///
 /// // Observed frequencies
 /// let observed = array![16, 18, 16, 14, 12, 12];
@@ -155,7 +155,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::tests::chi2_test::chi2_independence;
+/// use scirs2_stats::tests::chi2_test::chi2_independence;
 ///
 /// // Observed contingency table
 /// let observed = array![
@@ -277,7 +277,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::tests::chi2_test::chi2_yates;
+/// use scirs2_stats::tests::chi2_test::chi2_yates;
 ///
 /// // Observed 2x2 contingency table
 /// let observed = array![

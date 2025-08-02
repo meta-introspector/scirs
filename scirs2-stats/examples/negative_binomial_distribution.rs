@@ -1,4 +1,4 @@
-use scirs2__stats::distributions::{nbinom, NegativeBinomial};
+use scirs2_stats::distributions::{nbinom, NegativeBinomial};
 use statrs::statistics::Statistics;
 use std::error::Error;
 

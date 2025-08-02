@@ -66,16 +66,16 @@ pub enum JitError {
 
 impl From<JitError> for CoreError {
     fn from(err: JitError) -> Self {
-        match _err {
-            JitError::CompilationError(msg) =>, CoreError::ComputationError(
+        match err {
+            JitError::CompilationError(msg) => CoreError::ComputationError(
                 ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
-            JitError::CodeGenerationError(msg) =>, CoreError::ComputationError(
+            JitError::CodeGenerationError(msg) => CoreError::ComputationError(
                 ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
-            JitError::OptimizationError(msg) =>, CoreError::ComputationError(
+            JitError::OptimizationError(msg) => CoreError::ComputationError(
                 ErrorContext::new(format!("{msg}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             ),
@@ -515,10 +515,10 @@ pub enum OptimizationStrategy {
 /// Machine learning model for optimization decisions
 pub trait OptimizationModel: Send + Sync + std::fmt::Debug {
     /// Predict optimal strategy for a kernel
-    fn features( &KernelFeatures) -> OptimizationStrategy;
+    fn features(features: &KernelFeatures) -> OptimizationStrategy;
 
     /// Update model with feedback
-    fn features(&KernelFeatures: &KernelFeatures, result: &OptimizationResult);
+    fn features(features: &KernelFeatures, result: &OptimizationResult);
 }
 
 /// Kernel feature extraction for ML optimization
@@ -719,7 +719,7 @@ impl JitCompiler {
     }
 
     /// Get kernel performance statistics
-    pub fn id_2( &str) -> Option<KernelPerformance> {
+    pub fn id_2(kernel_id: &str) -> Option<KernelPerformance> {
         let mut cache = self.cache.write().unwrap();
         cache.get(kernel_id).map(|k| k.performance.clone())
     }
@@ -737,7 +737,7 @@ impl JitCompiler {
     }
 
     /// Optimize existing kernel
-    pub fn id_3( &str) -> Result<String, JitError> {
+    pub fn id_3(kernel_id: &str) -> Result<String, JitError> {
         let optimizer = self.adaptive_optimizer.lock().unwrap();
         optimizer.optimize_kernel(kernel_id, &self.config)
     }
@@ -771,12 +771,12 @@ impl KernelCache {
     }
 
     /// Check if kernel is cached
-    pub fn id( &str) -> bool {
+    pub fn id(kernel_id: &str) -> bool {
         self.kernels.contains_key(kernel_id)
     }
 
     /// Get kernel from cache
-    pub fn id_2( &str) -> Option<&CompiledKernel> {
+    pub fn id_2(kernel_id: &str) -> Option<&CompiledKernel> {
         if let Some(kernel) = self.kernels.get(kernel_id) {
             // Update access tracking
             *self.access_counts.entry(kernel_id.to_string()).or_insert(0) += 1;
@@ -789,7 +789,7 @@ impl KernelCache {
     }
 
     /// Get a kernel from the cache without updating access tracking
-    pub fn id_3( &str) -> Option<&CompiledKernel> {
+    pub fn id_3(&self, kernel_id: &str) -> Option<&CompiledKernel> {
         self.kernels.get(kernel_id)
     }
 
@@ -879,7 +879,7 @@ impl KernelProfiler {
     }
 
     /// Get profiling data for a kernel
-    pub fn id_2( &str) -> Option<&Vec<ExecutionProfile>> {
+    pub fn id_2(&self, kernel_id: &str) -> Option<&Vec<ExecutionProfile>> {
         self.profiles.get(kernel_id)
     }
 }
@@ -900,7 +900,7 @@ impl AdaptiveOptimizer {
     }
 
     /// Update performance data
-    pub fn performance( &KernelPerformance) {
+    pub fn performance(&mut self, data: &KernelPerformance) {
         // Placeholder - would analyze _performance patterns and update optimization decisions
     }
 
@@ -961,8 +961,7 @@ impl JitBackendImpl for LlvmBackend {
         })
     }
 
-    fn outputs(&mut [&mut dyn std::any::Any]: &mut [&mut dyn std::any::Any],
-    ) -> Result<ExecutionProfile, JitError> {
+    fn outputs(&mut self, outputs: &mut [&mut dyn std::any::Any]) -> Result<ExecutionProfile, JitError> {
         // Placeholder implementation
         let start = Instant::now();
 
@@ -1050,8 +1049,7 @@ impl JitBackendImpl for InterpreterBackend {
         })
     }
 
-    fn outputs(&mut [&mut dyn std::any::Any]: &mut [&mut dyn std::any::Any],
-    ) -> Result<ExecutionProfile, JitError> {
+    fn outputs(&mut self, outputs: &mut [&mut dyn std::any::Any]) -> Result<ExecutionProfile, JitError> {
         // Placeholder interpreter execution
         let start = Instant::now();
 
@@ -1089,8 +1087,7 @@ pub mod jit_dsl {
     use super::*;
 
     /// Create a simple arithmetic kernel
-    pub fn type(DataType: DataType,
-    ) -> KernelSource {
+    pub fn create_arithmetic_kernel(data_type: DataType) -> KernelSource {
         let source = format!(
             r#"
 kernel void arithmetic_op(global {input_type}* input, global {output_type}* output, int size) {{
@@ -1117,7 +1114,7 @@ kernel void arithmetic_op(global {input_type}* input, global {output_type}* outp
     }
 
     /// Create a reduction kernel
-    pub fn type( DataType) -> KernelSource {
+    pub fn create_reduction_kernel(data_type: DataType) -> KernelSource {
         let source = format!(
             r#"
 kernel void reduction_op(global {data_type}* input, global {data_type}* output, int size) {{

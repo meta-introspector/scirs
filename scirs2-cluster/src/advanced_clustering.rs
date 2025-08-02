@@ -395,7 +395,8 @@ impl AdvancedClusterer {
         match algorithm {
             "quantum_neuromorphic_kmeans" => 3.5,
             "ai_adaptive_clustering" => 2.8,
-            "meta_learned_clustering" => 2.2_ => 1.0,
+            "meta_learned_clustering" => 2.2,
+            _ => 1.0,
         }
     }
 

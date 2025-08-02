@@ -871,7 +871,8 @@ fn estimate_smallest_singular_value(_matrix: &Array2<f64>) -> f64 {
 /// Compute mode-specific controllability degrees
 #[allow(dead_code)]
 fn compute_mode_controllability_degrees(
-    ss: &StateSpace_config: &RobustAnalysisConfig,
+    ss: &StateSpace,
+    _config: &RobustAnalysisConfig,
 ) -> SignalResult<Array1<f64>> {
     let n = ss.n_states;
 
@@ -918,7 +919,8 @@ fn compute_mode_controllability_degrees(
 /// Compute mode-specific observability degrees
 #[allow(dead_code)]
 fn compute_mode_observability_degrees(
-    ss: &StateSpace_config: &RobustAnalysisConfig,
+    ss: &StateSpace,
+    _config: &RobustAnalysisConfig,
 ) -> SignalResult<Array1<f64>> {
     let n = ss.n_states;
 
@@ -965,7 +967,8 @@ fn compute_mode_observability_degrees(
 /// Compute minimum energy control analysis
 #[allow(dead_code)]
 fn compute_minimum_energy_analysis(
-    ss: &StateSpace_config: &RobustAnalysisConfig,
+    ss: &StateSpace,
+    _config: &RobustAnalysisConfig,
 ) -> SignalResult<MinimumEnergyAnalysis> {
     let n = ss.n_states;
     let m = ss.n_inputs;
@@ -989,7 +992,8 @@ fn compute_minimum_energy_analysis(
 /// Compute minimum variance estimation analysis
 #[allow(dead_code)]
 fn compute_minimum_variance_analysis(
-    ss: &StateSpace_config: &RobustAnalysisConfig,
+    ss: &StateSpace,
+    _config: &RobustAnalysisConfig,
 ) -> SignalResult<MinimumVarianceAnalysis> {
     let n = ss.n_states;
     let p = ss.n_outputs;
@@ -1289,7 +1293,8 @@ fn identify_robustness_issues(
     controllability: &EnhancedControllabilityAnalysis,
     observability: &EnhancedObservabilityAnalysis,
     sensitivity: &SensitivityAnalysisResults,
-    structured: &StructuredPerturbationAnalysis_config: &RobustAnalysisConfig,
+    structured: &StructuredPerturbationAnalysis,
+    _config: &RobustAnalysisConfig,
 ) -> Vec<String> {
     let mut issues: Vec<String> = Vec::new();
 

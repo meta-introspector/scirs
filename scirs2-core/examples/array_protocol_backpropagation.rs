@@ -15,7 +15,6 @@
 
 use ndarray::{array, Array1, Array2, Ix2};
 use scirs2_core::array_protocol::{
-use statrs::statistics::Statistics;
     self,
     grad::{Adam, GradientTensor, Optimizer, Variable},
     ml_ops::ActivationFunc,
@@ -23,6 +22,7 @@ use statrs::statistics::Statistics;
     training::{DataLoader, InMemoryDataset, Loss, MSELoss},
     NdarrayWrapper,
 };
+use statrs::statistics::Statistics;
 
 /// A simple feed-forward neural network for demonstrating backpropagation
 #[allow(dead_code)]
@@ -50,7 +50,8 @@ fn main() {
     println!("\nCreating model parameters with gradient tracking:");
 
     // First layer parameters
-    let w1_array = Array2::<f64>::from_shape_fn((2, 4), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
+    let w1_array =
+        Array2::<f64>::from_shape_fn((2, 4), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
     let b1_array = Array1::<f64>::zeros(4);
     println!(
         "Layer 1: {} -> {}",
@@ -59,7 +60,8 @@ fn main() {
     );
 
     // Second layer parameters
-    let w2_array = Array2::<f64>::from_shape_fn((4, 1), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
+    let w2_array =
+        Array2::<f64>::from_shape_fn((4, 1), |_| rand::random::<f64>() * 2.0.saturating_sub(1).0);
     let b2_array = Array1::<f64>::zeros(1);
     println!(
         "Layer 2: {} -> {}",

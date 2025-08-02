@@ -4,7 +4,7 @@
 //! optimizations. It validates that SIMD, parallel, and other optimizations maintain
 //! numerical accuracy while providing performance benefits.
 
-use scirs2__stats::{create_advanced_validator, create_custom_advanced_validator, ValidationConfig};
+use scirs2_stats::{create_advanced_validator, create_custom_advanced_validator, ValidationConfig};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -118,7 +118,7 @@ fn demonstrate_detailed_analysis() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Analyze performance trends across different data sizes
 #[allow(dead_code)]
-fn analyze_performance_trends(_report: &scirs2_stats: :ValidationReport) {
+fn analyze_performance_trends(_report: &scirs2_stats::ValidationReport) {
     println!("\n📈 Performance Trend Analysis:");
 
     let mut operations: std::collections::HashMap<String, Vec<&scirs2_stats::ValidationResult>> =
@@ -153,7 +153,7 @@ fn analyze_performance_trends(_report: &scirs2_stats: :ValidationReport) {
 
 /// Analyze validation results by operation type
 #[allow(dead_code)]
-fn analyze_by_operation(_report: &scirs2_stats: :ValidationReport) {
+fn analyze_by_operation(_report: &scirs2_stats::ValidationReport) {
     println!("\n🔬 Analysis by Operation Type:");
 
     let mut operation_stats: std::collections::HashMap<String, (usize, usize, f64, f64)> =
@@ -186,7 +186,7 @@ fn analyze_by_operation(_report: &scirs2_stats: :ValidationReport) {
 
 /// Analyze validation results by data size
 #[allow(dead_code)]
-fn analyze_by_data_size(_report: &scirs2_stats: :ValidationReport) {
+fn analyze_by_data_size(_report: &scirs2_stats::ValidationReport) {
     println!("\n📏 Analysis by Data Size:");
 
     let mut size_stats: std::collections::HashMap<usize, (usize, usize, f64, f64)> =
@@ -224,7 +224,7 @@ fn analyze_by_data_size(_report: &scirs2_stats: :ValidationReport) {
 
 /// Generate optimization recommendations based on validation results
 #[allow(dead_code)]
-fn generate_recommendations(_report: &scirs2_stats: :ValidationReport) {
+fn generate_recommendations(_report: &scirs2_stats::ValidationReport) {
     println!("\n💡 Optimization Recommendations:");
 
     let pass_rate = (_report.passed_tests as f64 / _report.total_tests as f64) * 100.0;
@@ -285,7 +285,10 @@ fn generate_recommendations(_report: &scirs2_stats: :ValidationReport) {
     println!("\n📊 Validation Metrics Summary:");
     println!("  Total tests conducted: {}", _report.total_tests);
     println!("  Overall success rate: {:.1}%", pass_rate);
-    println!("  Average performance gain: {:.2}x", _report.average_speedup);
+    println!(
+        "  Average performance gain: {:.2}x",
+        _report.average_speedup
+    );
     println!(
         "  Average numerical accuracy: {:.6}",
         _report.average_accuracy

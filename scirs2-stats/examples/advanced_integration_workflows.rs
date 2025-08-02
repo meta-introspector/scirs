@@ -4,7 +4,7 @@
 //! advanced statistical methods for comprehensive data analysis.
 
 use ndarray::{array, Array1, Array2};
-use scirs2__stats::{
+use scirs2_stats::{
     BayesianAnalysisWorkflow, DimensionalityAnalysisWorkflow, QMCSequenceType, QMCWorkflow,
     SurvivalAnalysisWorkflow,
 };

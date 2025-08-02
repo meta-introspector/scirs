@@ -30,7 +30,7 @@ use std::cmp::Ordering;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::wilcoxon;
+/// use scirs2_stats::wilcoxon;
 ///
 /// // Create two paired samples
 /// let before = array![125.0, 115.0, 130.0, 140.0, 140.0, 115.0, 140.0, 125.0, 140.0, 135.0];
@@ -78,8 +78,8 @@ where
         "wilcox" => {
             // Remove zero differences
             differences
-                .into().iter()
-                .filter(|(diff_)| !diff_.is_zero())
+                .into_iter()
+                .filter(|(diff_, _)| !diff_.is_zero())
                 .collect::<Vec<_>>()
         }
         "pratt" => {
@@ -110,7 +110,7 @@ where
 
     // Sort differences by absolute value for ranking
     let mut ranked_diffs = differences;
-    ranked_diffs.sort_by(|(a_), (b_)| a_.abs().partial_cmp(&b_.abs()).unwrap_or(Ordering::Equal));
+    ranked_diffs.sort_by(|(a, _), (b, _)| a.abs().partial_cmp(&b.abs()).unwrap_or(Ordering::Equal));
 
     // Assign ranks, handling ties appropriately
     let mut ranks = vec![F::zero(); ranked_diffs.len()];
@@ -140,7 +140,7 @@ where
     let mut w_plus = F::zero();
     let mut w_minus = F::zero();
 
-    for (i, (diff_)) in ranked_diffs.iter().enumerate() {
+    for (i, (diff_, _)) in ranked_diffs.iter().enumerate() {
         if diff_.is_sign_positive() {
             w_plus = w_plus + ranks[i];
         } else {
@@ -198,7 +198,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::mann_whitney;
+/// use scirs2_stats::mann_whitney;
 ///
 /// // Create two independent samples
 /// let group1 = array![2.9, 3.0, 2.5, 2.6, 3.2, 2.8];
@@ -395,7 +395,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::kruskal_wallis;
+/// use scirs2_stats::kruskal_wallis;
 ///
 /// // Create three independent samples
 /// let group1 = array![2.9, 3.0, 2.5, 2.6, 3.2];
@@ -540,7 +540,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::friedman;
+/// use scirs2_stats::friedman;
 ///
 /// // Create a 2D array where each row is a subject and each column is a treatment
 /// let data = array![

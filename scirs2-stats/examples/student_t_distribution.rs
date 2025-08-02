@@ -1,5 +1,5 @@
-use scirs2__stats::distributions::student_t::StudentT;
-use scirs2__stats::traits::distribution::{ContinuousDistribution, Distribution};
+use scirs2_stats::distributions::student_t::StudentT;
+use scirs2_stats::traits::{ContinuousDistribution, Distribution};
 use statrs::statistics::Statistics;
 use std::f64;
 

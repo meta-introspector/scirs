@@ -2418,7 +2418,8 @@ impl HfModelManager {
     pub fn save_model<P: AsRef<Path>>(
         &self,
         model: &TransformerModel,
-        output_path: P_model, _id: &str,
+        output_path: P_model,
+        _id: &str,
     ) -> Result<()> {
         let config = HfConfig::from_transformer_config(&model.config);
         let adapter = HfModelAdapter::new(config);

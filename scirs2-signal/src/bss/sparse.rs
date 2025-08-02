@@ -4,7 +4,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, s};
-use scirs2__linalg::solve;
+use scirs2_linalg::solve;
 use super::{BssConfig, IcaMethod, NonlinearityFunction, ica};
 
 #[allow(unused_imports)]

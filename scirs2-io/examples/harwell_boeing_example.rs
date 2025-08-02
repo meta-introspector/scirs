@@ -4,7 +4,7 @@
 //! including reading, writing, and converting between different formats.
 
 use ndarray::Array1;
-use scirs2__io::harwell_boeing::{self, ccs_to_hb, hb_to_ccs, HBMatrixType, HBSparseMatrix};
+use scirs2_io::harwell_boeing::{self, ccs_to_hb, hb_to_ccs, HBMatrixType, HBSparseMatrix};
 use tempfile::tempdir;
 
 #[allow(dead_code)]
@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[allow(dead_code)]
 fn create_and_write_matrix(
-    _temp_dir: &tempfile::TempDir,
+    temp_dir: &tempfile::TempDir,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📝 Creating and Writing Harwell-Boeing Matrix...");
 
@@ -85,11 +85,11 @@ fn create_and_write_matrix(
 
 #[allow(dead_code)]
 fn read_and_analyze_matrix(
-    _temp_dir: &tempfile::TempDir,
+    temp_dir: &tempfile::TempDir,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Reading and Analyzing Harwell-Boeing Matrix...");
 
-    let hb_file = _temp_dir.path().join("example_matrix.hb");
+    let hb_file = temp_dir.path().join("example_matrix.hb");
 
     // Read the matrix back
     let matrix = harwell_boeing::read_harwell_boeing(&hb_file)?;

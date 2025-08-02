@@ -388,7 +388,7 @@ where
                 .collect();
 
             let sample_values = samples?;
-            for (i, value) in sample_values.into().iter().enumerate() {
+            for (i, value) in sample_values.into_iter().enumerate() {
                 bootstrap_samples[i] = value;
             }
         } else {
@@ -1110,7 +1110,8 @@ where
     /// Compute quality metrics
     fn compute_quality_metrics(
         &self,
-        samples: &Array1<F>, _original_statistic: F,
+        samples: &Array1<F>,
+        _original_statistic: F,
     ) -> StatsResult<QualityMetrics<F>> {
         let std_error = self.compute_std(samples);
         let mc_std_error = std_error / F::from((samples.len() as f64).sqrt()).unwrap();
@@ -1347,7 +1348,7 @@ mod tests {
         let strata = vec![0, 0, 1, 1, 2, 2]; // Three strata
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
-        let result = stratifiedbootstrap(
+        let result = stratified_bootstrap(
             &data.view(),
             &strata,
             mean_fn,
@@ -1368,7 +1369,7 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
-        let result = moving_blockbootstrap(
+        let result = moving_block_bootstrap(
             &data.view(),
             mean_fn,
             Some(3),  // block length
@@ -1385,7 +1386,7 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
-        let result = circular_blockbootstrap(&data.view(), mean_fn, Some(2), Some(30)).unwrap();
+        let result = circular_block_bootstrap(&data.view(), mean_fn, Some(2), Some(30)).unwrap();
 
         assert_eq!(result.n_successful, 30);
     }

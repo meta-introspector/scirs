@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__stats::levene;
+use scirs2_stats::levene;
 
 #[allow(dead_code)]
 fn main() {

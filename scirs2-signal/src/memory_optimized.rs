@@ -338,7 +338,8 @@ pub fn memory_optimized_fft(
 fn memory_fft_in_core(
     input_file: &str,
     output_file: &str,
-    n: usize_config: &MemoryConfig,
+    n: usize,
+    _config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
     let start_time = Instant::now();
     let io_start = Instant::now();

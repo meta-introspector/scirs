@@ -377,12 +377,12 @@ impl LinearDiscriminantAnalysis {
         let m = l_inv.dot(sb).dot(&l_inv.t());
 
         // SVD of M
-        let (u, s_vt) = m
+        let (u, _s, _vt) = m
             .svd(true, false)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
         let u = u.unwrap();
-        let s = s_vt.unwrap();
+        let s = _s;
 
         // Transform back: scalings = L^{-T} * U
         let scalings = l_inv.t().dot(&u);
@@ -525,7 +525,7 @@ impl LinearDiscriminantAnalysis {
         let scores = self.decision_function(x, result)?;
         let mut predictions = Array1::zeros(x.nrows());
 
-        for (i, row) in scores.rows().into().iter().enumerate() {
+        for (i, row) in scores.rows().into_iter().enumerate() {
             let max_idx = row
                 .iter()
                 .enumerate()
@@ -565,7 +565,7 @@ impl LinearDiscriminantAnalysis {
         let scores = self.decision_function(x, result)?;
         let mut probabilities = Array2::zeros(scores.dim());
 
-        for (i, mut row) in probabilities.rows_mut().into().iter().enumerate() {
+        for (i, mut row) in probabilities.rows_mut().into_iter().enumerate() {
             let score_row = scores.row(i);
             let max_score = score_row.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 
@@ -779,7 +779,7 @@ impl QuadraticDiscriminantAnalysis {
         let scores = self.decision_function(x, result)?;
         let mut predictions = Array1::zeros(x.nrows());
 
-        for (i, row) in scores.rows().into().iter().enumerate() {
+        for (i, row) in scores.rows().into_iter().enumerate() {
             let max_idx = row
                 .iter()
                 .enumerate()
@@ -868,7 +868,7 @@ impl QuadraticDiscriminantAnalysis {
         let scores = self.decision_function(x, result)?;
         let mut probabilities = Array2::zeros(scores.dim());
 
-        for (i, mut row) in probabilities.rows_mut().into().iter().enumerate() {
+        for (i, mut row) in probabilities.rows_mut().into_iter().enumerate() {
             let score_row = scores.row(i);
             let max_score = score_row.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
 

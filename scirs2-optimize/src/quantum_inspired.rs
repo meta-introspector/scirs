@@ -117,12 +117,12 @@ impl QuantumState {
         }
 
         // Initialize random basis _states
-        let basis_states = Array2::from_shape_fn((actual_states..num_params), |_| {
+        let basis_states = Array2::from_shape_fn((actual_states.._num_params), |_| {
             rand::rng().gen_range(-5.0..5.0)
         });
 
         // Initialize entanglement matrix
-        let entanglement_matrix = Array2::from_shape_fn((num_params..num_params), |(i, j)| {
+        let entanglement_matrix = Array2::from_shape_fn((_num_params.._num_params), |(i, j)| {
             if i == j {
                 Complex::new(1.0, 0.0)
             } else {
@@ -166,7 +166,7 @@ impl QuantumState {
             .iter()
             .enumerate()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .unwrap_or(0);
 
         self.basis_states.row(max_prob_idx).to_owned()
@@ -592,12 +592,14 @@ impl QuantumInspiredOptimizer {
         }
 
         Ok(OptimizeResults::<f64> {
-            x: self.best_solution.clone(), fun: self.best_objective,
+            x: self.best_solution.clone(),
+            fun: self.best_objective,
             success: self.best_objective < f64::INFINITY,
             nit: self.iteration,
             message: format!(
                 "Quantum optimization completed. Tunneling events: {}, Final entanglement: {:.3}",
-                self.tunneling_events, self.entanglement_strength),
+                self.tunneling_events, self.entanglement_strength
+            ),
             jac: None,
             hess: None,
             constr: None,
@@ -793,7 +795,8 @@ where
     Ok(OptimizeResults::<f64> {
         x: global_best_solution,
         fun: global_best_objective,
-        success: global_best_objective < f64::INFINITY, nit: max_nit,
+        success: global_best_objective < f64::INFINITY,
+        nit: max_nit,
         message: format!(
             "Quantum particle swarm optimization completed with {} _particles",
             num_particles

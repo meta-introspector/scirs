@@ -51,7 +51,7 @@ pub struct OptimizeResults<T> {
     pub status: i32,
 }
 
-impl<T: fmt::Display + fmt::Debug>, fmt::Display for OptimizeResults<T>
+impl<T: fmt::Display + fmt::Debug> fmt::Display for OptimizeResults<T>
 where
     T: Copy,
     Array1<T>: fmt::Debug,

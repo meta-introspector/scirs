@@ -290,7 +290,7 @@ impl WaveletPacketTree {
     pub fn get_level(&self, level: usize) -> Vec<&WaveletPacket> {
         self.nodes
             .iter()
-            .filter(|&((l_)_)| *l == level)
+            .filter(|&((l, _))| *l == level)
             .map(|(_, node)| node)
             .collect()
     }

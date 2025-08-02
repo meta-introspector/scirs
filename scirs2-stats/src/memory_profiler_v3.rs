@@ -214,7 +214,7 @@ impl<F: Float + Clone + std::fmt::Display> StatisticsCache<F> {
     pub fn new(_max_entries: usize, max_memory: usize) -> Self {
         Self {
             cache: HashMap::new(),
-            _max_entries,
+            max_entries: _max_entries,
             max_memory,
             current_memory: 0,
             profiler: None,
@@ -341,7 +341,7 @@ impl AdaptiveMemoryManager {
         Self {
             memory_threshold_low: 100 * 1024 * 1024,   // 100MB
             memory_threshold_high: 1024 * 1024 * 1024, // 1GB
-            _profiler,
+            profiler: _profiler,
         }
     }
 
@@ -413,7 +413,7 @@ where
         let adaptive_manager = AdaptiveMemoryManager::new(_profiler.clone());
 
         Self {
-            _profiler: _profiler.clone(),
+            profiler: _profiler.clone(),
             cache,
             adaptive_manager,
         }

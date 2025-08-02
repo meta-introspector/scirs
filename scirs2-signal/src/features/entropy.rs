@@ -1,5 +1,4 @@
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use crate::features::statistical::{calculate_quantile, calculate_std};
 use std::collections::HashMap;
 

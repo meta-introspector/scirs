@@ -36,9 +36,9 @@ pub struct RandomWalkProposal {
 
 impl RandomWalkProposal {
     /// Create a new random walk proposal
-    pub fn new(_step_size: f64) -> Result<Self> {
-        check_positive(_step_size, "_step_size")?;
-        Ok(Self { _step_size })
+    pub fn new(step_size: f64) -> Result<Self> {
+        check_positive(step_size, "step_size")?;
+        Ok(Self { step_size })
     }
 }
 
@@ -68,20 +68,20 @@ pub struct MetropolisHastings<T: TargetDistribution, P: ProposalDistribution> {
 
 impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
     /// Create a new Metropolis-Hastings sampler
-    pub fn new(_target: T, proposal: P, initial: Array1<f64>) -> Result<Self> {
+    pub fn new(target: T, proposal: P, initial: Array1<f64>) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
-        if initial.len() != _target.dim() {
+        if initial.len() != target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
                 "initial dimension ({}) must match _target dimension ({})",
                 initial.len(),
-                _target.dim()
+                target.dim()
             )));
         }
 
-        let current_log_density = _target.log_density(&initial);
+        let current_log_density = target.log_density(&initial);
 
         Ok(Self {
-            _target,
+            target,
             proposal,
             current: initial,
             current_log_density,
@@ -98,7 +98,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
 
         // Compute acceptance ratio
         let log_ratio = proposed_log_density - self.current_log_density
-            + self.proposal.log_ratio(&self.current, &proposed);
+            + P::log_ratio(&self.current, &proposed);
 
         // Accept or reject
         self.n_proposed += 1;
@@ -249,16 +249,16 @@ pub struct MultivariateNormalTarget {
 
 impl MultivariateNormalTarget {
     /// Create a new multivariate normal target
-    pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
-        checkarray_finite(&_mean, "_mean")?;
+    pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
+        checkarray_finite(&mean, "mean")?;
         checkarray_finite(&covariance, "covariance")?;
-        if covariance.nrows() != _mean.len() || covariance.ncols() != _mean.len() {
+        if covariance.nrows() != mean.len() || covariance.ncols() != mean.len() {
             return Err(StatsError::DimensionMismatch(format!(
                 "covariance shape ({}, {}) must be ({}, {})",
                 covariance.nrows(),
                 covariance.ncols(),
-                _mean.len(),
-                _mean.len()
+                mean.len(),
+                mean.len()
             )));
         }
 
@@ -278,11 +278,11 @@ impl MultivariateNormalTarget {
             ));
         }
 
-        let d = _mean.len() as f64;
+        let d = mean.len() as f64;
         let log_norm_const = -0.5 * (d * (2.0 * std::f64::consts::PI).ln() + det_value.ln());
 
         Ok(Self {
-            _mean,
+            mean,
             precision,
             log_norm_const,
         })
@@ -311,11 +311,11 @@ pub struct CustomTarget<F> {
 
 impl<F> CustomTarget<F> {
     /// Create a new custom target distribution
-    pub fn new(_dim: usize, log_density_fn: F) -> Result<Self> {
-        check_positive(_dim, "_dim")?;
+    pub fn new(dim: usize, log_density_fn: F) -> Result<Self> {
+        check_positive(dim, "dim")?;
         Ok(Self {
             log_density_fn,
-            _dim,
+            dim,
         })
     }
 }

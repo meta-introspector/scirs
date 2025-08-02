@@ -3,7 +3,6 @@
 //! This module implements MEMD for multivariate signal processing.
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use ndarray::Array2;
 use rand::{Rng, SeedableRng};
 use super::BssConfig;

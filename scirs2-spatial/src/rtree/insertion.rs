@@ -138,8 +138,9 @@ impl<T: Clone> RTree<T> {
             let subtree_index = self.choose_subtree(&self.root, entry.mbr(), level)?;
 
             // Get the subtree
-            let child = match &mut self.root.entries[subtree_index] {
-                Entry::NonLeaf { child, .. } => {
+            let child: &mut Box<Node<T>> = match &mut self.root.entries[subtree_index] {
+                Entry::NonLeaf { child, .. } => child,
+                Entry::Leaf { .. } => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry".into(),
                     ))
@@ -229,8 +230,9 @@ impl<T: Clone> RTree<T> {
         let subtree_index = self.choose_subtree(node, entry.mbr(), level)?;
 
         // Get the subtree
-        let child = match &mut node.entries[subtree_index] {
-            Entry::NonLeaf { child, .. } => {
+        let child: &mut Box<Node<T>> = match &mut node.entries[subtree_index] {
+            Entry::NonLeaf { child, .. } => child,
+            Entry::Leaf { .. } => {
                 return Err(crate::error::SpatialError::ComputationError(
                     "Expected a non-leaf entry".into(),
                 ))

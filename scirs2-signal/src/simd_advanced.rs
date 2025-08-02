@@ -337,7 +337,8 @@ fn scalar_cross_correlation(
     let (output_len, start_offset) = match mode {
         "full" => (n1 + n2 - 1, 0),
         "same" => (n1, (n2 - 1) / 2),
-        "valid" => (if n1 >= n2 { n1 - n2 + 1 } else { 0 }, n2 - 1, _ => return Err(SignalError::ValueError("Invalid mode".to_string())),
+        "valid" => (if n1 >= n2 { n1 - n2 + 1 } else { 0 }, n2 - 1),
+        _ => return Err(SignalError::ValueError("Invalid mode".to_string())),
     };
 
     if output_len == 0 {
@@ -379,6 +380,7 @@ fn scalar_complex_butterfly(
 
 // SIMD implementations (platform-specific)
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
     let n = _input.len();
@@ -450,6 +452,7 @@ unsafe fn avx512_fir_filter(
     ))
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
     let n = _input.len();
@@ -491,6 +494,7 @@ unsafe fn sse_fir_filter(_input: &[f64], coeffs: &[f64], output: &mut [f64]) -> 
     Ok(())
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_autocorrelation(
     signal: &[f64],
@@ -528,6 +532,7 @@ unsafe fn avx2_autocorrelation(
     Ok(())
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_autocorrelation(
     signal: &[f64],
@@ -565,6 +570,7 @@ unsafe fn sse_autocorrelation(
     Ok(())
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_cross_correlation(
     signal1: &[f64],
@@ -618,6 +624,7 @@ unsafe fn avx2_cross_correlation(
     Ok(())
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_cross_correlation(
     signal1: &[f64],
@@ -631,6 +638,7 @@ unsafe fn sse_cross_correlation(
     });
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_complex_butterfly(
     data: &mut [num_complex::Complex<f64>],
@@ -650,6 +658,7 @@ unsafe fn avx2_complex_butterfly(
     Ok(())
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_complex_butterfly(
     data: &mut [num_complex::Complex<f64>],
@@ -673,6 +682,7 @@ unsafe fn avx512_apply_window(
     Ok(())
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_apply_window(
     signal: &[f64],
@@ -699,6 +709,7 @@ unsafe fn avx2_apply_window(
     Ok(())
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_apply_window(_signal: &[f64], window: &[f64], output: &mut [f64]) -> SignalResult<()> {
     let n = _signal.len();
@@ -996,6 +1007,7 @@ pub fn simd_peak_detection(
 }
 
 /// AVX2 optimized peak detection
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_peak_detection(
     signal: &[f64],
@@ -1135,6 +1147,7 @@ pub fn simd_zero_crossing_rate(_signal: &[f64], config: &SimdConfig) -> SignalRe
 }
 
 /// AVX2 optimized zero crossing detection
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_zero_crossings(_signal: &[f64]) -> SignalResult<usize> {
     let n = _signal.len();
@@ -1582,6 +1595,7 @@ fn scalar_enhanced_convolution(
 }
 
 /// AVX2 enhanced convolution with cache optimization
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_enhanced_convolution(
     signal: &[f64],
@@ -2070,6 +2084,7 @@ pub mod advanced_simd_realtime {
             Ok(())
         }
 
+        #[cfg(target_arch = "x86_64")]
         #[target_feature(enable = "avx2")]
         unsafe fn avx2_process_sample(&self) -> f64 {
             let mut sum = 0.0;
@@ -2690,6 +2705,7 @@ fn scalar_apply_window(_signal: &[f64], window: &[f64], result: &mut [f64]) -> S
 }
 
 // AVX2 implementations
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_complex_multiply(
     a_real: &[f64],
@@ -2713,11 +2729,11 @@ unsafe fn avx2_complex_multiply(
 
         // result_real = a_real * b_real - a_imag * b_imag
         let real_result =
-            _mm256_sub_pd(_mm256_mul_pd(ar_vec, br_vec)_mm256_mul_pd(ai_vec, bi_vec));
+            _mm256_sub_pd(_mm256_mul_pd(ar_vec, br_vec), _mm256_mul_pd(ai_vec, bi_vec));
 
         // result_imag = a_real * b_imag + a_imag * b_real
         let imag_result =
-            _mm256_add_pd(_mm256_mul_pd(ar_vec, bi_vec)_mm256_mul_pd(ai_vec, br_vec));
+            _mm256_add_pd(_mm256_mul_pd(ar_vec, bi_vec), _mm256_mul_pd(ai_vec, br_vec));
 
         _mm256_storeu_pd(result_real.as_mut_ptr().add(idx), real_result);
         _mm256_storeu_pd(result_imag.as_mut_ptr().add(idx), imag_result);
@@ -2732,6 +2748,7 @@ unsafe fn avx2_complex_multiply(
     Ok(())
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
     let n = _real.len();
@@ -2746,7 +2763,7 @@ unsafe fn avx2_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) ->
 
         // power = _real^2 + imag^2
         let power_vec = _mm256_add_pd(
-            _mm256_mul_pd(real_vec, real_vec)_mm256_mul_pd(imag_vec, imag_vec),
+            _mm256_mul_pd(real_vec, real_vec), _mm256_mul_pd(imag_vec, imag_vec),
         );
 
         _mm256_storeu_pd(power.as_mut_ptr().add(idx), power_vec);
@@ -2760,6 +2777,7 @@ unsafe fn avx2_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) ->
     Ok(())
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_weighted_average_spectra(
     spectra: &[&[f64]],
@@ -2774,7 +2792,7 @@ unsafe fn avx2_weighted_average_spectra(
     // Initialize result
     for chunk in 0..simd_chunks {
         let idx = chunk * simd_width;
-        _mm256_storeu_pd(result.as_mut_ptr().add(idx)_mm256_setzero_pd());
+        _mm256_storeu_pd(result.as_mut_ptr().add(idx), _mm256_setzero_pd());
     }
     for i in (simd_chunks * simd_width)..n_freqs {
         result[i] = 0.0;
@@ -2804,6 +2822,7 @@ unsafe fn avx2_weighted_average_spectra(
     Ok(())
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn avx2_apply_window_v2(
     signal: &[f64],
@@ -2833,6 +2852,7 @@ unsafe fn avx2_apply_window_v2(
 }
 
 // SSE implementations (similar structure but with _mm instructions)
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_complex_multiply(
     a_real: &[f64],
@@ -2846,11 +2866,13 @@ unsafe fn sse_complex_multiply(
     scalar_complex_multiply(a_real, a_imag, b_real, b_imag, result_real, result_imag)
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_power_spectrum(_real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
     scalar_power_spectrum(_real, imag, power)
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_weighted_average_spectra(
     spectra: &[&[f64]],
@@ -2860,6 +2882,7 @@ unsafe fn sse_weighted_average_spectra(
     scalar_weighted_average_spectra(spectra, weights, result)
 }
 
+#[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_apply_window_v2(
     signal: &[f64],

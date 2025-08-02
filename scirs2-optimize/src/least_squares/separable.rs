@@ -173,14 +173,14 @@ where
 
     // Main optimization loop
     while iter < options.max_iter {
-        // Compute basis _functions
+        // Compute basis functions
         let phi = basis_functions(x_data.as_slice().unwrap(), beta.as_slice().unwrap());
         nfev += 1;
 
-        let (n_points_n_basis) = phi.dim();
+        let (n_points, _n_basis) = phi.dim();
         if n_points != n {
             return Err(crate::error::OptimizeError::ValueError(
-                "Basis _functions returned wrong number of rows".to_string(),
+                "Basis functions returned wrong number of rows".to_string(),
             ));
         }
 
@@ -439,7 +439,11 @@ fn solve_symmetric_system(a: &Array2<f64>, b: &Array1<f64>) -> OptimizeResult<Ar
 
 /// QR solve (simplified)
 #[allow(dead_code)]
-fn qr_solve<S>(_phi: &Array2<f64>, y: &ArrayBase<S, Ix1>, lambda: f64) -> OptimizeResult<Array1<f64>>
+fn qr_solve<S>(
+    _phi: &Array2<f64>,
+    y: &ArrayBase<S, Ix1>,
+    lambda: f64,
+) -> OptimizeResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
 {

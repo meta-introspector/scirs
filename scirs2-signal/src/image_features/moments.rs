@@ -1,7 +1,6 @@
 //! Moment-based feature extraction for images
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use ndarray::Array2;
 use std::collections::HashMap;
 use super::utils::calculate_raw_moment;

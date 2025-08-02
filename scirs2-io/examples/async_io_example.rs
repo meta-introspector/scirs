@@ -4,7 +4,7 @@
 //! for non-blocking processing of large datasets.
 
 use futures::StreamExt;
-use scirs2__io::async_io::{
+use scirs2_io::async_io::{
     process_csv_async, process_file_async, AsyncChunkedReader, AsyncLineReader,
     AsyncStreamingConfig, CancellationToken,
 };

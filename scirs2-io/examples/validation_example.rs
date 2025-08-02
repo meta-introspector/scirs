@@ -1,11 +1,11 @@
-use scirs2__io::validation::{
+use scirs2_io::validation::{
     calculate_checksum, calculate_file_checksum, create_checksum_file, create_directory_manifest,
     generate_file_integrity_metadata, generate_validation_report, load_integrity_metadata,
     save_integrity_metadata, validate_file_integrity, verify_checksum, verify_checksum_file,
     verify_file_checksum, ChecksumAlgorithm,
 };
 
-use scirs2__io::validation::formats::{
+use scirs2_io::validation::formats::{
     detect_file_format, get_scientific_format_validators, validate_file_format, validate_format,
     DataFormat,
 };
@@ -79,11 +79,19 @@ fn basic_checksum_example(_data: &str) -> Result<(), Box<dyn std::error::Error>>
     );
     println!(
         "SHA256 valid: {}",
-        verify_checksum(_data.as_bytes(), &sha256_checksum, ChecksumAlgorithm::SHA256)
+        verify_checksum(
+            _data.as_bytes(),
+            &sha256_checksum,
+            ChecksumAlgorithm::SHA256
+        )
     );
     println!(
         "BLAKE3 valid: {}",
-        verify_checksum(_data.as_bytes(), &blake3_checksum, ChecksumAlgorithm::BLAKE3)
+        verify_checksum(
+            _data.as_bytes(),
+            &blake3_checksum,
+            ChecksumAlgorithm::BLAKE3
+        )
     );
 
     // Verify with modified _data
@@ -118,7 +126,7 @@ fn basic_checksum_example(_data: &str) -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[allow(dead_code)]
-fn file_checksum_example(_file_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn file_checksum_example(file_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== File Checksum Example ===");
 
     // Calculate checksums for the file
@@ -278,18 +286,18 @@ fn format_validation_example(
 }
 
 #[allow(dead_code)]
-fn directory_manifest_example(_dir_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn directory_manifest_example(dir_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Directory Manifest Example ===");
 
     // Create directory manifest
-    let manifest_path = _dir_path.join("manifest.json");
-    create_directory_manifest(_dir_path, &manifest_path, ChecksumAlgorithm::SHA256, true)?;
+    let manifest_path = dir_path.join("manifest.json");
+    create_directory_manifest(dir_path, &manifest_path, ChecksumAlgorithm::SHA256, true)?;
 
     println!("Created directory manifest: {}", manifest_path.display());
 
     // Load the manifest and verify
     let manifest_content = fs::read_to_string(&manifest_path)?;
-    let manifest: scirs2_io: validation::DirectoryManifest =
+    let manifest: scirs2_io::validation::DirectoryManifest =
         serde_json::from_str(&manifest_content)?;
 
     println!("Manifest contains {} files", manifest.files.len());
@@ -306,7 +314,7 @@ fn directory_manifest_example(_dir_path: &Path) -> Result<(), Box<dyn std::error
 
     // Modify a file in the directory
     let first_file = if !manifest.files.is_empty() {
-        let first_path = &manifest.files[0]._path;
+        let first_path = &manifest.files[0].path;
         let full_path = dir_path.join(first_path);
 
         if full_path.exists() {

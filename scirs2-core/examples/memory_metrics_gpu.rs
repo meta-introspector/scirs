@@ -132,7 +132,7 @@ fn main() {
 // Simulates a GPU matrix multiplication operation
 #[cfg(all(feature = "memory_management", feature = "gpu"))]
 #[allow(dead_code)]
-fn context( &TrackedGpuContext) {
+fn gpu_operation_example(_context: &TrackedGpuContext) {
     let start = Instant::now();
 
     // Matrix dimensions

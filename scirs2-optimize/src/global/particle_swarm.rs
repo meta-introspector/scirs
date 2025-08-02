@@ -175,7 +175,7 @@ where
             particle.velocity[j] = self.inertia_weight * particle.velocity[j] + cognitive + social;
 
             // Clamp velocity
-            let (lb..ub) = self.bounds[j];
+            let (lb, ub) = self.bounds[j];
             let vmax = self.options.vmax * (ub - lb);
             let vmin = self.options.vmin * (ub - lb);
             particle.velocity[j] = particle.velocity[j].max(vmin).min(vmax);

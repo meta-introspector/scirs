@@ -61,7 +61,10 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedD
     /// Create with custom options
     #[allow(dead_code)]
     pub fn with_options(_diagonal: Vec<F>, options: EnhancedOperatorOptions) -> Self {
-        Self { diagonal: _diagonal, options }
+        Self {
+            diagonal: _diagonal,
+            options,
+        }
     }
 
     /// Get the diagonal values
@@ -1067,7 +1070,11 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
 
     /// Create with custom options
     #[allow(dead_code)]
-    pub fn with_options<Func>(_function: Func, size: usize, options: EnhancedOperatorOptions) -> Self
+    pub fn with_options<Func>(
+        _function: Func,
+        size: usize,
+        options: EnhancedOperatorOptions,
+    ) -> Self
     where
         Func: Fn(F) -> F + Send + Sync + 'static,
     {

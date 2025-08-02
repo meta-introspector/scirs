@@ -201,7 +201,7 @@ where
         let cost = 0.5 * res.iter().map(|&r| r * r).sum::<f64>();
 
         // Compute Jacobian
-        let (jac_jac_evals) = match &jacobian {
+        let (jac, _jac_evals) = match &jacobian {
             Some(jac_fn) => {
                 let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                 njev += 1;
@@ -368,7 +368,8 @@ fn compute_projected_gradient(
 /// Solve trust region subproblem with bounds
 #[allow(dead_code)]
 fn solve_trust_region_bounds(
-    jac: &Array2<f64>, _res: &Array1<f64>,
+    jac: &Array2<f64>,
+    _res: &Array1<f64>,
     gradient: &Array1<f64>,
     trust_radius: f64,
     x: &Array1<f64>,

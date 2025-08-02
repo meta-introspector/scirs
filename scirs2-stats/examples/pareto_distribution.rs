@@ -1,4 +1,4 @@
-use scirs2__stats::distributions::pareto::Pareto;
+use scirs2_stats::distributions::pareto::Pareto;
 use statrs::statistics::Statistics;
 use std::error::Error;
 

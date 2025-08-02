@@ -1584,13 +1584,15 @@ fn run_interactive_visualizations() -> Result<(), Box<dyn std::error::Error>> {
             match func_choice.to_lowercase().as_str() {
                 "a" => visualize_gamma_function()?,
                 "b" => visualize_bessel_functions()?,
-                "c" => visualize_error_function()?_ => println!("Invalid choice"),
+                "c" => visualize_error_function()?,
+                _ => println!("Invalid choice"),
             }
         }
         "2" => visualize_complex_plane()?,
         "3" => animate_bessel_functions()?,
         "4" => visualize_3d_surfaces()?,
-        "5" => show_geometric_interpretations()?_ => println!("Invalid choice"),
+        "5" => show_geometric_interpretations()?,
+        _ => println!("Invalid choice"),
     }
 
     Ok(())
@@ -1886,7 +1888,8 @@ fn run_proof_exploration() -> Result<(), Box<dyn std::error::Error>> {
         "1" => explore_gamma_half_proof()?,
         "2" => explore_reflection_formula_proof()?,
         "3" => explore_bessel_generating_function_proof()?,
-        "4" => explore_error_function_series_proof()?_ => println!("Invalid choice"),
+        "4" => explore_error_function_series_proof()?,
+        _ => println!("Invalid choice"),
     }
 
     Ok(())

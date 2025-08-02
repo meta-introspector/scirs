@@ -809,7 +809,8 @@ impl AdaptiveSimdOptimizer {
 
     /// Try fallback strategy on failure
     fn try_fallback_strategy<F, T>(
-        &self, _operation_name: &str,
+        &self,
+        _operation_name: &str,
         data: ArrayView1<F>,
         operation: impl Fn(&ArrayView1<F>, &SimdStrategy) -> StatsResult<T> + Send + Sync,
         failed_strategy: &SimdStrategy,
@@ -859,7 +860,8 @@ impl AdaptiveSimdOptimizer {
 
     /// Try matrix fallback strategy
     fn try_matrix_fallback_strategy<F, T>(
-        &self, _operation_name: &str,
+        &self,
+        _operation_name: &str,
         data: ArrayView2<F>,
         operation: impl Fn(&ArrayView2<F>, &SimdStrategy) -> StatsResult<T> + Send + Sync,
         failed_strategy: &SimdStrategy,

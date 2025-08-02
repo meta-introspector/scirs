@@ -136,7 +136,7 @@ impl NumericalStabilityTester {
         };
 
         Self {
-            _config,
+            config: _config,
             rng,
             results: Vec::new(),
         }

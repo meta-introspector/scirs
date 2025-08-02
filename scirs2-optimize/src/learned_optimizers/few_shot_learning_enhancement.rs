@@ -1043,7 +1043,7 @@ impl MemoryNetwork {
             memory_keys: Array2::zeros((memory_size, _feature_dim)),
             memory_values: Array2::zeros((memory_size, _feature_dim)),
             access_patterns: Vec::new(),
-            memory_size: memory_size,
+            memory_size,
         }
     }
 }
@@ -1337,7 +1337,8 @@ impl FewShotLearningOptimizer {
     }
 
     fn create_support_examples_from_similar(
-        &self, _similar_problems: &[String],
+        &self,
+        _similar_problems: &[String],
     ) -> OptimizeResult<Vec<SupportExample>> {
         // Simplified creation from similar _problems
         Ok(vec![])

@@ -819,7 +819,8 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_none<T>(
         &self,
-        matrix_id: u64, _rows: usize,
+        matrix_id: u64,
+        _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -869,7 +870,8 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_rle<T>(
         &self,
-        matrix_id: u64, _rows: usize,
+        matrix_id: u64,
+        _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -923,7 +925,8 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_delta<T>(
         &self,
-        matrix_id: u64, _rows: usize,
+        matrix_id: u64,
+        _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -978,7 +981,8 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_huffman<T>(
         &self,
-        matrix_id: u64, _rows: usize,
+        matrix_id: u64,
+        _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -1032,7 +1036,8 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_lz77<T>(
         &self,
-        matrix_id: u64, _rows: usize,
+        matrix_id: u64,
+        _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -1087,7 +1092,8 @@ impl AdaptiveMemoryCompressor {
 
     fn compress_with_sparse_optimized<T>(
         &self,
-        matrix_id: u64, _rows: usize,
+        matrix_id: u64,
+        _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -2086,7 +2092,12 @@ impl OutOfCoreManager {
                 1 => BlockType::Indices,
                 2 => BlockType::Data,
                 3 => BlockType::Combined,
-                _ => return Err(SparseError::InvalidFormat(format!("Unknown block type: {}", header.block_type))),
+                _ => {
+                    return Err(SparseError::InvalidFormat(format!(
+                        "Unknown block type: {}",
+                        header.block_type
+                    )))
+                }
             },
             compressed_data,
             original_size: header.original_size,
@@ -2270,7 +2281,8 @@ pub struct CompressedMatrix<T> {
     pub compressed_blocks: Vec<CompressedBlock>,
     pub compression_algorithm: CompressionAlgorithm,
     pub block_size: usize,
-    pub metadata: CompressionMetadata, _phantom: PhantomData<T>,
+    pub metadata: CompressionMetadata,
+    _phantom: PhantomData<T>,
 }
 
 /// Compressed block of matrix data

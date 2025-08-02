@@ -1211,7 +1211,7 @@ fn build_tree_recursive(
         0 => SubbandType::Approximation,
         1 => SubbandType::HorizontalDetail,
         2 => SubbandType::VerticalDetail,
-        3 => SubbandType::DiagonalDetail_ => unreachable!(),
+        3 => unreachable!(),
     };
 
     // Check if this should be a leaf node
@@ -1564,7 +1564,7 @@ fn classify_subband(_index: usize) -> SubbandType {
         0 => SubbandType::Approximation,
         1 => SubbandType::HorizontalDetail,
         2 => SubbandType::VerticalDetail,
-        3 => SubbandType::DiagonalDetail_ => unreachable!(),
+        3 => unreachable!(),
     }
 }
 

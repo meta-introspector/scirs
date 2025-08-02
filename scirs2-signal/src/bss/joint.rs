@@ -4,7 +4,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, Axis, s};
-use scirs2__linalg::{eigh, svd};
+use scirs2_linalg::{eigh, svd};
 use super::{BssConfig, JadeMultiResult};
 
 #[allow(unused_imports)]

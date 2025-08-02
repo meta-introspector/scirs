@@ -169,7 +169,8 @@ where
             response,
             prior,
             inference_method,
-            config: BayesianRegressionConfig::default(), _phantom: PhantomData,
+            config: BayesianRegressionConfig::default(),
+            _phantom: PhantomData,
         })
     }
 
@@ -559,8 +560,10 @@ where
     /// Compute log marginal likelihood for exact inference
     fn compute_log_marginal_likelihood(
         &self,
-        xtx: &Array2<f64>, _xty: &Array1<f64>,
-        prior_precision: &Array2<f64>, _prior_mean: &Array1<f64>,
+        xtx: &Array2<f64>,
+        _xty: &Array1<f64>,
+        prior_precision: &Array2<f64>,
+        _prior_mean: &Array1<f64>,
         noise_shape: f64,
         noise_rate: f64,
         n: f64,
@@ -585,7 +588,8 @@ where
     /// Compute Evidence Lower BOund (ELBO) for variational inference
     fn compute_elbo(
         &self,
-        q_beta_mean: &Array1<F>, _q_beta_precision: &Array2<F>,
+        q_beta_mean: &Array1<F>,
+        _q_beta_precision: &Array2<F>,
         q_noise_shape: F,
         q_noise_rate: F,
     ) -> StatsResult<F> {

@@ -4,7 +4,7 @@
 //! to ensure data integrity and format compliance.
 
 use ndarray::{array, Array1, Array2};
-use scirs2__io::{
+use scirs2_io::{
     csv,
     hdf5::{self, AttributeValue},
     matrix_market::{

@@ -1,5 +1,5 @@
 use ndarray::{array, Array2};
-use scirs2__stats::{partial_corr, partial_corrr};
+use scirs2_stats::{partial_corr, partial_corrr};
 
 #[allow(dead_code)]
 fn main() {

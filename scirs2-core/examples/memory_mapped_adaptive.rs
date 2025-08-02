@@ -53,7 +53,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Create test arrays of different shapes and sizes
 #[allow(dead_code)]
-fn path( &std::path::Path,
+fn path(
+    dir_path: &std::path::Path,
 ) -> Result<Vec<MemoryMappedArray<f64>>, Box<dyn std::error::Error>> {
     let mut arrays = Vec::new();
 
@@ -230,7 +231,8 @@ fn benchmark_adaptive_chunks(
 
         // Extract the chunk size from the strategy
         let chunk_size = match adaptive_result.strategy {
-            ChunkingStrategy::Fixed(size) => size_ => panic!("Expected fixed chunking strategy"),
+            ChunkingStrategy::Fixed(size) => size,
+            _ => panic!("Expected fixed chunking strategy"),
         };
 
         // Calculate expected number of chunks
@@ -241,7 +243,7 @@ fn benchmark_adaptive_chunks(
         let start = Instant::now();
 
         // Process chunks using adaptive chunking
-        let result = array.process_chunks_adaptive(params, |chunk_| chunk.iter().sum::<f64>())?;
+        let result = array.process_chunks_adaptive(params, |chunk| chunk.iter().sum::<f64>())?;
 
         let elapsed = start.elapsed();
 

@@ -1,5 +1,5 @@
 use ndarray::{array, Array1, Array2};
-use scirs2__stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
+use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
 use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
@@ -163,13 +163,13 @@ fn calculate_covariance(
     mean: &Array1<f64>,
     n_samples: usize,
 ) -> Array2<f64> {
-    let dim = _samples.shape()[1];
+    let dim = samples.shape()[1];
     let mut cov = Array2::zeros((dim, dim));
 
     for i in 0..n_samples {
         for j in 0..dim {
             for k in 0..dim {
-                cov[[j, k]] += (_samples[[i, j]] - mean[j]) * (_samples[[i, k]] - mean[k]);
+                cov[[j, k]] += (samples[[i, j]] - mean[j]) * (samples[[i, k]] - mean[k]);
             }
         }
     }

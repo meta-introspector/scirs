@@ -662,7 +662,8 @@ impl AdvancedVisualizer {
             60..=119 => (x, c, 0.0),
             120..=179 => (0.0, c, x),
             180..=239 => (0.0, x, c),
-            240..=299 => (x, 0.0, c, _ => (c, 0.0, x),
+            240..=299 => (x, 0.0, c),
+            _ => (c, 0.0, x),
         };
 
         // Quantum enhancement: add slight iridescence
@@ -682,7 +683,8 @@ impl AdvancedVisualizer {
     ) -> Result<()> {
         match self.config.export_format {
             VisualizationExportFormat::JSONData => self.export_to_json(output, filename),
-            VisualizationExportFormat::InteractiveHTML => self.export_to_html(output, filename, _ => {
+            VisualizationExportFormat::InteractiveHTML => self.export_to_html(output, filename),
+            _ => {
                 // For other formats, return a placeholder implementation
                 println!("Export format not yet implemented, saving as JSON");
                 self.export_to_json(output, filename)

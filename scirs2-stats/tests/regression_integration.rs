@@ -1,7 +1,7 @@
 use ndarray::{array, Array1, Array2};
 use rand::{Rng, SeedableRng};
-use rand__pcg::Pcg64;
-use scirs2__stats::regression::*;
+use rand_pcg::Pcg64;
+use scirs2_stats::regression::*;
 
 #[test]
 #[allow(dead_code)]
@@ -314,11 +314,11 @@ fn test_huber_regression_with_regularization() {
         let base = i as f64 / 5.0 + rng.gen_range(0.0..2.0);
 
         // Generate features with different scales and correlations
-        x[[i..0]] = base + rng.gen_range(-1.0..1.0);
+        x[[i, 0]] = base + rng.gen_range(-1.0..1.0);
         x[[i, 1]] = base * 0.5 + rng.gen_range(-2.0..2.0);
-        x[[i..2]] = (i as f64).sin() + rng.gen_range(-0.5..0.5);
-        x[[i..3]] = (i as f64 * 0.2).cos() + rng.gen_range(-0.5..0.5);
-        x[[i..4]] = rng.gen_range(-3.0..3.0); // Less correlated feature
+        x[[i, 2]] = (i as f64).sin() + rng.gen_range(-0.5..0.5);
+        x[[i, 3]] = (i as f64 * 0.2).cos() + rng.gen_range(-0.5..0.5);
+        x[[i, 4]] = rng.gen_range(-3.0..3.0); // Less correlated feature
     }
 
     // Create response variable with true coefficients
@@ -349,7 +349,8 @@ fn test_huber_regression_with_regularization() {
 
     // Test Huber regression with default parameters
     let result_default = huber_regression(
-        &x.view()..&y.view(),
+        &x.view(),
+        &y.view(),
         None,       // Default epsilon
         Some(true), // fit_intercept
         None,

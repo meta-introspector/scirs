@@ -763,7 +763,7 @@ where
     };
 
     // Calculate actual checksum
-    let actual_checksum = calculate_file_checksum(data_path, algorithm)?;
+    let actual_checksum = calculate_file_checksum(_data_path, algorithm)?;
 
     // Compare checksums
     Ok(actual_checksum.eq_ignore_ascii_case(expected_checksum))

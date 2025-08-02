@@ -323,7 +323,10 @@ where
 
 /// Multi-variable forward-mode gradient computation using MultiDual
 #[allow(dead_code)]
-pub fn forward_gradient_multi<F>(_func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
+pub fn forward_gradient_multi<F>(
+    _func: F,
+    x: &ArrayView1<f64>,
+) -> Result<Array1<f64>, OptimizeError>
 where
     F: Fn(&[MultiDual]) -> MultiDual,
 {

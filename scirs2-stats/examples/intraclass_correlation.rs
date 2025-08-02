@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__stats::icc;
+use scirs2_stats::icc;
 
 #[allow(dead_code)]
 fn main() {

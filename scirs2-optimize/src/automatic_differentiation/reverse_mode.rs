@@ -935,7 +935,8 @@ where
 #[allow(dead_code)]
 pub fn reverse_gradient_with_tape<F>(
     func: F,
-    x: &ArrayView1<f64>, _options: &ReverseADOptions,
+    x: &ArrayView1<f64>,
+    _options: &ReverseADOptions,
 ) -> Result<Array1<f64>, OptimizeError>
 where
     F: Fn(&mut ComputationGraph, &[ReverseVariable]) -> ReverseVariable,

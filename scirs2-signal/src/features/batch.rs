@@ -6,8 +6,8 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 #[allow(unused_imports)]
-use crate::features::{
 use crate::utilities::spectral::spectral_centroid;
+use crate::features::{
     entropy::extract_entropy_features, peaks::extract_peak_features,
     spectral::extract_spectral_features, statistical::extract_statistical_features,
     trend::extract_trend_features, zero_crossing::extract_zero_crossing_features,

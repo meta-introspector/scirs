@@ -92,7 +92,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(5) => legendre_orthogonality_derivation()?,
             Ok(6) => hypergeometric_integral_derivation()?,
             Ok(7) => spherical_harmonics_derivation()?,
-            Ok(8) => wright_function_asymptotic_derivation()?_ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(8) => wright_function_asymptotic_derivation()?,
+            _ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 
@@ -1003,7 +1004,8 @@ fn run_derivation_session(
                     session.current_step += 1;
                     println!("✅ Step completed! Moving to next step...\n");
                 }
-                Ok(5) => show_session_progress(&session, _ => println!("❌ Invalid choice. Please try again."),
+                Ok(5) => show_session_progress(&session),
+                _ => println!("❌ Invalid choice. Please try again."),
             }
         } else {
             break;

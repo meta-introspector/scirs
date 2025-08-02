@@ -23,7 +23,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::mean;
+/// use scirs2_stats::mean;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 /// let result = mean(&data.view()).unwrap();
@@ -70,7 +70,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::weighted_mean;
+/// use scirs2_stats::weighted_mean;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 /// let weights = array![5.0f64, 4.0, 3.0, 2.0, 1.0];
@@ -137,7 +137,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::median;
+/// use scirs2_stats::median;
 ///
 /// let data = array![1.0f64, 3.0, 5.0, 2.0, 4.0];
 /// let result = median(&data.view()).unwrap();
@@ -193,7 +193,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::var;
+/// use scirs2_stats::var;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///
@@ -293,7 +293,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::std;
+/// use scirs2_stats::std;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///
@@ -337,7 +337,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::skew;
+/// use scirs2_stats::skew;
 ///
 /// let data = array![2.0f64, 8.0, 0.0, 4.0, 1.0, 9.0, 9.0, 0.0];
 ///
@@ -455,7 +455,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::kurtosis;
+/// use scirs2_stats::kurtosis;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///
@@ -613,7 +613,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::moment;
+/// use scirs2_stats::moment;
 ///
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
 ///

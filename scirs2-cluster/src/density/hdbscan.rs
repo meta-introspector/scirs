@@ -677,9 +677,9 @@ where
             let point2 = data.row(j).to_vec();
 
             let dist = match metric {
-                DistanceMetric::Euclidean =>, distance::euclidean(&point1, &point2),
-                DistanceMetric::Manhattan =>, distance::manhattan(&point1, &point2),
-                DistanceMetric::Chebyshev =>, distance::chebyshev(&point1, &point2),
+                DistanceMetric::Euclidean => distance::euclidean(&point1, &point2),
+                DistanceMetric::Manhattan => distance::manhattan(&point1, &point2),
+                DistanceMetric::Chebyshev => distance::chebyshev(&point1, &point2),
                 DistanceMetric::Minkowski => {
                     distance::minkowski(&point1, &point2, F::from(3.0).unwrap())
                 }
@@ -751,9 +751,9 @@ where
             let point2 = data.row(j).to_vec();
 
             let dist = match metric {
-                DistanceMetric::Euclidean =>, distance::euclidean(&point1, &point2),
-                DistanceMetric::Manhattan =>, distance::manhattan(&point1, &point2),
-                DistanceMetric::Chebyshev =>, distance::chebyshev(&point1, &point2),
+                DistanceMetric::Euclidean => distance::euclidean(&point1, &point2),
+                DistanceMetric::Manhattan => distance::manhattan(&point1, &point2),
+                DistanceMetric::Chebyshev => distance::chebyshev(&point1, &point2),
                 DistanceMetric::Minkowski => {
                     distance::minkowski(&point1, &point2, F::from(3.0).unwrap())
                 }
@@ -1378,7 +1378,7 @@ where
             .iter()
             .zip(condensed_tree.parent.iter())
             .zip(condensed_tree.lambda_val.iter())
-            .filter(|&((c_)_)| *c == point_label)
+            .filter(|&((c, _), _)| *c == point_label)
             .map(|((&_, &p), &lambda)| (p, lambda))
             .collect();
 
@@ -1412,7 +1412,7 @@ where
                     .iter()
                     .zip(condensed_tree.parent.iter())
                     .zip(condensed_tree.lambda_val.iter())
-                    .filter(|&((c_)_)| *c == current_node)
+                    .filter(|&((c, _), _)| *c == current_node)
                     .map(|((&_, &p), &lambda)| (p, lambda))
                     .collect();
 

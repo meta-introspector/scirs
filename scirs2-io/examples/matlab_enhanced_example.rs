@@ -8,11 +8,11 @@
 //! - Error handling and performance monitoring
 
 use ndarray::{Array1, Array2};
-use scirs2__io::matlab::enhanced::{
+use scirs2_io::matlab::enhanced::{
     create_cell_array, create_struct, read_mat_enhanced, write_mat_enhanced, EnhancedMatFile,
     MatFileConfig,
 };
-use scirs2__io::matlab::{read_mat, write_mat, MatType};
+use scirs2_io::matlab::{read_mat, write_mat, MatType};
 use std::collections::HashMap;
 use std::time::Instant;
 use tempfile::tempdir;
@@ -108,7 +108,8 @@ fn demonstrate_basic_mat_v5() -> Result<(), Box<dyn std::error::Error>> {
                 (MatType::Single(orig), MatType::Single(load)) => orig.shape() == load.shape(),
                 (MatType::Int32(orig), MatType::Int32(load)) => orig.shape() == load.shape(),
                 (MatType::Logical(orig), MatType::Logical(load)) => orig.shape() == load.shape(),
-                (MatType::Char(orig), MatType::Char(load)) => orig == load_ => false,
+                (MatType::Char(orig), MatType::Char(load)) => orig == load,
+                _ => false,
             };
             println!(
                 "    {}: {}",
@@ -219,7 +220,8 @@ fn demonstrate_cell_arrays() -> Result<(), Box<dyn std::error::Error>> {
                     MatType::Double(_) => "Double array",
                     MatType::Char(_) => "Character string",
                     MatType::Int32(_) => "Int32 array",
-                    MatType::Logical(_) => "Logical array"_ => "Other type",
+                    MatType::Logical(_) => "Logical array",
+                    _ => "Other type",
                 };
                 println!("      Cell {}: {}", i + 1, type_name);
             }
@@ -286,7 +288,8 @@ fn demonstrate_structures() -> Result<(), Box<dyn std::error::Error>> {
                 let type_name = match field_value {
                     MatType::Double(_) => "Double array",
                     MatType::Char(_) => "Character string",
-                    MatType::Logical(_) => "Logical array"_ => "Other type",
+                    MatType::Logical(_) => "Logical array",
+                    _ => "Other type",
                 };
                 println!("      {}: {}", field_name, type_name);
             }
@@ -372,10 +375,10 @@ fn demonstrate_format_detection() -> Result<(), Box<dyn std::error::Error>> {
     // Read and detect formats
     println!("  🔹 Reading and detecting formats:");
 
-    let v5_detected = auto_enhanced.is_v73_file(&v5_file)?;
+    let v5_detected = EnhancedMatFile::is_v73_file(&v5_file)?;
     println!("    v5 file detected as v7.3: {}", v5_detected);
 
-    let auto_detected = auto_enhanced.is_v73_file(&auto_file)?;
+    let auto_detected = EnhancedMatFile::is_v73_file(&auto_file)?;
     println!("    Auto file detected as v7.3: {}", auto_detected);
 
     // Verify reading works

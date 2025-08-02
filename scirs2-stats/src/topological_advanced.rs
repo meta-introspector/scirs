@@ -615,9 +615,27 @@ where
         };
 
         Self {
-            _config,
+            config: _config,
             cache,
-            performance_phantom: PhantomData,
+            performance: TopologicalPerformanceMetrics {
+                timing: HashMap::new(),
+                memory_usage: MemoryUsageStats {
+                    peak_usage: 0,
+                    average_usage: 0,
+                    complex_sizes: HashMap::new(),
+                },
+                convergence: ConvergenceMetrics {
+                    iterations: 0,
+                    final_residual: 0.0,
+                    convergence_rate: 1.0,
+                },
+                stability: StabilityMetrics {
+                    stability_score: 1.0,
+                    condition_numbers: HashMap::new(),
+                    error_bounds: HashMap::new(),
+                },
+            },
+            _phantom: PhantomData,
         }
     }
 
@@ -1358,7 +1376,8 @@ where
     /// Advanced-advanced topological machine learning with persistent features
     pub fn topological_machine_learning(
         &mut self,
-        data: &ArrayView2<F>, _labels: Option<&ArrayView1<F>>,
+        data: &ArrayView2<F>,
+        _labels: Option<&ArrayView1<F>>,
     ) -> StatsResult<TopologicalMLResult<F>> {
         // Extract topological features for machine learning
         let topological_features = (&*self).extract_topological_features(data)?;
@@ -2034,7 +2053,7 @@ where
         labels: &ArrayView1<F>,
         kernel_matrix: &Array2<F>,
     ) -> StatsResult<TopologicalPredictionResult<F>> {
-        let (n_samples_) = features.dim();
+        let n_samples_ = features.nrows();
 
         // Simplified topological SVM using kernel _matrix
         let mut predictions = Array1::zeros(n_samples_);
@@ -2084,7 +2103,7 @@ where
         &self,
         features: &Array2<F>,
     ) -> StatsResult<TopologicalClusteringResult<F>> {
-        let (n_samples_) = features.dim();
+        let n_samples_ = features.nrows();
         let num_clusters = 3; // Simplified to 3 clusters
 
         // Simple k-means clustering on topological features

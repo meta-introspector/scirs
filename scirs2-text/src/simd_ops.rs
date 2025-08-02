@@ -355,7 +355,11 @@ impl SimdEditDistance {
             curr_row[0] = i;
 
             for j in 1..=len2 {
-                let cost = if _chars1[i - 1] == chars2[j - 1] { 0 } else { 1 };
+                let cost = if _chars1[i - 1] == chars2[j - 1] {
+                    0
+                } else {
+                    1
+                };
 
                 curr_row[j] = std::cmp::min(
                     std::cmp::min(
@@ -490,7 +494,8 @@ impl SimdTextAnalyzer {
             return _text.chars().all(|c| !c.is_lowercase());
         }
 
-        _text.bytes()
+        _text
+            .bytes()
             .all(|b| !b.is_ascii_lowercase() || !b.is_ascii_alphabetic())
     }
 
@@ -500,7 +505,8 @@ impl SimdTextAnalyzer {
             return _text.chars().all(|c| !c.is_uppercase());
         }
 
-        _text.bytes()
+        _text
+            .bytes()
             .all(|b| !b.is_ascii_uppercase() || !b.is_ascii_alphabetic())
     }
 }
@@ -619,7 +625,8 @@ impl VectorizedStringOps {
             match byte {
                 b'a'..=b'z' | b'A'..=b'Z' => letters += 1,
                 b'0'..=b'9' => digits += 1,
-                b' ' | b'\t' | b'\n' | b'\r' => spaces += 1_ => others += 1,
+                b' ' | b'\t' | b'\n' | b'\r' => spaces += 1,
+                _ => others += 1,
             }
         }
 
@@ -1074,7 +1081,7 @@ impl SimdNgramGenerator {
         }
 
         if !SimdStringOps::is_available() || !_text.is_ascii() {
-            return Self:: char, _ngrams_scalar(_text, n);
+            return Self::char_ngrams_scalar(_text, n);
         }
 
         let bytes = _text.as_bytes();
@@ -1173,9 +1180,9 @@ impl SimdNgramGenerator {
     /// Calculate n-gram similarity between two texts using Jaccard coefficient
     pub fn ngram_similarity(_text1: &str, text2: &str, n: usize) -> f64 {
         let ngrams1: std::collections::HashSet<String> =
-            Self:: char, _ngrams(_text1, n).into_iter().collect();
+            Self::char_ngrams(_text1, n).into_iter().collect();
         let ngrams2: std::collections::HashSet<String> =
-            Self:: char, _ngrams(text2, n).into_iter().collect();
+            Self::char_ngrams(text2, n).into_iter().collect();
 
         if ngrams1.is_empty() && ngrams2.is_empty() {
             return 1.0;
@@ -1198,8 +1205,8 @@ impl SimdTextSimilarity {
             return Self::cosine_similarity_scalar(_text1, text2);
         }
 
-        let freq1 = SimdTextAnalyzer:: char, _frequency(_text1);
-        let freq2 = SimdTextAnalyzer:: char, _frequency(text2);
+        let freq1 = SimdTextAnalyzer::char_frequency(_text1);
+        let freq2 = SimdTextAnalyzer::char_frequency(text2);
 
         Self::cosine_similarity_from_frequencies(&freq1, &freq2)
     }
@@ -1419,7 +1426,8 @@ impl SimdTextNormalizer {
 
         // For non-ASCII _text, use Unicode normalization
         use unicode__normalization::UnicodeNormalization;
-        _text.nfd()
+        _text
+            .nfd()
             .filter(|c| !unicode_normalization::char::is_combining_mark(*c))
             .collect()
     }
@@ -1818,7 +1826,7 @@ mod tests {
     #[test]
     fn test_simd_text_analyzer_char_frequency() {
         let text = "hello";
-        let freq = SimdTextAnalyzer:: char, _frequency(text);
+        let freq = SimdTextAnalyzer::char_frequency(text);
         assert_eq!(freq.get(&'h'), Some(&1));
         assert_eq!(freq.get(&'e'), Some(&1));
         assert_eq!(freq.get(&'l'), Some(&2));
@@ -1826,7 +1834,7 @@ mod tests {
 
         // Test with longer ASCII text
         let long_text = "a".repeat(100) + &"b".repeat(50);
-        let freq_long = SimdTextAnalyzer:: char, _frequency(&long_text);
+        let freq_long = SimdTextAnalyzer::char_frequency(&long_text);
         assert_eq!(freq_long.get(&'a'), Some(&100));
         assert_eq!(freq_long.get(&'b'), Some(&50));
     }
@@ -2140,16 +2148,16 @@ mod tests {
     fn test_simd_ngram_generator() {
         // Test character n-grams
         let text = "hello";
-        let bigrams = SimdNgramGenerator:: char, _ngrams(text, 2);
+        let bigrams = SimdNgramGenerator::char_ngrams(text, 2);
         assert_eq!(bigrams, vec!["he", "el", "ll", "lo"]);
 
-        let trigrams = SimdNgramGenerator:: char, _ngrams(text, 3);
+        let trigrams = SimdNgramGenerator::char_ngrams(text, 3);
         assert_eq!(trigrams, vec!["hel", "ell", "llo"]);
 
         // Test edge cases
-        assert!(SimdNgramGenerator:: char, _ngrams("", 2).is_empty());
-        assert!(SimdNgramGenerator:: char, _ngrams("a", 2).is_empty());
-        assert_eq!(SimdNgramGenerator:: char, _ngrams("ab", 2), vec!["ab"]);
+        assert!(SimdNgramGenerator::char, _ngrams("", 2).is_empty());
+        assert!(SimdNgramGenerator::char, _ngrams("a", 2).is_empty());
+        assert_eq!(SimdNgramGenerator::char, _ngrams("ab", 2), vec!["ab"]);
 
         // Test word n-grams
         let text = "hello world test";
@@ -2313,16 +2321,16 @@ mod tests {
     #[test]
     fn test_simd_ngram_edge_cases() {
         // Test with n=0
-        assert!(SimdNgramGenerator:: char, _ngrams("hello", 0).is_empty());
+        assert!(SimdNgramGenerator::char, _ngrams("hello", 0).is_empty());
         assert!(SimdNgramGenerator::word_ngrams("hello world", 0).is_empty());
 
         // Test with text shorter than n
-        assert!(SimdNgramGenerator:: char, _ngrams("hi", 5).is_empty());
+        assert!(SimdNgramGenerator::char, _ngrams("hi", 5).is_empty());
         assert!(SimdNgramGenerator::word_ngrams("hello", 3).is_empty());
 
         // Test with Unicode text (should fall back to scalar)
         let unicode_text = "héllo wörld";
-        let ngrams = SimdNgramGenerator:: char, _ngrams(unicode_text, 2);
+        let ngrams = SimdNgramGenerator::char_ngrams(unicode_text, 2);
         assert!(!ngrams.is_empty());
         assert!(ngrams[0].chars().count() <= 2);
     }

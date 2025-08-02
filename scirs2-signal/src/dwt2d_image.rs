@@ -179,11 +179,11 @@ where
 
     // Convert denoising method to threshold method
     let threshold_method = match method {
-        DenoisingMethod::Hard =>, ThresholdMethod::Hard,
-        DenoisingMethod::Soft =>, ThresholdMethod::Soft,
-        DenoisingMethod::Garrote =>, ThresholdMethod::Garrote,
-        DenoisingMethod::VisuShrink =>, ThresholdMethod::Soft, // VisuShrink uses soft thresholding
-        DenoisingMethod::BayesShrink =>, ThresholdMethod::Soft, // BayesShrink uses soft thresholding
+        DenoisingMethod::Hard => ThresholdMethod::Hard,
+        DenoisingMethod::Soft => ThresholdMethod::Soft,
+        DenoisingMethod::Garrote => ThresholdMethod::Garrote,
+        DenoisingMethod::VisuShrink => ThresholdMethod::Soft, // VisuShrink uses soft thresholding
+        DenoisingMethod::BayesShrink => ThresholdMethod::Soft, // BayesShrink uses soft thresholding
     };
 
     // Apply thresholding to coefficients

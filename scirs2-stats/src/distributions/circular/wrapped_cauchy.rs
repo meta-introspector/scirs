@@ -82,8 +82,9 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> WrappedCauc
         let normalized_mu = ((_mu % two_pi) + two_pi) % two_pi;
 
         Ok(Self {
-            _mu: normalized_mu,
-            gamma_phantom: PhantomData,
+            mu: normalized_mu,
+            gamma,
+            _phantom: PhantomData,
         })
     }
 }

@@ -29,7 +29,9 @@ where
 #[allow(dead_code)]
 pub fn sparse_direct_solve<F>(
     a: &CsrMatrix<F>,
-    b: &[F], _symmetric: bool, _positive_definite: bool,
+    b: &[F],
+    _symmetric: bool,
+    _positive_definite: bool,
 ) -> SparseResult<Vec<F>>
 where
     F: Float + NumAssign + Sum + 'static + std::fmt::Debug,

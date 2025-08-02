@@ -288,7 +288,7 @@ where
             method: self.select_method_name(),
             computation_time_ms: computation_time,
             memory_usage_bytes: self.estimate_memory_usage(sample_size),
-            optimized: self.config.auto_optimize,
+            optimized: self.config.simd || self.config.parallel,
             extra: HashMap::new(),
         };
 
@@ -347,7 +347,8 @@ where
     /// Compute statistics using SIMD optimizations
     fn compute_simd_optimized(
         &self,
-        data: &Array1<F>, _warnings: &mut Vec<String>,
+        data: &Array1<F>,
+        _warnings: &mut Vec<String>,
     ) -> StatsResult<DescriptiveStats<F>> {
         // Use SIMD-optimized descriptive statistics
         let mean = crate::descriptive_simd::mean_simd(&data.view())?;
@@ -382,7 +383,8 @@ where
     /// Compute statistics using parallel optimizations
     fn compute_parallel_optimized(
         &self,
-        data: &Array1<F>, _warnings: &mut Vec<String>,
+        data: &Array1<F>,
+        _warnings: &mut Vec<String>,
     ) -> StatsResult<DescriptiveStats<F>> {
         // Use parallel-optimized functions
         let mean = crate::parallel_stats::mean_parallel(&data.view())?;
@@ -417,7 +419,8 @@ where
     /// Compute statistics using standard methods
     fn compute_standard(
         &self,
-        data: &Array1<F>, _warnings: &mut Vec<String>,
+        data: &Array1<F>,
+        _warnings: &mut Vec<String>,
     ) -> StatsResult<DescriptiveStats<F>> {
         let mean = crate::descriptive::mean(&data.view())?;
         let variance = crate::descriptive::var(&data.view(), self.ddof.unwrap_or(1), None)?;
@@ -682,7 +685,7 @@ where
             method: format!("Matrix {:?}", self.method),
             computation_time_ms: computation_time,
             memory_usage_bytes: self.estimate_memory_usage(data.nrows() * data.ncols()),
-            optimized: self.config.auto_optimize,
+            optimized: self.config.simd || self.config.parallel,
             extra: HashMap::new(),
         };
 

@@ -1,6 +1,6 @@
 use ndarray::{Array, ArrayBase, IxDyn, OwnedRepr};
 use rand::Rng;
-use scirs2__io::compression::{
+use scirs2_io::compression::{
     algorithm_info, compress_data, compress_file, decompress_data, decompress_file,
     ndarray::{
         compare_compression_algorithms, compress_array, compress_array_chunked, decompress_array,
@@ -361,7 +361,7 @@ fn create_random_array(_shape: &[usize]) -> Array<f64, IxDyn> {
         }
     }
 
-    Array::from_shape_vec(IxDyn(_shape)..data).unwrap()
+    Array::from_shape_vec(IxDyn(_shape), data).unwrap()
 }
 
 #[allow(dead_code)]
@@ -381,5 +381,5 @@ fn create_mixed_array(_shape: &[usize]) -> Array<f64, IxDyn> {
         }
     }
 
-    Array::from_shape_vec(IxDyn(_shape)..data).unwrap()
+    Array::from_shape_vec(IxDyn(_shape), data).unwrap()
 }

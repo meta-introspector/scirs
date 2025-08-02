@@ -1,4 +1,4 @@
-use scirs2__stats::distributions::bernoulli::Bernoulli;
+use scirs2_stats::distributions::bernoulli::Bernoulli;
 use statrs::statistics::Statistics;
 use std::error::Error;
 

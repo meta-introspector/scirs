@@ -1,7 +1,6 @@
 //! Statistical image feature extraction functions
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use ndarray::Array2;
 use std::collections::HashMap;
 use super::utils::{calculate_kurtosis, calculate_skewness};

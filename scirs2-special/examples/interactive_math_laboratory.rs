@@ -567,7 +567,8 @@ impl MathLaboratory {
                 expr if expr.contains("j1") => j1(x),
                 expr if expr.contains("erf") => erf(x),
                 expr if expr.contains("sin") => x.sin(),
-                expr if expr.contains("cos") => x.cos(, _ => x * x, // Default quadratic
+                expr if expr.contains("cos") => x.cos(),
+                _ => x * x, // Default quadratic
             };
 
             if y.is_finite() {
@@ -902,7 +903,8 @@ fn setup_laboratory_session(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std
         "2" => ExplorationMode::Exploratory,
         "3" => ExplorationMode::ProblemSolving,
         "4" => ExplorationMode::Research,
-        "5" => ExplorationMode::Teaching_ =>, ExplorationMode::Guided,
+        "5" => ExplorationMode::Teaching,
+        _ => ExplorationMode::Guided,
     };
 
     let difficulty = get_user_input("Preferred difficulty level (1-5): ")?;
@@ -1146,7 +1148,8 @@ fn explore_specific_theorem(_theorem: &TheoremExplorer) -> Result<(), Box<dyn st
                 wait_for_enter()?;
             }
             "5" => interactive_verification(_theorem)?,
-            "6" => break_ => println!("❌ Invalid choice"),
+            "6" => break,
+            _ => println!("❌ Invalid choice"),
         }
     }
 
@@ -1207,7 +1210,8 @@ fn step_through_proof(_theorem: &TheoremExplorer) -> Result<(), Box<dyn std::err
                 provide_step_explanation(&question, step);
                 wait_for_enter()?;
             }
-            "5" => break_ => println!("❌ Invalid choice"),
+            "5" => break,
+            _ => println!("❌ Invalid choice"),
         }
 
         if i < _theorem.proof_steps.len() - 1 {
@@ -1410,7 +1414,8 @@ fn create_visualizations(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::e
         "3" => create_animations(_lab)?,
         "4" => create_comparative_plots(_lab)?,
         "5" => interactive_parameter_exploration(_lab)?,
-        "6" => return Ok((), _ => println!("❌ Invalid choice"),
+        "6" => return Ok(()),
+        _ => println!("❌ Invalid choice"),
     }
 
     Ok(())
@@ -1518,7 +1523,8 @@ fn create_animations(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error
         "1" => animate_bessel_family()?,
         "2" => animate_gamma_poles()?,
         "3" => animate_error_convergence()?,
-        "4" => animate_parameter_variation()?_ => println!("❌ Invalid choice"),
+        "4" => animate_parameter_variation()?,
+        _ => println!("❌ Invalid choice"),
     }
 
     Ok(())
@@ -1543,7 +1549,8 @@ fn animate_bessel_family() -> Result<(), Box<dyn std::error::Error>> {
             let x = i as f64 * 0.5;
             let j_val = match n {
                 0 => j0(x),
-                1 => j1(x, _ => jn(n, x),
+                1 => j1(x),
+                _ => jn(n, x),
             };
 
             let normalized = ((j_val + 1.0) * 20.0) as i32;
@@ -1689,7 +1696,8 @@ fn interactive_parameter_exploration(
     match choice.as_str() {
         "1" => explore_bessel_parameters()?,
         "2" => explore_gamma_parameters()?,
-        "3" => explore_erf_parameters()?_ => println!("❌ Invalid choice"),
+        "3" => explore_erf_parameters()?,
+        _ => println!("❌ Invalid choice"),
     }
 
     Ok(())
@@ -1848,7 +1856,8 @@ fn run_function_analysis(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::e
         "2" => analyze_symmetry()?,
         "3" => study_asymptotic_behavior()?,
         "4" => investigate_numerical_properties()?,
-        "5" => explore_function_relationships()?_ => println!("❌ Invalid choice"),
+        "5" => explore_function_relationships()?,
+        _ => println!("❌ Invalid choice"),
     }
 
     Ok(())
@@ -2197,7 +2206,8 @@ fn run_computational_experiments(
         "2" => run_monte_carlo_experiments()?,
         "3" => analyze_parameter_sensitivity()?,
         "4" => benchmark_performance()?,
-        "5" => analyze_precision_requirements()?_ => println!("❌ Invalid choice"),
+        "5" => analyze_precision_requirements()?,
+        _ => println!("❌ Invalid choice"),
     }
 
     Ok(())

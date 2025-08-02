@@ -194,7 +194,8 @@ fn get_neighbors(_connectivity: u8) -> Vec<(i32, i32)> {
             (1, -1),
             (1, 0),
             (1, 1),
-        ]_ => vec![(-1, 0), (1, 0), (0, -1), (0, 1)], // Default to 4-_connectivity
+        ],
+        _ => vec![(-1, 0), (1, 0), (0, -1), (0, 1)], // Default to 4-connectivity
     }
 }
 
@@ -420,7 +421,8 @@ fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (f32, f32, f32) {
         1 => (x, c, 0.0),
         2 => (0.0, c, x),
         3 => (0.0, x, c),
-        4 => (x, 0.0, c, _ => (c, 0.0, x),
+        4 => (x, 0.0, c),
+        _ => (c, 0.0, x),
     };
 
     (r + m, g + m, b + m)

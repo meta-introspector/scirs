@@ -26,7 +26,7 @@ use scirs2_linalg::lstsq;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::polyfit;
+/// use scirs2_stats::polyfit;
 ///
 /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
 /// let y = array![1.0, 3.0, 9.0, 19.0, 33.0];  // y = 1 + 2x + x^2

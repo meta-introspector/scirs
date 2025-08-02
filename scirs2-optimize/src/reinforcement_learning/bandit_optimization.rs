@@ -110,7 +110,8 @@ where
     Ok(OptimizeResults::<f64> {
         x: _params,
         fun: best_obj,
-        success: true, nit: num_nit,
+        success: true,
+        nit: num_nit,
         message: "Bandit optimization completed".to_string(),
         jac: None,
         hess: None,

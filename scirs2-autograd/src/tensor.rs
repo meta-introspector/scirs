@@ -56,7 +56,7 @@ pub struct Tensor<'graph, F: Float> {
     pub(crate) graph: &'graph Graph<F>,
 }
 
-impl<F: Float> + std::fmt::Debug for Tensor<'_, F> {
+impl<F: Float + std::fmt::Debug> std::fmt::Debug for Tensor<'_, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Tensor")
             .field("id", &self.id)
@@ -568,7 +568,7 @@ impl<F: Float> TensorInternal<F> {
     }
 }
 
-impl<T: Float>, fmt::Debug for TensorInternal<T> {
+impl<T: Float> fmt::Debug for TensorInternal<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -607,7 +607,7 @@ impl<T: Float> AsRef<TensorInternal<T>> for TensorInternal<T> {
     }
 }
 
-impl<T: Float>, fmt::Display for TensorInternal<T> {
+impl<T: Float> fmt::Display for TensorInternal<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "name={}", self.get_op().name(),)
     }
@@ -890,8 +890,8 @@ impl<'graph, F: Float> TensorBuilder<'graph, F> {
 #[allow(dead_code)]
 pub(crate) struct Dummy;
 
-impl<T: Float>, op::Op<T> for Dummy {
-    fn compute(&self_: &mut op::ComputeContext<T>) -> Result<(), OpError> {
+impl<T: Float> op::Op<T> for Dummy {
+    fn compute(&self, _: &mut op::ComputeContext<T>) -> Result<(), OpError> {
         Ok(())
     }
     fn grad(&self_: &mut GradientContext<T>) {}

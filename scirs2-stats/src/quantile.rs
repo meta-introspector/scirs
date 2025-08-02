@@ -82,8 +82,8 @@ pub enum QuantileInterpolation {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::quantile;
-/// use scirs2__stats::QuantileInterpolation;
+/// use scirs2_stats::quantile;
+/// use scirs2_stats::QuantileInterpolation;
 ///
 /// let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 ///
@@ -267,8 +267,8 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::percentile;
-/// use scirs2__stats::QuantileInterpolation;
+/// use scirs2_stats::percentile;
+/// use scirs2_stats::QuantileInterpolation;
 ///
 /// let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 ///
@@ -328,8 +328,8 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::quartiles;
-/// use scirs2__stats::QuantileInterpolation;
+/// use scirs2_stats::quartiles;
+/// use scirs2_stats::QuantileInterpolation;
 ///
 /// let data = array![1.0, 3.0, 5.0, 7.0, 9.0];
 ///
@@ -377,8 +377,8 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::quintiles;
-/// use scirs2__stats::QuantileInterpolation;
+/// use scirs2_stats::quintiles;
+/// use scirs2_stats::QuantileInterpolation;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 ///
@@ -428,8 +428,8 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::deciles;
-/// use scirs2__stats::QuantileInterpolation;
+/// use scirs2_stats::deciles;
+/// use scirs2_stats::QuantileInterpolation;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 ///
@@ -488,8 +488,8 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::boxplot_stats;
-/// use scirs2__stats::QuantileInterpolation;
+/// use scirs2_stats::boxplot_stats;
+/// use scirs2_stats::QuantileInterpolation;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 20.0];  // Note the outlier
 ///
@@ -584,7 +584,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::winsorized_mean;
+/// use scirs2_stats::winsorized_mean;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 100.0];  // Note the outlier
 ///
@@ -670,7 +670,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::winsorized_variance;
+/// use scirs2_stats::winsorized_variance;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 100.0];  // Note the outlier
 ///

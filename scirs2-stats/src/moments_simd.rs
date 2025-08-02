@@ -30,7 +30,7 @@ use scirs2_core::{
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::moments_simd::skewness_simd;
+/// use scirs2_stats::moments_simd::skewness_simd;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let skew = skewness_simd(&data.view(), false).unwrap();
@@ -523,7 +523,7 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
         let simd_result = kurtosis_simd(&data.view(), true, false).unwrap();
-        let scalar_result = kurtosis(&data.view(), true, false).unwrap();
+        let scalar_result = kurtosis(&data.view(), true, false, None).unwrap();
 
         assert!((simd_result - scalar_result).abs() < 1e-10);
     }
@@ -535,7 +535,7 @@ mod tests {
         for order in 1..=4 {
             for center in [true, false] {
                 let simd_result = moment_simd(&data.view(), order, center).unwrap();
-                let scalar_result = moment(&data.view(), order, center).unwrap();
+                let scalar_result = moment(&data.view(), order, center, None).unwrap();
 
                 assert!(
                     (simd_result - scalar_result).abs() < 1e-10,

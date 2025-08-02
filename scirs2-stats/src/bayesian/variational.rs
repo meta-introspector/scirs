@@ -6,8 +6,8 @@
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::validation::*;
-use std::f64::consts::PI;
 use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 
 /// Mean-field variational inference for Bayesian linear regression
 ///
@@ -36,12 +36,12 @@ pub struct VariationalBayesianRegression {
 
 impl VariationalBayesianRegression {
     /// Create a new variational Bayesian regression model
-    pub fn new(_n_features: usize, fit_intercept: bool) -> Result<Self> {
-        check_positive(_n_features, "_n_features")?;
+    pub fn new(n_features: usize, fit_intercept: bool) -> Result<Self> {
+        check_positive(n_features, "n_features")?;
 
         // Initialize with weakly informative priors
-        let prior_mean_beta = Array1::zeros(_n_features);
-        let prior_cov_beta = Array2::eye(_n_features) * 100.0; // Large variance = weak prior
+        let prior_mean_beta = Array1::zeros(n_features);
+        let prior_cov_beta = Array2::eye(n_features) * 100.0; // Large variance = weak prior
         let prior_shape_tau = 1e-3;
         let prior_rate_tau = 1e-3;
 
@@ -54,7 +54,7 @@ impl VariationalBayesianRegression {
             prior_cov_beta,
             prior_shape_tau,
             prior_rate_tau,
-            _n_features,
+            n_features,
             fit_intercept,
         })
     }
@@ -461,8 +461,8 @@ pub struct VariationalARD {
 
 impl VariationalARD {
     /// Create new Variational ARD model
-    pub fn new(_n_features: usize, fit_intercept: bool) -> Result<Self> {
-        check_positive(_n_features, "_n_features")?;
+    pub fn new(n_features: usize, fit_intercept: bool) -> Result<Self> {
+        check_positive(n_features, "n_features")?;
 
         // Weakly informative priors
         let prior_shape_alpha = 1e-3;
@@ -471,17 +471,17 @@ impl VariationalARD {
         let prior_rate_tau = 1e-3;
 
         Ok(Self {
-            mean_beta: Array1::zeros(_n_features),
-            var_beta: Array1::from_elem(_n_features, 1.0),
-            shape_alpha: Array1::from_elem(_n_features, prior_shape_alpha),
-            rate_alpha: Array1::from_elem(_n_features, prior_rate_alpha),
+            mean_beta: Array1::zeros(n_features),
+            var_beta: Array1::from_elem(n_features, 1.0),
+            shape_alpha: Array1::from_elem(n_features, prior_shape_alpha),
+            rate_alpha: Array1::from_elem(n_features, prior_rate_alpha),
             shape_tau: prior_shape_tau,
             rate_tau: prior_rate_tau,
             prior_shape_alpha,
             prior_rate_alpha,
             prior_shape_tau,
             prior_rate_tau,
-            _n_features,
+            n_features,
             fit_intercept,
         })
     }

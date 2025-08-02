@@ -30,7 +30,7 @@ use std::cmp::Ordering;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::levene;
+/// use scirs2_stats::levene;
 ///
 /// // Create three samples with different variances
 /// let a = array![8.88, 9.12, 9.04, 8.98, 9.00, 9.08, 9.01, 8.85, 9.06, 8.99];
@@ -377,7 +377,7 @@ fn gamma_function(x: f64) -> f64 {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::bartlett;
+/// use scirs2_stats::bartlett;
 ///
 /// // Create three samples with different variances
 /// let a = array![8.88, 9.12, 9.04, 8.98, 9.00, 9.08, 9.01, 8.85, 9.06, 8.99];
@@ -621,7 +621,7 @@ fn gamma_continued_fraction(a: f64, x: f64) -> f64 {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::brown_forsythe;
+/// use scirs2_stats::brown_forsythe;
 ///
 /// // Create three samples with different variances
 /// let a = array![8.88, 9.12, 9.04, 8.98, 9.00, 9.08, 9.01, 8.85, 9.06, 8.99];

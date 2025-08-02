@@ -12,11 +12,11 @@
 //! - SciPy compatibility verification
 
 use crate::error::StatsResult;
+use ndarray::ArrayView1;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
-use ndarray::ArrayView1;
 
 /// API consistency validation framework
 pub struct APIConsistencyValidator {

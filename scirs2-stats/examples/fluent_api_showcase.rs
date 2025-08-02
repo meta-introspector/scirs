@@ -4,14 +4,14 @@
 //! intelligent optimization, and streamlined statistical analysis workflows.
 
 use ndarray::Array1;
-use scirs2__stats::{
-use statrs::statistics::Statistics;
+use scirs2_stats::{
     api_standardization_enhanced::{
-        quick_correlation, quick_descriptive, stats, AutoOptimizationLevel, CorrelationType,
-        EnhancedCorrelationMethod, FluentStatsConfig, MemoryStrategy, ResultFormat,
+        quick_correlation, quick_descriptive, stats, AutoOptimizationLevel, CorrelationMethod,
+        CorrelationType, FluentStatsConfig, MemoryStrategy, ResultFormat,
     },
     NullHandling,
 };
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -95,7 +95,7 @@ fn demonstrate_method_chaining() -> Result<(), Box<dyn std::error::Error>> {
         .all_basic() // Add all basic descriptive statistics
         .and()
         .correlation()
-        .method(EnhancedCorrelationMethod::Pearson)
+        .method(CorrelationMethod::Pearson)
         .matrix()
         .and()
         .test()
@@ -122,8 +122,8 @@ fn demonstrate_method_chaining() -> Result<(), Box<dyn std::error::Error>> {
             println!("📊 Total operations: {}", results.iter().count());
 
             // Display hypothetical results
-            for (name_result) in results.iter() {
-                println!("   ✓ {}", name);
+            for name_result in results.iter() {
+                println!("   ✓ {:?}", name_result);
             }
         }
         Err(e) => {

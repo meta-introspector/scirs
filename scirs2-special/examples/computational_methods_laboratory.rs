@@ -42,7 +42,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(5) => continued_fractions_workshop()?,
             Ok(6) => simd_and_parallel_optimization()?,
             Ok(7) => arbitrary_precision_computing()?,
-            Ok(8) => validation_and_testing_methods()?_ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(8) => validation_and_testing_methods()?,
+            _ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 

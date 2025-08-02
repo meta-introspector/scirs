@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_basic_slicing(mmap: &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Slicing Example");
     println!("------------------------");
 
@@ -67,7 +67,7 @@ fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
         row_start, row_end, col_start, col_end
     );
 
-    let slice = _mmap.slice_2d(row_start..row_end, col_start..col_end)?;
+    let slice = mmap.slice_2d(row_start..row_end, col_start..col_end)?;
     println!("Slice shape: {:?}", slice.shape());
 
     // Load the slice into memory
@@ -89,7 +89,7 @@ fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_complex_slicing(mmap: &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Complex Slicing Example");
     println!("--------------------------");
 
@@ -98,7 +98,7 @@ fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
 
     // Inclusive range (..=)
     println!("\nInclusive range (rows 40..=45, cols 10..=15):");
-    let slice1 = _mmap.slice_2d(40..=45, 10..=15)?;
+    let slice1 = mmap.slice_2d(40..=45, 10..=15)?;
     let array1 = slice1.load()?;
     println!("Shape: {:?}", array1.shape());
     println!(
@@ -109,7 +109,7 @@ fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
 
     // Open-ended range (..)
     println!("\nOpen-ended range (first 5 rows, all columns):");
-    let slice2 = _mmap.slice_2d(0..5, ..)?;
+    let slice2 = mmap.slice_2d(0..5, ..)?;
     let array2 = slice2.load()?;
     println!("Shape: {:?}", array2.shape());
     println!(
@@ -121,7 +121,7 @@ fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
 
     // Range from
     println!("\nRange from (rows from 95, columns from 95):");
-    let slice3 = _mmap.slice_2d(95.., 95..)?;
+    let slice3 = mmap.slice_2d(95.., 95..)?;
     let array3 = slice3.load()?;
     println!("Shape: {:?}", array3.shape());
     println!(
@@ -135,7 +135,7 @@ fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
+fn demo_ndarray_syntax(mmap: &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Using ndarray Slice Syntax");
     println!("-----------------------------");
 
@@ -144,7 +144,7 @@ fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
 
     // Regular slice with s![]
     println!("\nRegular slice with s![10..15, 20..25]:");
-    let slice1 = _mmap.slice(s![10..15, 20..25])?;
+    let slice1 = mmap.slice(s![10..15, 20..25])?;
     let array1 = slice1.load()?;
     println!("Shape: {:?}", array1.shape());
     println!(
@@ -155,7 +155,7 @@ fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
 
     // Stride with s![]
     println!("\nStride with s![50..70;2, 50..70;2] (every other element):");
-    let slice2 = _mmap.slice(s![50..70;2, 50..70;2])?;
+    let slice2 = mmap.slice(s![50..70;2, 50..70;2])?;
     let array2 = slice2.load()?;
     println!("Shape: {:?}", array2.shape());
     println!("Values should increase by 2 in each dimension:");
@@ -171,7 +171,9 @@ fn mmap( &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn path( &Path,
+fn demo_slice_chaining(
+    mmap: &MemoryMappedArray<f64>,
+    file_path: &Path,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Slice Chaining Example");
     println!("-------------------------");
@@ -193,11 +195,11 @@ fn path( &Path,
     println!("First slice saved to: {}", slice1_path.display());
 
     // Memory map the first slice
-    let slice1_mmap = MemoryMappedArray::<f64>::open(&slice1_path, &[50, 50])?;
+    let slice1mmap = MemoryMappedArray::<f64>::open(&slice1_path, &[50, 50])?;
 
     // Create a further slice from the first slice
     println!("\nSecond slice: rows 10..20, columns 10..20 (from the first slice)");
-    let slice2 = slice1_mmap.slice_2d(10..20, 10..20)?;
+    let slice2 = slice1mmap.slice_2d(10..20, 10..20)?;
     println!("Second slice shape: {:?}", slice2.shape());
 
     // Load and display the second slice

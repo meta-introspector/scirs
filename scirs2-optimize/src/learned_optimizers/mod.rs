@@ -13,8 +13,8 @@ use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::{rng, Rng};
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 type Result<T> = std::result::Result<T, OptimizeError>;
 
@@ -457,7 +457,8 @@ impl ProblemEncoder {
         &self,
         objective: &F,
         current_params: &ArrayView1<f64>,
-        problem: &OptimizationProblem) -> Array1<f64>
+        problem: &OptimizationProblem,
+    ) -> Array1<f64>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {

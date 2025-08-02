@@ -39,7 +39,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.5f64).unwrap();
     /// ```
@@ -78,7 +78,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.5f64).unwrap();
     /// let pmf_at_5 = binom.pmf(5.0);
@@ -129,7 +129,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.5f64).unwrap();
     /// let log_pmf_at_5 = binom.log_pmf(5.0);
@@ -185,7 +185,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.5f64).unwrap();
     /// let cdf_at_5 = binom.cdf(5.0);
@@ -231,7 +231,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.5f64).unwrap();
     /// let quant = binom.ppf(0.5).unwrap();
@@ -295,7 +295,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.5f64).unwrap();
     /// let samples = binom.rvs(5).unwrap();
@@ -324,7 +324,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.3f64).unwrap();
     /// let mean = binom.mean();
@@ -344,7 +344,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.3f64).unwrap();
     /// let variance = binom.var();
@@ -365,7 +365,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.3f64).unwrap();
     /// let std_dev = binom.std();
@@ -385,7 +385,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.3f64).unwrap();
     /// let skewness = binom.skewness();
@@ -416,7 +416,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.3f64).unwrap();
     /// let kurtosis = binom.kurtosis();
@@ -448,7 +448,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.5f64).unwrap();
     /// let entropy = binom.entropy();
@@ -479,7 +479,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.5f64).unwrap();
     /// let modes = binom.mode();
@@ -509,7 +509,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::binomial::Binomial;
+    /// use scirs2_stats::distributions::binomial::Binomial;
     ///
     /// let binom = Binomial::new(10, 0.5f64).unwrap();
     /// let median = binom.median();
@@ -576,7 +576,7 @@ impl<F: Float + NumCast + std::fmt::Display> Binomial<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let b = distributions::binom(10, 0.5f64).unwrap();
 /// let pmf_at_5 = b.pmf(5.0);

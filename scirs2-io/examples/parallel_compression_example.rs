@@ -3,7 +3,7 @@
 //! This example demonstrates the new parallel compression capabilities
 //! that can significantly improve performance when working with large datasets.
 
-use scirs2__io::compression::{
+use scirs2_io::compression::{
     self, benchmark_compression_algorithms, compress_data_parallel, decompress_data_parallel,
     CompressionAlgorithm, ParallelCompressionConfig,
 };

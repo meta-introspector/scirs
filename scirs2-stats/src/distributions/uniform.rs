@@ -36,7 +36,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::uniform::Uniform;
+    /// use scirs2_stats::distributions::uniform::Uniform;
     ///
     /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
     /// ```
@@ -53,7 +53,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
 
         match RandUniform::new_inclusive(low_f64, high_f64) {
             Ok(rand_distr) => Ok(Uniform {
-                _low,
+                low: _low,
                 high,
                 rand_distr,
             }),
@@ -76,7 +76,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::uniform::Uniform;
+    /// use scirs2_stats::distributions::uniform::Uniform;
     ///
     /// let unif = Uniform::new(0.0f64, 2.0).unwrap();
     /// let pdf_at_one = unif.pdf(1.0);
@@ -104,7 +104,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::uniform::Uniform;
+    /// use scirs2_stats::distributions::uniform::Uniform;
     ///
     /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
     /// let cdf_at_half = unif.cdf(0.5);
@@ -133,7 +133,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::uniform::Uniform;
+    /// use scirs2_stats::distributions::uniform::Uniform;
     ///
     /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
     /// let x = unif.ppf(0.75).unwrap();
@@ -163,7 +163,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::uniform::Uniform;
+    /// use scirs2_stats::distributions::uniform::Uniform;
     ///
     /// let unif = Uniform::new(0.0f64, 1.0).unwrap();
     /// let samples = unif.rvs(1000).unwrap();

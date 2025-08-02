@@ -10,10 +10,10 @@ use crate::error::{SparseError, SparseResult};
 use crate::sparray::{SparseArray, SparseSum};
 use crate::sym_coo::SymCooArray;
 use crate::sym_csr::SymCsrArray;
+use ndarray::ArrayView1;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Sub};
-use ndarray::ArrayView1;
 
 /// Trait for symmetric sparse arrays
 ///

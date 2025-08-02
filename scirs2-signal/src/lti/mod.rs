@@ -154,7 +154,7 @@ pub use robust__analysis::{
 pub use design::{
     add_polynomials, c2d, complementary_sensitivity, divide_polynomials, evaluate_polynomial,
     feedback, multiply_polynomials, parallel, polynomial_derivative, sensitivity, series, ss,
-    subtract_polynomials, tf, zpk,
+    subtract_polynomials, tf as design_tf, zpk,
 };
 
 // Keep the system module for backward compatibility

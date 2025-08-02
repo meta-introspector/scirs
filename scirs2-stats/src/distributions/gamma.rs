@@ -4,13 +4,13 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
-use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
+use crate::traits::{ContinuousCDF, ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{Distribution, Gamma as RandGamma};
-use std::fmt::Debug;
 use statrs::statistics::Statistics;
+use std::fmt::Debug;
 
 /// Gamma distribution structure
 pub struct Gamma<F: Float + Send + Sync> {
@@ -40,12 +40,12 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::gamma::Gamma;
+    /// use scirs2_stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// ```
-    pub fn new(_shape: F, scale: F, loc: F) -> StatsResult<Self> {
-        if _shape <= F::zero() {
+    pub fn new(shape: F, scale: F, loc: F) -> StatsResult<Self> {
+        if shape <= F::zero() {
             return Err(StatsError::DomainError(
                 "Shape parameter must be positive".to_string(),
             ));
@@ -58,13 +58,13 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
         }
 
         // Convert to f64 for rand_distr
-        let shape_f64 = <f64 as NumCast>::from(_shape).unwrap();
+        let shape_f64 = <f64 as NumCast>::from(shape).unwrap();
         let scale_f64 = <f64 as NumCast>::from(scale).unwrap();
 
         // rand_distr uses _shape and rate (= 1/scale)
         match RandGamma::new(shape_f64, 1.0 / scale_f64) {
             Ok(rand_distr) => Ok(Gamma {
-                _shape,
+                shape,
                 scale,
                 loc,
                 rand_distr,
@@ -88,7 +88,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::gamma::Gamma;
+    /// use scirs2_stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// let pdf_at_one = gamma.pdf(1.0);
@@ -138,7 +138,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::gamma::Gamma;
+    /// use scirs2_stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// let cdf_at_one = gamma.cdf(1.0);
@@ -183,7 +183,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::gamma::Gamma;
+    /// use scirs2_stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// let x = gamma.ppf(0.5).unwrap();
@@ -269,7 +269,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::gamma::Gamma;
+    /// use scirs2_stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// let samples = gamma.rvs(1000).unwrap();
@@ -294,7 +294,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::gamma::Gamma;
+    /// use scirs2_stats::distributions::gamma::Gamma;
     ///
     /// let gamma = Gamma::new(2.0f64, 1.0, 0.0).unwrap();
     /// let samples = gamma.rvs_vec(1000).unwrap();
@@ -586,6 +586,12 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display>
     }
 }
 
+impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> ContinuousCDF<F>
+    for Gamma<F>
+{
+    // Default implementations from trait are sufficient
+}
+
 /// Implementation of SampleableDistribution for Gamma
 impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display>
     SampleableDistribution<F> for Gamma<F>
@@ -763,13 +769,13 @@ mod tests {
         // Check PPF
         assert_relative_eq!(dist.ppf(0.5).unwrap(), 1.678346, epsilon = 1e-5);
 
-        // Check derived methods
-        assert_relative_eq!(dist.sf(1.0), 1.0 - 0.26424112, epsilon = 1e-6);
+        // Check derived methods using concrete type
+        assert_relative_eq!(gamma.sf(1.0), 1.0 - 0.26424112, epsilon = 1e-6);
 
         // Hazard function should be positive
-        assert!(dist.hazard(1.0) > 0.0);
+        assert!(gamma.hazard(1.0) > 0.0);
 
         // Cumulative hazard function
-        assert!(dist.cumhazard(1.0) > 0.0);
+        assert!(gamma.cumhazard(1.0) > 0.0);
     }
 }

@@ -900,7 +900,7 @@ impl OptimizationEngine {
                 "processing_time_ms" => data_point.processing_time.as_millis() as f64,
                 "cpu_utilization" => data_point.cpu_utilization,
                 "memory_usage_mb" => data_point.memory_usage as f64 / (1024.0 * 1024.0),
-                "cache_hit_rate" => data_point.cache_hit_rate_ => return false,
+                "cache_hit_rate" => data_point.cache_hit_rate,
             };
 
             match condition.operator {

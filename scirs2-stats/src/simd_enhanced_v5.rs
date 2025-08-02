@@ -828,8 +828,8 @@ where
     use scirs2_core::random::Random;
 
     let mut rng = match random_seed {
-        Some(_seed) => Random::with_seed(_seed),
-        None => Random::with_seed(42), // Use default _seed
+        Some(_seed) => Random::seed(_seed),
+        None => Random::seed(42), // Use default _seed
     };
 
     let _n_data = data.len();
@@ -869,7 +869,7 @@ where
         confidence_interval: (lower_bound, upper_bound),
         confidence_level,
         n_bootstrap,
-        _bootstrap_statistics: bootstrap_stats,
+        bootstrap_statistics: bootstrap_stats,
     })
 }
 

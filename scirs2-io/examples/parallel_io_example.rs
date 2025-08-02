@@ -4,7 +4,7 @@
 //! I/O operations across different file formats.
 
 use ndarray::{Array1, Array2};
-use scirs2__io::{
+use scirs2_io::{
     csv,
     error::IoError,
     matrix_market::{

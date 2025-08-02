@@ -1,6 +1,6 @@
 use ndarray::array;
 use plotters::prelude::*;
-use scirs2__stats::ransac;
+use scirs2_stats::ransac;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

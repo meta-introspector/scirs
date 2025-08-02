@@ -12,7 +12,6 @@ use rand::prelude::SliceRandom;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use scirs2_core::parallel_ops::*;
-use rand::seq::SliceRandom;
 
 /// Options for multi-start optimization
 #[derive(Debug, Clone)]
@@ -213,7 +212,7 @@ where
     fn optimize_single(&self, x0: Array1<f64>) -> OptimizeResult<f64> {
         let bounds = Some(
             UnconstrainedBounds::from_vecs(
-                self.bounds.iter().map(|&(lb_)| Some(lb)).collect(),
+                self.bounds.iter().map(|&(lb, _)| Some(lb)).collect(),
                 self.bounds.iter().map(|&(_, ub)| Some(ub)).collect(),
             )
             .unwrap(),

@@ -644,7 +644,8 @@ impl EmbeddingVisualizer {
             1 => (x, c, 0.0),
             2 => (0.0, c, x),
             3 => (0.0, x, c),
-            4 => (x, 0.0, c, _ => (c, 0.0, x),
+            4 => (x, 0.0, c),
+            _ => (c, 0.0, x),
         };
 
         Color::new(
@@ -833,7 +834,10 @@ impl SentimentVisualizer {
         radius: f64,
         start_angle: f64,
         end_angle: f64,
-        color: Color_label: &str, _count: usize_total: usize,
+        color: Color,
+        label: &str,
+        _count: usize,
+        total: usize,
     ) -> String {
         let x1 = center_x + radius * start_angle.cos();
         let y1 = center_y + radius * start_angle.sin();
@@ -995,7 +999,8 @@ impl TopicVisualizer {
             1 => (x, c, 0.0),
             2 => (0.0, c, x),
             3 => (0.0, x, c),
-            4 => (x, 0.0, c, _ => (c, 0.0, x),
+            4 => (x, 0.0, c),
+            _ => (c, 0.0, x),
         };
 
         Color::new(

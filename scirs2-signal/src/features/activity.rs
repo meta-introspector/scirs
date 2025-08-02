@@ -1,5 +1,4 @@
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use crate::features::batch::extract_features;
 use crate::features::options::FeatureOptions;
 use num_traits::{Float, NumCast};

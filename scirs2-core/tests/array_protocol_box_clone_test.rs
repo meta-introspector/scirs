@@ -35,8 +35,7 @@ impl MockDistributedArray {
 }
 
 impl ArrayProtocol for MockDistributedArray {
-    fn kwargs( &HashMap<String, Box<dyn Any>>,
-    ) -> Result<Box<dyn Any>, NotImplemented> {
+    fn kwargs(&self, kwargs: &HashMap<String, Box<dyn Any>>) -> Result<Box<dyn Any>, NotImplemented> {
         Err(NotImplemented)
     }
 
@@ -70,8 +69,7 @@ impl MockGPUArray {
 }
 
 impl ArrayProtocol for MockGPUArray {
-    fn kwargs( &HashMap<String, Box<dyn Any>>,
-    ) -> Result<Box<dyn Any>, NotImplemented> {
+    fn kwargs(&self, kwargs: &HashMap<String, Box<dyn Any>>) -> Result<Box<dyn Any>, NotImplemented> {
         Err(NotImplemented)
     }
 

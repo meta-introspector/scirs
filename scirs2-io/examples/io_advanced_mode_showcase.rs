@@ -9,11 +9,11 @@
 //! - Performance monitoring and adaptive parameter tuning
 //! - Integration between neural and quantum approaches
 
-use scirs2__io::error::Result;
-use scirs2__io::neural_adaptive_io::{
+use scirs2_io::error::Result;
+use scirs2_io::neural_adaptive_io::{
     AdvancedIoProcessor, NeuralAdaptiveIoController, PerformanceFeedback, SystemMetrics,
 };
-use scirs2__io::quantum_inspired_io::QuantumParallelProcessor;
+use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
 use std::time::Instant;
 
 #[allow(dead_code)]

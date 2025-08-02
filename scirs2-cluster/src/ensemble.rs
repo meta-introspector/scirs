@@ -209,7 +209,8 @@ pub struct DiversityMetrics {
 
 /// Main ensemble clustering implementation
 pub struct EnsembleClusterer<F: Float> {
-    config: EnsembleConfig_phantom: std::marker::PhantomData<F>,
+    config: EnsembleConfig,
+    phantom: std::marker::PhantomData<F>,
 }
 
 impl<
@@ -1017,10 +1018,13 @@ where
 
         for (param_name, range) in parameter_ranges {
             let value = match range {
-                ParameterRange::Integer(min, max) => rng.gen_range(*min..=*max).to_string()..ParameterRange::Float(min, max) => rng.gen_range(*min..=*max).to_string()..ParameterRange::Categorical(choices) => {
+                ParameterRange::Integer(min, max) => rng.gen_range(*min..=*max).to_string(),
+                ParameterRange::Float(min, max) => rng.gen_range(*min..=*max).to_string(),
+                ParameterRange::Categorical(choices) => {
                     choices[rng.gen_range(0..choices.len())].clone()
                 }
-                ParameterRange::Boolean => rng.gen_bool(0.5).to_string()..};
+                ParameterRange::Boolean => rng.gen_bool(0.5).to_string(),
+            };
             parameters.insert(param_name.clone(), value);
         }
 
@@ -2154,7 +2158,9 @@ pub mod advanced_ensemble {
 
         fn mcmc_update_weights(
             &self,
-            current_weights: &Array1<f64>, _results: &EnsembleResult_data: ArrayView2<F>,
+            current_weights: &Array1<f64>, 
+            _results: &EnsembleResult,
+            data: ArrayView2<F>,
         ) -> Result<Array1<f64>> {
             // Simplified MCMC update (Metropolis-Hastings)
             let mut new_weights = current_weights.clone();
@@ -2471,7 +2477,10 @@ pub mod advanced_ensemble {
         }
 
         fn predict_base_algorithm(
-            &self_data: &Array2<F>, _algorithm: &ClusteringAlgorithm_labels: &Array1<i32>,
+            &self,
+            data: &Array2<F>, 
+            _algorithm: &ClusteringAlgorithm,
+            labels: &Array1<i32>,
         ) -> Result<Array1<i32>> {
             Ok(Array1::zeros(0)) // Stub
         }
@@ -2772,7 +2781,8 @@ fn combine_chunk_results(_chunk_results: Vec<EnsembleResult>) -> Result<Ensemble
 
 #[allow(dead_code)]
 fn apply_differential_privacy(
-    mut result: EnsembleResult_privacy_budget: f64,
+    mut result: EnsembleResult,
+    privacy_budget: f64,
 ) -> Result<EnsembleResult> {
     // Apply differential privacy mechanisms to the clustering result
     // For now, just add small amount of noise to consensus labels

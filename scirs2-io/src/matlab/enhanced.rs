@@ -49,7 +49,7 @@ pub struct EnhancedMatFile {
 impl EnhancedMatFile {
     /// Create a new enhanced MAT file handler
     pub fn new(_config: MatFileConfig) -> Self {
-        Self { _config }
+        Self { config: _config }
     }
 
     /// Write variables to a MAT file with enhanced features
@@ -59,7 +59,7 @@ impl EnhancedMatFile {
         let use_v73 = self.config.use_v73 || total_size > self.config.v73_threshold;
 
         if use_v73 {
-            self.write_v73(path, vars)
+            EnhancedMatFile::write_v73(&path, vars)
         } else {
             write_mat(path, vars)
         }
@@ -68,8 +68,8 @@ impl EnhancedMatFile {
     /// Read variables from a MAT file with enhanced features
     pub fn read<P: AsRef<Path>>(&self, path: P) -> Result<HashMap<String, MatType>> {
         // Try v7.3 format first, then fall back to v5
-        if self.is_v73_file(&path)? {
-            self.read_v73(path)
+        if EnhancedMatFile::is_v73_file(&&path)? {
+            EnhancedMatFile::read_v73(&path)
         } else {
             read_mat(path)
         }
@@ -110,7 +110,7 @@ impl EnhancedMatFile {
     }
 
     /// Check if a file is in v7.3 format
-    pub fn is_v73_file<P: AsRef<Path>>(&self_path: P) -> Result<bool> {
+    pub fn is_v73_file<P: AsRef<Path>>(self_path: &P) -> Result<bool> {
         // Try to read as HDF5 file
         #[cfg(feature = "hdf5")]
         {
@@ -141,7 +141,7 @@ impl EnhancedMatFile {
 
     /// Write variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
-    fn write_v73<P: AsRef<Path>>(&self_path: P, _vars: &HashMap<String, MatType>) -> Result<()> {
+    fn write_v73<P: AsRef<Path>>(self_path: &P, _vars: &HashMap<String, MatType>) -> Result<()> {
         Err(IoError::Other(
             "MAT v7.3 format requires HDF5 feature".to_string(),
         ))
@@ -165,7 +165,7 @@ impl EnhancedMatFile {
 
     /// Read variables using MAT v7.3 format (fallback without HDF5)
     #[cfg(not(feature = "hdf5"))]
-    fn read_v73<P: AsRef<Path>>(&self_path: P) -> Result<HashMap<String, MatType>> {
+    fn read_v73<P: AsRef<Path>>(self_path: &P) -> Result<HashMap<String, MatType>> {
         Err(IoError::Other(
             "MAT v7.3 format requires HDF5 feature".to_string(),
         ))

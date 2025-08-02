@@ -39,7 +39,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::cauchy::Cauchy;
+    /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// ```
@@ -81,7 +81,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::cauchy::Cauchy;
+    /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let pdf_at_zero = cauchy.pdf(0.0);
@@ -109,7 +109,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::cauchy::Cauchy;
+    /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let cdf_at_zero = cauchy.cdf(0.0);
@@ -137,7 +137,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::cauchy::Cauchy;
+    /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let x = cauchy.ppf(0.75).unwrap();
@@ -173,7 +173,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::cauchy::Cauchy;
+    /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let samples = cauchy.rvs_vec(10).unwrap();
@@ -241,7 +241,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::cauchy::Cauchy;
+    /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let samples = cauchy.rvs(10).unwrap();
@@ -261,7 +261,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::cauchy::Cauchy;
+    /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(2.0f64, 1.0).unwrap();
     /// let median = cauchy.median();
@@ -281,7 +281,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::cauchy::Cauchy;
+    /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(2.0f64, 1.0).unwrap();
     /// let mode = cauchy.mode();
@@ -301,7 +301,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::cauchy::Cauchy;
+    /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let iqr = cauchy.iqr();
@@ -321,7 +321,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::cauchy::Cauchy;
+    /// use scirs2_stats::distributions::cauchy::Cauchy;
     ///
     /// let cauchy = Cauchy::new(0.0f64, 1.0).unwrap();
     /// let entropy = cauchy.entropy();
@@ -353,7 +353,7 @@ impl<F: Float + NumCast + std::fmt::Display> Cauchy<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions::cauchy;
+/// use scirs2_stats::distributions::cauchy;
 ///
 /// let c = cauchy::cauchy(0.0f64, 1.0).unwrap();
 /// let pdf_at_zero = c.pdf(0.0);

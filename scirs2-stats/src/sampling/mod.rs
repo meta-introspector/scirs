@@ -32,7 +32,7 @@ pub trait SampleableDistribution<T> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::{sampling, distributions};
+/// use scirs2_stats::{sampling, distributions};
 ///
 /// // Create a normal distribution
 /// let normal = distributions::norm(0.0f64, 1.0).unwrap();
@@ -73,7 +73,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::sampling;
+/// use scirs2_stats::sampling;
 ///
 /// // Create an array
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -109,7 +109,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::sampling;
+/// use scirs2_stats::sampling;
 ///
 /// // Create an array
 /// let data = array![1, 2, 3, 4, 5];
@@ -143,7 +143,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::sampling;
+/// use scirs2_stats::sampling;
 ///
 /// // Create an array and group labels
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
@@ -243,7 +243,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::sampling;
+/// use scirs2_stats::sampling;
 ///
 /// // Create an array and group labels
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
@@ -302,7 +302,7 @@ where
             for _ in 0..indices.len() {
                 let random_idx = rng.gen_range(0..indices.len());
                 let selected_idx = indices[random_idx];
-                samples[[resample_idx..sample_idx]] = x[selected_idx];
+                samples[[resample_idx, sample_idx]] = x[selected_idx];
                 sample_idx += 1;
             }
         }
@@ -330,7 +330,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::sampling;
+/// use scirs2_stats::sampling;
 ///
 /// // Create a time series
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
@@ -413,7 +413,7 @@ where
                     start_pos + block_offset
                 };
 
-                samples[[resample_idx..sample_pos]] = x[data_idx];
+                samples[[resample_idx, sample_pos]] = x[data_idx];
                 sample_pos += 1;
             }
         }
@@ -499,7 +499,7 @@ where
                 if sample_pos >= data_len {
                     break;
                 }
-                samples[[resample_idx..sample_pos]] = value;
+                samples[[resample_idx, sample_pos]] = value;
                 sample_pos += 1;
             }
         }
@@ -572,7 +572,7 @@ where
 
             // Generate a block with geometric length
             loop {
-                samples[[resample_idx..sample_pos]] = x[current_pos];
+                samples[[resample_idx, sample_pos]] = x[current_pos];
                 sample_pos += 1;
 
                 if sample_pos >= data_len {
@@ -668,15 +668,15 @@ where
         }
 
         // Estimate bias for this first-level sample
-        let second_level_mean = second_level_stats.mean().unwrap();
+        let second_level_mean = second_level_stats.mean();
         bias_estimates[i] = second_level_mean - first_stat;
     }
 
     // Overall bias estimate
-    let overall_bias = bias_estimates.mean().unwrap();
+    let overall_bias = bias_estimates.mean();
 
     // Bias-corrected estimate
-    let _first_level_mean = first_level_stats.mean().unwrap();
+    let _first_level_mean = first_level_stats.clone().mean();
     let bias_corrected = original_stat - overall_bias;
 
     Ok((bias_corrected, first_level_stats, overall_bias))

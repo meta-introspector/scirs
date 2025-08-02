@@ -75,7 +75,7 @@ pub use weibull::Weibull;
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let normal = distributions::norm(0.0f64, 1.0).unwrap();
 /// let pdf_at_zero = normal.pdf(0.0);
@@ -106,7 +106,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let unif = distributions::uniform(0.0f64, 1.0).unwrap();
 /// let pdf_at_half = unif.pdf(0.5);
@@ -138,7 +138,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let t = distributions::t(5.0f64, 0.0, 1.0).unwrap();
 /// let pdf_at_zero = t.pdf(0.0);
@@ -170,7 +170,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let chi2 = distributions::chi2(2.0f64, 0.0, 1.0).unwrap();
 /// let pdf_at_one = chi2.pdf(1.0);
@@ -203,7 +203,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let f_dist = distributions::f(2.0f64, 10.0, 0.0, 1.0).unwrap();
 /// let pdf_at_one = f_dist.pdf(1.0);
@@ -234,7 +234,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let poisson = distributions::poisson(3.0f64, 0.0).unwrap();
 /// let pmf_at_two = poisson.pmf(2.0);
@@ -266,7 +266,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let gamma = distributions::gamma(2.0f64, 1.0, 0.0).unwrap();
 /// let pdf_at_one = gamma.pdf(1.0);
@@ -303,7 +303,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// // Special case: beta(2,3)
 /// let beta = distributions::beta(2.0f64, 3.0, 0.0, 1.0).unwrap();
@@ -335,7 +335,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let exp = distributions::expon(1.0f64, 0.0).unwrap();
 /// let pdf_at_one = exp.pdf(1.0);
@@ -368,7 +368,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let lognorm = distributions::lognorm(0.0f64, 1.0, 0.0).unwrap();
 /// let pdf_at_one = lognorm.pdf(1.0);
@@ -400,7 +400,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let w = distributions::weibull(2.0f64, 1.0, 0.0).unwrap();
 /// let pdf_at_one = w.pdf(1.0);
@@ -432,7 +432,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let w = distributions::weibull_min(2.0f64, 1.0, 0.0).unwrap();
 /// let pdf_at_one = w.pdf(1.0);
@@ -464,7 +464,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let p = distributions::pareto(3.0f64, 1.0, 0.0).unwrap();
 /// let pdf_at_two = p.pdf(2.0);
@@ -495,7 +495,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let c = distributions::cauchy(0.0f64, 1.0).unwrap();
 /// let pdf_at_zero = c.pdf(0.0);
@@ -526,7 +526,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let l = distributions::laplace(0.0f64, 1.0).unwrap();
 /// let pdf_at_zero = l.pdf(0.0);
@@ -557,7 +557,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let l = distributions::logistic(0.0f64, 1.0).unwrap();
 /// let pdf_at_zero = l.pdf(0.0);
@@ -587,7 +587,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let b = distributions::bernoulli(0.3f64).unwrap();
 /// let pmf_at_one = b.pmf(1.0);
@@ -616,7 +616,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let b = distributions::bern(0.3f64).unwrap();
 /// let pmf_at_one = b.pmf(1.0);
@@ -647,7 +647,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let b = distributions::binom(10, 0.5f64).unwrap();
 /// let pmf_at_5 = b.pmf(5.0);
@@ -677,7 +677,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let g = distributions::geom(0.3f64).unwrap();
 /// let pmf_at_2 = g.pmf(2.0);
@@ -708,7 +708,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let nb = distributions::nbinom(5.0f64, 0.3).unwrap();
 /// let pmf_at_7 = nb.pmf(7.0);
@@ -741,7 +741,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// // Create a hypergeometric distribution
 /// // N = 20 (population size)
@@ -786,7 +786,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let vm = distributions::vonmises(0.0f64, 1.0).unwrap();
 /// let pdf_at_zero = vm.pdf(0.0);
@@ -820,7 +820,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions;
+/// use scirs2_stats::distributions;
 ///
 /// let wc = distributions::wrapcauchy(0.0f64, 0.5).unwrap();
 /// let pdf_at_zero = wc.pdf(0.0);

@@ -112,6 +112,7 @@ pub enum RecommendationCategory {
     Conversion,
     Preprocessing,
     Alternative,
+    BestPractice,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -242,8 +243,343 @@ impl ModelValidator {
         })
     }
 
-    // Private helper methods would continue here...
-    // (Implementation details omitted for brevity but would include all the check_* methods)
+    /// Check framework compatibility
+    fn check_framework_compatibility(&self, _model: &MLModel) -> FrameworkCompatibilityResult {
+        let mut warnings = Vec::new();
+        let mut recommendations = Vec::new();
+        
+        // Check if frameworks are the same
+        if self.source_framework == self.target_framework {
+            return FrameworkCompatibilityResult {
+                error: None,
+                warnings,
+                recommendations,
+            };
+        }
+        
+        // Check common conversion paths
+        let compatibility_score = crate::ml_framework::validation::utils::quick_compatibility_check(
+            self.source_framework, 
+            self.target_framework
+        );
+        
+        if compatibility_score < 0.5 {
+            warnings.push(ValidationWarning {
+                category: WarningCategory::Compatibility,
+                message: format!(
+                    "Low compatibility between {:?} and {:?} (score: {:.2})",
+                    self.source_framework, self.target_framework, compatibility_score
+                ),
+                location: None,
+                impact: WarningImpact::High,
+            });
+            
+            recommendations.push(ValidationRecommendation {
+                category: RecommendationCategory::Alternative,
+                message: "Consider using ONNX as an intermediate format".to_string(),
+                priority: RecommendationPriority::High,
+                estimated_effort: EstimatedEffort::Medium,
+            });
+        }
+        
+        FrameworkCompatibilityResult {
+            error: None,
+            warnings,
+            recommendations,
+        }
+    }
+    
+    /// Check data types compatibility
+    fn check_data_types(&self, model: &MLModel) -> ValidationCheckResult {
+        let mut errors = Vec::new();
+        let mut warnings = Vec::new();
+        let mut recommendations = Vec::new();
+        
+        for (tensor_name, tensor) in &model.weights {
+            // Check if data type is supported by target framework
+            if let Some(ref supported_dtypes) = self.validation_config.supported_dtypes {
+                if !supported_dtypes.contains(&tensor.metadata.dtype) {
+                    if self.validation_config.allow_type_conversion {
+                        warnings.push(ValidationWarning {
+                            category: WarningCategory::Precision,
+                            message: format!(
+                                "Tensor '{}' has unsupported data type {:?}, conversion may be needed",
+                                tensor_name, tensor.metadata.dtype
+                            ),
+                            location: Some(tensor_name.clone()),
+                            impact: WarningImpact::Medium,
+                        });
+                    } else {
+                        errors.push(ValidationError {
+                            category: ErrorCategory::DataType,
+                            severity: ErrorSeverity::High,
+                            message: format!(
+                                "Tensor '{}' has unsupported data type {:?}",
+                                tensor_name, tensor.metadata.dtype
+                            ),
+                            location: Some(tensor_name.clone()),
+                            fix_suggestion: Some("Enable type conversion or change tensor data type".to_string()),
+                        });
+                    }
+                }
+            }
+            
+            // Check for precision loss warnings
+            match (&self.source_framework, &self.target_framework, &tensor.metadata.dtype) {
+                (MLFramework::PyTorch, MLFramework::CoreML, DataType::Float64) => {
+                    warnings.push(ValidationWarning {
+                        category: WarningCategory::Precision,
+                        message: format!(
+                            "Tensor '{}' uses Float64 which may be converted to Float32 in CoreML",
+                            tensor_name
+                        ),
+                        location: Some(tensor_name.clone()),
+                        impact: WarningImpact::Medium,
+                    });
+                }
+                _ => {}
+            }
+        }
+        
+        ValidationCheckResult {
+            errors,
+            warnings,
+            recommendations,
+        }
+    }
+    
+    /// Check tensor shapes compatibility
+    fn check_tensor_shapes(&self, model: &MLModel) -> ValidationCheckResult {
+        let mut errors = Vec::new();
+        let mut warnings = Vec::new();
+        let mut recommendations = Vec::new();
+        
+        for (tensor_name, tensor) in &model.weights {
+            let shape = &tensor.metadata.shape;
+            
+            // Check maximum dimensions
+            if let Some(max_dims) = self.validation_config.max_shape_dimension {
+                if shape.len() > max_dims {
+                    errors.push(ValidationError {
+                        category: ErrorCategory::Shape,
+                        severity: ErrorSeverity::High,
+                        message: format!(
+                            "Tensor '{}' has {} dimensions, but target framework supports max {}",
+                            tensor_name, shape.len(), max_dims
+                        ),
+                        location: Some(tensor_name.clone()),
+                        fix_suggestion: Some("Reshape tensor or use tensor decomposition".to_string()),
+                    });
+                }
+            }
+            
+            // Check for dynamic shapes (represented as 0 dimensions)
+            if shape.iter().any(|&dim| dim == 0) {
+                warnings.push(ValidationWarning {
+                    category: WarningCategory::Compatibility,
+                    message: format!(
+                        "Tensor '{}' has dynamic shape dimensions which may not be supported",
+                        tensor_name
+                    ),
+                    location: Some(tensor_name.clone()),
+                    impact: WarningImpact::High,
+                });
+            }
+            
+            // Check for very large tensors
+            let total_elements: usize = shape.iter().product();
+            if total_elements > 1_000_000_000 {
+                warnings.push(ValidationWarning {
+                    category: WarningCategory::Performance,
+                    message: format!(
+                        "Tensor '{}' is very large ({} elements), may cause memory issues",
+                        tensor_name, total_elements
+                    ),
+                    location: Some(tensor_name.clone()),
+                    impact: WarningImpact::Medium,
+                });
+            }
+        }
+        
+        ValidationCheckResult {
+            errors,
+            warnings,
+            recommendations,
+        }
+    }
+    
+    /// Check operations compatibility (simplified implementation)
+    fn check_operations(&self, _model: &MLModel) -> ValidationCheckResult {
+        let mut errors = Vec::new();
+        let mut warnings = Vec::new();
+        let mut recommendations = Vec::new();
+        
+        // In a real implementation, this would analyze the model graph and operations
+        // For now, we'll just provide framework-specific warnings
+        match (&self.source_framework, &self.target_framework) {
+            (MLFramework::PyTorch, MLFramework::CoreML) => {
+                warnings.push(ValidationWarning {
+                    category: WarningCategory::Compatibility,
+                    message: "Some PyTorch operations may not have direct CoreML equivalents".to_string(),
+                    location: None,
+                    impact: WarningImpact::Medium,
+                });
+            }
+            (MLFramework::TensorFlow, MLFramework::PyTorch) => {
+                recommendations.push(ValidationRecommendation {
+                    category: RecommendationCategory::Conversion,
+                    message: "Consider using ONNX as intermediate format for TensorFlow -> PyTorch conversion".to_string(),
+                    priority: RecommendationPriority::Medium,
+                    estimated_effort: EstimatedEffort::Low,
+                });
+            }
+            _ => {}
+        }
+        
+        ValidationCheckResult {
+            errors,
+            warnings,
+            recommendations,
+        }
+    }
+    
+    /// Check metadata compatibility
+    fn check_metadata(&self, model: &MLModel) -> ValidationCheckResult {
+        let mut errors = Vec::new();
+        let mut warnings = Vec::new();
+        let mut recommendations = Vec::new();
+        
+        // Check if framework version is compatible
+        if let Some(ref framework_version) = model.metadata.framework_version {
+            // This is a simplified check - in practice would have version compatibility matrices
+            if framework_version.starts_with("0.") {
+                warnings.push(ValidationWarning {
+                    category: WarningCategory::Compatibility,
+                    message: format!(
+                        "Framework version {} appears to be a pre-release version",
+                        framework_version
+                    ),
+                    location: None,
+                    impact: WarningImpact::Low,
+                });
+            }
+        }
+        
+        // Check for missing critical metadata
+        if model.metadata.model_name.is_none() {
+            recommendations.push(ValidationRecommendation {
+                category: RecommendationCategory::BestPractice,
+                message: "Consider adding a model name for better tracking".to_string(),
+                priority: RecommendationPriority::Low,
+                estimated_effort: EstimatedEffort::Minimal,
+            });
+        }
+        
+        // Check for empty configurations
+        if model.config.is_empty() {
+            warnings.push(ValidationWarning {
+                category: WarningCategory::BestPractice,
+                message: "Model configuration is empty, may cause issues during conversion".to_string(),
+                location: None,
+                impact: WarningImpact::Low,
+            });
+        }
+        
+        ValidationCheckResult {
+            errors,
+            warnings,
+            recommendations,
+        }
+    }
+    
+    /// Calculate overall compatibility score
+    fn calculate_compatibility_score(&self, errors: &[ValidationError], warnings: &[ValidationWarning]) -> f32 {
+        let base_score = crate::ml_framework::validation::utils::quick_compatibility_check(
+            self.source_framework, 
+            self.target_framework
+        );
+        
+        // Reduce score based on errors and warnings
+        let error_penalty: f32 = errors.iter().map(|e| match e.severity {
+            ErrorSeverity::Critical => 0.5,
+            ErrorSeverity::High => 0.3,
+            ErrorSeverity::Medium => 0.1,
+            ErrorSeverity::Low => 0.05,
+        }).sum();
+        
+        let warning_penalty: f32 = warnings.iter().map(|w| match w.impact {
+            WarningImpact::High => 0.1,
+            WarningImpact::Medium => 0.05,
+            WarningImpact::Low => 0.02,
+        }).sum();
+        
+        (base_score - error_penalty - warning_penalty).max(0.0).min(1.0)
+    }
+    
+    /// Generate conversion path
+    fn generate_conversion_path(
+        &self, 
+        _model: &MLModel, 
+        errors: &[ValidationError], 
+        warnings: &[ValidationWarning]
+    ) -> Result<ConversionPath> {
+        let mut steps = Vec::new();
+        
+        // Analyze errors and warnings to determine conversion steps
+        let has_dtype_issues = errors.iter().any(|e| e.category == ErrorCategory::DataType) 
+            || warnings.iter().any(|w| w.category == WarningCategory::Precision);
+        
+        let has_shape_issues = errors.iter().any(|e| e.category == ErrorCategory::Shape);
+        
+        if has_dtype_issues {
+            steps.push(ConversionStep {
+                operation: ConversionOperation::TypeConversion,
+                description: "Convert incompatible data types".to_string(),
+                required_tools: vec!["dtype_converter".to_string()],
+                estimated_time: EstimatedEffort::Low,
+            });
+        }
+        
+        if has_shape_issues {
+            steps.push(ConversionStep {
+                operation: ConversionOperation::ShapeReshaping,
+                description: "Reshape tensors for target framework".to_string(),
+                required_tools: vec!["shape_converter".to_string()],
+                estimated_time: EstimatedEffort::Medium,
+            });
+        }
+        
+        // Add main conversion step
+        let conversion_complexity = if steps.is_empty() {
+            ConversionComplexity::Trivial
+        } else if steps.len() <= 2 {
+            ConversionComplexity::Simple
+        } else {
+            ConversionComplexity::Moderate
+        };
+        
+        steps.push(ConversionStep {
+            operation: ConversionOperation::DirectConversion,
+            description: format!(
+                "Convert from {:?} to {:?}", 
+                self.source_framework, 
+                self.target_framework
+            ),
+            required_tools: vec![format!("{:?}_converter", self.target_framework)],
+            estimated_time: match conversion_complexity {
+                ConversionComplexity::Trivial => EstimatedEffort::Minimal,
+                ConversionComplexity::Simple => EstimatedEffort::Low,
+                _ => EstimatedEffort::Medium,
+            },
+        });
+        
+        Ok(ConversionPath {
+            steps,
+            estimated_accuracy_loss: if has_dtype_issues { 0.05 } else { 0.01 },
+            estimated_performance_impact: if has_shape_issues { 0.1 } else { 0.02 },
+            complexity: conversion_complexity,
+        })
+    }
 }
 
 /// Batch validation for multiple models

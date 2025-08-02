@@ -783,11 +783,11 @@ impl GpuContext {
     /// Detect available GPU devices
     fn detect_devices(_backend: &GpuBackend) -> Result<Vec<GpuDevice>> {
         match _backend {
-            GpuBackend::Cuda =>, Self::detect_cuda_devices(),
-            GpuBackend::OpenCl =>, Self::detect_opencl_devices(),
-            GpuBackend::Rocm =>, Self::detect_rocm_devices(),
-            GpuBackend::OneApi =>, Self::detect_oneapi_devices(),
-            GpuBackend::Metal =>, Self::detect_metal_devices(),
+            GpuBackend::Cuda => Self::detect_cuda_devices(),
+            GpuBackend::OpenCl => Self::detect_opencl_devices(),
+            GpuBackend::Rocm => Self::detect_rocm_devices(),
+            GpuBackend::OneApi => Self::detect_oneapi_devices(),
+            GpuBackend::Metal => Self::detect_metal_devices(),
             GpuBackend::CpuFallback => Ok(vec![]),
         }
     }
@@ -1606,7 +1606,8 @@ impl GpuContext {
     fn initialize_backend(_backend: &GpuBackend) -> Result<BackendContext> {
         match _backend {
             GpuBackend::Cuda => Ok(BackendContext::Cuda { context_handle: 0 }),
-            GpuBackend::OpenCl => Ok(BackendContext::OpenCl { context_handle: 0 }, _ => Ok(BackendContext::CpuFallback),
+            GpuBackend::OpenCl => Ok(BackendContext::OpenCl { context_handle: 0 }),
+            _ => Ok(BackendContext::CpuFallback),
         }
     }
 
@@ -2250,7 +2251,8 @@ fn gpu_dbscan_impl<F: Float + FromPrimitive + Send + Sync>(
 #[allow(dead_code)]
 fn gpu_find_neighbors<F: Float + FromPrimitive + Send + Sync>(
     gpu_data: &GpuArray<F>,
-    eps: F_context: &GpuContext,
+    eps: F,
+    context: &GpuContext,
 ) -> Result<Vec<Vec<usize>>> {
     use scirs2_core::parallel_ops::*;
 
@@ -3271,7 +3273,7 @@ pub mod accelerated {
             let gpu_time_scaled = profile.gpu_time.map(|t| t * size_factor);
 
             match (&gpu_time_scaled, &self.strategy) {
-                (Some(gpu_time)_) if gpu_time < &cpu_time_scaled => {
+                (Some(gpu_time), _) if gpu_time < &cpu_time_scaled => {
                     // GPU is faster
                     if let Some(ref gpu_ctx) = self.gpu_context {
                         if let Some(device) = gpu_ctx.select_best_device() {

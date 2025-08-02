@@ -4,7 +4,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, s};
-use scirs2__linalg::solve_multiple;
+use scirs2_linalg::solve_multiple;
 use std::f64::consts::PI;
 use super::{BssConfig, pca};
 

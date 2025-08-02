@@ -8,8 +8,8 @@
 //! - Memory efficiency analysis
 //! - Performance comparison between formats
 
-use scirs2__io::error::Result;
-use scirs2__io::serialize::{
+use scirs2_io::error::Result;
+use scirs2_io::serialize::{
     deserialize_enhanced_sparse_matrix, serialize_enhanced_sparse_matrix, sparse_ops,
     SerializationFormat, SparseMatrix,
 };
@@ -116,7 +116,7 @@ fn demonstrate_format_conversion() -> Result<()> {
         // Test row access in CSR
         let start = Instant::now();
         for i in 0..std::cmp::min(100, size) {
-            if let Some((cols_vals)) = csr.row(i) {
+            if let Some((cols, _vals)) = csr.row(i) {
                 let _row_nnz = cols.len();
             }
         }
@@ -134,7 +134,7 @@ fn demonstrate_format_conversion() -> Result<()> {
         // Test column access in CSC
         let start = Instant::now();
         for j in 0..std::cmp::min(100, size) {
-            if let Some((rows_vals)) = csc.column(j) {
+            if let Some((rows, _vals)) = csc.column(j) {
                 let _col_nnz = rows.len();
             }
         }
@@ -340,8 +340,7 @@ fn demonstrate_memory_analysis() -> Result<()> {
 
     let coo_memory = sparse.coo_data.values.len()
         * (
-            std::mem::size_of::<f64>() + 2 * std::mem::size,
-            _of::<usize>(),
+            std::mem::size_of::<f64>() + 2 * std::mem::size_of::<usize>()
         );
 
     let csr = sparse.to_csr()?;
@@ -364,7 +363,7 @@ fn demonstrate_memory_analysis() -> Result<()> {
 /// Create a sample sparse matrix (tridiagonal pattern)
 #[allow(dead_code)]
 fn create_sample_sparse_matrix(_size: usize) -> SparseMatrix<f64> {
-    let mut sparse = SparseMatrix::new(_size_size);
+    let mut sparse = SparseMatrix::new(_size, _size);
 
     // Main diagonal
     for i in 0.._size {

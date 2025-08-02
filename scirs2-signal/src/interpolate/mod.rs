@@ -51,7 +51,6 @@
 //! | Spectral | Periodic signals | Good for frequency content | Iterative process |
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use ndarray::{Array1, Array2};
 use std::f64::consts::PI;
 

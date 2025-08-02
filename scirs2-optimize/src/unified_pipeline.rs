@@ -411,7 +411,8 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
 
     /// Perform distributed line search
     fn distributed_line_search<F>(
-        &mut self, _dist_ctx: &mut DistributedOptimizationContext<M>,
+        &mut self,
+        _dist_ctx: &mut DistributedOptimizationContext<M>,
         function: &F,
         x: &Array1<f64>,
         direction: &Array1<f64>,

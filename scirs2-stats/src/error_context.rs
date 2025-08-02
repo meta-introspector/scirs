@@ -270,7 +270,11 @@ pub mod data_validation {
     use num_traits::Float;
 
     /// Validate input data with enhanced error messages
-    pub fn validate_data_quality<T>(_data: &[T], context: &str, allow_empty: bool) -> StatsResult<()>
+    pub fn validate_data_quality<T>(
+        _data: &[T],
+        context: &str,
+        allow_empty: bool,
+    ) -> StatsResult<()>
     where
         T: Float + Display,
     {

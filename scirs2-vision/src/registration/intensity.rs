@@ -327,7 +327,8 @@ fn compute_gradient(
             2 => perturbed_transform[[0, 2]] += config.step_size,
             3 => perturbed_transform[[1, 0]] += config.step_size,
             4 => perturbed_transform[[1, 1]] += config.step_size,
-            5 => perturbed_transform[[1, 2]] += config.step_size_ => {}
+            5 => perturbed_transform[[1, 2]] += config.step_size,
+            _ => {}
         }
 
         let perturbed_cost =

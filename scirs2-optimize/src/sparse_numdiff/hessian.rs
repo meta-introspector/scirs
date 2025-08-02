@@ -191,7 +191,7 @@ where
     let h = compute_step_sizes(x, options);
 
     // Create result matrix with the same sparsity pattern as the upper triangle
-    let (rows, cols_) = sparsity.find();
+    let (rows, cols) = sparsity.find();
     let (m, n) = sparsity.shape();
     let zeros = vec![0.0; rows.len()];
     let mut hess = CsrArray::from_triplets(&rows.to_vec(), &cols.to_vec(), &zeros, (m, n), false)?;
@@ -338,7 +338,7 @@ where
     let h = compute_step_sizes(x, options);
 
     // Create result matrix with the same sparsity pattern as the upper triangle
-    let (rows, cols_) = sparsity.find();
+    let (rows, cols) = sparsity.find();
     let (m, n_cols) = sparsity.shape();
     let zeros = vec![0.0; rows.len()];
     let mut hess =
@@ -512,7 +512,7 @@ where
     let groups = determine_column_groups(sparsity, None, None)?;
 
     // Create result matrix with the same sparsity pattern
-    let (rows, cols_) = sparsity.find();
+    let (rows, cols) = sparsity.find();
     let zeros = vec![0.0; rows.len()];
     let mut hess = CsrArray::from_triplets(&rows.to_vec(), &cols.to_vec(), &zeros, (n, n), false)?;
 

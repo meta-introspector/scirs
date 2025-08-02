@@ -45,8 +45,8 @@ impl<T: Float + NumCast> F<T> {
     /// // F distribution with 2 and 10 degrees of freedom
     /// let f_dist = F::new(2.0f64, 10.0, 0.0, 1.0).unwrap();
     /// ```
-    pub fn new(_dfn: T, dfd: T, loc: T, scale: T) -> StatsResult<Self> {
-        if _dfn <= T::zero() {
+    pub fn new(dfn: T, dfd: T, loc: T, scale: T) -> StatsResult<Self> {
+        if dfn <= T::zero() {
             return Err(StatsError::DomainError(
                 "Numerator degrees of freedom must be positive".to_string(),
             ));
@@ -65,12 +65,12 @@ impl<T: Float + NumCast> F<T> {
         }
 
         // Convert to f64 for rand_distr
-        let dfn_f64 = <f64 as NumCast>::from(_dfn).unwrap();
+        let dfn_f64 = <f64 as NumCast>::from(dfn).unwrap();
         let dfd_f64 = <f64 as NumCast>::from(dfd).unwrap();
 
         match RandFisherF::new(dfn_f64, dfd_f64) {
             Ok(rand_distr) => Ok(F {
-                _dfn,
+                dfn,
                 dfd,
                 loc,
                 scale,

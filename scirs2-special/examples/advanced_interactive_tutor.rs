@@ -148,7 +148,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(5) => real_world_applications_lab(&mut profile)?,
             Ok(6) => mastery_challenge(&mut profile)?,
             Ok(7) => peer_comparison_mode(&mut profile)?,
-            Ok(8) => profile_settings(&mut profile)?_ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(8) => profile_settings(&mut profile)?,
+            _ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 

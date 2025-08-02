@@ -2,7 +2,7 @@
 mod test_robust_methods {
     use ndarray::Array2;
     use num_traits::Float;
-    use scirs2__stats::error::StatsResult;
+    use scirs2_stats::error::StatsResult;
 
     // A simplified version of TheilSlopes just for testing
     struct SimpleTheilSlopes {

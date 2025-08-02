@@ -71,7 +71,8 @@ impl Language {
             "zh" => Language::Chinese,
             "ja" => Language::Japanese,
             "ko" => Language::Korean,
-            "ar" => Language::Arabic_ =>, Language::Unknown,
+            "ar" => Language::Arabic,
+            _ => Language::Unknown,
         }
     }
 

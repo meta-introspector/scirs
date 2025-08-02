@@ -182,7 +182,8 @@ where
             if idx_vec[0] >= _block_cols {
                 return Err(SparseError::ValueError(format!(
                     "index {} out of bounds (max {})",
-                    idx_vec[0], _block_cols - 1
+                    idx_vec[0],
+                    _block_cols - 1
                 )));
             }
         }

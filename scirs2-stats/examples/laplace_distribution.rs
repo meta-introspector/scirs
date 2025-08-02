@@ -1,5 +1,5 @@
-use scirs2__stats::distributions::laplace::Laplace;
-use scirs2__stats::traits::distribution::{ContinuousDistribution, Distribution};
+use scirs2_stats::distributions::laplace::Laplace;
+use scirs2_stats::traits::distribution::{ContinuousDistribution, Distribution};
 use statrs::statistics::Statistics;
 use std::error::Error;
 

@@ -1025,7 +1025,8 @@ impl TutorialSystem {
                 Ok(5) => self.visualization_laboratory()?,
                 Ok(6) => self.view_progress_analytics()?,
                 Ok(7) => self.customize_learning_preferences()?,
-                Ok(8) => self.access_help_and_resources()?_ => println!("❌ Invalid choice. Please try again.\n"),
+                Ok(8) => self.access_help_and_resources()?,
+                _ => println!("❌ Invalid choice. Please try again.\n"),
             }
         }
 
@@ -1232,7 +1233,8 @@ impl TutorialSystem {
                 for style in styles {
                     match style {
                         LearningStyle::Visual => self.deliver_visual_content(&module)?,
-                        LearningStyle::Analytical => self.deliver_analytical_content(&module)?_ => {}
+                        LearningStyle::Analytical => self.deliver_analytical_content(&module)?,
+                        _ => {}
                     }
                 }
             }
@@ -1639,7 +1641,8 @@ impl TutorialSystem {
             Ok(1) => self.function_calculator_explorer()?,
             Ok(2) => self.concept_relationship_mapper()?,
             Ok(3) => self.live_function_visualization()?,
-            Ok(4) => self.expression_evaluator()?_ => println!("❌ Invalid choice."),
+            Ok(4) => self.expression_evaluator()?,
+            _ => println!("❌ Invalid choice."),
         }
 
         Ok(())
@@ -1986,7 +1989,8 @@ impl TutorialSystem {
             Ok(1) => self.interactive_function_plots()?,
             Ok(2) => self.complex_function_visualization()?,
             Ok(3) => self.surface_plot_3d()?,
-            Ok(4) => self.function_animations()?_ => println!("❌ Invalid choice."),
+            Ok(4) => self.function_animations()?,
+            _ => println!("❌ Invalid choice."),
         }
 
         Ok(())
@@ -2164,7 +2168,8 @@ impl TutorialSystem {
             Ok(2) => self.customize_pacing()?,
             Ok(3) => self.customize_difficulty_tolerance()?,
             Ok(4) => self.customize_application_domains()?,
-            Ok(5) => self.customize_explanation_detail()?_ => println!("❌ Invalid choice."),
+            Ok(5) => self.customize_explanation_detail()?,
+            _ => println!("❌ Invalid choice."),
         }
 
         Ok(())
@@ -2306,7 +2311,8 @@ impl TutorialSystem {
             Ok(3) => self.show_faq()?,
             Ok(4) => self.show_external_references()?,
             Ok(5) => self.show_learning_tips()?,
-            Ok(6) => self.show_technical_support()?_ => println!("❌ Invalid choice."),
+            Ok(6) => self.show_technical_support()?,
+            _ => println!("❌ Invalid choice."),
         }
 
         Ok(())

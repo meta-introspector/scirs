@@ -129,7 +129,7 @@ impl Default for Options {
 /// use scirs2_optimize::least_squares::{least_squares, Method};
 ///
 /// // Define a function that returns the residuals
-/// fn residual(x: &[f64]_: &[f64]) -> Array1<f64> {
+/// fn residual(x: &[f64], _: &[f64]) -> Array1<f64> {
 ///     let y = array![
 ///         x[0] + 2.0 * x[1] - 2.0,
 ///         x[0] + x[1] - 1.0
@@ -138,7 +138,7 @@ impl Default for Options {
 /// }
 ///
 /// // Define the Jacobian (optional)
-/// fn jacobian(x: &[f64]_: &[f64]) -> Array2<f64> {
+/// fn jacobian(x: &[f64], _: &[f64]) -> Array2<f64> {
 ///     array![[1.0, 2.0], [1.0, 1.0]]
 /// }
 ///
@@ -239,7 +239,7 @@ where
     };
 
     // Compute initial Jacobian
-    let (mut jac_jac_evals) = match &jacobian {
+    let (mut jac, _jac_evals) = match &jacobian {
         Some(jac_fn) => {
             let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
             njev += 1;
@@ -332,7 +332,7 @@ where
             }
 
             // Compute new Jacobian for next iteration
-            let (new_jac_jac_evals) = match &jacobian {
+            let (new_jac, _jac_evals) = match &jacobian {
                 Some(jac_fn) => {
                     let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                     njev += 1;
@@ -364,10 +364,10 @@ where
     result.jac = if let Some(jac_fn) = &jacobian {
         let jac_array = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
         njev += 1;
-        let (vec_) = jac_array.into_raw_vec_and_offset();
+        let (vec, _) = jac_array.into_raw_vec_and_offset();
         Some(vec)
     } else {
-        let (vec_) = jac.into_raw_vec_and_offset();
+        let (vec, _) = jac.into_raw_vec_and_offset();
         Some(vec)
     };
     result.nfev = nfev;
@@ -451,7 +451,7 @@ where
     };
 
     // Compute initial Jacobian
-    let (mut jac_jac_evals) = match &jacobian {
+    let (mut jac, _jac_evals) = match &jacobian {
         Some(jac_fn) => {
             let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
             njev += 1;
@@ -529,7 +529,7 @@ where
             }
 
             // Compute new Jacobian for next iteration
-            let (new_jac_jac_evals) = match &jacobian {
+            let (new_jac, _jac_evals) = match &jacobian {
                 Some(jac_fn) => {
                     let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                     njev += 1;
@@ -558,10 +558,10 @@ where
     result.jac = if let Some(jac_fn) = &jacobian {
         let jac_array = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
         njev += 1;
-        let (vec_) = jac_array.into_raw_vec_and_offset();
+        let (vec, _) = jac_array.into_raw_vec_and_offset();
         Some(vec)
     } else {
-        let (vec_) = jac.into_raw_vec_and_offset();
+        let (vec, _) = jac.into_raw_vec_and_offset();
         Some(vec)
     };
     result.nfev = nfev;
@@ -881,10 +881,10 @@ where
     result.jac = if let Some(jac_fn) = &jacobian {
         let jac_array = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
         njev += 1;
-        let (vec_) = jac_array.into_raw_vec_and_offset();
+        let (vec, _) = jac_array.into_raw_vec_and_offset();
         Some(vec)
     } else {
-        let (vec_) = jac.into_raw_vec_and_offset();
+        let (vec, _) = jac.into_raw_vec_and_offset();
         Some(vec)
     };
     result.nfev = nfev;
@@ -930,8 +930,8 @@ fn compute_dogbox_step(
     let mut jt_j_free = Array2::zeros((free_vars.len(), free_vars.len()));
 
     for (i, &fi) in free_vars.iter().enumerate() {
-        for (_j, &fj) in free_vars.iter().enumerate() {
-            jt_j_free[[i_j]] = jt_j[[fi, fj]];
+        for (j, &fj) in free_vars.iter().enumerate() {
+            jt_j_free[[i, j]] = jt_j[[fi, fj]];
         }
     }
 

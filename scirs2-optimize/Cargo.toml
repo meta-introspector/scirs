@@ -25,6 +25,7 @@ rand = { workspace = true }
 rand_distr = { workspace = true }
 friedrich = { workspace = true }
 scirs2-sparse = { workspace = true }
+statrs = { workspace = true }
 # ndarray-linalg = { workspace = true, features = ["openblas-system"] } # Removed - use scirs2-core BLAS abstractions
 
 # Async dependencies (optional)

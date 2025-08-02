@@ -8,8 +8,8 @@ use crate::error::OptimizeError;
 use crate::unconstrained::result::OptimizeResult;
 use ndarray::{Array1, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::Float;
-use std::collections::HashMap;
 use rand::seq::SliceRandom;
+use std::collections::HashMap;
 
 /// L1 regularization (Lasso) optimizer using proximal gradient descent
 #[derive(Debug, Clone)]

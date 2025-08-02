@@ -177,7 +177,8 @@ impl NGramModel {
         match self.order {
             1 => self.unigram_probability(word),
             2 => self.bigram_probability(word, context),
-            3 => self.trigram_probability(word, context, _ => self.unigram_probability(word), // Default fallback
+            3 => self.trigram_probability(word, context),
+            _ => self.unigram_probability(word), // Default fallback
         }
     }
 

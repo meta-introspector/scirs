@@ -12,8 +12,8 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
-use std::marker::PhantomData;
 use statrs::statistics::Statistics;
+use std::marker::PhantomData;
 
 /// Enhanced Principal Component Analysis with multiple algorithms
 pub struct EnhancedPCA<F> {
@@ -22,7 +22,8 @@ pub struct EnhancedPCA<F> {
     /// Configuration
     pub config: PCAConfig,
     /// Fitted results
-    pub results: Option<PCAResult<F>>, _phantom: PhantomData<F>,
+    pub results: Option<PCAResult<F>>,
+    _phantom: PhantomData<F>,
 }
 
 /// PCA algorithms
@@ -132,7 +133,7 @@ where
     /// Create new enhanced PCA analyzer
     pub fn new(_algorithm: PCAAlgorithm, config: PCAConfig) -> Self {
         Self {
-            _algorithm,
+            algorithm: _algorithm,
             config,
             results: None,
             _phantom: PhantomData,
@@ -236,7 +237,7 @@ where
         let scale = if self.config.scale {
             let mut std_dev = Array1::zeros(n_features);
 
-            for (j, mut col) in processed_data.columns_mut().into().iter().enumerate() {
+            for (j, mut col) in processed_data.columns_mut().into_iter().enumerate() {
                 let var = col.mapv(|x| x * x).mean().unwrap();
                 std_dev[j] = var.sqrt();
 
@@ -299,7 +300,7 @@ where
         let total_variance_f = F::from(total_variance_f64).unwrap();
 
         Ok(PCAResult {
-            _components: components_f,
+            components: components_f,
             explained_variance: explained_variance_f,
             explained_variance_ratio: explained_variance_ratio_f,
             cumulative_variance_ratio: cumulative_variance_ratio_f,
@@ -377,7 +378,7 @@ where
         let total_variance_f = F::from(total_variance_f64).unwrap();
 
         Ok(PCAResult {
-            _components: components_f,
+            components: components_f,
             explained_variance: explained_variance_f,
             explained_variance_ratio: explained_variance_ratio_f,
             cumulative_variance_ratio: cumulative_variance_ratio_f,
@@ -394,7 +395,9 @@ where
     fn fit_randomized(
         &self,
         data: &Array2<F>,
-        n_components: usize, _n_iter: usize, _oversamples: usize,
+        n_components: usize,
+        _n_iter: usize,
+        _oversamples: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -407,7 +410,8 @@ where
     fn fit_incremental(
         &self,
         data: &Array2<F>,
-        n_components: usize, _batch_size: usize,
+        n_components: usize,
+        _batch_size: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -420,7 +424,9 @@ where
     fn fit_sparse(
         &self,
         data: &Array2<F>,
-        n_components: usize, _alpha: f64, _max_iter: usize,
+        n_components: usize,
+        _alpha: f64,
+        _max_iter: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -433,7 +439,9 @@ where
     fn fit_robust(
         &self,
         data: &Array2<F>,
-        n_components: usize, _lambda: f64, _max_iter: usize,
+        n_components: usize,
+        _lambda: f64,
+        _max_iter: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -472,7 +480,7 @@ where
 
         // Scale
         if let Some(ref scale) = results.scale {
-            for (j, mut col) in processed_data.columns_mut().into().iter().enumerate() {
+            for (j, mut col) in processed_data.columns_mut().into_iter().enumerate() {
                 if scale[j] > F::from(1e-12).unwrap() {
                     for x in col.iter_mut() {
                         *x = *x / scale[j];
@@ -514,7 +522,7 @@ where
 
         // Reverse scaling
         if let Some(ref scale) = results.scale {
-            for (j, mut col) in reconstructed.columns_mut().into().iter().enumerate() {
+            for (j, mut col) in reconstructed.columns_mut().into_iter().enumerate() {
                 if scale[j] > F::from(1e-12).unwrap() {
                     for x in col.iter_mut() {
                         *x = *x * scale[j];
@@ -558,7 +566,8 @@ pub struct EnhancedFactorAnalysis<F> {
     /// Configuration
     pub config: FactorAnalysisConfig,
     /// Results
-    pub results: Option<FactorAnalysisResult<F>>, _phantom: PhantomData<F>,
+    pub results: Option<FactorAnalysisResult<F>>,
+    _phantom: PhantomData<F>,
 }
 
 /// Factor analysis configuration
@@ -634,7 +643,7 @@ where
         check_positive(_n_factors, "_n_factors")?;
 
         Ok(Self {
-            _n_factors,
+            n_factors: _n_factors,
             config,
             results: None,
             _phantom: PhantomData,
@@ -666,13 +675,8 @@ where
         // Iterative estimation (simplified EM algorithm)
         let uniquenesses = Array1::ones(n_features) * F::from(0.5).unwrap();
 
-        for _iter in 0..self.config.max_iter {
-            // E-step: Update factor scores (simplified)
-            // M-step: Update loadings and uniquenesses (simplified)
-
-            // For now, use the initial PCA-based loadings
-            break;
-        }
+        // TODO: Implement full iterative EM algorithm
+        // For now, use the initial PCA-based loadings directly
 
         // Apply rotation if requested
         if self.config.rotation != RotationMethod::None {
@@ -682,14 +686,14 @@ where
         // Compute communalities
         let communalities = loadings
             .rows()
-            .into().iter()
+            .into_iter()
             .map(|row| row.mapv(|x| x * x).sum())
             .collect::<Array1<F>>();
 
         // Compute explained variance
         let explained_variance = loadings
             .columns()
-            .into().iter()
+            .into_iter()
             .map(|col| col.mapv(|x| x * x).sum())
             .collect::<Array1<F>>();
 

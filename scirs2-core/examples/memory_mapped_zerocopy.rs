@@ -116,7 +116,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nComparison with conventional approach:");
     let start = Instant::now();
     let loaded_array = array.readonlyarray::<ndarray::Ix1>()?;
-    let squared_loaded: Array<f64_> = loaded_array.map(|&x| x * x);
+    let squared_loaded: Array<f64, _> = loaded_array.map(|&x| x * x);
     let squared_loaded_mean = squared_loaded.mean().unwrap();
     let elapsed = start.elapsed();
     println!(
@@ -298,7 +298,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let strategy = ChunkingStrategy::Fixed(chunk_size);
 
         // Process chunks
-        let chunk_sums = bench_array.process_chunks(strategy, |chunk_| chunk.iter().sum::<f64>());
+        let chunk_sums = bench_array.process_chunks(strategy, |chunk| chunk.iter().sum::<f64>());
 
         // Calculate final sum
         result = chunk_sums.iter().sum();
@@ -324,7 +324,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Process chunks in parallel
             let chunk_sums =
-                bench_array.process_chunks_parallel(strategy, |chunk_| chunk.iter().sum::<f64>());
+                bench_array.process_chunks_parallel(strategy, |chunk| chunk.iter().sum::<f64>());
 
             // Calculate final sum
             result = chunk_sums.iter().sum();

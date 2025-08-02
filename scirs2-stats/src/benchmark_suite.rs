@@ -612,7 +612,9 @@ impl BenchmarkSuite {
 
     /// Get baseline performance comparison
     fn get_baseline_comparison(
-        &self, _function_name: &str, _data_size: usize,
+        &self,
+        _function_name: &str,
+        _data_size: usize,
         current_time_ns: f64,
     ) -> Option<f64> {
         // This would typically compare against stored baseline measurements
@@ -966,77 +968,80 @@ mod tests {
     #[test]
     fn test_complexity_classification() {
         let suite = BenchmarkSuite::new();
-        let metrics = vec![
-            &BenchmarkMetrics {
-                function_name: "test".to_string(),
-                data_size: 100,
-                timing: TimingStats {
-                    mean_ns: 1000.0,
-                    std_dev_ns: 100.0,
-                    min_ns: 900.0,
-                    max_ns: 1100.0,
-                    median_ns: 1000.0,
-                    p95_ns: 1050.0,
-                    p99_ns: 1080.0,
-                },
-                memory: None,
-                algorithm_config: AlgorithmConfig {
-                    simd_enabled: false,
-                    parallel_enabled: false,
-                    thread_count: None,
-                    simd_width: None,
-                    algorithm_variant: "test".to_string(),
-                },
-                throughput: 100000.0,
-                baseline_comparison: None,
+
+        let metric1 = BenchmarkMetrics {
+            function_name: "test".to_string(),
+            data_size: 100,
+            timing: TimingStats {
+                mean_ns: 1000.0,
+                std_dev_ns: 100.0,
+                min_ns: 900.0,
+                max_ns: 1100.0,
+                median_ns: 1000.0,
+                p95_ns: 1050.0,
+                p99_ns: 1080.0,
             },
-            &BenchmarkMetrics {
-                function_name: "test".to_string(),
-                data_size: 1000,
-                timing: TimingStats {
-                    mean_ns: 10000.0,
-                    std_dev_ns: 1000.0,
-                    min_ns: 9000.0,
-                    max_ns: 11000.0,
-                    median_ns: 10000.0,
-                    p95_ns: 10500.0,
-                    p99_ns: 10800.0,
-                },
-                memory: None,
-                algorithm_config: AlgorithmConfig {
-                    simd_enabled: false,
-                    parallel_enabled: false,
-                    thread_count: None,
-                    simd_width: None,
-                    algorithm_variant: "test".to_string(),
-                },
-                throughput: 100000.0,
-                baseline_comparison: None,
+            memory: None,
+            algorithm_config: AlgorithmConfig {
+                simd_enabled: false,
+                parallel_enabled: false,
+                thread_count: None,
+                simd_width: None,
+                algorithm_variant: "test".to_string(),
             },
-            &BenchmarkMetrics {
-                function_name: "test".to_string(),
-                data_size: 10000,
-                timing: TimingStats {
-                    mean_ns: 100000.0,
-                    std_dev_ns: 10000.0,
-                    min_ns: 90000.0,
-                    max_ns: 110000.0,
-                    median_ns: 100000.0,
-                    p95_ns: 105000.0,
-                    p99_ns: 108000.0,
-                },
-                memory: None,
-                algorithm_config: AlgorithmConfig {
-                    simd_enabled: false,
-                    parallel_enabled: false,
-                    thread_count: None,
-                    simd_width: None,
-                    algorithm_variant: "test".to_string(),
-                },
-                throughput: 100000.0,
-                baseline_comparison: None,
+            throughput: 100000.0,
+            baseline_comparison: None,
+        };
+
+        let metric2 = BenchmarkMetrics {
+            function_name: "test".to_string(),
+            data_size: 1000,
+            timing: TimingStats {
+                mean_ns: 10000.0,
+                std_dev_ns: 1000.0,
+                min_ns: 9000.0,
+                max_ns: 11000.0,
+                median_ns: 10000.0,
+                p95_ns: 10500.0,
+                p99_ns: 10800.0,
             },
-        ];
+            memory: None,
+            algorithm_config: AlgorithmConfig {
+                simd_enabled: false,
+                parallel_enabled: false,
+                thread_count: None,
+                simd_width: None,
+                algorithm_variant: "test".to_string(),
+            },
+            throughput: 100000.0,
+            baseline_comparison: None,
+        };
+
+        let metric3 = BenchmarkMetrics {
+            function_name: "test".to_string(),
+            data_size: 10000,
+            timing: TimingStats {
+                mean_ns: 100000.0,
+                std_dev_ns: 10000.0,
+                min_ns: 90000.0,
+                max_ns: 110000.0,
+                median_ns: 100000.0,
+                p95_ns: 105000.0,
+                p99_ns: 108000.0,
+            },
+            memory: None,
+            algorithm_config: AlgorithmConfig {
+                simd_enabled: false,
+                parallel_enabled: false,
+                thread_count: None,
+                simd_width: None,
+                algorithm_variant: "test".to_string(),
+            },
+            throughput: 100000.0,
+            baseline_comparison: None,
+        };
+
+        let metrics = vec![&metric1, &metric2, &metric3];
 
         let complexity = suite.classify_complexity(&metrics);
         assert!(matches!(complexity, ComplexityClass::Linear));

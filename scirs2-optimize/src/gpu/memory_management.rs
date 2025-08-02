@@ -401,7 +401,7 @@ impl MemoryStats {
             report.push('\n');
             report.push_str("Memory Pools:\n");
             let mut pools: Vec<_> = self.pool_sizes.iter().collect();
-            pools.sort_by_key(|&(size_)| size);
+            pools.sort_by_key(|&(size_, _)| size_);
             for (&size, &count) in pools {
                 report.push_str(&format!("  {} bytes: {} blocks\n", size, count));
             }

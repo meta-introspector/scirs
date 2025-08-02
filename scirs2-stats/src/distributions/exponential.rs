@@ -5,13 +5,13 @@
 use crate::error::{StatsError, StatsResult};
 use crate::error_messages::{helpers, validation};
 use crate::sampling::SampleableDistribution;
-use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
+use crate::traits::{ContinuousCDF, ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{Distribution, Exp as RandExp};
-use std::fmt::Debug;
 use statrs::statistics::Statistics;
+use std::fmt::Debug;
 
 /// Exponential distribution structure
 pub struct Exponential<F: Float> {
@@ -40,22 +40,22 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::distributions::exponential::Exponential;
     ///
     /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
     /// ```
-    pub fn new(_rate: F, loc: F) -> StatsResult<Self> {
-        validation::ensure_positive(_rate, "Rate parameter")?;
+    pub fn new(rate: F, loc: F) -> StatsResult<Self> {
+        validation::ensure_positive(rate, "Rate parameter")?;
 
-        // Set scale = 1/_rate
-        let scale = F::one() / _rate;
+        // Set scale = 1/rate
+        let scale = F::one() / rate;
 
         // Convert to f64 for rand_distr
-        let rate_f64 = <f64 as NumCast>::from(_rate).unwrap();
+        let rate_f64 = <f64 as NumCast>::from(rate).unwrap();
 
         match RandExp::new(rate_f64) {
             Ok(rand_distr) => Ok(Exponential {
-                _rate,
+                rate,
                 scale,
                 loc,
                 rand_distr,
@@ -80,16 +80,16 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::distributions::exponential::Exponential;
     ///
     /// let exp = Exponential::from_scale(2.0f64, 0.0).unwrap();
     /// assert_eq!(exp.rate, 0.5);
     /// ```
-    pub fn from_scale(_scale: F, loc: F) -> StatsResult<Self> {
-        validation::ensure_positive(_scale, "_scale")?;
+    pub fn from_scale(scale: F, loc: F) -> StatsResult<Self> {
+        validation::ensure_positive(scale, "scale")?;
 
-        // Set rate = 1/_scale
-        let rate = F::one() / _scale;
+        // Set rate = 1/scale
+        let rate = F::one() / scale;
 
         // Convert to f64 for rand_distr
         let rate_f64 = <f64 as NumCast>::from(rate).unwrap();
@@ -97,7 +97,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
         match RandExp::new(rate_f64) {
             Ok(rand_distr) => Ok(Exponential {
                 rate,
-                _scale,
+                scale,
                 loc,
                 rand_distr,
             }),
@@ -120,7 +120,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::distributions::exponential::Exponential;
     ///
     /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
     /// let pdf_at_one = exp.pdf(1.0);
@@ -153,7 +153,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::distributions::exponential::Exponential;
     ///
     /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
     /// let cdf_at_one = exp.cdf(1.0);
@@ -186,7 +186,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::distributions::exponential::Exponential;
     ///
     /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
     /// let x = exp.ppf(0.5).unwrap();
@@ -223,7 +223,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::distributions::exponential::Exponential;
     ///
     /// let exp = Exponential::new(2.0f64, 1.0).unwrap();
     /// assert_eq!(exp.mean(), 1.5); // loc + 1/rate = 1 + 1/2 = 1.5
@@ -241,7 +241,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::distributions::exponential::Exponential;
     ///
     /// let exp = Exponential::new(2.0f64, 0.0).unwrap();
     /// assert_eq!(exp.variance(), 0.25); // (1/rate)^2 = (1/2)^2 = 0.25
@@ -263,7 +263,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::distributions::exponential::Exponential;
     ///
     /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
     /// let samples = exp.rvs(1000).unwrap();
@@ -288,7 +288,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Exponential<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::exponential::Exponential;
+    /// use scirs2_stats::distributions::exponential::Exponential;
     ///
     /// let exp = Exponential::new(1.0f64, 0.0).unwrap();
     /// let samples = exp.rvs_vec(1000).unwrap();
@@ -344,6 +344,10 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> ContinuousDistribution<F> f
     fn ppf(&self, p: F) -> StatsResult<F> {
         self.ppf(p)
     }
+}
+
+impl<F: Float + NumCast + Debug + std::fmt::Display> ContinuousCDF<F> for Exponential<F> {
+    // Default implementations from trait are sufficient
 }
 
 /// Implementation of SampleableDistribution for Exponential
@@ -564,18 +568,18 @@ mod tests {
         // Check PPF
         assert_relative_eq!(dist.ppf(0.5).unwrap(), 0.69314718, epsilon = 1e-7);
 
-        // Check derived methods
-        assert_relative_eq!(dist.sf(1.0), 1.0 - 0.63212056, epsilon = 1e-7);
+        // Check derived methods using concrete type
+        assert_relative_eq!(exp.sf(1.0), 1.0 - 0.63212056, epsilon = 1e-7);
 
         // Hazard function for exponential should be constant = rate
-        assert_relative_eq!(dist.hazard(1.0), 1.0, epsilon = 1e-7);
+        assert_relative_eq!(exp.hazard(1.0), 1.0, epsilon = 1e-7);
 
         // Cumulative hazard function for exponential is just rate*x
-        assert_relative_eq!(dist.cumhazard(1.0), 1.0, epsilon = 1e-7);
+        assert_relative_eq!(exp.cumhazard(1.0), 1.0, epsilon = 1e-7);
 
         // Inverse survival function should work
         assert_relative_eq!(
-            dist.isf(0.5).unwrap(),
+            exp.isf(0.5).unwrap(),
             dist.ppf(0.5).unwrap(),
             epsilon = 1e-7
         );

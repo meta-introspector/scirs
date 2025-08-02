@@ -53,8 +53,8 @@ use ndarray::Array1;
 use num_traits::{cast::NumCast, Float, FloatConst};
 use rand::rng;
 use scirs2_core::Rng;
-use std::cmp;
 use statrs::statistics::Statistics;
+use std::cmp;
 
 /// Hypergeometric distribution
 ///
@@ -104,13 +104,13 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
 
         if n_success > n_population {
             return Err(StatsError::InvalidArgument(
-                "Number of _success states cannot exceed _population size".to_string(),
+                "Number of success states cannot exceed population size".to_string(),
             ));
         }
 
         if n_draws > n_population {
             return Err(StatsError::InvalidArgument(
-                "Number of _draws cannot exceed _population size".to_string(),
+                "Number of draws cannot exceed population size".to_string(),
             ));
         }
 

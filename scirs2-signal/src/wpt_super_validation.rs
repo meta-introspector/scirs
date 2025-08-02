@@ -1921,7 +1921,8 @@ fn validate_individual_simd_operations(
                 "simd_downsampling" => test_simd_downsampling(&test_signal)?,
                 "simd_upsampling" => test_simd_upsampling(&test_signal)?,
                 "simd_coefficient_thresholding" => test_simd_thresholding(&test_signal)?,
-                "simd_energy_calculation" => test_simd_energy_calculation(&test_signal)?_ => (0.0, 0.0),
+                "simd_energy_calculation" => test_simd_energy_calculation(&test_signal)?,
+                _ => (0.0, 0.0),
             };
 
             let error = (simd_result - scalar_result).abs();
@@ -2545,7 +2546,8 @@ fn analyze_frequency_band_errors(
 
 #[allow(dead_code)]
 fn calculate_frame_bounds(
-    _tree: &crate::wpt::WaveletPacketTree_signal: &Array1<f64>,
+    _tree: &crate::wpt::WaveletPacketTree,
+    _signal: &Array1<f64>,
 ) -> SignalResult<(f64, f64)> {
     // TODO: Implement frame bounds calculation for tight frame validation
     Ok((0.99, 1.01))
@@ -2553,7 +2555,8 @@ fn calculate_frame_bounds(
 
 #[allow(dead_code)]
 fn verify_parseval_relation(
-    _tree: &crate::wpt::WaveletPacketTree_signal: &Array1<f64>,
+    _tree: &crate::wpt::WaveletPacketTree,
+    _signal: &Array1<f64>,
 ) -> SignalResult<f64> {
     // TODO: Implement Parseval's relation verification (energy conservation)
     Ok(0.0)
@@ -2586,7 +2589,8 @@ fn is_orthogonal_wavelet(_wavelet: crate::dwt::Wavelet) -> bool {
 
 #[allow(dead_code)]
 fn verify_biorthogonality(
-    _tree: &crate::wpt::WaveletPacketTree_wavelet: crate::dwt::Wavelet,
+    _tree: &crate::wpt::WaveletPacketTree,
+    _wavelet: crate::dwt::Wavelet,
 ) -> SignalResult<bool> {
     // TODO: Implement biorthogonality verification for non-orthogonal wavelets
     Ok(true)

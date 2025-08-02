@@ -90,7 +90,7 @@ fn color_jacobian_columns(_sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optim
 #[allow(dead_code)]
 fn get_column_nonzero_rows(_sparsity: &CsrArray<f64>, col: usize) -> HashSet<usize> {
     let mut rows = HashSet::new();
-    let (m_) = _sparsity.shape();
+    let (m, _) = _sparsity.shape();
 
     for row in 0..m {
         let val = _sparsity.get(row, col);
@@ -118,7 +118,7 @@ fn get_column_nonzero_rows(_sparsity: &CsrArray<f64>, col: usize) -> HashSet<usi
 pub fn compress_hessian_pattern(
     sparsity: &CsrArray<f64>,
 ) -> Result<(CsrArray<f64>, Array2<f64>), OptimizeError> {
-    let (n_) = sparsity.shape();
+    let (n, _) = sparsity.shape();
 
     // Perform distance-2 coloring for Hessian
     let coloring = color_hessian_columns(sparsity)?;
@@ -140,7 +140,7 @@ pub fn compress_hessian_pattern(
 /// 2. They don't share any common neighbors
 #[allow(dead_code)]
 fn color_hessian_columns(_sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
-    let (n_) = _sparsity.shape();
+    let (n, _) = _sparsity.shape();
     let mut coloring = vec![0; n];
 
     // Build adjacency information for efficient neighbor lookup
@@ -183,7 +183,7 @@ fn color_hessian_columns(_sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimi
 /// Build adjacency list representation of the sparsity pattern
 #[allow(dead_code)]
 fn build_adjacency_list(_sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
-    let (n_) = _sparsity.shape();
+    let (n, _) = _sparsity.shape();
     let mut adjacency = vec![HashSet::new(); n];
 
     for i in 0..n {
@@ -220,7 +220,8 @@ fn build_adjacency_list(_sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
 #[allow(dead_code)]
 pub fn reconstruct_jacobian(
     gradients: &ArrayView2<f64>,
-    b: &ArrayView2<f64>, _c: &ArrayView2<f64>,
+    b: &ArrayView2<f64>,
+    _c: &ArrayView2<f64>,
     sparsity: &CsrArray<f64>,
 ) -> Result<CsrArray<f64>, OptimizeError> {
     let (m, n) = sparsity.shape();
@@ -307,7 +308,7 @@ pub fn reconstruct_hessian_central_diff(
     sparsity: &CsrArray<f64>,
     h: f64,
 ) -> Result<CsrArray<f64>, OptimizeError> {
-    let (n_) = sparsity.shape();
+    let (n, _) = sparsity.shape();
     let (grad_n, num_colors) = gradients_forward.dim();
     let (p_n, p_colors) = p.dim();
 

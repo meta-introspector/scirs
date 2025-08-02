@@ -4,13 +4,13 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
-use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
+use crate::traits::{ContinuousCDF, ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{Beta as RandBeta, Distribution};
-use std::fmt::Debug;
 use statrs::statistics::Statistics;
+use std::fmt::Debug;
 
 /// Beta distribution structure
 pub struct Beta<F: Float> {
@@ -43,7 +43,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::beta::Beta;
+    /// use scirs2_stats::distributions::beta::Beta;
     ///
     /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
     /// ```
@@ -97,7 +97,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::beta::Beta;
+    /// use scirs2_stats::distributions::beta::Beta;
     ///
     /// // Special case: beta(2,3)
     /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
@@ -163,7 +163,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::beta::Beta;
+    /// use scirs2_stats::distributions::beta::Beta;
     ///
     /// let beta = Beta::new(2.0f64, 2.0, 0.0, 1.0).unwrap();
     /// let cdf_at_half = beta.cdf(0.5);
@@ -236,7 +236,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::beta::Beta;
+    /// use scirs2_stats::distributions::beta::Beta;
     ///
     /// let beta = Beta::new(2.0f64, 2.0, 0.0, 1.0).unwrap();
     /// let x = beta.ppf(0.5).unwrap();
@@ -324,7 +324,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::beta::Beta;
+    /// use scirs2_stats::distributions::beta::Beta;
     ///
     /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
     /// let samples = beta.rvs_vec(1000).unwrap();
@@ -355,7 +355,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> Beta<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::beta::Beta;
+    /// use scirs2_stats::distributions::beta::Beta;
     ///
     /// let beta = Beta::new(2.0f64, 3.0, 0.0, 1.0).unwrap();
     /// let samples = beta.rvs(1000).unwrap();
@@ -664,6 +664,10 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> ContinuousDistribution<F> f
     }
 }
 
+impl<F: Float + NumCast + Debug + std::fmt::Display> ContinuousCDF<F> for Beta<F> {
+    // Default implementations from trait are sufficient
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -829,8 +833,8 @@ mod tests {
         let direct_ppf = beta.ppf(0.5).unwrap();
         assert_relative_eq!(ppf, direct_ppf, epsilon = 1e-10);
 
-        // Test derived methods of ContinuousDistribution
-        let sf = ContinuousDistribution::sf(&beta, 0.5);
+        // Test derived methods of ContinuousCDF
+        let sf = beta.sf(0.5);
         assert_relative_eq!(sf, 1.0 - beta.cdf(0.5), epsilon = 1e-10);
     }
 

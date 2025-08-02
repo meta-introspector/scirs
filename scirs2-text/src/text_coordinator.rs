@@ -1086,7 +1086,8 @@ impl AdvancedTextCoordinator {
     }
 
     fn calculate_confidence_scores(
-        &self_result: &TextProcessingResult, _analytics: &AdvancedTextAnalytics,
+        &self_result: &TextProcessingResult,
+        _analytics: &AdvancedTextAnalytics,
     ) -> Result<HashMap<String, f64>> {
         let mut scores = HashMap::new();
         scores.insert("overall_confidence".to_string(), 0.93);
@@ -1430,7 +1431,8 @@ impl NeuralProcessingEnsemble {
 
     fn classify_batch_ensemble(
         &self,
-        texts: &[String], _categories: &[String],
+        texts: &[String],
+        _categories: &[String],
     ) -> Result<Vec<ClassificationResult>> {
         // Enhanced classification using text features
         let mut results = Vec::new();
@@ -1458,7 +1460,8 @@ impl NeuralProcessingEnsemble {
 
     fn enhanced_topic_modeling(
         &self,
-        documents: &[String], _params: &TopicModelingParams,
+        documents: &[String],
+        _params: &TopicModelingParams,
     ) -> Result<EnhancedTopicModelingResult> {
         // Enhanced topic modeling using text analysis
         // This is a simplified implementation for demonstration
@@ -1509,7 +1512,8 @@ impl TextMemoryOptimizer {
     }
 
     fn optimize_for_classification_batch(
-        &self_num_texts: usize, _num_categories: usize,
+        &self_num_texts: usize,
+        _num_categories: usize,
     ) -> Result<()> {
         Ok(()) // Placeholder
     }
@@ -1530,7 +1534,8 @@ impl AdaptiveTextEngine {
     }
 
     fn optimize_topic_modeling_params(
-        &self_documents: &[String], _num_topics: usize,
+        &self_documents: &[String],
+        _num_topics: usize,
     ) -> Result<TopicModelingParams> {
         Ok(TopicModelingParams) // Placeholder
     }
@@ -1547,19 +1552,24 @@ impl TextAnalyticsEngine {
     }
 
     fn analyze_comprehensive(
-        &self_texts: &[String], _result: &TextProcessingResult,
+        &self_texts: &[String],
+        _result: &TextProcessingResult,
     ) -> Result<AdvancedTextAnalytics> {
         Ok(AdvancedTextAnalytics::empty()) // Placeholder
     }
 
     fn analyze_similarity_context(
-        &self_text1: &str, _text2: &str_similarity: f64,
+        &self,
+        text1: &str,
+        _text2: &str,
+        _similarity: f64,
     ) -> Result<SimilarityAnalytics> {
         Ok(SimilarityAnalytics) // Placeholder
     }
 
     fn analyze_topic_quality(
-        &self_topics: &EnhancedTopicModelingResult, _documents: &[String],
+        &self_topics: &EnhancedTopicModelingResult,
+        _documents: &[String],
     ) -> Result<TopicAnalytics> {
         Ok(TopicAnalytics) // Placeholder
     }

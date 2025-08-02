@@ -47,7 +47,7 @@ pub struct AnovaResult<F> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::tests::anova::one_way_anova;
+/// use scirs2_stats::tests::anova::one_way_anova;
 ///
 /// // Create three groups for comparison
 /// let group1 = array![85.0, 82.0, 78.0, 88.0, 91.0];
@@ -192,7 +192,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::tests::anova::{one_way_anova, tukey_hsd};
+/// use scirs2_stats::tests::anova::{one_way_anova, tukey_hsd};
 ///
 /// // Create three groups for comparison
 /// let group1 = array![85.0, 82.0, 78.0, 88.0, 91.0];

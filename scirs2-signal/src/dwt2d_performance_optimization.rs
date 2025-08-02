@@ -411,7 +411,7 @@ fn simd_optimized_decomposition(
 #[allow(dead_code)]
 fn simd_row_transform(
     image: &Array2<f64>,
-    wavelet: &Wavelet_config: &PerformanceConfig,
+    wavelet: &Wavelet, _config: &PerformanceConfig,
 ) -> SignalResult<Array2<f64>> {
     let (height, width) = image.dim();
     let filters = wavelet.filters()?;
@@ -432,7 +432,7 @@ fn simd_row_transform(
 #[allow(dead_code)]
 fn simd_column_transform(
     image: &Array2<f64>,
-    wavelet: &Wavelet_config: &PerformanceConfig,
+    wavelet: &Wavelet, _config: &PerformanceConfig,
 ) -> SignalResult<(Array2<f64>, Array2<f64>, Array2<f64>, Array2<f64>)> {
     let (height, width) = image.dim();
     let half_height = height / 2;
@@ -511,7 +511,7 @@ fn simd_1d_transform(
 fn parallel_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
-    levels: usize_config: &PerformanceConfig,
+    levels: usize, _config: &PerformanceConfig,
 ) -> SignalResult<Vec<Array2<f64>>> {
     // For simplicity, fall back to standard decomposition with parallel row processing
     let mut current_image = image.clone();
@@ -555,7 +555,7 @@ fn tiled_optimized_decomposition(
 fn streaming_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
-    levels: usize_config: &PerformanceConfig,
+    levels: usize, _config: &PerformanceConfig,
 ) -> SignalResult<Vec<Array2<f64>>> {
     // For simplicity, fall back to standard decomposition
     // A full implementation would process data in streaming chunks

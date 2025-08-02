@@ -253,7 +253,7 @@ impl UMAP {
 
     /// Optimize the low dimensional embedding
     fn optimize_embedding(
-        &self..embedding: &mut Array2<f64>,
+        &self, embedding: &mut Array2<f64>,
         graph: &Array2<f64>,
         n_epochs: usize,) {
         let n_samples = embedding.shape()[0];

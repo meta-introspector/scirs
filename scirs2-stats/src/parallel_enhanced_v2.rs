@@ -137,7 +137,7 @@ pub fn variance_parallel_enhanced<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
-    D: Data<Elem = F> + Sync + std::fmt::Display,
+    D: Data<Elem = F> + Sync,
 {
     let n = x.len();
     if n <= ddof {
@@ -159,9 +159,9 @@ where
 
     // Each chunk computes local mean and M2
     let chunk_stats: Vec<(F, F, usize)> = (0..n_chunks)
-        .into().iter()
+        .into_iter()
         .collect::<Vec<_>>()
-        .into_par.iter()
+        .into_par_iter()
         .map(|chunk_idx| {
             let start = chunk_idx * chunk_size;
             let end = (start + chunk_size).min(n);
@@ -184,7 +184,7 @@ where
         .collect();
 
     // Combine chunk statistics
-    let (_total_mean, total_m2__) = combine_welford_stats(&chunk_stats);
+    let (_total_mean, total_m2__, _total_count) = combine_welford_stats(&chunk_stats);
 
     Ok(total_m2__ / F::from(n - ddof).unwrap())
 }
@@ -211,9 +211,9 @@ where
 
     // Compute means for each feature in parallel
     let means: Vec<F> = (0..n_features)
-        .into().iter()
+        .into_iter()
         .collect::<Vec<_>>()
-        .into_par.iter()
+        .into_par_iter()
         .map(|j| {
             let col = data.column(j);
             mean_parallel_enhanced(&col, Some(config.clone())).unwrap_or(F::zero())
@@ -229,7 +229,7 @@ where
         .collect();
 
     let correlations: Vec<((usize, usize), F)> = indices
-        .into_par.iter()
+        .into_par_iter()
         .map(|(i, j)| {
             let corr = if i == j {
                 F::one() // Diagonal is always 1
@@ -263,7 +263,7 @@ pub fn bootstrap_parallel_enhanced<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync,
-    D: Data<Elem = F> + Sync + std::fmt::Display,
+    D: Data<Elem = F> + Sync,
 {
     if data.is_empty() {
         return Err(StatsError::invalid_argument("Cannot bootstrap empty data"));
@@ -275,9 +275,9 @@ where
 
     // Generate bootstrap statistics in parallel
     let stats: Vec<F> = (0..n_samples_)
-        .into().iter()
+        .into_iter()
         .collect::<Vec<_>>()
-        .into_par.iter()
+        .into_par_iter()
         .map(|sample_idx| {
             use rand::rngs::StdRng;
             use rand::{Rng, SeedableRng};
@@ -324,9 +324,9 @@ where
     let n_chunks = (n + chunk_size - 1) / chunk_size;
 
     (0..n_chunks)
-        .into().iter()
+        .into_iter()
         .collect::<Vec<_>>()
-        .into_par.iter()
+        .into_par_iter()
         .map(|chunk_idx| {
             let start = chunk_idx * chunk_size;
             let end = (start + chunk_size).min(n);
@@ -343,7 +343,7 @@ where
 fn variance_sequential_welford<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let mut mean = F::zero();
     let mut m2 = F::zero();

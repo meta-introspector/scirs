@@ -146,7 +146,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             1 => "LZ4 (L9)",
             2 => "Zstd (L1)",
             3 => "Zstd (L9)",
-            4 => Snappy_ => Unknown,
+            4 => "Snappy",
+            _ => "Unknown",
         };
 
         let start = Instant::now();
@@ -189,7 +190,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             1 => "LZ4 (L9)",
             2 => "Zstd (L1)",
             3 => "Zstd (L9)",
-            4 => Snappy_ => Unknown,
+            4 => "Snappy",
+            _ => "Unknown",
         };
 
         let start = Instant::now();
@@ -241,11 +243,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             1 => "LZ4 (L9)",
             2 => "Zstd (L1)",
             3 => "Zstd (L9)",
-            4 => Snappy_ => Unknown,
+            4 => "Snappy",
+            _ => "Unknown",
         };
 
         let start = Instant::now();
-        let results = cmm.process_blocks(|block_| block.iter().sum::<f64>())?;
+        let results = cmm.process_blocks(|block| block.iter().sum::<f64>())?;
         let cmm_sum: f64 = results.iter().sum();
         let elapsed = start.elapsed();
         println!(

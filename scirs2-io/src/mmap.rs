@@ -104,7 +104,7 @@ impl<'a> MmapArrayBuilder<'a> {
     /// Create a new builder for the specified file path
     pub fn new<P: AsRef<Path>>(_path: &'a P) -> Self {
         Self {
-            _path: _path.as_ref(),
+            path: _path.as_ref(),
             create: true,
             truncate: false,
             buffer_size: 64 * 1024, // 64KB default buffer
@@ -266,11 +266,13 @@ where
         };
 
         // Read metadata to determine array size
-        let (len_metadata_size) = Self::read_metadata(&mmap[..])?;
+        let (len_value, _metadata_size) = Self::read_metadata(&mmap[..])?;
 
         Ok(Self {
-            mmap_file: file,
-            len_phantom: PhantomData,
+            mmap,
+            _file: file,
+            len: len_value,
+            _phantom: PhantomData,
         })
     }
 
@@ -442,11 +444,13 @@ where
         };
 
         // Read metadata to determine array size
-        let (len_metadata_size) = Self::read_metadata(&mmap)?;
+        let (len_value, _metadata_size) = Self::read_metadata(&mmap)?;
 
         Ok(Self {
-            mmap_file: file,
-            len_phantom: PhantomData,
+            mmap,
+            _file: file,
+            len: len_value,
+            _phantom: PhantomData,
         })
     }
 

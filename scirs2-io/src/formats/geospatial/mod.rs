@@ -66,7 +66,7 @@ impl CRS {
     pub fn from_wkt(_wkt: String) -> Self {
         Self {
             epsg_code: None,
-            _wkt: Some(_wkt),
+            wkt: Some(_wkt),
             proj4: None,
         }
     }
@@ -91,9 +91,9 @@ pub struct GeoTransform {
 
 impl GeoTransform {
     /// Create a simple north-up transform
-    pub fn new(_x_origin: f64, y_origin: f64, pixel_width: f64, pixel_height: f64) -> Self {
+    pub fn new(x_origin: f64, y_origin: f64, pixel_width: f64, pixel_height: f64) -> Self {
         Self {
-            _x_origin,
+            x_origin,
             y_origin,
             pixel_width,
             pixel_height,
@@ -754,7 +754,7 @@ impl GeoJson {
 
         Self {
             r#type: "FeatureCollection".to_string(),
-            _features: geojson_features,
+            features: geojson_features,
             crs,
         }
     }
@@ -820,7 +820,7 @@ impl KMLDocument {
     /// Create a new KML document
     pub fn new(_name: impl Into<String>) -> Self {
         Self {
-            _name: Some(_name.into()),
+            name: Some(_name.into()),
             description: None,
             features: Vec::new(),
             folders: Vec::new(),

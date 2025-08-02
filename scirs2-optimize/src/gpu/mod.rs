@@ -7,8 +7,8 @@
 use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuContext};
-use std::sync::Arc;
 use statrs::statistics::Statistics;
+use std::sync::Arc;
 
 // Note: Error conversion handled through scirs2_core::error system
 // GPU errors are automatically converted via CoreError type alias
@@ -434,12 +434,12 @@ pub mod algorithms {
             trial_population: &Array2<f64>,
             trial_fitness: &Array1<f64>,
         ) -> ScirsResult<()> {
-            for i in 0.._population.nrows() {
-                if trial_fitness[i] <= _fitness[i] {
-                    for j in 0.._population.ncols() {
-                        _population[[i, j]] = trial_population[[i, j]];
+            for i in 0..population.nrows() {
+                if trial_fitness[i] <= fitness[i] {
+                    for j in 0..population.ncols() {
+                        population[[i, j]] = trial_population[[i, j]];
                     }
-                    _fitness[i] = trial_fitness[i];
+                    fitness[i] = trial_fitness[i];
                 }
             }
             Ok(())

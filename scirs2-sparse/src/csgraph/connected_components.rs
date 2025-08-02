@@ -108,7 +108,13 @@ where
     for start in 0..n {
         if !visited[start] {
             // Start a new component
-            dfs_component(&adj_list, start, &mut visited, component_count, &mut _labels);
+            dfs_component(
+                &adj_list,
+                start,
+                &mut visited,
+                component_count,
+                &mut _labels,
+            );
             component_count += 1;
         }
     }

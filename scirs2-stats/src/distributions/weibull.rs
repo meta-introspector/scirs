@@ -41,7 +41,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::weibull::Weibull;
+    /// use scirs2_stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// ```
@@ -70,7 +70,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
         };
 
         Ok(Weibull {
-            _shape,
+            shape: _shape,
             scale,
             loc,
             rand_distr,
@@ -90,7 +90,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::weibull::Weibull;
+    /// use scirs2_stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let pdf_at_one = weibull.pdf(1.0);
@@ -131,7 +131,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::weibull::Weibull;
+    /// use scirs2_stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let cdf_at_one = weibull.cdf(1.0);
@@ -165,7 +165,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::weibull::Weibull;
+    /// use scirs2_stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let x = weibull.ppf(0.5).unwrap();
@@ -208,7 +208,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::weibull::Weibull;
+    /// use scirs2_stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let samples = weibull.rvs(10).unwrap();
@@ -241,7 +241,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::weibull::Weibull;
+    /// use scirs2_stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let mean = weibull.mean();
@@ -263,7 +263,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::weibull::Weibull;
+    /// use scirs2_stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let var = weibull.var();
@@ -294,7 +294,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::weibull::Weibull;
+    /// use scirs2_stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let median = weibull.median();
@@ -316,7 +316,7 @@ impl<F: Float + NumCast + std::fmt::Display> Weibull<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::weibull::Weibull;
+    /// use scirs2_stats::distributions::weibull::Weibull;
     ///
     /// let weibull = Weibull::new(2.0f64, 1.0, 0.0).unwrap();
     /// let mode = weibull.mode();
@@ -404,7 +404,7 @@ fn gamma_function<F: Float + NumCast>(x: F) -> F {
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions::weibull;
+/// use scirs2_stats::distributions::weibull;
 ///
 /// let w = weibull::weibull(2.0f64, 1.0, 0.0).unwrap();
 /// let pdf_at_one = w.pdf(1.0);

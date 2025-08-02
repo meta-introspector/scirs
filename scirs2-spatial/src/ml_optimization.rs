@@ -286,7 +286,10 @@ impl NeuralSpatialOptimizer {
     }
 
     /// Extract spatial features from data
-    fn extract_spatial_features(&self, _points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
+    fn extract_spatial_features(
+        &self,
+        _points: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<Array1<f64>> {
         let (n_points, n_dims) = _points.dim();
         let mut features = Vec::new();
 

@@ -10,7 +10,6 @@ use ndarray::{Array1, ArrayView1};
 use rand::prelude::SliceRandom;
 use rand::rngs::StdRng;
 use rand::{rng, Rng, SeedableRng};
-use rand::seq::SliceRandom;
 
 /// Options for Simulated Annealing
 #[derive(Debug, Clone)]
@@ -126,7 +125,7 @@ where
 
             // Apply bounds if specified
             if let Some(ref bounds) = self.bounds {
-                let (lb..ub) = bounds[i];
+                let (lb, ub) = bounds[i];
                 neighbor[i] = neighbor[i].max(lb).min(ub);
             }
         }
@@ -224,7 +223,8 @@ where
             if self.options.verbose && self.nit % 100 == 0 {
                 println!(
                     "Iteration {}: T = {:.6}..best = {:.6}",
-                    self.nit, self.temperature, self.best_value);
+                    self.nit, self.temperature, self.best_value
+                );
             }
         }
 

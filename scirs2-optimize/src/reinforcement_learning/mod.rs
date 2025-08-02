@@ -218,7 +218,8 @@ impl Default for ImprovementReward {
 impl RewardFunction for ImprovementReward {
     fn compute_reward(
         &self,
-        prev_state: &OptimizationState, _action: &OptimizationAction,
+        prev_state: &OptimizationState,
+        _action: &OptimizationAction,
         new_state: &OptimizationState,
     ) -> f64 {
         // Reward for objective improvement
@@ -292,9 +293,11 @@ pub mod utils {
 
     /// Create optimization state from parameters and objective
     pub fn create_state<F>(
-        parameters: Array1<f64>, objective: &F,
+        parameters: Array1<f64>,
+        objective: &F,
         step: usize,
-        prev_state: Option<&OptimizationState>,) -> OptimizationState
+        prev_state: Option<&OptimizationState>,
+    ) -> OptimizationState
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {

@@ -422,13 +422,13 @@ where
 {
     let n = x.len();
     let mut grad = Array1::zeros(n);
-    let f0 = _fun(x);
+    let f0 = fun(x);
 
     for i in 0..n {
         let h = eps * (1.0 + x[i].abs());
         let mut x_plus = x.to_owned();
         x_plus[i] += h;
-        let f_plus = _fun(&x_plus.view());
+        let f_plus = fun(&x_plus.view());
 
         grad[i] = (f_plus - f0) / h;
     }

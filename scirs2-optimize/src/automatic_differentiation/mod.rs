@@ -285,11 +285,11 @@ where
 
 /// Optimize AD mode selection based on problem characteristics
 #[allow(dead_code)]
-pub fn optimize_ad_mode(_problem_dim: usize, output_dim: usize, expected_sparsity: f64) -> ADMode {
+pub fn optimize_ad_mode(problem_dim: usize, output_dim: usize, expected_sparsity: f64) -> ADMode {
     // Forward mode is efficient when input dimension is small
     // Reverse mode is efficient when output dimension is small (typically 1 for optimization)
 
-    if _problem_dim <= 5 {
+    if problem_dim <= 5 {
         ADMode::Forward
     } else if expected_sparsity > 0.8 {
         // For very sparse problems, forward mode might be better

@@ -1,4 +1,4 @@
-use scirs2__stats::distributions::binomial::Binomial;
+use scirs2_stats::distributions::binomial::Binomial;
 use statrs::statistics::Statistics;
 use std::error::Error;
 

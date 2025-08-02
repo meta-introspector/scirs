@@ -181,21 +181,21 @@ impl TransformError {
             TransformError::NotImplemented(_)
             | TransformError::NotFitted(_)
             | TransformError::FeatureNotEnabled(_)
-            | TransformError::Other(_) =>, ErrorKind::Internal,
+            | TransformError::Other(_) => ErrorKind::Internal,
 
             TransformError::CoreError(_)
             | TransformError::LinalgError(_)
-            | TransformError::FFTError(_) =>, ErrorKind::External,
+            | TransformError::FFTError(_) => ErrorKind::External,
 
             TransformError::ParallelError(_)
             | TransformError::CrossValidationError(_)
-            | TransformError::ParseError(_) =>, ErrorKind::Computation,
+            | TransformError::ParseError(_) => ErrorKind::Computation,
 
             #[cfg(feature = "monitoring")]
-            TransformError::PrometheusError(_) =>, ErrorKind::External,
+            TransformError::PrometheusError(_) => ErrorKind::External,
 
             #[cfg(feature = "distributed")]
-            TransformError::SerializationError(_) =>, ErrorKind::External,
+            TransformError::SerializationError(_) => ErrorKind::External,
         }
     }
 

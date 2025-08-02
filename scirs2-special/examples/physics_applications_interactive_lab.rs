@@ -1138,7 +1138,8 @@ fn run_simulation(_experiment: &PhysicsExperiment) -> Result<(), Box<dyn std::er
         "statistical_mechanics" => run_statistical_simulation(),
         "signal_processing" => run_signal_processing_simulation(),
         "mie_scattering" => run_scattering_simulation(),
-        "quantum_tunneling" => run_tunneling_simulation(, _ => {
+        "quantum_tunneling" => run_tunneling_simulation(),
+        _ => {
             println!("Simulation not yet implemented for this _experiment.");
             Ok(())
         }
@@ -1626,7 +1627,8 @@ fn hermite_physicist(n: usize, x: f64) -> f64 {
         2 => 4.0 * x * x - 2.0,
         3 => 8.0 * x * x * x - 12.0 * x,
         4 => 16.0 * x.powi(4) - 48.0 * x * x + 12.0,
-        5 => 32.0 * x.powi(5) - 160.0 * x.powi(3) + 120.0 * x_ => {
+        5 => 32.0 * x.powi(5) - 160.0 * x.powi(3) + 120.0 * x,
+        _ => {
             // Recurrence relation: H_{n+1} = 2x H_n - 2n H_{n-1}
             let mut h_prev2 = 1.0; // H_0
             let mut h_prev1 = 2.0 * x; // H_1
@@ -1646,7 +1648,8 @@ fn j_n(n: i32, x: f64) -> f64 {
     // Placeholder for Bessel function of first kind - use scirs2_special in practice
     match n {
         0 => j0(x),
-        1 => j1(x, _ => 0.0, // Simplified - implement full Bessel functions
+        1 => j1(x),
+        _ => 0.0, // Simplified - implement full Bessel functions
     }
 }
 
@@ -1655,7 +1658,8 @@ fn y_n(n: i32, x: f64) -> f64 {
     // Placeholder for Bessel function of second kind - use scirs2_special in practice
     match n {
         0 => y0(x),
-        1 => y1(x, _ => 0.0, // Simplified - implement full Neumann functions
+        1 => y1(x),
+        _ => 0.0, // Simplified - implement full Neumann functions
     }
 }
 

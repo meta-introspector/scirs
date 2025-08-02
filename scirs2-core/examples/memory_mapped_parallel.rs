@@ -115,7 +115,7 @@ fn main() {
     // Verify that the mutation worked by computing the sum
     println!("\nVerifying the mutation worked...");
     let sum_after_mutation: f64 = mmap
-        .process_chunks(ChunkingStrategy::Fixed(chunk_size), |chunk_| {
+        .process_chunks(ChunkingStrategy::Fixed(chunk_size), |chunk| {
             chunk.iter().sum::<f64>()
         })
         .iter()

@@ -96,7 +96,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(5) => physics_applications_module(&mut progress)?,
             Ok(6) => engineering_problems_module(&mut progress)?,
             Ok(7) => advanced_topics_module(&mut progress)?,
-            Ok(8) => custom_challenge_mode(&mut progress)?_ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(8) => custom_challenge_mode(&mut progress)?,
+            _ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 
@@ -598,7 +599,8 @@ fn custom_challenge_mode(
             "4" => random_challenge(progress)?,
             "5" => ultimate_challenge(progress)?,
             "6" => show_challenge_statistics(progress),
-            "7" => break_ => println!("❌ Invalid choice. Please try again.\n"),
+            "7" => break,
+            _ => println!("❌ Invalid choice. Please try again.\n"),
         }
     }
 

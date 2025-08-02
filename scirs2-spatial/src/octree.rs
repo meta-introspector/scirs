@@ -994,25 +994,25 @@ mod tests {
         // Test radius search with small radius
         let query = array![0.0, 0.0, 0.0];
         let radius = 0.5;
-        let (indices_distances) = octree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = octree.query_radius(&query.view(), radius).unwrap();
 
         assert_eq!(indices.len(), 1);
         assert_eq!(indices[0], 0); // Only origin is within 0.5 units
 
         // Test with larger radius
         let radius = 1.5;
-        let (indices_distances) = octree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = octree.query_radius(&query.view(), radius).unwrap();
 
         assert!(indices.len() >= 4); // Should find at least origin, (1,0,0), (0,1,0), (0,0,1)
 
         // Check all distances are within radius
-        for &dist in &_distances {
+        for &dist in &distances {
             assert!(dist <= radius * radius);
         }
 
         // Test with radius covering all points
         let radius = 4.0;
-        let (indices_) = octree.query_radius(&query.view(), radius).unwrap();
+        let (indices, _distances) = octree.query_radius(&query.view(), radius).unwrap();
 
         assert_eq!(indices.len(), 6); // Should find all points
     }

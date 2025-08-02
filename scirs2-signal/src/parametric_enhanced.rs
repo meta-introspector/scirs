@@ -177,7 +177,8 @@ pub fn enhanced_parametric_estimation(
     let optimal_result = match config.method {
         EstimationMethod::Robust => robust_parametric_estimation(signal, max_ar, max_ma, config)?,
         EstimationMethod::Adaptive => adaptive_order_selection(signal, max_ar, max_ma, config)?,
-        EstimationMethod::TimeVarying => time_varying_parametric_estimation(signal, config)?_ => {
+        EstimationMethod::TimeVarying => time_varying_parametric_estimation(signal, config)?,
+        _ => {
             // Standard model selection
             if config.parallel {
                 parallel_model_selection(signal, max_ar, max_ma, config)?
@@ -292,7 +293,8 @@ fn evaluate_model(
     if q == 0 {
         // AR model
         let method = match config.method {
-            EstimationMethod::AR(ar_method) => ar_method_ =>, ARMethod::Burg, // Default to Burg method
+            EstimationMethod::AR(ar_method) => ar_method,
+            _ => ARMethod::Burg, // Default to Burg method
         };
 
         let ar_result = estimate_ar(signal.as_slice().unwrap(), p, Some(method))?;

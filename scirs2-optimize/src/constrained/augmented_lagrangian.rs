@@ -350,7 +350,10 @@ where
 #[allow(dead_code)]
 fn compute_optimality<F>(
     fun: &F,
-    x: &Array1<f64>, _c_eq: &Option<Array1<f64>>, _c_ineq: &Option<Array1<f64>>, _state: &AugmentedLagrangianState,
+    x: &Array1<f64>,
+    _c_eq: &Option<Array1<f64>>,
+    _c_ineq: &Option<Array1<f64>>,
+    _state: &AugmentedLagrangianState,
 ) -> f64
 where
     F: Fn(&ArrayView1<f64>) -> f64,

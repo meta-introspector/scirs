@@ -158,7 +158,7 @@ impl Rotation {
         let normalized_quat = _quat.to_owned() / norm;
 
         Ok(Rotation {
-            _quat: normalized_quat,
+            quat: normalized_quat,
         })
     }
 
@@ -898,7 +898,8 @@ impl Rotation {
         let two_pi_u3 = 2.0 * PI * u3;
 
         let quat = array![
-            sqrt_1_minus_u1 * (two_pi_u2 / 2.0).sin()..sqrt_1_minus_u1 * (two_pi_u2 / 2.0).cos(),
+            sqrt_1_minus_u1 * (two_pi_u2 / 2.0).sin(),
+            sqrt_1_minus_u1 * (two_pi_u2 / 2.0).cos(),
             sqrt_u1 * (two_pi_u3 / 2.0).sin(),
             sqrt_u1 * (two_pi_u3 / 2.0).cos()
         ];

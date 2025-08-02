@@ -54,7 +54,11 @@ impl MatrixTestData {
     pub fn new(_data: Vec<Vec<f64>>) -> Self {
         let rows = _data.len();
         let cols = if rows > 0 { _data[0].len() } else { 0 };
-        Self { data: _data, rows, cols }
+        Self {
+            data: _data,
+            rows,
+            cols,
+        }
     }
 
     pub fn generate_sample() -> Self {
@@ -718,9 +722,7 @@ impl FuzzingTester {
         use rand::{Rng, SeedableRng};
 
         let mut rng = StdRng::seed_from_u64(seed);
-        let data: Vec<f64> = (0.._size)
-            .map(|_| rng.gen_range(-1000.0..1000.0))
-            .collect();
+        let data: Vec<f64> = (0.._size).map(|_| rng.gen_range(-1000.0..1000.0)).collect();
         StatisticalTestData::new(data)
     }
 
@@ -728,7 +730,8 @@ impl FuzzingTester {
     pub fn generate_skewed_data(
         size: usize,
         skew_direction: f64,
-        seed: u64,) -> StatisticalTestData {
+        seed: u64,
+    ) -> StatisticalTestData {
         use rand::rngs::StdRng;
         use rand::{Rng, SeedableRng};
 
@@ -737,10 +740,10 @@ impl FuzzingTester {
 
         // Apply transformation to create skewness
         if skew_direction > 0.0 {
-            data = data.into().iter().map(|x| x.powf(skew_direction)).collect();
+            data = data.into_iter().map(|x| x.powf(skew_direction)).collect();
         } else if skew_direction < 0.0 {
             data = data
-                .into().iter()
+                .into_iter()
                 .map(|x| 1.0 - (1.0 - x).powf(-skew_direction))
                 .collect();
         }
@@ -752,7 +755,8 @@ impl FuzzingTester {
     pub fn generate_outlier_data(
         size: usize,
         outlier_fraction: f64,
-        seed: u64,) -> StatisticalTestData {
+        seed: u64,
+    ) -> StatisticalTestData {
         use rand::rngs::StdRng;
         use rand::{Rng, SeedableRng};
 
@@ -771,7 +775,7 @@ impl FuzzingTester {
     /// Test function stability with random inputs
     pub fn test_mean_stability_fuzz(_iterations: usize) -> bool {
         for i in 0.._iterations {
-            let test_data = Self::generate_random_data(100..i as u64);
+            let test_data = Self::generate_random_data(100, i as u64);
             let arr = Array1::from_vec(test_data.data);
 
             match mean(&arr.view()) {

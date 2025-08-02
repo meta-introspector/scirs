@@ -185,7 +185,7 @@ impl Trajectory {
     /// Create a new trajectory
     fn new(_points: Vec<TrajectoryPoint>, duration: f64, method: OptimizationMethod) -> Self {
         Self {
-            _points,
+            points: _points,
             duration,
             method,
         }
@@ -304,7 +304,9 @@ impl TrajectoryOptimizer {
     ///
     /// * A new TrajectoryOptimizer instance
     pub fn new(_constraints: TrajectoryConstraints) -> Self {
-        Self { _constraints }
+        Self {
+            constraints: _constraints,
+        }
     }
 
     /// Optimize a quintic polynomial trajectory between two points
@@ -345,8 +347,8 @@ impl TrajectoryOptimizer {
 
         for i in 0..=num_steps {
             let t = (i as f64) * duration / (num_steps as f64);
-            let (x, vx, ax) = self.evaluate_quintic_polynomial(&x_coeffs, t);
-            let (y, vy, ay) = self.evaluate_quintic_polynomial(&y_coeffs, t);
+            let (x, vx, ax) = TrajectoryOptimizer::evaluate_quintic_polynomial(&x_coeffs, t);
+            let (y, vy, ay) = TrajectoryOptimizer::evaluate_quintic_polynomial(&y_coeffs, t);
 
             points.push(TrajectoryPoint::with_time(x, y, vx, vy, ax, ay, t));
         }

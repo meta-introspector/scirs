@@ -891,7 +891,7 @@ fn process_dwt2d_block(
         // Edge blocks may benefit from different boundary handling
         Dwt2dConfig {
             boundary_mode: match config.boundary_mode {
-                BoundaryMode::Adaptive =>, BoundaryMode::Symmetric,
+                BoundaryMode::Adaptive => BoundaryMode::Symmetric,
                 mode => mode,
             },
             ..*config
@@ -2274,7 +2274,8 @@ pub fn enhanced_boundary_padding(_data: &[f64], pad_length: usize, mode: Boundar
             // Fallback to smooth if extrapolate fails
             apply_enhanced_boundary_padding(_data, pad_length, BoundaryMode::Smooth)
                 .unwrap_or_default()
-        }, _ => {
+        }),
+        _ => {
             // Use existing implementation for other modes
             apply_enhanced_boundary_padding(_data, pad_length, mode).unwrap_or_default()
         }

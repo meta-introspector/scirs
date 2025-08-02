@@ -127,7 +127,7 @@ fn main() {
 
     // Matrix multiplication with single precision
     let result =
-        array_protocol::mixed, precision: :ops::matmul(&mixed_f64, &mixed_f32, Precision::Single);
+        array_protocol::mixed_precision_ops::matmul(&mixed_f64, &mixed_f32, Precision::Single);
     match result {
         Ok(_) => println!("Matrix multiplication (single precision): succeeded"),
         Err(e) => println!("Operation error: {}", e),
@@ -135,7 +135,7 @@ fn main() {
 
     // Matrix multiplication with double precision
     let result =
-        array_protocol::mixed, precision: :ops::matmul(&mixed_f64, &mixed_f32, Precision::Double);
+        array_protocol::mixed_precision_ops::matmul(&mixed_f64, &mixed_f32, Precision::Double);
     match result {
         Ok(_) => println!("Matrix multiplication (double precision): succeeded"),
         Err(e) => println!("Operation error: {}", e),
@@ -158,7 +158,7 @@ fn main() {
 
     // Check precision
     println!("GPU array with mixed precision enabled");
-    match array_protocol::mixed, precision: :MixedPrecisionSupport::precision(&gpu_array) {
+    match array_protocol::mixed_precision::MixedPrecisionSupport::precision(&gpu_array) {
         Precision::Mixed => println!("GPU array is using mixed precision"),
         precision => println!("GPU array is using {:?} precision", precision),
     }

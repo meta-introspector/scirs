@@ -805,8 +805,7 @@ impl AdaptiveAlgorithmSelector {
                     for dim in 0..n_dims {
                         let column = data.column(dim);
                         let mean = column.to_owned().mean();
-                        let std =
-                            (column.mapv(|x| (x - mean).powi(2)).mean()).sqrt();
+                        let std = (column.mapv(|x| (x - mean).powi(2)).mean()).sqrt();
                         features.push(mean);
                         features.push(std);
                     }

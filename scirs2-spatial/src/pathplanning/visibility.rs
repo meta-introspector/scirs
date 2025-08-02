@@ -117,7 +117,7 @@ impl Edge {
     fn new(_start: Point2D, end: Point2D) -> Self {
         let weight = _start.distance(&end);
         Edge {
-            _start,
+            start: _start,
             end,
             weight,
         }
@@ -363,7 +363,7 @@ impl VisibilityGraphPlanner {
     /// Create a new visibility graph planner with the given obstacles
     pub fn new(_obstacles: Vec<Array2<f64>>) -> Self {
         VisibilityGraphPlanner {
-            _obstacles,
+            obstacles: _obstacles,
             visibility_graph: None,
             use_fast_path: true,
         }

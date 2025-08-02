@@ -1,6 +1,6 @@
 use ndarray::{array, Array2};
 use plotters::prelude::*;
-use scirs2__stats::huber_regression;
+use scirs2_stats::huber_regression;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Compute ordinary least squares regression for comparison
     let ols_result = scirs2_stats::linregress(&x_values.view(), &y.view()).unwrap();
-    let (ols_slope, ols_intercept___) = ols_result;
+    let (ols_slope, ols_intercept___, _, _, _) = ols_result;
 
     // Print results
     println!("Huber Regression Results (default epsilon=1.345):");
@@ -84,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     println!("Ordinary Least Squares Results:");
-    println!("Intercept: {:.4}", ols_intercept);
+    println!("Intercept: {:.4}", ols_intercept___);
     println!("Slope: {:.4}", ols_slope);
     println!();
 
@@ -182,7 +182,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .draw_series(LineSeries::new(
             (0..100).map(|i| {
                 let x = min_x + (max_x - min_x) * i as f64 / 99.0;
-                let y = ols_intercept + ols_slope * x;
+                let y = ols_intercept___ + ols_slope * x;
                 (x, y)
             }),
             &GREEN,

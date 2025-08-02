@@ -35,7 +35,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(5) => machine_learning_applications()?,
             Ok(6) => interactive_proofs_section()?,
             Ok(7) => computational_experiments()?,
-            Ok(8) => quiz_and_challenges()?_ => println!("❌ Invalid choice. Please try again.\n"),
+            Ok(8) => quiz_and_challenges()?,
+            _ => println!("❌ Invalid choice. Please try again.\n"),
         }
 
         pause();

@@ -23,7 +23,8 @@ pub fn normalize_string(_text: &str, case_sensitive: bool) -> String {
 /// Extract words from text, normalizing and filtering empty words
 #[allow(dead_code)]
 pub fn extract_words(_text: &str) -> Vec<String> {
-    _text.split_whitespace()
+    _text
+        .split_whitespace()
         .map(|s| {
             s.trim_matches(|c: char| !c.is_alphanumeric())
                 .to_lowercase()
@@ -35,7 +36,8 @@ pub fn extract_words(_text: &str) -> Vec<String> {
 /// Split text into sentences
 #[allow(dead_code)]
 pub fn split_sentences(_text: &str) -> Vec<&str> {
-    _text.split(['.', '?', '!'])
+    _text
+        .split(['.', '?', '!'])
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .collect()
@@ -45,7 +47,8 @@ pub fn split_sentences(_text: &str) -> Vec<&str> {
 #[inline]
 #[allow(dead_code)]
 pub fn is_within_length_threshold(_word1: &str, word2: &str, max_edit_distance: usize) -> bool {
-    _word1.len() <= word2.len() + max_edit_distance && _word1.len() + max_edit_distance >= word2.len()
+    _word1.len() <= word2.len() + max_edit_distance
+        && _word1.len() + max_edit_distance >= word2.len()
 }
 
 /// Check if a word exists in a dictionary with optional case sensitivity

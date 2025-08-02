@@ -806,7 +806,8 @@ impl MemoryAwareSelector {
 
     fn select_algorithm(
         &self,
-        operation: &str, _data_size: usize,
+        operation: &str,
+        _data_size: usize,
         conditions: &MemoryConditions,
     ) -> String {
         // Select optimal algorithm based on memory conditions

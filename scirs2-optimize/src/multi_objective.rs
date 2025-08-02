@@ -246,10 +246,10 @@ impl NSGAII {
         for _ in 0..self.config.population_size {
             let variables = if let Some((ref lower, ref upper)) = self.config.bounds {
                 Array1::from_shape_fn(self.n_variables, |i| {
-                    lower[i] + rng.random_f64() * (upper[i] - lower[i])
+                    lower[i] + rng.gen::<f64>() * (upper[i] - lower[i])
                 })
             } else {
-                Array1::from_shape_fn(self.n_variables, |_| rng.random_f64() * 2.0 - 1.0)
+                Array1::from_shape_fn(self.n_variables, |_| rng.gen::<f64>() * 2.0 - 1.0)
             };
 
             let objectives = objective_fn(&variables.view());
@@ -298,7 +298,7 @@ impl NSGAII {
             let parent2 = self.tournament_selection(&mut rng);
 
             // Crossover
-            let (mut child1_vars, mut child2_vars) = if rng.random_f64()
+            let (mut child1_vars, mut child2_vars) = if rng.gen::<f64>()
                 < self.config.crossover_probability
             {
                 self.simulated_binary_crossover(&parent1.variables, &parent2.variables, &mut rng)
@@ -307,10 +307,10 @@ impl NSGAII {
             };
 
             // Mutation
-            if rng.random_f64() < self.config.mutation_probability {
+            if rng.gen::<f64>() < self.config.mutation_probability {
                 self.polynomial_mutation(&mut child1_vars, &mut rng);
             }
-            if rng.random_f64() < self.config.mutation_probability {
+            if rng.gen::<f64>() < self.config.mutation_probability {
                 self.polynomial_mutation(&mut child2_vars, &mut rng);
             }
 
@@ -358,7 +358,7 @@ impl NSGAII {
 
         for _ in 1..tournament_size {
             let idx = rng.gen_range(0..self.population.len());
-            if self.dominates_or_better(&self.population[idx]..&self.population[best_idx]) {
+            if self.dominates_or_better(&self.population[idx], &self.population[best_idx]) {
                 best_idx = idx;
             }
         }
@@ -395,12 +395,12 @@ impl NSGAII {
         let eta = self.config.crossover_eta;
 
         for i in 0..self.n_variables {
-            if rng.random_f64() <= 0.5 {
+            if rng.gen::<f64>() <= 0.5 {
                 let y1 = parent1[i].min(parent2[i]);
                 let y2 = parent1[i].max(parent2[i]);
 
                 if (y2 - y1).abs() > 1e-14 {
-                    let u = rng.random_f64();
+                    let u = rng.gen::<f64>();
                     let beta = if u <= 0.5 {
                         (2.0 * u).powf(1.0 / (eta + 1.0))
                     } else {
@@ -421,8 +421,8 @@ impl NSGAII {
         let eta = self.config.mutation_eta;
 
         for i in 0..self.n_variables {
-            if rng.random_f64() <= 1.0 / self.n_variables as f64 {
-                let u = rng.random_f64();
+            if rng.gen::<f64>() <= 1.0 / self.n_variables as f64 {
+                let u = rng.gen::<f64>();
                 let delta = if u < 0.5 {
                     (2.0 * u).powf(1.0 / (eta + 1.0)) - 1.0
                 } else {
@@ -619,7 +619,7 @@ impl NSGAII {
     fn calculate_hypervolume(&self, reference_point: &Array1<f64>) -> Result<f64, OptimizeError> {
         if reference_point.len() != self.n_objectives {
             return Err(OptimizeError::ValueError(
-                "Reference _point dimension must match number of objectives".to_string(),
+                "Reference point dimension must match number of objectives".to_string(),
             ));
         }
 
@@ -679,18 +679,18 @@ impl NSGAII {
         }
 
         for _ in 0..n_samples {
-            // Generate random _point
-            let mut _point = Array1::zeros(self.n_objectives);
+            // Generate random point
+            let mut point = Array1::zeros(self.n_objectives);
             for i in 0..self.n_objectives {
-                _point[i] = min_bounds[i] + rng.random_f64() * (reference_point[i] - min_bounds[i]);
+                point[i] = min_bounds[i] + rng.gen::<f64>() * (reference_point[i] - min_bounds[i]);
             }
 
-            // Check if _point is dominated by any solution in Pareto _front
+            // Check if point is dominated by any solution in Pareto front
             let mut is_dominated = false;
             for sol in pareto_front {
                 let mut dominates = true;
                 for i in 0..self.n_objectives {
-                    if sol.objectives[i] >= _point[i] {
+                    if sol.objectives[i] >= point[i] {
                         dominates = false;
                         break;
                     }
@@ -746,7 +746,7 @@ impl NSGAIII {
     ) -> Result<Self, OptimizeError> {
         if reference_points.ncols() != n_objectives {
             return Err(OptimizeError::ValueError(
-                "Reference _points must have same number of columns as _objectives".to_string(),
+                "Reference points must have same number of columns as objectives".to_string(),
             ));
         }
 
@@ -788,18 +788,18 @@ impl NSGAIII {
     }
 
     /// Generate structured reference points using Das and Dennis method
-    pub fn generate_reference_points(_n_objectives: usize, n_divisions: usize) -> Array2<f64> {
-        let n_points = Self::binomial_coefficient(_n_objectives + n_divisions - 1, n_divisions);
-        let mut points = Array2::zeros((n_points, _n_objectives));
+    pub fn generate_reference_points(n_objectives: usize, n_divisions: usize) -> Array2<f64> {
+        let n_points = Self::binomial_coefficient(n_objectives + n_divisions - 1, n_divisions);
+        let mut points = Array2::zeros((n_points, n_objectives));
         let mut point_idx = 0;
 
         Self::generate_points_recursive(
             &mut points,
             &mut point_idx,
-            _n_objectives,
+            n_objectives,
             n_divisions,
             0,
-            Array1::zeros(_n_objectives),
+            Array1::zeros(n_objectives),
             n_divisions,
         );
 
@@ -820,7 +820,8 @@ impl NSGAIII {
     fn generate_points_recursive(
         points: &mut Array2<f64>,
         point_idx: &mut usize,
-        n_objectives: usize, _n_divisions: usize,
+        n_objectives: usize,
+        _n_divisions: usize,
         current_objective: usize,
         mut current_point: Array1<f64>,
         remaining_sum: usize,
@@ -839,7 +840,8 @@ impl NSGAIII {
             Self::generate_points_recursive(
                 points,
                 point_idx,
-                n_objectives_n_divisions,
+                n_objectives,
+                _n_divisions,
                 current_objective + 1,
                 current_point.clone(),
                 remaining_sum - i,
@@ -939,10 +941,10 @@ impl NSGAIII {
         for _ in 0..self.config.population_size {
             let variables = if let Some((ref lower, ref upper)) = self.config.bounds {
                 Array1::from_shape_fn(self.n_variables, |i| {
-                    lower[i] + rng.random_f64() * (upper[i] - lower[i])
+                    lower[i] + rng.gen::<f64>() * (upper[i] - lower[i])
                 })
             } else {
-                Array1::from_shape_fn(self.n_variables, |_| rng.random_f64() * 2.0 - 1.0)
+                Array1::from_shape_fn(self.n_variables, |_| rng.gen::<f64>() * 2.0 - 1.0)
             };
 
             let objectives = objective_fn(&variables.view());
@@ -988,7 +990,7 @@ impl NSGAIII {
             let parent2 = self.tournament_selection(&mut rng);
 
             // Crossover
-            let (mut child1_vars, mut child2_vars) = if rng.random_f64()
+            let (mut child1_vars, mut child2_vars) = if rng.gen::<f64>()
                 < self.config.crossover_probability
             {
                 self.simulated_binary_crossover(&parent1.variables, &parent2.variables, &mut rng)
@@ -997,10 +999,10 @@ impl NSGAIII {
             };
 
             // Mutation
-            if rng.random_f64() < self.config.mutation_probability {
+            if rng.gen::<f64>() < self.config.mutation_probability {
                 self.polynomial_mutation(&mut child1_vars, &mut rng);
             }
-            if rng.random_f64() < self.config.mutation_probability {
+            if rng.gen::<f64>() < self.config.mutation_probability {
                 self.polynomial_mutation(&mut child2_vars, &mut rng);
             }
 
@@ -1185,14 +1187,14 @@ impl NSGAIII {
 
         // Count associations for already selected solutions
         let mut niche_count = vec![0; n_ref_points];
-        for (sol_idx_) in new_population.iter().enumerate() {
+        for (sol_idx, _) in new_population.iter().enumerate() {
             let ref_point_idx = self.find_closest_reference_point(sol_idx, normalized_objectives);
             niche_count[ref_point_idx] += 1;
         }
 
-        // Associate partial _front solutions with reference points
+        // Associate partial front solutions with reference points
         let start_idx = new_population.len();
-        for (i_) in partial_front.iter().enumerate() {
+        for (i, _) in partial_front.iter().enumerate() {
             let sol_idx = start_idx + i;
             let ref_point_idx = self.find_closest_reference_point(sol_idx, normalized_objectives);
             associations[ref_point_idx].push(i);
@@ -1230,7 +1232,7 @@ impl NSGAIII {
         reference_point: &ArrayView1<f64>,
     ) -> f64 {
         // Calculate projection length
-        let dot_product: f64 = _point
+        let dot_product: f64 = point
             .iter()
             .zip(reference_point.iter())
             .map(|(&p, &r)| p * r)
@@ -1238,13 +1240,13 @@ impl NSGAIII {
         let ref_norm_sq: f64 = reference_point.iter().map(|&r| r * r).sum();
 
         if ref_norm_sq < 1e-12 {
-            return _point.iter().map(|&p| p * p).sum::<f64>().sqrt();
+            return point.iter().map(|&p| p * p).sum::<f64>().sqrt();
         }
 
         let projection_length = dot_product / ref_norm_sq.sqrt();
 
         // Calculate perpendicular distance
-        let _point_norm: f64 = _point.iter().map(|&p| p * p).sum::<f64>().sqrt();
+        let point_norm: f64 = point.iter().map(|&p| p * p).sum::<f64>().sqrt();
 
         if projection_length >= point_norm {
             0.0
@@ -1267,7 +1269,7 @@ impl NSGAIII {
         let start_idx = normalized_objectives.nrows() - partial_front.len();
 
         for _ in 0..k {
-            // Find reference point with minimum niche _count that has available associated solutions
+            // Find reference point with minimum niche count that has available associated solutions
             let mut min_niche_count = usize::MAX;
             let mut candidate_ref_points = Vec::new();
 
@@ -1275,7 +1277,7 @@ impl NSGAIII {
                 let available_assocs = associated_solutions
                     .iter()
                     .filter(|&&sol_idx| available_solutions[sol_idx])
-                    ._count();
+                    .count();
 
                 if available_assocs > 0 {
                     if niche_count[ref_idx] < min_niche_count {
@@ -1311,7 +1313,8 @@ impl NSGAIII {
                         &associated_indices,
                         selected_ref_point,
                         normalized_objectives,
-                        start_idx,)
+                        start_idx,
+                    )
                 } else {
                     // If niche already has solutions, randomly select
                     associated_indices[rng.gen_range(0..associated_indices.len())]
@@ -1320,7 +1323,7 @@ impl NSGAIII {
                 // Add selected solution to result
                 selected.push(partial_front[selected_sol_idx].clone());
 
-                // Update niche _count
+                // Update niche count
                 niche_count[selected_ref_point] += 1;
 
                 // Mark solution as unavailable
@@ -1338,10 +1341,12 @@ impl NSGAIII {
 
     /// Select the solution closest to a reference point (minimum perpendicular distance)
     fn select_closest_to_reference_point(
-        &self, candidate_indices: &[usize],
+        &self,
+        candidate_indices: &[usize],
         ref_point_idx: usize,
         normalized_objectives: &Array2<f64>,
-        start_idx: usize,) -> usize {
+        start_idx: usize,
+    ) -> usize {
         let mut min_distance = f64::INFINITY;
         let mut best_candidate = candidate_indices[0];
 
@@ -1460,7 +1465,7 @@ impl NSGAIII {
 
         for _ in 1..tournament_size {
             let idx = rng.gen_range(0..self.population.len());
-            if self.dominates_or_better(&self.population[idx]..&self.population[best_idx]) {
+            if self.dominates_or_better(&self.population[idx], &self.population[best_idx]) {
                 best_idx = idx;
             }
         }
@@ -1497,12 +1502,12 @@ impl NSGAIII {
         let eta = self.config.crossover_eta;
 
         for i in 0..self.n_variables {
-            if rng.random_f64() <= 0.5 {
+            if rng.gen::<f64>() <= 0.5 {
                 let y1 = parent1[i].min(parent2[i]);
                 let y2 = parent1[i].max(parent2[i]);
 
                 if (y2 - y1).abs() > 1e-14 {
-                    let u = rng.random_f64();
+                    let u = rng.gen::<f64>();
                     let beta = if u <= 0.5 {
                         (2.0 * u).powf(1.0 / (eta + 1.0))
                     } else {
@@ -1523,8 +1528,8 @@ impl NSGAIII {
         let eta = self.config.mutation_eta;
 
         for i in 0..self.n_variables {
-            if rng.random_f64() <= 1.0 / self.n_variables as f64 {
-                let u = rng.random_f64();
+            if rng.gen::<f64>() <= 1.0 / self.n_variables as f64 {
+                let u = rng.gen::<f64>();
                 let delta = if u < 0.5 {
                     (2.0 * u).powf(1.0 / (eta + 1.0)) - 1.0
                 } else {
@@ -1552,7 +1557,7 @@ impl NSGAIII {
     fn calculate_hypervolume(&self, reference_point: &Array1<f64>) -> Result<f64, OptimizeError> {
         if reference_point.len() != self.n_objectives {
             return Err(OptimizeError::ValueError(
-                "Reference _point dimension must match number of objectives".to_string(),
+                "Reference point dimension must match number of objectives".to_string(),
             ));
         }
 
@@ -1589,18 +1594,18 @@ impl NSGAIII {
         }
 
         for _ in 0..n_samples {
-            // Generate random _point
-            let mut _point = Array1::zeros(self.n_objectives);
+            // Generate random point
+            let mut point = Array1::zeros(self.n_objectives);
             for i in 0..self.n_objectives {
-                _point[i] = min_bounds[i] + rng.random_f64() * (reference_point[i] - min_bounds[i]);
+                point[i] = min_bounds[i] + rng.gen::<f64>() * (reference_point[i] - min_bounds[i]);
             }
 
-            // Check if _point is dominated by any solution in Pareto _front
+            // Check if point is dominated by any solution in Pareto front
             let mut is_dominated = false;
             for sol in pareto_front {
                 let mut dominates = true;
                 for i in 0..self.n_objectives {
-                    if sol.objectives[i] >= _point[i] {
+                    if sol.objectives[i] >= point[i] {
                         dominates = false;
                         break;
                     }
@@ -1631,11 +1636,11 @@ pub mod scalarization {
     use super::*;
 
     /// Weighted sum scalarization
-    pub fn weighted_sum<F>(_objectives_fn: F, weights: &Array1<f64>, x: &ArrayView1<f64>) -> f64
+    pub fn weighted_sum<F>(objectives_fn: F, weights: &Array1<f64>, x: &ArrayView1<f64>) -> f64
     where
         F: Fn(&ArrayView1<f64>) -> Array1<f64>,
     {
-        let objectives = _objectives_fn(x);
+        let objectives = objectives_fn(x);
         objectives
             .iter()
             .zip(weights.iter())
@@ -1700,9 +1705,9 @@ pub mod scalarization {
     }
 
     impl EpsilonConstraint {
-        pub fn new(_primary_objective: usize, epsilon_constraints: Array1<f64>) -> Self {
+        pub fn new(primary_objective: usize, epsilon_constraints: Array1<f64>) -> Self {
             Self {
-                _primary_objective,
+                primary_objective,
                 epsilon_constraints,
             }
         }

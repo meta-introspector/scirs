@@ -8,8 +8,8 @@ use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, Axis};
 use scirs2_core::validation::*;
 use scirs2_core::Rng;
-use std::sync::Arc;
 use statrs::statistics::Statistics;
+use std::sync::Arc;
 
 /// Multiple-try Metropolis sampler
 ///
@@ -34,22 +34,22 @@ pub struct MultipleTryMetropolis<T: TargetDistribution, P: ProposalDistribution>
 
 impl<T: TargetDistribution, P: ProposalDistribution> MultipleTryMetropolis<T, P> {
     /// Create a new multiple-try Metropolis sampler
-    pub fn new(_target: T, proposal: P, initial: Array1<f64>, n_tries: usize) -> Result<Self> {
+    pub fn new(target: T, proposal: P, initial: Array1<f64>, n_tries: usize) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
         check_positive(n_tries, "n_tries")?;
 
-        if initial.len() != _target.dim() {
+        if initial.len() != target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
-                "initial dimension ({}) must match _target dimension ({})",
+                "initial dimension ({}) must match target dimension ({})",
                 initial.len(),
-                _target.dim()
+                target.dim()
             )));
         }
 
-        let current_log_density = _target.log_density(&initial);
+        let current_log_density = target.log_density(&initial);
 
         Ok(Self {
-            _target,
+            target,
             proposal,
             current: initial,
             current_log_density,
@@ -228,8 +228,9 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
         Ok(Self {
             base_target,
             proposal,
-            temperatures_states: initial_states,
+            states: initial_states,
             log_densities,
+            temperatures,
             n_chains,
             exchange_freq,
             move_accepted: vec![0; n_chains],
@@ -252,7 +253,7 @@ impl<T: TargetDistribution + Clone + Send, P: ProposalDistribution + Clone + Sen
 
             // Accept or reject
             let log_ratio = proposal_log_density - self.log_densities[i]
-                + self.proposal.log_ratio(current_state, &proposal);
+                + P::log_ratio(current_state, &proposal);
 
             self.move_attempts[i] += 1;
             let u: f64 = rng.random();
@@ -380,22 +381,22 @@ pub struct SliceSampler<T: TargetDistribution> {
 
 impl<T: TargetDistribution> SliceSampler<T> {
     /// Create a new slice sampler
-    pub fn new(_target: T, initial: Array1<f64>, step_size: f64) -> Result<Self> {
+    pub fn new(target: T, initial: Array1<f64>, step_size: f64) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
         check_positive(step_size, "step_size")?;
 
-        if initial.len() != _target.dim() {
+        if initial.len() != target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
-                "initial dimension ({}) must match _target dimension ({})",
+                "initial dimension ({}) must match target dimension ({})",
                 initial.len(),
-                _target.dim()
+                target.dim()
             )));
         }
 
-        let current_log_density = _target.log_density(&initial);
+        let current_log_density = target.log_density(&initial);
 
         Ok(Self {
-            _target,
+            target,
             current: initial,
             current_log_density,
             step_size,
@@ -535,14 +536,14 @@ pub struct EnsembleSampler<T: TargetDistribution + Clone + Send + Sync> {
 
 impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
     /// Create a new ensemble sampler
-    pub fn new(_target: T, initial_walkers: Array2<f64>, scale: Option<f64>) -> Result<Self> {
+    pub fn new(target: T, initial_walkers: Array2<f64>, scale: Option<f64>) -> Result<Self> {
         checkarray_finite(&initial_walkers, "initial_walkers")?;
         let (n_walkers, dim) = initial_walkers.dim();
         let scale = scale.unwrap_or(2.0);
 
         if n_walkers < 2 * dim {
             return Err(StatsError::InvalidArgument(format!(
-                "Number of _walkers ({}) should be at least 2 * dim ({})",
+                "Number of walkers ({}) should be at least 2 * dim ({})",
                 n_walkers,
                 2 * dim
             )));
@@ -554,12 +555,12 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
         let mut log_densities = Array1::zeros(n_walkers);
         for i in 0..n_walkers {
             let walker = initial_walkers.row(i);
-            log_densities[i] = _target.log_density(&walker.to_owned());
+            log_densities[i] = target.log_density(&walker.to_owned());
         }
 
         Ok(Self {
-            _target: Arc::new(_target),
-            _walkers: initial_walkers,
+            target: Arc::new(target),
+            walkers: initial_walkers,
             log_densities,
             n_walkers,
             dim,
@@ -630,7 +631,8 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
     pub fn sample<R: Rng + ?Sized>(
         &mut self,
         n_samples_: usize,
-        rng: &mut R,) -> Result<Array2<f64>> {
+        rng: &mut R,
+    ) -> Result<Array2<f64>> {
         let total_samples = n_samples_ * self.n_walkers;
         let mut _samples = Array2::zeros((total_samples, self.dim));
 
@@ -675,7 +677,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
         for j in 0..dim {
             let col = samples.column(j);
             let mean_j = means[j];
-            let var_j = col.mapv(|x| (x - mean_j).powi(2)).mean().unwrap();
+            let var_j = col.mapv(|x| (x - mean_j).powi(2)).mean();
             variances[j] = var_j;
         }
 
@@ -702,7 +704,7 @@ impl<T: TargetDistribution + Clone + Send + Sync> EnsembleSampler<T> {
         }
 
         let mean = chain.mean().unwrap();
-        let variance = chain.mapv(|x| (x - mean).powi(2)).mean().unwrap();
+        let variance = chain.mapv(|x| (x - mean).powi(2)).mean();
 
         if variance <= 0.0 {
             return Ok(1.0);

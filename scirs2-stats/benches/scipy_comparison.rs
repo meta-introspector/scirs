@@ -7,7 +7,7 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use ndarray::Array1;
 use rand::prelude::*;
 use rand__distr::StandardNormal;
-use scirs2__stats::{
+use scirs2_stats::{
     kurtosis, mean, pearson_r, quantile, skewness, spearman_r, std, variance, QuantileInterpolation,
 };
 
@@ -112,7 +112,7 @@ fn bench_correlation_matrix(c: &mut Criterion) {
         (10, 1000), // 10 variables, 1000 observations
     ];
 
-    use scirs2__stats::corrcoef;
+    use scirs2_stats::corrcoef;
 
     for (n_vars, n_obs) in configs {
         // Generate random data matrix

@@ -110,7 +110,10 @@ impl VariogramModel {
 
     /// Create a linear variogram model
     pub fn linear(_slope: f64, nugget: f64) -> Self {
-        Self::Linear { slope: _slope, nugget }
+        Self::Linear {
+            slope: _slope,
+            nugget,
+        }
     }
 
     /// Create a power variogram model
@@ -483,7 +486,10 @@ impl OrdinaryKriging {
                 let dist = if i == j {
                     0.0
                 } else {
-                    OrdinaryKriging::distance(&self.points.row(i).to_vec(), &self.points.row(j).to_vec())
+                    OrdinaryKriging::distance(
+                        &self.points.row(i).to_vec(),
+                        &self.points.row(j).to_vec(),
+                    )
                 };
                 // Covariance = Sill - Variogram
                 matrix[[i, j]] = self.variogram.sill() - self.variogram.evaluate(dist);
@@ -725,7 +731,10 @@ impl SimpleKriging {
                 let dist = if i == j {
                     0.0
                 } else {
-                    OrdinaryKriging::distance(&self.points.row(i).to_vec(), &self.points.row(j).to_vec())
+                    OrdinaryKriging::distance(
+                        &self.points.row(i).to_vec(),
+                        &self.points.row(j).to_vec(),
+                    )
                 };
                 cov_matrix[[i, j]] = self.variogram.sill() - self.variogram.evaluate(dist);
             }

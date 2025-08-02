@@ -55,7 +55,7 @@ pub struct OperationMetrics {
 impl AdaptiveMemoryManager {
     pub fn new(_constraints: MemoryConstraints) -> Self {
         Self {
-            _constraints,
+            constraints: _constraints,
             current_usage: Arc::new(Mutex::new(0)),
             peak_usage: Arc::new(Mutex::new(0)),
             operation_history: Arc::new(Mutex::new(VecDeque::with_capacity(100))),
@@ -384,7 +384,7 @@ where
         let transformed = matrix_multiply(&centered_data.view(), &eigenvectors.view())?;
 
         let result = PCAResult {
-            _components: eigenvectors,
+            components: eigenvectors,
             explained_variance: eigenvalues,
             transformed_data: transformed,
             mean: means,
@@ -463,9 +463,9 @@ where
                 for j in 0..n_features {
                     for k in j..n_features {
                         let prod = (row[j] - running_mean[j]) * (row[k] - running_mean[k]);
-                        running_cov[[j, k]] = running_cov[[j, k]] * F::from(n_samples_ - 1).unwrap()
-                            / n_f
-                            + prod / n_f;
+                        running_cov[[j, k]] =
+                            running_cov[[j, k]] * F::from(n_samples_ - 1).unwrap() / n_f
+                                + prod / n_f;
                         if j != k {
                             running_cov[[k, j]] = running_cov[[j, k]];
                         }
@@ -494,7 +494,7 @@ where
     });
 
     Ok(PCAResult {
-        _components,
+        components: _components,
         explained_variance,
         transformed_data: Array2::zeros((0, 0)), // Would project data in second pass
         mean: running_mean,
@@ -659,7 +659,7 @@ where
 {
     fn new(_quantile: f64) -> Self {
         let mut estimator = Self {
-            _quantile,
+            quantile: _quantile,
             markers: [F::zero(); 5],
             positions: [1.0, 2.0, 3.0, 4.0, 5.0],
             desired_positions: [
@@ -669,7 +669,13 @@ where
                 3.0 + 2.0 * _quantile,
                 5.0,
             ],
-            increment: [0.0, _quantile / 2.0, _quantile, (1.0 + _quantile) / 2.0, 1.0],
+            increment: [
+                0.0,
+                _quantile / 2.0,
+                _quantile,
+                (1.0 + _quantile) / 2.0,
+                1.0,
+            ],
             count: 0,
         };
 
@@ -1284,7 +1290,7 @@ where
     }
 
     Ok(PCAResult {
-        _components,
+        components: _components,
         explained_variance,
         transformed_data,
         mean: means.clone(),

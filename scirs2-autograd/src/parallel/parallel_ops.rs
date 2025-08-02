@@ -126,7 +126,7 @@ impl ParallelElementWise {
                 .map(|n| n.get())
                 .unwrap_or(4);
 
-            let chunk_size = total_size.div_ceil(num_threads);
+            let chunk_size = _total_size.div_ceil(num_threads);
             chunk_size.max(config.preferred_chunk_size / num_threads)
         }
     }
@@ -354,7 +354,7 @@ impl ParallelMatrix {
     }
 
     /// Calculate optimal block size for matrix multiplication
-    fn calculate_block_size(m: usize, n: usize, k: usize_config: &ParallelConfig) -> usize {
+    fn calculate_block_size(m: usize, n: usize, k: usize, _config: &ParallelConfig) -> usize {
         // Simple heuristic for cache-friendly block size
         let cache_size = 32 * 1024; // Assume 32KB L1 cache
         let element_size = std::mem::size_of::<f64>(); // Assume f64 for estimation
@@ -531,7 +531,7 @@ impl ParallelSort {
             });
         }
 
-        let sorted_indices: Vec<usize> = indices.into_iter().map(|(idx_)| idx).collect();
+        let sorted_indices: Vec<usize> = indices.into_iter().map(|(idx, _)| idx).collect();
 
         Array::from_shape_vec(array.raw_dim(), sorted_indices)
             .map_err(|_| ThreadPoolError::ExecutionFailed)
@@ -558,7 +558,7 @@ impl ParallelDispatcher {
     pub fn with_config(_config: ParallelConfig) -> Self {
         let _ = init_thread_pool();
 
-        Self { _config }
+        Self { config: _config }
     }
 
     /// Dispatch parallel element-wise operation

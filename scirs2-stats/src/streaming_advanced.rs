@@ -125,7 +125,8 @@ pub struct AdvancedAdvancedStreamingProcessor<F> {
     change_detector: Arc<Mutex<ChangePointDetector<F>>>,
     anomaly_detector: Arc<Mutex<AnomalyDetector<F>>>,
     ml_model: Option<Arc<Mutex<IncrementalMLModel<F>>>>,
-    compression_engine: Arc<Mutex<CompressionEngine<F>>>, _phantom: PhantomData<F>,
+    compression_engine: Arc<Mutex<CompressionEngine<F>>>,
+    _phantom: PhantomData<F>,
 }
 
 /// Change point detection using advanced algorithms
@@ -133,7 +134,8 @@ pub struct ChangePointDetector<F> {
     algorithm: ChangePointAlgorithm,
     window_data: VecDeque<F>,
     threshold: f64,
-    last_detection: Option<Instant>, _phantom: PhantomData<F>,
+    last_detection: Option<Instant>,
+    _phantom: PhantomData<F>,
 }
 
 /// Change point detection algorithms
@@ -156,7 +158,8 @@ pub struct AnomalyDetector<F> {
     algorithm: AnomalyDetectionAlgorithm,
     baseline_statistics: StreamingStatistics<F>,
     detection_threshold: f64,
-    anomaly_history: VecDeque<(Instant, F, AnomalyType)>, _phantom: PhantomData<F>,
+    anomaly_history: VecDeque<(Instant, F, AnomalyType)>,
+    _phantom: PhantomData<F>,
 }
 
 /// Anomaly detection algorithms
@@ -187,7 +190,8 @@ pub struct IncrementalMLModel<F> {
     model_type: MLModelType,
     parameters: HashMap<String, F>,
     training_data: VecDeque<Array1<F>>,
-    model_performance: ModelPerformance<F>, _phantom: PhantomData<F>,
+    model_performance: ModelPerformance<F>,
+    _phantom: PhantomData<F>,
 }
 
 /// Types of incremental ML models
@@ -393,7 +397,7 @@ where
         };
 
         Self {
-            _config,
+            config: _config,
             windowing_strategy,
             processing_mode,
             buffer: Arc::new(RwLock::new(VecDeque::new())),
@@ -401,7 +405,8 @@ where
             change_detector: Arc::new(Mutex::new(ChangePointDetector::new())),
             anomaly_detector: Arc::new(Mutex::new(AnomalyDetector::new())),
             ml_model: None,
-            compression_engine: Arc::new(Mutex::new(CompressionEngine::new())), _phantom: PhantomData,
+            compression_engine: Arc::new(Mutex::new(CompressionEngine::new())),
+            _phantom: PhantomData,
         }
     }
 
@@ -524,7 +529,7 @@ where
             }
             WindowingStrategy::TimeBased { duration } => {
                 let cutoff = Instant::now() - *duration;
-                while let Some((timestamp_)) = buffer.front() {
+                while let Some((timestamp_, _)) = buffer.front() {
                     if *timestamp_ < cutoff {
                         buffer.pop_front();
                     } else {
@@ -762,7 +767,8 @@ where
             },
             window_data: VecDeque::new(),
             threshold: 0.05,
-            last_detection: None, _phantom: PhantomData,
+            last_detection: None,
+            _phantom: PhantomData,
         }
     }
 
@@ -831,7 +837,8 @@ where
             algorithm: AnomalyDetectionAlgorithm::ZScore { threshold: 3.0 },
             baseline_statistics: baseline,
             detection_threshold: 0.05,
-            anomaly_history: VecDeque::new(), _phantom: PhantomData,
+            anomaly_history: VecDeque::new(),
+            _phantom: PhantomData,
         }
     }
 

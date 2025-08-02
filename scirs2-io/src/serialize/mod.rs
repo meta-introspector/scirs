@@ -298,7 +298,7 @@ where
 pub fn deserialize_array_with_metadata<P, A>(
     path: P,
     format: SerializationFormat,
-) -> Result<(Array<A, IxDyn> + std::collections::HashMap<String, String>)>
+) -> Result<(Array<A, IxDyn>, std::collections::HashMap<String, String>)>
 where
     P: AsRef<Path>,
     A: for<'de> Deserialize<'de> + Clone,
@@ -997,15 +997,15 @@ where
         .insert("source".to_string(), "Matrix Market".to_string());
     sparse.metadata.insert(
         "format".to_string(),
-        format!("{:?}", mm_matrix.header.format),
+        format!("{:?}", _mm_matrix.header.format),
     );
     sparse.metadata.insert(
         "data_type".to_string(),
-        format!("{:?}", mm_matrix.header.data_type),
+        format!("{:?}", _mm_matrix.header.data_type),
     );
     sparse.metadata.insert(
         "symmetry".to_string(),
-        format!("{:?}", mm_matrix.header.symmetry),
+        format!("{:?}", _mm_matrix.header.symmetry),
     );
 
     sparse

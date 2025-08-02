@@ -69,15 +69,15 @@ mod tests {
 
         let samples = vec![a.view(), b.view()];
 
-        let (statistic_) = bartlett(&samples).unwrap();
+        let (statistic_, _p_value) = bartlett(&samples).unwrap();
 
         // Expected result for this specific example:
         // When one variance is zero, the statistic tends to infinity
         // But numerical implementations usually yield a large finite value
         assert!(
-            statistic > 10.0,
+            statistic_ > 10.0,
             "Expected large statistic value, got {}",
-            statistic
+            statistic_
         );
     }
 

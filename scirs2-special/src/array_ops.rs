@@ -15,7 +15,9 @@ fn cast_slice_to_bytes<T>(_slice: &[T]) -> &[u8] {
     // 1. The pointer is derived from a valid _slice
     // 2. The size calculation is correct using size_of_val
     // 3. The lifetime is bounded by the input _slice
-    unsafe { std::_slice::from_raw_parts(_slice.as_ptr() as *const u8, std::mem::size_of_val(_slice)) }
+    unsafe {
+        std::_slice::from_raw_parts(_slice.as_ptr() as *const u8, std::mem::size_of_val(_slice))
+    }
 }
 
 /// Safe slice casting replacement for bytemuck::cast_slice (reverse)
@@ -109,7 +111,11 @@ pub mod memory_efficient {
     }
 
     /// Check if operation fits within memory limits
-    pub fn check_memory_limit<T>(_shape: &[usize], num_arrays: usize, config: &ArrayConfig) -> bool {
+    pub fn check_memory_limit<T>(
+        _shape: &[usize],
+        num_arrays: usize,
+        config: &ArrayConfig,
+    ) -> bool {
         estimate_memory_usage::<T>(_shape, num_arrays) <= config.memory_limit
     }
 }
@@ -317,7 +323,7 @@ pub mod gpu {
     impl GpuBuffer {
         /// Create a new GPU buffer
         #[cfg(feature = "gpu")]
-        pub fn new<T>(_ctx: &scirs2_core: :gpu::GpuContext, data: &[T]) -> SpecialResult<Self>
+        pub fn new<T>(_ctx: &scirs2_core::gpu::GpuContext, data: &[T]) -> SpecialResult<Self>
         where
             T: 'static,
         {
@@ -616,7 +622,10 @@ pub mod broadcasting {
     }
 
     /// Compute the broadcast shape of two arrays
-    pub fn broadcast_shape(_shape1: &[usize], shape2: &[usize]) -> Result<Vec<usize>, SpecialError> {
+    pub fn broadcast_shape(
+        _shape1: &[usize],
+        shape2: &[usize],
+    ) -> Result<Vec<usize>, SpecialError> {
         if !can_broadcast(_shape1, shape2) {
             return Err(SpecialError::DomainError(
                 "Arrays cannot be broadcast together".to_string(),
@@ -771,7 +780,10 @@ pub mod vectorized {
     }
 
     /// Enhanced error function computation
-    pub fn erf_array<D>(_input: &Array<f64, D>, config: &ArrayConfig) -> SpecialResult<Array<f64, D>>
+    pub fn erf_array<D>(
+        _input: &Array<f64, D>,
+        config: &ArrayConfig,
+    ) -> SpecialResult<Array<f64, D>>
     where
         D: Dimension,
     {
@@ -820,7 +832,8 @@ pub mod vectorized {
 
     /// Enhanced softmax computation
     pub fn softmax_1d(
-        input: ArrayView1<f64>, _config: &ArrayConfig,
+        input: ArrayView1<f64>,
+        _config: &ArrayConfig,
     ) -> SpecialResult<Array<f64, ndarray::Ix1>> {
         // Use existing optimized implementation from statistical module
         crate::statistical::softmax(input)
@@ -1066,7 +1079,8 @@ pub mod complex {
     pub fn lambert_w_array<D>(
         input: &Array<Complex64, D>,
         branch: i32,
-        tolerance: f64_config: &ArrayConfig,
+        tolerance: f64,
+        _config: &ArrayConfig,
     ) -> SpecialResult<Array<Complex64, D>>
     where
         D: Dimension,
@@ -1365,11 +1379,11 @@ mod tests {
     #[test]
     fn test_memory_estimation() {
         let shape = [1000, 1000];
-        let memory = memory_efficient::estimate_memory, _usage::<f64>(&shape, 2);
+        let memory = memory_efficient::estimate_memory_usage::<f64>(&shape, 2);
         assert_eq!(memory, 1000 * 1000 * 8 * 2); // 16MB for two f64 arrays
 
         let config = ArrayConfig::default();
-        assert!(memory_efficient::check_memory, _limit::<f64>(
+        assert!(memory_efficient::check_memory_limit::<f64>(
             &shape, 2, &config
         ));
     }

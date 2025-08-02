@@ -11,8 +11,8 @@ use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::Rng;
-use std::collections::{HashMap, VecDeque};
 use statrs::statistics::Statistics;
+use std::collections::{HashMap, VecDeque};
 
 /// Learned hyperparameter tuner with adaptive configuration
 #[derive(Debug, Clone)]
@@ -611,12 +611,12 @@ impl LearnedHyperparameterTuner {
             let value = match param.scale {
                 ParameterScale::Linear => {
                     param.lower_bound
-                        + rand::rng().random_f64() * (param.upper_bound - param.lower_bound)
+                        + rand::rng().gen::<f64>() * (param.upper_bound - param.lower_bound)
                 }
                 ParameterScale::Logarithmic => {
                     let log_lower = param.lower_bound.ln();
                     let log_upper = param.upper_bound.ln();
-                    (log_lower + rand::rng().random_f64() * (log_upper - log_lower)).exp()
+                    (log_lower + rand::rng().gen::<f64>() * (log_upper - log_lower)).exp()
                 }
                 _ => param.default_value,
             };
@@ -834,7 +834,8 @@ impl LearnedHyperparameterTuner {
 
     /// Select next configuration to evaluate
     fn select_next_configuration(
-        &self, _problem_features: &Array1<f64>,
+        &self,
+        _problem_features: &Array1<f64>,
     ) -> OptimizeResult<HyperparameterConfig> {
         // Use acquisition function to select next point
         let candidate_configs = self.generate_candidate_configurations(100)?;
@@ -1243,7 +1244,7 @@ impl CostModel {
     pub fn new() -> Self {
         Self {
             cost_network: Array2::from_shape_fn((1, 10), |_| {
-                (rand::rng().random_f64() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             base_cost: 1.0,
             scaling_factors: Array1::ones(5),
@@ -1425,7 +1426,7 @@ mod tests {
     fn test_gaussian_process() {
         let mut gp = GaussianProcess::new();
 
-        let inputs = Array2::from_shape_fn((3, 2), |_| rand::rng().random_f64());
+        let inputs = Array2::from_shape_fn((3, 2), |_| rand::rng().gen::<f64>());
         let outputs = Array1::from(vec![1.0, 2.0, 3.0]);
 
         gp.update_training_data(inputs, outputs).unwrap();

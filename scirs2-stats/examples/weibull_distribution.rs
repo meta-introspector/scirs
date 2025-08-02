@@ -1,4 +1,4 @@
-use scirs2__stats::distributions::weibull::Weibull;
+use scirs2_stats::distributions::weibull::Weibull;
 use statrs::statistics::Statistics;
 use std::error::Error;
 

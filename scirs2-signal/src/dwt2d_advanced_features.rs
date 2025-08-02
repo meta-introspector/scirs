@@ -9,7 +9,7 @@
 //! - Directional wavelets and steerable filters
 
 use crate::dwt::Wavelet;
-use crate::dwt2d__enhanced::{BoundaryMode, Dwt2dConfig, enhanced_dwt2d_decompose};
+use crate::dwt2d_enhanced::{BoundaryMode, Dwt2dConfig, enhanced_dwt2d_decompose};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, s};
 use rand::Rng;
@@ -379,7 +379,8 @@ fn adaptive_threshold_processing(
         processed_levels.push(WaveletLevel {
             approx: level.approx.clone(),
             details: (processed_lh, processed_hl, processed_hh),
-            level: level.level_scale: level._scale,
+            level: level.level,
+            scale: level.scale,
         });
     }
 
@@ -673,7 +674,8 @@ fn standard_threshold_processing(
         processed_levels.push(WaveletLevel {
             approx: level.approx.clone(),
             details: (processed_lh, processed_hl, processed_hh),
-            level: level.level_scale: level._scale,
+            level: level.level,
+            scale: level.scale,
         });
     }
 

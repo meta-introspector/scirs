@@ -1,4 +1,4 @@
-use scirs2__stats::distributions::lognormal::Lognormal;
+use scirs2_stats::distributions::lognormal::Lognormal;
 use statrs::statistics::Statistics;
 use std::error::Error;
 

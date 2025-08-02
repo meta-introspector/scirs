@@ -519,7 +519,8 @@ pub mod algorithms {
         fn evaluate_local_population<F>(
             &self,
             function: &F,
-            population: &Array2<f64>,) -> ScirsResult<Array1<f64>>
+            population: &Array2<f64>,
+        ) -> ScirsResult<Array1<f64>>
         where
             F: Fn(&ArrayView1<f64>) -> f64,
         {
@@ -541,9 +542,9 @@ pub mod algorithms {
             // Find local best
             let mut best_idx = 0;
             let mut best_fitness = local_fitness[0];
-            for (i, &_fitness) in local_fitness.iter().enumerate() {
-                if _fitness < best_fitness {
-                    best_fitness = _fitness;
+            for (i, &fitness) in local_fitness.iter().enumerate() {
+                if fitness < best_fitness {
+                    best_fitness = fitness;
                     best_idx = i;
                 }
             }
@@ -575,12 +576,14 @@ pub mod algorithms {
                     }
                 }
 
-                let [a..b, c] = [indices[0], indices[1], indices[2]];
+                let a = indices[0];
+                let b = indices[1];
+                let c = indices[2];
 
                 // Mutation and crossover
                 let j_rand = rng.random_range(0..dims);
                 for j in 0..dims {
-                    if rng.random_f64() < self.crossover_rate || j == j_rand {
+                    if rng.gen::<f64>() < self.crossover_rate || j == j_rand {
                         trial_population[[i, j]] = population[[a, j]]
                             + self.f_scale * (population[[b, j]] - population[[c, j]]);
                     } else {
@@ -599,12 +602,12 @@ pub mod algorithms {
             trial_population: &Array2<f64>,
             trial_fitness: &Array1<f64>,
         ) {
-            for i in 0.._population.nrows() {
-                if trial_fitness[i] <= _fitness[i] {
-                    for j in 0.._population.ncols() {
-                        _population[[i, j]] = trial_population[[i, j]];
+            for i in 0..population.nrows() {
+                if trial_fitness[i] <= fitness[i] {
+                    for j in 0..population.ncols() {
+                        population[[i, j]] = trial_population[[i, j]];
                     }
-                    _fitness[i] = trial_fitness[i];
+                    fitness[i] = trial_fitness[i];
                 }
             }
         }
@@ -623,7 +626,7 @@ pub mod algorithms {
                 .iter()
                 .enumerate()
                 .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(i_)| i)
+                .map(|(i, _)| i)
                 .unwrap_or(0);
 
             let _next_rank = (self.context.rank() + 1) % self.context.size();
@@ -782,7 +785,8 @@ pub mod algorithms {
         fn evaluate_swarm<F>(
             &self,
             function: &F,
-            positions: &Array2<f64>,) -> ScirsResult<Array1<f64>>
+            positions: &Array2<f64>,
+        ) -> ScirsResult<Array1<f64>>
         where
             F: Fn(&ArrayView1<f64>) -> f64,
         {
@@ -946,7 +950,10 @@ impl MPIInterface for MockMPI {
     }
 
     fn gather<T>(
-        &self, _send_data: &[T], _recv_data: Option<&mut [T]>, _root: i32,
+        &self,
+        _send_data: &[T],
+        _recv_data: Option<&mut [T]>,
+        _root: i32,
     ) -> ScirsResult<()>
     where
         T: Clone + Send + Sync,
@@ -957,7 +964,8 @@ impl MPIInterface for MockMPI {
     fn allreduce<T>(
         &self,
         send_data: &[T],
-        recv_data: &mut [T], _op: ReductionOp,
+        recv_data: &mut [T],
+        _op: ReductionOp,
     ) -> ScirsResult<()>
     where
         T: Clone + Send + Sync + std::ops::Add<Output = T> + PartialOrd,

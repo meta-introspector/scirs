@@ -119,7 +119,7 @@ impl PropertyBasedValidator {
     /// Create a new property-based validator
     pub fn new(_config: PropertyTestConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             test_results: HashMap::new(),
         }
     }
@@ -330,7 +330,7 @@ impl MathematicalProperty<Array1<f64>> for MeanTranslationInvariance {
         // Add edge cases
         if config.test_edge_cases {
             test_cases.push(Array1::from_vec(vec![0.0]));
-            test_cases.push(Array1::from_vec(vec![f64::MAX..f64::MIN]));
+            test_cases.push(Array1::from_vec(vec![f64::MAX, f64::MIN]));
             test_cases.push(Array1::from_vec(vec![-1.0, 1.0]));
         }
 
@@ -470,7 +470,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationBounds {
                 y[i] = normal.sample(&mut rng);
             }
 
-            test_cases.push((x..y));
+            test_cases.push((x, y));
         }
 
         // Add edge cases

@@ -793,7 +793,8 @@ impl QuantumSparseProcessor {
 
     /// Classify the type of quantum error
     fn classify_error_type(
-        &self, _logical_qubit: &LogicalQubit,
+        &self,
+        _logical_qubit: &LogicalQubit,
         syndrome_strength: f64,
     ) -> QuantumError {
         // Simplified error classification based on syndrome patterns

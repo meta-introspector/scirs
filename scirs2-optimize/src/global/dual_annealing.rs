@@ -155,7 +155,7 @@ where
                         self.options
                             .bounds
                             .iter()
-                            .map(|&(lb_)| Some(lb))
+                            .map(|&(lb, _)| Some(lb))
                             .collect(),
                         self.options
                             .bounds
@@ -218,7 +218,7 @@ where
         // Local search phase
         if iteration % 10 == 0 {
             // Perform local search periodically
-            let (x_local..energy_local, nfev_local) = self.local_search();
+            let (x_local, energy_local, nfev_local) = self.local_search();
             self.nfev += nfev_local;
 
             if energy_local < self.best_energy {

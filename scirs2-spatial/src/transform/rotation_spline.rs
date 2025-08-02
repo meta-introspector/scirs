@@ -124,11 +124,11 @@ impl RotationSpline {
         }
 
         // Make a copy of the _rotations and times
-        let _rotations = _rotations.to_vec();
+        let rotations = _rotations.to_vec();
         let times = times.to_vec();
 
         Ok(RotationSpline {
-            _rotations,
+            rotations,
             times,
             velocities: None,
             interpolation_type: "slerp".to_string(),
@@ -643,7 +643,7 @@ impl RotationSpline {
         // Calculate angular velocity based on interpolation type
         match self.interpolation_type.as_str() {
             "slerp" => self.angular_velocity_slerp(t, idx),
-            "cubic" => self.angular_velocity_cubic(t, idx),
+            "cubic" => Ok(self.angular_velocity_cubic(t, idx)),
             _ => self.angular_velocity_slerp(t, idx), // Default to slerp
         }
     }

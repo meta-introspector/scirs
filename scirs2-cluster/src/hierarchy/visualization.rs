@@ -564,7 +564,8 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd>(
     node: &TreeNode<F>,
     positions: &HashMap<usize, (F, F)>,
     branches: &mut Vec<Branch<F>>,
-    threshold: F_config: &DendrogramConfig<F>,
+    threshold: F,
+    config: &DendrogramConfig<F>,
 ) {
     if node.is_leaf {
         return;
@@ -1847,7 +1848,8 @@ pub mod export {
                         config.styling.node_markers.marker_size,
                         config.styling.node_markers.marker_size,
                         config.styling.node_markers.marker_color
-                    , _ => format!(
+                    ),
+                    _ => format!(
                         "<circle cx=\"{}\" cy=\"{}\" r=\"{}\" fill=\"{}\"/>\n",
                         leaf.position.0,
                         leaf.position.1,

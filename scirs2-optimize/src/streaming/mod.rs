@@ -194,7 +194,8 @@ pub trait StreamingObjective {
 
     /// Compute the Hessian for a single data point (optional)
     fn hessian(
-        &self_parameters: &ArrayView1<f64>, _data_point: &StreamingDataPoint,
+        &self_parameters: &ArrayView1<f64>,
+        _data_point: &StreamingDataPoint,
     ) -> Option<Array2<f64>> {
         None
     }

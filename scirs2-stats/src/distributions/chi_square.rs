@@ -4,13 +4,13 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
-use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
+use crate::traits::{ContinuousCDF, ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{ChiSquared as RandChiSquared, Distribution};
-use std::f64::consts::PI;
 use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 
 /// Chi-square distribution structure
 pub struct ChiSquare<F: Float + Send + Sync> {
@@ -40,7 +40,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::chi_square::ChiSquare;
+    /// use scirs2_stats::distributions::chi_square::ChiSquare;
     ///
     /// // Chi-square distribution with 2 degrees of freedom
     /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
@@ -87,7 +87,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::chi_square::ChiSquare;
+    /// use scirs2_stats::distributions::chi_square::ChiSquare;
     ///
     /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
     /// let pdf_at_one = chi2.pdf(1.0);
@@ -137,7 +137,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::chi_square::ChiSquare;
+    /// use scirs2_stats::distributions::chi_square::ChiSquare;
     ///
     /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
     /// let cdf_at_two = chi2.cdf(2.0);
@@ -210,7 +210,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::chi_square::ChiSquare;
+    /// use scirs2_stats::distributions::chi_square::ChiSquare;
     ///
     /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
     /// let samples = chi2.rvs(1000).unwrap();
@@ -235,7 +235,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ChiSquare<F
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::chi_square::ChiSquare;
+    /// use scirs2_stats::distributions::chi_square::ChiSquare;
     ///
     /// let chi2 = ChiSquare::new(2.0f64, 0.0, 1.0).unwrap();
     /// let samples = chi2.rvs_vec(1000).unwrap();
@@ -581,6 +581,12 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousD
     }
 }
 
+impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousCDF<F>
+    for ChiSquare<F>
+{
+    // Default implementations from trait are sufficient
+}
+
 /// Implementation of SampleableDistribution for ChiSquare
 impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> SampleableDistribution<F>
     for ChiSquare<F>
@@ -745,14 +751,14 @@ mod tests {
         // Check PPF
         assert_relative_eq!(dist.ppf(0.95).unwrap(), 5.991, epsilon = 1e-3);
 
-        // Check derived methods
-        assert_relative_eq!(dist.sf(2.0), 1.0 - 0.632, epsilon = 1e-3);
-        assert!(dist.hazard(2.0) > 0.0);
-        assert!(dist.cumhazard(2.0) > 0.0);
+        // Check derived methods using concrete type
+        assert_relative_eq!(chi2.sf(2.0), 1.0 - 0.632, epsilon = 1e-3);
+        assert!(chi2.hazard(2.0) > 0.0);
+        assert!(chi2.cumhazard(2.0) > 0.0);
 
         // Check that isf and ppf are consistent
         assert_relative_eq!(
-            dist.isf(0.95).unwrap(),
+            chi2.isf(0.95).unwrap(),
             dist.ppf(0.05).unwrap(),
             epsilon = 1e-3
         );

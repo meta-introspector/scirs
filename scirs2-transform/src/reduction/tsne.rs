@@ -1918,14 +1918,15 @@ where
         pairs.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // The first element will be i itself (distance 0), so skip it
-        for (j, &(idx_)) in pairs.iterj]] = idx;
+        for (j, &(idx, _)) in pairs.iter().skip(1).take(n_neighbors).enumerate() {
+            nn_embedded[[i, j]] = idx;
         }
     }
 
     // Calculate the trustworthiness score
     let mut t = 0.0;
     for i in 0..n_samples {
-        for &j in nn_embedded.row(i.iter() {
+        for &j in nn_embedded.row(i).iter() {
             // Check if j is not in the n_neighbors nearest neighbors in the original space
             let is_not_neighbor = !nn_orig.row(i).iter().any(|&nn| nn == j);
 

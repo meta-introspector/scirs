@@ -21,15 +21,17 @@ impl<F: Float> MemoryOptimizer<F> {
     pub fn new() -> Self {
         Self {
             config: MemoryOptimizationConfig::default(),
-            analysis: None_phantom: std::marker::PhantomData,
+            analysis: None,
+            _phantom: std::marker::PhantomData,
         }
     }
 
     /// Create a memory optimizer with custom configuration
     pub fn with_config(_config: MemoryOptimizationConfig) -> Self {
         Self {
-            _config,
-            analysis: None_phantom: std::marker::PhantomData,
+            config: _config,
+            analysis: None,
+            _phantom: std::marker::PhantomData,
         }
     }
 

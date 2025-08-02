@@ -1,7 +1,6 @@
 //! Error types for the SciRS2 signal processing module
 
 use thiserror::Error;
-use crate::error::{SignalError, SignalResult};
 
 #[allow(unused_imports)]
 /// Signal processing error type

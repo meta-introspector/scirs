@@ -207,7 +207,7 @@ impl DictionaryLearning {
             // Swap rows
             if max_idx != k {
                 perm.swap(k, max_idx);
-                for j in 0, n {
+                for j in 0..n {
                     let tmp = lu[[k, j]];
                     lu[[k, j]] = lu[[max_idx, j]];
                     lu[[max_idx, j]] = tmp;

@@ -57,9 +57,10 @@ fn get_window(_window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
             }
             Ok(window)
         }
-        "boxcar" | "rectangular" => Ok(vec![1.0; nperseg], _ => Err(SignalError::ValueError(format!(
+        "boxcar" | "rectangular" => Ok(vec![1.0; nperseg]),
+        _ => Err(SignalError::ValueError(format!(
             "Unknown window _type: {}",
-            window_type
+            _window_type
         ))),
     }
 }
@@ -106,7 +107,8 @@ fn apply_detrend(x: &[f64], detrend_type: &str) -> SignalResult<Vec<f64>> {
                 .map(|(i, &y)| y - (slope * i as f64 + intercept))
                 .collect())
         }
-        "none" => Ok(x.to_vec(), _ => Err(SignalError::ValueError(format!(
+        "none" => Ok(x.to_vec()),
+        _ => Err(SignalError::ValueError(format!(
             "Unknown detrend option: {}",
             detrend_type
         ))),

@@ -55,7 +55,8 @@ where
         Self {
             name: _name,
             func,
-            config: ErrorConfig::default(), _phantom: std::marker::PhantomData,
+            config: ErrorConfig::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -150,7 +151,8 @@ where
         Self {
             name: _name,
             func,
-            config: ErrorConfig::default(), _phantom: std::marker::PhantomData,
+            config: ErrorConfig::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -227,7 +229,8 @@ where
         Self {
             name: _name,
             func,
-            config: ErrorConfig::default(), _phantom: std::marker::PhantomData,
+            config: ErrorConfig::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 

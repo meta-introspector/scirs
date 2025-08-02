@@ -65,8 +65,8 @@
 
 use crate::error::{SpecialError, SpecialResult};
 use crate::validation;
-use scirs2_core::validation::check_finite;
 use num_traits::{Float, FromPrimitive};
+use scirs2_core::validation::check_finite;
 use std::f64;
 use std::fmt::{Debug, Display};
 

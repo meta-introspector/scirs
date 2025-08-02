@@ -527,7 +527,7 @@ where
 /// });
 /// ```
 #[allow(dead_code)]
-pub fn normalize<'graph, A, AT, F: Float>(_x: A_axes: &AT) -> Tensor<'graph, F>
+pub fn normalize<'graph, A, AT, F: Float>(_x: A, axes: &AT) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
     AT: AsTensor<'graph, F>,

@@ -18,7 +18,6 @@
 
 use crate::error::SignalResult;
 use crate::dwt::Wavelet;
-use crate::error::SignalResult;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::SeedableRng;
 use std::collections::HashMap;
@@ -1018,7 +1017,7 @@ pub fn run_comprehensive_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_multitaper_validation(
-    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
 ) -> SignalResult<MultitaperAdvancedResults> {
     // Placeholder implementation - in a real implementation this would
     // call the actual multitaper validation functions
@@ -1063,7 +1062,7 @@ fn run_enhanced_multitaper_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_lombscargle_validation(
-    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
 ) -> SignalResult<LombScargleAdvancedResults> {
     // Placeholder implementation
     Ok(LombScargleAdvancedResults {
@@ -1092,7 +1091,7 @@ fn run_enhanced_lombscargle_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_parametric_validation(
-    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
 ) -> SignalResult<ParametricAdvancedResults> {
     // Placeholder implementation
     Ok(ParametricAdvancedResults {
@@ -1140,7 +1139,7 @@ fn run_enhanced_parametric_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_wavelet2d_validation(
-    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
 ) -> SignalResult<Wavelet2dAdvancedResults> {
     // Placeholder implementation
     Ok(Wavelet2dAdvancedResults {
@@ -1168,7 +1167,7 @@ fn run_enhanced_wavelet2d_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_wavelet_packet_validation(
-    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
 ) -> SignalResult<WaveletPacketAdvancedResults> {
     // Placeholder implementation
     Ok(WaveletPacketAdvancedResults {
@@ -1195,7 +1194,7 @@ fn run_enhanced_wavelet_packet_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_simd_validation(
-    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
 ) -> SignalResult<SimdValidationResults> {
     // Placeholder implementation
     Ok(SimdValidationResults {
@@ -1211,7 +1210,7 @@ fn run_enhanced_simd_validation(
 
 #[allow(dead_code)]
 fn run_enhanced_parallel_validation(
-    _config: &ComprehensiveValidationConfig_rng: &mut rand, _chacha::ChaCha8Rng,
+    _config: &ComprehensiveValidationConfig, _rng: &mut rand::chacha::ChaCha8Rng,
 ) -> SignalResult<ParallelValidationResults> {
     // Placeholder implementation
     Ok(ParallelValidationResults {

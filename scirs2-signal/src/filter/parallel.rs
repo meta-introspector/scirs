@@ -7,7 +7,7 @@ use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use crate::savgol::savgol_coeffs;
 use ndarray::{Array1, Array2, ArrayView1, s};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rustfft::{FftPlanner, num_complex::Complex};
 use scirs2_core::parallel_ops::*;
@@ -18,8 +18,8 @@ use std::fmt::Debug;
 #[allow(unused_imports)]
 // Temporary replacement for par_iter_with_setup
 fn par_iter_with_setup<I, IT, S, F, R, RF, E>(
-    items: I_setup: S,
-    map_fn: F_reduce, _fn: RF,
+    items: I, _setup: S,
+    map_fn: F, _reduce_fn: RF,
 ) -> Result<Vec<R>, E>
 where
     I: IntoIterator<Item = IT>,
@@ -386,7 +386,8 @@ pub fn parallel_convolve2d(
     let (out_rows, out_cols) = match mode {
         "full" => (img_rows + ker_rows - 1, img_cols + ker_cols - 1),
         "same" => (img_rows, img_cols),
-        "valid" => (img_rows - ker_rows + 1, img_cols - ker_cols + 1, _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
+        "valid" => (img_rows - ker_rows + 1, img_cols - ker_cols + 1),
+        _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
     };
 
     // Padding for boundary handling
@@ -406,13 +407,15 @@ pub fn parallel_convolve2d(
         let row_offset = match mode {
             "full" => 0,
             "same" => ker_rows / 2,
-            "valid" => ker_rows - 1_ => 0,
+            "valid" => ker_rows - 1,
+            _ => 0,
         };
 
         let col_offset = match mode {
             "full" => 0,
             "same" => ker_cols / 2,
-            "valid" => ker_cols - 1_ => 0,
+            "valid" => ker_cols - 1,
+            _ => 0,
         };
 
         for j in 0..out_cols {
@@ -1174,7 +1177,7 @@ pub fn parallel_filter_advanced(
             filter_length,
             step_size,
         } => {
-            let (output__) = parallel_adaptive_lms_filter(
+            let (output, _, _) = parallel_adaptive_lms_filter(
                 signal,
                 desired,
                 *filter_length,
@@ -1795,7 +1798,7 @@ where
                     SignalError::ValueError(format!("Could not convert {:?} to f64", val))
                 })
             })
-            .collect::<Result<Vec<f64>_>>()?,
+            .collect::<Result<Vec<f64>>>()?,
     );
 
     // Check if all values are finite

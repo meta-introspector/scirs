@@ -436,7 +436,8 @@ fn compute_median_absolute_deviation(_values: &Array1<f64>) -> f64 {
 fn estimate_ar_weighted(
     signal: &Array1<f64>,
     order: usize,
-    method: ARMethod_weights: &Array1<f64>,
+    method: ARMethod,
+    _weights: &Array1<f64>,
 ) -> SignalResult<(Array1<f64>, Option<Array1<f64>>, f64)> {
     // For simplicity, use standard estimation
     // A full implementation would incorporate _weights into the estimation
@@ -454,9 +455,10 @@ fn compute_model_criteria(
     let n = signal.len()  as f64;
     let k = match model_type {
         ModelType::AR(p) => p as f64,
-        ModelType::ARMA(p, q) => (p + q) as f64_ => {
+        ModelType::ARMA(p, q) => (p + q) as f64,
+        _ => {
             return Err(SignalError::ValueError(
-                "Unsupported model _type".to_string(),
+                "Unsupported model type".to_string(),
             ))
         }
     };

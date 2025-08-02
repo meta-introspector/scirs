@@ -110,7 +110,7 @@ where
     ///
     /// ```
     /// use ndarray::{array, Array2};
-    /// use scirs2__stats::linear_regression;
+    /// use scirs2_stats::linear_regression;
     ///
     /// // Fit a model
     /// let x = Array2::from_shape_vec((3, 2), vec![

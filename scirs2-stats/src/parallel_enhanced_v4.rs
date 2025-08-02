@@ -7,8 +7,8 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
-use std::sync::Arc;
 use statrs::statistics::Statistics;
+use std::sync::Arc;
 
 /// Enhanced parallel configuration
 #[derive(Debug, Clone)]
@@ -61,14 +61,16 @@ where
     /// Create new enhanced parallel processor
     pub fn new() -> Self {
         Self {
-            config: EnhancedParallelConfig::default(), _phantom: std::marker::PhantomData,
+            config: EnhancedParallelConfig::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
     /// Create with custom configuration
     pub fn with_config(_config: EnhancedParallelConfig) -> Self {
         Self {
-            _config_phantom: std::marker::PhantomData,
+            config: _config,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -91,20 +93,23 @@ where
 
         // Use scirs2-core's parallel operations
         let chunk_size = self.calculate_optimal_chunk_size(n);
-        let result = parallel_map_reduce(
-            data,
-            chunk_size,
-            |chunk| {
+        let result = data
+            .as_slice()
+            .unwrap()
+            .par_chunks(chunk_size)
+            .map(|chunk| {
                 // Process each chunk (map phase)
                 let sum: F = chunk.iter().copied().sum();
                 let count = chunk.len();
                 (sum, count)
-            },
-            |(sum1, count1), (sum2, count2)| {
-                // Combine results (reduce phase)
-                (sum1 + sum2, count1 + count2)
-            },
-        );
+            })
+            .reduce(
+                || (F::zero(), 0),
+                |(sum1, count1), (sum2, count2)| {
+                    // Combine results (reduce phase)
+                    (sum1 + sum2, count1 + count2)
+                },
+            );
 
         let (total_sum, total_count) = result;
         Ok(total_sum / F::from(total_count).unwrap())
@@ -134,20 +139,23 @@ where
 
         // Second pass: compute variance in parallel
         let chunk_size = self.calculate_optimal_chunk_size(n);
-        let result = parallel_map_reduce(
-            data,
-            chunk_size,
-            |chunk| {
+        let result = data
+            .as_slice()
+            .unwrap()
+            .par_chunks(chunk_size)
+            .map(|chunk| {
                 // Process each chunk (map phase)
                 let sum_sq_diff: F = chunk.iter().map(|&x| (x - mean) * (x - mean)).sum();
                 let count = chunk.len();
                 (sum_sq_diff, count)
-            },
-            |(sum1, count1), (sum2, count2)| {
-                // Combine results (reduce phase)
-                (sum1 + sum2, count1 + count2)
-            },
-        );
+            })
+            .reduce(
+                || (F::zero(), 0),
+                |(sum1, count1), (sum2, count2)| {
+                    // Combine results (reduce phase)
+                    (sum1 + sum2, count1 + count2)
+                },
+            );
 
         let (total_sum_sq_diff, total_count) = result;
         let denominator = total_count.saturating_sub(ddof);
@@ -226,15 +234,15 @@ where
         let results = parallel_map_collect(0..n_bootstrap, |i| {
             use scirs2_core::random::Random;
             let mut rng = match seed {
-                Some(s) => Random::with_seed(s.wrapping_add(i as u64)),
-                None => Random::with_seed(i as u64), // Use index as seed for determinism in parallel
+                Some(s) => Random::seed(s.wrapping_add(i as u64)),
+                None => Random::seed(i as u64), // Use index as seed for determinism in parallel
             };
 
             // Generate _bootstrap sample
             let n = data_arc.len();
             let mut bootstrap_sample = Array1::zeros(n);
             for j in 0..n {
-                let idx = rng.gen_range(0..n);
+                let idx = rng.random_range(0, n);
                 bootstrap_sample[j] = data_arc[idx];
             }
 

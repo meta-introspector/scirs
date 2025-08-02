@@ -9,7 +9,6 @@
 //! - Numerical accuracy under extreme conditions
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
 use ndarray::Array1;
 use num_traits::Float;

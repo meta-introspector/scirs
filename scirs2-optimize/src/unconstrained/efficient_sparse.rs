@@ -585,7 +585,12 @@ fn sparse_to_dense(_sparse: &CsrArray<f64>) -> Array1<f64> {
 
 #[allow(dead_code)]
 fn sparse_vector_norm(_sparse: &CsrArray<f64>) -> f64 {
-    _sparse.get_data().iter().map(|&x| x * x).sum::<f64>().sqrt()
+    _sparse
+        .get_data()
+        .iter()
+        .map(|&x| x * x)
+        .sum::<f64>()
+        .sqrt()
 }
 
 #[allow(dead_code)]
@@ -631,7 +636,9 @@ fn apply_bounds_projection(p: &Array1<f64>, x: &Array1<f64>, options: &Options) 
 
 #[allow(dead_code)]
 fn refine_sparsity_pattern(
-    _sparsity_info: &mut SparsityInfo_current, _gradient: &CsrArray<f64>, _options: &EfficientSparseOptions,
+    _sparsity_info: &mut SparsityInfo_current,
+    _gradient: &CsrArray<f64>,
+    _options: &EfficientSparseOptions,
 ) -> Result<(), OptimizeError> {
     // Adaptive refinement of sparsity pattern based on current _gradient
     // This is a simplified version - a full implementation would track

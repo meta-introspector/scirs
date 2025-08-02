@@ -71,7 +71,7 @@ impl DatabaseConfig {
     /// Create a new database configuration
     pub fn new(_db_type: DatabaseType, database: impl Into<String>) -> Self {
         Self {
-            _db_type,
+            db_type: _db_type,
             host: None,
             port: None,
             database: database.into(),
@@ -182,7 +182,7 @@ impl QueryBuilder {
     pub fn select(_table: impl Into<String>) -> Self {
         Self {
             query_type: QueryType::Select,
-            _table: _table.into(),
+            table: _table.into(),
             columns: vec!["*".to_string()],
             conditions: Vec::new(),
             values: Vec::new(),
@@ -196,7 +196,7 @@ impl QueryBuilder {
     pub fn insert(_table: impl Into<String>) -> Self {
         Self {
             query_type: QueryType::Insert,
-            _table: _table.into(),
+            table: _table.into(),
             columns: Vec::new(),
             conditions: Vec::new(),
             values: Vec::new(),
@@ -327,7 +327,7 @@ impl ResultSet {
     /// Create new result set
     pub fn new(_columns: Vec<String>) -> Self {
         Self {
-            _columns,
+            columns: _columns,
             rows: Vec::new(),
             metadata: Metadata::new(),
         }
@@ -836,7 +836,7 @@ pub mod timeseries {
     impl TimeSeriesQuery {
         pub fn new(_measurement: impl Into<String>) -> Self {
             Self {
-                _measurement: _measurement.into(),
+                measurement: _measurement.into(),
                 start_time: None,
                 end_time: None,
                 tags: HashMap::new(),
@@ -881,7 +881,7 @@ pub mod bulk {
             Self {
                 batch_size: 1000,
                 buffer: Vec::new(),
-                _table: _table.into(),
+                table: _table.into(),
                 columns: columns.into_iter().map(|c| c.into()).collect(),
             }
         }
@@ -2172,7 +2172,8 @@ impl ConnectionPool {
     pub fn new(_config: DatabaseConfig, max_connections: usize) -> Self {
         Self {
             db_type: _config.db_type,
-            _config_connections: Arc::new(Mutex::new(Vec::new())),
+            config: _config,
+            connections: Arc::new(Mutex::new(Vec::new())),
             max_connections,
         }
     }
@@ -2233,7 +2234,7 @@ impl Transaction {
         _connection.execute_sql(&format!("SAVEPOINT {savepoint}"), &[])?;
 
         Ok(Self {
-            _connection,
+            connection: _connection,
             savepoint,
             committed: false,
         })
@@ -2277,7 +2278,7 @@ impl PreparedStatement {
         let _sql = _sql.into();
         let param_count = _sql.matches('?').count();
 
-        Ok(Self { _sql, param_count })
+        Ok(Self { sql: _sql, param_count })
     }
 
     /// Execute with parameters
@@ -2459,7 +2460,7 @@ pub mod orm {
     impl<T: Model> ActiveRecord<T> {
         pub fn new(_model: T) -> Self {
             Self {
-                _model,
+                model: _model,
                 changed: false,
             }
         }
@@ -2529,7 +2530,7 @@ pub mod cdc {
 
     impl CDCListener {
         pub fn new(_receiver: mpsc::Receiver<ChangeEvent>) -> Self {
-            Self { _receiver }
+            Self { receiver: _receiver }
         }
 
         /// Get next change event
@@ -2550,7 +2551,7 @@ pub mod cdc {
 
     impl CDCPublisher {
         pub fn new(_sender: mpsc::Sender<ChangeEvent>) -> Self {
-            Self { _sender }
+            Self { sender: _sender }
         }
 
         /// Publish change event
@@ -2682,7 +2683,7 @@ pub mod advanced_query {
     struct IndexHintRule;
 
     impl OptimizationRule for IndexHintRule {
-        fn optimize(&self_query: &mut QueryBuilder) {
+        fn optimize(&self, query: &mut QueryBuilder) {
             // Add index hints based on conditions
         }
     }
@@ -2691,7 +2692,7 @@ pub mod advanced_query {
     struct JoinOrderRule;
 
     impl OptimizationRule for JoinOrderRule {
-        fn optimize(&self_query: &mut QueryBuilder) {
+        fn optimize(&self, query: &mut QueryBuilder) {
             // Optimize join order based on statistics
         }
     }
@@ -2712,7 +2713,7 @@ pub mod advanced_query {
         /// Analyze query performance
         pub fn analyze(_query: &QueryBuilder, conn: &dyn DatabaseConnection) -> Result<QueryStats> {
             let start = std::time::Instant::now();
-            let result = conn._query(_query)?;
+            let result = conn.query(_query)?;
             let execution_time = start.elapsed();
 
             Ok(QueryStats {

@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__stats::bartlett;
+use scirs2_stats::bartlett;
 
 #[allow(dead_code)]
 fn main() {

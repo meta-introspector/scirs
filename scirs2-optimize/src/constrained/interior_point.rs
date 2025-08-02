@@ -253,7 +253,7 @@ impl<'a> InteriorPointSolver<'a> {
 
         let final_f = fun(&x.view());
         self.nfev += 1;
-        let (final_optimality_feasibility) = self.compute_convergence_measures(
+        let (final_optimality, _final_feasibility) = self.compute_convergence_measures(
             &grad(&x.view()),
             &None,
             &None,
@@ -291,7 +291,8 @@ impl<'a> InteriorPointSolver<'a> {
         c_eq: &Option<Array1<f64>>,
         c_ineq: &Option<Array1<f64>>,
         j_eq: &Option<Array2<f64>>,
-        j_ineq: &Option<Array2<f64>>, _lambda_eq: &Array1<f64>,
+        j_ineq: &Option<Array2<f64>>,
+        _lambda_eq: &Array1<f64>,
         lambda_ineq: &Array1<f64>,
         s: &Array1<f64>,
         barrier: f64,
@@ -341,12 +342,13 @@ impl<'a> InteriorPointSolver<'a> {
         c_ineq: &Option<Array1<f64>>,
         j_eq: &Option<Array2<f64>>,
         j_ineq: &Option<Array2<f64>>,
-        s: &Array1<f64>, _lambda_eq: &Array1<f64>,
+        s: &Array1<f64>,
+        _lambda_eq: &Array1<f64>,
         lambda_ineq: &Array1<f64>,
         barrier: f64,
     ) -> Result<NewtonDirectionResult, OptimizeError> {
         // Build KKT system
-        let n_total = self.n + self.m_ineq + self.m_eq + self.m_ineq;
+        let n_total = self.n + self.m_eq + 2 * self.m_ineq;
         let mut kkt_matrix = Array2::zeros((n_total, n_total));
         let mut rhs = Array1::zeros(n_total);
 
@@ -466,7 +468,8 @@ impl<'a> InteriorPointSolver<'a> {
         j_eq: &Option<Array2<f64>>,
         j_ineq: &Option<Array2<f64>>,
         s: &Array1<f64>,
-        lambda_ineq: &Array1<f64>, _barrier: f64,
+        lambda_ineq: &Array1<f64>,
+        _barrier: f64,
     ) -> Result<NewtonDirectionResult, OptimizeError> {
         if self.m_ineq == 0 {
             // No inequality constraints, use standard Newton direction
@@ -478,13 +481,13 @@ impl<'a> InteriorPointSolver<'a> {
                 j_ineq,
                 s,
                 &Array1::zeros(self.m_eq),
-                lambda_ineq_barrier,
+                lambda_ineq,
             );
         }
 
         // Step 1: Compute predictor step (affine scaling direction)
         // This is the Newton step with zero _barrier parameter (affine scaling)
-        let (dx_aff, ds_aff_dlambda_eq_aff, dlambda_ineq_aff) =
+        let (dx_aff, ds_aff, dlambda_eq_aff, dlambda_ineq_aff) =
             self.compute_affine_scaling_direction(g, c_eq, c_ineq, j_eq, j_ineq, s, lambda_ineq)?;
 
         // Step 2: Compute maximum step lengths for predictor step
@@ -551,7 +554,7 @@ impl<'a> InteriorPointSolver<'a> {
         lambda_ineq: &Array1<f64>,
     ) -> Result<NewtonDirectionResult, OptimizeError> {
         // Build KKT system for affine scaling (barrier = 0)
-        let n_total = self.n + self.m_ineq + self.m_eq + self.m_ineq;
+        let n_total = self.n + self.m_eq + 2 * self.m_ineq;
         let mut kkt_matrix = Array2::zeros((n_total, n_total));
         let mut rhs = Array1::zeros(n_total);
 
@@ -625,7 +628,10 @@ impl<'a> InteriorPointSolver<'a> {
 
     /// Compute corrector direction combining predictor and centering
     fn compute_corrector_direction(
-        &self_g: &Array1<f64>, _c_eq: &Option<Array1<f64>>, _c_ineq: &Option<Array1<f64>>,
+        &self,
+        &self_g: &Array1<f64>,
+        _c_eq: &Option<Array1<f64>>,
+        _c_ineq: &Option<Array1<f64>>,
         j_eq: &Option<Array2<f64>>,
         j_ineq: &Option<Array2<f64>>,
         s: &Array1<f64>,
@@ -636,7 +642,7 @@ impl<'a> InteriorPointSolver<'a> {
         sigma_mu: f64,
     ) -> Result<NewtonDirectionResult, OptimizeError> {
         // Build KKT system for corrector step
-        let n_total = self.n + self.m_ineq + self.m_eq + self.m_ineq;
+        let n_total = self.n + self.m_eq + 2 * self.m_ineq;
         let mut kkt_matrix = Array2::zeros((n_total, n_total));
         let mut rhs = Array1::zeros(n_total);
 
@@ -799,7 +805,8 @@ impl<'a> InteriorPointSolver<'a> {
         lambda_ineq: &Array1<f64>,
         dx: &Array1<f64>,
         ds: &Array1<f64>,
-        dlambda_ineq: &Array1<f64>, _barrier: f64,
+        dlambda_ineq: &Array1<f64>,
+        _barrier: f64,
     ) -> Result<f64, OptimizeError>
     where
         F: FnMut(&ArrayView1<f64>) -> f64,
@@ -857,8 +864,10 @@ fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError>
 pub fn minimize_interior_point<F, H, J>(
     fun: F,
     x0: Array1<f64>,
-    eq_con: Option<H>, _eq_jac: Option<J>,
-    ineq_con: Option<H>, _ineq_jac: Option<J>,
+    eq_con: Option<H>,
+    _eq_jac: Option<J>,
+    ineq_con: Option<H>,
+    _ineq_jac: Option<J>,
     options: Option<InteriorPointOptions>,
 ) -> Result<OptimizeResult<f64>, OptimizeError>
 where

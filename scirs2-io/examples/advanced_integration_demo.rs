@@ -4,11 +4,11 @@
 //! in realistic scenarios, showing how to build intelligent I/O systems that
 //! adapt to changing conditions and optimize performance automatically.
 
-use scirs2__io::error::Result;
-use scirs2__io::neural_adaptive_io::{
+use scirs2_io::error::Result;
+use scirs2_io::neural_adaptive_io::{
     AdvancedIoProcessor, NeuralAdaptiveIoController, SystemMetrics,
 };
-use scirs2__io::quantum_inspired_io::QuantumParallelProcessor;
+use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -163,7 +163,8 @@ impl IntelligentIoManager {
         match size {
             0..=1_000 => DataSizeClass::Small,
             1_001..=50_000 => DataSizeClass::Medium,
-            50_001..=1_000_000 => DataSizeClass::Large_ =>, DataSizeClass::VeryLarge,
+            50_001..=1_000_000 => DataSizeClass::Large,
+            _ => DataSizeClass::VeryLarge,
         }
     }
 
@@ -499,7 +500,8 @@ fn generate_genomic_data(_size: usize) -> Vec<u8> {
         .map(|i| match (i * 31 + 13) % 4 {
             0 => b'A',
             1 => b'T',
-            2 => b'G'_ => b'C',
+            2 => b'G',
+            _ => b'C',
         })
         .collect()
 }

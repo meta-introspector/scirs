@@ -51,7 +51,7 @@ impl HamiltonianMonteCarlo {
         check_positive(n_steps, "n_steps")?;
 
         Ok(Self {
-            _step_size,
+            step_size: _step_size,
             n_steps,
             mass_matrix: None,
             seed: None,
@@ -104,7 +104,7 @@ impl HamiltonianMonteCarlo {
         };
 
         let ndim = target.ndim();
-        let mut _samples = Array2::zeros((n_samples_, ndim));
+        let mut samples = Array2::zeros((n_samples_, ndim));
         let mut log_probs = Array1::zeros(n_samples_);
         let mut accepted = Array1::from_elem(n_samples_, false);
 
@@ -151,7 +151,7 @@ impl HamiltonianMonteCarlo {
                 accepted[i] = true;
             }
 
-            _samples.row_mut(i).assign(&current_state);
+            samples.row_mut(i).assign(&current_state);
             log_probs[i] = current_log_prob;
 
             // Adapt step size
@@ -163,7 +163,7 @@ impl HamiltonianMonteCarlo {
         let acceptance_rate = n_accepted as f64 / n_samples_ as f64;
 
         Ok(HMCResult {
-            _samples,
+            samples,
             log_probabilities: log_probs,
             accepted,
             acceptance_rate,
@@ -366,7 +366,7 @@ impl NoUTurnSampler {
         };
 
         let ndim = target.ndim();
-        let mut _samples = Array2::zeros((n_samples_, ndim));
+        let mut samples = Array2::zeros((n_samples_, ndim));
         let mut log_probs = Array1::zeros(n_samples_);
         let mut tree_sizes = Array1::zeros(n_samples_);
 
@@ -388,7 +388,7 @@ impl NoUTurnSampler {
             current_state = new_state;
             current_log_prob = new_log_prob;
 
-            _samples.row_mut(i).assign(&current_state);
+            samples.row_mut(i).assign(&current_state);
             log_probs[i] = current_log_prob;
             tree_sizes[i] = tree_size as f64;
 
@@ -409,7 +409,7 @@ impl NoUTurnSampler {
         }
 
         Ok(NUTSResult {
-            _samples,
+            samples,
             log_probabilities: log_probs,
             tree_sizes,
             final_step_size: step_size,
@@ -462,7 +462,7 @@ impl NoUTurnSampler {
 
         let new_log_prob = target.log_density(&current_pos.view())?;
 
-        Ok((current_pos..new_log_prob, n_steps))
+        Ok((current_pos, new_log_prob, n_steps))
     }
 }
 
@@ -534,7 +534,7 @@ impl AdaptiveMetropolis {
         };
 
         let ndim = target.ndim();
-        let mut _samples = Array2::zeros((n_samples_, ndim));
+        let mut samples = Array2::zeros((n_samples_, ndim));
         let mut log_probs = Array1::zeros(n_samples_);
         let mut accepted = Array1::from_elem(n_samples_, false);
 
@@ -568,7 +568,7 @@ impl AdaptiveMetropolis {
                 accepted[i] = true;
             }
 
-            _samples.row_mut(i).assign(&current_state);
+            samples.row_mut(i).assign(&current_state);
             log_probs[i] = current_log_prob;
 
             // Update adaptation statistics
@@ -601,7 +601,7 @@ impl AdaptiveMetropolis {
         let acceptance_rate = n_accepted as f64 / n_samples_ as f64;
 
         Ok(AdaptiveMetropolisResult {
-            _samples,
+            samples,
             log_probabilities: log_probs,
             accepted,
             acceptance_rate,
@@ -676,11 +676,11 @@ pub struct ParallelTempering {
 
 impl ParallelTempering {
     /// Create a new parallel tempering sampler
-    pub fn new(_temperatures: Array1<f64>, step_size: f64) -> Result<Self> {
-        checkarray_finite(&_temperatures, "_temperatures")?;
+    pub fn new(temperatures: Array1<f64>, step_size: f64) -> Result<Self> {
+        checkarray_finite(&temperatures, "temperatures")?;
         check_positive(step_size, "step_size")?;
 
-        for &temp in _temperatures.iter() {
+        for &temp in temperatures.iter() {
             if temp <= 0.0 {
                 return Err(StatsError::InvalidArgument(
                     "All _temperatures must be positive".to_string(),
@@ -689,7 +689,7 @@ impl ParallelTempering {
         }
 
         Ok(Self {
-            _temperatures,
+            temperatures,
             step_size,
             swap_interval: 10,
             seed: None,
@@ -884,16 +884,16 @@ pub struct MultivariateNormal {
 }
 
 impl MultivariateNormal {
-    pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
-        checkarray_finite(&_mean, "_mean")?;
+    pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
+        checkarray_finite(&mean, "mean")?;
         checkarray_finite(&covariance, "covariance")?;
 
         // Simplified precision computation (should use proper matrix inversion)
-        let precision = Array2::eye(_mean.len()); // Placeholder
+        let precision = Array2::eye(mean.len()); // Placeholder
         let log_det_precision = 0.0; // Placeholder
 
         Ok(Self {
-            _mean,
+            mean,
             precision,
             log_det_precision,
         })

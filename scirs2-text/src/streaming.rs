@@ -751,7 +751,8 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
         Self {
             _tokenizer,
             buffer_size: 1024 * 1024, // 1MB
-            parallel_chunks: num, _cpus: get(),
+            parallel_chunks: num,
+            _cpus: get(),
             memory_monitor: MemoryMonitor::new(),
         }
     }

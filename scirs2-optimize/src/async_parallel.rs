@@ -363,13 +363,13 @@ impl AsyncDifferentialEvolution {
         if let Some((ref lower, ref upper)) = self.bounds {
             for mut individual in population.outer_iter_mut() {
                 for (j, gene) in individual.iter_mut().enumerate() {
-                    *gene = lower[j] + rng.random_f64() * (upper[j] - lower[j]);
+                    *gene = lower[j] + rng.gen::<f64>() * (upper[j] - lower[j]);
                 }
             }
         } else {
             for mut individual in population.outer_iter_mut() {
                 for gene in individual.iter_mut() {
-                    *gene = rng.random_f64() * 2.0 - 1.0; // [-1, 1]
+                    *gene = rng.gen::<f64>() * 2.0 - 1.0; // [-1, 1]
                 }
             }
         }
@@ -571,7 +571,8 @@ impl AsyncDifferentialEvolution {
     /// Generate next population using differential evolution
     fn generate_next_population(
         &self,
-        current_population: &Array2<f64>, _fitness_values: &[f64],
+        current_population: &Array2<f64>,
+        _fitness_values: &[f64],
     ) -> Array2<f64> {
         let mut new_population = Array2::zeros((self.population_size, self.dimensions));
         let mut rng = rand::rng();
@@ -607,7 +608,7 @@ impl AsyncDifferentialEvolution {
             let r = rng.gen_range(0..self.dimensions);
 
             for j in 0..self.dimensions {
-                if j == r || rng.random_f64() < self.crossover_probability {
+                if j == r || rng.gen::<f64>() < self.crossover_probability {
                     trial[j] = mutant[j];
                 }
             }

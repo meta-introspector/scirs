@@ -302,7 +302,9 @@ pub fn register_non_rigid_points(
 #[allow(dead_code)]
 pub fn register_non_rigid_regularized(
     source_points: &[(f64, f64)],
-    target_points: &[(f64, f64)]_regularization_weight: f64, _params: &RegistrationParams,
+    target_points: &[(f64, f64)],
+    _regularization_weight: f64, 
+    _params: &RegistrationParams,
 ) -> Result<RegistrationResult> {
     if source_points.len() != target_points.len() {
         return Err(VisionError::InvalidParameter(

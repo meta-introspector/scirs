@@ -69,7 +69,7 @@ impl HttpClient {
     /// Create a new HTTP client with the given configuration
     pub fn new(_config: NetworkConfig) -> Self {
         let client = Self {
-            _config,
+            config: _config,
             #[cfg(feature = "reqwest")]
             client: None,
         };
@@ -357,7 +357,7 @@ impl HttpClient {
     // Fallback implementations when reqwest feature is not enabled
     #[cfg(not(feature = "reqwest"))]
     /// Download a file (fallback implementation when reqwest feature is disabled)
-    pub async fn download<P: AsRef<Path>>(&self_url: &str, _local_path: P) -> Result<()> {
+    pub async fn download<P: AsRef<Path>>(_url: &str, _local_path: P) -> Result<()> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
         ))
@@ -365,7 +365,7 @@ impl HttpClient {
 
     #[cfg(not(feature = "reqwest"))]
     /// Upload a file (fallback implementation when reqwest feature is disabled)
-    pub async fn upload<P: AsRef<Path>>(&self_local_path: P, _url: &str) -> Result<()> {
+    pub async fn upload<P: AsRef<Path>>(_local_path: P, _url: &str) -> Result<()> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
         ))
@@ -383,7 +383,7 @@ impl HttpClient {
 
     #[cfg(not(feature = "reqwest"))]
     /// Check if URL is reachable (fallback implementation when reqwest feature is disabled)
-    pub async fn check_url(&self_url: &str) -> Result<bool> {
+    pub async fn check_url(_url: &str) -> Result<bool> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
         ))
@@ -391,7 +391,7 @@ impl HttpClient {
 
     #[cfg(not(feature = "reqwest"))]
     /// Get remote file size (fallback implementation when reqwest feature is disabled)
-    pub async fn get_remote_file_size(&self_url: &str) -> Result<Option<u64>> {
+    pub async fn get_remote_file_size(_url: &str) -> Result<Option<u64>> {
         Err(IoError::ConfigError(
             "HTTP support requires 'reqwest' feature".to_string(),
         ))

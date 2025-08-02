@@ -321,7 +321,7 @@ impl ComprehensiveValidationSuite {
                 _config.property_config.clone(),
             ),
             stability_analyzer: NumericalStabilityAnalyzer::new(_config.stability_config.clone()),
-            _config,
+            config: _config,
             cached_results: HashMap::new(),
         }
     }

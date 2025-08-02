@@ -65,7 +65,7 @@
 //!
 //! // Advanced statistics
 //! let skewness = skew(&data.view(), false).unwrap();  // bias = false
-//! let kurt = kurtosis(&data.view(), true, false).unwrap();  // fisher = true, bias = false
+//! let kurt = kurtosis(&data.view(), true, false, None).unwrap();  // fisher = true, bias = false
 //! ```
 //!
 //! ### Correlation Measures

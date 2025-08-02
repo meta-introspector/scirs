@@ -230,7 +230,7 @@ impl ScipyBenchmarkFramework {
     /// Create a new benchmark framework
     pub fn new(_config: BenchmarkConfig) -> Self {
         Self {
-            _config,
+            config: _config,
             results_cache: HashMap::new(),
             test_data_generator: TestDataGenerator::new(TestDataConfig::default()),
         }
@@ -522,7 +522,7 @@ impl ScipyBenchmarkFramework {
 impl TestDataGenerator {
     /// Create a new test data generator
     pub fn new(_config: TestDataConfig) -> Self {
-        Self { _config }
+        Self { config: _config }
     }
 
     /// Generate 1D test data

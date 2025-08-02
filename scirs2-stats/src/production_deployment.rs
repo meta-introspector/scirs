@@ -1788,7 +1788,9 @@ pub fn create_cloud_production_config(_cloud_provider: CloudProvider) -> Product
 }
 
 #[allow(dead_code)]
-pub fn create_container_production_config(_container_runtime: ContainerRuntime) -> ProductionConfig {
+pub fn create_container_production_config(
+    _container_runtime: ContainerRuntime,
+) -> ProductionConfig {
     let mut config = ProductionConfig::default();
 
     config.environment.environment_type = EnvironmentType::Container {

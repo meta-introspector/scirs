@@ -670,7 +670,7 @@ fn cross_spectral_density_welch(
 fn estimate_freq_response_periodogram(
     input: &Array1<f64>,
     output: &Array1<f64>,
-    fs: f64_config: &SysIdConfig,
+    fs: f64, _config: &SysIdConfig,
 ) -> SignalResult<FreqResponseResult> {
     let n = input.len();
     let nfft = next_power_of_2(n);

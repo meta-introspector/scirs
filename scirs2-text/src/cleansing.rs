@@ -796,7 +796,9 @@ pub fn normalize_whitespace(_text: &str) -> String {
         static ref WHITESPACE_PATTERN: Regex = Regex::new(r"\s+").unwrap();
     }
 
-    WHITESPACE_PATTERN.replace_all(_text.trim(), " ").to_string()
+    WHITESPACE_PATTERN
+        .replace_all(_text.trim(), " ")
+        .to_string()
 }
 
 /// Remove accents from text
@@ -804,7 +806,8 @@ pub fn normalize_whitespace(_text: &str) -> String {
 pub fn remove_accents(_text: &str) -> String {
     use unicode__normalization::UnicodeNormalization;
 
-    _text.nfd()
+    _text
+        .nfd()
         .filter(|c| !unicode_normalization::char::is_combining_mark(*c))
         .collect()
 }

@@ -1267,7 +1267,7 @@ fn search_optimal_architecture(
 #[allow(dead_code)]
 fn train_feedforward_network(
     _input: &Array1<f64>, _output: &Array1<f64>,
-    architecture: &NetworkArchitecture_config: &NeuralNetworkConfig_simd, _enabled: bool,
+    architecture: &NetworkArchitecture, _config: &NeuralNetworkConfig, _simd_enabled: bool,
 ) -> SignalResult<FeedforwardNetwork> {
     // Train neural network (simplified)
     let mut weights = Vec::new();
@@ -1308,7 +1308,7 @@ fn train_feedforward_network(
 
 #[allow(dead_code)]
 fn perform_bayesian_estimation(
-    _input: &Array1<f64>, _output: &Array1<f64>, _config: &UncertaintyConfig_simd_enabled: bool,
+    _input: &Array1<f64>, _output: &Array1<f64>, _config: &UncertaintyConfig, _simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Bayesian parameter estimation (simplified)
     Ok(SystemModel::ARX {
@@ -1332,7 +1332,7 @@ fn train_gaussian_process(
 
 #[allow(dead_code)]
 fn train_physics_informed_network(
-    _input: &Array1<f64>, _output: &Array1<f64>, _config: &NeuralNetworkConfig_simd_enabled: bool,
+    _input: &Array1<f64>, _output: &Array1<f64>, _config: &NeuralNetworkConfig, _simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Physics-informed neural network training (simplified)
     Ok(SystemModel::ARX {
@@ -1384,7 +1384,7 @@ fn build_single_model_ensemble(_models: Vec<WeightedModel>) -> SignalResult<Mode
 
 #[allow(dead_code)]
 fn initialize_real_time_tracker(
-    _input: &Array1<f64>, _output: &Array1<f64>, _ensemble: &ModelEnsemble_config: &RealTimeConfig,
+    _input: &Array1<f64>, _output: &Array1<f64>, _ensemble: &ModelEnsemble, _config: &RealTimeConfig,
 ) -> SignalResult<RealTimeTracker> {
     // Initialize real-time tracker with _ensemble model
     Ok(RealTimeTracker::default())
@@ -1392,7 +1392,7 @@ fn initialize_real_time_tracker(
 
 #[allow(dead_code)]
 fn perform_uncertainty_quantification(
-    _ensemble: &ModelEnsemble_config: &UncertaintyConfig,
+    _ensemble: &ModelEnsemble, _config: &UncertaintyConfig,
 ) -> SignalResult<UncertaintyAnalysis> {
     // Perform uncertainty quantification (simplified)
     Ok(UncertaintyAnalysis::default())

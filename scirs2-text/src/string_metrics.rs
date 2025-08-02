@@ -246,7 +246,8 @@ fn encode_char(_ch: char) -> char {
         'D' | 'T' => '3',
         'L' => '4',
         'M' | 'N' => '5',
-        'R' => '6'_ => '0',
+        'R' => '6',
+        _ => '0',
     }
 }
 
@@ -450,7 +451,8 @@ impl PhoneticAlgorithm for Metaphone {
                     result.push('K');
                     result.push('S');
                 }
-                'Z' => result.push('S', _ => {}
+                'Z' => result.push('S'),
+                _ => {}
             }
 
             i += 1;

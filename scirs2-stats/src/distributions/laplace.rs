@@ -40,11 +40,11 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// ```
-    pub fn new(_loc: F, scale: F) -> StatsResult<Self> {
+    pub fn new(loc: F, scale: F) -> StatsResult<Self> {
         // Validate parameters
         if scale <= F::zero() {
             return Err(StatsError::DomainError(
@@ -63,7 +63,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
         };
 
         Ok(Laplace {
-            _loc,
+            loc,
             scale,
             rand_distr,
         })
@@ -82,7 +82,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// let pdf_at_zero = laplace.pdf(0.0);
@@ -113,7 +113,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// let cdf_at_zero = laplace.cdf(0.0);
@@ -144,7 +144,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// let x = laplace.ppf(0.75).unwrap();
@@ -183,7 +183,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// let samples = laplace.rvs_vec(10).unwrap();
@@ -236,7 +236,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// let samples = laplace.rvs(10).unwrap();
@@ -256,7 +256,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(2.0f64, 1.0).unwrap();
     /// let mean = laplace.mean();
@@ -276,7 +276,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// let variance = laplace.var();
@@ -297,7 +297,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// let std_dev = laplace.std();
@@ -317,7 +317,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(2.0f64, 1.0).unwrap();
     /// let median = laplace.median();
@@ -337,7 +337,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(2.0f64, 1.0).unwrap();
     /// let mode = laplace.mode();
@@ -357,7 +357,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// let skewness = laplace.skewness();
@@ -377,7 +377,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// let kurtosis = laplace.kurtosis();
@@ -397,7 +397,7 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::laplace::Laplace;
+    /// use scirs2_stats::distributions::laplace::Laplace;
     ///
     /// let laplace = Laplace::new(0.0f64, 1.0).unwrap();
     /// let entropy = laplace.entropy();
@@ -428,18 +428,18 @@ impl<F: Float + NumCast + std::fmt::Display> Laplace<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions::laplace;
+/// use scirs2_stats::distributions::laplace;
 ///
 /// let l = laplace::laplace(0.0f64, 1.0).unwrap();
 /// let pdf_at_zero = l.pdf(0.0);
 /// assert!((pdf_at_zero - 0.5).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn laplace<F>(_loc: F, scale: F) -> StatsResult<Laplace<F>>
+pub fn laplace<F>(loc: F, scale: F) -> StatsResult<Laplace<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    Laplace::new(_loc, scale)
+    Laplace::new(loc, scale)
 }
 
 /// Implementation of SampleableDistribution for Laplace

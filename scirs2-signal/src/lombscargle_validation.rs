@@ -1992,7 +1992,8 @@ fn validate_cross_reference(_tolerance: f64) -> SignalResult<ValidationResult> {
         f_min: Some(5.0),
         f_max: Some(25.0),
         bootstrap_iter: None,
-        confidence: None_tolerance: 1e-10,
+        confidence: None,
+        tolerance: 1e-10,
         use_fast: true,
     };
     let (freqs_enh, power_enh__) = lombscargle_enhanced(&t, &signal, &config)?;

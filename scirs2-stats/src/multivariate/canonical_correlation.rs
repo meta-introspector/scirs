@@ -235,7 +235,7 @@ impl CanonicalCorrelationAnalysis {
             let mut std_dev = Array1::zeros(data.ncols());
             for j in 0..data.ncols() {
                 let col = centered.column(j);
-                let variance = col.mapv(|x| x * x).mean().unwrap();
+                let variance = col.mapv(|x| x * x).mean();
                 std_dev[j] = variance.sqrt().max(1e-10); // Avoid division by zero
             }
 
@@ -580,7 +580,7 @@ impl PLSCanonical {
     /// Create new PLS instance
     pub fn new(_n_components: usize) -> Self {
         Self {
-            _n_components,
+            n_components: _n_components,
             ..Default::default()
         }
     }

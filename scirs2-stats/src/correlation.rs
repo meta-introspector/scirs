@@ -32,7 +32,7 @@ use scirs2_core::parallel_ops::*;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::pearson_r;
+/// use scirs2_stats::pearson_r;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
@@ -128,7 +128,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::spearman_r;
+/// use scirs2_stats::spearman_r;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![1.0, 4.0, 9.0, 16.0, 25.0];  // Squared values - non-linear relationship
@@ -188,7 +188,7 @@ where
     let y_ranks = ndarray::Array1::from(y_ranks);
 
     // Calculate Pearson correlation of the ranks
-    pearson_r::<F>(&x_ranks.view(), &y_ranks.view())
+    pearson_r::<F, _>(&x_ranks.view(), &y_ranks.view())
 }
 
 /// Helper function to assign ranks to sorted data
@@ -241,7 +241,7 @@ fn assign_ranks<F: Float>(sorted_data: &[(F, usize)], ranks: &mut [F]) -> StatsR
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::kendall_tau;
+/// use scirs2_stats::kendall_tau;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
@@ -361,7 +361,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2, Axis};
-/// use scirs2__stats::partial_corr;
+/// use scirs2_stats::partial_corr;
 ///
 /// // Create sample data
 /// let x = array![10.0, 8.0, 13.0, 9.0, 11.0, 14.0, 6.0, 4.0, 12.0, 7.0, 5.0];
@@ -420,7 +420,7 @@ where
     let y_resid = compute_residuals(y, z)?;
 
     // Then calculate the correlation between residuals
-    pearson_r::<F>(&x_resid.view(), &y_resid.view())
+    pearson_r::<F, _>(&x_resid.view(), &y_resid.view())
 }
 
 /// Calculates the partial correlation coefficient and p-value.
@@ -447,7 +447,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::partial_corrr;
+/// use scirs2_stats::partial_corrr;
 ///
 /// // Create sample data
 /// let x = array![10.0, 8.0, 13.0, 9.0, 11.0, 14.0, 6.0, 4.0, 12.0, 7.0, 5.0];
@@ -482,7 +482,7 @@ where
     D2: Data<Elem = F>,
 {
     // Calculate the partial correlation coefficient
-    let pr = partial_corr::<F>(x, y, z)?;
+    let pr = partial_corr::<F, D1, D2>(x, y, z)?;
 
     // Get sample size and number of control variables
     let n = x.len();
@@ -710,7 +710,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::point_biserial;
+/// use scirs2_stats::point_biserial;
 ///
 /// let binary = array![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0];
 /// let continuous = array![2.5, 4.5, 3.2, 5.1, 2.0, 4.8, 2.8, 5.5];
@@ -830,7 +830,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::point_biserialr;
+/// use scirs2_stats::point_biserialr;
 ///
 /// // Create data with binary predictor and continuous outcome
 /// let binary = array![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0];
@@ -863,7 +863,7 @@ where
     D: Data<Elem = F>,
 {
     // Calculate the point-biserial correlation coefficient
-    let rpb = point_biserial::<F>(binary, continuous)?;
+    let rpb = point_biserial::<F, D>(binary, continuous)?;
 
     // Get sample size
     let n = binary.len();
@@ -942,7 +942,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::corrcoef;
+/// use scirs2_stats::corrcoef;
 ///
 /// let data = array![
 ///     [1.0, 5.0, 10.0],
@@ -1007,15 +1007,15 @@ where
     let correlations: StatsResult<Vec<((usize, usize), F)>> = if pairs.len() > 50 {
         // Parallel computation for large correlation matrices
         pairs
-            .par.iter()
+            .par_iter()
             .map(|&(i, j)| {
                 let var_i = _data.slice(s![.., i]);
                 let var_j = _data.slice(s![.., j]);
 
                 let corr = match method {
-                    "pearson" => pearson_r::<F>(&var_i, &var_j)?,
-                    "spearman" => spearman_r::<F>(&var_i, &var_j)?,
-                    "kendall" => kendall_tau::<F>(&var_i, &var_j, "b")?,
+                    "pearson" => pearson_r::<F, _>(&var_i, &var_j)?,
+                    "spearman" => spearman_r::<F, _>(&var_i, &var_j)?,
+                    "kendall" => kendall_tau::<F, _>(&var_i, &var_j, "b")?,
                     _ => unreachable!(),
                 };
 
@@ -1031,9 +1031,9 @@ where
                 let var_j = _data.slice(s![.., j]);
 
                 let corr = match method {
-                    "pearson" => pearson_r::<F>(&var_i, &var_j)?,
-                    "spearman" => spearman_r::<F>(&var_i, &var_j)?,
-                    "kendall" => kendall_tau::<F>(&var_i, &var_j, "b")?,
+                    "pearson" => pearson_r::<F, _>(&var_i, &var_j)?,
+                    "spearman" => spearman_r::<F, _>(&var_i, &var_j)?,
+                    "kendall" => kendall_tau::<F, _>(&var_i, &var_j, "b")?,
                     _ => unreachable!(),
                 };
 
@@ -1192,7 +1192,7 @@ mod tests {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::pearsonr;
+/// use scirs2_stats::pearsonr;
 ///
 /// // Create two datasets with a positive linear relationship
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -1258,7 +1258,7 @@ where
     }
 
     // Calculate correlation coefficient
-    let r = pearson_r::<F>(x, y)?;
+    let r = pearson_r::<F, D>(x, y)?;
 
     // Special case: n=2
     if n == 2 {
@@ -1489,7 +1489,7 @@ fn gamma_function(x: f64) -> f64 {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::spearmanr;
+/// use scirs2_stats::spearmanr;
 ///
 /// // Create two datasets with a monotonic (but not linear) relationship
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -1520,7 +1520,7 @@ where
     D: Data<Elem = F>,
 {
     // Calculate Spearman's rank correlation coefficient (rho)
-    let rho = spearman_r::<F>(x, y)?;
+    let rho = spearman_r::<F, D>(x, y)?;
 
     // Get sample size
     let n = x.len();
@@ -1606,7 +1606,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::kendalltau;
+/// use scirs2_stats::kendalltau;
 ///
 /// // Create two datasets with a perfect negative ordinal relationship
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -1633,7 +1633,7 @@ where
     D: Data<Elem = F>,
 {
     // Calculate Kendall's tau correlation coefficient
-    let tau = kendall_tau::<F>(x, y, method)?;
+    let tau = kendall_tau::<F, D>(x, y, method)?;
 
     // Get sample size
     let n = x.len();

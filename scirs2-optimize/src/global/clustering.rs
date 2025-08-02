@@ -134,7 +134,7 @@ where
             fun_clone,
             start_point.as_slice().unwrap(),
             method,
-            _options.clone(),
+            options.clone(),
         ) {
             Ok(result) => {
                 let minimum = LocalMinimum {
@@ -662,8 +662,8 @@ where
 /// Normalize feature matrix
 #[allow(dead_code)]
 fn normalize_features(_features: &mut Array2<f64>, coord_dim: usize) {
-    let (n_) = _features._dim();
-    if n == 0 {
+    let n_ = _features.nrows();
+    if n_ == 0 {
         return;
     }
 
@@ -674,7 +674,7 @@ fn normalize_features(_features: &mut Array2<f64>, coord_dim: usize) {
         let max_val = col.iter().fold(f64::NEG_INFINITY, |a, &b| f64::max(a, b));
 
         if (max_val - min_val).abs() > 1e-10 {
-            for i in 0..n {
+            for i in 0..n_ {
                 _features[[i, j]] = (_features[[i, j]] - min_val) / (max_val - min_val);
             }
         }
@@ -714,7 +714,7 @@ fn initialize_centroids_plus_plus(_features: &Array2<f64>, k: usize) -> Array2<f
             .iter()
             .enumerate()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-            .map(|(i_)| i)
+            .map(|(i, _)| i)
             .unwrap_or(0);
 
         centroids.row_mut(c).assign(&_features.row(next_idx));

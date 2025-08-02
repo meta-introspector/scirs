@@ -4,7 +4,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, Axis};
-use scirs2__linalg::solve_multiple;
+use scirs2_linalg::solve_multiple;
 use super::{BssConfig, IcaMethod, NonlinearityFunction, whiten_signals};
 use super::fastica::fast_ica;
 use super::infomax::{extended_infomax_ica, infomax_ica};

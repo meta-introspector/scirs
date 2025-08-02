@@ -640,7 +640,7 @@ pub fn validate_entropy_computation(_tree: &WaveletPacketTree) -> SignalResult<b
         }
 
         // Verify parent cost >= sum of children costs (for additive costs)
-        for ((level, position)_) in &costs {
+        for ((level, position), _) in &costs {
             if *level < _tree.max_level {
                 let left_child = (*level + 1, position * 2);
                 let right_child = (*level + 1, position * 2 + 1);

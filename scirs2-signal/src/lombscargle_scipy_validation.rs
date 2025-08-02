@@ -480,7 +480,8 @@ fn validate_single_normalization_case(
     n: usize,
     fs: f64,
     test_freq: f64,
-    normalization: &str_config: &ScipyValidationConfig,
+    normalization: &str,
+    _config: &ScipyValidationConfig,
 ) -> SignalResult<(f64, f64, f64, f64)> {
     // Generate test signal
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();

@@ -66,7 +66,7 @@ fn main() {
 // Function to process array with standard chunking
 #[cfg(feature = "memory_management")]
 #[allow(dead_code)]
-fn array( &Array2<f64>) {
+fn process_array_standard(_array: &Array2<f64>) {
     let start = Instant::now();
     let mut sum = 0.0;
     let mut count = 0;
@@ -87,7 +87,7 @@ fn array( &Array2<f64>) {
 // Function to process array with tracked chunking
 #[cfg(feature = "memory_management")]
 #[allow(dead_code)]
-fn array( &Array2<f64>) {
+fn process_array_tracked(_array: &Array2<f64>) {
     let start = Instant::now();
 
     // Define chunk size (500x500 chunks = ~2MB per chunk)

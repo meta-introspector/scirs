@@ -46,7 +46,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distribution_characteristics::{mode, ModeMethod};
+/// use scirs2_stats::distribution_characteristics::{mode, ModeMethod};
 ///
 /// // Unimodal data
 /// let data = array![1, 2, 2, 3, 2, 4, 5];
@@ -131,7 +131,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distribution_characteristics::entropy;
+/// use scirs2_stats::distribution_characteristics::entropy;
 ///
 /// // Uniform distribution (maximum entropy)
 /// let uniform = array![1, 2, 3, 4, 5, 6];
@@ -196,7 +196,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distribution_characteristics::kl_divergence;
+/// use scirs2_stats::distribution_characteristics::kl_divergence;
 ///
 /// // Create two probability distributions
 /// let p = array![0.5f64, 0.5];
@@ -281,7 +281,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distribution_characteristics::cross_entropy;
+/// use scirs2_stats::distribution_characteristics::cross_entropy;
 ///
 /// // Create two probability distributions
 /// let p = array![0.5f64, 0.5];
@@ -379,7 +379,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distribution_characteristics::skewness_ci;
+/// use scirs2_stats::distribution_characteristics::skewness_ci;
 ///
 /// // Calculate skewness with 95% confidence interval
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0, 10.0];
@@ -487,7 +487,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distribution_characteristics::kurtosis_ci;
+/// use scirs2_stats::distribution_characteristics::kurtosis_ci;
 ///
 /// // Calculate kurtosis with 95% confidence interval
 /// let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0, 10.0];
@@ -676,7 +676,7 @@ mod tests {
         let result = kurtosis_ci(&data.view(), true, false, None, Some(100), Some(42)).unwrap();
 
         // Check that the estimate is correct
-        let direct_kurt = kurtosis(&data.view(), true, false).unwrap();
+        let direct_kurt = kurtosis(&data.view(), true, false, None).unwrap();
         assert_relative_eq!(result.estimate, direct_kurt, epsilon = 1e-10);
 
         // Check confidence interval contains the estimate

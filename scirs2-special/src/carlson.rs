@@ -41,9 +41,9 @@
 #![allow(dead_code)]
 
 use crate::{SpecialError, SpecialResult};
-use scirs2_core::validation::check_finite;
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
+use scirs2_core::validation::check_finite;
 use std::fmt::{Debug, Display};
 
 /// Maximum number of iterations for convergence

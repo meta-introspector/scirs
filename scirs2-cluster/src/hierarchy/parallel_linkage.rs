@@ -356,7 +356,7 @@ fn median_linkage<F: Float>(_cluster_i: usize, _cluster_j: usize, _centroids: &A
 /// Update centroid (not parallelized - used as-is from linkage.rs)
 #[allow(dead_code)]
 fn update_centroid<F: Float>(
-    _centroids: &mut Array2<F>, _method: LinkageMethod_n_samples: usize, _cluster_id: usize,
+    _centroids: &mut Array2<F>, _method: LinkageMethod, n_samples: usize, _cluster_id: usize,
 ) {
     // Placeholder implementation
 }

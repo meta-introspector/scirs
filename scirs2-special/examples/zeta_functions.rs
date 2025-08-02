@@ -92,7 +92,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         1 => 1.0,
         2 => 2.0,
         3 => 6.0,
-        4 => 24.0_ => (1..=m).product::<i32>() as f64,
+        4 => 24.0,
+        _ => (1..=m).product::<i32>() as f64,
     };
     let sign = if m % 2 == 0 { 1.0 } else { -1.0 };
 

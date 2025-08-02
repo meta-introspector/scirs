@@ -146,7 +146,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
             .collect();
 
         let mut histogram = Self {
-            _bins,
+            bins: _bins,
             counts: vec![0; n_bins],
             min_val,
             max_val,
@@ -211,7 +211,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelHistogram<F> 
 
             // Merge local histograms
             for local_counts in local_histograms {
-                for (i, count) in local_counts.into().iter().enumerate() {
+                for (i, count) in local_counts.into_iter().enumerate() {
                     self.counts[i] += count;
                 }
             }
@@ -235,7 +235,7 @@ pub fn kde_parallel<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync + std::fmt::Display,
+    D: Data<Elem = F> + Sync,
 {
     use std::f64::consts::PI;
 
@@ -311,7 +311,8 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps + std::fmt::Display> Para
         }
 
         Ok(Self {
-            window_size_data: Arc::new(_data.to_vec()),
+            window_size,
+            data: Arc::new(_data.to_vec()),
         })
     }
 
@@ -433,7 +434,7 @@ pub fn pairwise_distances_parallel<F, D>(
 ) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync + std::fmt::Display,
+    D: Data<Elem = F> + Sync,
 {
     let n = x.nrows();
     let d = x.ncols();
@@ -524,16 +525,18 @@ where
 pub struct ParallelCrossValidation<F: Float> {
     n_folds: usize,
     shuffle: bool,
-    random_state: Option<u64>, _phantom: std::marker::PhantomData<F>,
+    random_state: Option<u64>,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidation<F> {
     /// Create a new cross-validation splitter
     pub fn new(_n_folds: usize, shuffle: bool, random_state: Option<u64>) -> Self {
         Self {
-            _n_folds,
+            n_folds: _n_folds,
             shuffle,
-            random_state_phantom: std::marker::PhantomData,
+            random_state,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -602,7 +605,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidati
             // Score on test set
             scorer(&x_test.view(), &y_test)
         })
-        .into().iter()
+        .into_iter()
         .collect::<StatsResult<Vec<_>>>()?;
 
         Ok(Array1::from_vec(scores))
@@ -617,7 +620,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidati
 pub fn corrcoef_parallel<F, D>(_data: &ArrayBase<D, Ix2>, rowvar: bool) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync + std::fmt::Display,
+    D: Data<Elem = F> + Sync,
 {
     use crate::correlation_simd::pearson_r_simd;
 
@@ -688,7 +691,7 @@ where
             let corr = pearson_r_simd(&var_i, &var_j)?;
             Ok(((i, j), corr))
         })
-        .into().iter()
+        .into_iter()
         .collect::<StatsResult<Vec<_>>>()?;
 
         // Fill the correlation matrix
@@ -719,7 +722,7 @@ where
         + ndarray::ScalarOperand
         + std::iter::Sum
         + num_traits::NumAssign,
-    D: Data<Elem = F> + Sync + std::fmt::Display,
+    D: Data<Elem = F> + Sync,
 {
     use scirs2_linalg::lstsq;
 
@@ -814,7 +817,7 @@ where
 
             Ok(((i, j), partial_r))
         })
-        .into().iter()
+        .into_iter()
         .collect::<StatsResult<Vec<_>>>()?;
 
         // Fill the matrix
@@ -837,7 +840,7 @@ pub fn autocorrelation_parallel<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync + std::fmt::Display,
+    D: Data<Elem = F> + Sync,
 {
     let n = data.len();
     if max_lag >= n {
@@ -942,7 +945,7 @@ mod tests {
             .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(idx_)| idx)
+            .map(|(idx_, _)| idx_)
             .unwrap();
 
         assert!(max_idx > 40 && max_idx < 60); // Maximum should be near middle

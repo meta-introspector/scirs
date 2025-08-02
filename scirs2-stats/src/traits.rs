@@ -304,3 +304,143 @@ pub trait Truncatable<F: Float>: Distribution<F> {
     fn truncate(&self, lower: Option<F>, upper: Option<F>)
         -> StatsResult<Box<dyn Distribution<F>>>;
 }
+
+/// Trait for continuous distributions that support CDF-related functions
+pub trait ContinuousCDF<F: Float>: ContinuousDistribution<F> {
+    /// Survival function (1 - CDF)
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - Point at which to evaluate the survival function
+    ///
+    /// # Returns
+    ///
+    /// The survival probability at x (1 - CDF(x))
+    fn sf(&self, x: F) -> F {
+        F::one() - self.cdf(x)
+    }
+
+    /// Hazard function (PDF / (1 - CDF))
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - Point at which to evaluate the hazard function
+    ///
+    /// # Returns
+    ///
+    /// The hazard rate at x
+    fn hazard(&self, x: F) -> F {
+        let sf_val = self.sf(x);
+        if sf_val == F::zero() {
+            F::infinity()
+        } else {
+            self.pdf(x) / sf_val
+        }
+    }
+
+    /// Cumulative hazard function (-ln(survival function))
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - Point at which to evaluate the cumulative hazard function
+    ///
+    /// # Returns
+    ///
+    /// The cumulative hazard at x (-ln(1 - CDF(x)))
+    fn cumhazard(&self, x: F) -> F {
+        let sf_val = self.sf(x);
+        if sf_val <= F::zero() {
+            F::infinity()
+        } else {
+            -sf_val.ln()
+        }
+    }
+
+    /// Inverse survival function (PPF(1 - q))
+    ///
+    /// # Arguments
+    ///
+    /// * `q` - Probability in [0, 1]
+    ///
+    /// # Returns
+    ///
+    /// The value x such that SF(x) = q (equivalent to PPF(1 - q))
+    fn isf(&self, q: F) -> StatsResult<F> {
+        if q < F::zero() || q > F::one() {
+            return Err(crate::error::StatsError::InvalidArgument(
+                "Probability must be in [0, 1]".to_string(),
+            ));
+        }
+        self.ppf(F::one() - q)
+    }
+}
+
+/// Trait for discrete distributions that support CDF-related functions
+pub trait DiscreteCDF<F: Float>: DiscreteDistribution<F> {
+    /// Survival function (1 - CDF)
+    ///
+    /// # Arguments
+    ///
+    /// * `k` - Point at which to evaluate the survival function
+    ///
+    /// # Returns
+    ///
+    /// The survival probability at k (1 - CDF(k))
+    fn sf(&self, k: F) -> F {
+        F::one() - self.cdf(k)
+    }
+
+    /// Hazard function (PMF / (1 - CDF))
+    ///
+    /// # Arguments
+    ///
+    /// * `k` - Point at which to evaluate the hazard function
+    ///
+    /// # Returns
+    ///
+    /// The hazard rate at k
+    fn hazard(&self, k: F) -> F {
+        let sf_val = self.sf(k);
+        if sf_val == F::zero() {
+            F::infinity()
+        } else {
+            self.pmf(k) / sf_val
+        }
+    }
+
+    /// Cumulative hazard function (-ln(survival function))
+    ///
+    /// # Arguments
+    ///
+    /// * `k` - Point at which to evaluate the cumulative hazard function
+    ///
+    /// # Returns
+    ///
+    /// The cumulative hazard at k (-ln(1 - CDF(k)))
+    fn cumhazard(&self, k: F) -> F {
+        let sf_val = self.sf(k);
+        if sf_val <= F::zero() {
+            F::infinity()
+        } else {
+            -sf_val.ln()
+        }
+    }
+
+    /// Inverse survival function (PPF(1 - q))
+    ///
+    /// # Arguments
+    ///
+    /// * `q` - Probability in [0, 1]
+    ///
+    /// # Returns
+    ///
+    /// The value k such that SF(k) = q (equivalent to PPF(1 - q))
+    fn isf(&self, q: F) -> StatsResult<F> {
+        if q < F::zero() || q > F::one() {
+            return Err(crate::error::StatsError::InvalidArgument(
+                "Probability must be in [0, 1]".to_string(),
+            ));
+        }
+        self.ppf(F::one() - q)
+    }
+}

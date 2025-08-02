@@ -676,7 +676,7 @@ fn get_pixel_value(
     } else {
         match boundary {
             BoundaryMethod::Zero => 0.0,
-            BoundaryMethod::Constant(value) => value_ => 0.0, // Fallback
+            BoundaryMethod::Constant(value) => value,
         }
     }
 }
@@ -699,7 +699,7 @@ fn get_rgb_pixel_value(
     } else {
         match boundary {
             BoundaryMethod::Zero => 0.0,
-            BoundaryMethod::Constant(value) => value_ => 0.0, // Fallback
+            BoundaryMethod::Constant(value) => value,
         }
     }
 }
@@ -1614,7 +1614,8 @@ impl StreamingPanoramaProcessor {
         warped_tile: &RgbImage,
     ) -> Result<()> {
         let tile_id = TileId {
-            _x: tile_x_y: tile_y,
+            x: tile_x,
+            y: tile_y,
         };
         let existing_tile = self.tile_cache.get_or_create_tile(tile_id)?;
 
@@ -2227,7 +2228,8 @@ fn compute_cost_volume(
                         y,
                         disparity,
                         params.block_size,
-                    )?_ => 0.0, // Simplified for other cost functions
+                    )?,
+                    _ => 0.0, // Simplified for other cost functions
                 };
                 cost_volume[[y, x, d]] = cost;
                 x += 1;

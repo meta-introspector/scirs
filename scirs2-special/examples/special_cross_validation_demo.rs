@@ -89,7 +89,8 @@ fn python_validation() -> Result<(), Box<dyn std::error::Error>> {
             "gamma" => gamma(args[0]),
             "beta" => beta(args[0], args[1]),
             "j0" => j0(args[0]),
-            "erf" => erf(args[0], _ => continue,
+            "erf" => erf(args[0]),
+            _ => continue,
         };
 
         match py_validator.compute_reference(func_name, &args) {
@@ -146,7 +147,7 @@ fn comprehensive_validation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[allow(dead_code)]
-fn print_summary(_summary: &scirs2_special: :cross, _validation::ValidationSummary) {
+fn print_summary(_summary: &scirs2_special::cross_validation::ValidationSummary) {
     println!("  Total tests: {}", _summary.total_tests);
     println!(
         "  Passed: {} ({:.1}%)",
@@ -160,7 +161,7 @@ fn print_summary(_summary: &scirs2_special: :cross, _validation::ValidationSumma
 }
 
 #[allow(dead_code)]
-fn print_detailed_summary(_summary: &scirs2_special: :cross, _validation::ValidationSummary) {
+fn print_detailed_summary(_summary: &scirs2_special::cross_validation::ValidationSummary) {
     println!("\n{} Validation:", _summary.function);
     println!(
         "  Tests: {} total, {} passed, {} failed",

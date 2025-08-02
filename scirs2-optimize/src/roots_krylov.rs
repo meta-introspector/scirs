@@ -152,7 +152,7 @@ where
     result.fun = f.iter().map(|&fi| fi.powi(2)).sum::<f64>();
 
     // Store the final Jacobian
-    let (jac_vec_) = jac.into_raw_vec_and_offset();
+    let (jac_vec, _) = jac.into_raw_vec_and_offset();
     result.jac = Some(jac_vec);
 
     result.nfev = nfev;

@@ -362,7 +362,8 @@ where
 #[allow(dead_code)]
 fn sequential_finite_diff_hessian<F>(
     f: &F,
-    x: ArrayView1<f64>, _gradient: Option<&Array1<f64>>,
+    x: ArrayView1<f64>,
+    _gradient: Option<&Array1<f64>>,
     eps: f64,
 ) -> Array1<f64>
 where

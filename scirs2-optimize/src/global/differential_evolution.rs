@@ -184,7 +184,6 @@ where
 }
 
 use ndarray::Array2;
-use rand::seq::SliceRandom;
 
 impl<F> DifferentialEvolution<F>
 where
@@ -584,7 +583,7 @@ where
             // Extract just the trials for batch evaluation
             let trials: Vec<Array1<f64>> = trials_and_indices
                 .iter()
-                .map(|(trial_)| trial.clone())
+                .map(|(trial_, _)| trial_.clone())
                 .collect();
 
             // Extract the parallel options for evaluation

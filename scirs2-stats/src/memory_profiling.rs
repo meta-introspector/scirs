@@ -6,9 +6,9 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
+use statrs::statistics::Statistics;
 use std::collections::VecDeque;
 use std::sync::Arc;
-use statrs::statistics::Statistics;
 
 /// Memory usage profiler for statistical operations
 #[derive(Debug, Clone)]
@@ -364,7 +364,7 @@ impl<F: Float + NumCast + std::fmt::Display> RingBufferStats<F> {
     pub fn new(_capacity: usize) -> Self {
         Self {
             buffer: VecDeque::with_capacity(_capacity),
-            _capacity,
+            capacity: _capacity,
             sum: F::zero(),
             sum_squares: F::zero(),
         }
@@ -430,7 +430,7 @@ impl<F: Float + NumCast + std::iter::Sum + std::fmt::Display> LazyStatComputatio
     /// Create a new lazy computation
     pub fn new(_data: Vec<F>) -> Self {
         Self {
-            _data_ref: Arc::new(_data),
+            data_ref: Arc::new(_data),
             operations: Vec::new(),
         }
     }
@@ -687,8 +687,7 @@ mod tests {
     fn test_zero_copy_rolling() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let results =
-            zero_copy::rolling_stats_zerocopy(&data.view(), 3, |window| Ok(window.mean().unwrap()))
-                .unwrap();
+            zero_copy::rolling_stats_zerocopy(&data.view(), 3, |window| Ok(window.mean())).unwrap();
 
         assert_eq!(results.len(), 3);
         assert_relative_eq!(results[0], 2.0, epsilon = 1e-10);

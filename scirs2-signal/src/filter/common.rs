@@ -43,7 +43,8 @@ impl std::str::FromStr for FilterType {
             "lowpass" | "low" => Ok(FilterType::Lowpass),
             "highpass" | "high" => Ok(FilterType::Highpass),
             "bandpass" | "band" => Ok(FilterType::Bandpass),
-            "bandstop" | "stop" => Ok(FilterType::Bandstop, _ => Err(SignalError::ValueError(format!(
+            "bandstop" | "stop" => Ok(FilterType::Bandstop),
+            _ => Err(SignalError::ValueError(format!(
                 "Unknown filter type: {}",
                 s
             ))),

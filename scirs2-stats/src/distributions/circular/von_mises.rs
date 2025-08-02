@@ -94,8 +94,9 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> VonMises<F>
         };
 
         Ok(Self {
-            _mu: normalized_mu,
-            kappa_phantom: PhantomData,
+            mu: normalized_mu,
+            kappa,
+            _phantom: PhantomData,
         })
     }
 

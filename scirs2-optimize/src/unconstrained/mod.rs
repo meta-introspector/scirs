@@ -327,7 +327,7 @@ where
         Method::NewtonCG => newton::minimize_newton_cg(fun, x0, options),
         Method::TrustNCG => trust_region::minimize_trust_ncg(fun, x0, options),
         Method::TrustKrylov => trust_region::minimize_trust_krylov(fun, x0, options),
-        Method::TrustExact =>, trust_region::minimize_trust_exact(fun, x0, options),
+        Method::TrustExact => trust_region::minimize_trust_exact(fun, x0, options),
         Method::TruncatedNewton => truncated_newton_wrapper(fun, x0, options),
         Method::TrustRegionNewton => trust_region_newton_wrapper(fun, x0, options),
     }

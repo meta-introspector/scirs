@@ -16,7 +16,7 @@
 //! - Compression and chunking support (NetCDF4/HDF5)
 //! - Large file support with HDF5 backend
 
-use ndarray::{Array, ArrayD, Dimension};
+use ndarray::{Array, Array2, ArrayD, Dimension};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -199,7 +199,7 @@ impl NetCDFFile {
         // Create an empty NetCDF file structure
         // In a real implementation, this would parse an actual NetCDF file
         Ok(Self {
-            _path: path_str,
+            path: path_str,
             mode: opts.mode,
             format: opts.format,
             dimensions: HashMap::new(),
@@ -259,7 +259,7 @@ impl NetCDFFile {
             };
 
         Ok(Self {
-            _path: path_str,
+            path: path_str,
             mode: opts.mode,
             format: opts.format,
             dimensions: HashMap::new(),
@@ -1094,7 +1094,7 @@ mod tests {
             .unwrap();
 
         // Test writing data (placeholder implementation just validates)
-        let data = Array::<f32>::zeros((3, 2));
+        let data = Array2::<f32>::zeros((3, 2));
         file.write_variable("data", &data).unwrap();
 
         // Since this is a placeholder implementation that doesn't persist,

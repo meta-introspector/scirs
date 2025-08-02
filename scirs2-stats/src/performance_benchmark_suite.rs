@@ -1170,7 +1170,8 @@ impl AdvancedBenchmarkSuite {
 
     /// Analyze SIMD optimization opportunities
     fn analyze_simd_opportunities(
-        &self, _metrics: &[AdvancedBenchmarkMetrics],
+        &self,
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Performance,
@@ -1196,7 +1197,8 @@ let result = f64::simd_mean(&data.view());
 
     /// Analyze parallel processing opportunities
     fn analyze_parallel_opportunities(
-        &self, _metrics: &[AdvancedBenchmarkMetrics],
+        &self,
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Performance,
@@ -1223,7 +1225,8 @@ if data.len() > 10_000 {
 
     /// Analyze memory optimization opportunities
     fn analyze_memory_opportunities(
-        &self, _metrics: &[AdvancedBenchmarkMetrics],
+        &self,
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Memory,
@@ -1241,7 +1244,8 @@ if data.len() > 10_000 {
 
     /// Analyze numerical stability improvements
     fn analyze_stability_improvements(
-        &self, _metrics: &[AdvancedBenchmarkMetrics],
+        &self,
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Stability,
@@ -1337,7 +1341,8 @@ fn kahan_sum(_data: &[f64]) -> f64 {
 
     /// Assess cross-platform performance
     fn assess_cross_platform(
-        &self, _metrics: &[AdvancedBenchmarkMetrics],
+        &self,
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> CrossPlatformAssessment {
         CrossPlatformAssessment {
             portability_score: 0.9,
@@ -1352,7 +1357,8 @@ fn kahan_sum(_data: &[f64]) -> f64 {
 
     /// Analyze performance bottlenecks
     fn analyze_bottlenecks(
-        &self, _metrics: &[AdvancedBenchmarkMetrics],
+        &self,
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<BottleneckAnalysis> {
         vec![
             BottleneckAnalysis {
@@ -1376,7 +1382,8 @@ fn kahan_sum(_data: &[f64]) -> f64 {
 
     /// Identify optimization opportunities
     fn identify_optimization_opportunities(
-        &self, _metrics: &[AdvancedBenchmarkMetrics],
+        &self,
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<OptimizationOpportunity> {
         vec![
             OptimizationOpportunity {

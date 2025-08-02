@@ -7,8 +7,8 @@
 //! - Advanced optimization recommendations
 //! - Self-improving algorithmic components
 
-use scirs2__io::enhanced_algorithms::AdvancedPatternRecognizer;
-use scirs2__io::error::Result;
+use scirs2_io::enhanced_algorithms::AdvancedPatternRecognizer;
+use scirs2_io::error::Result;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -556,7 +556,8 @@ fn demonstrate_real_world_analysis(_recognizer: &mut AdvancedPatternRecognizer) 
             x if x > 0.8 => "Very High",
             x if x > 0.6 => "High",
             x if x > 0.4 => "Moderate",
-            x if x > 0.2 => "Low"_ => "Very Low",
+            x if x > 0.2 => "Low",
+            _ => "Very Low",
         };
 
         println!("   Data Size: {} bytes", data.len());
@@ -565,7 +566,7 @@ fn demonstrate_real_world_analysis(_recognizer: &mut AdvancedPatternRecognizer) 
             "   Primary Pattern: {} (Score: {:.3})",
             primary_pattern
                 .as_ref()
-                .map(|(k_)| k.as_str())
+                .map(|(k_, _)| k_.as_str())
                 .unwrap_or("None"),
             primary_pattern.as_ref().map(|(_, v)| *v).unwrap_or(0.0)
         );

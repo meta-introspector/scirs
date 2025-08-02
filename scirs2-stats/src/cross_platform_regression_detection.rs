@@ -383,7 +383,7 @@ impl CrossPlatformRegressionDetector {
     /// Create a new regression detector
     pub fn new(_config: CrossPlatformRegressionConfig) -> StatsResult<Self> {
         let mut detector = Self {
-            _config,
+            config: _config,
             baselines: HashMap::new(),
             historical_data: BTreeMap::new(),
         };
@@ -820,9 +820,11 @@ impl CrossPlatformRegressionDetector {
 
     /// Generate performance recommendations
     fn generate_recommendations(
-        &self, _function_name: &str,
+        &self,
+        _function_name: &str,
         performance_change_percent: f64,
-        baseline_stats: &BaselineStatistics, _measurement: &PerformanceMeasurement,
+        baseline_stats: &BaselineStatistics,
+        _measurement: &PerformanceMeasurement,
     ) -> StatsResult<Vec<PerformanceRecommendation>> {
         let mut recommendations = Vec::new();
 

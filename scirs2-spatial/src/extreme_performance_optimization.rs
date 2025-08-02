@@ -988,7 +988,8 @@ impl AdvancedfastDistanceMatrix {
 
         // Use lock-free structures if enabled
         if self.optimizer.lock_free {
-            self.apply_lock_free_optimization(&mut distance_matrix).await?;
+            self.apply_lock_free_optimization(&mut distance_matrix)
+                .await?;
         }
 
         // Simulate advanced-high performance computation
@@ -1308,7 +1309,8 @@ impl AdvancedfastDistanceMatrix {
                         let current_val = _matrix[[i, j]];
 
                         // Simulate compare-and-swap optimization
-                        let optimized_val = AdvancedfastDistanceMatrix::lock_free_optimize_value(current_val);
+                        let optimized_val =
+                            AdvancedfastDistanceMatrix::lock_free_optimize_value(current_val);
                         _matrix[[i, j]] = optimized_val;
                     }
                 }

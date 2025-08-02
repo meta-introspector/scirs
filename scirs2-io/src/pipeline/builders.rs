@@ -189,7 +189,7 @@ where
     {
         Self {
             branches: Vec::new(),
-            _selector: Box::new(_selector),
+            selector: Box::new(_selector),
             config: PipelineConfig::default(),
         }
     }
@@ -300,7 +300,7 @@ where
     {
         Self {
             pipelines: Vec::new(),
-            _combiner: Box::new(_combiner),
+            combiner: Box::new(_combiner),
             config: PipelineConfig::default(),
         }
     }

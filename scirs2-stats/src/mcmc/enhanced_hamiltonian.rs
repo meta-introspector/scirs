@@ -207,21 +207,21 @@ where
         + 'static,
 {
     /// Create new enhanced HMC sampler
-    pub fn new(_target: T, initial: Array1<F>, config: EnhancedHMCConfig) -> StatsResult<Self> {
+    pub fn new(target: T, initial: Array1<F>, config: EnhancedHMCConfig) -> StatsResult<Self> {
         checkarray_finite(&initial, "initial")?;
 
-        if initial.len() != _target.dim() {
+        if initial.len() != target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
-                "Initial position dimension ({}) must match _target dimension ({})",
+                "Initial position dimension ({}) must match target dimension ({})",
                 initial.len(),
-                _target.dim()
+                target.dim()
             )));
         }
 
         let dim = initial.len();
         let mass_matrix = Array2::eye(dim);
         let mass_inv = Array2::eye(dim);
-        let current_log_density = _target.log_density(&initial);
+        let current_log_density = target.log_density(&initial);
         let step_size = F::from(config.initial_step_size).unwrap();
 
         let adaptation_state = AdaptationState {
@@ -229,7 +229,7 @@ where
             step_size_state: DualAveragingState {
                 log_step_avg: config.initial_step_size.ln(),
                 h_avg: 0.0,
-                _target_accept: config.target_accept_rate,
+                target_accept: config.target_accept_rate,
                 gamma: 0.05,
                 t0: 10.0,
                 kappa: 0.75,
@@ -244,7 +244,7 @@ where
         };
 
         Ok(Self {
-            _target,
+            target,
             position: initial,
             current_log_density,
             config,
@@ -252,7 +252,8 @@ where
             mass_inv,
             step_size,
             adaptation_state,
-            stats: HMCStatistics::default(), _phantom: PhantomData,
+            stats: HMCStatistics::default(),
+            _phantom: PhantomData,
         })
     }
 
@@ -388,10 +389,8 @@ where
         for _ in 0..self.config.num_leapfrog_steps {
             // Update momentum using gradient and metric
             let gradient = self.target.gradient(&position);
-            let metric = self
-                .target
-                .fisher_information(&position)
-                .unwrap_or_else(|| Array2::eye(position.len()));
+            let metric =
+                T::fisher_information(&position).unwrap_or_else(|| Array2::eye(position.len()));
 
             let metric_inv = scirs2_linalg::inv(&metric.view(), None)
                 .unwrap_or_else(|_| Array2::eye(position.len()));
@@ -419,7 +418,7 @@ where
 
         // Sample from standard normal
         let z: Vec<f64> = (0..dim).map(|_| normal.sample(rng)).collect();
-        let z_array = Array1::from_vec(z.into().iter().map(|x| F::from(x).unwrap()).collect());
+        let z_array = Array1::from_vec(z.into_iter().map(|x| F::from(x).unwrap()).collect());
 
         // Transform using Cholesky decomposition of mass matrix
         // For simplicity, assume diagonal mass matrix

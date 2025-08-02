@@ -177,7 +177,7 @@ where
     let n_samples = similarity.shape()[0];
 
     // Verify damping is in the correct range
-    if options.damping < F::from(0.5).unwrap() || options.damping >, F::one() {
+    if options.damping < F::from(0.5).unwrap() || options.damping > F::one() {
         return Err(ClusteringError::InvalidInput(
             "Damping factor must be between 0.5 and 1.0".to_string(),
         ));

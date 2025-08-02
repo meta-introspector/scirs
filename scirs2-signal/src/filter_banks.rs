@@ -24,7 +24,7 @@
 //!
 //! ```rust
 //! use ndarray::Array1;
-//! use scirs2__signal::filter_banks::{QmfBank, WaveletFilterBank, FilterBankType};
+//! use scirs2_signal::filter_banks::{QmfBank, WaveletFilterBank, FilterBankType};
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!
 //! // Design a QMF filter bank
@@ -49,7 +49,7 @@ use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use crate::filter::{FilterType, butter};
 use ndarray::{Array1, Array2};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use std::f64::consts::PI;
 
 #[allow(unused_imports)]
@@ -633,7 +633,8 @@ impl WaveletFilterBank {
             "sym5" => Ok(Wavelet::Sym(5)),
             "sym6" => Ok(Wavelet::Sym(6)),
             "meyer" => Ok(Wavelet::Meyer),
-            "dmeyer" => Ok(Wavelet::DMeyer, _ => Err(SignalError::ValueError(format!(
+            "dmeyer" => Ok(Wavelet::DMeyer),
+            _ => Err(SignalError::ValueError(format!(
                 "Unknown wavelet _name: {}",
                 _name
             ))),
@@ -930,8 +931,8 @@ impl IirStabilizer {
         method: StabilizationMethod,
     ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
         match method {
-            StabilizationMethod::RadialProjection =>, Self::radial_projection_stabilization(b, a),
-            StabilizationMethod::ZeroPlacement =>, Self::zero_placement_stabilization(b, a),
+            StabilizationMethod::RadialProjection => Self::radial_projection_stabilization(b, a),
+            StabilizationMethod::ZeroPlacement => Self::zero_placement_stabilization(b, a),
             StabilizationMethod::BalancedTruncation => {
                 Self::balanced_truncation_stabilization(b, a)
             }

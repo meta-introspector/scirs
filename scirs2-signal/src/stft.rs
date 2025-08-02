@@ -56,7 +56,8 @@ impl std::str::FromStr for FftMode {
             "twosided" => Ok(FftMode::TwoSided),
             "centered" => Ok(FftMode::Centered),
             "onesided" => Ok(FftMode::OneSided),
-            "onesided2x" => Ok(FftMode::OneSided2X, _ => Err(SignalError::ValueError(format!(
+            "onesided2x" => Ok(FftMode::OneSided2X),
+            _ => Err(SignalError::ValueError(format!(
                 "Invalid FFT mode: '{}'. Valid options are: 'twosided', 'centered', 'onesided', 'onesided2x'",
                 s
             ))),
@@ -83,7 +84,8 @@ impl std::str::FromStr for ScalingMode {
         match s.to_lowercase().as_str() {
             "none" => Ok(ScalingMode::None),
             "magnitude" => Ok(ScalingMode::Magnitude),
-            "psd" => Ok(ScalingMode::Psd, _ => Err(SignalError::ValueError(format!(
+            "psd" => Ok(ScalingMode::Psd),
+            _ => Err(SignalError::ValueError(format!(
                 "Invalid scaling mode: '{}'. Valid options are: 'none', 'magnitude', 'psd'",
                 s
             ))),
@@ -761,7 +763,8 @@ impl ShortTimeFft {
         if self.scaling != ScalingMode::None {
             let scale_factor = match self.scaling {
                 ScalingMode::Magnitude => 1.0 / self.win.map(|x| x * x).sum().sqrt(),
-                ScalingMode::Psd => 1.0 / self.win.map(|x| x * x).sum(, _ => 1.0,
+                ScalingMode::Psd => 1.0 / self.win.map(|x| x * x).sum(),
+                _ => 1.0,
             };
 
             stft_matrix.mapv_inplace(|x| x * scale_factor);
@@ -1845,7 +1848,7 @@ impl MemoryEfficientStft {
         }
 
         // Process chunks in parallel
-        let chunk_results: Result<Vec<_>_> = chunks
+        let chunk_results: Result<Vec<_>, _> = chunks
             .par_iter()
             .map(|(start, end_)| {
                 let chunk = &signal[*start..*end];

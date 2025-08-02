@@ -2564,7 +2564,8 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
         });
 
         Self {
-            config..n_clusters,
+            config,
+            n_clusters: _n_clusters,
             variational_params: params,
             hamiltonian_matrix: None,
             eigenvalues: None,

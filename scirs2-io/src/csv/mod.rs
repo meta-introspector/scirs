@@ -612,7 +612,7 @@ fn convert_value(
 
     // Check for missing _values
     if missing_values
-        ._values
+        .values
         .iter()
         .any(|mv| mv.eq_ignore_ascii_case(trimmed))
     {
@@ -1296,7 +1296,7 @@ impl<R: BufRead> StreamingCsvReader<R> {
     /// Create a new streaming CSV reader
     pub fn new(_reader: R, config: StreamingCsvConfig) -> Result<Self> {
         let mut _reader = Self {
-            _reader,
+            reader: _reader,
             config,
             headers: None,
             current_line: 0,

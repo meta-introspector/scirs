@@ -280,7 +280,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     fn evaluate_population_gpu<F>(
         &mut self,
         function: &F,
-        population: &Array2<f64>,) -> ScirsResult<Array1<f64>>
+        population: &Array2<f64>,
+    ) -> ScirsResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -312,7 +313,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Perform GPU-accelerated mutation and crossover
     fn gpu_mutation_crossover(
-        &self_kernel: &DifferentialEvolutionKernel,
+        &self,
+        _kernel: &DifferentialEvolutionKernel,
         population: &Array2<f64>,
         f_scale: f64,
         crossover_rate: f64,
@@ -335,13 +337,15 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
                 }
             }
 
-            let [a..b, c] = [indices[0], indices[1], indices[2]];
+            let a = indices[0];
+            let b = indices[1];
+            let c = indices[2];
 
             // Mutation and crossover
             let j_rand = rng.gen_range(0..dims);
             for j in 0..dims {
                 if rng.gen_range(0.0..1.0) < crossover_rate || j == j_rand {
-                    trial_population[[i..j]] =
+                    trial_population[[i, j]] =
                         population[[a, j]] + f_scale * (population[[b, j]] - population[[c, j]]);
                 } else {
                     trial_population[[i, j]] = population[[i, j]];
@@ -354,7 +358,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Perform GPU-accelerated selection
     fn gpu_selection(
-        &self_kernel: &DifferentialEvolutionKernel,
+        &self,
+        _kernel: &DifferentialEvolutionKernel,
         population: &mut Array2<f64>,
         trial_population: &Array2<f64>,
         fitness: &mut Array1<f64>,
@@ -362,12 +367,12 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     ) -> ScirsResult<()> {
         // For now, implement CPU-based selection
         // TODO: Use actual GPU kernels when properly implemented
-        for i in 0.._population.nrows() {
-            if trial_fitness[i] <= _fitness[i] {
-                for j in 0.._population.ncols() {
-                    _population[[i, j]] = trial_population[[i, j]];
+        for i in 0..population.nrows() {
+            if trial_fitness[i] <= fitness[i] {
+                for j in 0..population.ncols() {
+                    population[[i, j]] = trial_population[[i, j]];
                 }
-                _fitness[i] = trial_fitness[i];
+                fitness[i] = trial_fitness[i];
             }
         }
 
@@ -435,7 +440,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Direct GPU-to-GPU migration using GPUDirect
     fn gpu_direct_migration(
-        &mut self_population: &mut Array2<f64>, _fitness: &mut Array1<f64>,
+        &mut self_population: &mut Array2<f64>,
+        _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // Placeholder for GPUDirect implementation
         // This would use CUDA-aware MPI or similar technology
@@ -444,7 +450,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Staged migration through CPU memory
     fn staged_migration(
-        &mut self_population: &mut Array2<f64>, _fitness: &mut Array1<f64>,
+        &mut self_population: &mut Array2<f64>,
+        _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // Download from GPU, perform MPI communication, upload back to GPU
         // This is less efficient but more compatible
@@ -453,7 +460,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Asynchronous migration with computation overlap
     fn async_migration(
-        &mut self_population: &mut Array2<f64>, _fitness: &mut Array1<f64>,
+        &mut self_population: &mut Array2<f64>,
+        _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // Use asynchronous MPI operations to overlap communication with computation
         Ok(())
@@ -461,7 +469,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Hierarchical migration (intra-node GPU, inter-node MPI)
     fn hierarchical_migration(
-        &mut self_population: &mut Array2<f64>, _fitness: &mut Array1<f64>,
+        &mut self_population: &mut Array2<f64>,
+        _fitness: &mut Array1<f64>,
     ) -> ScirsResult<()> {
         // First migrate within node between GPUs, then between nodes via MPI
         Ok(())

@@ -140,9 +140,9 @@ pub struct Group {
 
 impl Group {
     /// Create a new empty group
-    pub fn new(_name: String) -> Self {
+    pub fn new(name: String) -> Self {
         Self {
-            _name,
+            name,
             groups: HashMap::new(),
             datasets: HashMap::new(),
             attributes: HashMap::new(),
@@ -392,7 +392,7 @@ impl HDF5File {
                 .map_err(|e| IoError::FormatError(format!("Failed to create HDF5 file: {e}")))?;
 
             Ok(Self {
-                _path: path_str,
+                path: path_str,
                 root: Group::new("/".to_string()),
                 mode: FileMode::Create,
                 native_file: Some(native_file),
@@ -402,7 +402,7 @@ impl HDF5File {
         #[cfg(not(feature = "hdf5"))]
         {
             Ok(Self {
-                _path: path_str,
+                path: path_str,
                 root: Group::new("/".to_string()),
                 mode: FileMode::Create,
             })
@@ -433,7 +433,7 @@ impl HDF5File {
             Self::load_group_structure(&native_file, &mut root)?;
 
             Ok(Self {
-                _path: path_str,
+                path: path_str,
                 root,
                 mode,
                 native_file: Some(native_file),
@@ -443,7 +443,7 @@ impl HDF5File {
         #[cfg(not(feature = "hdf5"))]
         {
             Ok(Self {
-                _path: path_str,
+                path: path_str,
                 root: Group::new("/".to_string()),
                 mode,
             })

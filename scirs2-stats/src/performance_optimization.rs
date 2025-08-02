@@ -16,8 +16,8 @@ use crate::{
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_cpus;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::time::Instant;
 use statrs::statistics::Statistics;
+use std::time::Instant;
 
 /// Performance optimization configuration
 #[derive(Debug, Clone)]
@@ -586,23 +586,17 @@ impl OptimizedCanonicalCorrelationAnalysis {
         let mut x_centered = x.to_owned();
         let mut y_centered = y.to_owned();
 
-        x_centered
-            .axis_iter_mut(Axis(0))
-            .into().iter()
-            .for_each(|mut row| {
-                for (i, &mean) in x_mean.iter().enumerate() {
-                    row[i] -= mean;
-                }
-            });
+        x_centered.axis_iter_mut(Axis(0)).for_each(|mut row| {
+            for (i, &mean) in x_mean.iter().enumerate() {
+                row[i] -= mean;
+            }
+        });
 
-        y_centered
-            .axis_iter_mut(Axis(0))
-            .into().iter()
-            .for_each(|mut row| {
-                for (i, &mean) in y_mean.iter().enumerate() {
-                    row[i] -= mean;
-                }
-            });
+        y_centered.axis_iter_mut(Axis(0)).for_each(|mut row| {
+            for (i, &mean) in y_mean.iter().enumerate() {
+                row[i] -= mean;
+            }
+        });
 
         Ok((x_centered, y_centered))
     }

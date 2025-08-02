@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Basic example of chunked processing
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn basic_chunk_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Chunk Processing Example");
     println!("--------------------------------");
 
@@ -102,7 +102,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
 /// Example showing how to aggregate data from chunks
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn aggregate_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Chunk Aggregation Example");
     println!("---------------------------");
 
@@ -138,21 +138,21 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
     // Calculate global statistics from the chunk results
     let global_min = chunk_stats
         .iter()
-        .map(|&(min____)| min)
+        .map(|&(min, _, _, _, _)| min)
         .min()
         .unwrap();
     let global_max = chunk_stats
         .iter()
-        .map(|&(_, max___)| max)
+        .map(|&(_, max, _, _, _)| max)
         .max()
         .unwrap();
     let global_sum = chunk_stats
         .iter()
-        .map(|&(__, sum__)| sum)
+        .map(|&(_, _, sum, _, _)| sum)
         .sum::<i64>();
     let global_count = chunk_stats
         .iter()
-        .map(|&(___, count_)| count)
+        .map(|&(_, _, _, count, _)| count)
         .sum::<usize>();
     let global_mean = global_sum as f64 / global_count as f64;
 
@@ -168,7 +168,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
 /// Performance comparison between chunked and unchunked processing
 #[cfg(feature = "memory_efficient")]
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn performance_comparison(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Performance Comparison");
     println!("-----------------------");
 
@@ -215,7 +215,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
     let chunk_size = 1_000_000;
     let strategy = ChunkingStrategy::Fixed(chunk_size);
 
-    let chunk_results = mmap.process_chunks(strategy, |chunk_data_| {
+    let chunk_results = mmap.process_chunks(strategy, |chunk_data| {
         let chunk = Array1::<f32>::from_vec(chunk_data.to_vec()); // Convert to Array1 for convenience
         let sum = chunk.sum();
         let min = *chunk
@@ -229,15 +229,15 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
         (sum, min, max)
     });
 
-    let sum_chunks = chunk_results.iter().map(|&(sum__)| sum).sum::<f32>();
+    let sum_chunks = chunk_results.iter().map(|&(sum, _, _)| sum).sum::<f32>();
     let min_chunks = chunk_results
         .iter()
-        .map(|&(_, min_)| min)
+        .map(|&(_, min, _)| min)
         .min_by(|a, b| a.partial_cmp(b).unwrap())
         .unwrap();
     let max_chunks = chunk_results
         .iter()
-        .map(|&(__, max)| max)
+        .map(|&(_, _, max)| max)
         .max_by(|a, b| a.partial_cmp(b).unwrap())
         .unwrap();
 

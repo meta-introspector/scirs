@@ -10,7 +10,6 @@
 //! - Multi-scale signals
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
 use ndarray::Array1;
 use num_traits::Float;

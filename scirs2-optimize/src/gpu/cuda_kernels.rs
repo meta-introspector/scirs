@@ -50,7 +50,9 @@ impl FunctionEvaluationKernel {
     /// Note: This is a placeholder implementation that compiles correctly
     pub fn evaluate_batch(
         &self,
-        points: &GpuBuffer<f64>, _function_type: i32, _stream: Option<&GpuStream>,
+        points: &GpuBuffer<f64>,
+        _function_type: i32,
+        _stream: Option<&GpuStream>,
     ) -> ScirsResult<GpuBuffer<f64>> {
         // Placeholder implementation
         let n_points = points.len();

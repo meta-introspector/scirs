@@ -152,14 +152,16 @@ where
     /// Create new advanced-comprehensive SIMD processor
     pub fn new() -> Self {
         Self {
-            config: AdvancedComprehensiveSimdConfig::default(), _phantom: PhantomData,
+            config: AdvancedComprehensiveSimdConfig::default(),
+            _phantom: PhantomData,
         }
     }
 
     /// Create with custom configuration
     pub fn with_config(_config: AdvancedComprehensiveSimdConfig) -> Self {
         Self {
-            _config_phantom: PhantomData,
+            config: _config,
+            _phantom: PhantomData,
         }
     }
 
@@ -583,7 +585,7 @@ where
 
         // Process chunks in parallel, then combine using SIMD
         let partial_results: Vec<_> = (0..num_threads)
-            .into_par.iter()
+            .into_par_iter()
             .map(|thread_id| {
                 let start = thread_id * chunk_size;
                 let end = if thread_id == num_threads - 1 {
@@ -968,7 +970,7 @@ where
     fn simd_frobenius_norm(&self, matrix: &ArrayView2<F>) -> StatsResult<F> {
         let mut sum_squares = F::zero();
 
-        for row in matrix.outer.iter() {
+        for row in matrix.rows() {
             sum_squares = sum_squares + F::simd_sum_squares(&row);
         }
 
@@ -1114,7 +1116,7 @@ mod tests {
         let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let (sum, sum_sq_sum_cube_sum_quad, min_val, max_val) =
+        let (sum, sum_sq, _sum_cube, _sum_quad, min_val, max_val) =
             processor.simd_single_pass_moments(&data.view()).unwrap();
 
         assert!((sum - 15.0).abs() < 1e-10);

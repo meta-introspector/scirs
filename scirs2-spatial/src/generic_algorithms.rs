@@ -1035,7 +1035,9 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
             for point in points {
                 let min_distance = centroids
                     .iter()
-                    .map(|centroid| GenericKMeans::<T, P>::point_to_generic(point).distance_to(centroid))
+                    .map(|centroid| {
+                        GenericKMeans::<T, P>::point_to_generic(point).distance_to(centroid)
+                    })
                     .fold(
                         T::max_finite(),
                         |acc, dist| if dist < acc { dist } else { acc },
@@ -1051,7 +1053,9 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
                 .map(|(idx_, _)| idx_)
                 .unwrap_or(0);
 
-            centroids.push(GenericKMeans::<T, P>::point_to_generic(&points[max_distance_idx]));
+            centroids.push(GenericKMeans::<T, P>::point_to_generic(
+                &points[max_distance_idx],
+            ));
         }
 
         Ok(centroids)
@@ -1743,8 +1747,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
                     for k in 0..self.n_components {
                         responsibilities[i][k] = responsibilities[i][k] / sum_exp;
                     }
-                    new_log_likelihood =
-                        new_log_likelihood + max_log_likelihood + sum_exp.ln();
+                    new_log_likelihood = new_log_likelihood + max_log_likelihood + sum_exp.ln();
                 }
             }
 
@@ -1826,9 +1829,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
             }
 
             // Check for convergence using proper log-likelihood
-            if iteration > 0
-                && (new_log_likelihood - log_likelihood).abs() < self.tolerance
-            {
+            if iteration > 0 && (new_log_likelihood - log_likelihood).abs() < self.tolerance {
                 break;
             }
             log_likelihood = new_log_likelihood;

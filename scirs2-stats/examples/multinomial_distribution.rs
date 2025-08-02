@@ -1,5 +1,5 @@
 use ndarray::{array, Array1};
-use scirs2__stats::distributions::multivariate::multinomial::Multinomial;
+use scirs2_stats::distributions::multivariate::multinomial::Multinomial;
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
 

@@ -1969,7 +1969,8 @@ fn compute_spectrum_confidence_bands(
     ma_coeffs: &Array1<f64>,
     variance: f64,
     freqs: &Array1<f64>,
-    fs: f64_opts: &SpectrumOptions,
+    fs: f64,
+    _opts: &SpectrumOptions,
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     let spectrum = compute_arma_spectrum_basic(ar_coeffs, ma_coeffs, variance, freqs, fs)?;
     let factor = 1.96; // 95% confidence
@@ -2070,11 +2071,13 @@ fn extend_var_to_varma(
 fn compute_order_criterion(
     _signal: &Array1<f64>,
     result: &EnhancedARMAResult,
-    criterion: &OrderSelectionCriterion_opts: &OrderSelectionOptions,
+    criterion: &OrderSelectionCriterion,
+    _opts: &OrderSelectionOptions,
 ) -> SignalResult<f64> {
     match criterion {
         OrderSelectionCriterion::AIC => Ok(result.aic),
-        OrderSelectionCriterion::BIC => Ok(result.bic, _ => Ok(result.aic), // Default to AIC for others
+        OrderSelectionCriterion::BIC => Ok(result.bic),
+        _ => Ok(result.aic), // Default to AIC for others
     }
 }
 
@@ -2699,7 +2702,9 @@ fn chi_squared_cdf(x: f64, df: f64) -> f64 {
 
 #[allow(dead_code)]
 fn validate_arma_model(
-    signal: &Array1<f64>, _params: &ARMAParameters_opts: &ARMAOptions,
+    signal: &Array1<f64>,
+    _params: &ARMAParameters,
+    _opts: &ARMAOptions,
 ) -> SignalResult<ARMAValidation> {
     // Placeholder implementation
     Ok(ARMAValidation {
@@ -3410,14 +3415,20 @@ fn estimate_fractional_differencing_parameter(
 
 #[allow(dead_code)]
 fn fractional_differencing(
-    _signal: &Array1<f64>, _d: f64_truncation: usize,
+    _signal: &Array1<f64>,
+    _d: f64,
+    _truncation: usize,
 ) -> SignalResult<Array1<f64>> {
     Ok(Array1::zeros(1)) // Placeholder
 }
 
 #[allow(dead_code)]
 fn farima_spectrum(
-    _ar_coeffs: &Array1<f64>, _ma_coeffs: &Array1<f64>, _d: f64_variance: f64, _points: usize,
+    _ar_coeffs: &Array1<f64>,
+    _ma_coeffs: &Array1<f64>,
+    _d: f64,
+    _variance: f64,
+    _points: usize,
 ) -> SignalResult<Array1<f64>> {
     Ok(Array1::zeros(_points)) // Placeholder
 }

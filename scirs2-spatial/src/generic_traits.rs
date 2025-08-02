@@ -722,8 +722,8 @@ pub mod utils {
 
 /// Integration with ndarray
 pub mod ndarray_integration {
+    use super::{SpatialArray, SpatialPoint, SpatialScalar};
     use ndarray::{Array1, ArrayView1, ArrayView2, Axis};
-    use super::{SpatialScalar, SpatialPoint, SpatialArray};
 
     /// Implementation of SpatialPoint for ndarray ArrayView1
     impl<T: SpatialScalar> SpatialPoint<T> for ArrayView1<'_, T> {

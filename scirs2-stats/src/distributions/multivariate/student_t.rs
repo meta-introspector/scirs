@@ -111,7 +111,7 @@ impl MultivariateT {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::student_t::MultivariateT;
+    /// use scirs2_stats::distributions::multivariate::student_t::MultivariateT;
     ///
     /// // Create a 2D multivariate Student's t-distribution with 5 degrees of freedom
     /// let mean = array![0.0, 0.0];
@@ -192,7 +192,7 @@ impl MultivariateT {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::student_t::MultivariateT;
+    /// use scirs2_stats::distributions::multivariate::student_t::MultivariateT;
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
@@ -249,7 +249,7 @@ impl MultivariateT {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::student_t::MultivariateT;
+    /// use scirs2_stats::distributions::multivariate::student_t::MultivariateT;
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
@@ -305,7 +305,7 @@ impl MultivariateT {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::student_t::MultivariateT;
+    /// use scirs2_stats::distributions::multivariate::student_t::MultivariateT;
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
@@ -333,7 +333,7 @@ impl MultivariateT {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::student_t::MultivariateT;
+    /// use scirs2_stats::distributions::multivariate::student_t::MultivariateT;
     ///
     /// let mean = array![0.0, 0.0];
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
@@ -409,7 +409,7 @@ impl MultivariateT {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distributions::multivariate;
+/// use scirs2_stats::distributions::multivariate;
 ///
 /// let mean = array![0.0, 0.0];
 /// let scale = array![[1.0, 0.5], [0.5, 2.0]];

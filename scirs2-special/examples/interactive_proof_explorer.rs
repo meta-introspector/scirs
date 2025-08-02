@@ -898,7 +898,8 @@ impl ProofExplorer {
                     1 => 1.0 / 12.0,
                     2 => -1.0 / 360.0,
                     3 => 1.0 / 1260.0,
-                    4 => -1.0 / 1680.0_ => 0.0,
+                    4 => -1.0 / 1680.0,
+                    _ => 0.0,
                 };
 
                 sum += bernoulli_coeff / x.powi(2 * k as i32 - 1);
@@ -1212,7 +1213,8 @@ impl ProofExplorer {
             "2" => self.show_complex_analysis_reference()?,
             "3" => self.show_asymptotic_methods_reference()?,
             "4" => self.show_number_theory_reference()?,
-            "5" => self.show_historical_reference()?_ => return Ok(()),
+            "5" => self.show_historical_reference()?,
+            _ => return Ok(()),
         }
 
         Ok(())

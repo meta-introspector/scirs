@@ -12,9 +12,9 @@ use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::{rng, simd_ops::SimdUnifiedOps};
+use statrs::statistics::Statistics;
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
-use statrs::statistics::Statistics;
 
 /// Advanced parallel Monte Carlo integrator
 pub struct AdvancedParallelMonteCarlo<F> {
@@ -388,7 +388,12 @@ where
     }
 
     /// Evaluate function on a chunk of samples
-    fn evaluate_chunk<T>(&self, function: &T, n_samples_: usize, seed: u64) -> StatsResult<Array1<F>>
+    fn evaluate_chunk<T>(
+        &self,
+        function: &T,
+        n_samples_: usize,
+        seed: u64,
+    ) -> StatsResult<Array1<F>>
     where
         T: IntegrableFunction<F>,
     {
@@ -700,7 +705,7 @@ impl GaussianFunction {
         let upper_bounds = Array1::from_elem(dimension, 5.0);
 
         Self {
-            _mean,
+            mean: _mean,
             covariance,
             lower_bounds,
             upper_bounds,

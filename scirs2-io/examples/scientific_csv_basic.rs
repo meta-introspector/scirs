@@ -1,5 +1,5 @@
 use ndarray::{Array1, Array2};
-use scirs2__io::csv::{read_csv_numeric, write_csv, CsvReaderConfig};
+use scirs2_io::csv::{read_csv_numeric, write_csv, CsvReaderConfig};
 use std::error::Error;
 
 /// This example demonstrates using CSV functionality for scientific data conversion

@@ -13,6 +13,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
+use rand::Rng;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -625,9 +626,21 @@ where
         };
 
         Self {
-            _config,
+            config: _config,
             cache,
-            performance_phantom: PhantomData,
+            performance: QuantumPerformanceMetrics {
+                circuit_times: HashMap::new(),
+                quantum_memory_usage: 0,
+                gate_counts: HashMap::new(),
+                fidelities: HashMap::new(),
+                quantum_advantage: QuantumAdvantageMetrics {
+                    speedup_factor: 1.0,
+                    memory_advantage: 1.0,
+                    quality_improvement: 1.0,
+                    resource_efficiency: 1.0,
+                },
+            },
+            _phantom: PhantomData,
         }
     }
 
@@ -728,7 +741,7 @@ where
 
     /// Quantum amplitude estimation for enhanced Monte Carlo
     fn quantum_amplitude_estimation(&mut self, data: &ArrayView2<F>) -> StatsResult<QAEResults<F>> {
-        let (_n_samples_) = data.dim();
+        let _n_samples_ = data.shape()[0];
 
         // Simplified QAE implementation
         let target_amplitude = F::from(0.3).unwrap(); // Would compute actual amplitude
@@ -1191,8 +1204,8 @@ where
 
         // Evaluate function with parallel processing
         let values: Vec<F> = _samples
-            .outer.iter()
-            .into_par.iter()
+            .outer_iter()
+            .into_par_iter()
             .map(|sample| function(sample.as_slice().unwrap()))
             .collect();
 
@@ -1376,7 +1389,7 @@ where
         data: &ArrayView2<F>,
         params: &QuantumVariationalParams<F>,
     ) -> StatsResult<F> {
-        let (_n_samples_) = data.dim();
+        let _n_samples_ = data.shape()[0];
 
         // Simplified quantum ELBO computation
         // In practice, would use quantum circuits for probability estimation
@@ -1498,8 +1511,8 @@ where
         data: &ArrayView2<F>,
         params: &QuantumVariationalParams<F>,
     ) -> StatsResult<Array2<F>> {
-        let (n_samples_) = data.dim();
-        let (num_latent_) = params.means.dim();
+        let n_samples_ = data.shape()[0];
+        let (num_latent_, _) = params.means.dim();
 
         let mut latent_vars = Array2::zeros((n_samples_, num_latent_));
 
@@ -1646,7 +1659,7 @@ where
         labels: &ArrayView1<F>,
         model: &QuantumModel<F>,
     ) -> StatsResult<F> {
-        let (n_samples_) = data.dim();
+        let n_samples_ = data.shape()[0];
         let mut total_loss = F::zero();
 
         for i in 0..n_samples_ {
@@ -1670,7 +1683,7 @@ where
         for (i, &feature) in sample.iter().enumerate() {
             if i < model.circuit_params.len() / 2 {
                 let param = model.circuit_params[i];
-                let quantum_feature = ""(feature * param).cos();
+                let quantum_feature = (feature * param).cos();
                 result = result + quantum_feature;
             }
         }
@@ -1685,7 +1698,7 @@ where
         labels: &ArrayView1<F>,
         model: &QuantumModel<F>,
     ) -> StatsResult<F> {
-        let (n_samples_) = data.dim();
+        let n_samples_ = data.shape()[0];
         let mut correct_predictions = 0;
 
         for i in 0..n_samples_ {
@@ -1707,7 +1720,9 @@ where
     /// Compute quantum model weight based on performance
     fn compute_quantum_model_weight(
         &self,
-        model: &QuantumModel<F>, _data: &ArrayView2<F>, _labels: &ArrayView1<F>,
+        model: &QuantumModel<F>,
+        _data: &ArrayView2<F>,
+        _labels: &ArrayView1<F>,
     ) -> StatsResult<F> {
         // Weight based on training fidelity and quantum advantages
         let base_weight = model.training_fidelity;
@@ -1723,7 +1738,7 @@ where
         models: &[QuantumModel<F>],
         weights: &Array1<F>,
     ) -> StatsResult<Array1<F>> {
-        let (n_samples_) = data.dim();
+        let n_samples_ = data.shape()[0];
         let mut predictions = Array1::zeros(n_samples_);
 
         for i in 0..n_samples_ {
@@ -1746,7 +1761,7 @@ where
         data: &ArrayView2<F>,
         models: &[QuantumModel<F>],
     ) -> StatsResult<Array1<F>> {
-        let (n_samples_) = data.dim();
+        let n_samples_ = data.shape()[0];
         let mut uncertainties = Array1::zeros(n_samples_);
 
         for i in 0..n_samples_ {
@@ -1887,7 +1902,8 @@ impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
     /// Advanced quantum teleportation-based data transfer
     pub fn quantum_teleportation_transfer(
         &mut self,
-        source_data: &ArrayView2<F>, _target_encoding: QuantumFeatureEncoding,
+        source_data: &ArrayView2<F>,
+        _target_encoding: QuantumFeatureEncoding,
     ) -> StatsResult<Array2<F>> {
         let (n_samples_, n_features) = source_data.dim();
         let mut transferred_data = Array2::zeros((n_samples_, n_features));

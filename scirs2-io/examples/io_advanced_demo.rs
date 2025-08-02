@@ -3,8 +3,8 @@
 //! This example showcases the advanced intelligent I/O processing capabilities
 //! of the advanced coordinator and enhanced algorithms.
 
-use scirs2__io::advanced_coordinator::AdvancedCoordinator;
-use scirs2__io::enhanced_algorithms::AdvancedPatternRecognizer;
+use scirs2_io::advanced_coordinator::AdvancedCoordinator;
+use scirs2_io::enhanced_algorithms::AdvancedPatternRecognizer;
 use std::time::Instant;
 
 #[allow(dead_code)]

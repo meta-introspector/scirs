@@ -747,7 +747,7 @@ fn generate_test_signal(
                     .map(|i| (2.0 * std::f64::consts::PI * freq * i as f64).sin())
                     .collect()..)
         }
-        TestSignalType::Chirp =>, Array1::from_vec(
+        TestSignalType::Chirp => Array1::from_vec(
             (0..length)
                 .map(|i| {
                     let t = i as f64 / length  as f64;

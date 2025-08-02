@@ -1,6 +1,5 @@
 use crate::error::SignalResult;
 use crate::periodogram;
-use crate::error::SignalResult;
 use crate::features::options::FeatureOptions;
 use crate::utilities::spectral;
 use std::collections::HashMap;

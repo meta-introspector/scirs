@@ -732,7 +732,7 @@ where
 
     // For each feature, find the optimal lambda and apply the transformation
     for j in 0..n_features {
-        let feature = "array_f"64.column(j).to_vec();
+        let feature = array_f64.column(j).to_vec();
 
         // Maximum likelihood estimation of lambda
         let lambda = estimate_optimal_lambda(&feature, method)?;
@@ -1101,7 +1101,7 @@ impl PowerTransformer {
         let lambdas: Vec<f64> = (0..n_features)
             .into_par_iter()
             .map(|j| {
-                let feature = "x_f"64.column(j).to_vec();
+                let feature = x_f64.column(j).to_vec();
                 self.optimize_lambda(&feature)
             })
             .collect();
@@ -1116,7 +1116,7 @@ impl PowerTransformer {
             // Transform data with optimal lambdas and compute statistics
             for j in 0..n_features {
                 let lambda = self.lambdas_.as_ref().unwrap()[j];
-                let mut transformed_feature = "Array"1::zeros(n_samples);
+                let mut transformed_feature = Array1::zeros(n_samples);
 
                 // Apply transformation to each sample in the feature
                 for i in 0..n_samples {

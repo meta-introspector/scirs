@@ -51,26 +51,26 @@ pub struct HamiltonianMonteCarlo<T: DifferentiableTarget> {
 
 impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
     /// Create a new HMC sampler
-    pub fn new(_target: T, initial: Array1<f64>, step_size: f64, n_steps: usize) -> Result<Self> {
+    pub fn new(target: T, initial: Array1<f64>, step_size: f64, n_steps: usize) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
         check_positive(step_size, "step_size")?;
         check_positive(n_steps, "n_steps")?;
 
-        if initial.len() != _target.dim() {
+        if initial.len() != target.dim() {
             return Err(StatsError::DimensionMismatch(format!(
-                "initial dimension ({}) must match _target dimension ({})",
+                "initial dimension ({}) must match target dimension ({})",
                 initial.len(),
-                _target.dim()
+                target.dim()
             )));
         }
 
         let dim = initial.len();
         let mass_matrix = Array2::eye(dim);
         let mass_inv = Array2::eye(dim);
-        let current_log_density = _target.log_density(&initial);
+        let current_log_density = target.log_density(&initial);
 
         Ok(Self {
-            _target,
+            target,
             position: initial,
             current_log_density,
             step_size,
@@ -295,9 +295,9 @@ pub struct DualAveragingAdaptation {
 
 impl DualAveragingAdaptation {
     /// Create new dual averaging adaptation
-    pub fn new(_target: f64, initial_log_step: f64) -> Self {
+    pub fn new(target: f64, initial_log_step: f64) -> Self {
         Self {
-            _target,
+            target,
             gamma: 0.05,
             t0: 10.0,
             kappa: 0.75,
@@ -329,8 +329,8 @@ impl DualAveragingAdaptation {
 
 impl<T: DifferentiableTarget> NoUTurnSampler<T> {
     /// Create new NUTS sampler
-    pub fn new(_target: T, initial: Array1<f64>, initial_step_size: f64) -> Result<Self> {
-        let hmc = HamiltonianMonteCarlo::new(_target, initial, initial_step_size, 1)?;
+    pub fn new(target: T, initial: Array1<f64>, initial_step_size: f64) -> Result<Self> {
+        let hmc = HamiltonianMonteCarlo::new(target, initial, initial_step_size, 1)?;
         let step_size_adaptation = DualAveragingAdaptation::new(0.8, initial_step_size.ln());
 
         Ok(Self {
@@ -446,17 +446,17 @@ pub struct MultivariateNormalHMC {
 
 impl MultivariateNormalHMC {
     /// Create new multivariate normal target
-    pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
-        checkarray_finite(&_mean, "_mean")?;
+    pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
+        checkarray_finite(&mean, "mean")?;
         checkarray_finite(&covariance, "covariance")?;
 
-        if covariance.nrows() != _mean.len() || covariance.ncols() != _mean.len() {
+        if covariance.nrows() != mean.len() || covariance.ncols() != mean.len() {
             return Err(StatsError::DimensionMismatch(format!(
                 "covariance shape ({}, {}) must be ({}, {})",
                 covariance.nrows(),
                 covariance.ncols(),
-                _mean.len(),
-                _mean.len()
+                mean.len(),
+                mean.len()
             )));
         }
 
@@ -474,11 +474,11 @@ impl MultivariateNormalHMC {
             ));
         }
 
-        let d = _mean.len() as f64;
+        let d = mean.len() as f64;
         let log_norm_const = -0.5 * (d * (2.0 * std::f64::consts::PI).ln() + det.ln());
 
         Ok(Self {
-            _mean,
+            mean,
             precision,
             log_norm_const,
         })
@@ -522,12 +522,12 @@ pub struct CustomDifferentiableTarget<F, G> {
 
 impl<F, G> CustomDifferentiableTarget<F, G> {
     /// Create new custom target
-    pub fn new(_dim: usize, log_density_fn: F, gradient_fn: G) -> Result<Self> {
-        check_positive(_dim, "_dim")?;
+    pub fn new(dim: usize, log_density_fn: F, gradient_fn: G) -> Result<Self> {
+        check_positive(dim, "dim")?;
         Ok(Self {
             log_density_fn,
             gradient_fn,
-            _dim,
+            dim,
         })
     }
 }

@@ -27,7 +27,7 @@ use rand_distr::{Distribution, StandardNormal};
 ///
 /// ```
 /// use rand_distr::{Uniform, Distribution};
-/// use scirs2__stats::random::random_sample;
+/// use scirs2_stats::random::random_sample;
 ///
 /// // Generate 10 random numbers from a uniform distribution [0, 1)
 /// let uniform_dist = Uniform::new(0.0, 1.0).unwrap();
@@ -84,7 +84,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::random::uniform;
+/// use scirs2_stats::random::uniform;
 ///
 /// // Generate 5 random numbers from uniform distribution [0, 10)
 /// let samples = uniform(0.0, 10.0, 5, Some(123)).unwrap();
@@ -134,7 +134,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::random::randint;
+/// use scirs2_stats::random::randint;
 ///
 /// // Generate 10 random integers from 1 to 100 (inclusive)
 /// let samples = randint(1, 101, 10, Some(42)).unwrap();
@@ -179,7 +179,7 @@ pub fn randint(_low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsRes
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::random::randn;
+/// use scirs2_stats::random::randn;
 ///
 /// // Generate 100 random numbers from standard normal distribution
 /// let samples = randn(100, Some(42)).unwrap();
@@ -237,7 +237,7 @@ pub fn randn(_size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::random::choice;
+/// use scirs2_stats::random::choice;
 ///
 /// // Create an array of choices
 /// let options = array![10, 20, 30, 40, 50];
@@ -428,7 +428,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::random::permutation;
+/// use scirs2_stats::random::permutation;
 ///
 /// // Permute an array
 /// let arr = array![1, 2, 3, 4, 5];
@@ -491,7 +491,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::random::permutation_int;
+/// use scirs2_stats::random::permutation_int;
 ///
 /// // Generate a random permutation of integers from 0 to 9
 /// let perm = permutation_int(10, Some(42)).unwrap();
@@ -550,7 +550,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::random::random_binary_matrix;
+/// use scirs2_stats::random::random_binary_matrix;
 ///
 /// // Generate a 5x5 binary matrix with 30% non-zero elements
 /// let matrix = random_binary_matrix(5, 5, 0.3, Some(42)).unwrap();
@@ -621,7 +621,7 @@ pub fn random_binary_matrix(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::random::bootstrap_sample;
+/// use scirs2_stats::random::bootstrap_sample;
 ///
 /// // Create an array
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -697,7 +697,7 @@ mod tests {
         }
 
         // Test error cases
-        assert!(random_sample::<f64>(0, &uniform_dist, None).is_err());
+        assert!(random_sample::<f64, rand_distr::Uniform<f64>>(0, &uniform_dist, None).is_err());
     }
 
     #[test]

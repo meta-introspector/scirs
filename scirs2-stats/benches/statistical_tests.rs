@@ -7,7 +7,7 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand__distr::{Normal, StandardNormal};
-use scirs2__stats::{
+use scirs2_stats::{
     anderson_darling,
     dagostino_k2,
     friedman,
@@ -281,7 +281,7 @@ fn bench_anova(c: &mut Criterion) {
         (10, 20), // 10 groups, 20 samples each
     ];
 
-    use scirs2__stats::one_way_anova;
+    use scirs2_stats::one_way_anova;
 
     for (num_groups, samples_per_group) in configurations {
         let groups: Vec<Array1<f64>> = (0..num_groups)

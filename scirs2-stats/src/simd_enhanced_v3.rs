@@ -19,7 +19,7 @@ pub fn distance_matrix_simd<F, D>(
 ) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display + std::iter::Sum + Send + Sync,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let (n_samples_, n_features) = data.dim();
 
@@ -179,7 +179,8 @@ where
 ///
 /// Computes rolling statistics over a sliding window using SIMD acceleration.
 pub struct MovingWindowSIMD<F> {
-    window_size: usize, _phantom: std::marker::PhantomData<F>,
+    window_size: usize,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F> MovingWindowSIMD<F>
@@ -188,7 +189,8 @@ where
 {
     pub fn new(_window_size: usize) -> Self {
         Self {
-            window_size_phantom: std::marker::PhantomData,
+            window_size: _window_size,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -354,7 +356,7 @@ pub fn histogram_simd<F, D>(
 ) -> StatsResult<(ndarray::Array1<usize>, ndarray::Array1<F>)>
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display + std::iter::Sum + Send + Sync,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -428,7 +430,7 @@ pub fn detect_outliers_zscore_simd<F, D>(
 ) -> StatsResult<ndarray::Array1<bool>>
 where
     F: Float + NumCast + SimdUnifiedOps + std::fmt::Display + std::iter::Sum + Send + Sync,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(

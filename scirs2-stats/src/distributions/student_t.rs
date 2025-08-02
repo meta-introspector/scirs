@@ -4,13 +4,13 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
-use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
+use crate::traits::{ContinuousCDF, ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use rand::rng;
 use rand_distr::{Distribution, StudentT as RandStudentT};
-use std::f64::consts::PI;
 use statrs::statistics::Statistics;
+use std::f64::consts::PI;
 
 /// Student's t distribution structure
 pub struct StudentT<F: Float + Send + Sync> {
@@ -40,7 +40,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::student_t::StudentT;
+    /// use scirs2_stats::distributions::student_t::StudentT;
     ///
     /// // Standard t-distribution with 5 degrees of freedom
     /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
@@ -63,7 +63,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
 
         match RandStudentT::new(df_f64) {
             Ok(rand_distr) => Ok(StudentT {
-                _df,
+                df: _df,
                 loc,
                 scale,
                 rand_distr,
@@ -87,7 +87,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::student_t::StudentT;
+    /// use scirs2_stats::distributions::student_t::StudentT;
     ///
     /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
     /// let pdf_at_zero = t.pdf(0.0);
@@ -129,7 +129,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::student_t::StudentT;
+    /// use scirs2_stats::distributions::student_t::StudentT;
     ///
     /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
     /// let cdf_at_zero = t.cdf(0.0);
@@ -195,7 +195,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::student_t::StudentT;
+    /// use scirs2_stats::distributions::student_t::StudentT;
     ///
     /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
     /// let samples = t.rvs(1000).unwrap();
@@ -220,7 +220,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::student_t::StudentT;
+    /// use scirs2_stats::distributions::student_t::StudentT;
     ///
     /// let t = StudentT::new(5.0f64, 0.0, 1.0).unwrap();
     /// let samples = t.rvs_vec(1000).unwrap();
@@ -513,6 +513,12 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousD
     }
 }
 
+impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> ContinuousCDF<F>
+    for StudentT<F>
+{
+    // Default implementations from trait are sufficient
+}
+
 /// Implementation of SampleableDistribution for StudentT
 impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> SampleableDistribution<F>
     for StudentT<F>
@@ -661,14 +667,14 @@ mod tests {
         // Check PPF
         assert_relative_eq!(dist.ppf(0.5).unwrap(), 0.0, epsilon = 1e-10);
 
-        // Check derived methods
-        assert_relative_eq!(dist.sf(0.0), 0.5, epsilon = 1e-10);
-        assert!(dist.hazard(0.0) > 0.0);
-        assert!(dist.cumhazard(0.0) > 0.0);
+        // Check derived methods using concrete type
+        assert_relative_eq!(t5.sf(0.0), 0.5, epsilon = 1e-10);
+        assert!(t5.hazard(0.0) > 0.0);
+        assert!(t5.cumhazard(0.0) > 0.0);
 
         // Check that isf and ppf are consistent
         assert_relative_eq!(
-            dist.isf(0.95).unwrap(),
+            t5.isf(0.95).unwrap(),
             dist.ppf(0.05).unwrap(),
             epsilon = 1e-6
         );

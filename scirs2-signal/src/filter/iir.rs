@@ -19,8 +19,8 @@ pub enum Either<A, B> {
     Left(A),
     Right(B),
 }
+use crate::lti::design::tf as design_tf;
 use super::common::{
-use crate::lti::design::tf;
     math::{add_digital_zeros, bilinear_pole_transform, butterworth_poles, prewarp_frequency},
     validation::{convert_filter_type, validate_cutoff_frequency, validate_order},
     FilterCoefficients, FilterType, FilterTypeParam,
@@ -843,7 +843,8 @@ where
             Complex64::new(-0.7111381808485399, -0.7186517314014426),
             Complex64::new(-0.4621740412532122, 1.0344954064286434),
             Complex64::new(-0.4621740412532122, -1.0344954064286434),
-        ]_ => {
+        ],
+        _ => {
             // For higher orders, approximate using Butterworth-like poles
             // with modified positions for Bessel characteristics
             let mut poles = Vec::with_capacity(order);

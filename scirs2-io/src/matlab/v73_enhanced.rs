@@ -139,7 +139,7 @@ impl V73MatFile {
     /// Create a new v7.3 MAT file handler
     pub fn new(_features: V73Features) -> Self {
         Self {
-            _features,
+            features: _features,
             #[cfg(feature = "hdf5")]
             compression: None,
         }

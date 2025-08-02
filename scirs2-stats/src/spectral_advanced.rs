@@ -433,9 +433,30 @@ where
         };
 
         Self {
-            _config,
+            config: _config,
             cache,
-            performance_phantom: PhantomData,
+            performance: SpectralPerformanceMetrics {
+                timing: HashMap::new(),
+                memory_usage: MemoryUsageStats {
+                    peak_usage: 0,
+                    average_usage: 0,
+                    cache_efficiency: 0.0,
+                    allocation_count: 0,
+                },
+                accuracy: AccuracyMetrics {
+                    relative_error: 0.0,
+                    absolute_error: 0.0,
+                    snr_improvement: 0.0,
+                    frequency_resolution: 0.0,
+                },
+                convergence: ConvergenceMetrics {
+                    iterations: 0,
+                    final_residual: 0.0,
+                    convergence_rate: 1.0,
+                    stability: 1.0,
+                },
+            },
+            _phantom: PhantomData,
         }
     }
 
@@ -1046,7 +1067,7 @@ mod tests {
         let analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);
 
         assert_eq!(analyzer.config.fs, 1.0);
-        assert_eq!(analyzer._config.multitaper_config.k, 7);
+        assert_eq!(analyzer.config.multitaper_config.k, 7);
     }
 
     #[test]

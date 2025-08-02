@@ -118,7 +118,7 @@ impl RRTPlanner {
         let rng = StdRng::seed_from_u64(seed);
 
         RRTPlanner {
-            _config,
+            config: _config,
             collision_checker: None,
             rng,
             dimension,
@@ -162,7 +162,7 @@ impl RRTPlanner {
             }
         }
 
-        self._bounds = Some((min_bounds, max_bounds));
+        self.bounds = Some((min_bounds, max_bounds));
         Ok(self)
     }
 
@@ -197,7 +197,7 @@ impl RRTPlanner {
         kdtree: &KDTree<f64, EuclideanDistance<f64>>,
     ) -> SpatialResult<usize> {
         let point_vec = point.to_vec();
-        let (indices_) = kdtree.query(point_vec.as_slice(), 1)?;
+        let (indices_, _) = kdtree.query(point_vec.as_slice(), 1)?;
         Ok(indices_[0])
     }
 
@@ -310,7 +310,7 @@ impl RRTPlanner {
                 // Check if we've reached the goal
                 if euclidean_distance(&new_point.view(), &goal) <= goal_threshold {
                     // Extract the path
-                    return Ok(Some(self.extract_path(&nodes, nodes.len() - 1)));
+                    return Ok(Some(RRTPlanner::extract_path(&nodes, nodes.len() - 1)));
                 }
             }
         }
@@ -405,7 +405,7 @@ impl RRTPlanner {
 
         // Extract the path if goal was reached
         if let Some(idx) = goal_idx {
-            Ok(Some(self.extract_path(&nodes, idx)))
+            Ok(Some(RRTPlanner::extract_path(&nodes, idx)))
         } else {
             Ok(None)
         }
@@ -490,7 +490,7 @@ impl RRTPlanner {
                 nodes[node_idx].cost = cost_through_new;
 
                 // Recursively update costs in the subtree
-                self.update_subtree_costs(nodes, node_idx);
+                RRTPlanner::update_subtree_costs(nodes, node_idx);
             }
         }
     }
@@ -503,7 +503,7 @@ impl RRTPlanner {
             .iter()
             .enumerate()
             .filter(|(_, node)| node.parent == Some(node_idx))
-            .map(|(idx_)| idx_)
+            .map(|(idx, _)| idx)
             .collect();
 
         // Update each child's cost and recursively update its subtree
@@ -735,7 +735,8 @@ impl RRT2DPlanner {
 
         Ok(RRT2DPlanner {
             planner,
-            obstacles_collision_step_size: collision_step_size,
+            obstacles: obstacles.clone(),
+            _collision_step_size: collision_step_size,
         })
     }
 

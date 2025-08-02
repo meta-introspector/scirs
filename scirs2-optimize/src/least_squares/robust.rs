@@ -402,7 +402,7 @@ where
         prev_weights = weights.clone();
 
         // Compute Jacobian
-        let (jac_jac_evals) = match &jacobian {
+        let (jac, _jac_evals) = match &jacobian {
             Some(jac_fn) => {
                 let j = jac_fn(x.as_slice().unwrap(), data.as_slice().unwrap());
                 njev += 1;
@@ -505,7 +505,11 @@ where
 #[allow(dead_code)]
 fn gradient_based_robust_optimizer<F, J, L, D, S1, S2>(
     _residuals: F,
-    x0: &ArrayBase<S1, Ix1>, _loss: L, _jacobian: Option<J>, _data: &ArrayBase<S2, Ix1>, _options: &RobustOptions,
+    x0: &ArrayBase<S1, Ix1>,
+    _loss: L,
+    _jacobian: Option<J>,
+    _data: &ArrayBase<S2, Ix1>,
+    _options: &RobustOptions,
 ) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&[f64], &[D]) -> Array1<f64>,

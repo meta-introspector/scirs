@@ -8,11 +8,11 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use ndarray::{Array1, Array2, Axis};
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use scirs2__stats::{
+use scirs2_core::rng;
+use scirs2_stats::{
     correlation::*, descriptive::*, distributions::*, quantile::*, regression::linear::*, tests::*,
     traits::Distribution,
 };
-use scirs2_core::rng;
 use statrs::statistics::Statistics;
 use std::time::Duration;
 

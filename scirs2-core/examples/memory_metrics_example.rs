@@ -104,10 +104,7 @@ fn main() {
         let json = report.to_json();
         println!("\nJSON Report Format (excerpt):");
         println!("{{");
-        println!(
-            "  \"total_current_usage\": {},",
-            json[total_current_usage]
-        );
+        println!("  \"total_current_usage\": {},", json[total_current_usage]);
         println!("  \"total_peak_usage\": {},", json[total_peak_usage]);
         println!(
             "  \"total_allocation_count\": {}",
@@ -129,7 +126,7 @@ fn main() {
 // Simulate matrix operations with memory tracking
 #[cfg(feature = "memory_management")]
 #[allow(dead_code)]
-fn collector( &MemoryMetricsCollector) {
+fn simulate_matrix_operations(_collector: &MemoryMetricsCollector) {
     // Track memory for matrix A
     let matrix_a_size = 8 * 1024 * 1024; // 8MB
     _collector.record_event(

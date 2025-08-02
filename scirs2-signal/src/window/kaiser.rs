@@ -4,7 +4,6 @@
 //! the trade-off between the main lobe width and side lobe level.
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use scirs2__special::i0;
 use std::f64::consts::PI;
 

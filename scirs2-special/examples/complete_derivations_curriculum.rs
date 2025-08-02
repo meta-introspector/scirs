@@ -1111,7 +1111,8 @@ impl DerivationCurriculum {
                 Ok(3) => self.interactive_derivation_builder()?,
                 Ok(4) => self.verification_laboratory()?,
                 Ok(5) => self.view_progress_and_mastery()?,
-                Ok(6) => self.access_reference_materials()?_ => println!("❌ Invalid choice. Please try again.\n"),
+                Ok(6) => self.access_reference_materials()?,
+                _ => println!("❌ Invalid choice. Please try again.\n"),
             }
         }
 
@@ -1568,7 +1569,8 @@ impl DerivationCurriculum {
             Ok(1) => self.numerical_verification()?,
             Ok(2) => self.symbolic_verification()?,
             Ok(3) => self.edge_case_testing()?,
-            Ok(4) => self.precision_analysis()?_ => println!("❌ Invalid choice."),
+            Ok(4) => self.precision_analysis()?,
+            _ => println!("❌ Invalid choice."),
         }
 
         Ok(())

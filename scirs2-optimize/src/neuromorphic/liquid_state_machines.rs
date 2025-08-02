@@ -44,7 +44,7 @@ impl LiquidStateMachine {
 
         // Random input weights
         for i in 0..reservoir_size {
-            for j in 0..input_size {
+            for j in 0.._input_size {
                 input_weights[[i, j]] = (rand::rng().gen::<f64>() - 0.5) * 0.5;
             }
         }
@@ -55,7 +55,7 @@ impl LiquidStateMachine {
             output_weights,
             reservoir_state: Array1::zeros(reservoir_size),
             reservoir_size,
-            input_size,
+            input_size: _input_size,
             output_size,
         }
     }

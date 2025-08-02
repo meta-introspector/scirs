@@ -936,7 +936,10 @@ impl RealTimePerformanceMonitor {
             _history.trend_analysis.efficiency_trend = efficiency_trend;
 
             // Update anomaly detection
-            _history.trend_analysis.anomaly_detection.update(&efficiency);
+            _history
+                .trend_analysis
+                .anomaly_detection
+                .update(&efficiency);
         }
     }
 
@@ -1437,7 +1440,10 @@ impl RealTimePerformanceMonitor {
         models
     }
 
-    fn extract_metric_values(_metric_name: &str, samples: &VecDeque<PerformanceSample>) -> Vec<f64> {
+    fn extract_metric_values(
+        _metric_name: &str,
+        samples: &VecDeque<PerformanceSample>,
+    ) -> Vec<f64> {
         samples
             .iter()
             .map(|s| match _metric_name {
@@ -1664,7 +1670,8 @@ impl RealTimePerformanceMonitor {
 
     fn run_adaptive_optimization(
         history: &Arc<Mutex<PerformanceHistory>>,
-        adaptation_engine: &Arc<Mutex<AdaptationEngine>>, _processor_registry: &Arc<Mutex<ProcessorRegistry>>,
+        adaptation_engine: &Arc<Mutex<AdaptationEngine>>,
+        _processor_registry: &Arc<Mutex<ProcessorRegistry>>,
     ) {
         // Simplified adaptive optimization
         if let (Ok(history), Ok(mut adaptation_engine)) = (history.lock(), adaptation_engine.lock())

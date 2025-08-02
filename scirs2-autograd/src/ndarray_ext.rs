@@ -126,7 +126,8 @@ use rand::{Rng, RngCore, SeedableRng};
 /// Random number generator for ndarray
 #[derive(Clone)]
 pub struct ArrayRng<A> {
-    rng: rand::rngs::StdRng_phantom: std::marker::PhantomData<A>,
+    rng: rand::rngs::StdRng,
+    _phantom: std::marker::PhantomData<A>,
 }
 
 // Implement RngCore for ArrayRng by delegating to the internal StdRng
@@ -158,7 +159,8 @@ impl<A: Float> ArrayRng<A> {
     pub fn from_seed(_seed: u64) -> Self {
         let rng = rand::rngs::StdRng::seed_from_u64(_seed);
         Self {
-            rng_phantom: std::marker::PhantomData,
+            rng,
+            _phantom: std::marker::PhantomData,
         }
     }
 

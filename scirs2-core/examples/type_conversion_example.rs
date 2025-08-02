@@ -184,7 +184,7 @@ fn batch_conversion_example() {
     let float_values = vec![1.1, 2.2, 3.3, 4.4, 5.5];
 
     // Convert to integers with error checking
-    let int_result: Result<Vec<i32>_> = convert::slice_to_numeric(&float_values);
+    let int_result: Result<Vec<i32>, _> = convert::slice_to_numeric(&float_values);
     match int_result {
         Ok(ints) => println!("Slice conversion with error checking: {:?}", ints),
         Err(err) => println!("Conversion failed: {}", err),

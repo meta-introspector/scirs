@@ -6,7 +6,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, Axis, s};
-use scirs2__linalg::eigh;
+use scirs2_linalg::eigh;
 use statrs::statistics::Statistics;
 
 #[allow(unused_imports)]

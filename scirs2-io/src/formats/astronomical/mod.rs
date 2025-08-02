@@ -1006,9 +1006,9 @@ pub struct GeoTransform {
 
 impl GeoTransform {
     /// Create a new coordinate transformation
-    pub fn new(_ref_lon: f64, ref_lat: f64, lon_scale: f64, lat_scale: f64) -> Self {
+    pub fn new(ref_lon: f64, ref_lat: f64, lon_scale: f64, lat_scale: f64) -> Self {
         Self {
-            _ref_lon,
+            ref_lon,
             ref_lat,
             lon_scale,
             lat_scale,

@@ -389,7 +389,7 @@ where
 pub fn swt2d_reconstruct(
     decomposition: &Swt2dResult,
     wavelet: Wavelet,
-    level: usize_mode: Option<&str>,
+    level: usize, _mode: Option<&str>,
 ) -> SignalResult<Array2<f64>> {
     if level < 1 {
         return Err(SignalError::ValueError(

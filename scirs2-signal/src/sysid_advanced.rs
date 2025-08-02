@@ -213,7 +213,8 @@ pub fn identify_bj_complete(
     let (oe_model____) = identify_oe_complete(input, output, nb, nf, delay)?;
 
     let (b_coeffs, f_coeffs) = match oe_model {
-        SystemModel::OE { b, f, .. } => (b, f, _ => {
+        SystemModel::OE { b, f, .. } => (b, f),
+        _ => {
             return Err(SignalError::ComputationError(
                 "OE model estimation failed".to_string(),
             ))
@@ -881,7 +882,8 @@ fn update_bj_parameters(
             identify_oe_complete(input, &y_clean, b.len(), f.len() - 1, delay)?;
 
         match oe_model {
-            SystemModel::OE { b, f, .. } => ((), b, f, _ => ((), b.clone(), f.clone()),
+            SystemModel::OE { b, f, .. } => ((), b, f),
+            _ => ((), vec![], vec![]),
         }
     };
 
@@ -993,7 +995,8 @@ fn build_narx_regression_matrix(
     // Determine number of nonlinear terms
     let n_nonlinear = match nonlinearity {
         NonlinearFunction::Polynomial(coeffs) => coeffs.len() - 1,
-        NonlinearFunction::PiecewiseLinear { breakpoints, .. } => breakpoints.len() + 1_ => 10, // Default number of basis functions
+        NonlinearFunction::PiecewiseLinear { breakpoints, .. } => breakpoints.len() + 1,
+        _ => 10, // Default number of basis functions
     };
 
     let n_features = na + nb + n_nonlinear;

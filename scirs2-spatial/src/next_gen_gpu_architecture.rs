@@ -1000,7 +1000,11 @@ impl PhotonicAccelerator {
     }
 
     /// Calculate optical similarity between waveform and cluster
-    fn calculate_optical_similarity(&mut self, _waveform: &Array1<Complex64>, cluster: usize) -> f64 {
+    fn calculate_optical_similarity(
+        &mut self,
+        _waveform: &Array1<Complex64>,
+        cluster: usize,
+    ) -> f64 {
         // Simplified optical correlation calculation
         if cluster < self.photonic_units.len() {
             // Use wavelength-based similarity

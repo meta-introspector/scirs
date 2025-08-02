@@ -59,7 +59,7 @@ impl HierarchicalLinearModel {
             fixed_effects,
             random_effects_cov,
             residual_variance: 1.0,
-            _groups: Array1::zeros(0),
+            groups: Array1::zeros(0),
             n_groups,
             n_level1_predictors,
             n_level2_predictors,
@@ -572,16 +572,16 @@ pub struct HierarchicalANOVA {
 
 impl HierarchicalANOVA {
     /// Create new hierarchical ANOVA
-    pub fn new(_n_groups: usize) -> Result<Self> {
-        check_positive(_n_groups, "_n_groups")?;
+    pub fn new(n_groups: usize) -> Result<Self> {
+        check_positive(n_groups, "n_groups")?;
 
         Ok(Self {
-            group_means: Array1::zeros(_n_groups),
+            group_means: Array1::zeros(n_groups),
             overall_mean: 0.0,
             between_variance: 1.0,
             within_variance: 1.0,
-            _groups: Array1::zeros(0),
-            _n_groups,
+            groups: Array1::zeros(0),
+            n_groups,
         })
     }
 
@@ -661,7 +661,7 @@ impl HierarchicalANOVA {
             }
 
             // 2. Update overall mean
-            let group_mean_avg = self.group_means.mean();
+            let group_mean_avg = self.group_means.clone().mean();
             let prior_variance = 10.0; // Weak prior
             let likelihood_variance = self.between_variance / self.n_groups as f64;
             let posterior_variance = 1.0 / (1.0 / prior_variance + 1.0 / likelihood_variance);

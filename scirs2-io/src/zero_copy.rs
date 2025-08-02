@@ -52,7 +52,7 @@ where
 
         Ok(Self {
             mmap: _mmap,
-            shape: _shape,
+            shape: shape,
             _phantom: PhantomData,
         })
     }
@@ -106,7 +106,7 @@ where
 
         Ok(Self {
             mmap: _mmap,
-            shape: _shape,
+            shape: shape,
             _phantom: PhantomData,
         })
     }
@@ -411,12 +411,12 @@ pub mod simd_zero_copy {
             let count = shape.iter().product::<usize>();
             let expected_bytes = count * mem::size_of::<f32>();
 
-            if a_mmap.len() < expected_bytes {
+            if _a_mmap.len() < expected_bytes {
                 return Err(IoError::Other("Memory map too small for shape".to_string()));
             }
 
             // Create array views from memory maps
-            let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f32, count) };
+            let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f32, count) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f32, count) };
 
             let a_view = ArrayView1::from_shape(count, a_slice).unwrap();
@@ -457,7 +457,7 @@ pub mod simd_zero_copy {
                 return Err(IoError::Other("Memory maps too small".to_string()));
             }
 
-            let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f32, len) };
+            let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f32, len) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f32, len) };
 
             let a_view = ArrayView1::from_shape(len, a_slice).unwrap();
@@ -484,12 +484,12 @@ pub mod simd_zero_copy {
             let count = shape.iter().product::<usize>();
             let expected_bytes = count * mem::size_of::<f64>();
 
-            if a_mmap.len() < expected_bytes {
+            if _a_mmap.len() < expected_bytes {
                 return Err(IoError::Other("Memory map too small for shape".to_string()));
             }
 
             // Create array views from memory maps
-            let a_slice = unsafe { slice::from_raw_parts(a_mmap.as_ptr() as *const f64, count) };
+            let a_slice = unsafe { slice::from_raw_parts(_a_mmap.as_ptr() as *const f64, count) };
             let b_slice = unsafe { slice::from_raw_parts(b_mmap.as_ptr() as *const f64, count) };
 
             let a_view = ArrayView1::from_shape(count, a_slice).unwrap();
@@ -633,7 +633,8 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
             chunk_size,
             numa_node: Some(numa_node),
             memory_policy: NumaMemoryPolicy::Bind(numa_node),
-            async_config: _config, _phantom: PhantomData,
+            async_config: config,
+            _phantom: PhantomData,
         })
     }
 

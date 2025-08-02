@@ -50,78 +50,78 @@ pub type OptimizeResult<T> = Result<T, OptimizeError>;
 impl From<scirs2_sparse::error::SparseError> for OptimizeError {
     fn from(_error: scirs2_sparse::error::SparseError) -> Self {
         match _error {
-            scirs2_sparse::_error::SparseError::ComputationError(msg) => {
+            scirs2_sparse::SparseError::ComputationError(msg) => {
                 OptimizeError::ComputationError(msg)
             }
-            scirs2_sparse::_error::SparseError::DimensionMismatch { expected, found } => {
+            scirs2_sparse::SparseError::DimensionMismatch { expected, found } => {
                 OptimizeError::ValueError(format!(
                     "Dimension mismatch: expected {}, found {}",
                     expected, found
                 ))
             }
-            scirs2_sparse::_error::SparseError::IndexOutOfBounds { index, shape } => {
+            scirs2_sparse::SparseError::IndexOutOfBounds { index, shape } => {
                 OptimizeError::ValueError(format!(
                     "Index {:?} out of bounds for array with shape {:?}",
                     index, shape
                 ))
             }
-            scirs2_sparse::_error::SparseError::InvalidAxis => {
+            scirs2_sparse::SparseError::InvalidAxis => {
                 OptimizeError::ValueError("Invalid axis specified".to_string())
             }
-            scirs2_sparse::_error::SparseError::InvalidSliceRange => {
+            scirs2_sparse::SparseError::InvalidSliceRange => {
                 OptimizeError::ValueError("Invalid slice range specified".to_string())
             }
-            scirs2_sparse::_error::SparseError::InconsistentData { reason } => {
+            scirs2_sparse::SparseError::InconsistentData { reason } => {
                 OptimizeError::ValueError(format!("Inconsistent data: {}", reason))
             }
-            scirs2_sparse::_error::SparseError::NotImplemented(msg) => {
+            scirs2_sparse::SparseError::NotImplemented(msg) => {
                 OptimizeError::NotImplementedError(msg)
             }
-            scirs2_sparse::_error::SparseError::SingularMatrix(msg) => {
-                OptimizeError::ComputationError(format!("Singular matrix _error: {}", msg))
+            scirs2_sparse::SparseError::SingularMatrix(msg) => {
+                OptimizeError::ComputationError(format!("Singular matrix error: {}", msg))
             }
-            scirs2_sparse::_error::SparseError::ValueError(msg) => OptimizeError::ValueError(msg),
-            scirs2_sparse::_error::SparseError::ConversionError(msg) => {
-                OptimizeError::ValueError(format!("Conversion _error: {}", msg))
+            scirs2_sparse::SparseError::ValueError(msg) => OptimizeError::ValueError(msg),
+            scirs2_sparse::SparseError::ConversionError(msg) => {
+                OptimizeError::ValueError(format!("Conversion error: {}", msg))
             }
-            scirs2_sparse::_error::SparseError::OperationNotSupported(msg) => {
+            scirs2_sparse::SparseError::OperationNotSupported(msg) => {
                 OptimizeError::NotImplementedError(format!("Operation not supported: {}", msg))
             }
-            scirs2_sparse::_error::SparseError::ShapeMismatch { expected, found } => {
+            scirs2_sparse::SparseError::ShapeMismatch { expected, found } => {
                 OptimizeError::ValueError(format!(
                     "Shape mismatch: expected {:?}, found {:?}",
                     expected, found
                 ))
             }
-            scirs2_sparse::_error::SparseError::IterativeSolverFailure(msg) => {
+            scirs2_sparse::SparseError::IterativeSolverFailure(msg) => {
                 OptimizeError::ConvergenceError(format!("Iterative solver failure: {}", msg))
             }
-            scirs2_sparse::_error::SparseError::IndexCastOverflow { value, target_type } => {
+            scirs2_sparse::SparseError::IndexCastOverflow { value, target_type } => {
                 OptimizeError::ValueError(format!(
                     "Index value {} cannot be represented in the target type {}",
                     value, target_type
                 ))
             }
-            scirs2_sparse::_error::SparseError::ConvergenceError(msg) => {
-                OptimizeError::ConvergenceError(format!("Convergence _error: {}", msg))
+            scirs2_sparse::SparseError::ConvergenceError(msg) => {
+                OptimizeError::ConvergenceError(format!("Convergence error: {}", msg))
             }
-            scirs2_sparse::_error::SparseError::InvalidFormat(msg) => {
+            scirs2_sparse::SparseError::InvalidFormat(msg) => {
                 OptimizeError::ValueError(format!("Invalid format: {}", msg))
             }
-            scirs2_sparse::_error::SparseError::IoError(err) => {
-                OptimizeError::IOError(format!("I/O _error: {}", err))
+            scirs2_sparse::SparseError::IoError(err) => {
+                OptimizeError::IOError(format!("I/O error: {}", err))
             }
-            scirs2_sparse::_error::SparseError::CompressionError(msg) => {
-                OptimizeError::ComputationError(format!("Compression _error: {}", msg))
+            scirs2_sparse::SparseError::CompressionError(msg) => {
+                OptimizeError::ComputationError(format!("Compression error: {}", msg))
             }
-            scirs2_sparse::_error::SparseError::Io(msg) => {
-                OptimizeError::IOError(format!("I/O _error: {}", msg))
+            scirs2_sparse::SparseError::Io(msg) => {
+                OptimizeError::IOError(format!("I/O error: {}", msg))
             }
-            scirs2_sparse::_error::SparseError::BlockNotFound(msg) => {
+            scirs2_sparse::SparseError::BlockNotFound(msg) => {
                 OptimizeError::ValueError(format!("Block not found: {}", msg))
             }
-            scirs2_sparse::_error::SparseError::GpuError(err) => {
-                OptimizeError::ComputationError(format!("GPU _error: {}", err))
+            scirs2_sparse::SparseError::GpuError(err) => {
+                OptimizeError::ComputationError(format!("GPU error: {}", err))
             }
         }
     }
@@ -139,36 +139,36 @@ impl From<OptimizeError> for CoreError {
     fn from(_error: OptimizeError) -> Self {
         match _error {
             OptimizeError::ComputationError(msg) => CoreError::ComputationError(
-                scirs2_core::_error::ErrorContext::new(msg)
-                    .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
+                scirs2_core::error::ErrorContext::new(msg)
+                    .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
             OptimizeError::ConvergenceError(msg) => CoreError::ConvergenceError(
-                scirs2_core::_error::ErrorContext::new(msg)
-                    .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
+                scirs2_core::error::ErrorContext::new(msg)
+                    .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
             OptimizeError::ValueError(msg) => CoreError::ValueError(
-                scirs2_core::_error::ErrorContext::new(msg)
-                    .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
+                scirs2_core::error::ErrorContext::new(msg)
+                    .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
             OptimizeError::NotImplementedError(msg) => CoreError::NotImplementedError(
-                scirs2_core::_error::ErrorContext::new(msg)
-                    .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
+                scirs2_core::error::ErrorContext::new(msg)
+                    .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
             OptimizeError::InitializationError(msg) => CoreError::ComputationError(
-                scirs2_core::_error::ErrorContext::new(format!("Initialization _error: {}", msg))
-                    .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
+                scirs2_core::error::ErrorContext::new(format!("Initialization error: {}", msg))
+                    .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
             OptimizeError::IOError(msg) => CoreError::IoError(
-                scirs2_core::_error::ErrorContext::new(msg)
-                    .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
+                scirs2_core::error::ErrorContext::new(msg)
+                    .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
             OptimizeError::InvalidInput(msg) => CoreError::InvalidInput(
-                scirs2_core::_error::ErrorContext::new(msg)
-                    .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
+                scirs2_core::error::ErrorContext::new(msg)
+                    .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
             OptimizeError::InvalidParameter(msg) => CoreError::InvalidArgument(
-                scirs2_core::_error::ErrorContext::new(msg)
-                    .with_location(scirs2_core::_error::ErrorLocation::new(file!(), line!())),
+                scirs2_core::error::ErrorContext::new(msg)
+                    .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
             ),
         }
     }

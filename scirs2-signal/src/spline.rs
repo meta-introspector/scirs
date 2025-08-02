@@ -37,7 +37,8 @@ impl SplineOrder {
             2 => Ok(SplineOrder::Quadratic),
             3 => Ok(SplineOrder::Cubic),
             4 => Ok(SplineOrder::Quartic),
-            5 => Ok(SplineOrder::Quintic, _ => Err(SignalError::ValueError(format!(
+            5 => Ok(SplineOrder::Quintic),
+            _ => Err(SignalError::ValueError(format!(
                 "Unsupported spline _order: {}. Valid values are 0 through 5.",
                 _order
             ))),
@@ -60,7 +61,8 @@ impl std::str::FromStr for SplineOrder {
             "2" | "quadratic" => Ok(SplineOrder::Quadratic),
             "3" | "cubic" => Ok(SplineOrder::Cubic),
             "4" | "quartic" => Ok(SplineOrder::Quartic),
-            "5" | "quintic" => Ok(SplineOrder::Quintic, _ => Err(SignalError::ValueError(format!(
+            "5" | "quintic" => Ok(SplineOrder::Quintic),
+            _ => Err(SignalError::ValueError(format!(
                 "Invalid spline order: '{}'. Valid options are 0-5 or corresponding names (e.g., 'cubic').",
                 s
             ))),
@@ -572,7 +574,7 @@ where
         SplineOrder::Quadratic => 3.0,
         SplineOrder::Cubic => 6.0,
         SplineOrder::Quartic => 120.0,
-        SplineOrder::Quintic => 720.0_ => 1.0,
+        SplineOrder::Quintic => 720.0,
     };
 
     // Apply b-spline filter

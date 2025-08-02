@@ -3,7 +3,6 @@
 //! This module implements Infomax-based algorithms for blind source separation.
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use ndarray::{Array2, s};
 use rand::SeedableRng;
 use rand__distr::{Distribution, Normal};

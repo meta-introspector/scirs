@@ -244,7 +244,8 @@ impl<T: Clone + std::hash::Hash + Eq> DisjointSet<T> {
     /// ```
     pub fn connected(&mut self, x: &T, y: &T) -> bool {
         match (self.find(x), self.find(y)) {
-            (Some(root_x), Some(root_y)) => root_x == root_y_ => false,
+            (Some(root_x), Some(root_y)) => root_x == root_y,
+            _ => false,
         }
     }
 

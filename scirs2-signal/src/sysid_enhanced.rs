@@ -17,11 +17,11 @@ use scirs2_core::validation::check_shape;
 use statrs::statistics::Statistics;
 
 #[allow(unused_imports)]
-use crate::sysid__advanced::{
-use crate::lti::design::tf;
+use crate::sysid_advanced::{
     identify_armax_complete, identify_bj_complete, identify_narx_complete, identify_oe_complete,
     identify_state_space_complete,
 };
+use crate::lti::design::tf;
 /// Enhanced system identification result
 #[derive(Debug, Clone)]
 pub struct EnhancedSysIdResult {
@@ -1491,7 +1491,8 @@ fn apply_nonlinear_function(_input: f64, func: &NonlinearFunction) -> SignalResu
                 "tanh" => Ok(_input.tanh()),
                 "relu" => Ok(_input.max(0.0)),
                 "leaky_relu" => Ok(if _input > 0.0 { _input } else { 0.01 * _input }),
-                "identity" => Ok(_input, _ => Err(SignalError::NotImplemented(format!(
+                "identity" => Ok(_input),
+                _ => Err(SignalError::NotImplemented(format!(
                     "Custom function '{}' not implemented",
                     name
                 ))),
@@ -1683,7 +1684,7 @@ fn parallel_block_identification(
 
             enhanced_system_identification(&block_input, &block_output, config)
         })
-        .collect::<Result<Vec<_>_>>()?;
+        .collect::<Result<Vec<_>, _>>()?;
 
     // Aggregate results using weighted averaging
     aggregate_block_results(&block_results)

@@ -1,5 +1,5 @@
 use ndarray::{array, Array1, Array2};
-use scirs2__stats::regression::{
+use scirs2_stats::regression::{
     huber_regression, linear_regression, ransac, theilslopes, HuberT, RegressionResults,
 };
 use statrs::statistics::Statistics;
@@ -45,7 +45,7 @@ fn print_regression_summary(_name: &str, results: &RegressionResults<f64>) {
         .iter()
         .enumerate()
         .filter(|(_, &is_inlier)| !is_inlier)
-        .map(|(idx_)| idx)
+        .map(|(idx_, _)| idx_)
         .collect();
     if !outlier_indices.is_empty() {
         println!("Outlier indices: {:?}", outlier_indices);
@@ -84,7 +84,7 @@ fn main() {
     let y_pred_theilsen = x.dot(&theilsen_coeffs);
     let residuals_theilsen = &y - &y_pred_theilsen;
     let ss_res = residuals_theilsen.mapv(|r| r * r).sum();
-    let y_mean = y.mean().unwrap();
+    let y_mean = y.mean();
     let ss_tot = y.mapv(|yi| (yi - y_mean).powi(2)).sum();
     let r_squared_theilsen = 1.0 - (ss_res / ss_tot);
     let _mse_theilsen = ss_res / y.len() as f64;

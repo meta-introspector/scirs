@@ -328,7 +328,7 @@ impl DokMatrix {
             self.data.iter().map(|(&k, &v)| (k, v)).collect();
 
         // Sort by row, then by column
-        entries.sort_by_key(|&((r, c)_)| (r, c));
+        entries.sort_by_key(|&((r, c), _)| (r, c));
 
         let mut values = Vec::with_capacity(entries.len());
         let mut col_indices = Vec::with_capacity(entries.len());
@@ -727,7 +727,12 @@ pub struct CompressedBlock {
 
 impl HierarchicalSparseMatrix {
     /// Create new hierarchical sparse matrix
-    pub fn new(_n_rows: usize, n_cols: usize, top_block_size: usize, sub_block_size: usize) -> Self {
+    pub fn new(
+        _n_rows: usize,
+        n_cols: usize,
+        top_block_size: usize,
+        sub_block_size: usize,
+    ) -> Self {
         Self {
             top_level_blocks: HashMap::new(),
             top_block_size,

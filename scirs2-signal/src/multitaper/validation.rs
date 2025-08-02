@@ -737,7 +737,8 @@ fn calculate_correlation(x: &[f64], y: &[f64]) -> f64 {
 #[allow(dead_code)]
 fn validate_confidence_intervals(
     signal: &[f64],
-    config: &MultitaperConfig_confidence_level: f64,
+    config: &MultitaperConfig,
+    _confidence_level: f64,
 ) -> SignalResult<f64> {
     // Run multiple trials and check coverage
     let mut coverage_count = 0;
@@ -985,7 +986,8 @@ fn validate_single_signal_type(
     };
 
     let n_trials = match signal_type {
-        TestSignalType::WhiteNoise | TestSignalType::ColoredNoise => 50_ => 20,
+        TestSignalType::WhiteNoise | TestSignalType::ColoredNoise => 50,
+        _ => 20,
     };
 
     let mut psd_estimates = Vec::new();
@@ -1009,7 +1011,8 @@ fn validate_single_signal_type(
             calculate_sinusoidal_metrics(&psd_estimates, test_signals, &first_result.frequencies)
         }
         TestSignalType::WhiteNoise => calculate_noise_metrics(&psd_estimates, true),
-        TestSignalType::ColoredNoise => calculate_noise_metrics(&psd_estimates, false, _ => {
+        TestSignalType::ColoredNoise => calculate_noise_metrics(&psd_estimates, false),
+        _ => {
             // General metrics for other signal types
             calculate_general_metrics(&psd_estimates)
         }
@@ -1390,7 +1393,7 @@ pub struct ConvergenceMetrics {
 
 /// Validate extreme parameter cases
 #[allow(dead_code)]
-fn validate_extreme_case(_config: &TestSignalConfig_tolerance: f64) -> SignalResult<f64> {
+fn validate_extreme_case(_config: &TestSignalConfig, _tolerance: f64) -> SignalResult<f64> {
     // Generate a simple test signal
     let signal: Vec<f64> = (0.._config.n)
         .map(|i| (2.0 * PI * 10.0 * i as f64 / _config.fs).sin())
@@ -1532,7 +1535,8 @@ fn analyze_performance_scaling(
 /// Test convergence stability of adaptive algorithms
 #[allow(dead_code)]
 fn test_convergence_stability(
-    config: &TestSignalConfig_tolerance: f64,
+    config: &TestSignalConfig,
+    _tolerance: f64,
 ) -> SignalResult<ConvergenceMetrics> {
     // Test adaptive multitaper convergence with different signals
     let mut convergence_rates = Vec::new();
@@ -1577,7 +1581,7 @@ fn test_convergence_stability(
 
 /// Test robustness against various noise conditions
 #[allow(dead_code)]
-fn test_noise_robustness(_config: &TestSignalConfig_tolerance: f64) -> SignalResult<f64> {
+fn test_noise_robustness(_config: &TestSignalConfig, _tolerance: f64) -> SignalResult<f64> {
     let noise_levels = vec![0.1, 0.5, 1.0, 2.0]; // Different SNR conditions
     let mut robustness_scores = Vec::new();
 
@@ -1766,7 +1770,7 @@ pub fn validate_simd_operations(_test_signals: &TestSignalConfig) -> SignalResul
                 ));
             }
         }
-        (Err(_)_) => {
+        (Err(_)) => {
             simd_score -= 25.0;
             validation_errors.push("SIMD enhanced multitaper failed".to_string());
         }
@@ -2132,4 +2136,4 @@ pub struct AdvancedEnhancedMultitaperValidationResult {
 }
 
 // Re-export for tests
-pub use num_traits::{Float, NumCast};
+pub use num_traits::NumCast;

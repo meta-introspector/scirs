@@ -325,8 +325,9 @@ fn evaluate_model_order(
         max_ar_order: order,
         max_ma_order: 0, // Only AR model for order selection
         method: match config.optimization_method {
-            OptimizationMethod::Burg =>, EstimationMethod::AR(ARMethod::Burg),
-            OptimizationMethod::YuleWalker => EstimationMethod::AR(ARMethod::YuleWalker, _ =>, EstimationMethod::AR(ARMethod::Burg), // Default to Burg for order selection
+            OptimizationMethod::Burg => EstimationMethod::AR(ARMethod::Burg),
+            OptimizationMethod::YuleWalker => EstimationMethod::AR(ARMethod::YuleWalker),
+            _ => EstimationMethod::AR(ARMethod::Burg), // Default to Burg for order selection
         },
         ..Default::default()
     };
@@ -551,8 +552,9 @@ fn advanced_parameter_estimation(
                 max_ar_order: *_order,
                 max_ma_order: 0, // Only AR model
                 method: match config.optimization_method {
-                    OptimizationMethod::Burg =>, EstimationMethod::AR(ARMethod::Burg),
-                    OptimizationMethod::YuleWalker => EstimationMethod::AR(ARMethod::YuleWalker, _ =>, EstimationMethod::AR(ARMethod::Burg),
+                    OptimizationMethod::Burg => EstimationMethod::AR(ARMethod::Burg),
+                    OptimizationMethod::YuleWalker => EstimationMethod::AR(ARMethod::YuleWalker),
+                    _ => EstimationMethod::AR(ARMethod::Burg),
                 },
                 ..Default::default()
             };
@@ -723,7 +725,8 @@ fn enhanced_cross_validation(
 /// Comprehensive stability analysis
 #[allow(dead_code)]
 fn comprehensive_stability_analysis(
-    result: &AdvancedEstimationResult_config: &ComprehensiveOptimizationConfig,
+    result: &AdvancedEstimationResult,
+    _config: &ComprehensiveOptimizationConfig,
 ) -> SignalResult<StabilityAnalysis> {
     let ar_coeffs = &result.ar_coeffs;
 

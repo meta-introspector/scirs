@@ -164,9 +164,9 @@ pub fn dbscan<F: Float + FromPrimitive + Debug + PartialOrd>(
             let point2 = data.row(j).to_vec();
 
             let dist = match metric.unwrap_or(DistanceMetric::Euclidean) {
-                DistanceMetric::Euclidean =>, distance::euclidean(&point1, &point2),
-                DistanceMetric::Manhattan =>, distance::manhattan(&point1, &point2),
-                DistanceMetric::Chebyshev =>, distance::chebyshev(&point1, &point2),
+                DistanceMetric::Euclidean => distance::euclidean(&point1, &point2),
+                DistanceMetric::Manhattan => distance::manhattan(&point1, &point2),
+                DistanceMetric::Chebyshev => distance::chebyshev(&point1, &point2),
                 DistanceMetric::Minkowski => {
                     distance::minkowski(&point1, &point2, F::from(3.0).unwrap())
                 }

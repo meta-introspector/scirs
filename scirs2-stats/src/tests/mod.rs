@@ -51,7 +51,7 @@ pub use ttest::{
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::{ttest_1samp, Alternative};
+/// use scirs2_stats::{ttest_1samp, Alternative};
 ///
 /// let data = array![5.1, 4.9, 6.2, 5.7, 5.5, 5.1, 5.2, 5.0];
 /// let null_mean = 5.0;
@@ -105,7 +105,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::{ttest_ind, Alternative};
+/// use scirs2_stats::{ttest_ind, Alternative};
 ///
 /// let group1 = array![5.1, 4.9, 6.2, 5.7, 5.5];
 /// let group2 = array![4.8, 5.2, 5.1, 4.7, 4.9];
@@ -209,7 +209,8 @@ where
     Ok(TTestResult {
         statistic: t_stat,
         pvalue: p_value,
-        df_alternative: Alternative::TwoSided,
+        df,
+        alternative: Alternative::TwoSided,
         info: None,
     })
 }
@@ -229,7 +230,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::{ttest_rel, Alternative};
+/// use scirs2_stats::{ttest_rel, Alternative};
 ///
 /// // Data from paired measurements (e.g., before and after treatment)
 /// let before = array![68.5, 70.2, 65.3, 72.1, 69.8];
@@ -311,7 +312,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::{kstest, distributions};
+/// use scirs2_stats::{kstest, distributions};
 ///
 /// // Test if data follows a normal distribution
 /// let data = array![0.2, 0.5, -0.3, 0.1, -0.4, 0.3, -0.2, 0.0, 0.1, -0.1];
@@ -448,7 +449,7 @@ fn calculate_ks_p_value<F: Float + NumCast>(_ks_stat: F, n: F) -> F {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::shapiro;
+/// use scirs2_stats::shapiro;
 ///
 /// // Test if data follows a normal distribution
 /// let data = array![0.2, 0.5, -0.3, 0.1, -0.4, 0.3, -0.2, 0.0, 0.1, -0.1, 0.4, -0.5];

@@ -151,7 +151,9 @@ pub struct DiagonalOperator<F> {
 impl<F: Float> DiagonalOperator<F> {
     /// Create a new diagonal operator from diagonal values
     pub fn new(_diagonal: Vec<F>) -> Self {
-        Self { diagonal: _diagonal }
+        Self {
+            diagonal: _diagonal,
+        }
     }
 
     /// Get the diagonal values
@@ -192,7 +194,8 @@ impl<F: Float + NumAssign> LinearOperator<F> for DiagonalOperator<F> {
 /// Zero operator: 0 * x = 0
 #[derive(Clone)]
 pub struct ZeroOperator<F> {
-    shape: (usize, usize), _phantom: PhantomData<F>,
+    shape: (usize, usize),
+    _phantom: PhantomData<F>,
 }
 
 impl<F> ZeroOperator<F> {
@@ -200,7 +203,8 @@ impl<F> ZeroOperator<F> {
     #[allow(dead_code)]
     pub fn new(_rows: usize, cols: usize) -> Self {
         Self {
-            shape: (_rows, cols), _phantom: PhantomData,
+            shape: (_rows, cols),
+            _phantom: PhantomData,
         }
     }
 }
@@ -603,7 +607,9 @@ pub struct TransposeOperator<F> {
 impl<F: Float + NumAssign> TransposeOperator<F> {
     /// Create a new transpose operator
     pub fn new(_original: Box<dyn LinearOperator<F>>) -> Self {
-        Self { original: _original }
+        Self {
+            original: _original,
+        }
     }
 }
 
@@ -641,7 +647,9 @@ impl<F: Float + NumAssign> AdjointOperator<F> {
                 "Original operator does not support adjoint operations".to_string(),
             ));
         }
-        Ok(Self { original: _original })
+        Ok(Self {
+            original: _original,
+        })
     }
 }
 
@@ -727,7 +735,10 @@ pub struct ScaledOperator<F> {
 impl<F: Float + NumAssign> ScaledOperator<F> {
     /// Create a new scaled operator
     pub fn new(_alpha: F, operator: Box<dyn LinearOperator<F>>) -> Self {
-        Self { alpha: _alpha, operator }
+        Self {
+            alpha: _alpha,
+            operator,
+        }
     }
 }
 
@@ -854,7 +865,10 @@ impl<F: Float + NumAssign> PowerOperator<F> {
                 "Power must be positive".to_string(),
             ));
         }
-        Ok(Self { operator: _operator, power })
+        Ok(Self {
+            operator: _operator,
+            power,
+        })
     }
 }
 

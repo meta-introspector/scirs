@@ -154,8 +154,9 @@ impl<T: Clone> RTree<T> {
         child_index: usize,
     ) -> SpatialResult<()> {
         // Get the child node
-        let child = match &parent.entries[child_index] {
-            Entry::NonLeaf { child, .. } => {
+        let child: &Box<Node<T>> = match &parent.entries[child_index] {
+            Entry::NonLeaf { child, .. } => child,
+            Entry::Leaf { .. } => {
                 return Err(crate::error::SpatialError::ComputationError(
                     "Expected a non-leaf entry".into(),
                 ))
@@ -197,8 +198,9 @@ impl<T: Clone> RTree<T> {
         }
 
         // Get the sibling
-        let sibling = match &parent.entries[best_sibling_index] {
-            Entry::NonLeaf { child, .. } => {
+        let sibling: &Box<Node<T>> = match &parent.entries[best_sibling_index] {
+            Entry::NonLeaf { child, .. } => child,
+            Entry::Leaf { .. } => {
                 return Err(crate::error::SpatialError::ComputationError(
                     "Expected a non-leaf entry".into(),
                 ))
@@ -225,15 +227,17 @@ impl<T: Clone> RTree<T> {
             });
 
             // Get mutable references to the nodes
-            let child_node = match &mut child_entry {
-                Entry::NonLeaf { child, .. } => {
+            let child_node: &mut Box<Node<T>> = match &mut child_entry {
+                Entry::NonLeaf { child, .. } => child,
+                Entry::Leaf { .. } => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry for child node".into(),
                     ))
                 }
             };
-            let sibling_node = match &mut sibling_entry {
-                Entry::NonLeaf { child, .. } => {
+            let sibling_node: &mut Box<Node<T>> = match &mut sibling_entry {
+                Entry::NonLeaf { child, .. } => child,
+                Entry::Leaf { .. } => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry for sibling node".into(),
                     ))
@@ -288,15 +292,17 @@ impl<T: Clone> RTree<T> {
             let sibling_entry = parent.entries.remove(larger_idx - 1);
 
             // Get the nodes
-            let child_node = match &mut child_entry {
-                Entry::NonLeaf { child, .. } => {
+            let child_node: &mut Box<Node<T>> = match &mut child_entry {
+                Entry::NonLeaf { child, .. } => child,
+                Entry::Leaf { .. } => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry for child node".into(),
                     ))
                 }
             };
-            let sibling_node = match sibling_entry {
-                Entry::NonLeaf { child, .. } => {
+            let sibling_node: Box<Node<T>> = match sibling_entry {
+                Entry::NonLeaf { child, .. } => child,
+                Entry::Leaf { .. } => {
                     return Err(crate::error::SpatialError::ComputationError(
                         "Expected a non-leaf entry for sibling node".into(),
                     ))

@@ -1402,7 +1402,8 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
 
         let algorithm = match _data.config.get("algorithm").map(|s| s.as_str()) {
             Some("CBOW") => crate::embeddings::Word2VecAlgorithm::CBOW,
-            Some("SkipGram") => crate::embeddings::Word2VecAlgorithm::SkipGram_ => {
+            Some("SkipGram") => crate::embeddings::Word2VecAlgorithm::SkipGram,
+            _ => {
                 return Err(TextError::InvalidInput(
                     "Invalid or missing algorithm config".to_string(),
                 ))
@@ -1449,7 +1450,8 @@ impl RegistrableModel for crate::embeddings::Word2Vec {
             let mut restored_word2vec = word2vec;
 
             // Apply configuration parameters if available
-            if let Some(window_size) = _data.config.get("window_size").and_then(|s| s.parse().ok()) {
+            if let Some(window_size) = _data.config.get("window_size").and_then(|s| s.parse().ok())
+            {
                 restored_word2vec = restored_word2vec.with_window_size(window_size);
             }
 

@@ -1,4 +1,4 @@
-use scirs2__io::csv::{read_csv_typed, write_csv_typed, ColumnType, CsvReaderConfig, DataValue};
+use scirs2_io::csv::{read_csv_typed, write_csv_typed, ColumnType, CsvReaderConfig, DataValue};
 use statrs::statistics::Statistics;
 use std::collections::HashMap;
 use std::error::Error;
@@ -443,7 +443,7 @@ struct ColumnStats {
 impl ColumnStats {
     fn new(_name: &str) -> Self {
         Self {
-            _name: _name.to_string(),
+            name: _name.to_string(),
             count: 0,
             min: f64::INFINITY,
             max: f64::NEG_INFINITY,

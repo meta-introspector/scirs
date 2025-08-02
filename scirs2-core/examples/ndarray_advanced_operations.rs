@@ -6,8 +6,8 @@ use scirs2_core::ndarray_ext::manipulation::{
 };
 
 #[allow(dead_code)]
-fn title( &str) {
-    println!("\n{title}");
+fn print_title(_title: &str) {
+    println!("\n{_title}");
     println!("{}", "=".repeat(_title.len()));
 }
 

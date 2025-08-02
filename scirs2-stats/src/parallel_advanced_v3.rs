@@ -6,9 +6,9 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Axis, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
+use rand::seq::SliceRandom;
 use scirs2_core::parallel_ops::*;
 use std::sync::{Arc, Mutex};
-use rand::seq::SliceRandom;
 
 /// Advanced parallel configuration with work stealing and load balancing
 #[derive(Debug, Clone)]
@@ -71,7 +71,8 @@ where
 {
     pub fn new(_config: AdvancedParallelConfig) -> Self {
         Self {
-            _config_phantom: std::marker::PhantomData,
+            config: _config,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -93,7 +94,7 @@ where
             .map(|dataset| self.compute_single_dataset_stats(dataset))
             .collect();
 
-        results.into().iter().collect()
+        results.into_iter().collect()
     }
 
     fn compute_single_dataset_stats<D>(&self, data: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F)>
@@ -221,8 +222,9 @@ where
 {
     pub fn new(_k_folds: usize, config: AdvancedParallelConfig) -> Self {
         Self {
-            _k_folds,
-            config_phantom: std::marker::PhantomData,
+            k_folds: _k_folds,
+            config,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -256,7 +258,7 @@ where
 
         // Parallel computation of correlations for each fold
         let correlations: Vec<F> = (0..self.k_folds)
-            .into().iter()
+            .into_iter()
             .map(|fold| {
                 let start = fold * fold_size;
                 let end = if fold == self.k_folds - 1 {
@@ -342,8 +344,9 @@ where
 {
     pub fn new(_n_simulations: usize, config: AdvancedParallelConfig) -> Self {
         Self {
-            _n_simulations,
-            config_phantom: std::marker::PhantomData,
+            n_simulations: _n_simulations,
+            config,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -375,7 +378,7 @@ where
 
         // Parallel bootstrap sampling
         let bootstrap_stats: Vec<F> = (0..self.n_simulations)
-            .into().iter()
+            .into_iter()
             .map(|seed| {
                 use rand::rngs::StdRng;
                 use rand::SeedableRng;
@@ -449,7 +452,7 @@ where
         let combined_arc = Arc::new(combined);
         let count_extreme = Arc::new(Mutex::new(0usize));
 
-        (0..self.n_simulations).into().iter().for_each(|seed| {
+        (0..self.n_simulations).into_iter().for_each(|seed| {
             use rand::rngs::StdRng;
             use rand::{seq::SliceRandom, SeedableRng};
 
@@ -490,7 +493,7 @@ impl ParallelMatrixOps {
     where
         F: Float + NumCast + Send + Sync + std::iter::Sum,
         D1: Data<Elem = F> + Sync,
-        D2: Data<Elem = F> + Sync + std::fmt::Display,
+        D2: Data<Elem = F> + Sync,
     {
         let (m, n) = matrix.dim();
         if n != vector.len() {
@@ -539,7 +542,7 @@ impl ParallelMatrixOps {
     where
         F: Float + NumCast + Send + Sync,
         D1: Data<Elem = F> + Sync,
-        D2: Data<Elem = F> + Sync + std::fmt::Display,
+        D2: Data<Elem = F> + Sync,
     {
         let m = a.len();
         let n = b.len();

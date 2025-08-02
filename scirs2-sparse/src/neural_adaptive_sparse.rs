@@ -515,7 +515,8 @@ impl NeuralAdaptiveSparseProcessor {
     fn execute_strategy<T>(
         &self,
         strategy: OptimizationStrategy,
-        rows: usize, _cols: usize,
+        rows: usize,
+        _cols: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],

@@ -193,7 +193,8 @@ impl NeuromorphicNetwork {
         }
 
         Self {
-            config: _config, neurons,
+            config: _config,
+            neurons,
             connectivity,
             current_time: 0.0,
             spike_queue: Vec::new(),

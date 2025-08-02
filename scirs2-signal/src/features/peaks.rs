@@ -1,6 +1,5 @@
 use crate::error::SignalResult;
 use crate::measurements;
-use crate::error::SignalResult;
 use std::collections::HashMap;
 
 #[allow(unused_imports)]

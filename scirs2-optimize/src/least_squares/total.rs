@@ -371,7 +371,8 @@ fn tls_maximum_likelihood<S1, S2, S3, S4>(
     x_measured: &ArrayBase<S1, Ix1>,
     y_measured: &ArrayBase<S2, Ix1>,
     x_variance: Option<&ArrayBase<S3, Ix1>>,
-    y_variance: Option<&ArrayBase<S4, Ix1>>, _options: &TotalLeastSquaresOptions,
+    y_variance: Option<&ArrayBase<S4, Ix1>>,
+    _options: &TotalLeastSquaresOptions,
 ) -> OptimizeResult<TotalLeastSquaresResult>
 where
     S1: Data<Elem = f64>,
@@ -381,7 +382,7 @@ where
 {
     // For now, use the iterative method
     // A proper implementation would maximize the likelihood function
-    tls_iterative(x_measured, y_measured, x_variance, y_variance_options)
+    tls_iterative(x_measured, y_measured, x_variance, y_variance, _options)
 }
 
 /// Compute ordinary least squares for initial estimate
@@ -437,12 +438,12 @@ fn weighted_orthogonal_projection(
     weight_x: f64,
     weight_y: f64,
 ) -> (f64, f64) {
-    // Minimize: weight_x * (_x - x_proj)^2 + weight_y * (_y - y_proj)^2
+    // Minimize: weight_x * (x - x_proj)^2 + weight_y * (y - y_proj)^2
     // Subject to: y_proj = slope * x_proj + intercept
 
     let a = weight_x + weight_y * slope * slope;
     let _b = weight_y * slope;
-    let c = weight_x * _x + weight_y * slope * (_y - intercept);
+    let c = weight_x * x + weight_y * slope * (y - intercept);
 
     let x_proj = c / a;
     let y_proj = slope * x_proj + intercept;
@@ -464,7 +465,7 @@ where
     S3: Data<Elem = f64>,
     S4: Data<Elem = f64>,
 {
-    let n = _x.len();
+    let n = x.len();
     let mut sum_wx = 0.0;
     let mut sum_wy = 0.0;
     let mut sum_wxx = 0.0;
@@ -475,11 +476,11 @@ where
     for i in 0..n {
         let w = (weight_x[i] + weight_y[i]) / 2.0; // Combined weight
         sum_w += w;
-        sum_wx += w * _x[i];
-        sum_wy += w * _y[i];
-        sum_wxx += w * _x[i] * _x[i];
-        sum_wxy += w * _x[i] * _y[i];
-        _sum_wyy += w * _y[i] * _y[i];
+        sum_wx += w * x[i];
+        sum_wy += w * y[i];
+        sum_wxx += w * x[i] * x[i];
+        sum_wxy += w * x[i] * y[i];
+        _sum_wyy += w * y[i] * y[i];
     }
 
     let x_mean = sum_wx / sum_w;
@@ -563,7 +564,7 @@ mod tests {
         let x_measured = &x_true + &x_errors;
         let y_measured = &y_true + &y_errors;
 
-        let result = total_least_squares::<___>(
+        let result = total_least_squares(
             &x_measured,
             &y_measured,
             None::<&Array1<f64>>,

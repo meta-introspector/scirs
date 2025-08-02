@@ -50,18 +50,18 @@ pub struct GibbsSampler<C: ConditionalDistribution> {
 
 impl<C: ConditionalDistribution> GibbsSampler<C> {
     /// Create a new Gibbs sampler
-    pub fn new(_conditionals: C, initial: Array1<f64>) -> Result<Self> {
+    pub fn new(conditionals: C, initial: Array1<f64>) -> Result<Self> {
         checkarray_finite(&initial, "initial")?;
-        if initial.len() != _conditionals.dim() {
+        if initial.len() != conditionals.dim() {
             return Err(StatsError::DimensionMismatch(format!(
-                "initial dimension ({}) must match _conditionals dimension ({})",
+                "initial dimension ({}) must match conditionals dimension ({})",
                 initial.len(),
-                _conditionals.dim()
+                conditionals.dim()
             )));
         }
 
         Ok(Self {
-            _conditionals,
+            conditionals,
             current: initial,
             n_samples_: 0,
             update_order: None,
@@ -186,17 +186,17 @@ pub struct MultivariateNormalGibbs {
 
 impl MultivariateNormalGibbs {
     /// Create a new multivariate normal Gibbs sampler
-    pub fn new(_mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
-        checkarray_finite(&_mean, "_mean")?;
+    pub fn new(mean: Array1<f64>, covariance: Array2<f64>) -> Result<Self> {
+        checkarray_finite(&mean, "mean")?;
         checkarray_finite(&covariance, "covariance")?;
 
-        if covariance.nrows() != _mean.len() || covariance.ncols() != _mean.len() {
+        if covariance.nrows() != mean.len() || covariance.ncols() != mean.len() {
             return Err(StatsError::DimensionMismatch(format!(
                 "covariance shape ({}, {}) must be ({}, {})",
                 covariance.nrows(),
                 covariance.ncols(),
-                _mean.len(),
-                _mean.len()
+                mean.len(),
+                mean.len()
             )));
         }
 
@@ -205,25 +205,25 @@ impl MultivariateNormalGibbs {
             StatsError::ComputationError(format!("Failed to invert covariance: {}", e))
         })?;
 
-        Ok(Self { _mean, precision })
+        Ok(Self { mean, precision })
     }
 
     /// Create from precision matrix directly
-    pub fn from_precision(_mean: Array1<f64>, precision: Array2<f64>) -> Result<Self> {
-        checkarray_finite(&_mean, "_mean")?;
+    pub fn from_precision(mean: Array1<f64>, precision: Array2<f64>) -> Result<Self> {
+        checkarray_finite(&mean, "mean")?;
         checkarray_finite(&precision, "precision")?;
 
-        if precision.nrows() != _mean.len() || precision.ncols() != _mean.len() {
+        if precision.nrows() != mean.len() || precision.ncols() != mean.len() {
             return Err(StatsError::DimensionMismatch(format!(
                 "precision shape ({}, {}) must be ({}, {})",
                 precision.nrows(),
                 precision.ncols(),
-                _mean.len(),
-                _mean.len()
+                mean.len(),
+                mean.len()
             )));
         }
 
-        Ok(Self { _mean, precision })
+        Ok(Self { mean, precision })
     }
 }
 
@@ -572,11 +572,11 @@ pub struct BlockedGibbsSampler<C: ConditionalDistribution> {
 
 impl<C: ConditionalDistribution> BlockedGibbsSampler<C> {
     /// Create a new blocked Gibbs sampler
-    pub fn new(_conditionals: C, initial: Array1<f64>, blocks: Vec<Vec<usize>>) -> Result<Self> {
-        let sampler = GibbsSampler::new(_conditionals, initial)?;
+    pub fn new(conditionals: C, initial: Array1<f64>, blocks: Vec<Vec<usize>>) -> Result<Self> {
+        let sampler = GibbsSampler::new(conditionals, initial)?;
 
         // Validate blocks
-        let dim = sampler._conditionals.dim();
+        let dim = sampler.conditionals.dim();
         let mut all_indices = Vec::new();
         for block in &blocks {
             for &idx in block {

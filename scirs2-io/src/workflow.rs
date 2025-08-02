@@ -1100,7 +1100,7 @@ pub mod engines {
             Ok(dag_code)
         }
 
-        fn import_workflow(_definition: &str) -> Result<Workflow> {
+        fn import_workflow(&self, _definition: &str) -> Result<Workflow> {
             // Parse Airflow DAG _definition
             Err(IoError::UnsupportedFormat(
                 "Airflow import not yet implemented".to_string(),
@@ -1193,13 +1193,13 @@ pub mod engines {
             Ok(flow_code)
         }
 
-        fn import_workflow(_definition: &str) -> Result<Workflow> {
+        fn import_workflow(&self, _definition: &str) -> Result<Workflow> {
             Err(IoError::UnsupportedFormat(
                 "Prefect import not yet implemented".to_string(),
             ))
         }
 
-        fn submit(self_workflow: &Workflow) -> Result<String> {
+        fn submit(&self, _workflow: &Workflow) -> Result<String> {
             let flow_run_id = uuid::Uuid::new_v4().to_string();
             Ok(flow_run_id)
         }
@@ -1252,13 +1252,13 @@ pub mod engines {
             Ok(job_code)
         }
 
-        fn import_workflow(_definition: &str) -> Result<Workflow> {
+        fn import_workflow(&self, _definition: &str) -> Result<Workflow> {
             Err(IoError::UnsupportedFormat(
                 "Dagster import not yet implemented".to_string(),
             ))
         }
 
-        fn submit(self_workflow: &Workflow) -> Result<String> {
+        fn submit(&self, _workflow: &Workflow) -> Result<String> {
             Ok(uuid::Uuid::new_v4().to_string())
         }
 

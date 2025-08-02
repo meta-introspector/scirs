@@ -237,7 +237,7 @@ impl DistributedReader {
     /// Process file in parallel with enhanced load balancing and error recovery
     pub fn process_parallel<T, F>(&self, processor: F) -> Result<Vec<T>>
     where
-        T: Send + 'static,
+        T: Send + 'static + std::cmp::Ord,
         F: Fn(Vec<u8>) -> Result<T> + Send + Sync + 'static,
     {
         let partitions = self.create_partitions()?;
@@ -347,7 +347,7 @@ impl DistributedReader {
 
         // Sort results by partition index and extract values
         let mut results_guard = results.lock().unwrap();
-        results_guard.sort_by_key(|(idx_)| *idx_);
+        results_guard.sort_by_key(|(idx_, _)| *idx_);
 
         // Drain the results to own them, avoiding cloning issues
         let sorted_results: Vec<_> = results_guard.drain(..).collect();

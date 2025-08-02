@@ -32,7 +32,8 @@ where
 {
     pub fn new(_method: NormalizationMethod) -> Self {
         Self {
-            _method_phantom: PhantomData,
+            method: _method,
+            _phantom: PhantomData,
         }
     }
 }
@@ -68,8 +69,8 @@ fn normalize_minmax<T>(mut array: Array2<T>, new_min: T, new_max: T) -> Array2<T
 where
     T: Float + FromPrimitive,
 {
-    let _min = array.iter().fold(T::infinity(), |a, &b| a._min(b));
-    let _max = array.iter().fold(T::neg_infinity(), |a, &b| a._max(b));
+    let _min = array.iter().fold(T::infinity(), |a, &b| a.min(b));
+    let _max = array.iter().fold(T::neg_infinity(), |a, &b| a.max(b));
     let range = _max - _min;
 
     if range > T::zero() {
@@ -228,7 +229,7 @@ pub enum AggregationMethod {
 
 impl AggregateTransform {
     pub fn new(_method: AggregationMethod, axis: Option<Axis>) -> Self {
-        Self { _method, axis }
+        Self { method: _method, axis }
     }
 }
 
@@ -246,7 +247,7 @@ impl DataTransformer for AggregateTransform {
                     Box::new(array.sum()) as Box<dyn Any + Send + Sync>
                 }
                 (AggregationMethod::Mean, None) => {
-                    Box::new(array.mean().unwrap()) as Box<dyn Any + Send + Sync>
+                    Box::new(array.mean()) as Box<dyn Any + Send + Sync>
                 }
                 _ => return Err(IoError::Other("Unsupported aggregation".to_string())),
             };
@@ -273,7 +274,7 @@ pub enum EncodingMethod {
 
 impl EncodingTransform {
     pub fn new(_method: EncodingMethod) -> Self {
-        Self { _method }
+        Self { method: _method }
     }
 }
 
@@ -356,7 +357,7 @@ pub enum ImputationStrategy {
 
 impl ImputeTransform {
     pub fn new(_strategy: ImputationStrategy) -> Self {
-        Self { _strategy }
+        Self { strategy: _strategy }
     }
 }
 
@@ -410,7 +411,7 @@ pub enum OutlierMethod {
 
 impl OutlierTransform {
     pub fn new(_method: OutlierMethod, threshold: f64) -> Self {
-        Self { _method, threshold }
+        Self { method: _method, threshold }
     }
 }
 
@@ -419,7 +420,7 @@ impl DataTransformer for OutlierTransform {
         if let Ok(array) = data.downcast::<Array2<f64>>() {
             match &self.method {
                 OutlierMethod::ZScore => {
-                    let mean = array.mean().unwrap();
+                    let mean = array.view().mean();
                     let std = array.std(0.0);
 
                     let filtered: Vec<Vec<f64>> = array

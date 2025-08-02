@@ -53,7 +53,7 @@ impl<F: Float> MemoryPool<F> {
         let pools = vec![VecDeque::new(); 20]; // Up to 2^20 elements
         Self {
             pools: RefCell::new(pools),
-            _config,
+            config: _config,
         }
     }
 
@@ -98,7 +98,7 @@ impl<F: Float> MemoryPool<F> {
 pub fn mean_zero_copy<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     if x.is_empty() {
         return Err(StatsError::invalid_argument(
@@ -131,7 +131,7 @@ pub fn variance_cache_aware<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let n = x.len();
     if n <= ddof {
@@ -170,7 +170,7 @@ where
 pub struct LazyStats<'a, F, D>
 where
     F: Float,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     data: &'a ArrayBase<D, Ix1>,
     mean: RefCell<Option<F>>,
@@ -183,11 +183,11 @@ where
 impl<'a, F, D> LazyStats<'a, F, D>
 where
     F: Float + NumCast,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     pub fn new(_data: &'a ArrayBase<D, Ix1>) -> Self {
         Self {
-            _data,
+            data: _data,
             mean: RefCell::new(None),
             variance: RefCell::new(None),
             min: RefCell::new(None),
@@ -288,11 +288,11 @@ pub struct StreamingCovariance<F> {
 }
 
 impl<F: Float + NumCast + std::fmt::Display> StreamingCovariance<F> {
-    pub fn new(_n_features: usize, pool: Rc<MemoryPool<F>>) -> Self {
+    pub fn new(n_features: usize, pool: Rc<MemoryPool<F>>) -> Self {
         Self {
             n: 0,
-            means: vec![F::zero(); _n_features],
-            cov: vec![vec![F::zero(); _n_features]; _n_features],
+            means: vec![F::zero(); n_features],
+            cov: vec![vec![F::zero(); n_features]; n_features],
             pool,
         }
     }

@@ -47,7 +47,7 @@ impl S3Config {
     /// Create a new S3 configuration
     pub fn new(_bucket: &str, region: &str, access_key: &str, secret_key: &str) -> Self {
         Self {
-            _bucket: _bucket.to_string(),
+            bucket: _bucket.to_string(),
             region: region.to_string(),
             access_key: access_key.to_string(),
             secret_key: secret_key.to_string(),
@@ -86,7 +86,7 @@ impl GcsConfig {
     /// Create a new GCS configuration
     pub fn new(_bucket: &str, project_id: &str) -> Self {
         Self {
-            _bucket: _bucket.to_string(),
+            bucket: _bucket.to_string(),
             project_id: project_id.to_string(),
             credentials_path: None,
             credentials_json: None,
@@ -123,7 +123,7 @@ impl AzureConfig {
     /// Create a new Azure configuration
     pub fn new(_account: &str, container: &str, access_key: &str) -> Self {
         Self {
-            _account: _account.to_string(),
+            account: _account.to_string(),
             container: container.to_string(),
             access_key: access_key.to_string(),
             endpoint: None,
@@ -182,36 +182,36 @@ impl CloudProvider {
     /// List files in cloud storage path
     pub async fn list_files(&self, path: &str) -> Result<Vec<String>> {
         match self {
-            CloudProvider::S3(config) => self.s3_list(config, path).await,
-            CloudProvider::GCS(config) => self.gcs_list(config, path).await,
-            CloudProvider::Azure(config) => self.azure_list(config, path).await,
+            CloudProvider::S3(config) => CloudProvider::s3_list(config, path).await,
+            CloudProvider::GCS(config) => CloudProvider::gcs_list(config, path).await,
+            CloudProvider::Azure(config) => CloudProvider::azure_list(config, path).await,
         }
     }
 
     /// Check if a file exists in cloud storage
     pub async fn file_exists(&self, path: &str) -> Result<bool> {
         match self {
-            CloudProvider::S3(config) => self.s3_exists(config, path).await,
-            CloudProvider::GCS(config) => self.gcs_exists(config, path).await,
-            CloudProvider::Azure(config) => self.azure_exists(config, path).await,
+            CloudProvider::S3(config) => CloudProvider::s3_exists(config, path).await,
+            CloudProvider::GCS(config) => CloudProvider::gcs_exists(config, path).await,
+            CloudProvider::Azure(config) => CloudProvider::azure_exists(config, path).await,
         }
     }
 
     /// Get file metadata from cloud storage
     pub async fn get_metadata(&self, path: &str) -> Result<FileMetadata> {
         match self {
-            CloudProvider::S3(config) => self.s3_metadata(config, path).await,
-            CloudProvider::GCS(config) => self.gcs_metadata(config, path).await,
-            CloudProvider::Azure(config) => self.azure_metadata(config, path).await,
+            CloudProvider::S3(config) => CloudProvider::s3_metadata(config, path).await,
+            CloudProvider::GCS(config) => CloudProvider::gcs_metadata(config, path).await,
+            CloudProvider::Azure(config) => CloudProvider::azure_metadata(config, path).await,
         }
     }
 
     /// Delete a file from cloud storage
     pub async fn delete_file(&self, path: &str) -> Result<()> {
         match self {
-            CloudProvider::S3(config) => self.s3_delete(config, path).await,
-            CloudProvider::GCS(config) => self.gcs_delete(config, path).await,
-            CloudProvider::Azure(config) => self.azure_delete(config, path).await,
+            CloudProvider::S3(config) => CloudProvider::s3_delete(config, path).await,
+            CloudProvider::GCS(config) => CloudProvider::gcs_delete(config, path).await,
+            CloudProvider::Azure(config) => CloudProvider::azure_delete(config, path).await,
         }
     }
 
@@ -245,7 +245,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn s3_list(&self_config: &S3Config, _path: &str) -> Result<Vec<String>> {
+    async fn s3_list(_config: &S3Config, _path: &str) -> Result<Vec<String>> {
         #[cfg(feature = "aws-sdk-s3")]
         {
             // Implementation with AWS SDK would go here
@@ -257,7 +257,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn s3_exists(&self_config: &S3Config, _path: &str) -> Result<bool> {
+    async fn s3_exists(_config: &S3Config, _path: &str) -> Result<bool> {
         #[cfg(feature = "aws-sdk-s3")]
         {
             // Implementation with AWS SDK would go here
@@ -269,7 +269,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn s3_metadata(&self_config: &S3Config, _path: &str) -> Result<FileMetadata> {
+    async fn s3_metadata(_config: &S3Config, _path: &str) -> Result<FileMetadata> {
         #[cfg(feature = "aws-sdk-s3")]
         {
             // Implementation with AWS SDK would go here
@@ -288,7 +288,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn s3_delete(&self_config: &S3Config, _path: &str) -> Result<()> {
+    async fn s3_delete(_config: &S3Config, _path: &str) -> Result<()> {
         #[cfg(feature = "aws-sdk-s3")]
         {
             // Implementation with AWS SDK would go here
@@ -329,7 +329,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn gcs_list(&self_config: &GcsConfig, _path: &str) -> Result<Vec<String>> {
+    async fn gcs_list(_config: &GcsConfig, _path: &str) -> Result<Vec<String>> {
         #[cfg(feature = "google-cloud-storage")]
         {
             // Implementation with GCS SDK would go here
@@ -341,7 +341,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn gcs_exists(&self_config: &GcsConfig, _path: &str) -> Result<bool> {
+    async fn gcs_exists(_config: &GcsConfig, _path: &str) -> Result<bool> {
         #[cfg(feature = "google-cloud-storage")]
         {
             // Implementation with GCS SDK would go here
@@ -353,7 +353,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn gcs_metadata(&self_config: &GcsConfig, _path: &str) -> Result<FileMetadata> {
+    async fn gcs_metadata(_config: &GcsConfig, _path: &str) -> Result<FileMetadata> {
         #[cfg(feature = "google-cloud-storage")]
         {
             // Implementation with GCS SDK would go here
@@ -372,7 +372,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn gcs_delete(&self_config: &GcsConfig, _path: &str) -> Result<()> {
+    async fn gcs_delete(_config: &GcsConfig, _path: &str) -> Result<()> {
         #[cfg(feature = "google-cloud-storage")]
         {
             // Implementation with GCS SDK would go here
@@ -413,7 +413,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn azure_list(&self_config: &AzureConfig, _path: &str) -> Result<Vec<String>> {
+    async fn azure_list(_config: &AzureConfig, _path: &str) -> Result<Vec<String>> {
         #[cfg(feature = "azure-storage-blobs")]
         {
             // Implementation with Azure SDK would go here
@@ -425,7 +425,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn azure_exists(&self_config: &AzureConfig, _path: &str) -> Result<bool> {
+    async fn azure_exists(_config: &AzureConfig, _path: &str) -> Result<bool> {
         #[cfg(feature = "azure-storage-blobs")]
         {
             // Implementation with Azure SDK would go here
@@ -437,7 +437,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn azure_metadata(&self_config: &AzureConfig, _path: &str) -> Result<FileMetadata> {
+    async fn azure_metadata(_config: &AzureConfig, _path: &str) -> Result<FileMetadata> {
         #[cfg(feature = "azure-storage-blobs")]
         {
             // Implementation with Azure SDK would go here
@@ -456,7 +456,7 @@ impl CloudProvider {
         ))
     }
 
-    async fn azure_delete(&self_config: &AzureConfig, _path: &str) -> Result<()> {
+    async fn azure_delete(_config: &AzureConfig, _path: &str) -> Result<()> {
         #[cfg(feature = "azure-storage-blobs")]
         {
             // Implementation with Azure SDK would go here
@@ -474,7 +474,7 @@ impl CloudProvider {
 #[allow(dead_code)]
 pub fn create_mock_metadata(_name: &str, size: u64) -> FileMetadata {
     FileMetadata {
-        _name: _name.to_string(),
+        name: _name.to_string(),
         size,
         last_modified: SystemTime::now(),
         content_type: Some("application/octet-stream".to_string()),

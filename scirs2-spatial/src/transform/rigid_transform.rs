@@ -416,7 +416,7 @@ impl RigidTransform {
     /// ```
     pub fn identity() -> RigidTransform {
         RigidTransform {
-            rotation: Rotation::identity(),
+            rotation: Rotation::from_quat(&array![1.0, 0.0, 0.0, 0.0].view()).unwrap(),
             translation: Array1::<f64>::zeros(3),
         }
     }
@@ -451,7 +451,7 @@ impl RigidTransform {
         }
 
         Ok(RigidTransform {
-            rotation: Rotation::identity(),
+            rotation: Rotation::from_quat(&array![1.0, 0.0, 0.0, 0.0].view()).unwrap(),
             translation: _translation.to_owned(),
         })
     }

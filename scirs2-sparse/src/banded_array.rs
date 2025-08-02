@@ -39,7 +39,12 @@ where
     T: Float + Debug + Display + Copy + Zero + One + Send + Sync + 'static + std::ops::AddAssign,
 {
     /// Create a new banded array
-    pub fn new(_data: Array2<T>, kl: usize, ku: usize, shape: (usize, usize)) -> SparseResult<Self> {
+    pub fn new(
+        _data: Array2<T>,
+        kl: usize,
+        ku: usize,
+        shape: (usize, usize),
+    ) -> SparseResult<Self> {
         let expected_bands = kl + ku + 1;
         let (bands, cols) = _data.dim();
 

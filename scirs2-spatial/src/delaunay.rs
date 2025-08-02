@@ -186,7 +186,7 @@ impl Delaunay {
                         npoints,
                         simplices,
                         neighbors,
-                _qh: None,
+                        _qh: None,
                         constraints: Vec::new(),
                     });
                 }

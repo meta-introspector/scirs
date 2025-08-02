@@ -52,6 +52,7 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use rand::Rng;
 use statrs::statistics::Statistics;
 use std::collections::{HashMap, VecDeque};
 // Constants removed - not used in this module
@@ -92,7 +93,7 @@ pub struct SpikingNeuron {
 
 impl SpikingNeuron {
     /// Create new spiking neuron
-    pub fn new(_position: Vec<f64>) -> Self {
+    pub fn new(position: Vec<f64>) -> Self {
         Self {
             membrane_potential: 0.0,
             threshold: 1.0,
@@ -100,7 +101,7 @@ impl SpikingNeuron {
             time_since_spike: 0.0,
             leak_constant: 0.1,
             input_current: 0.0,
-            _position,
+            position,
             learning_rate: 0.01,
         }
     }
@@ -132,7 +133,7 @@ impl SpikingNeuron {
     /// Calculate distance-based influence on another neuron
     pub fn calculate_influence(&self, _other_position: &[f64]) -> f64 {
         let distance: f64 = self
-            ._position
+            .position
             .iter()
             .zip(_other_position.iter())
             .map(|(&a, &b)| (a - b).powi(2))
@@ -165,10 +166,11 @@ pub struct Synapse {
 
 impl Synapse {
     /// Create new synapse
-    pub fn new(_pre_neuron: usize, post_neuron: usize, initial_weight: f64) -> Self {
+    pub fn new(pre_neuron: usize, post_neuron: usize, initial_weight: f64) -> Self {
         Self {
-            _pre_neuron,
-            post_neuron_weight: initial_weight,
+            pre_neuron,
+            post_neuron,
+            weight: initial_weight,
             last_pre_spike: -1000.0,
             last_post_spike: -1000.0,
             stdp_rate: 0.01,
@@ -239,11 +241,11 @@ pub struct SpikingNeuralClusterer {
 
 impl SpikingNeuralClusterer {
     /// Create new spiking neural clusterer
-    pub fn new(_num_clusters: usize) -> Self {
+    pub fn new(num_clusters: usize) -> Self {
         Self {
             neurons: Vec::new(),
             synapses: Vec::new(),
-            _num_clusters,
+            num_clusters,
             spike_threshold: 1.0,
             stdp_learning: true,
             lateral_inhibition: true,
@@ -660,7 +662,7 @@ impl NeuromorphicProcessor {
 
             // Apply temporal dynamics
             if self.temporal_coding {
-                self.apply_temporal_dynamics(&mut processed_events)?;
+                NeuromorphicProcessor::apply_temporal_dynamics(&mut processed_events)?;
             }
 
             // Maintain event pipeline size
@@ -831,16 +833,13 @@ impl CompetitiveNeuralClusterer {
 
         // Initialize inhibition matrix
         let inhibition_strengths =
-            Array2::from_shape_fn(
-                (_num_clusters, _num_clusters),
-                |(i, j)| {
-                    if i == j {
-                        0.0
-                    } else {
-                        0.1
-                    }
-                },
-            );
+            Array2::from_shape_fn((_num_clusters, _num_clusters), |(i, j)| {
+                if i == j {
+                    0.0
+                } else {
+                    0.1
+                }
+            });
 
         Self {
             neurons,
@@ -1361,9 +1360,9 @@ impl HomeostaticNeuron {
 
 impl LearningRateAdaptation {
     /// Create new learning rate adaptation
-    fn new(_base_rate: f64) -> Self {
+    fn new(base_rate: f64) -> Self {
         Self {
-            _base_rate,
+            base_rate,
             adaptation_factor: 0.1,
             performance_history: VecDeque::new(),
             adaptation_threshold: 0.1,
@@ -1432,8 +1431,7 @@ impl MetaplasticityController {
             .metaplastic_variables
             .row(_neuron_idx)
             .to_owned()
-            .mean()
-            .unwrap_or(1.0);
+            .mean();
 
         // Higher metaplastic variable means lower plasticity (harder to change)
         let modulation = 1.0 / (1.0 + meta_var_avg);
@@ -1491,9 +1489,9 @@ impl MultiTimescaleAdaptation {
 
 impl AdaptationScale {
     /// Create new adaptation scale
-    fn new(_time_constant: f64, adaptation_strength: f64) -> Self {
+    fn new(time_constant: f64, adaptation_strength: f64) -> Self {
         Self {
-            _time_constant,
+            time_constant,
             adaptation_strength,
             memory_trace: 1.0,
             decay_factor: 0.999,
@@ -1599,13 +1597,13 @@ pub struct LocalLearningParams {
 impl DendriticSpatialClusterer {
     /// Create new dendritic spatial clusterer
     pub fn new(_num_neurons: usize, input_dim: usize, dendrites_per_neuron: usize) -> Self {
-        let mut _neurons = Vec::new();
+        let mut neurons = Vec::new();
         for i in 0.._num_neurons {
             let position = Array1::from(vec![
                 (i as f64) / (_num_neurons as f64), // Simple 1D arrangement
                 0.0,
             ]);
-            _neurons.push(DendriticNeuron::new(
+            neurons.push(DendriticNeuron::new(
                 input_dim,
                 dendrites_per_neuron,
                 position,
@@ -1618,7 +1616,7 @@ impl DendriticSpatialClusterer {
         Self {
             num_neurons: _num_neurons,
             input_dim,
-            _neurons,
+            neurons,
             lateral_connections,
             global_learning_params,
         }
@@ -1737,15 +1735,15 @@ impl DendriticSpatialClusterer {
 impl DendriticNeuron {
     /// Create new dendritic neuron
     fn new(_input_dim: usize, num_dendrites: usize, position: Array1<f64>) -> Self {
-        let mut _dendrites = Vec::new();
+        let mut dendrites = Vec::new();
         for _ in 0..num_dendrites {
-            _dendrites.push(DendriticCompartment::new(_input_dim));
+            dendrites.push(DendriticCompartment::new(_input_dim));
         }
 
         let soma = SomaCompartment::new();
 
         Self {
-            _dendrites,
+            dendrites,
             soma,
             axon_output: 0.0,
             position,
@@ -1848,7 +1846,11 @@ impl DendriticCompartment {
     }
 
     /// Update compartment weights
-    fn update_weights(&mut self, _input: &ArrayView1<f64>, learning_rate: f64) -> SpatialResult<()> {
+    fn update_weights(
+        &mut self,
+        _input: &ArrayView1<f64>,
+        learning_rate: f64,
+    ) -> SpatialResult<()> {
         for (weight, &input_val) in self.weights.iter_mut().zip(_input.iter()) {
             // Activity-dependent learning with local modulation
             let local_modulation = self.activation * self.local_learning_params.activity_scaling;
@@ -2590,7 +2592,8 @@ impl AdvancedMemristiveLearning {
         mechanism: &PlasticityMechanism,
     ) -> SpatialResult<()> {
         // Simulate calcium dynamics
-        let calcium_level = AdvancedMemristiveLearning::compute_calcium_level(input, output, target);
+        let calcium_level =
+            AdvancedMemristiveLearning::compute_calcium_level(input, output, target);
 
         let ltp_threshold = mechanism.thresholds.ltp_threshold;
         let ltd_threshold = mechanism.thresholds.ltd_threshold;
@@ -2776,7 +2779,7 @@ impl AdvancedMemristiveLearning {
             let total_conductance: f64 = (0..self.crossbar_array.dimensions.0)
                 .map(|i| self.crossbar_array.conductances[[i, j]])
                 .sum();
-            rates[j] = self.sigmoid(total_conductance);
+            rates[j] = AdvancedMemristiveLearning::sigmoid(total_conductance);
         }
 
         rates

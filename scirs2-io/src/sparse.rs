@@ -497,14 +497,14 @@ impl SparseMatrix<f64> {
         // Copy metadata
         sparse
             .metadata
-            .insert("format".to_string(), mm_matrix.header.format.to_string());
+            .insert("format".to_string(), _mm_matrix.header.format.to_string());
         sparse.metadata.insert(
             "data_type".to_string(),
-            mm_matrix.header.data_type.to_string(),
+            _mm_matrix.header.data_type.to_string(),
         );
         sparse.metadata.insert(
             "symmetry".to_string(),
-            mm_matrix.header.symmetry.to_string(),
+            _mm_matrix.header.symmetry.to_string(),
         );
 
         sparse

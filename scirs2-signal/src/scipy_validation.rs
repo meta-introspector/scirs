@@ -313,7 +313,8 @@ fn test_single_cheby1_filter(
     fs: f64,
     order: usize,
     filter_type: FilterType,
-    ripple: f64_config: &ValidationConfig,
+    ripple: f64,
+    _config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
     // Create test signal (chirp from 0.1*fs to 0.4*fs)
     let duration = n as f64 / fs;
@@ -420,7 +421,7 @@ fn test_single_butter_filter(
 /// Simplified reference implementation (in practice, this would call SciPy via Python)
 #[allow(dead_code)]
 fn reference_butter_filter(
-    signal: &[f64], _order: usize_critical_freq: &[f64], _btype: &str_fs: f64,
+    signal: &[f64], _order: usize, _critical_freq: &[f64], _btype: &str, _fs: f64,
 ) -> SignalResult<Vec<f64>> {
     // This is a placeholder - in a real implementation, you would:
     // 1. Call SciPy via Python binding (pyo3)
@@ -435,7 +436,7 @@ fn reference_butter_filter(
 /// Reference Chebyshev Type I filter implementation
 #[allow(dead_code)]
 fn reference_cheby1_filter(
-    signal: &[f64], _order: usize_ripple: f64,
+    signal: &[f64], _order: usize, _ripple: f64,
     critical_freq: &[f64],
     btype: &str,
     fs: f64,
@@ -462,7 +463,7 @@ fn reference_cheby1_filter(
 /// Reference Chebyshev Type II filter implementation
 #[allow(dead_code)]
 fn reference_cheby2_filter(
-    signal: &[f64], _order: usize_attenuation: f64,
+    signal: &[f64], _order: usize, _attenuation: f64,
     critical_freq: &[f64],
     btype: &str,
     fs: f64,
@@ -1590,7 +1591,7 @@ fn test_single_window(
 #[allow(dead_code)]
 fn reference_multitaper_psd(
     signal: &[f64],
-    fs: f64_nw: f64, _k: Option<usize>,
+    fs: f64, _nw: f64, _k: Option<usize>,
 ) -> SignalResult<Vec<f64>> {
     // Simplified reference - in practice would use actual SciPy output
     // This should be replaced with either:
@@ -1677,7 +1678,7 @@ fn reference_ar_spectrum(
 #[allow(dead_code)]
 fn reference_dwt_reconstruction(
     signal: &[f64],
-    wavelet: Wavelet_level: usize,
+    wavelet: Wavelet, _level: usize,
 ) -> SignalResult<Vec<f64>> {
     // Simplified reference implementation for DWT perfect reconstruction
     // In practice, this would use pywt.wavedec + pywt.waverec

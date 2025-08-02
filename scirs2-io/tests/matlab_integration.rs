@@ -1,5 +1,5 @@
 use ndarray::{Array1, Array2};
-use scirs2__io::matlab::{read_mat, write_mat, MatType};
+use scirs2_io::matlab::{read_mat, write_mat, MatType};
 use std::collections::HashMap;
 use std::f32::consts::PI as PI_F32;
 use std::f64::consts::PI as PI_F64;

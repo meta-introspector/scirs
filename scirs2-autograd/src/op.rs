@@ -83,7 +83,8 @@ pub(crate) enum OpInput<'graph, F: Float> {
 /// Variable or non-variable tensor input.
 #[allow(dead_code)]
 pub(crate) struct OpInputGetter<'a, F: Float> {
-    f: F_marker: PhantomData<&'a ()>,
+    f: F,
+    _marker: PhantomData<&'a ()>,
 }
 
 impl<F: Float> OpInputGetter<'_, F> {
@@ -116,7 +117,8 @@ impl<F: Float> ComputeContext<F> {
         // Clone all _inputs to own the data
         let input_arrays = _inputs.to_vec();
         Self {
-            _inputs: input_arrays_outputs: Vec::new(),
+            inputs: input_arrays,
+            outputs: Vec::new(),
         }
     }
 
@@ -133,7 +135,7 @@ impl<F: Float> ComputeContext<F> {
     pub fn input(&self, i: usize) -> NdArrayView<F> {
         if self.inputs.is_empty() {
             // Create a dummy array for use when no inputs are available
-            static DUMMY_ARRAY: once, _cell: sync::Lazy<NdArray<f32>> =
+            static DUMMY_ARRAY: once_cell::sync::Lazy<NdArray<f32>> =
                 once_cell::sync::Lazy::new(|| crate::ndarray_ext::zeros(&[1, 1]));
 
             // Safety: This is a read-only view, and we're converting types.
@@ -153,7 +155,7 @@ impl<F: Float> ComputeContext<F> {
                      self.inputs.len(), i);
 
             // Return the same dummy array as above
-            static DUMMY_ARRAY: once, _cell: sync::Lazy<NdArray<f32>> =
+            static DUMMY_ARRAY: once_cell::sync::Lazy<NdArray<f32>> =
                 once_cell::sync::Lazy::new(|| crate::ndarray_ext::zeros(&[1, 1]));
 
             #[allow(clippy::transmute_ptr_to_ref)]

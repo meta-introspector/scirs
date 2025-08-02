@@ -6,8 +6,8 @@
 //! - Working with different data types
 //! - Managing NetCDF file structure
 
-use scirs2__io::error::Result;
-use scirs2__io::netcdf::{NetCDFDataType, NetCDFFile};
+use scirs2_io::error::Result;
+use scirs2_io::netcdf::{NetCDFDataType, NetCDFFile};
 
 #[allow(dead_code)]
 fn main() -> Result<()> {

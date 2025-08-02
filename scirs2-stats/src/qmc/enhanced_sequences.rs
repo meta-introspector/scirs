@@ -211,7 +211,8 @@ where
             sequence_type,
             dimension,
             config,
-            state_phantom: PhantomData,
+            state,
+            _phantom: PhantomData,
         };
 
         // Initialize scrambling and digital shifts if needed
@@ -347,7 +348,8 @@ where
         &self,
         index: usize,
         owen_scrambling: bool,
-        digital_shift: bool, _nested_scrambling: bool,
+        digital_shift: bool,
+        _nested_scrambling: bool,
     ) -> StatsResult<Array1<F>> {
         let mut point = Array1::zeros(self.dimension);
 
@@ -413,7 +415,9 @@ where
     /// Compute improved Faure sequence point
     fn compute_faure_improved(
         &self,
-        index: usize, _permutation_optimization: bool, _radical_inverse_improvements: bool,
+        index: usize,
+        _permutation_optimization: bool,
+        _radical_inverse_improvements: bool,
     ) -> StatsResult<Array1<F>> {
         // Simplified implementation
         let mut point = Array1::zeros(self.dimension);
@@ -503,7 +507,7 @@ where
         // Generate random permutation matrix
         for i in 0..32 {
             let j = rng.gen_range(0..32);
-            matrix[[i..j]] = 1;
+            matrix[[i, j]] = 1;
         }
 
         Ok(matrix)

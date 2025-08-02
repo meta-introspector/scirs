@@ -1,7 +1,7 @@
 // Integration tests for sampling and random modules
 use approx::assert_relative_eq;
 use ndarray::{array, Array1};
-use scirs2__stats::{
+use scirs2_stats::{
     distributions::{norm, poisson},
     random, sampling,
 };

@@ -114,7 +114,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::{stepwise_regression, StepwiseDirection, StepwiseCriterion};
+/// use scirs2_stats::{stepwise_regression, StepwiseDirection, StepwiseCriterion};
 ///
 /// // Create a design matrix with 3 variables
 /// let x = Array2::from_shape_vec((10, 3), vec![

@@ -29,7 +29,7 @@ struct Complex64 {
 }
 
 impl Complex64 {
-    fn real( f64, imag: f64) -> Self {
+    fn real(real: f64, imag: f64) -> Self {
         Self { real, imag }
     }
 
@@ -40,7 +40,7 @@ impl Complex64 {
 
 // Implementation of ZeroCopySerializable for our custom type
 impl ZeroCopySerializable for Complex64 {
-    unsafe fn bytes( &[u8]) -> CoreResult<Self> {
+    unsafe fn bytes(_bytes: &[u8]) -> CoreResult<Self> {
         if !Self::validate_bytes(_bytes) {
             return Err(CoreError::ValidationError(
                 ErrorContext::new(format!(
@@ -100,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example demonstrating custom type serialization with zero-copy operations
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn custom_type_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n6. Custom Type Serialization Example");
     println!("-----------------------------------");
 
@@ -212,7 +212,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Basic example of zero-copy serialization and deserialization
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn basic_serialization_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Zero-Copy Serialization Example");
     println!("-----------------------------------------");
 
@@ -278,7 +278,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example demonstrating working with metadata in zero-copy serialized files
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn metadata_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Working with Metadata Example");
     println!("--------------------------------");
 
@@ -314,10 +314,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\nMetadata before update:");
     println!("  Description: {}", metadata[description]);
     println!("  Version: {}", metadata[version]);
-    println!(
-        "  Sampling rate: {}",
-        metadata[properties]["sampling_rate"]
-    );
+    println!("  Sampling rate: {}", metadata[properties]["sampling_rate"]);
 
     // Update metadata (without rewriting the entire array)
     println!("\nUpdating metadata...");
@@ -367,7 +364,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example demonstrating zero-copy serialization with multidimensional arrays
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn multidimensional_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Multidimensional Array Example");
     println!("---------------------------------");
 
@@ -454,7 +451,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example comparing performance of zero-copy serialization with traditional methods
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn performance_comparison(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Performance Comparison Example");
     println!("--------------------------------");
 
@@ -595,7 +592,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example demonstrating updating data in a zero-copy serialized file
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn updating_data_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n5. Updating Data Example");
     println!("------------------------");
 

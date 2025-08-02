@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Basic example of creating and using memory-mapped arrays
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn basic_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Memory-Mapped Array Example");
     println!("----------------------------------");
 
@@ -48,7 +48,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("Created a 1D array with 100 elements");
 
     // Create a memory-mapped file from the data
-    let file_path = _temp_dir.join("basic_example.bin");
+    let file_path = temp_dir.join("basic_example.bin");
     let mmap = create_mmap::<f64>(&data, &file_path, AccessMode::Write, 0)?;
     println!("Created memory-mapped array at: {:?}", file_path);
     println!("  Shape: {:?}", mmap.shape);
@@ -72,7 +72,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example showing how to work with large arrays using memory mapping
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn large_array_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Large Array Processing Example");
     println!("-------------------------------");
 
@@ -121,7 +121,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example showing how to work with multi-dimensional arrays
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn multi_dimensional_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Multi-Dimensional Array Example");
     println!("---------------------------------");
 
@@ -153,7 +153,7 @@ fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example comparing performance between memory-mapped and in-memory arrays
 #[allow(dead_code)]
-fn dir( &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn performance_comparison_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Performance Comparison Example");
     println!("--------------------------------");
 

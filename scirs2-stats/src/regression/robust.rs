@@ -183,7 +183,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::theilslopes;
+/// use scirs2_stats::theilslopes;
 ///
 /// // Create data with an outlier
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -397,7 +397,7 @@ where
 /// Simple example with an obvious outlier:
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::ransac;
+/// use scirs2_stats::ransac;
 ///
 /// // Create data with outliers
 /// let x = Array2::from_shape_vec((10, 1), vec![
@@ -418,7 +418,7 @@ where
 /// Simpler example with fewer dimensions:
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::ransac;
+/// use scirs2_stats::ransac;
 ///
 /// // Create 1D data with outlier, but in 2D form to match function requirements
 /// let mut x = Array2::zeros((5, 1));
@@ -866,7 +866,7 @@ where
 /// Basic example with an outlier:
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::huber_regression;
+/// use scirs2_stats::huber_regression;
 ///
 /// // Create data with outliers
 /// let x = Array2::from_shape_vec((10, 1), vec![
@@ -887,7 +887,7 @@ where
 /// Using custom epsilon and regularization:
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::huber_regression;
+/// use scirs2_stats::huber_regression;
 ///
 /// // Create data with outliers and some collinearity
 /// let x = Array2::from_shape_vec((10, 2), vec![
@@ -1176,9 +1176,11 @@ where
 /// Calculate robust standard errors for Huber regression
 #[allow(dead_code)]
 fn calculate_huber_std_errors<F>(
-    x: &ArrayView2<F>, _residuals: &ArrayView1<F>,
+    x: &ArrayView2<F>,
+    _residuals: &ArrayView1<F>,
     weights: &ArrayView1<F>,
-    sigma: F, _df: usize,
+    sigma: F,
+    _df: usize,
 ) -> StatsResult<Array1<F>>
 where
     F: Float

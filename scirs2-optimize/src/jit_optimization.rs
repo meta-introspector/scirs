@@ -201,7 +201,7 @@ impl JitCompiler {
             let mut cache = self.cache.lock().unwrap();
             if cache.len() >= self.options.max_cache_size {
                 // Remove oldest entry (simple FIFO eviction)
-                if let Some((&oldest_key_)) = cache.iter().next() {
+                if let Some((&oldest_key, _)) = cache.iter().next() {
                     cache.remove(&oldest_key);
                 }
             }
@@ -224,7 +224,7 @@ impl JitCompiler {
         let mut hasher = DefaultHasher::new();
         n_vars.hash(&mut hasher);
         // Function pointer address (not reliable across runs, but works for caching within a session)
-        (std::ptr::addr_of!(*_fun) as usize).hash(&mut hasher);
+        (std::ptr::addr_of!(*self_fun) as usize).hash(&mut hasher);
         hasher.finish()
     }
 
@@ -281,11 +281,7 @@ impl JitCompiler {
     }
 
     /// Create optimized implementation for sum of squares
-    fn create_sum_of_squares_implementation<F>(
-        &self,
-        fun: F,
-        n_vars: usize,
-    ) -> JitCompilationResult
+    fn create_sum_of_squares_implementation<F>(&self, fun: F, n_vars: usize) -> JitCompilationResult
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + 'static,
     {
@@ -509,7 +505,7 @@ impl PatternDetector {
         false
     }
 
-    fn is_separable<F>(&self_fun: &F_n, _vars: usize) -> Result<bool, OptimizeError>
+    fn is_separable<F>(&self_fun: &F, _vars: usize) -> Result<bool, OptimizeError>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -583,7 +579,7 @@ impl FunctionProfiler {
             .into_iter()
             .rev()
             .take(10)
-            .map(|(&sig_)| sig)
+            .map(|(&sig, _)| sig)
             .collect()
     }
 }

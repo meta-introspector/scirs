@@ -19,8 +19,8 @@ pub struct Circle {
 
 impl Circle {
     /// Creates a new circle with the given center and radius
-    pub fn new(_center: [f64; 2], radius: f64) -> Self {
-        Circle { _center, radius }
+    pub fn new(center: [f64; 2], radius: f64) -> Self {
+        Circle { center, radius }
     }
 
     /// Calculates the area of the circle
@@ -45,8 +45,8 @@ pub struct LineSegment2D {
 
 impl LineSegment2D {
     /// Creates a new line segment with the given endpoints
-    pub fn new(_start: [f64; 2], end: [f64; 2]) -> Self {
-        LineSegment2D { _start, end }
+    pub fn new(start: [f64; 2], end: [f64; 2]) -> Self {
+        LineSegment2D { start, end }
     }
 
     /// Calculates the length of the line segment
@@ -117,8 +117,8 @@ pub struct Box2D {
 
 impl Box2D {
     /// Creates a new 2D axis-aligned bounding box with the given minimum and maximum corners
-    pub fn new(_min: [f64; 2], max: [f64; 2]) -> Self {
-        Box2D { _min, max }
+    pub fn new(min: [f64; 2], max: [f64; 2]) -> Self {
+        Box2D { min, max }
     }
 
     /// Gets the width of the box
@@ -165,8 +165,8 @@ pub struct Sphere {
 
 impl Sphere {
     /// Creates a new sphere with the given center and radius
-    pub fn new(_center: [f64; 3], radius: f64) -> Self {
-        Sphere { _center, radius }
+    pub fn new(center: [f64; 3], radius: f64) -> Self {
+        Sphere { center, radius }
     }
 
     /// Calculates the volume of the sphere
@@ -191,8 +191,8 @@ pub struct LineSegment3D {
 
 impl LineSegment3D {
     /// Creates a new 3D line segment with the given endpoints
-    pub fn new(_start: [f64; 3], end: [f64; 3]) -> Self {
-        LineSegment3D { _start, end }
+    pub fn new(start: [f64; 3], end: [f64; 3]) -> Self {
+        LineSegment3D { start, end }
     }
 
     /// Calculates the length of the line segment
@@ -312,8 +312,8 @@ pub struct Box3D {
 
 impl Box3D {
     /// Creates a new 3D axis-aligned bounding box with the given minimum and maximum corners
-    pub fn new(_min: [f64; 3], max: [f64; 3]) -> Self {
-        Box3D { _min, max }
+    pub fn new(min: [f64; 3], max: [f64; 3]) -> Self {
+        Box3D { min, max }
     }
 
     /// Gets the width of the box (x-dimension)

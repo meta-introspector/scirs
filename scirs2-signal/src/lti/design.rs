@@ -147,7 +147,7 @@ pub fn ss(
 /// let sys_dt = c2d(&sys_ct, 0.1).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn c2d<T: LtiSystem>(_system: &T_dt: f64) -> SignalResult<StateSpace> {
+pub fn c2d<T: LtiSystem>(_system: &T, _dt: f64) -> SignalResult<StateSpace> {
     // Convert to state-space first
     let ss_sys = _system.to_ss()?;
 

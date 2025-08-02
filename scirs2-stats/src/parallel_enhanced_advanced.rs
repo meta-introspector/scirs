@@ -533,7 +533,7 @@ where
             .collect();
 
         // Combine results using parallel reduction
-        let (_final_mean, final_m2, _final_count) = results.into().iter().fold(
+        let (_final_mean, final_m2, _final_count) = results.into_iter().fold(
             (F::zero(), F::zero(), 0),
             |(mean_a, m2_a, count_a), (mean_b, m2_b, count_b)| {
                 if count_b == 0 {
@@ -665,7 +665,7 @@ where
             .collect();
 
         // Combine results
-        let (total_mean, total_m2_, total_m3, total_m4, _total_count) = results.into().iter().fold(
+        let (total_mean, total_m2_, total_m3, total_m4, _total_count) = results.into_iter().fold(
             (F::zero(), F::zero(), F::zero(), F::zero(), 0),
             |(mean_acc, m2_acc, m3_acc, m4_acc, count_acc), (mean, m2, m3, m4, count)| {
                 if count == 0 {
@@ -766,7 +766,7 @@ where
                             (0..n_data).map(|_| rng.gen_range(0..n_data)).collect();
 
                         let bootstrap_sample: Vec<F> =
-                            bootstrap_indices.into().iter().map(|i| data_arc[i]).collect();
+                            bootstrap_indices.into_iter().map(|i| data_arc[i]).collect();
 
                         let sample_array = Array1::from(bootstrap_sample);
                         let statistic = statistic_fn(&sample_array.view());

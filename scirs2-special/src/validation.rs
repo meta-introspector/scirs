@@ -24,8 +24,9 @@ pub fn check_non_negative<T>(_value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy + Zero,
 {
-    validation::check_non_negative(_value, name)
-        .map_err(|_| SpecialError::DomainError(format!("{name} must be non-negative, got {_value}")))
+    validation::check_non_negative(_value, name).map_err(|_| {
+        SpecialError::DomainError(format!("{name} must be non-negative, got {_value}"))
+    })
 }
 
 /// Check if a value is finite
@@ -144,7 +145,9 @@ pub fn check_order_m(l: i32, m: i32) -> SpecialResult<i32> {
 #[allow(dead_code)]
 pub fn check_convergence_params(_max_iter: usize, tolerance: f64) -> SpecialResult<()> {
     if _max_iter == 0 {
-        return Err(SpecialError::ValueError("_max_iter must be > 0".to_string()));
+        return Err(SpecialError::ValueError(
+            "_max_iter must be > 0".to_string(),
+        ));
     }
     check_positive(tolerance, "tolerance")?;
     Ok(())

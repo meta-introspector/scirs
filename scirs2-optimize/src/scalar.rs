@@ -135,7 +135,10 @@ where
 
 /// Brent's method for scalar minimization
 #[allow(dead_code)]
-fn minimize_scalar_brent<F>(_fun: F, options: Options) -> Result<ScalarOptimizeResult, OptimizeError>
+fn minimize_scalar_brent<F>(
+    _fun: F,
+    options: Options,
+) -> Result<ScalarOptimizeResult, OptimizeError>
 where
     F: Fn(f64) -> f64,
 {

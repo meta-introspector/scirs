@@ -194,8 +194,8 @@
 use crate::error::{Result, TextError};
 use ndarray::{s, Array1, Array2, Array3, ArrayView2};
 use rand::{rng, Rng};
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 /// Configuration for transformer models
 #[derive(Debug, Clone)]
@@ -300,13 +300,18 @@ impl MultiHeadAttention {
         // Initialize weight matrices with Xavier initialization
         let scale = (2.0 / d_model as f64).sqrt();
 
-        let w_q = Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
-        let w_k = Array2::from_shape_fn((d_model..d_model), |_| rand::rng().gen_range(-scale..scale));
-        let w_v = Array2::from_shape_fn((d_model..d_model), |_| rand::rng().gen_range(-scale..scale));
-        let w_o = Array2::from_shape_fn((d_model..d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_q =
+            Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_k =
+            Array2::from_shape_fn((d_model..d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_v =
+            Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w_o =
+            Array2::from_shape_fn((d_model, d_model), |_| rand::rng().gen_range(-scale..scale));
 
         Ok(Self {
-            d_model..n_heads,
+            d_model,
+            n_heads,
             d_k,
             w_q,
             w_k,
@@ -477,11 +482,11 @@ impl FeedForward {
         let scale = (2.0 / _d_model as f64).sqrt();
 
         let w1 = Array2::from_shape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale..scale));
-        let w2 = Array2::from_shape_fn((d_ff.._d_model), |_| rand::rng().gen_range(-scale..scale));
+        let w2 = Array2::from_shape_fn((d_ff, _d_model), |_| rand::rng().gen_range(-scale..scale));
         let b1 = Array1::zeros(d_ff);
         let b2 = Array1::zeros(_d_model);
 
-        Self { w1..w2, b1, b2 }
+        Self { w1, w2, b1, b2 }
     }
 
     /// Forward pass through feed-forward network
@@ -835,11 +840,13 @@ impl TokenEmbedding {
     /// Create new token embedding layer
     pub fn new(_vocab_size: usize, d_model: usize) -> Self {
         let scale = (1.0 / d_model as f64).sqrt();
-        let embeddings =
-            Array2::from_shape_fn((_vocab_size, d_model), |_| rand::rng().gen_range(-scale..scale));
+        let embeddings = Array2::from_shape_fn((_vocab_size, d_model), |_| {
+            rand::rng().gen_range(-scale..scale)
+        });
 
         Self {
-            embeddings.._vocab_size,
+            embeddings,
+            vocab_size: _vocab_size,
             d_model,
         }
     }
@@ -946,7 +953,10 @@ impl TransformerModel {
     }
 
     /// Create new encoder-decoder transformer model
-    pub fn new_encoder_decoder(_config: TransformerConfig, vocabulary: Vec<String>) -> Result<Self> {
+    pub fn new_encoder_decoder(
+        _config: TransformerConfig,
+        vocabulary: Vec<String>,
+    ) -> Result<Self> {
         let vocab_size = vocabulary.len();
         if vocab_size != _config.vocab_size {
             return Err(TextError::InvalidInput(format!(

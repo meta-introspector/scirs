@@ -229,7 +229,7 @@ fn adaptive_parallel_filter(
     let chunks = create_overlapped_chunks(x, chunk_size, overlap);
 
     // Process chunks in parallel
-    let processed_chunks: Result<Vec<_>_> = chunks
+    let processed_chunks: Result<Vec<_>> = chunks
         .into_par_iter()
         .map(|(chunk_data, chunk_start_)| {
             let chunk_result = apply_iir_filter_simd(&chunk_data, b, a, config.use_simd)?;

@@ -212,6 +212,7 @@ pub fn simd_euclidean_distance_batch(
 /// * Condensed distance matrix, shape (n*(n-1)/2,)
 #[allow(dead_code)]
 pub fn parallel_pdist(_points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResult<Array1<f64>> {
+    use scirs2_core::parallel_ops::{ParallelBridge, ParallelIterator};
     let n_points = _points.nrows();
     if n_points < 2 {
         return Err(SpatialError::ValueError(
@@ -287,6 +288,7 @@ pub fn parallel_cdist(
     points2: &ArrayView2<'_, f64>,
     metric: &str,
 ) -> SpatialResult<Array2<f64>> {
+    use scirs2_core::parallel_ops::{ParallelBridge, ParallelIterator};
     if points1.ncols() != points2.ncols() {
         return Err(SpatialError::ValueError(
             "Point arrays must have the same number of dimensions".to_string(),
@@ -776,6 +778,7 @@ pub mod advanced_simd_clustering {
             data_points: &ArrayView2<'_, f64>,
             k: usize,
         ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
+            use scirs2_core::parallel_ops::{ParallelBridge, ParallelIterator};
             let n_queries = query_points.nrows();
             let n_data = data_points.nrows();
 
@@ -872,13 +875,13 @@ pub mod hardware_specific_simd {
             }
 
             let result = if self.capabilities.avx512_available && a.len() >= 8 {
-                self.euclidean_distance_avx512(a, b)
+                HardwareOptimizedDistances::euclidean_distance_avx512(a, b)
             } else if self.capabilities.avx2_available && a.len() >= 4 {
-                self.euclidean_distance_avx2(a, b)
+                HardwareOptimizedDistances::euclidean_distance_avx2(a, b)
             } else if self.capabilities.neon_available && a.len() >= 4 {
-                self.euclidean_distance_neon(a, b)
+                HardwareOptimizedDistances::euclidean_distance_neon(a, b)
             } else {
-                self.euclidean_distance_sse(a, b)
+                HardwareOptimizedDistances::euclidean_distance_sse(a, b)
             };
 
             Ok(result)
@@ -1073,6 +1076,7 @@ pub mod hardware_specific_simd {
             data_points: &ArrayView2<'_, f64>,
             k: usize,
         ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
+            use scirs2_core::parallel_ops::{ParallelBridge, ParallelIterator};
             let n_queries = query_points.nrows();
             let n_data = data_points.nrows();
 
@@ -1174,6 +1178,7 @@ pub mod hardware_specific_simd {
 pub mod mixed_precision_simd {
     use crate::error::{SpatialError, SpatialResult};
     use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+    use scirs2_core::parallel_ops::*;
     use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 
     /// Mixed precision distance computation (f32 where precision allows)
@@ -1264,9 +1269,9 @@ pub mod mixed_precision_simd {
 
 /// Performance benchmarking utilities with advanced metrics
 pub mod bench {
+    use super::mixed_precision_simd::simd_euclidean_distance_batch_f32;
     use crate::error::{SpatialError, SpatialResult};
     use crate::simd_euclidean_distance_batch;
-    use super::mixed_precision_simd::simd_euclidean_distance_batch_f32;
     use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
     use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
     use std::time::Instant;
@@ -1384,6 +1389,7 @@ pub mod bench {
 
 #[cfg(test)]
 mod tests {
+    use super::HardwareOptimizedDistances;
     use approx::assert_relative_eq;
     use ndarray::array;
 

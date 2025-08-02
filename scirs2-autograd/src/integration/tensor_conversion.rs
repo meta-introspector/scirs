@@ -92,7 +92,7 @@ impl TensorConverter {
 
     /// Convert from a specific format to autograd tensor
     pub fn convert_from<F: Float>(
-        &self_data: &[u8], _metadata: &TensorMetadata_source_format: &str,
+        _data: &[u8], _metadata: &TensorMetadata, _source_format: &str,
     ) -> Result<Tensor<F>, IntegrationError> {
         // For now, implement basic conversion
         // In practice, this would use the registered converters
@@ -380,7 +380,7 @@ pub fn convert_tensor_to<F: Float>(
 /// Convert from format using global converter
 #[allow(dead_code)]
 pub fn convert_tensor_from<F: Float>(
-    _data: &[u8], _metadata: &TensorMetadata_source_format: &str,
+    _data: &[u8], _metadata: &TensorMetadata, _source_format: &str,
 ) -> Result<(), IntegrationError> {
     let _converter = init_tensor_converter();
     let _converter_guard = _converter.lock().map_err(|_| {

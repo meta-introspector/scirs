@@ -1,5 +1,4 @@
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use crate::features::options::FeatureOptions;
 use std::collections::HashMap;
 

@@ -124,7 +124,7 @@ impl Space {
                         // Use gen_range directly instead of Uniform distribution
                         sample[i] = rng.gen_range(*lower..*upper);
                     }
-                    Parameter::Integer(lower..upper) => {
+                    Parameter::Integer((lower, upper)) => {
                         let range = rng.gen_range(*lower..=*upper);
                         sample[i] = range as f64;
                     }

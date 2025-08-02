@@ -7,8 +7,8 @@ use crate::error::{Result, TextError};
 use crate::vectorize::{TfidfVectorizer, Vectorizer};
 use ndarray::{Array2, Axis};
 use rand::prelude::*;
-use rand::SeedableRng;
 use rand::seq::SliceRandom;
+use rand::SeedableRng;
 
 /// Text feature selector
 ///

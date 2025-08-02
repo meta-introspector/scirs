@@ -708,6 +708,7 @@ impl<T: Float + Send + Sync + 'static> BallTree<T, EuclideanDistance<T>> {
 
 #[cfg(test)]
 mod tests {
+    use super::BallTree;
     use crate::distance::euclidean;
     use approx::assert_relative_eq;
     use ndarray::arr2;

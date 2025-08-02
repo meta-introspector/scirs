@@ -5,7 +5,6 @@
 //! memory profiling, and statistical validation.
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
 use crate::lombscargle__simd::simd_lombscargle;
 use ndarray::Array1;

@@ -500,7 +500,7 @@ extern "C" __global__ void gradient_magnitude(
     float* __restrict__ magnitude,
     int size
 ) {
-    int idx = blockIdx._x * blockDim._x + threadIdx._x;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < size) {
         float gx = grad_x[idx];
         float gy = grad_y[idx];
@@ -519,7 +519,7 @@ extern "C" __global__ void gradient_magnitude(
 @compute @workgroup_size(256)
 #[allow(dead_code)]
 fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let idx = global_id._x;
+    let idx = global_id.x;
     if (idx >= size) {
         return;
     }
@@ -779,7 +779,7 @@ fn separable_conv_1d(@builtin(global_invocation_id) global_id: vec3<u32>) {
     output[idx] = sum;
 }
 "#
-        .to_string(, _ => {
+        .to_string(), _ => {
             // Fall back for unsupported backends
             return Ok(input.to_vec());
         }
@@ -853,7 +853,7 @@ pub fn gpu_harris_corners(
     threshold: f32,
 ) -> Result<Array2<f32>> {
     // Compute gradients
-    let (grad_x, grad_y_) = gpu_sobel_gradients(ctx, image)?;
+    let (grad_x, grad_y, _) = gpu_sobel_gradients(ctx, image)?;
 
     // Compute structure tensor elements
     let ixx = gpu_element_wise_multiply(ctx, &grad_x.view(), &grad_x.view())?;
@@ -1221,7 +1221,7 @@ impl GpuMemoryPool {
     }
 
     /// Return a buffer to the pool
-    pub fn return_buffer(&mut self, size: usize, buffer: scirs2_core: gpu::GpuBuffer<f32>) {
+    pub fn return_buffer(&mut self, size: usize, buffer: scirs2_core::gpu::GpuBuffer<f32>) {
         let pool = self.buffers.entry(size).or_default();
         if pool.len() < self.max_pool_size {
             pool.push(buffer);
@@ -1514,7 +1514,7 @@ impl GpuPerformanceProfiler {
     }
 
     /// Start timing an operation
-    pub fn start_timing(&self_operation: &str) -> std::time::Instant {
+    pub fn start_timing(&self, _operation: &str) -> std::time::Instant {
         std::time::Instant::now()
     }
 
@@ -2214,7 +2214,9 @@ pub enum LayerType {
 /// Helper functions for GPU neural layers (simplified implementations)
 #[allow(dead_code)]
 fn gpu_conv_layer(
-    ctx: &GpuVisionContext_input: &scirs2_core: :gpu::GpuBuffer<f32>, _weights: &Array2<f32>,
+    ctx: &GpuVisionContext,
+    _input: &scirs2_core::gpu::GpuBuffer<f32>,
+    _weights: &Array2<f32>,
     config: &LayerConfig,
     input_shape: (usize, usize),
 ) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
@@ -2231,7 +2233,8 @@ fn gpu_conv_layer(
 
 #[allow(dead_code)]
 fn gpu_maxpool_layer(
-    ctx: &GpuVisionContext_input: &scirs2_core: :gpu::GpuBuffer<f32>,
+    ctx: &GpuVisionContext,
+    _input: &scirs2_core::gpu::GpuBuffer<f32>,
     config: &LayerConfig,
     input_shape: (usize, usize),
 ) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
@@ -2244,7 +2247,9 @@ fn gpu_maxpool_layer(
 
 #[allow(dead_code)]
 fn gpu_dense_layer(
-    ctx: &GpuVisionContext_input: &scirs2_core: :gpu::GpuBuffer<f32>, _weights: &Array2<f32>,
+    ctx: &GpuVisionContext,
+    _input: &scirs2_core::gpu::GpuBuffer<f32>,
+    _weights: &Array2<f32>,
     config: &LayerConfig,
 ) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
     let output_buffer = ctx.context.create_buffer::<f32>(config.output_channels);
@@ -2253,7 +2258,8 @@ fn gpu_dense_layer(
 
 #[allow(dead_code)]
 fn gpu_relu_layer(
-    ctx: &GpuVisionContext_input: &scirs2_core: :gpu::GpuBuffer<f32>,
+    ctx: &GpuVisionContext,
+    _input: &scirs2_core::gpu::GpuBuffer<f32>,
     shape: (usize, usize),
 ) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
     // ReLU can be applied in-place, but for simplicity we create a new buffer

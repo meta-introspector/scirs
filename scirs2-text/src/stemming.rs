@@ -405,7 +405,8 @@ impl SnowballStemmer {
         match _language.to_lowercase().as_str() {
             "english" | "en" => Ok(Self {
                 _language: "english".to_string(),
-            }, _ => Err(TextError::InvalidInput(format!(
+            }),
+            _ => Err(TextError::InvalidInput(format!(
                 "Unsupported _language: {_language}"
             ))),
         }
@@ -497,7 +498,8 @@ impl SnowballStemmer {
 impl Stemmer for SnowballStemmer {
     fn stem(&self, word: &str) -> Result<String> {
         match self.language.as_str() {
-            "english" => Ok(self.stem_english(word), _ => Err(TextError::InvalidInput(format!(
+            "english" => Ok(self.stem_english(word)),
+            _ => Err(TextError::InvalidInput(format!(
                 "Unsupported language: {}",
                 self.language
             ))),

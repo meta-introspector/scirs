@@ -35,7 +35,7 @@ type PreprocessingResult<F> = (Array2<F>, F, Array1<F>, Array1<F>);
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::ridge_regression;
+/// use scirs2_stats::ridge_regression;
 ///
 /// // Create a design matrix with 3 variables
 /// let x = Array2::from_shape_vec((5, 3), vec![
@@ -253,7 +253,9 @@ where
 #[allow(dead_code)]
 fn solve_ridge_system<F>(
     x_ridge: &ArrayView2<F>,
-    y_ridge: &ArrayView1<F>, _tol: F, _max_iter: usize,
+    y_ridge: &ArrayView1<F>,
+    _tol: F,
+    _max_iter: usize,
 ) -> StatsResult<Array1<F>>
 where
     F: Float
@@ -476,7 +478,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::lasso_regression;
+/// use scirs2_stats::lasso_regression;
 ///
 /// // Create a design matrix with 5 variables, where only the first 2 are relevant
 /// let x = Array2::from_shape_vec((10, 5), vec![
@@ -839,7 +841,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::elastic_net;
+/// use scirs2_stats::elastic_net;
 ///
 /// // Create a design matrix with 5 variables
 /// let x = Array2::from_shape_vec((10, 5), vec![
@@ -1248,7 +1250,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::group_lasso;
+/// use scirs2_stats::group_lasso;
 ///
 /// // Create a design matrix with 6 variables in 2 groups
 /// let x = Array2::from_shape_vec((10, 6), vec![
@@ -1609,7 +1611,8 @@ where
 #[allow(dead_code)]
 fn solve_group<F>(
     xtr: Array1<F>,
-    xtx: Array2<F>, _alpha: F,
+    xtx: Array2<F>,
+    _alpha: F,
     tol: F,
     max_iter: usize,
 ) -> StatsResult<Array1<F>>

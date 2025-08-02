@@ -6,8 +6,8 @@
 //! - Working with GPS coordinates and camera settings
 
 use ndarray::Array3;
-use scirs2__io::error::Result;
-use scirs2__io::image::{
+use scirs2_io::error::Result;
+use scirs2_io::image::{
     load_image, read_exif_metadata, save_image, ColorMode, ImageData, ImageFormat, ImageMetadata,
 };
 use std::fs;

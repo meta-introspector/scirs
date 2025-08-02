@@ -264,7 +264,8 @@ impl MetaLearningOptimizer {
     /// Adapt to new problem using meta-knowledge
     pub fn adapt_to_new_problem(
         &mut self,
-        problem: &OptimizationProblem) -> OptimizeResult<TaskSpecificOptimizer> {
+        problem: &OptimizationProblem,
+    ) -> OptimizeResult<TaskSpecificOptimizer> {
         // Find most similar task
         let similar_task = self.find_most_similar_task(problem)?;
 

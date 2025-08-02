@@ -72,7 +72,7 @@ impl FactorAnalysis {
     pub fn new(_n_factors: usize) -> Result<Self> {
         check_positive(_n_factors, "_n_factors")?;
         Ok(Self {
-            _n_factors,
+            n_factors: _n_factors,
             ..Default::default()
         })
     }

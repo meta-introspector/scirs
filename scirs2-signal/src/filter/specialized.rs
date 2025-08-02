@@ -10,7 +10,7 @@ use num__complex::Complex64;
 use std::f64::consts::PI;
 use super::common::{FilterCoefficients, validation::validate_cutoff_frequency};
 use super::transform::zpk_to_tf;
-use crate::lti::design::tf;
+use crate::lti::design::tf as design_tf;
 
 #[allow(unused_imports)]
 /// Design a notch filter to remove a specific frequency

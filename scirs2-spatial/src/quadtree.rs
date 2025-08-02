@@ -1048,25 +1048,25 @@ mod tests {
         // Test radius search with small radius
         let query = array![0.0, 0.0];
         let radius = 0.5;
-        let (indices_distances) = quadtree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = quadtree.query_radius(&query.view(), radius).unwrap();
 
         assert_eq!(indices.len(), 1);
         assert_eq!(indices[0], 0); // Only origin is within 0.5 units
 
         // Test with larger radius
         let radius = 1.5;
-        let (indices_distances) = quadtree.query_radius(&query.view(), radius).unwrap();
+        let (indices, distances) = quadtree.query_radius(&query.view(), radius).unwrap();
 
         assert!(indices.len() >= 4); // Should find at least origin, right, up, center
 
         // Check all distances are within radius
-        for &dist in &_distances {
+        for &dist in &distances {
             assert!(dist <= radius * radius);
         }
 
         // Test with radius covering all points
         let radius = 4.0;
-        let (indices_) = quadtree.query_radius(&query.view(), radius).unwrap();
+        let (indices, _distances) = quadtree.query_radius(&query.view(), radius).unwrap();
 
         assert_eq!(indices.len(), 6); // Should find all points
     }

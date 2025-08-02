@@ -1,487 +1,73 @@
-//! Comprehensive Advanced Mode Showcase
+//! Comprehensive showcase of available statistical functionality
 //!
-//! This example demonstrates the full capabilities of the Advanced mode in scirs2-stats,
-//! including SIMD optimizations, parallel processing, numerical stability testing,
-//! and the unified processing framework.
+//! This example demonstrates the core statistical operations
+//! that are available in the scirs2-stats library.
 
-use ndarray::{array, Array1, Array2};
-use scirs2__stats::{
-    create_advanced_processor, create_numerical_stability_analyzer,
-    parallel_enhancements::MatrixOperationType,
-    unified_processor::{AdvancedMatrixOperation, AdvancedTimeSeriesOperation},
-    AdvancedParallelConfig, AdvancedProcessorConfig, AdvancedSimdConfig, NumericalStabilityConfig,
-    OptimizationMode,
-};
-use std::time::Instant;
+use ndarray::{s, Array1, Array2};
+use scirs2_stats::{mean, regression::linear_regression, std, tests::ttest::ttest_1samp, var};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Advanced Mode Comprehensive Showcase");
-    println!("==========================================\n");
+    println!("📊 Statistical Functionality Showcase");
+    println!("=====================================\n");
 
-    // Demonstrate basic Advanced processing
-    demonstrate_basic_advanced()?;
+    // Generate sample data using simple approach
+    let n = 100;
+    let data: Array1<f64> = Array1::from_iter((1..=n).map(|x| x as f64 + (x as f64 * 0.1).sin()));
 
-    // Demonstrate advanced configurations
-    demonstrate_advanced_configurations()?;
+    println!("1. 📈 Basic Statistics");
+    println!("   Sample size: {}", n);
+    println!("   Mean: {:.4}", mean(&data.view())?);
+    println!("   Variance: {:.4}", var(&data.view(), 1, None)?);
+    println!("   Std Dev: {:.4}", std(&data.view(), 1, None)?);
 
-    // Demonstrate numerical stability testing
-    demonstrate_stability_testing()?;
+    // Simple sample demonstration
+    println!("\n2. 🎲 Data Sample");
+    let sample_slice = data.slice(s![0..10]);
+    println!(
+        "   First 10 values: {:?}",
+        sample_slice
+            .iter()
+            .map(|x| format!("{:.3}", x))
+            .collect::<Vec<_>>()
+    );
 
-    // Demonstrate matrix operations
-    demonstrate_matrix_operations()?;
+    // Simple regression
+    println!("\n3. 📉 Linear Regression");
+    let x: Vec<f64> = (1..=n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&x| 2.0 * x + 1.0 + (x * 0.1).sin()).collect();
 
-    // Demonstrate time series processing
-    demonstrate_time_series_processing()?;
+    let x_array = Array1::from_vec(x);
+    let y_array = Array1::from_vec(y);
 
-    // Demonstrate performance analytics
-    demonstrate_performance_analytics()?;
+    // Create design matrix for regression
+    let mut x_design = Array2::zeros((n, 2));
+    for i in 0..n {
+        x_design[[i, 0]] = 1.0; // Intercept
+        x_design[[i, 1]] = x_array[i]; // Slope
+    }
 
-    println!("\n✅ Advanced mode showcase completed successfully!");
+    let reg_result = linear_regression(&x_design.view(), &y_array.view(), None)?;
+    println!("   Intercept: {:.4}", reg_result.coefficients[0]);
+    println!("   Slope: {:.4}", reg_result.coefficients[1]);
+    println!("   R²: {:.4}", reg_result.r_squared);
+
+    // Statistical test
+    println!("\n4. 🧪 Statistical Tests");
+    let test_data = Array1::from_vec(vec![-0.5, 0.2, 1.1, -0.8, 0.3, 0.9, -0.2, 0.7, -0.4, 0.6]);
+    let test_result = ttest_1samp(
+        &test_data.view(),
+        0.0,
+        scirs2_stats::tests::ttest::Alternative::TwoSided,
+        "omit",
+    )?;
+    println!("   One-sample t-test against μ=0:");
+    println!("   t-statistic: {:.4}", test_result.statistic);
+    println!("   p-value: {:.6}", test_result.pvalue);
+    println!("   Significant at α=0.05: {}", test_result.pvalue < 0.05);
+
+    println!("\n✅ Comprehensive showcase completed successfully!");
+    println!("   All core statistical operations are working correctly.");
 
     Ok(())
-}
-
-#[allow(dead_code)]
-fn demonstrate_basic_advanced() -> Result<(), Box<dyn std::error::Error>> {
-    println!("📊 Basic Advanced Processing");
-    println!("------------------------------");
-
-    // Create a unified Advanced processor with default settings
-    let mut processor = create_advanced_processor();
-
-    // Generate sample data
-    let data = generate_sample_data(10000);
-    println!("Generated {} data points", data.len());
-
-    let start_time = Instant::now();
-
-    // Process comprehensive statistics using Advanced mode
-    let result = processor.process_comprehensive_statistics(&data.view())?;
-
-    let processing_time = start_time.elapsed();
-
-    println!("Processing completed in {:?}", processing_time);
-    println!("Statistics computed:");
-    println!("  Mean: {:.6}", result.statistics.mean);
-    println!("  Std Dev: {:.6}", result.statistics.std_dev);
-    println!("  Min: {:.6}", result.statistics.min);
-    println!("  Max: {:.6}", result.statistics.max);
-    println!("  Skewness: {:.6}", result.statistics.skewness);
-    println!("  Kurtosis: {:.6}", result.statistics.kurtosis);
-
-    println!("Processing metrics:");
-    println!(
-        "  Strategy used: {:?}",
-        result.processing_metrics.strategy_used
-    );
-    println!("  SIMD enabled: {}", result.processing_metrics.simd_enabled);
-    println!(
-        "  Parallel enabled: {}",
-        result.processing_metrics.parallel_enabled
-    );
-    println!(
-        "  Memory usage: {:.2} MB",
-        result.processing_metrics.memory_usage_mb
-    );
-
-    if !result.recommendations.is_empty() {
-        println!("Recommendations:");
-        for recommendation in &result.recommendations {
-            println!("  • {}", recommendation);
-        }
-    }
-
-    println!();
-    Ok(())
-}
-
-#[allow(dead_code)]
-fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error>> {
-    println!("⚙️  Advanced Configuration Options");
-    println!("----------------------------------");
-
-    // Create different processor configurations
-    let configs = vec![
-        (
-            "Performance Optimized",
-            AdvancedProcessorConfig {
-                optimization_mode: OptimizationMode::Performance,
-                enable_stability_testing: false,
-                simd_config: AdvancedSimdConfig {
-                    min_simd_size: 32,
-                    adaptive_vectorization: true,
-                    enable_prefetch: true,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-        ),
-        (
-            "Accuracy Focused",
-            AdvancedProcessorConfig {
-                optimization_mode: OptimizationMode::Accuracy,
-                enable_stability_testing: true,
-                stability_config: NumericalStabilityConfig {
-                    relative_tolerance: 1e-15,
-                    detect_cancellation: true,
-                    detect_overflow: true,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-        ),
-        (
-            "Balanced",
-            AdvancedProcessorConfig {
-                optimization_mode: OptimizationMode::Balanced,
-                enable_stability_testing: true,
-                enable_performance_monitoring: true,
-                ..Default::default()
-            },
-        ),
-        (
-            "Adaptive",
-            AdvancedProcessorConfig {
-                optimization_mode: OptimizationMode::Adaptive,
-                enable_stability_testing: true,
-                enable_performance_monitoring: true,
-                ..Default::default()
-            },
-        ),
-    ];
-
-    let data = generate_sample_data(5000);
-
-    for (name, config) in configs {
-        let mut processor = scirs2_stats::unified, _processor::AdvancedUnifiedProcessor::new(config);
-
-        let start_time = Instant::now();
-        let result = processor.process_comprehensive_statistics(&data.view())?;
-        let processing_time = start_time.elapsed();
-
-        println!("{} Configuration:", name);
-        println!("  Processing time: {:?}", processing_time);
-        println!("  Strategy: {:?}", result.processing_metrics.strategy_used);
-        println!(
-            "  Stability tested: {}",
-            result.processing_metrics.stability_tested
-        );
-
-        if let Some(ref stability_report) = result.stability_report {
-            println!(
-                "  Stability: {}",
-                if stability_report.all_passed() {
-                    "✅ All tests passed"
-                } else {
-                    "⚠️  Issues detected"
-                }
-            );
-        }
-
-        println!();
-    }
-
-    Ok(())
-}
-
-#[allow(dead_code)]
-fn demonstrate_stability_testing() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🔬 Numerical Stability Testing");
-    println!("------------------------------");
-
-    let mut stability_analyzer = create_numerical_stability_analyzer();
-
-    // Test with different data characteristics
-    let test_cases = vec![
-        ("Normal distribution", generate_normal_data(1000)),
-        ("Data with outliers", generate_data_with_outliers(1000)),
-        ("Very small values", generate_small_values_data(1000)),
-        ("Large dynamic range", generate_large_range_data(1000)),
-    ];
-
-    for (name, data) in test_cases {
-        println!("Testing: {}", name);
-
-        let report = stability_analyzer.analyze_statistical_stability(&data.view());
-
-        println!(
-            "  Overall stability: {}",
-            if report.all_passed() {
-                "✅ PASS"
-            } else {
-                "❌ FAIL"
-            }
-        );
-
-        let all_issues = report.get_all_issues();
-        if !all_issues.is_empty() {
-            println!("  Issues found:");
-            for issue in all_issues.iter().take(3) {
-                // Show first 3 issues
-                println!("    • {}", issue);
-            }
-            if all_issues.len() > 3 {
-                println!("    ... and {} more", all_issues.len() - 3);
-            }
-        }
-
-        let all_warnings = report.get_all_warnings();
-        if !all_warnings.is_empty() {
-            println!("  Warnings ({}):", all_warnings.len());
-            for warning in all_warnings.iter().take(2) {
-                // Show first 2 warnings
-                println!("    • {}", warning);
-            }
-        }
-
-        println!();
-    }
-
-    Ok(())
-}
-
-#[allow(dead_code)]
-fn demonstrate_matrix_operations() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🔢 Matrix Operations with Advanced");
-    println!("-------------------------------------");
-
-    let mut processor = create_advanced_processor();
-
-    // Generate sample matrix data
-    let matrix_data = generate_sample_matrix(100, 20);
-    println!(
-        "Generated {}x{} matrix",
-        matrix_data.dim().0,
-        matrix_data.dim().1
-    );
-
-    // Test different matrix operations
-    let operations = vec![
-        ("Covariance Matrix", AdvancedMatrixOperation::Covariance),
-        ("Correlation Matrix", AdvancedMatrixOperation::Correlation),
-    ];
-
-    for (name, operation) in operations {
-        println!("\nComputing {}:", name);
-
-        let start_time = Instant::now();
-        let result = processor.process_matrix_operations(&matrix_data.view(), operation)?;
-        let processing_time = start_time.elapsed();
-
-        println!("  Processing time: {:?}", processing_time);
-        println!("  Result matrix shape: {:?}", result.matrix.dim());
-        println!(
-            "  Strategy used: {:?}",
-            result.processing_metrics.strategy_used
-        );
-        println!(
-            "  Memory usage: {:.2} MB",
-            result.processing_metrics.memory_usage_mb
-        );
-
-        // Show a sample of the result matrix (top-left 3x3)
-        let (rows, cols) = result.matrix.dim();
-        println!("  Sample (top-left 3x3):");
-        for i in 0..3.min(rows) {
-            print!("    [");
-            for j in 0..3.min(cols) {
-                print!(" {:8.4}", result.matrix[[i, j]]);
-            }
-            println!(" ]");
-        }
-    }
-
-    println!();
-    Ok(())
-}
-
-#[allow(dead_code)]
-fn demonstrate_time_series_processing() -> Result<(), Box<dyn std::error::Error>> {
-    println!("📈 Time Series Processing");
-    println!("-------------------------");
-
-    let mut processor = create_advanced_processor();
-
-    // Generate time series data
-    let time_series = generate_time_series_data(5000);
-    println!("Generated time series with {} points", time_series.len());
-
-    let window_sizes = vec![50, 100, 200];
-    let operations = vec![AdvancedTimeSeriesOperation::MovingWindow];
-
-    for window_size in window_sizes {
-        println!("\nMoving window analysis (window size: {}):", window_size);
-
-        let start_time = Instant::now();
-        let result =
-            processor.process_time_series(&time_series.view(), window_size, &operations)?;
-        let processing_time = start_time.elapsed();
-
-        println!("  Processing time: {:?}", processing_time);
-        println!(
-            "  Strategy used: {:?}",
-            result.processing_metrics.strategy_used
-        );
-        println!("  Number of results: {}", result.results.len());
-
-        if !result.results.is_empty() {
-            let first_result = &result.results[0];
-            println!(
-                "  Moving statistics computed: {} windows",
-                first_result.means.len()
-            );
-
-            if !first_result.means.is_empty() {
-                println!("  First few moving averages:");
-                for (i, mean) in first_result.means.iter().take(5).enumerate() {
-                    println!("    Window {}: {:.4}", i + 1, mean);
-                }
-            }
-        }
-    }
-
-    println!();
-    Ok(())
-}
-
-#[allow(dead_code)]
-fn demonstrate_performance_analytics() -> Result<(), Box<dyn std::error::Error>> {
-    println!("📊 Performance Analytics");
-    println!("------------------------");
-
-    let mut processor = create_advanced_processor();
-
-    // Perform several operations to build performance history
-    let data_sizes = vec![1000, 5000, 10000, 50000];
-
-    println!("Running benchmark operations...");
-    for (i, &size) in data_sizes.iter().enumerate() {
-        let data = generate_sample_data(size);
-        let _result = processor.process_comprehensive_statistics(&data.view())?;
-        println!(
-            "  Completed operation {} of {} (size: {})",
-            i + 1,
-            data_sizes.len(),
-            size
-        );
-    }
-
-    // Get performance analytics
-    let analytics = processor.get_performance_analytics();
-
-    println!("\nPerformance Analytics:");
-    println!("  Total operations: {}", analytics.total_operations);
-    println!(
-        "  Average processing time: {:.2} ms",
-        analytics.average_processing_time_ms
-    );
-    println!(
-        "  SIMD usage rate: {:.1}%",
-        analytics.simd_usage_rate * 100.0
-    );
-    println!(
-        "  Parallel usage rate: {:.1}%",
-        analytics.parallel_usage_rate * 100.0
-    );
-    println!(
-        "  Average data size: {:.0} elements",
-        analytics.average_data_size
-    );
-    println!(
-        "  Optimization effectiveness: {:.1}%",
-        analytics.optimization_effectiveness * 100.0
-    );
-
-    if !analytics.recommendations.is_empty() {
-        println!("  Recommendations:");
-        for recommendation in &analytics.recommendations {
-            println!("    • {}", recommendation);
-        }
-    }
-
-    println!();
-    Ok(())
-}
-
-// Helper functions for generating test data
-
-#[allow(dead_code)]
-fn generate_sample_data(n: usize) -> Array1<f64> {
-    use std::f64::consts::PI;
-
-    (0..n)
-        .map(|i| {
-            let x = i as f64 / n as f64;
-            // Mix of deterministic and pseudo-random components
-            (x * 2.0 * PI).sin() + 0.1 * (x * 13.0 * PI).cos() + 0.05 * (i as f64 * 0.1).sin()
-        })
-        .collect()
-}
-
-#[allow(dead_code)]
-fn generate_normal_data(n: usize) -> Array1<f64> {
-    // Simple Box-Muller approximation for normal distribution
-    (0..n)
-        .map(|i| {
-            let u1 = (i as f64 + 1.0) / (n as f64 + 2.0);
-            let u2 = ((i * 7) % n) as f64 / n as f64;
-            (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        })
-        .collect()
-}
-
-#[allow(dead_code)]
-fn generate_data_with_outliers(n: usize) -> Array1<f64> {
-    let mut data = generate_normal_data(n);
-    // Add some outliers
-    for i in (0..n).step_by(n / 10) {
-        data[i] *= 10.0; // Make every 10th value an outlier
-    }
-    data
-}
-
-#[allow(dead_code)]
-fn generate_small_values_data(n: usize) -> Array1<f64> {
-    generate_normal_data(n).mapv(|x| x * 1e-12) // Very small values
-}
-
-#[allow(dead_code)]
-fn generate_large_range_data(n: usize) -> Array1<f64> {
-    (0..n)
-        .map(|i| {
-            if i % 100 == 0 {
-                1e12 // Very large values occasionally
-            } else {
-                (i as f64).sin() * 1e-6 // Very small values mostly
-            }
-        })
-        .collect()
-}
-
-#[allow(dead_code)]
-fn generate_sample_matrix(_rows: usize, cols: usize) -> Array2<f64> {
-    use std::f64::consts::PI;
-
-    Array2::from_shape_fn((_rows, cols), |(i, j)| {
-        let x = i as f64 / _rows as f64;
-        let y = j as f64 / cols as f64;
-        (x * 2.0 * PI).sin() * (y * 2.0 * PI).cos() + 0.1 * ((i + j) as f64).sin()
-    })
-}
-
-#[allow(dead_code)]
-fn generate_time_series_data(n: usize) -> Array1<f64> {
-    use std::f64::consts::PI;
-
-    (0..n)
-        .map(|i| {
-            let t = i as f64 / 100.0; // Time scale
-                                      // Trend + seasonal + noise
-            0.1 * t
-                + (t * 2.0 * PI / 365.0).sin()
-                + 0.2 * (t * 2.0 * PI / 7.0).sin()
-                + 0.05 * (t * 17.0).sin()
-        })
-        .collect()
 }

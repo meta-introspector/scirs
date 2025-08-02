@@ -368,8 +368,9 @@ pub fn gromov_hausdorff_distance<T: Float + Send + Sync>(
 
 #[cfg(test)]
 mod tests {
+    use super::{directed_hausdorff, gromov_hausdorff_distance, hausdorff_distance};
     use approx::assert_relative_eq;
-    use ndarray::array;
+    use ndarray::{array, Array2};
 
     #[test]
     fn test_directed_hausdorff() {

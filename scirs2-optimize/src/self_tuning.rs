@@ -455,7 +455,8 @@ impl ParameterValue {
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             ParameterValue::Float(f) => Some(*f),
-            ParameterValue::Integer(i) => Some(*i as f64), _ => None,
+            ParameterValue::Integer(i) => Some(*i as f64),
+            _ => None,
         }
     }
 
@@ -463,14 +464,16 @@ impl ParameterValue {
     pub fn as_i64(&self) -> Option<i64> {
         match self {
             ParameterValue::Integer(i) => Some(*i),
-            ParameterValue::Float(f) => Some(*f as i64), _ => None,
+            ParameterValue::Float(f) => Some(*f as i64),
+            _ => None,
         }
     }
 
     /// Extract as bool if possible
     pub fn as_bool(&self) -> Option<bool> {
         match self {
-            ParameterValue::Boolean(b) => Some(*b), _ => None,
+            ParameterValue::Boolean(b) => Some(*b),
+            _ => None,
         }
     }
 }
@@ -1190,7 +1193,8 @@ impl BayesianParameterOptimizer {
                             let new_val = ((*i as f64) * perturbation_factor) as i64;
                             Some(ParameterValue::Integer(new_val.max(1)))
                         }
-                        _ => None..};
+                        _ => None..,
+                    };
 
                     if let Some(new_value) = perturbed_value {
                         if new_value != *value {

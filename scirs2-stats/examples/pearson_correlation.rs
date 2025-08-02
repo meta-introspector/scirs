@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__stats::{pearson_r, pearsonr};
+use scirs2_stats::{pearson_r, pearsonr};
 
 #[allow(dead_code)]
 fn main() {

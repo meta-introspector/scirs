@@ -129,7 +129,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
     ///
     /// // Create a 2D Wishart distribution with 5 degrees of freedom
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
@@ -173,7 +173,7 @@ impl Wishart {
         };
 
         Ok(Wishart {
-            _scale: scale_owned,
+            scale: scale_owned,
             df,
             dim,
             scale_chol,
@@ -195,7 +195,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
@@ -275,7 +275,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
@@ -318,7 +318,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -420,7 +420,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -444,7 +444,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -469,7 +469,7 @@ impl Wishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::wishart::Wishart;
+    /// use scirs2_stats::distributions::multivariate::wishart::Wishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;  // For 2x2 matrix, mode exists when df ≥ 3
@@ -509,7 +509,7 @@ impl Wishart {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distributions::multivariate;
+/// use scirs2_stats::distributions::multivariate;
 ///
 /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
 /// let df = 5.0;

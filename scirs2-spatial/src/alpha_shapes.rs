@@ -779,10 +779,7 @@ impl AlphaShape {
     /// let (optimal_alpha, shape) = AlphaShape::find_optimal_alpha(&points, "area").unwrap();
     /// println!("Optimal alpha: {}", optimal_alpha);
     /// ```
-    pub fn find_optimal_alpha(
-        points: &Array2<f64>,
-        criterion: &str,
-    ) -> SpatialResult<(f64, Self)> {
+    pub fn find_optimal_alpha(points: &Array2<f64>, criterion: &str) -> SpatialResult<(f64, Self)> {
         // Build alpha spectrum by analyzing circumradii
         let delaunay = Delaunay::new(points)?;
         let circumradii = Self::compute_circumradii(&delaunay, points)?;

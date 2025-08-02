@@ -48,7 +48,7 @@ pub fn mean_simd_optimized<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     // Use scirs2-core validation
     check_not_empty(x, "x").map_err(|_| {
@@ -80,7 +80,7 @@ pub fn variance_simd_optimized<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let n = x.len();
     if n <= ddof {
@@ -113,7 +113,7 @@ pub fn stats_simd_single_pass<F, D>(
 ) -> StatsResult<(F, F, F, F, F, F)>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     if x.is_empty() {
         return Err(crate::error::StatsError::invalid_argument(
@@ -235,7 +235,7 @@ where
 fn chunked_simd_sum<F, D>(x: &ArrayBase<D, Ix1>, _config: &SimdConfig) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let capabilities = PlatformCapabilities::detect();
     let _simd_width = if capabilities.simd_available { 8 } else { 1 };
@@ -269,7 +269,7 @@ fn chunked_simd_sum_squared_deviations<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     const CHUNK_SIZE: usize = 1024;
     let mut total_sum = F::zero();
@@ -303,7 +303,7 @@ where
 fn variance_scalar_welford<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let mut mean = F::zero();
     let mut m2 = F::zero();
@@ -325,7 +325,7 @@ where
 fn stats_scalar_single_pass<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F, F, F)>
 where
     F: Float + NumCast,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let n = x.len();
     let n_f = F::from(n).unwrap();
@@ -398,11 +398,12 @@ mod tests {
     #[test]
     fn test_stats_single_pass() {
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-        let (mean, var, min, max__) = stats_simd_single_pass(&data.view(), None).unwrap();
+        let (mean, var, min, max__, skew, kurt) =
+            stats_simd_single_pass(&data.view(), None).unwrap();
 
         assert!((mean - 3.0).abs() < 1e-10);
         assert!((var - 2.5).abs() < 1e-10);
         assert!((min - 1.0).abs() < 1e-10);
-        assert!((max - 5.0).abs() < 1e-10);
+        assert!((max__ - 5.0).abs() < 1e-10);
     }
 }

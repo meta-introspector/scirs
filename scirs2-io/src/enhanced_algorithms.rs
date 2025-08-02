@@ -356,10 +356,10 @@ impl AdvancedPatternRecognizer {
 
         // Calculate slope (fractal dimension)
         let n = dimensions.len() as f32;
-        let sum_x: f32 = dimensions.iter().map(|(x_)| x_).sum();
+        let sum_x: f32 = dimensions.iter().map(|(x, _)| *x).sum();
         let sum_y: f32 = dimensions.iter().map(|(_, y)| y).sum();
         let sum_xy: f32 = dimensions.iter().map(|(x, y)| x * y).sum();
-        let sum_x2: f32 = dimensions.iter().map(|(x_)| x_ * x_).sum();
+        let sum_x2: f32 = dimensions.iter().map(|(x, _)| x * x).sum();
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
         slope.abs().min(2.0) // Clamp to reasonable range
@@ -556,7 +556,7 @@ impl AdvancedPatternRecognizer {
             .iter()
             .enumerate()
             .max_by_key(|(_, &count)| count)
-            .map(|(byte_)| byte_ as u8)
+            .map(|(byte, _)| byte as u8)
             .unwrap_or(0)
     }
 

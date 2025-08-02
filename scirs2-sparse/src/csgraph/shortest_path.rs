@@ -575,8 +575,7 @@ mod tests {
         let graph = create_test_graph();
 
         // Single source
-        let (distances_) =
-            shortest_path(&graph, Some(0), None, "dijkstra", false, false).unwrap();
+        let (distances_) = shortest_path(&graph, Some(0), None, "dijkstra", false, false).unwrap();
         assert_relative_eq!(distances[[0, 1]], 1.0);
         assert_relative_eq!(distances[[0, 3]], 3.0);
 

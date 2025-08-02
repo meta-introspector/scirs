@@ -163,7 +163,8 @@ pub struct ParallelTextProcessor {
 impl Default for ParallelTextProcessor {
     fn default() -> Self {
         Self {
-            num_threads: num, _cpus: get(),
+            num_threads: num,
+            _cpus: get(),
         }
     }
 }

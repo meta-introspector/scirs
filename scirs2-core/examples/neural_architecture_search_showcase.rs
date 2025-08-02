@@ -649,7 +649,7 @@ fn demonstrate_meta_learning() -> CoreResult<()> {
 
 /// Analyze and display comprehensive search results
 #[allow(dead_code)]
-fn results( &SearchResults) -> CoreResult<()> {
+fn analyze_search_results(_results: &SearchResults) -> CoreResult<()> {
     println!("\n📊 Comprehensive Search Analysis:");
     println!("================================");
 
@@ -682,7 +682,10 @@ fn results( &SearchResults) -> CoreResult<()> {
 
     // Resource usage
     println!("\n💰 Resource Usage:");
-    println!("   - Total CPU time: {:?}", _results.resource_usage.cpu_time);
+    println!(
+        "   - Total CPU time: {:?}",
+        _results.resource_usage.cpu_time
+    );
     println!(
         "   - Peak memory: {} MB",
         _results.resource_usage.memory_peak / (1024 * 1024)
@@ -738,7 +741,7 @@ fn results( &SearchResults) -> CoreResult<()> {
 
 /// Count layer types in an architecture
 #[allow(dead_code)]
-fn architecture( &Architecture) -> std::collections::HashMap<LayerType, usize> {
+fn count_layer_types(_architecture: &Architecture) -> std::collections::HashMap<LayerType, usize> {
     let mut counts = std::collections::HashMap::new();
 
     for layer in &_architecture.layers {

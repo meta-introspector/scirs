@@ -261,8 +261,8 @@ pub fn save_image<P: AsRef<Path>>(
         ImageFormat::from_extension(path.extension().and_then(|ext| ext.to_str()).unwrap_or(""))
     });
 
-    let (height, width_) = image_data._data.dim();
-    let raw_data = image_data._data.iter().cloned().collect::<Vec<u8>>();
+    let (height, width_, _) = image_data.data.dim();
+    let raw_data = image_data.data.iter().cloned().collect::<Vec<u8>>();
 
     let img_buffer = image::RgbImage::from_raw(width_ as u32, height as u32, raw_data)
         .ok_or_else(|| IoError::FormatError("Invalid image dimensions".to_string()))?;
@@ -327,8 +327,8 @@ pub fn convert_image<P1: AsRef<Path>, P2: AsRef<Path>>(
 /// ```
 #[allow(dead_code)]
 pub fn resize_image(_image_data: &ImageData, new_width: u32, new_height: u32) -> Result<ImageData> {
-    let (_height, width_) = _image_data._data.dim();
-    let raw_data = _image_data._data.iter().cloned().collect::<Vec<u8>>();
+    let (_height, width_, _) = _image_data.data.dim();
+    let raw_data = _image_data.data.iter().cloned().collect::<Vec<u8>>();
 
     let img_buffer = image::RgbImage::from_raw(width_ as u32, _height as u32, raw_data)
         .ok_or_else(|| IoError::FormatError("Invalid image dimensions".to_string()))?;
@@ -344,11 +344,11 @@ pub fn resize_image(_image_data: &ImageData, new_width: u32, new_height: u32) ->
             .map_err(|e| IoError::FormatError(e.to_string()))?;
 
     let mut new_metadata = _image_data.metadata.clone();
-    new_metadata._width = new_width;
-    new_metadata._height = new_height;
+    new_metadata.width = new_width;
+    new_metadata.height = new_height;
 
     Ok(ImageData {
-        _data: resized_data,
+        data: resized_data,
         metadata: new_metadata,
     })
 }

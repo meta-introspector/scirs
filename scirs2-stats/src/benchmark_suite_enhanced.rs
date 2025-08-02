@@ -676,7 +676,8 @@ impl EnhancedBenchmarkSuite {
 
     /// Perform AI-driven performance analysis
     fn perform_ai_analysis(
-        &self, _metrics: &[BenchmarkMetrics],
+        &self,
+        _metrics: &[BenchmarkMetrics],
     ) -> StatsResult<AIPerformanceAnalysis> {
         // Placeholder implementation - would use actual ML models
         Ok(AIPerformanceAnalysis {
@@ -774,7 +775,8 @@ impl EnhancedBenchmarkSuite {
 
     /// Perform regression analysis
     fn perform_regression_analysis(
-        &self, _metrics: &[BenchmarkMetrics],
+        &self,
+        _metrics: &[BenchmarkMetrics],
     ) -> StatsResult<RegressionAnalysis> {
         // Placeholder implementation
         Ok(RegressionAnalysis {
@@ -800,7 +802,11 @@ impl EnhancedBenchmarkSuite {
     /// Generate intelligent optimization recommendations
     #[allow(clippy::too_many_arguments)]
     fn generate_intelligent_recommendations(
-        &self, _metrics: &[BenchmarkMetrics], _ai_analysis: &Option<AIPerformanceAnalysis>, _cross_platform: &Option<CrossPlatformAnalysis>, _regression: &Option<RegressionAnalysis>,
+        &self,
+        _metrics: &[BenchmarkMetrics],
+        _ai_analysis: &Option<AIPerformanceAnalysis>,
+        _cross_platform: &Option<CrossPlatformAnalysis>,
+        _regression: &Option<RegressionAnalysis>,
     ) -> StatsResult<Vec<IntelligentRecommendation>> {
         Ok(vec![
             IntelligentRecommendation {
@@ -902,7 +908,8 @@ pub fn create_configured_enhanced_benchmark_suite(
 /// Run quick performance analysis with AI insights
 #[allow(dead_code)]
 pub fn run_quick_ai_analysis(
-    data_size: usize, _operation: &str,
+    data_size: usize,
+    _operation: &str,
 ) -> StatsResult<Vec<IntelligentRecommendation>> {
     let config = EnhancedBenchmarkConfig {
         base_config: BenchmarkConfig {

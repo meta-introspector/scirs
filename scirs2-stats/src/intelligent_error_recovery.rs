@@ -380,7 +380,8 @@ impl IntelligentErrorRecovery {
 
     /// Create dimension mismatch fix strategy
     fn create_dimension_fix_strategy(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         let suggestion = RecoverySuggestion {
             suggestion_type: SuggestionType::InputValidation,
@@ -409,7 +410,8 @@ impl IntelligentErrorRecovery {
 
     /// Create computation error fix strategies
     fn create_computation_fix_strategies(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
 
@@ -466,7 +468,8 @@ impl IntelligentErrorRecovery {
 
     /// Create convergence fix strategies
     fn create_convergence_fix_strategies(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
 
@@ -497,7 +500,8 @@ impl IntelligentErrorRecovery {
 
     /// Create data augmentation strategy
     fn create_data_augmentation_strategy(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
             suggestion: RecoverySuggestion {
@@ -524,7 +528,8 @@ impl IntelligentErrorRecovery {
 
     /// Create memory optimization strategy
     fn create_memory_optimization_strategy(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
             suggestion: RecoverySuggestion {
@@ -577,7 +582,8 @@ impl IntelligentErrorRecovery {
 
     /// Create generic recovery strategy
     fn create_generic_strategy(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
             suggestion: RecoverySuggestion {
@@ -776,7 +782,7 @@ impl NeuralErrorClassifier {
             }
             layer2.push(neuron_weights);
         }
-        weights.push(layer2.into().iter().flatten().collect());
+        weights.push(layer2.into_iter().flatten().collect());
 
         Self {
             weights,
@@ -1305,7 +1311,8 @@ impl MLEnhancedErrorRecovery {
 
     /// Create data preprocessing strategy
     fn create_data_preprocessing_strategy(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
@@ -1331,7 +1338,8 @@ impl MLEnhancedErrorRecovery {
 
     /// Create algorithm optimization strategy
     fn create_algorithm_optimization_strategy(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
@@ -1359,7 +1367,8 @@ impl MLEnhancedErrorRecovery {
 
     /// Create numerical stability strategy
     fn create_numerical_stability_strategy(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
@@ -1416,7 +1425,8 @@ impl MLEnhancedErrorRecovery {
 
     /// Create approximation strategy
     fn create_approximation_strategy(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
@@ -1444,7 +1454,8 @@ impl MLEnhancedErrorRecovery {
 
     /// Create adaptive strategy
     fn create_adaptive_strategy(
-        &self, error: &EnhancedStatsError,
+        &self,
+        error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {

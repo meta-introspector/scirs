@@ -1583,7 +1583,8 @@ fn estimate_window_effectiveness(_times: &[f64]) -> SignalResult<f64> {
             "none" => WindowType::None,
             "hann" => WindowType::Hann,
             "hamming" => WindowType::Hamming,
-            "blackman" => WindowType::Blackman_ =>, WindowType::None,
+            "blackman" => WindowType::Blackman,
+            _ => WindowType::None,
         };
 
         let f0 = 10.0;

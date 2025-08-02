@@ -30,7 +30,8 @@ pub struct GaussianMixtureModel<F> {
     /// Fitted parameters
     pub parameters: Option<GMMParameters<F>>,
     /// Convergence history
-    pub convergence_history: Vec<F>, _phantom: PhantomData<F>,
+    pub convergence_history: Vec<F>,
+    _phantom: PhantomData<F>,
 }
 
 /// Advanced GMM configuration
@@ -259,10 +260,11 @@ where
         check_positive(_n_components, "_n_components")?;
 
         Ok(Self {
-            _n_components,
+            n_components: _n_components,
             config,
             parameters: None,
-            convergence_history: Vec::new(), _phantom: PhantomData,
+            convergence_history: Vec::new(),
+            _phantom: PhantomData,
         })
     }
 
@@ -374,8 +376,8 @@ where
                 use scirs2_core::random::Random;
                 let mut init_rng = rand::rng();
                 let mut rng = match self.config.seed {
-                    Some(seed) => Random::with_seed(seed),
-                    None => Random::with_seed(init_rng.random()),
+                    Some(seed) => Random::seed(seed),
+                    None => Random::seed(init_rng.random()),
                 };
 
                 for i in 0..self.n_components {
@@ -433,8 +435,8 @@ where
         use scirs2_core::random::Random;
         let mut init_rng = rand::rng();
         let mut rng = match self.config.seed {
-            Some(seed) => Random::with_seed(seed),
-            None => Random::with_seed(init_rng.random()),
+            Some(seed) => Random::seed(seed),
+            None => Random::seed(init_rng.random()),
         };
 
         let (n_samples_, n_features) = data.dim();
@@ -477,7 +479,8 @@ where
     /// Initialize covariances
     fn initialize_covariances(
         &self,
-        data: &ArrayView2<F>, _means: &Array2<F>,
+        data: &ArrayView2<F>,
+        _means: &Array2<F>,
     ) -> StatsResult<Vec<Array2<F>>> {
         let n_features = data.ncols();
         let mut covariances = Vec::with_capacity(self.n_components);
@@ -523,7 +526,7 @@ where
         means: &Array2<F>,
         covariances: &[Array2<F>],
     ) -> StatsResult<Array2<F>> {
-        let (n_samples_) = data.dim();
+        let n_samples_ = data.shape()[0];
         let mut responsibilities = Array2::zeros((n_samples_, self.n_components));
 
         for i in 0..n_samples_ {
@@ -791,7 +794,8 @@ pub struct KernelDensityEstimator<F> {
     /// Configuration
     pub config: KDEConfig,
     /// Training data
-    pub training_data: Option<Array2<F>>, _phantom: PhantomData<F>,
+    pub training_data: Option<Array2<F>>,
+    _phantom: PhantomData<F>,
 }
 
 /// Kernel types for KDE
@@ -860,10 +864,11 @@ where
     /// Create new KDE
     pub fn new(_kernel: KernelType, bandwidth: F, config: KDEConfig) -> Self {
         Self {
-            _kernel,
+            kernel: _kernel,
             bandwidth,
             config,
-            training_data: None, _phantom: PhantomData,
+            training_data: None,
+            _phantom: PhantomData,
         }
     }
 
@@ -1165,7 +1170,8 @@ where
         Ok(Self {
             gmm,
             outlier_threshold,
-            contamination_phantom: PhantomData,
+            contamination,
+            _phantom: PhantomData,
         })
     }
 
@@ -1218,7 +1224,8 @@ pub struct StreamingGMM<F> {
     /// Running statistics
     pub running_means: Option<Array2<F>>,
     pub running_covariances: Option<Vec<Array2<F>>>,
-    pub running_weights: Option<Array1<F>>, _phantom: PhantomData<F>,
+    pub running_weights: Option<Array1<F>>,
+    _phantom: PhantomData<F>,
 }
 
 impl<F> StreamingGMM<F>
@@ -1251,7 +1258,8 @@ where
             n_samples_seen: 0,
             running_means: None,
             running_covariances: None,
-            running_weights: None, _phantom: PhantomData,
+            running_weights: None,
+            _phantom: PhantomData,
         })
     }
 
@@ -1373,7 +1381,7 @@ where
         + std::iter::Sum<F>
         + ndarray::ScalarOperand,
 {
-    let (n_samples_) = data.dim();
+    let (n_samples_, _) = data.dim();
     let fold_size = n_samples_ / n_folds;
     let mut cv_scores = Vec::with_capacity(n_folds);
 
@@ -1577,7 +1585,8 @@ pub struct VariationalGMM<F> {
     /// Fitted parameters
     pub parameters: Option<VariationalGMMParameters<F>>,
     /// Lower bound history
-    pub lower_bound_history: Vec<F>, _phantom: PhantomData<F>,
+    pub lower_bound_history: Vec<F>,
+    _phantom: PhantomData<F>,
 }
 
 /// Configuration for Variational GMM
@@ -1664,10 +1673,11 @@ where
     /// Create new Variational GMM
     pub fn new(_max_components: usize, config: VariationalGMMConfig) -> Self {
         Self {
-            _max_components,
+            max_components: _max_components,
             config,
             parameters: None,
-            lower_bound_history: Vec::new(), _phantom: PhantomData,
+            lower_bound_history: Vec::new(),
+            _phantom: PhantomData,
         }
     }
 
@@ -1789,8 +1799,8 @@ where
         use scirs2_core::random::Random;
         let mut init_rng = rand::rng();
         let mut rng = match self.config.seed {
-            Some(seed) => Random::with_seed(seed),
-            None => Random::with_seed(init_rng.random()),
+            Some(seed) => Random::seed(seed),
+            None => Random::seed(init_rng.random()),
         };
 
         for i in 0..self.max_components {
@@ -1810,7 +1820,7 @@ where
         degrees_of_freedom: &Array1<F>,
         weight_concentration: &Array1<F>,
     ) -> StatsResult<Array2<F>> {
-        let (n_samples_) = data.dim();
+        let n_samples_ = data.shape()[0];
         let mut responsibilities = Array2::zeros((n_samples_, self.max_components));
 
         for i in 0..n_samples_ {
@@ -1904,7 +1914,7 @@ where
         means: &Array2<F>,
         scale_matrices: &Array3<F>,
     ) -> StatsResult<F> {
-        let (n_samples_) = data.dim();
+        let n_samples_ = data.shape()[0];
         let mut lower_bound = F::zero();
 
         // Expected log likelihood
@@ -1962,7 +1972,9 @@ where
     fn compute_log_likelihood_component(
         &self,
         point: &ArrayView1<F>,
-        mean: &ArrayView1<F>, _scale_matrix: &ndarray::ArrayBase<ndarray::ViewRepr<&F>, ndarray::Dim<[usize; 2]>>, _degrees_of_freedom: F,
+        mean: &ArrayView1<F>,
+        _scale_matrix: &ndarray::ArrayBase<ndarray::ViewRepr<&F>, ndarray::Dim<[usize; 2]>>,
+        _degrees_of_freedom: F,
     ) -> StatsResult<F> {
         // Simplified Gaussian log likelihood
         let mut sum_sq = F::zero();

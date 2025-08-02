@@ -73,7 +73,8 @@ pub fn simd_convolve_1d(
     let out_size = match mode {
         "full" => n + k - 1,
         "same" => n,
-        "valid" => n - k + 1_ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
+        "valid" => n - k + 1,
+        _ => return Err(SignalError::ValueError(format!("Unknown mode: {}", mode))),
     };
 
     let mut output = Array1::zeros(out_size);
@@ -96,7 +97,8 @@ pub fn simd_convolve_1d(
             let conv_start = match mode {
                 "full" => 0,
                 "same" => (k - 1) / 2,
-                "valid" => k - 1_ => 0,
+                "valid" => k - 1,
+                _ => 0,
             };
 
             // Compute convolution for this output position
@@ -122,7 +124,8 @@ pub fn simd_convolve_1d(
         let conv_start = match mode {
             "full" => 0,
             "same" => (k - 1) / 2,
-            "valid" => k - 1_ => 0,
+            "valid" => k - 1,
+            _ => 0,
         };
 
         let sig_start = out_idx.saturating_sub(conv_start);

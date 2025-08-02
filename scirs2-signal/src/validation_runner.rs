@@ -8,7 +8,6 @@
 use crate::error::SignalResult;
 use crate::dwt::Wavelet;
 use crate::dwt2d__enhanced::{BoundaryMode, Dwt2dConfig, enhanced_dwt2d_decompose};
-use crate::error::SignalResult;
 use crate::filter::{FilterType, butter};
 use crate::multitaper::{TestSignalConfig, validate_multitaper_comprehensive};
 use crate::parametric::{ARMethod, estimate_arma};
@@ -364,7 +363,7 @@ pub fn validate_signal_processing_library(
 /// Validate multitaper module
 #[allow(dead_code)]
 fn validate_multitaper_module(
-    config: &ValidationConfig_rng: &mut StdRng,
+    config: &ValidationConfig, _rng: &mut StdRng,
 ) -> SignalResult<Option<crate::multitaper::MultitaperValidationResult>> {
     let test_config = TestSignalConfig {
         n: 1024,
@@ -388,7 +387,7 @@ fn validate_multitaper_module(
 /// Validate Lomb-Scargle module
 #[allow(dead_code)]
 fn validate_lombscargle_module(
-    config: &ValidationConfig_rng: &mut StdRng,
+    config: &ValidationConfig, _rng: &mut StdRng,
 ) -> SignalResult<Option<crate::lombscargle_scipy_validation::ScipyValidationResult>> {
     let scipy_config = ScipyValidationConfig {
         tolerance: config.tolerance,
@@ -483,7 +482,7 @@ fn validate_parametric_module(
 /// Validate 2D wavelet module
 #[allow(dead_code)]
 fn validate_wavelet2d_module(
-    config: &ValidationConfig_rng: &mut StdRng,
+    config: &ValidationConfig, _rng: &mut StdRng,
 ) -> SignalResult<Wavelet2dValidationResult> {
     let mut perfect_reconstruction = true;
     let mut max_reconstruction_error = 0.0;
@@ -594,7 +593,7 @@ fn validate_sysid_module(
 /// Validate filter module
 #[allow(dead_code)]
 fn validate_filter_module(
-    config: &ValidationConfig_rng: &mut StdRng,
+    config: &ValidationConfig, _rng: &mut StdRng,
 ) -> SignalResult<FilterValidationResult> {
     let mut stability_validation = true;
     let mut frequency_response_accuracy = 0.0;

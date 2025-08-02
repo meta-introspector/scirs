@@ -31,7 +31,7 @@ struct SparseArray {
 impl SparseArray {
     /// Create a new sparse array.
     #[allow(dead_code)]
-    fn indices( Vec<(usize, usize)>, values: Vec<f64>, shape: (usize, usize)) -> Self {
+    fn indices(_indices: Vec<(usize, usize)>, values: Vec<f64>, shape: (usize, usize)) -> Self {
         assert_eq!(
             _indices.len(),
             values.len(),
@@ -45,7 +45,7 @@ impl SparseArray {
     }
 
     /// Create a sparse array from a dense array by keeping only non-zero elements.
-    fn array( &Array2<f64>) -> Self {
+    fn array(_array: &Array2<f64>) -> Self {
         let shape = _array.dim();
         let mut indices = Vec::new();
         let mut values = Vec::new();
@@ -107,7 +107,8 @@ impl ArrayProtocol for SparseArray {
         })
     }
 
-    fn types( &[TypeId],
+    fn types(
+        _type_ids: &[TypeId],
         args: &[Box<dyn Any>],
         kwargs: &HashMap<String, Box<dyn Any>>,
     ) -> Result<Box<dyn Any>, NotImplemented> {

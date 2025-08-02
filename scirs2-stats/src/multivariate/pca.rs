@@ -153,7 +153,7 @@ impl PCA {
             // Avoid division by zero
             let std = std.mapv(|s| if s > 1e-10 { s } else { 1.0 });
 
-            for (mut col, &s) in centered_data.columns_mut().into().iter().zip(std.iter()) {
+            for (mut col, &s) in centered_data.columns_mut().into_iter().zip(std.iter()) {
                 col /= s;
             }
             Some(std)
@@ -338,7 +338,7 @@ impl PCA {
 
         // Scale
         if let Some(ref scale) = result.scale {
-            for (mut col, &s) in transformed.columns_mut().into().iter().zip(scale.iter()) {
+            for (mut col, &s) in transformed.columns_mut().into_iter().zip(scale.iter()) {
                 col /= s;
             }
         }
@@ -368,7 +368,7 @@ impl PCA {
 
         // Inverse scale
         if let Some(ref scale) = result.scale {
-            for (mut col, &s) in reconstructed.columns_mut().into().iter().zip(scale.iter()) {
+            for (mut col, &s) in reconstructed.columns_mut().into_iter().zip(scale.iter()) {
                 col *= s;
             }
         }

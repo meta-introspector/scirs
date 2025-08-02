@@ -291,7 +291,7 @@ impl ProcessingHistoryEntry {
     pub fn new(_operation: impl Into<String>) -> Self {
         Self {
             timestamp: Utc::now(),
-            _operation: _operation.into(),
+            operation: _operation.into(),
             parameters: IndexMap::new(),
             user: std::env::var("USER").ok(),
         }
@@ -839,7 +839,7 @@ impl MetadataVersionControl {
             .read()
             .unwrap()
             .iter()
-            .find(|v| v._id == version_id)
+            .find(|v| v.id == version_id)
             .cloned()
     }
 
@@ -940,7 +940,7 @@ pub struct MetadataTemplate {
 impl MetadataTemplate {
     pub fn new(_base: Metadata) -> Self {
         Self {
-            _base,
+            base: _base,
             overridable: HashSet::new(),
             required: HashSet::new(),
             defaults: IndexMap::new(),

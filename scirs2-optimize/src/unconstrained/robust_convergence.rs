@@ -312,9 +312,11 @@ impl RobustConvergenceState {
 
     /// Check all convergence criteria
     fn check_all_convergence_criteria(
-        &self_function_value: f64,
+        &self,
+        function_value: f64,
         gradient_norm: f64,
-        step_norm: f64, _iteration: usize,
+        step_norm: f64,
+        _iteration: usize,
     ) -> Result<RobustConvergenceResult, OptimizeError> {
         let mut convergence_reasons = Vec::new();
         let mut warning_flags = Vec::new();

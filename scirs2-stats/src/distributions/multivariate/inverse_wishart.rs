@@ -44,7 +44,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// // Create a 2D Inverse Wishart distribution with 5 degrees of freedom
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
@@ -89,7 +89,7 @@ impl InverseWishart {
         };
 
         Ok(InverseWishart {
-            _scale: scale_owned,
+            scale: scale_owned,
             df,
             dim,
             scale_chol,
@@ -111,7 +111,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
@@ -194,7 +194,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.0], [0.0, 1.0]];
     /// let df = 5.0;
@@ -237,7 +237,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -282,7 +282,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -306,7 +306,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -343,7 +343,7 @@ impl InverseWishart {
     ///
     /// ```
     /// use ndarray::array;
-    /// use scirs2__stats::distributions::multivariate::inverse_wishart::InverseWishart;
+    /// use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
     ///
     /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
     /// let df = 5.0;
@@ -380,7 +380,7 @@ impl InverseWishart {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::distributions::multivariate;
+/// use scirs2_stats::distributions::multivariate;
 ///
 /// let scale = array![[1.0, 0.5], [0.5, 2.0]];
 /// let df = 5.0;

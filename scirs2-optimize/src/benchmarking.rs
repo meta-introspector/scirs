@@ -159,7 +159,8 @@ impl TestProblem {
         };
 
         let bounds = test_functions::get_bounds(_name, dimensions);
-        let (global_optimum, global_minimum) = test_functions::get_global_optimum(_name, dimensions);
+        let (global_optimum, global_minimum) =
+            test_functions::get_global_optimum(_name, dimensions);
         let characteristics = ProblemCharacteristics::from_function_name(_name);
 
         Self {

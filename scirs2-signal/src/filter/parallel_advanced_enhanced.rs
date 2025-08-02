@@ -170,7 +170,7 @@ impl ParallelMultiRateFilterBank {
         let num_bands = self.analysis_filters.len();
 
         // Analysis stage - parallel decimation
-        let analysis_results: Result<Vec<_>_> = (0..num_bands)
+        let analysis_results: Result<Vec<_>> = (0..num_bands)
             .into_par_iter()
             .map(|band| {
                 let filtered = parallel_convolve_decimated(
@@ -189,7 +189,7 @@ impl ParallelMultiRateFilterBank {
         let processed_bands = decimated_bands;
 
         // Synthesis stage - parallel interpolation and reconstruction
-        let synthesis_results: Result<Vec<_>_> = (0..num_bands)
+        let synthesis_results: Result<Vec<_>> = (0..num_bands)
             .into_par_iter()
             .map(|band| {
                 parallel_interpolate_filter(
@@ -279,7 +279,7 @@ impl SparseParallelFilter {
         let chunk_size = signal_len / num_threads;
 
         // Process signal in parallel chunks
-        let results: Result<Vec<_>_> = (0..num_threads)
+        let results: Result<Vec<_>> = (0..num_threads)
             .into_par_iter()
             .map(|thread_id| {
                 let start = thread_id * chunk_size;
@@ -526,7 +526,7 @@ impl ParallelSpectralFilter {
         let num_frames = (signal.len() + hop_size - 1) / hop_size;
 
         // Process frames in parallel
-        let frame_results: Result<Vec<_>_> = (0..num_frames)
+        let frame_results: Result<Vec<_>> = (0..num_frames)
             .into_par_iter()
             .map(|frame_idx| {
                 let start = frame_idx * hop_size;
@@ -610,7 +610,7 @@ fn parallel_convolve_decimated(
     // Process only samples that will be kept after decimation
     let sample_indices: Vec<usize> = (0..output_len).map(|i| i * decimation_factor).collect();
 
-    let results: Result<Vec<_>_> = sample_indices
+    let results: Result<Vec<_>> = sample_indices
         .into_par_iter()
         .map(|sample_idx| {
             let mut convolution_result = 0.0;
@@ -658,7 +658,7 @@ fn parallel_interpolate_filter(
     let chunk_size = config.chunk_size.unwrap_or(1024);
     let chunks: Vec<_> = (0..filtered_len).step_by(chunk_size).collect();
 
-    let results: Result<Vec<_>_> = chunks
+    let results: Result<Vec<_>> = chunks
         .into_par_iter()
         .map(|start| {
             let end = (start + chunk_size).min(filtered_len);

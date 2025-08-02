@@ -651,7 +651,7 @@ where
             let data_array = Array1::from_vec(data);
             
             // Test that normal data has kurtosis ≈ 0 (Fisher definition)
-            let result = match crate::descriptive::kurtosis(&data_array.view()..true, false) {
+            let result = match crate::descriptive::kurtosis(&data_array.view(), true, false, None) {
                 Ok(kurtosis_val) => {
                     // Allow larger tolerance for finite samples of normal distribution
                     if kurtosis_val.abs() < 2.0 { 

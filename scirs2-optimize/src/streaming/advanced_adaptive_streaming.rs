@@ -726,7 +726,7 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
     }
 
     /// Adaptive hyperparameter tuning
-    fn adaptive_hyperparameter_tuning(&mut self_context: &Array1<f64>) -> Result<()> {
+    fn adaptive_hyperparameter_tuning(&mut self, context: &Array1<f64>) -> Result<()> {
         // Tune learning rate based on performance
         if self.performance_tracker.is_stagnant() {
             self.config.learning_rate *= 1.1; // Increase learning rate
@@ -899,7 +899,9 @@ impl NeuromorphicLearningSystem {
     }
 
     fn process_spike_update(
-        &mut self_parameters: &Array1<f64>, _data_point: &StreamingDataPoint, _context: &Array1<f64>,
+        &mut self_parameters: &Array1<f64>,
+        _data_point: &StreamingDataPoint,
+        _context: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         // Placeholder for neuromorphic update
         Ok(Array1::zeros(_parameters.len()))
@@ -923,7 +925,9 @@ impl QuantumInspiredVariational {
     }
 
     fn variational_update(
-        &mut self_parameters: &Array1<f64>, _data_point: &StreamingDataPoint, _context: &Array1<f64>,
+        &mut self_parameters: &Array1<f64>,
+        _data_point: &StreamingDataPoint,
+        _context: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         // Placeholder for quantum variational update
         Ok(Array1::zeros(_parameters.len()))
@@ -952,7 +956,8 @@ impl MetaLearningSelector {
     }
 
     fn select_algorithm(
-        &mut self_context: &Array1<f64>, _metrics: &HashMap<String, f64>,
+        &mut self_context: &Array1<f64>,
+        _metrics: &HashMap<String, f64>,
     ) -> Result<OptimizationAlgorithm> {
         // Placeholder for meta-learning selection
         Ok(OptimizationAlgorithm::AdaptiveGradientDescent)
@@ -976,7 +981,8 @@ impl FederatedLearningCoordinator {
     }
 
     fn aggregate_update(
-        &mut self_update1: &Array1<f64>, _update2: &Array1<f64>,
+        &mut self_update1: &Array1<f64>,
+        _update2: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         // Placeholder for federated aggregation
         Ok(Array1::zeros(_update1.len()))
@@ -1054,7 +1060,9 @@ impl AdvancedPerformanceTracker {
     }
 
     fn update_metrics(
-        &mut self_parameters: &Array1<f64>, _data_point: &StreamingDataPoint_processing, _time: Duration,
+        &mut self_parameters: &Array1<f64>,
+        _data_point: &StreamingDataPoint_processing,
+        _time: Duration,
     ) -> Result<()> {
         // Placeholder for metrics update
         Ok(())

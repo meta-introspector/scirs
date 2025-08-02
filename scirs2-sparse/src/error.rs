@@ -192,18 +192,15 @@ impl SparseError {
     }
 
     /// Create a dimension mismatch error with helpful context
-    pub fn dimension_mismatch_with_context(
-        expected: usize,
-        found: usize,
-        operation: &str,
-    ) -> Self {
+    pub fn dimension_mismatch_with_context(expected: usize, found: usize, operation: &str) -> Self {
         SparseError::DimensionMismatch { expected, found }
     }
 
     /// Create a shape mismatch error with helpful context
     pub fn shape_mismatch_with_context(
         expected: (usize, usize),
-        found: (usize, usize), _operation: &str,
+        found: (usize, usize),
+        _operation: &str,
     ) -> Self {
         SparseError::ShapeMismatch { expected, found }
     }

@@ -27,7 +27,7 @@ use num_traits::{Float, NumCast};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::shapiro_wilk;
+/// use scirs2_stats::shapiro_wilk;
 ///
 /// // Create some normally distributed data
 /// let normal_data = array![0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, 0.0, -0.2, 0.3];
@@ -337,7 +337,7 @@ fn approx_normal_cdf(z: f64) -> f64 {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::anderson_darling;
+/// use scirs2_stats::anderson_darling;
 ///
 /// // Create some normally distributed data
 /// let normal_data = array![0.1, -0.2, 0.3, -0.1, 0.2, -0.3, 0.1, 0.0, -0.2, 0.3];
@@ -477,7 +477,7 @@ fn calculate_anderson_darling_p_value<F: Float + NumCast>(_a_squared: F) -> F {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::dagostino_k2;
+/// use scirs2_stats::dagostino_k2;
 ///
 /// // Create some data to test (at least 20 samples are required)
 /// let data = array![
@@ -706,7 +706,7 @@ fn gamma_function(x: f64) -> f64 {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::ks_2samp;
+/// use scirs2_stats::ks_2samp;
 ///
 /// // Create two samples
 /// let sample1 = array![0.1, 0.2, 0.3, 0.4, 0.5];

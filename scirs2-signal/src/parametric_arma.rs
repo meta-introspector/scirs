@@ -674,7 +674,8 @@ fn inverse_normal_cdf(p: f64) -> f64 {
     match p {
         x if ((x - 0.975) as f64).abs() < 1e-10 => 1.96,
         x if ((x - 0.95) as f64).abs() < 1e-10 => 1.645,
-        x if ((x - 0.99) as f64).abs() < 1e-10 => 2.576_ => {
+        x if ((x - 0.99) as f64).abs() < 1e-10 => 2.576,
+        _ => {
             // Approximate using rational approximation
             let a = [
                 2.50662823884,

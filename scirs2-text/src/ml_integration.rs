@@ -77,7 +77,9 @@ impl MLTextPreprocessor {
 
     /// Configure TF-IDF parameters
     pub fn with_tfidf_params(
-        mut self_min_df: f64, _max_df: f64, _max_features: Option<usize>,
+        mut self_min_df: f64,
+        _max_df: f64,
+        _max_features: Option<usize>,
     ) -> Self {
         // For now, use standard EnhancedTfidfVectorizer
         let vectorizer = EnhancedTfidfVectorizer::new();

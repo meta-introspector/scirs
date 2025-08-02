@@ -231,7 +231,8 @@ where
 fn calculate_optimal_dimensions(
     backend: GpuBackend,
     problem_size: usize,
-    workgroup_size: [u32; 3], _compute_units: u32,
+    workgroup_size: [u32; 3],
+    _compute_units: u32,
 ) -> (Vec<usize>, Vec<usize>) {
     let optimal_workgroup = match backend {
         GpuBackend::Cuda => {
@@ -667,7 +668,8 @@ pub fn execute_triangular_solve_kernel<T>(
     indices_buffer: &GpuBuffer<u32>,
     data_buffer: &GpuBuffer<T>,
     b_buffer: &GpuBuffer<T>,
-    x_buffer: &GpuBuffer<T>, _config: &GpuKernelConfig,
+    x_buffer: &GpuBuffer<T>,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -959,7 +961,8 @@ impl GpuMemoryManager {
     /// Optimize data transfer between host and device with adaptive strategies
     pub fn transfer_data_optimized<T>(
         &mut self,
-        host_data: &[T], _priority: TransferPriority,
+        host_data: &[T],
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: GpuDataType + Copy,
@@ -1001,7 +1004,8 @@ impl GpuMemoryManager {
     fn transfer_data_cuda_optimized<T>(
         &self,
         host_data: &[T],
-        transfer_size: usize, _priority: TransferPriority,
+        transfer_size: usize,
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: GpuDataType + Copy,
@@ -1026,7 +1030,8 @@ impl GpuMemoryManager {
     fn transfer_data_opencl_optimized<T>(
         &self,
         host_data: &[T],
-        transfer_size: usize, _priority: TransferPriority,
+        transfer_size: usize,
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: GpuDataType + Copy,
@@ -1044,7 +1049,8 @@ impl GpuMemoryManager {
     fn transfer_data_metal_optimized<T>(
         &self,
         host_data: &[T],
-        transfer_size: usize, _priority: TransferPriority,
+        transfer_size: usize,
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: GpuDataType + Copy,
@@ -1308,13 +1314,15 @@ pub fn calculate_adaptive_workgroup_size(
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_spmv_kernel<T>(
-    _device: &GpuDevice, _kernel: &GpuKernelHandle,
+    _device: &GpuDevice,
+    _kernel: &GpuKernelHandle,
     rows: usize,
     indptr_buffer: &GpuBuffer<u32>,
     indices_buffer: &GpuBuffer<u32>,
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
-    y_buffer: &GpuBuffer<T>, _config: &GpuKernelConfig,
+    y_buffer: &GpuBuffer<T>,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -1335,13 +1343,15 @@ where
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_symmetric_spmv_kernel<T>(
-    _device: &GpuDevice, _kernel: &GpuKernelHandle,
+    _device: &GpuDevice,
+    _kernel: &GpuKernelHandle,
     rows: usize,
     indptr_buffer: &GpuBuffer<u32>,
     indices_buffer: &GpuBuffer<u32>,
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
-    y_buffer: &GpuBuffer<T>, _config: &GpuKernelConfig,
+    y_buffer: &GpuBuffer<T>,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -1362,13 +1372,15 @@ where
 #[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_triangular_solve_kernel<T>(
-    _device: &GpuDevice, _kernel: &GpuKernelHandle,
+    _device: &GpuDevice,
+    _kernel: &GpuKernelHandle,
     n: usize,
     indptr_buffer: &GpuBuffer<u32>,
     indices_buffer: &GpuBuffer<u32>,
     data_buffer: &GpuBuffer<T>,
     b_buffer: &GpuBuffer<T>,
-    x_buffer: &GpuBuffer<T>, _config: &GpuKernelConfig,
+    x_buffer: &GpuBuffer<T>,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,

@@ -12,8 +12,8 @@ use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, Array3, ArrayView1};
 use rand::Rng;
-use std::collections::HashMap;
 use statrs::statistics::Statistics;
+use std::collections::HashMap;
 
 /// Advanced Neural Architecture Search System for Optimization
 #[derive(Debug, Clone)]
@@ -405,7 +405,7 @@ impl AdaptiveNASSystem {
                     let skip_source = rand::rng().gen_range(0..i);
                     connections.push(Connection {
                         from: skip_source,
-                    to: i,
+                        to: i,
                         weight: 0.5,
                         connection_type: ConnectionType::Residual,
                     });
@@ -495,8 +495,10 @@ impl AdaptiveNASSystem {
             },
             2 => OptimizerComponent::SecondOrder {
                 hessian_approximation: HessianApprox::LBFGS {
-                    memory_size: 5 + rand::rng().gen_range(0..15),},
-                regularization: 1e-6 + rand::rng().gen_range(0.0..1e-3)..},
+                    memory_size: 5 + rand::rng().gen_range(0..15),
+                },
+                regularization: 1e-6 + rand::rng().gen_range(0.0..1e-3)..,
+            },
             3 => OptimizerComponent::TrustRegion {
                 initial_radius: 0.1 + rand::rng().gen_range(0.0..0.9),
                 max_radius: 10.0,
@@ -510,14 +512,16 @@ impl AdaptiveNASSystem {
             _ => OptimizerComponent::Regularization {
                 l1_weight: rand::rng().gen_range(0.0..0.01),
                 l2_weight: rand::rng().gen_range(0.0..0.01),
-                elastic_net_ratio: rand::rng().gen_range(0.0..1.0),},
+                elastic_net_ratio: rand::rng().gen_range(0.0..1.0),
+            },
         }
     }
 
     /// Evaluate population on training problems
     fn evaluate_population(
         &mut self,
-        training_problems: &[OptimizationProblem]) -> OptimizeResult<()> {
+        training_problems: &[OptimizationProblem],
+    ) -> OptimizeResult<()> {
         for architecture in &mut self.architecture_population {
             let mut total_score = 0.0;
             let mut num_evaluated = 0;
@@ -698,7 +702,8 @@ impl AdaptiveNASSystem {
     /// Select best architectures for next generation
     fn select_next_generation(
         &mut self,
-        new_architectures: Vec<OptimizationArchitecture>) -> OptimizeResult<()> {
+        new_architectures: Vec<OptimizationArchitecture>,
+    ) -> OptimizeResult<()> {
         // Combine current population with new architectures
         self.architecture_population.append(&mut new_architectures);
 

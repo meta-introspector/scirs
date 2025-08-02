@@ -57,7 +57,7 @@ impl Default for ParallelCorrelationConfig {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::correlation_parallel_enhanced::{corrcoef_parallel_enhanced, ParallelCorrelationConfig};
+/// use scirs2_stats::correlation_parallel_enhanced::{corrcoef_parallel_enhanced, ParallelCorrelationConfig};
 ///
 /// let data = array![
 ///     [1.0, 5.0, 10.0],
@@ -166,7 +166,8 @@ where
                     "kendall" => match kendall_tau(&var_i, &var_j, "b") {
                         Ok(val) => val,
                         Err(_) => continue,
-                    }_ => unreachable!(),
+                    },
+                    _ => unreachable!(),
                 };
 
                 local_results.push((i, j, corr));

@@ -869,7 +869,10 @@ impl<T: Float + Send + Sync + 'static, D: Distance<T> + 'static> KDTree<T, D> {
 
 #[cfg(test)]
 mod tests {
-    use crate::distance::{ChebyshevDistance, ManhattanDistance, MinkowskiDistance};
+    use super::{KDTree, Rectangle};
+    use crate::distance::{
+        ChebyshevDistance, EuclideanDistance, ManhattanDistance, MinkowskiDistance,
+    };
     use approx::assert_relative_eq;
     use ndarray::arr2;
 
@@ -993,7 +996,7 @@ mod tests {
         expected_dists.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Verify we got the 3 actual nearest neighbors (for now, just check distances)
-        let expected_indices: Vec<usize> = expected_dists.iter().take(3).map(|&(i_)| i).collect();
+        let expected_indices: Vec<usize> = expected_dists.iter().take(3).map(|&(i, _)| i).collect();
         let expected_distances: Vec<f64> = expected_dists.iter().take(3).map(|&(_, d)| d).collect();
 
         // Check each returned index is in the expected set

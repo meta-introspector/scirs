@@ -28,7 +28,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps}
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::descriptive_simd::mean_simd;
+/// use scirs2_stats::descriptive_simd::mean_simd;
 ///
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let mean = mean_simd(&data.view()).unwrap();

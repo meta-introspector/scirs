@@ -800,6 +800,7 @@ impl Ord for KNNItem {
 
 #[cfg(test)]
 mod tests {
+    use super::{AdvancedKDTree, KDTreeConfig};
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
     use ndarray::array;

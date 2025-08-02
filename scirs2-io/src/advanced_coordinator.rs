@@ -622,7 +622,7 @@ impl AdvancedCoordinator {
     }
 
     /// Extract historical insights
-    fn extract_historical_insights(&self_data: &[u8]) -> Result<HistoricalInsights> {
+    fn extract_historical_insights(&self, data: &[u8]) -> Result<HistoricalInsights> {
         // Would analyze historical performance _data
         Ok(HistoricalInsights {
             best_performing_strategy: StrategyType::NeuralAdaptive,
@@ -634,7 +634,8 @@ impl AdvancedCoordinator {
 
     /// Get meta-learning recommendations
     fn get_meta_learning_recommendations(
-        &self_data: &[u8],
+        &self,
+        data: &[u8],
     ) -> Result<MetaLearningRecommendations> {
         Ok(MetaLearningRecommendations {
             recommended_strategy: StrategyType::QuantumInspired,
@@ -655,7 +656,9 @@ impl AdvancedCoordinator {
 
     /// Assess quality metrics
     fn assess_quality_metrics(
-        &self_original: &[u8], _processed: &[u8],
+        &self,
+        original: &[u8],
+        _processed: &[u8],
     ) -> Result<QualityMetrics> {
         Ok(QualityMetrics {
             data_integrity: 0.98,
@@ -1210,14 +1213,14 @@ struct StrategyResult {
 
 impl StrategyResult {
     /// Create a new emergent strategy result
-    fn new_emergent(_processed_data: Vec<u8>, processing_time: Duration) -> Self {
+    fn new_emergent(processed_data: Vec<u8>, processing_time: Duration) -> Self {
         Self {
             strategy_type: StrategyType::EmergentOptimization,
-            _processed_data,
+            processed_data,
             processing_time,
             efficiency_score: 0.95, // High efficiency for emergent processing
             quality_metrics: QualityMetrics {
-                _data_integrity: 1.0,
+                data_integrity: 1.0,
                 compression_efficiency: 0.95,
                 processing_accuracy: 0.98,
                 memory_efficiency: 0.92,
@@ -1328,7 +1331,7 @@ impl MetaLearningSystem {
         Self {}
     }
 
-    fn adapt_to_context(&mut self_intelligence: &ComprehensiveIntelligence) -> Result<()> {
+    fn adapt_to_context(&mut self, intelligence: &ComprehensiveIntelligence) -> Result<()> {
         Ok(())
     }
 
@@ -1338,7 +1341,9 @@ impl MetaLearningSystem {
 
     /// Extract domain-specific patterns from data
     fn extract_domain_patterns(
-        &mut self_data: &[u8], _domain: &str,
+        &mut self,
+        data: &[u8],
+        _domain: &str,
     ) -> Result<Vec<DomainPattern>> {
         // Extract patterns specific to the given _domain
         Ok(vec![DomainPattern {
@@ -1370,13 +1375,13 @@ impl MetaLearningSystem {
     }
 
     /// Apply transferred knowledge to new data
-    fn apply_transferred_knowledge(&self_data: &[u8]) -> Result<f64> {
+    fn apply_transferred_knowledge(&self, data: &[u8]) -> Result<f64> {
         // Apply learned knowledge and return improvement percentage
         Ok(15.0) // 15% improvement
     }
 
     /// Get confidence in knowledge transfer
-    fn get_transfer_confidence(&self_data: &[u8]) -> Result<f32> {
+    fn get_transfer_confidence(&self, data: &[u8]) -> Result<f32> {
         Ok(0.85) // 85% confidence
     }
 
@@ -1418,7 +1423,7 @@ impl PerformanceIntelligence {
     }
 
     /// Update efficiency metrics based on processing results
-    fn update_efficiency_metrics(&mut self_result: &ProcessingResult) -> Result<()> {
+    fn update_efficiency_metrics(&mut self, result: &ProcessingResult) -> Result<()> {
         // Update internal efficiency tracking based on processing results
         Ok(())
     }
@@ -1527,7 +1532,8 @@ impl EmergentBehaviorDetector {
 
     /// Apply emergent optimizations based on advanced pattern analysis
     fn apply_emergent_optimizations(
-        &mut self_analysis: &crate::enhanced_algorithms::AdvancedPatternAnalysis,
+        &mut self,
+        analysis: &crate::enhanced_algorithms::AdvancedPatternAnalysis,
     ) -> Result<()> {
         // Apply optimizations based on emergent patterns detected
         // This would implement autonomous optimization strategies
@@ -1579,9 +1585,9 @@ pub struct AdvancedProcessingResult {
 }
 
 impl AdvancedProcessingResult {
-    fn new(_results: Vec<StrategyResult>, efficiency_score: f32, processing_time: Duration) -> Self {
+    fn new(results: Vec<StrategyResult>, efficiency_score: f32, processing_time: Duration) -> Self {
         Self {
-            _results,
+            results,
             efficiency_score,
             processing_time,
         }
@@ -1614,9 +1620,9 @@ pub struct DomainLearningResult {
 }
 
 impl DomainLearningResult {
-    fn new(_pattern_count: usize, optimization_count: usize) -> Self {
+    fn new(pattern_count: usize, optimization_count: usize) -> Self {
         Self {
-            _pattern_count,
+            pattern_count,
             optimization_count,
         }
     }
@@ -1640,9 +1646,9 @@ pub struct KnowledgeTransferResult {
 }
 
 impl KnowledgeTransferResult {
-    fn new(_improvement_percentage: f64, confidence: f32) -> Self {
+    fn new(improvement_percentage: f64, confidence: f32) -> Self {
         Self {
-            _improvement_percentage,
+            improvement_percentage,
             confidence,
         }
     }
@@ -1713,7 +1719,7 @@ pub struct AppliedOptimization {
 impl AppliedOptimization {
     fn new(_name: &str, description: &str) -> Self {
         Self {
-            _name: _name.to_string(),
+            name: _name.to_string(),
             description: description.to_string(),
         }
     }

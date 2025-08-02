@@ -25,7 +25,7 @@ pub struct ActorNetwork {
     /// Output layer biases
     pub output_bias: Array1<f64>,
     /// Network architecture
-    pub input_size: usize,
+    pub _input_size: usize,
     pub hidden_size: usize,
     pub output_size: usize,
     /// Activation function type
@@ -44,7 +44,7 @@ pub struct CriticNetwork {
     /// Output bias
     pub output_bias: f64,
     /// Network architecture
-    pub input_size: usize,
+    pub _input_size: usize,
     pub hidden_size: usize,
     /// Activation function type
     pub activation: ActivationType,
@@ -121,15 +121,15 @@ impl ActivationType {
 impl ActorNetwork {
     /// Create new actor network
     pub fn new(
-        input_size: usize,
+        _input_size: usize,
         hidden_size: usize,
         output_size: usize,
         activation: ActivationType,
     ) -> Self {
-        let xavier_scale = (2.0 / (input_size + hidden_size) as f64).sqrt();
+        let xavier_scale = (2.0 / (_input_size + hidden_size) as f64).sqrt();
 
         Self {
-            hidden_weights: Array2::from_shape_fn((hidden_size, input_size), |_| {
+            hidden_weights: Array2::from_shape_fn((hidden_size, _input_size), |_| {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
@@ -137,7 +137,7 @@ impl ActorNetwork {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: Array1::zeros(output_size),
-            input_size,
+            _input_size,
             hidden_size,
             output_size,
             activation,
@@ -149,7 +149,7 @@ impl ActorNetwork {
         // Hidden layer
         let mut hidden_raw = Array1::zeros(self.hidden_size);
         for i in 0..self.hidden_size {
-            for j in 0..self.input_size.min(input.len()) {
+            for j in 0..self._input_size.min(input.len()) {
                 hidden_raw[i] += self.hidden_weights[[i, j]] * input[j];
             }
             hidden_raw[i] += self.hidden_bias[i];
@@ -221,7 +221,7 @@ impl ActorNetwork {
 
         // Update hidden layer weights and biases
         for i in 0..self.hidden_size {
-            for j in 0..self.input_size.min(input.len()) {
+            for j in 0..self._input_size.min(input.len()) {
                 self.hidden_weights[[i, j]] -= learning_rate * hidden_gradient[i] * input[j];
             }
             self.hidden_bias[i] -= learning_rate * hidden_gradient[i];
@@ -243,7 +243,7 @@ impl CriticNetwork {
                 (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: 0.0,
-            input_size,
+            _input_size,
             hidden_size,
             activation,
         }
@@ -254,7 +254,7 @@ impl CriticNetwork {
         // Hidden layer
         let mut hidden_raw = Array1::zeros(self.hidden_size);
         for i in 0..self.hidden_size {
-            for j in 0..self.input_size.min(input.len()) {
+            for j in 0..self._input_size.min(input.len()) {
                 hidden_raw[i] += self.hidden_weights[[i, j]] * input[j];
             }
             hidden_raw[i] += self.hidden_bias[i];
@@ -299,7 +299,7 @@ impl CriticNetwork {
 
         // Update hidden layer weights and biases
         for i in 0..self.hidden_size {
-            for j in 0..self.input_size.min(input.len()) {
+            for j in 0..self._input_size.min(input.len()) {
                 self.hidden_weights[[i, j]] += learning_rate * hidden_gradient[i] * input[j];
             }
             self.hidden_bias[i] += learning_rate * hidden_gradient[i];
@@ -506,7 +506,8 @@ impl AdvantageActorCriticOptimizer {
             3 => OptimizationAction::AdaptiveLearningRate {
                 factor: 0.5 + 0.5 * policy_output.get(3).unwrap_or(&0.0).tanh(),
             },
-            4 => OptimizationAction::ResetToBest, _ => OptimizationAction::Terminate,
+            4 => OptimizationAction::ResetToBest,
+            _ => OptimizationAction::Terminate,
         }
     }
 
@@ -854,7 +855,7 @@ mod tests {
     #[test]
     fn test_actor_network_creation() {
         let actor = ActorNetwork::new(10, 20, 6, ActivationType::Tanh);
-        assert_eq!(actor.input_size, 10);
+        assert_eq!(actor._input_size, 10);
         assert_eq!(actor.hidden_size, 20);
         assert_eq!(actor.output_size, 6);
     }
@@ -862,7 +863,7 @@ mod tests {
     #[test]
     fn test_critic_network_creation() {
         let critic = CriticNetwork::new(10, 20, ActivationType::ReLU);
-        assert_eq!(critic.input_size, 10);
+        assert_eq!(critic._input_size, 10);
         assert_eq!(critic.hidden_size, 20);
     }
 
@@ -916,9 +917,9 @@ mod tests {
         let config = RLOptimizationConfig::default();
         let optimizer = AdvantageActorCriticOptimizer::new(config, 10, 6, 20);
 
-        assert_eq!(optimizer.actor.input_size, 10);
+        assert_eq!(optimizer.actor._input_size, 10);
         assert_eq!(optimizer.actor.output_size, 6);
-        assert_eq!(optimizer.critic.input_size, 10);
+        assert_eq!(optimizer.critic._input_size, 10);
     }
 
     #[test]

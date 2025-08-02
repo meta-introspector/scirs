@@ -127,7 +127,7 @@ impl GpuDevice {
     }
 
     /// Detect available GPU capabilities
-    fn detect_capabilities(&self) -> SpatialResult<GpuCapabilities> {
+    fn detect_capabilities() -> SpatialResult<GpuCapabilities> {
         let mut caps = GpuCapabilities::default();
 
         // Check CUDA backend

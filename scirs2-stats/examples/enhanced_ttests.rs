@@ -1,7 +1,8 @@
 use ndarray::array;
-use scirs2__stats::{
+use scirs2_stats::{
+    tests::ttest::Alternative,
     tests::{enhanced_ttest_1samp, enhanced_ttest_ind, enhanced_ttest_rel, ttest_ind_from_stats},
-    Alternative, TTestResult,
+    TTestResult,
 };
 
 #[allow(dead_code)]

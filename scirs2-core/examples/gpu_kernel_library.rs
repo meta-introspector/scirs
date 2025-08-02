@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Example demonstrating matrix multiplication with the GEMM kernel
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn ctx( &GpuContext) -> Result<(), GpuError> {
+fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create two matrices
     let a = Array2::from_shape_vec(
         (3, 4),
@@ -153,7 +153,7 @@ fn ctx( &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating vector addition with the AXPY kernel
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn ctx( &GpuContext) -> Result<(), GpuError> {
+fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create two vectors
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
     let mut y = Array1::from_vec(vec![5.0f32, 4.0, 3.0, 2.0, 1.0]);
@@ -201,7 +201,7 @@ fn ctx( &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating vector sum reduction
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn ctx( &GpuContext) -> Result<(), GpuError> {
+fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create a vector
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
 
@@ -243,7 +243,7 @@ fn ctx( &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating vector L2 norm
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn ctx( &GpuContext) -> Result<(), GpuError> {
+fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create a vector
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
 
@@ -285,7 +285,7 @@ fn ctx( &GpuContext) -> Result<(), GpuError> {
 /// Example demonstrating neural network activation functions
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn ctx( &GpuContext) -> Result<(), GpuError> {
+fn demo_function(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create an input vector
     let x = Array1::from_vec(vec![-2.0f32, -1.0, 0.0, 1.0, 2.0]);
 

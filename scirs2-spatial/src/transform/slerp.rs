@@ -84,8 +84,8 @@ impl Slerp {
     /// let rot2 = Rotation::from_euler(&array![0.0, 0.0, PI/2.0].view(), "xyz").unwrap();
     /// let slerp = Slerp::new(rot1, rot2).unwrap();
     /// ```
-    pub fn new(_start: Rotation, end: Rotation) -> SpatialResult<Self> {
-        let q1 = _start.as_quat();
+    pub fn new(start: Rotation, end: Rotation) -> SpatialResult<Self> {
+        let q1 = start.as_quat();
         let mut q2 = end.as_quat();
 
         // Calculate the dot product between quaternions
@@ -113,7 +113,7 @@ impl Slerp {
         }
 
         Ok(Slerp {
-            _start,
+            start,
             end,
             q1,
             q2,

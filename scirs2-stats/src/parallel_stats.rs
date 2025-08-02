@@ -229,7 +229,7 @@ where
     let row_indices: Vec<usize> = (0..nrows).collect();
     let results: Result<Vec<F>, StatsError> =
         parallel_map(&row_indices, |&i| stat_fn(&data.slice(s![i, ..]).view()))
-            .into().iter()
+            .into_iter()
             .collect();
 
     Ok(Array1::from_vec(results?))
@@ -283,7 +283,7 @@ where
         let corr = pearson_r(&var_i, &var_j)?;
         Ok(((i, j), corr))
     })
-    .into().iter()
+    .into_iter()
     .collect::<StatsResult<Vec<_>>>()?;
 
     // Fill the correlation matrix
@@ -333,7 +333,7 @@ where
         // Sequential bootstrap for small number of _samples
         let _samples = bootstrap(&data.view(), n_samples_, seed)?;
         let mut results = Array1::zeros(n_samples_);
-        for (i, sample) in _samples.outer.iter().enumerate() {
+        for (i, sample) in _samples.outer_iter().enumerate() {
             results[i] = statistic(&sample)?;
         }
         return Ok(results);
@@ -350,7 +350,7 @@ where
         let sample = bootstrap(&data.view(), 1, Some(seed))?;
         statistic(&sample.slice(s![0, ..]))
     })
-    .into().iter()
+    .into_iter()
     .collect::<StatsResult<Vec<_>>>()?;
 
     Ok(Array1::from_vec(results))

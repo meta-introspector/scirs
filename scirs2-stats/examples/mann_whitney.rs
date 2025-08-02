@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__stats::mann_whitney;
+use scirs2_stats::mann_whitney;
 
 #[allow(dead_code)]
 fn main() {

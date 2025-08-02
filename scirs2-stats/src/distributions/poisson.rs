@@ -36,24 +36,24 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::poisson::Poisson;
+    /// use scirs2_stats::distributions::poisson::Poisson;
     ///
     /// // Poisson distribution with rate 3.0
     /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
     /// ```
-    pub fn new(_mu: F, loc: F) -> StatsResult<Self> {
-        if _mu <= F::zero() {
+    pub fn new(mu: F, loc: F) -> StatsResult<Self> {
+        if mu <= F::zero() {
             return Err(StatsError::DomainError(
-                "Rate parameter (_mu) must be positive".to_string(),
+                "Rate parameter (mu) must be positive".to_string(),
             ));
         }
 
         // Convert to f64 for rand_distr
-        let mu_f64 = <f64 as NumCast>::from(_mu).unwrap();
+        let mu_f64 = <f64 as NumCast>::from(mu).unwrap();
 
         match RandPoisson::new(mu_f64) {
             Ok(rand_distr) => Ok(Poisson {
-                _mu,
+                mu,
                 loc,
                 rand_distr,
             }),
@@ -76,7 +76,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::poisson::Poisson;
+    /// use scirs2_stats::distributions::poisson::Poisson;
     ///
     /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
     /// let pmf_at_two = poisson.pmf(2.0);
@@ -116,7 +116,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::poisson::Poisson;
+    /// use scirs2_stats::distributions::poisson::Poisson;
     ///
     /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
     /// let cdf_at_four = poisson.cdf(4.0);
@@ -167,7 +167,7 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::poisson::Poisson;
+    /// use scirs2_stats::distributions::poisson::Poisson;
     ///
     /// let poisson = Poisson::new(3.0f64, 0.0).unwrap();
     /// let samples = poisson.rvs(1000).unwrap();

@@ -1,6 +1,5 @@
 use crate::error::SignalResult;
 use crate::{spectral, window};
-use crate::error::SignalResult;
 use ndarray::{Array1, Array2, s};
 use num__complex::Complex64;
 use std::f64::consts::PI;

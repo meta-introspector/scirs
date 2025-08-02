@@ -9,11 +9,11 @@ use crate::error_standardization::ErrorMessages;
 use memmap2::Mmap;
 use ndarray::{s, ArrayBase, ArrayViewMut1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
+use statrs::statistics::Statistics;
 use std::cmp::Ordering;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
-use statrs::statistics::Statistics;
 
 /// Chunk size for streaming operations (tuned for cache efficiency)
 const CHUNK_SIZE: usize = 8192;
@@ -400,7 +400,7 @@ impl<F: Float + NumCast + ndarray::ScalarOperand + std::fmt::Display> Incrementa
             n: 0,
             means: ndarray::Array1::zeros(_n_vars),
             cov_matrix: ndarray::Array2::zeros((_n_vars, _n_vars)),
-            _n_vars,
+            n_vars: _n_vars,
         }
     }
 
@@ -571,7 +571,7 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
             .collect();
 
         Self {
-            _bins,
+            bins: _bins,
             counts: vec![0; _n_bins],
             min_val,
             max_val,
@@ -627,7 +627,8 @@ impl<F: Float + NumCast + std::fmt::Display> StreamingHistogram<F> {
 /// Processes data from files in chunks without loading entire dataset.
 #[allow(dead_code)]
 pub struct OutOfCoreStats<F: Float> {
-    chunk_size: usize, _phantom: std::marker::PhantomData<F>,
+    chunk_size: usize,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 #[allow(dead_code)]
@@ -635,7 +636,8 @@ impl<F: Float + NumCast + std::str::FromStr + std::fmt::Display> OutOfCoreStats<
     /// Create a new out-of-core statistics processor
     pub fn new(_chunk_size: usize) -> Self {
         Self {
-            chunk_size_phantom: std::marker::PhantomData,
+            chunk_size: _chunk_size,
+            _phantom: std::marker::PhantomData,
         }
     }
 

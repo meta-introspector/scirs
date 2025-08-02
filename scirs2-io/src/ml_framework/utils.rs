@@ -44,7 +44,7 @@ pub struct SafeTensorsHeader {
     pub tensors: std::collections::HashMap<String, TensorInfo>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TensorInfo {
     pub dtype: DataType,
     pub shape: Vec<usize>,

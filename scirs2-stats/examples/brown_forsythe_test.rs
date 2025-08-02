@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__stats::{brown_forsythe, levene};
+use scirs2_stats::{brown_forsythe, levene};
 
 #[allow(dead_code)]
 fn main() {

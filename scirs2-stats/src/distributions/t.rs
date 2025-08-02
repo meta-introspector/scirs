@@ -36,7 +36,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::t::StudentT;
+    /// use scirs2_stats::distributions::t::StudentT;
     ///
     /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
     /// ```
@@ -57,7 +57,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
         
         match RandStudentT::new(df_f64) {
             Ok(rand_distr) => Ok(StudentT {
-                _df,
+                df: _df,
                 loc,
                 scale,
                 rand_distr,
@@ -81,7 +81,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::t::StudentT;
+    /// use scirs2_stats::distributions::t::StudentT;
     ///
     /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
     /// let pdf_at_zero = t_dist.pdf(0.0);
@@ -129,7 +129,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::t::StudentT;
+    /// use scirs2_stats::distributions::t::StudentT;
     ///
     /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
     /// let cdf_at_zero = t_dist.cdf(0.0);
@@ -177,7 +177,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::t::StudentT;
+    /// use scirs2_stats::distributions::t::StudentT;
     ///
     /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
     /// let x = t_dist.ppf(0.975).unwrap();
@@ -242,7 +242,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::t::StudentT;
+    /// use scirs2_stats::distributions::t::StudentT;
     ///
     /// let t_dist = StudentT::new(10.0f64, 0.0, 1.0).unwrap();
     /// let samples = t_dist.rvs(1000).unwrap();

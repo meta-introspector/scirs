@@ -1,5 +1,5 @@
 use ndarray::array;
-use scirs2__stats::gini_coefficient;
+use scirs2_stats::gini_coefficient;
 
 #[allow(dead_code)]
 fn main() {

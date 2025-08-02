@@ -16,11 +16,11 @@ pub use bilateral::{
     bilateral_filter_advanced, fast_bilateral_filter, joint_bilateral_filter, BilateralParams,
 };
 pub use gamma::{adaptive_gamma_correction, auto_gamma_correction, gamma_correction};
-pub use guided__filter::{fast_guided_filter, guided_filter, guided_filter_color};
+pub use guided_filter::{fast_guided_filter, guided_filter, guided_filter_color};
 pub use morphology::{
     black_hat, closing, dilate, erode, morphological_gradient, opening, top_hat, StructuringElement,
 };
-pub use nlm__denoise::{nlm_denoise, nlm_denoise_color, nlm_denoise_parallel};
+pub use nlm_denoise::{nlm_denoise, nlm_denoise_color, nlm_denoise_parallel};
 pub use retinex::{
     adaptive_retinex, msrcr, multi_scale_retinex, retinex_with_clahe, single_scale_retinex,
 };
@@ -329,7 +329,7 @@ pub fn unsharp_mask(_img: &DynamicImage, sigma: f32, amount: f32) -> Result<Dyna
 /// # Example
 ///
 /// ```
-/// use scirs2__vision::preprocessing::bilateral_filter;
+/// use scirs2_vision::preprocessing::bilateral_filter;
 /// use image::open;
 ///
 /// let img = open("examples/input/input.jpg").unwrap();
@@ -360,10 +360,11 @@ pub fn bilateral_filter(
         ));
     }
 
-    // Check if the image is grayscale or _color by looking at the _color type
-    let color_type = img._color();
+    // Check if the image is grayscale or color by looking at the color type
+    let color_type = img.color();
     let is_color = match color_type {
-        image::ColorType::L8 | image::ColorType::L16 => false_ => true, // Consider any non-grayscale format as _color
+        image::ColorType::L8 | image::ColorType::L16 => false,
+        _ => true, // Consider any non-grayscale format as color
     };
 
     // Process according to image type
@@ -597,7 +598,7 @@ fn bilateral_filter_color(
 /// # Example
 ///
 /// ```
-/// use scirs2__vision::preprocessing::median_filter;
+/// use scirs2_vision::preprocessing::median_filter;
 /// use image::open;
 ///
 /// let img = open("examples/input/input.jpg").unwrap();
@@ -684,7 +685,7 @@ pub fn median_filter(_img: &DynamicImage, kernel_size: u32) -> Result<DynamicIma
 /// # Example
 ///
 /// ```
-/// use scirs2__vision::preprocessing::clahe;
+/// use scirs2_vision::preprocessing::clahe;
 /// use image::open;
 ///
 /// let img = open("examples/input/input.jpg").unwrap();

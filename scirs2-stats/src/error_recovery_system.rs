@@ -499,11 +499,7 @@ impl ErrorRecoverySystem {
     }
 
     /// Infer computation state
-    fn infer_computation_state(
-        &self,
-        error: &StatsError,
-        function_name: &str,
-    ) -> ComputationState {
+    fn infer_computation_state(&self, error: &StatsError, function_name: &str) -> ComputationState {
         ComputationState {
             algorithm: function_name.to_string(),
             iteration: None,

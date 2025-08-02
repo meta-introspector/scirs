@@ -203,7 +203,7 @@ where
 
         // Evaluate function at alpha
         let x_alpha = x + alpha * direction;
-        let f_alpha = _fun(&x_alpha.view()).into();
+        let f_alpha = fun(&x_alpha.view()).into();
         nfev += 1;
 
         // Check Armijo condition and sufficient decrease
@@ -217,7 +217,7 @@ where
         }
 
         // Evaluate gradient at alpha
-        let g_alpha = grad_fun(&x_alpha.view());
+        let g_alpha = gradfun(&x_alpha.view());
         let derphi_alpha = g_alpha.dot(direction);
         ngev += 1;
 
@@ -303,7 +303,7 @@ where
 
         // Evaluate function at trial point
         let x_alpha = x + alpha * direction;
-        let f_alpha = _fun(&x_alpha.view()).into();
+        let f_alpha = fun(&x_alpha.view()).into();
         nfev += 1;
 
         // Check Armijo condition
@@ -313,7 +313,7 @@ where
             f_hi = f_alpha;
         } else {
             // Trial point satisfies Armijo condition, check curvature
-            let g_alpha = grad_fun(&x_alpha.view());
+            let g_alpha = gradfun(&x_alpha.view());
             let derphi_alpha = g_alpha.dot(direction);
             ngev += 1;
 
@@ -343,8 +343,8 @@ where
     // If we reach here, return the best point found
     let alpha = if f_lo < f_hi { alpha_lo } else { alpha_hi };
     let x_alpha = x + alpha * direction;
-    let f_alpha = _fun(&x_alpha.view()).into();
-    let g_alpha = grad_fun(&x_alpha.view());
+    let f_alpha = fun(&x_alpha.view()).into();
+    let g_alpha = gradfun(&x_alpha.view());
     nfev += 1;
     ngev += 1;
 
@@ -358,7 +358,8 @@ fn safeguarded_interpolation(
     alpha_hi: f64,
     f_lo: f64,
     f_hi: f64,
-    derphi_lo: f64, _derphi0: f64,
+    derphi_lo: f64,
+    _derphi0: f64,
 ) -> f64 {
     let delta = alpha_hi - alpha_lo;
 

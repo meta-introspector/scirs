@@ -235,7 +235,8 @@ impl BayesianAnalysisWorkflow {
     fn compute_model_metrics(
         &self,
         regression: &BayesianRegressionResult,
-        x: ArrayView2<f64>, _y: ArrayView1<f64>,
+        x: ArrayView2<f64>,
+        _y: ArrayView1<f64>,
     ) -> Result<BayesianModelMetrics> {
         let n_samples_ = x.nrows() as f64;
         let n_params = regression.posterior_mean.len() as f64;
@@ -705,7 +706,7 @@ impl QMCWorkflow {
         }
 
         // Coefficient of variation of minimum distances
-        let mean_dist = min_distances.mean();
+        let mean_dist = min_distances.clone().mean();
         let var_dist = min_distances.var(1.0);
         let uniformity = 1.0 / (var_dist.sqrt() / mean_dist); // Inverse CV
 

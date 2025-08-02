@@ -316,7 +316,8 @@ fn get_neighbors(_connectivity: u8) -> &'static [(i32, i32)] {
             (1, -1),
             (1, 0),
             (1, 1),
-        ]_ => &[],
+        ],
+        _ => &[],
     }
 }
 

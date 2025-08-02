@@ -4,7 +4,7 @@
 //! HDF5 files with groups, datasets, and attributes.
 
 use ndarray::{array, Array2};
-use scirs2__io::hdf5::{
+use scirs2_io::hdf5::{
     create_hdf5_with_structure, read_hdf5, write_hdf5, AttributeValue, CompressionOptions,
     DatasetOptions, FileMode, HDF5File,
 };

@@ -806,7 +806,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             "progress" | "p" => display_detailed_progress(&learning_center)?,
             "resources" | "r" => explore_resources(&learning_center)?,
-            "help" | "h" => display_help()?_ => {
+            "help" | "h" => display_help()?,
+            _ => {
                 if let Ok(track_num) = choice.parse::<usize>() {
                     if track_num > 0 && track_num <= learning_center.learning_tracks.len() {
                         enter_learning_track(&mut learning_center, track_num - 1)?;

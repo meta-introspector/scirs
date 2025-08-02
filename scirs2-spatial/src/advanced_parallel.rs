@@ -397,22 +397,22 @@ pub struct KDTreeChunkResult {
 
 impl WorkStealingPool {
     /// Create a new work-stealing thread pool
-    pub fn new(_config: WorkStealingConfig) -> SpatialResult<Self> {
-        let numa_topology = if _config.numa_aware {
+    pub fn new(config: WorkStealingConfig) -> SpatialResult<Self> {
+        let numa_topology = if config.numa_aware {
             NumaTopology::detect()
         } else {
             NumaTopology {
                 num_nodes: 1,
-                cores_per_node: vec![_config.num_threads],
+                cores_per_node: vec![config.num_threads],
                 memory_per_node: vec![0],
                 distance_matrix: vec![vec![10]],
             }
         };
 
-        let num_threads = if _config.num_threads == 0 {
+        let num_threads = if config.num_threads == 0 {
             numa_topology.cores_per_node.iter().sum()
         } else {
-            _config.num_threads
+            config.num_threads
         };
 
         let global_queue = Arc::new(Mutex::new(VecDeque::new()));
@@ -425,7 +425,7 @@ impl WorkStealingPool {
 
         // Create workers with NUMA-aware placement
         for thread_id in 0..num_threads {
-            let numa_node = if _config.numa_aware {
+            let numa_node = if config.numa_aware {
                 Self::assign_thread_to_numa_node(thread_id, &numa_topology)
             } else {
                 0
@@ -449,7 +449,7 @@ impl WorkStealingPool {
             let completed_work = Arc::clone(&completed_work);
             let active_workers = Arc::clone(&active_workers);
             let shutdown = Arc::clone(&shutdown);
-            let config_clone = _config.clone();
+            let config_clone = config.clone();
             let thread_id = worker.thread_id;
             let numa_node = worker.numa_node;
             let memory_pool = Arc::clone(&worker.memory_pool);
@@ -473,7 +473,7 @@ impl WorkStealingPool {
 
         Ok(Self {
             workers,
-            _config,
+            config,
             numa_topology,
             global_queue,
             completed_work,
@@ -1048,9 +1048,9 @@ pub struct AdvancedParallelDistanceMatrix {
 
 impl AdvancedParallelDistanceMatrix {
     /// Create a new advanced-parallel distance matrix computer
-    pub fn new(_config: WorkStealingConfig) -> SpatialResult<Self> {
-        let pool = WorkStealingPool::new(_config.clone())?;
-        Ok(Self { pool, _config })
+    pub fn new(config: WorkStealingConfig) -> SpatialResult<Self> {
+        let pool = WorkStealingPool::new(config.clone())?;
+        Ok(Self { pool, config })
     }
 
     /// Compute distance matrix using advanced-parallel processing
@@ -1066,7 +1066,7 @@ impl AdvancedParallelDistanceMatrix {
 
         // Create distance matrix context
         let _distance_context = DistanceMatrixContext {
-            _points: _points.to_owned(),
+            points: _points.to_owned(),
             result_sender,
         };
 

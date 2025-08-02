@@ -1,5 +1,5 @@
 use ndarray::{array, s, Array2};
-use scirs2__stats::distributions::multivariate;
+use scirs2_stats::distributions::multivariate;
 use statrs::statistics::Statistics;
 
 #[allow(dead_code)]

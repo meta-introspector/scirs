@@ -4,7 +4,6 @@
 //! including accuracy tests, stability analysis, and performance benchmarks.
 
 use crate::error::SignalResult;
-use crate::error::SignalResult;
 use crate::parametric::{ARMethod, ar_spectrum, estimate_ar};
 use crate::parametric__arma::{ArmaMethod, ArmaModel, estimate_arma};
 use ndarray::Array1;

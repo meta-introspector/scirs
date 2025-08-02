@@ -38,11 +38,11 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// ```
-    pub fn new(_loc: F, scale: F) -> StatsResult<Self> {
+    pub fn new(loc: F, scale: F) -> StatsResult<Self> {
         // Validate parameters
         if scale <= F::zero() {
             return Err(StatsError::DomainError(
@@ -61,7 +61,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
         };
 
         Ok(Logistic {
-            _loc,
+            loc,
             scale,
             rand_distr,
         })
@@ -80,7 +80,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// let pdf_at_zero = logistic.pdf(0.0);
@@ -107,7 +107,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// let cdf_at_zero = logistic.cdf(0.0);
@@ -133,7 +133,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// let x = logistic.ppf(0.75).unwrap();
@@ -172,7 +172,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// let samples = logistic.rvs(10).unwrap();
@@ -230,7 +230,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(2.0f64, 1.0).unwrap();
     /// let mean = logistic.mean();
@@ -250,7 +250,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// let variance = logistic.var();
@@ -274,7 +274,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// let std_dev = logistic.std();
@@ -294,7 +294,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(2.0f64, 1.0).unwrap();
     /// let median = logistic.median();
@@ -314,7 +314,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(2.0f64, 1.0).unwrap();
     /// let mode = logistic.mode();
@@ -334,7 +334,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// let skewness = logistic.skewness();
@@ -354,7 +354,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// let kurtosis = logistic.kurtosis();
@@ -374,7 +374,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// let entropy = logistic.entropy();
@@ -395,7 +395,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// # Examples
     ///
     /// ```
-    /// use scirs2__stats::distributions::logistic::Logistic;
+    /// use scirs2_stats::distributions::logistic::Logistic;
     ///
     /// let logistic = Logistic::new(0.0f64, 1.0).unwrap();
     /// let iqr = logistic.iqr();
@@ -425,18 +425,18 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
 /// # Examples
 ///
 /// ```
-/// use scirs2__stats::distributions::logistic;
+/// use scirs2_stats::distributions::logistic;
 ///
 /// let l = logistic::logistic(0.0f64, 1.0).unwrap();
 /// let pdf_at_zero = l.pdf(0.0);
 /// assert!((pdf_at_zero - 0.25).abs() < 1e-7);
 /// ```
 #[allow(dead_code)]
-pub fn logistic<F>(_loc: F, scale: F) -> StatsResult<Logistic<F>>
+pub fn logistic<F>(loc: F, scale: F) -> StatsResult<Logistic<F>>
 where
     F: Float + NumCast + std::fmt::Display,
 {
-    Logistic::new(_loc, scale)
+    Logistic::new(loc, scale)
 }
 
 /// Implementation of SampleableDistribution for Logistic

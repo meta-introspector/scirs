@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate BLAS operations (GEMM, AXPY)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context( &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 1: BLAS Operations");
     println!("-----------------------");
 
@@ -142,7 +142,7 @@ fn context( &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate reduction operations (sum, min, max, mean, std)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context( &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 2: Reduction Operations");
     println!("----------------------------");
 
@@ -215,7 +215,7 @@ fn context( &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate machine learning operations (activations, pooling, softmax)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context( &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 3: Machine Learning Operations");
     println!("----------------------------------");
 
@@ -288,7 +288,7 @@ fn context( &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate transform operations (FFT)
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context( &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 4: Transform Operations");
     println!("---------------------------");
 
@@ -342,7 +342,7 @@ fn context( &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate kernel specialization capabilities
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
-fn context( &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
+fn context(_context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo 5: Kernel Specialization");
     println!("-----------------------------");
 
@@ -408,7 +408,7 @@ fn context( &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Helper function to compare CPU and GPU results
 #[allow(dead_code)]
-fn result( &[f32], tolerance: f32) -> bool {
+fn result(_results: &[f32], tolerance: f32) -> bool {
     if _cpu_result.len() != gpu_result.len() {
         return false;
     }
@@ -424,7 +424,7 @@ fn result( &[f32], tolerance: f32) -> bool {
 
 /// Helper function to print performance comparison
 #[allow(dead_code)]
-fn time( f64) {
+fn time(_execution_time: f64) {
     let speedup = cpu_time / gpu_time;
     println!("   {operation} Performance:");
     println!("     CPU: {:.2} ms", cpu_time * 1000.0);

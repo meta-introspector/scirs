@@ -26,7 +26,7 @@ use scirs2_linalg::{lstsq, svd};
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::multilinear_regression;
+/// use scirs2_stats::multilinear_regression;
 ///
 /// // Create a design matrix with 3 variables (including a constant term)
 /// let x = Array2::from_shape_vec((5, 3), vec![
@@ -162,7 +162,7 @@ where
 ///
 /// ```
 /// use ndarray::{array, Array2};
-/// use scirs2__stats::linear_regression;
+/// use scirs2_stats::linear_regression;
 ///
 /// // Create a design matrix with 3 variables (including a constant term)
 /// let x = Array2::from_shape_vec((5, 3), vec![
@@ -361,7 +361,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::linregress;
+/// use scirs2_stats::linregress;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![2.0, 4.0, 6.0, 8.0, 10.0];  // y = 2*x
@@ -479,7 +479,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__stats::odr;
+/// use scirs2_stats::odr;
 ///
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let y = array![2.0, 4.0, 6.0, 8.0, 10.0];  // y = 2*x

@@ -285,7 +285,7 @@ pub fn optimal_leaf_ordering_heuristic<F: Float + FromPrimitive + Debug + Partia
 
         // Try larger swaps (2-opt style)
         if !improved {
-            for i in 0, current_ordering.len() {
+            for i in 0..current_ordering.len() {
                 for j in (i + 2)..current_ordering.len() {
                     // Reverse the segment between i and j
                     current_ordering[i..=j].reverse();

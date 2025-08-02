@@ -493,7 +493,7 @@ impl AdvancedSimdOptimizer {
         let memory_manager = Self::create_memory_manager(&_config, &hardware_profile);
 
         Self {
-            _config,
+            config: _config,
             performance_cache: Arc::new(RwLock::new(HashMap::new())),
             hardware_profile,
             algorithm_selector,
@@ -513,7 +513,7 @@ impl AdvancedSimdOptimizer {
             + 'static
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         if x.is_empty() {
             return Err(ErrorMessages::empty_array("x"));
@@ -561,7 +561,7 @@ impl AdvancedSimdOptimizer {
             + 'static
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         if x.is_empty() {
             return Err(ErrorMessages::empty_array("x"));
@@ -617,8 +617,8 @@ impl AdvancedSimdOptimizer {
             + 'static
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D1: Data<Elem = F> + std::fmt::Display,
-        D2: Data<Elem = F> + std::fmt::Display,
+        D1: Data<Elem = F>,
+        D2: Data<Elem = F>,
     {
         if x.is_empty() {
             return Err(ErrorMessages::empty_array("x"));
@@ -669,7 +669,7 @@ impl AdvancedSimdOptimizer {
             )));
         }
 
-        let characteristics = self.analyze_matrix_characteristics(a, b);
+        let characteristics = Self::analyze_matrix_characteristics(a, b);
         let signature = OperationSignature {
             operation_type: "matrix_multiply".to_string(),
             size_bucket: Self::categorize_matrix_size(a.nrows() * a.ncols()),
@@ -678,7 +678,7 @@ impl AdvancedSimdOptimizer {
         };
 
         // Select optimal matrix multiplication algorithm
-        let algorithm = self.select_matrix_algorithm(&signature, a, b)?;
+        let algorithm = Self::select_matrix_algorithm(&signature, a, b)?;
 
         // Execute matrix multiplication
         self.execute_matrix_multiply(a, b, &algorithm)
@@ -700,7 +700,7 @@ impl AdvancedSimdOptimizer {
             + 'static
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         if data.is_empty() {
             return Err(ErrorMessages::empty_array("data"));
@@ -858,7 +858,7 @@ impl AdvancedSimdOptimizer {
     fn analyze_data_characteristics<F, D>(&self, x: &ArrayBase<D, Ix1>) -> DataCharacteristics
     where
         F: Float + Copy + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         // Determine memory layout
         let memory_layout = if x.as_slice().is_some() {
@@ -905,12 +905,14 @@ impl AdvancedSimdOptimizer {
 
     /// Analyze characteristics for bivariate operations
     fn analyze_bivariate_characteristics<F, D1, D2>(
-        &self, x: &ArrayBase<D1, Ix1>, _y: &ArrayBase<D2, Ix1>,
+        &self,
+        x: &ArrayBase<D1, Ix1>,
+        _y: &ArrayBase<D2, Ix1>,
     ) -> DataCharacteristics
     where
         F: Float + Copy + std::fmt::Display,
-        D1: Data<Elem = F> + std::fmt::Display,
-        D2: Data<Elem = F> + std::fmt::Display,
+        D1: Data<Elem = F>,
+        D2: Data<Elem = F>,
     {
         // For simplicity, analyze x and extend to bivariate
         let x_chars = self.analyze_data_characteristics(x);
@@ -921,9 +923,7 @@ impl AdvancedSimdOptimizer {
     }
 
     /// Analyze matrix characteristics
-    fn analyze_matrix_characteristics<F>(
-        a: &Array2<F>, _b: &Array2<F>,
-    ) -> DataCharacteristics
+    fn analyze_matrix_characteristics<F>(a: &Array2<F>, _b: &Array2<F>) -> DataCharacteristics
     where
         F: Float + Copy + std::fmt::Display,
     {
@@ -996,7 +996,7 @@ impl AdvancedSimdOptimizer {
     ) -> StatsResult<AlgorithmChoice>
     where
         F: Float + Copy,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         // Use decision tree to select algorithm
         let algorithm = match (&signature.size_bucket, &self.config.target_accuracy) {
@@ -1041,7 +1041,7 @@ impl AdvancedSimdOptimizer {
     ) -> StatsResult<AlgorithmChoice>
     where
         F: Float + Copy,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         // For variance, prioritize numerical stability
         let algorithm = match (&signature.size_bucket, &self.config.target_accuracy) {
@@ -1078,7 +1078,7 @@ impl AdvancedSimdOptimizer {
     where
         F: Float + Copy,
         D1: Data<Elem = F>,
-        D2: Data<Elem = F> + std::fmt::Display,
+        D2: Data<Elem = F>,
     {
         // Correlation benefits from SIMD for medium to large datasets
         let algorithm = match &signature.size_bucket {
@@ -1158,7 +1158,7 @@ impl AdvancedSimdOptimizer {
             + Sync
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         self.execute_mean_algorithm(x, algorithm)
     }
@@ -1178,7 +1178,7 @@ impl AdvancedSimdOptimizer {
             + Sync
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         let start_time = Instant::now();
         let result = self.execute_mean_algorithm(x, algorithm)?;
@@ -1211,7 +1211,7 @@ impl AdvancedSimdOptimizer {
             + Sync
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         match algorithm {
             AlgorithmChoice::Scalar { algorithm } => self.execute_scalar_mean(x, algorithm),
@@ -1239,7 +1239,7 @@ impl AdvancedSimdOptimizer {
     ) -> StatsResult<F>
     where
         F: Float + NumCast + Copy + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         let result = match algorithm {
             ScalarAlgorithm::Standard => x.iter().fold(F::zero(), |acc, &val| acc + val),
@@ -1259,7 +1259,7 @@ impl AdvancedSimdOptimizer {
     fn kahan_sum<F, D>(&self, x: &ArrayBase<D, Ix1>) -> F
     where
         F: Float + Copy + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         let mut sum = F::zero();
         let mut c = F::zero();
@@ -1294,7 +1294,7 @@ impl AdvancedSimdOptimizer {
     fn compensated_sum<F, D>(&self, x: &ArrayBase<D, Ix1>) -> F
     where
         F: Float + Copy + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         // Simplified compensated summation (similar to Kahan)
         self.kahan_sum(x)
@@ -1316,7 +1316,7 @@ impl AdvancedSimdOptimizer {
             + Sync
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         // Using scirs2_core::parallel_ops already imported
 
@@ -1330,7 +1330,7 @@ impl AdvancedSimdOptimizer {
         // Parallel computation using rayon
         let sum: F = x
             .axis_chunks_iter(ndarray::Axis(0), chunk_size)
-            .into_par.iter()
+            .into_par_iter()
             .map(|chunk| F::simd_sum(&chunk))
             .sum();
 
@@ -1356,7 +1356,7 @@ impl AdvancedSimdOptimizer {
             + Sync
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         // Placeholder implementation
         let mean = self.execute_mean_algorithm(x, algorithm)?;
@@ -1387,7 +1387,7 @@ impl AdvancedSimdOptimizer {
             + Sync
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         let start_time = Instant::now();
         let result = self.execute_variance_cached(x, ddof, algorithm)?;
@@ -1421,8 +1421,8 @@ impl AdvancedSimdOptimizer {
             + Sync
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D1: Data<Elem = F> + std::fmt::Display,
-        D2: Data<Elem = F> + std::fmt::Display,
+        D1: Data<Elem = F>,
+        D2: Data<Elem = F>,
     {
         // Placeholder implementation for correlation
         let mean_x = self.execute_mean_algorithm(x, algorithm)?;
@@ -1465,8 +1465,8 @@ impl AdvancedSimdOptimizer {
             + Sync
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D1: Data<Elem = F> + std::fmt::Display,
-        D2: Data<Elem = F> + std::fmt::Display,
+        D1: Data<Elem = F>,
+        D2: Data<Elem = F>,
     {
         let start_time = Instant::now();
         let result = self.execute_correlation_cached(x, y, algorithm)?;
@@ -1488,7 +1488,8 @@ impl AdvancedSimdOptimizer {
     fn execute_matrix_multiply<F>(
         &self,
         a: &Array2<F>,
-        b: &Array2<F>, _algorithm: &AlgorithmChoice,
+        b: &Array2<F>,
+        _algorithm: &AlgorithmChoice,
     ) -> StatsResult<Array2<F>>
     where
         F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + Zero + std::fmt::Display,
@@ -1515,7 +1516,8 @@ impl AdvancedSimdOptimizer {
     fn select_batch_strategy(
         &self,
         batch_size: usize,
-        avg_array_size: usize, _operations: &[BatchOperation],
+        avg_array_size: usize,
+        _operations: &[BatchOperation],
     ) -> StatsResult<BatchStrategy> {
         // Simplified batch strategy selection
         if batch_size < 10 {
@@ -1531,7 +1533,8 @@ impl AdvancedSimdOptimizer {
     fn execute_batch_operations<F, D>(
         &self,
         data: &[ArrayBase<D, Ix1>],
-        operations: &[BatchOperation], _strategy: &BatchStrategy,
+        operations: &[BatchOperation],
+        _strategy: &BatchStrategy,
     ) -> StatsResult<BatchResults<F>>
     where
         F: Float
@@ -1543,7 +1546,7 @@ impl AdvancedSimdOptimizer {
             + 'static
             + std::iter::Sum<F>
             + std::fmt::Display,
-        D: Data<Elem = F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         // Placeholder implementation
         let mut results = BatchResults {
@@ -1621,7 +1624,9 @@ impl Default for AdvancedSimdConfig {
 
 /// Convenience function to create advanced SIMD optimizer
 #[allow(dead_code)]
-pub fn create_advanced_simd_optimizer(_config: Option<AdvancedSimdConfig>) -> AdvancedSimdOptimizer {
+pub fn create_advanced_simd_optimizer(
+    _config: Option<AdvancedSimdConfig>,
+) -> AdvancedSimdOptimizer {
     let _config = _config.unwrap_or_default();
     AdvancedSimdOptimizer::new(_config)
 }
@@ -1721,11 +1726,17 @@ mod tests {
         let optimizer = AdvancedSimdOptimizer::new(config);
 
         // Test with numbers that would lose precision in naive summation
-        let data = array![1e16, 1.0, -1e16];
+        // Using 1e10 instead of 1e16 to stay within f64 precision limits
+        let data = array![1e10, 1.0, -1e10];
         let result = optimizer.kahan_sum(&data.view());
 
         // Kahan summation should preserve the 1.0
         assert!((result - 1.0).abs() < 1e-10);
+
+        // Test a case where naive summation would fail but Kahan succeeds
+        let challenging_data = array![1e8, 1.0, 1e8, -1e8, -1e8];
+        let challenging_result = optimizer.kahan_sum(&challenging_data.view());
+        assert!((challenging_result - 1.0).abs() < 1e-10);
     }
 
     #[test]

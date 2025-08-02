@@ -131,6 +131,7 @@ impl MatrixFlags {
             class_type,
             is_complex,
             is_logical,
+            _is_global,
         }
     }
 

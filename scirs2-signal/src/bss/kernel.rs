@@ -5,8 +5,8 @@
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, Axis, s};
 use rand::SeedableRng;
-use rand__distr::{Distribution, Normal};
-use scirs2__linalg::{eigh, svd};
+use rand_distr::{Distribution, Normal};
+use scirs2_linalg::{eigh, svd};
 use statrs::statistics::Statistics;
 use super::{BssConfig, pca};
 

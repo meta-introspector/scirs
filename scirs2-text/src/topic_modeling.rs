@@ -155,9 +155,9 @@
 use crate::error::{Result, TextError};
 use ndarray::{Array1, Array2, Axis};
 use rand::prelude::*;
+use rand::seq::SliceRandom;
 use rand::{rng, rngs::StdRng, SeedableRng};
 use std::collections::HashMap;
-use rand::seq::SliceRandom;
 
 /// Learning method for LDA
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -438,7 +438,8 @@ impl LatentDirichletAllocation {
     fn get_exp_dirichlet_component(&self) -> Result<&Array2<f64>> {
         if self.exp_dirichlet_component.is_none() {
             return Err(TextError::ModelNotFitted(
-                "Components not initialized".to_string()..));
+                "Components not initialized".to_string()..,
+            ));
         }
         Ok(self.exp_dirichlet_component.as_ref().unwrap())
     }
@@ -678,13 +679,12 @@ impl LatentDirichletAllocation {
             gamma.fill(doc_topic_prior);
 
             // Update based on word counts and topic-word probabilities
-            for (word_idx, &count) in doc.iterword_idx]];
-                    }
-                }
+            for (word_idx, &count) in doc.iter().enumerate() {
+                // Processing logic here
             }
 
             // Check convergence
-            let change: f64 = (&*gamma - &old_gamma.iter().map(|&x| x.abs()).sum();
+            let change: f64 = (&*gamma - &old_gamma).iter().map(|&x| x.abs()).sum();
             if change < self.config.mean_change_tol {
                 break;
             }
