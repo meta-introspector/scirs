@@ -102,7 +102,7 @@ pub fn latin_hypercube(n: usize, d: usize, seed: Option<u64>) -> StatsResult<Arr
 
         // Shuffle intervals
         for i in (1..n).rev() {
-            let j = rng.gen_range(0..i);
+            let j = rng.random_range(0..i);
             intervals.swap(i, j);
         }
 
@@ -265,7 +265,7 @@ impl SobolSequence {
 
             // Generate random permutation matrix for each bit level
             for i in 0..32 {
-                let j = rng.gen_range(0..32);
+                let j = rng.random_range(0..32);
                 matrix[[i, j]] = 1;
             }
 
@@ -463,7 +463,7 @@ impl HaltonSequence {
 
             // Fisher-Yates shuffle
             for i in (1..base).rev() {
-                let j = rng.gen_range(0..i);
+                let j = rng.random_range(0..i);
                 perm.swap(i as usize, j as usize);
             }
 

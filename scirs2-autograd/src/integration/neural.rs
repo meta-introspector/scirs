@@ -171,7 +171,8 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
 
     fn forward_custom<'b>(
         &self,
-        input: &Tensor<'b, F>, _name: &str,
+        input: &Tensor<'b, F>,
+        _name: &str,
     ) -> Result<Tensor<'b, F>, IntegrationError> {
         // Custom layer implementation (placeholder)
         Ok(*input)
@@ -209,10 +210,7 @@ impl<'a, F: Float> AutogradLayer<'a, F> {
         Ok(())
     }
 
-    fn init_batch_norm_parameters(
-        &mut self,
-        inputshape: &[usize],
-    ) -> Result<(), IntegrationError> {
+    fn init_batch_norm_parameters(&mut self, inputshape: &[usize]) -> Result<(), IntegrationError> {
         let _num_features = inputshape[inputshape.len() - 1];
 
         // Skip tensor initialization due to autograd's lazy evaluation

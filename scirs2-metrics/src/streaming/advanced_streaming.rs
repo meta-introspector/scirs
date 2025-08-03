@@ -486,7 +486,7 @@ pub struct MetricEnsemble<F: Float + std::fmt::Debug> {
     consensus_threshold: F,
 }
 
-impl<F: Float + std::fmt::Debug> + std::fmt::Debug for MetricEnsemble<F> {
+impl<F: Float + std::fmt::Debug> std::fmt::Debug for MetricEnsemble<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("MetricEnsemble")
             .field(
@@ -1724,7 +1724,8 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PerformanceMonitor<F> {
                 "accuracy" => snapshot.accuracy.to_f64().unwrap_or(0.0),
                 "precision" => snapshot.precision.to_f64().unwrap_or(0.0),
                 "recall" => snapshot.recall.to_f64().unwrap_or(0.0),
-                "f1_score" => snapshot.f1_score.to_f64().unwrap_or(0.0, _ => 0.0,
+                "f1_score" => snapshot.f1_score.to_f64().unwrap_or(0.0),
+                _ => 0.0,
             })
             .collect();
 
@@ -2794,7 +2795,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> Adaptive
     }
 }
 
-impl<F: Float + std::fmt::Debug> + std::fmt::Debug for AdaptiveControlAgent<F> {
+impl<F: Float + std::fmt::Debug> std::fmt::Debug for AdaptiveControlAgent<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AdaptiveControlAgent")
             .field("current_state", &self.current_state)
@@ -3105,7 +3106,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
     }
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> + std::fmt::Debug
+impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> std::fmt::Debug
     for OnlineLearningSystem<F>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

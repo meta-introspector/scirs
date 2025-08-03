@@ -380,7 +380,8 @@ impl<'graph, 'env, F: Float> Context<'env, F> {
     pub fn eval(
         &'graph self,
         tensors: &[&Tensor<'graph, F>],
-        feeds: &HashMap<TensorID, RawNdArrayView<F>>, _var_env: &'env VariableEnvironment<F>,
+        feeds: &HashMap<TensorID, RawNdArrayView<F>>,
+        _var_env: &'env VariableEnvironment<F>,
     ) -> Vec<Result<NdArray<F>, OpError>> {
         // Create a temporary HashMap to store references
         let temp_feeds: HashMap<TensorID, &RawNdArrayView<F>> =

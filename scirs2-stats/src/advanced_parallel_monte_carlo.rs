@@ -12,7 +12,6 @@ use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use statrs::statistics::Statistics;
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 

@@ -137,7 +137,8 @@ pub fn export_scatter_2d_to_file<P: AsRef<Path>>(
         ExportFormat::PlotlyJSON => export_scatter_2d_to_plotly(plot, _path, config),
         ExportFormat::D3JS => export_scatter_2d_to_d3(plot, _path, config),
         ExportFormat::SVG => export_scatter_2d_to_svg(plot, _path, config),
-        ExportFormat::PNG => export_scatter_2d_to_png(plot, _path, config, _ => Err(ClusteringError::ComputationError(format!(
+        ExportFormat::PNG => export_scatter_2d_to_png(plot, _path, config),
+        _ => Err(ClusteringError::ComputationError(format!(
             "Unsupported export format {:?} for 2D scatter plot",
             config.format
         ))),
@@ -170,7 +171,8 @@ pub fn export_scatter_3d_to_file<P: AsRef<Path>>(
         ExportFormat::GLTF => export_scatter_3d_to_gltf(plot, _path, config),
         ExportFormat::WebGL => export_scatter_3d_to_webgl(plot, _path, config),
         ExportFormat::Unity3D => export_scatter_3d_to_unity(plot, _path, config),
-        ExportFormat::Blender => export_scatter_3d_to_blender(plot, _path, config, _ => Err(ClusteringError::ComputationError(format!(
+        ExportFormat::Blender => export_scatter_3d_to_blender(plot, _path, config),
+        _ => Err(ClusteringError::ComputationError(format!(
             "Unsupported export format {:?} for 3D scatter plot",
             config.format
         ))),
@@ -201,7 +203,8 @@ pub fn export_animation_to_file<P: AsRef<Path>>(
         ExportFormat::MP4 => export_animation_to_mp4(frames, _path, config),
         ExportFormat::WebM => export_animation_to_webm(frames, _path, config),
         ExportFormat::HTML => export_animation_to_html(frames, _path, config),
-        ExportFormat::JSON => export_animation_to_json(frames, _path, config, _ => Err(ClusteringError::ComputationError(format!(
+        ExportFormat::JSON => export_animation_to_json(frames, _path, config),
+        _ => Err(ClusteringError::ComputationError(format!(
             "Unsupported export format {:?} for animation",
             config.format
         ))),
@@ -331,7 +334,8 @@ pub fn save_visualization_to_file<P: AsRef<Path>>(
             "html" => ExportFormat::HTML,
             "json" => ExportFormat::JSON,
             "csv" => ExportFormat::CSV,
-            "gltf" | "glb" => ExportFormat::GLTF_ => config.format, // Keep original format if not recognized
+            "gltf" | "glb" => ExportFormat::GLTF,
+            _ => config.format, // Keep original format if not recognized
         };
     }
 
@@ -696,7 +700,8 @@ fn generate_scatter_3d_html(_plot: &ScatterPlot3D, config: &ExportConfig) -> Res
 #[allow(dead_code)]
 fn export_scatter_2d_to_csv<P: AsRef<Path>>(
     plot: &ScatterPlot2D,
-    output_path: P, _config: &ExportConfig,
+    output_path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     let mut csv_content = String::from("x,y,cluster,color\n");
 
@@ -718,7 +723,9 @@ fn export_scatter_2d_to_csv<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_plotly<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output, path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot2D_output,
+    path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "Plotly export not yet implemented".to_string(),
@@ -727,7 +734,9 @@ fn export_scatter_2d_to_plotly<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_d3<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output, path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot2D_output,
+    path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "D3.js export not yet implemented".to_string(),
@@ -736,7 +745,9 @@ fn export_scatter_2d_to_d3<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_svg<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output, path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot2D_output,
+    path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "SVG export not yet implemented".to_string(),
@@ -745,7 +756,9 @@ fn export_scatter_2d_to_svg<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_2d_to_png<P: AsRef<Path>>(
-    _plot: &ScatterPlot2D_output, path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot2D_output,
+    path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "PNG export requires image rendering library".to_string(),
@@ -754,7 +767,9 @@ fn export_scatter_2d_to_png<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_threejs<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output, path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot3D_output,
+    path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "Three.js export not yet implemented".to_string(),
@@ -763,7 +778,9 @@ fn export_scatter_3d_to_threejs<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_gltf<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output, path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot3D_output,
+    path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "GLTF export not yet implemented".to_string(),
@@ -772,7 +789,9 @@ fn export_scatter_3d_to_gltf<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_webgl<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output, path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot3D_output,
+    path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "WebGL export not yet implemented".to_string(),
@@ -781,7 +800,9 @@ fn export_scatter_3d_to_webgl<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_unity<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output, path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot3D_output,
+    path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "Unity3D export not yet implemented".to_string(),
@@ -790,7 +811,9 @@ fn export_scatter_3d_to_unity<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_scatter_3d_to_blender<P: AsRef<Path>>(
-    _plot: &ScatterPlot3D_output, path: P, _config: &ExportConfig,
+    _plot: &ScatterPlot3D_output,
+    path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "Blender export not yet implemented".to_string(),
@@ -799,7 +822,9 @@ fn export_scatter_3d_to_blender<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_animation_to_gif<P: AsRef<Path>>(
-    _frames: &[AnimationFrame], _output_path: P, _config: &ExportConfig,
+    _frames: &[AnimationFrame],
+    _output_path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "GIF export requires animation library".to_string(),
@@ -808,7 +833,9 @@ fn export_animation_to_gif<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_animation_to_mp4<P: AsRef<Path>>(
-    _frames: &[AnimationFrame], _output_path: P, _config: &ExportConfig,
+    _frames: &[AnimationFrame],
+    _output_path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "MP4 export requires video encoding library".to_string(),
@@ -817,7 +844,9 @@ fn export_animation_to_mp4<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_animation_to_webm<P: AsRef<Path>>(
-    _frames: &[AnimationFrame], _output_path: P, _config: &ExportConfig,
+    _frames: &[AnimationFrame],
+    _output_path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "WebM export requires video encoding library".to_string(),
@@ -826,7 +855,9 @@ fn export_animation_to_webm<P: AsRef<Path>>(
 
 #[allow(dead_code)]
 fn export_animation_to_html<P: AsRef<Path>>(
-    _frames: &[AnimationFrame], _output_path: P, _config: &ExportConfig,
+    _frames: &[AnimationFrame],
+    _output_path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "Animation HTML export not yet implemented".to_string(),
@@ -837,7 +868,8 @@ fn export_animation_to_html<P: AsRef<Path>>(
 #[allow(unused_variables)]
 fn export_animation_to_json<P: AsRef<Path>>(
     frames: &[AnimationFrame],
-    output_path: P, _config: &ExportConfig,
+    output_path: P,
+    _config: &ExportConfig,
 ) -> Result<()> {
     #[cfg(feature = "serde")]
     {

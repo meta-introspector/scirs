@@ -673,7 +673,9 @@ impl TimeSeriesAnomalyMetrics {
             match (true_val, pred_val) {
                 (1, 1) => tp += 1,
                 (0, 1) => fp += 1,
-                (1, 0) => fn_count += 1_ => {} // TN
+                (1, 0) => fn_count += 1, // FN
+                (0, 0) => {} // TN
+                _ => {} // Other cases
             }
         }
 
@@ -883,7 +885,10 @@ impl TimeSeriesAnomalyMetrics {
 
             match (y_true[i], y_pred[i]) {
                 (1, 1) => weighted_tp += weight,
-                (0, 1) => weighted_fp += weight_ => {}
+                (0, 1) => weighted_fp += weight,
+                (1, 0) => {} // FN - not used in precision calculation
+                (0, 0) => {} // TN - not used in precision calculation
+                _ => {} // Other cases
             }
         }
 

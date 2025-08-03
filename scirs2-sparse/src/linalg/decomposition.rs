@@ -1536,7 +1536,7 @@ mod tests {
 
     #[test]
     fn test_dense_to_sparse_conversion() {
-        let dense = Array2::fromshape_vec((2, 2), vec![1.0, 0.0, 2.0, 3.0]).unwrap();
+        let dense = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 2.0, 3.0]).unwrap();
         let sparse = dense_to_sparse(&dense).unwrap();
 
         assert_eq!(sparse.nnz(), 3);

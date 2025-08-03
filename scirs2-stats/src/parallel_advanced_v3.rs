@@ -6,7 +6,6 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Axis, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
-use rand::seq::SliceRandom;
 use scirs2_core::parallel_ops::*;
 use std::sync::{Arc, Mutex};
 
@@ -388,7 +387,7 @@ where
 
                 for i in 0..n {
                     use rand::Rng;
-                    let idx = rng.gen_range(0..n);
+                    let idx = rng.random_range(0..n);
                     bootstrap_sample[i] = data_arc[idx];
                 }
 

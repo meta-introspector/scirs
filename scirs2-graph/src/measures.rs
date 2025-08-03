@@ -446,7 +446,7 @@ where
 fn eigenvector_centrality<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
     let nodes = _graph.nodes();
@@ -517,7 +517,7 @@ where
 fn eigenvector_centrality_digraph<N, E, Ix>(_graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
     let nodes = _graph.nodes();
@@ -714,7 +714,7 @@ pub fn katz_centrality<N, E, Ix>(
 ) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num, _traits::One + Into<f64> + Copy,
+    E: EdgeWeight + num_traits::Zero + num_traits::One + Into<f64> + Copy,
     Ix: petgraph::graph::IndexType,
 {
     let nodes = graph.nodes();
@@ -794,7 +794,7 @@ pub fn katz_centrality_digraph<N, E, Ix>(
 ) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num, _traits::One + Into<f64> + Copy,
+    E: EdgeWeight + num_traits::Zero + num_traits::One + Into<f64> + Copy,
     Ix: petgraph::graph::IndexType,
 {
     let nodes = graph.nodes();

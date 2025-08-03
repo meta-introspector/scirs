@@ -518,7 +518,8 @@ impl HardwareAcceleratedMatrix {
                 let distance = match metric {
                     "euclidean" => simd_distances.euclidean_distance_simd(&row_i, &row_j)?,
                     "manhattan" => simd_distances.manhattan_distance_simd(&row_i, &row_j)?,
-                    "cosine" => simd_distances.cosine_distance_simd(&row_i, &row_j)?_ => {
+                    "cosine" => simd_distances.cosine_distance_simd(&row_i, &row_j)?,
+                    _ => {
                         return Err(MetricsError::InvalidInput(format!(
                             "Unsupported metric: {}",
                             metric

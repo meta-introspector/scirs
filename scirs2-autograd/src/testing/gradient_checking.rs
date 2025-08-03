@@ -467,7 +467,9 @@ impl<F: Float> VectorFunctionChecker<F> {
 
     /// Check gradients of a vector-valued function (Jacobian)
     pub fn check_jacobian<Func>(
-        &self_function: Func, _input: &Tensor<F>, _analytical_jacobian: &Array<F, IxDyn>,
+        &self_function: Func,
+        _input: &Tensor<F>,
+        _analytical_jacobian: &Array<F, IxDyn>,
     ) -> Result<JacobianCheckResult<'_, F>, StabilityError>
     where
         Func: for<'a> Fn(&Tensor<'a, F>) -> Result<Tensor<'a, F>, StabilityError>,
@@ -495,7 +497,8 @@ impl<F: Float> VectorFunctionChecker<F> {
     #[allow(dead_code)]
     fn extract_jacobian_row<'a>(
         &self,
-        jacobian: &Array<F, IxDyn>, _row: usize,
+        jacobian: &Array<F, IxDyn>,
+        _row: usize,
         graph: &'a Graph<F>,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Extract a specific _row from the Jacobian matrix
@@ -619,7 +622,10 @@ where
 /// Comprehensive gradient check with detailed results
 #[allow(dead_code)]
 pub fn comprehensive_gradient_check<'a, F: Float, Func>(
-    _function: Func, input: &'a Tensor<'a, F>, _analytical_gradient: &'a Tensor<'a, F>, _config: GradientCheckConfig,
+    _function: Func,
+    input: &'a Tensor<'a, F>,
+    _analytical_gradient: &'a Tensor<'a, F>,
+    _config: GradientCheckConfig,
 ) -> Result<GradientCheckResult<'a, F>, StabilityError>
 where
     Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,

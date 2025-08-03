@@ -521,7 +521,7 @@ mod tests {
         let mut data = vec![9.0, 3.0, 7.0, 1.0, 5.0, 8.0, 2.0, 6.0, 4.0];
         simd_sort(&mut data);
 
-        let expected = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+        let expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
         for (a, b) in data.iter().zip(expected.iter()) {
             assert_relative_eq!(a, b, epsilon = 1e-10);
         }

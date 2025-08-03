@@ -168,7 +168,7 @@ fn generate_synthetic_data(
         }
 
         // Assign to _points array
-        for i in 0, n_points {
+        for i in 0..n_points {
             _points[[i, d]] = values[i] * 10.0; // Scale to [0, 10]
         }
     }

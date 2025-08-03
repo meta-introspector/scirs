@@ -349,7 +349,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
         let rank_sum_a: F = combined
             .iter()
             .zip(ranks.iter())
-            .filter(|((_, group)_)| *group == 0)
+            .filter(|((_, group), _)| *group == 0)
             .map(|(_, &rank)| rank)
             .sum();
 

@@ -245,7 +245,10 @@ fn generate_social_network(_num_nodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
 
-    println!("  👥 Generating social network with {} _nodes...", num_nodes);
+    println!(
+        "  👥 Generating social network with {} _nodes...",
+        num_nodes
+    );
 
     // Add _nodes
     for i in 0..num_nodes {
@@ -277,8 +280,8 @@ fn generate_social_network(_num_nodes: usize) -> Graph<usize, f64> {
                 // 5 inter-cluster connections per cluster
                 let source = rng.gen_range(cluster_start..cluster_end);
                 let target_cluster = rng.gen_range(0..cluster_id);
-                let target = rng.gen_range(
-                    target_cluster * CLUSTER_SIZE..(target_cluster + 1) * CLUSTER_SIZE);
+                let target = rng
+                    .gen_range(target_cluster * CLUSTER_SIZE..(target_cluster + 1) * CLUSTER_SIZE);
                 let weight = rng.random::<f64>() * 0.3 + 0.2; // Weaker inter-cluster weights
                 let _ = graph.add_edge(source, target, weight);
             }

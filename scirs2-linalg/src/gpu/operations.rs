@@ -1815,7 +1815,8 @@ where
                 "matmul" => 1000000, // Estimate based on typical matrix sizes
                 "matvec" => 100000,
                 "decomposition" => 2000000,
-                "solve" => 1500000_ => 500000,
+                "solve" => 1500000,
+                _ => 500000,
             };
 
             memory_requirements.insert(op.to_string(), requirement);
@@ -2518,7 +2519,8 @@ where
                 }
             }
             "matvec" => MemoryAccessPattern::Sequential,
-            "transpose" => MemoryAccessPattern::Strided(shape.1, _ => MemoryAccessPattern::Sequential,
+            "transpose" => MemoryAccessPattern::Strided(shape.1, 1),
+            _ => MemoryAccessPattern::Sequential,
         }
     }
 

@@ -4,7 +4,7 @@
 //! quality of clustering results, including bootstrap validation,
 //! consensus clustering, and stability indices.
 
-use ndarray::{ArrayView1, Array1, Array2, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use rand::seq::SliceRandom;
 use rand::{Rng, SeedableRng};
@@ -65,7 +65,8 @@ pub struct StabilityResult<F: Float> {
 /// on multiple bootstrap samples of the data and measuring the consistency
 /// of the results.
 pub struct BootstrapValidator<F: Float> {
-    config: StabilityConfig, phantom: std::marker::PhantomData<F>,
+    config: StabilityConfig,
+    phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
@@ -273,7 +274,8 @@ impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Dis
 /// This method combines multiple clustering results to identify
 /// stable cluster structures.
 pub struct ConsensusClusterer<F: Float> {
-    config: StabilityConfig, phantom: std::marker::PhantomData<F>,
+    config: StabilityConfig,
+    phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display> ConsensusClusterer<F> {
@@ -444,7 +446,8 @@ impl<F: Float + FromPrimitive + Debug + std::iter::Sum + std::fmt::Display> Cons
 
 /// Optimal cluster number selection using stability criteria
 pub struct OptimalKSelector<F: Float> {
-    config: StabilityConfig, phantom: std::marker::PhantomData<F>,
+    config: StabilityConfig,
+    phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
@@ -621,7 +624,8 @@ pub mod advanced {
     /// by training on different subsets and testing on held-out data.
     pub struct CrossValidationStability<F: Float> {
         config: StabilityConfig,
-        n_folds: usize, _phantom: std::marker::PhantomData<F>,
+        n_folds: usize,
+        _phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
@@ -760,7 +764,8 @@ pub mod advanced {
     /// to the data and measuring how much the clustering results change.
     pub struct PerturbationStability<F: Float> {
         config: StabilityConfig,
-        perturbation_types: Vec<PerturbationType>, _phantom: std::marker::PhantomData<F>,
+        perturbation_types: Vec<PerturbationType>,
+        _phantom: std::marker::PhantomData<F>,
     }
 
     /// Types of perturbations for stability testing
@@ -936,7 +941,8 @@ pub mod advanced {
     /// to understand how clustering behaves at different granularities.
     pub struct MultiScaleStability<F: Float> {
         config: StabilityConfig,
-        scale_factors: Vec<f64>, _phantom: std::marker::PhantomData<F>,
+        scale_factors: Vec<f64>,
+        _phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display>
@@ -1012,7 +1018,8 @@ pub mod advanced {
     /// prediction strength criterion.
     pub struct PredictionStrength<F: Float> {
         /// Configuration for prediction strength assessment
-        pub config: PredictionStrengthConfig, phantom: std::marker::PhantomData<F>,
+        pub config: PredictionStrengthConfig,
+        phantom: std::marker::PhantomData<F>,
     }
 
     /// Configuration for prediction strength method
@@ -1223,7 +1230,8 @@ pub mod advanced {
         /// Subsample ratio for each bootstrap
         pub subsample_ratio: f64,
         /// Random seed for reproducible results
-        pub random_seed: Option<u64>, _phantom: std::marker::PhantomData<F>,
+        pub random_seed: Option<u64>,
+        _phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + FromPrimitive + Debug> JaccardStability<F> {
@@ -1362,7 +1370,8 @@ pub mod advanced {
     /// global stability measures.
     pub struct ClusterSpecificStability<F: Float> {
         /// Configuration for cluster-specific stability assessment
-        pub config: StabilityConfig, phantom: std::marker::PhantomData<F>,
+        pub config: StabilityConfig,
+        phantom: std::marker::PhantomData<F>,
     }
 
     /// Results of cluster-specific stability assessment
@@ -1526,7 +1535,8 @@ pub mod advanced {
         /// Number of random parameter samples per range
         pub n_samples_per_range: usize,
         /// Random seed for reproducible results
-        pub random_seed: Option<u64>, _phantom: std::marker::PhantomData<F>,
+        pub random_seed: Option<u64>,
+        _phantom: std::marker::PhantomData<F>,
     }
 
     /// Results of parameter stability analysis

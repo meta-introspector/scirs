@@ -12,8 +12,7 @@
 //! - Comprehensive performance monitoring
 
 use ndarray::{Array2, ArrayView2};
-use scirs2__ndimage::{
-use statrs::statistics::Statistics;
+use scirs2_ndimage::{
     adaptive_advanced_optimizer::{AdaptiveAdvancedOptimizer, AdaptiveOptimizerConfig},
     error::NdimageResult,
     fusion_core::{
@@ -22,6 +21,7 @@ use statrs::statistics::Statistics;
         AdvancedState,
     },
 };
+use statrs::statistics::Statistics;
 
 /// Comprehensive Advanced validation demonstration
 #[allow(dead_code)]

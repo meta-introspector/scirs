@@ -767,7 +767,7 @@ where
     // Use inverse distance weighting as approximation to linear interpolation
     // This provides reasonable results for higher dimensions
     for i in 0..n_queries {
-        result[i] = interpolate_idw_linear(points, values, &xi.row(i)_default_fill)?;
+        result[i] = interpolate_idw_linear(points, values, &xi.row(i), _default_fill)?;
     }
 
     Ok(())

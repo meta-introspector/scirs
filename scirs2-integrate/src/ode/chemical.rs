@@ -690,7 +690,7 @@ pub mod systems {
             reactions,
             temperature: 298.15,
             volume: 1.0,
-            conservation_matrix: Some(Array2::fromshape_vec((1, 2), vec![1.0, 1.0]).unwrap()),
+            conservation_matrix: Some(Array2::from_shape_vec((1, 2), vec![1.0, 1.0]).unwrap()),
         };
 
         let state = ChemicalState {
@@ -760,7 +760,7 @@ pub mod systems {
             temperature: 310.15, // 37°C (physiological)
             volume: 1.0,
             conservation_matrix: Some(
-                Array2::fromshape_vec(
+                Array2::from_shape_vec(
                     (2, 4),
                     vec![
                         1.0, 0.0, 0.0, 1.0, // Enzyme conservation: E + ES = constant

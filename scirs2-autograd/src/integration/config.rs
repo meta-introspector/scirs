@@ -309,7 +309,9 @@ impl ConfigManager {
     }
 
     fn validate_module_version(
-        &self, _module_name: &str, _version: &str,
+        &self,
+        _module_name: &str,
+        _version: &str,
     ) -> Result<(), IntegrationError> {
         // Simplified _version validation
         Ok(())

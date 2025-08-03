@@ -44,7 +44,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__metrics::classification::threshold::precision_recall_curve;
+/// use scirs2_metrics::classification::threshold::precision_recall_curve;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8];
@@ -218,7 +218,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::threshold::{precision_recall_curve, average_precision_score_from_curve};
+/// use scirs2_metrics::classification::threshold::{precision_recall_curve, average_precision_score_from_curve};
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8];
@@ -270,7 +270,7 @@ where
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__metrics::classification::threshold::average_precision_score;
+/// use scirs2_metrics::classification::threshold::average_precision_score;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8];
@@ -315,7 +315,7 @@ where
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__metrics::classification::threshold::find_optimal_threshold;
+/// use scirs2_metrics::classification::threshold::find_optimal_threshold;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8];
@@ -433,7 +433,7 @@ where
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__metrics::classification::threshold::g_means_score;
+/// use scirs2_metrics::classification::threshold::g_means_score;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_pred = array![0.0, 1.0, 0.0, 1.0];
@@ -529,7 +529,7 @@ where
 ///
 /// ```rust
 /// use ndarray::array;
-/// use scirs2__metrics::classification::threshold::find_optimal_threshold_g_means;
+/// use scirs2_metrics::classification::threshold::find_optimal_threshold_g_means;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 1.0];
 /// let y_prob = array![0.1, 0.4, 0.35, 0.8];

@@ -388,7 +388,7 @@ impl CacheAwareAlgorithms {
 
     /// Memory-efficient reduction with minimal cache misses
     pub fn reduction_blocked<F: IntegrateFloat>(data: ArrayView1<F>, block_size: usize) -> F {
-        let n = _data.len();
+        let n = data.len();
         let mut partial_sums = Vec::new();
 
         // Compute partial sums for each block
@@ -397,7 +397,7 @@ impl CacheAwareAlgorithms {
             let mut sum = F::zero();
 
             for i in start..end {
-                sum += _data[i];
+                sum += data[i];
             }
 
             partial_sums.push(sum);
@@ -450,7 +450,7 @@ impl DataLayoutOptimizer {
     pub fn spatial_reorder<F: IntegrateFloat>(data: &mut [(F, F)], // Input: (value, key) pairs
     ) {
         // Sort by key to improve spatial locality
-        _data.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+        data.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
     }
 }
 

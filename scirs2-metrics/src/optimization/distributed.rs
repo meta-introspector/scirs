@@ -1172,7 +1172,7 @@ impl DistributedMetricsCoordinator {
                     if retries >= self.config.max_retries {
                         // Fallback to local computation
                         let chunk_id = match &message {
-                            DistributedMessage::ComputeMetrics { chunk_id, .. } => *chunk_id_ => 0,
+                            DistributedMessage::ComputeMetrics { chunk_id, .. } => *chunk_id,
                         };
 
                         return Ok(ChunkResult {
@@ -2772,7 +2772,8 @@ impl NetworkClient for HttpClient {
                         metrics_json.join(",")
                     )
                 }
-                DistributedMessage::HealthCheck => r#"{"type":"health_check"}"#.to_string(, _ => r#"{"type":"unknown"}"#.to_string(),
+                DistributedMessage::HealthCheck => r#"{"type":"health_check"}"#.to_string(),
+                _ => r#"{"type":"unknown"}"#.to_string(),
             };
 
             // Use a thread to perform blocking HTTP request
@@ -2851,7 +2852,8 @@ impl HttpClient {
                 r#"{{"type": "ComputeMetrics", "task_id": "{}", "chunk_id": {}, "y_true": {:?}, "y_pred": {:?}, "metric_names": {:?}}}"#,
                 task_id, chunk_id, y_true, y_pred, metric_names
             )),
-            DistributedMessage::HealthCheck => Ok(r#"{"type": "HealthCheck"}"#.to_string(), _ => Ok(r#"{"type": "Unknown"}"#.to_string()),
+            DistributedMessage::HealthCheck => Ok(r#"{"type": "HealthCheck"}"#.to_string()),
+            _ => Ok(r#"{"type": "Unknown"}"#.to_string()),
         }
     }
 
@@ -2949,7 +2951,8 @@ impl HttpClient {
                     capabilities: vec!["metrics".to_string(), "http".to_string()],
                     health_score: 0.92,
                 },
-            }, _ => Err(MetricsError::ComputationError(
+            }),
+            _ => Err(MetricsError::ComputationError(
                 "Unknown _message type".to_string(),
             )),
         }

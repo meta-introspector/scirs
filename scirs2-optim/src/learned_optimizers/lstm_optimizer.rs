@@ -1273,7 +1273,7 @@ impl<
     where
         D: Dimension + Clone,
     {
-        Array::fromshape_vec(shape, flat.to_vec())
+        Array::from_shape_vec(shape, flat.to_vec())
             .map_err(|e| OptimError::InvalidConfig(format!("Reshape error: {}", e)))
     }
 }
@@ -1420,7 +1420,7 @@ impl<T: Float + Default + Clone + 'static> LSTMLayer<T> {
 
     /// Xavier initialization
     fn xavier_init(_rows: usize, cols: usize, scale: f64) -> Array2<T> {
-        Array2::fromshape_fn((_rows, cols), |_| {
+        Array2::from_shape_fn((_rows, cols), |_| {
             let val = (scirs2_core::random::rng().gen_range(0.0..1.0) - 0.5) * 2.0 * scale;
             T::from(val).unwrap()
         })

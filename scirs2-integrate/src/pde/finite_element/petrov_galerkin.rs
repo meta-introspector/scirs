@@ -163,7 +163,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
                 Array1::from_vec(unique_x),
                 Array1::from_vec(unique_y),
             ],
-            values: vec![Array2::fromshape_vec((solution.len(), 1), solution.to_vec()).map_err(|_| IntegrateError::ComputationError("Shape error".to_string()))?],
+            values: vec![Array2::from_shape_vec((solution.len(), 1), solution.to_vec()).map_err(|_| IntegrateError::ComputationError("Shape error".to_string()))?],
             error_estimate: None,
             info: PDESolverInfo {
                 num_iterations: 1,
@@ -315,7 +315,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
     /// Trial shape function gradients
     fn trialshape_gradients(_xi: F, eta: F, inv_j: ArrayView2<F>) -> IntegrateResult<Array2<F>> {
         // Linear triangular gradients in reference element
-        let ref_grads = Array2::fromshape_vec((3, 2), vec![
+        let ref_grads = Array2::from_shape_vec((3, 2), vec![
             -F::one(), -F::one(),  // ∇N₁
              F::one(),  F::zero(), // ∇N₂
              F::zero(), F::one(),  // ∇N₃
@@ -375,7 +375,7 @@ impl<F: IntegrateFloat> PetrovGalerkinSolver<F> {
             ));
         }
         
-        let inv_j = Array2::fromshape_vec((2, 2), vec![
+        let inv_j = Array2::from_shape_vec((2, 2), vec![
             j22 / det_j, -j12 / det_j,
             -j21 / det_j, j11 / det_j,
         ]).map_err(|_| IntegrateError::ComputationError("Shape error".to_string()))?;
@@ -642,13 +642,13 @@ mod tests {
     #[test]
     fn testshape_functions() {
         // Create simple triangular mesh
-        let nodes = Array2::fromshape_vec((3, 2), vec![
+        let nodes = Array2::from_shape_vec((3, 2), vec![
             0.0, 0.0,
             1.0, 0.0,
             0.0, 1.0,
         ]).unwrap();
         
-        let elements = Array2::fromshape_vec((1, 3), vec![0, 1, 2]).unwrap();
+        let elements = Array2::from_shape_vec((1, 3), vec![0, 1, 2]).unwrap();
         
         let formulation = StabilizedFormulations::supg((1.0, 0.0), 0.1);
         let solver = PetrovGalerkinSolver::new(formulation, nodes, elements, 1, 1);
@@ -668,13 +668,13 @@ mod tests {
     
     #[test]
     fn test_jacobian_computation() {
-        let nodes = Array2::fromshape_vec((3, 2), vec![
+        let nodes = Array2::from_shape_vec((3, 2), vec![
             0.0, 0.0,
             1.0, 0.0,
             0.0, 1.0,
         ]).unwrap();
         
-        let elements = Array2::fromshape_vec((1, 3), vec![0, 1, 2]).unwrap();
+        let elements = Array2::from_shape_vec((1, 3), vec![0, 1, 2]).unwrap();
         let formulation = StabilizedFormulations::supg((1.0, 0.0), 0.1);
         let solver = PetrovGalerkinSolver::new(formulation, nodes, elements, 1, 1);
         

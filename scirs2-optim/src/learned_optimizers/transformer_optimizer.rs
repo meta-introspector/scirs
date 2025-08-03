@@ -3090,7 +3090,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
     where
         D: Dimension + Clone,
     {
-        Array::fromshape_vec(shape, flat.to_vec())
+        Array::from_shape_vec(shape, flat.to_vec())
             .map_err(|e| OptimError::InvalidConfig(format!("Reshape error: {}", e)))
     }
 }

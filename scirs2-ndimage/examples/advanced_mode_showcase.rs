@@ -201,8 +201,7 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
     .unwrap();
 
     let corner_template =
-        Array2::fromshape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
-            .unwrap();
+        Array2::fromshape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0]).unwrap();
 
     let blob_template = Array2::fromshape_vec(
         (5, 5),

@@ -782,7 +782,7 @@ impl CrossModuleBenchmarkRunner {
 
     /// Simulate parallel operations
     #[cfg(feature = "parallel")]
-    fn count(usize) -> CoreResult<()> {
+    fn count(n: usize) -> CoreResult<()> {
         let work_items = 100000;
         let items_per_thread = work_items / thread_count;
 
@@ -805,7 +805,7 @@ impl CrossModuleBenchmarkRunner {
 
     /// Simulate parallel operations (fallback)
     #[cfg(not(feature = "parallel"))]
-    fn count(usize) -> CoreResult<()> {
+    fn count(n: usize) -> CoreResult<()> {
         // Fallback: simulate work sequentially
         for _ in 0..100000 {
             let result = 1.23456_f64.sin() + 7.89012_f64.cos();
@@ -886,7 +886,7 @@ impl CrossModuleBenchmarkRunner {
     }
 
     /// Simulate memory-constrained operation
-    fn limit(usize) -> CoreResult<()> {
+    fn limit(n: usize) -> CoreResult<()> {
         // Allocate memory up to the _limit and perform operations
         let element_count = (memory_limit / std::mem::size_of::<f64>()).min(1000000);
         let buffer = vec![1.0f64; element_count];

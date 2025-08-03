@@ -387,7 +387,7 @@ mod tests {
         let stats = ProgressStats::new(100);
 
         let result = template.render("Test", &stats, None);
-        assert!(result.contains(Test));
+        assert!(result.contains("Test"));
         assert!(result.contains("0.0%"));
         assert!(result.contains("0/100"));
     }

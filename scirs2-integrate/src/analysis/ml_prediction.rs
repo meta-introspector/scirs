@@ -1350,7 +1350,7 @@ impl BifurcationPredictionNetwork {
         }
 
         let mut rng = rand::rng();
-        let mask: Array1<f64> = Array1::fromshape_fn(x.len(), |_| {
+        let mask: Array1<f64> = Array1::from_shape_fn(x.len(), |_| {
             if rng.random::<f64>() < dropout_rate {
                 0.0
             } else {

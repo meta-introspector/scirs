@@ -635,7 +635,8 @@ impl<F: Float> Op<F> for SLogDetExtractOp {
 
         match self.component {
             0 => ctx.append_output(ndarray::arr0(sign).into_dyn()),
-            1 => ctx.append_output(ndarray::arr0(log_det).into_dyn(), _ => return Err(OpError::IncompatibleShape("Invalid component".into())),
+            1 => ctx.append_output(ndarray::arr0(log_det).into_dyn()),
+            _ => return Err(OpError::IncompatibleShape("Invalid component".into())),
         }
 
         Ok(())

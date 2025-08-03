@@ -533,20 +533,21 @@ impl<'a, F: Float> StabilityTestSuite<'a, F> {
     ) -> bool {
         // Test passes if actual stability grade is at least as good as expected
         match (metrics.stability_grade, test_case.expected_stability) {
-            (StabilityGrade:: Excellent) => true,
+            (StabilityGrade::Excellent) => true,
             (StabilityGrade::Good, StabilityGrade::Excellent) => false,
-            (StabilityGrade:: Good) => true,
+            (StabilityGrade::Good) => true,
             (StabilityGrade::Fair, StabilityGrade::Excellent | StabilityGrade::Good) => false,
-            (StabilityGrade:: Fair) => true,
+            (StabilityGrade::Fair) => true,
             (StabilityGrade::Poor, StabilityGrade::Unstable) => true,
-            (StabilityGrade:: Poor) => false,
-            (StabilityGrade:: Unstable) => false,
+            (StabilityGrade::Poor) => false,
+            (StabilityGrade::Unstable) => false,
         }
     }
 
     #[allow(dead_code)]
     fn run_edge_case_test(
-        &self_name: &str, _edge_case: EdgeCaseTest<F>,
+        &self_name: &str,
+        _edge_case: EdgeCaseTest<F>,
     ) -> Result<EdgeCaseTestResult, StabilityError> {
         // Simplified implementation
         Ok(EdgeCaseTestResult {

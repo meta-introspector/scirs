@@ -23,17 +23,17 @@ pub fn error_norm<F: IntegrateFloat>(error: &Array1<F>, y: &Array1<F>, rtol: F, 
     // Calculate the denominator for normalization
     let scale = y
         .iter()
-        .zip(_error.iter())
+        .zip(error.iter())
         .map(|(y_i_, _)| rtol * y_i_.abs() + atol)
         .collect::<Array1<F>>();
 
-    // Calculate RMS of scaled _error
+    // Calculate RMS of scaled error
     let mut sum_sq = F::zero();
-    for (e, s) in _error.iter().zip(scale.iter()) {
+    for (e, s) in error.iter().zip(scale.iter()) {
         sum_sq += (*e / *s).powi(2);
     }
 
-    let n = F::from_usize(_error.len()).unwrap();
+    let n = F::from_usize(error.len()).unwrap();
     (sum_sq / n).sqrt()
 }
 

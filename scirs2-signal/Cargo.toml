@@ -41,7 +41,7 @@ ndarray-rand = { workspace = true }
 # rayon = { workspace = true, optional = true }
 
 [features]
-default = []
+default = ["parallel"]
 parallel = ["scirs2-core/parallel"]  # Use scirs2-core parallel abstractions
 unstable_avx512 = []  # Experimental AVX-512 support
 

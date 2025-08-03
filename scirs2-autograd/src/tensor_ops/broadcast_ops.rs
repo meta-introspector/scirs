@@ -185,7 +185,8 @@ fn padshape_left(shape: &[usize], target_len: usize) -> Vec<usize> {
 
 #[allow(dead_code)]
 fn choose_broadcast_strategy(
-    _leftshape: &[usize], _rightshape: &[usize],
+    _leftshape: &[usize],
+    _rightshape: &[usize],
     outputshape: &[usize],
     memory_cost: usize,
 ) -> BroadcastStrategy {
@@ -206,7 +207,8 @@ fn choose_broadcast_strategy(
 /// Optimized broadcast operation that applies a binary function
 pub struct OptimizedBroadcastOp<F: Float> {
     pub operation: BinaryOperation,
-    pub info: BroadcastInfo, phantom: std::marker::PhantomData<F>,
+    pub info: BroadcastInfo,
+    phantom: std::marker::PhantomData<F>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -396,16 +398,16 @@ fn apply_scalar_broadcast<'a, F: Float>(
     };
 
     let result = match (op, is_left_scalar) {
-        (BinaryOperation:: Add) => array.mapv(|x| x + scalar_val),
+        (BinaryOperation::Add) => array.mapv(|x| x + scalar_val),
         (BinaryOperation::Subtract, true) => array.mapv(|x| scalar_val - x),
         (BinaryOperation::Subtract, false) => array.mapv(|x| x - scalar_val),
-        (BinaryOperation:: Multiply) => array.mapv(|x| x * scalar_val),
+        (BinaryOperation::Multiply) => array.mapv(|x| x * scalar_val),
         (BinaryOperation::Divide, true) => array.mapv(|x| scalar_val / x),
         (BinaryOperation::Divide, false) => array.mapv(|x| x / scalar_val),
         (BinaryOperation::Power, true) => array.mapv(|x| scalar_val.powf(x)),
         (BinaryOperation::Power, false) => array.mapv(|x| x.powf(scalar_val)),
-        (BinaryOperation:: Maximum) => array.mapv(|x| x.max(scalar_val)),
-        (BinaryOperation:: Minimum) => array.mapv(|x| x.min(scalar_val)),
+        (BinaryOperation::Maximum) => array.mapv(|x| x.max(scalar_val)),
+        (BinaryOperation::Minimum) => array.mapv(|x| x.min(scalar_val)),
     };
 
     Ok(result)
@@ -416,7 +418,8 @@ fn apply_scalar_broadcast<'a, F: Float>(
 fn apply_simd_broadcast<'a, F: Float>(
     left: &NdArrayView<'a, F>,
     right: &NdArrayView<'a, F>,
-    op: BinaryOperation, info: &BroadcastInfo,
+    op: BinaryOperation,
+    info: &BroadcastInfo,
 ) -> Result<NdArray<F>, OpError> {
     // For now, fall back to standard broadcasting
     // In a full implementation, this would use SIMD instructions
@@ -526,7 +529,8 @@ fn apply_standard_broadcast<'a, F: Float>(
 fn reduce_for_broadcast_grad<'g, F: Float>(
     grad: &Tensor<'g, F>,
     reduce_axes: &[usize],
-    original_input: &Tensor<'g, F>, _graph: &'g crate::Graph<F>,
+    original_input: &Tensor<'g, F>,
+    _graph: &'g crate::Graph<F>,
 ) -> Tensor<'g, F> {
     let mut result = *grad;
 

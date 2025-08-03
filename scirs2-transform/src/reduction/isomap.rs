@@ -7,12 +7,12 @@
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_positive, checkshape};
-use scirs2__linalg::eigh;
+use scirs2_linalg::eigh;
 use std::collections::BinaryHeap;
 use std::f64;
 
 use crate::error::{Result, TransformError};
-use statrs::statistics::Statistics;
+// use statrs::statistics::Statistics; // TODO: Add statrs dependency
 
 /// Isomap (Isometric Feature Mapping) dimensionality reduction
 ///

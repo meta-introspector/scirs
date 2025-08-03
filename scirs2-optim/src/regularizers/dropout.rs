@@ -59,7 +59,7 @@ impl<A: Float + Debug> Dropout<A> {
     /// * `rng` - Random number generator
     pub fn new<R: Rng>(rate: A, rng: &mut R) -> Self {
         // Ensure _rate is between 0 and 1
-        let rate = _rate.max(A::zero()).min(A::one());
+        let rate = rate.max(A::zero()).min(A::one());
 
         // Create a new RNG from the provided one
         let mut seed_bytes = [0u8; 8];

@@ -246,7 +246,7 @@ impl DeepWalk {
     }
 
     /// Train embeddings using Skip-gram with negative sampling
-    fn train_embeddings(&self..walks: &[Vec<usize>], n_nodes: usize) -> Array2<f64> {
+    fn train_embeddings(&self, walks: &[Vec<usize>], n_nodes: usize) -> Array2<f64> {
         let mut rng = rand::rng();
 
         // Initialize embeddings randomly
@@ -265,7 +265,7 @@ impl DeepWalk {
             let lr = self.learning_rate * (1.0 - epoch as f64 / self.n_epochs as f64);
 
             for walk in walks {
-                for (idx..&center) in walk.iter().enumerate() {
+                for (idx, &center) in walk.iter().enumerate() {
                     // Define context window
                     let window_start = idx.saturating_sub(self.window_size);
                     let window_end = (idx + self.window_size + 1).min(walk.len());

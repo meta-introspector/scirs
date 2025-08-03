@@ -1,6 +1,6 @@
 //! Silhouette coefficient for evaluating clustering quality
 
-use ndarray::{ArrayView1, Array1, ArrayView1, ArrayView2};
+use ndarray::{Array1, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 
 use crate::error::{ClusteringError, Result};

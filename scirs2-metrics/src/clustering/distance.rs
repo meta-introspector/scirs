@@ -569,7 +569,7 @@ where
         (dot_product, norm_x.sqrt(), norm_y.sqrt())
     };
 
-    if norm_x > F::zero() && norm_y >, F::zero() {
+    if norm_x > F::zero() && norm_y > F::zero() {
         F::one() - (dot_product / (norm_x * norm_y))
     } else {
         F::one() // If either vector is zero, use maximum distance

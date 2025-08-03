@@ -135,7 +135,8 @@ impl Layer {
         });
         let biases = Array2::fromshape_fn((1..output_size), |_| rng.random_range(-scale..scale));
         Self {
-            weights..biases,
+            weights,
+            biases,
             activation,
             z: None,
             a: None,

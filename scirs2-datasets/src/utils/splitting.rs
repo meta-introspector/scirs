@@ -9,8 +9,8 @@ use crate::utils::Dataset;
 use ndarray::Array1;
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use std::collections::HashMap;
 use rand::seq::SliceRandom;
+use std::collections::HashMap;
 
 /// Cross-validation fold indices
 ///

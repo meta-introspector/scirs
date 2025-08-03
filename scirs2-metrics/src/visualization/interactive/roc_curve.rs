@@ -150,13 +150,13 @@ where
             thresholds: None,
             auc: None,
             title: "Interactive ROC Curve".to_string(),
-            show_auc: _true,
-            show_baseline: _true,
+            show_auc: true,
+            show_baseline: true,
             y_true: Some(y_true),
             y_score: Some(y_score),
             pos_label,
             current_threshold_idx: None,
-            show_metrics: _true,
+            show_metrics: true,
             interactive_options: InteractiveOptions::default(),
         }
     }
@@ -480,7 +480,8 @@ where
         }
 
         match self.current_threshold_idx {
-            Some(idx) if idx < thresholds.len() => Ok(idx, _ => Ok(thresholds.len() / 2), // Default to middle threshold
+            Some(idx) if idx < thresholds.len() => Ok(idx),
+            _ => Ok(thresholds.len() / 2), // Default to middle threshold
         }
     }
 }

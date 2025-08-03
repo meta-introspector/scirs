@@ -802,8 +802,9 @@ fn plot_scatter_3d_png<P: AsRef<Path>>(
         }
     }
 
-    root.present()
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save 3D _plot: {}", e)))?;
+    root.present().map_err(|e| {
+        ClusteringError::ComputationError(format!("Failed to save 3D _plot: {}", e))
+    })?;
 
     Ok(())
 }
@@ -898,8 +899,9 @@ fn plot_scatter_3d_svg<P: AsRef<Path>>(
         }
     }
 
-    root.present()
-        .map_err(|e| ClusteringError::ComputationError(format!("Failed to save 3D _plot: {}", e)))?;
+    root.present().map_err(|e| {
+        ClusteringError::ComputationError(format!("Failed to save 3D _plot: {}", e))
+    })?;
 
     Ok(())
 }
@@ -1007,7 +1009,10 @@ pub fn launch_interactive_visualization(
 #[cfg(not(feature = "egui"))]
 #[allow(dead_code)]
 pub fn launch_interactive_visualization(
-    _data: ArrayView2<f64>, _labels: &Array1<i32>, _centroids: Option<&Array2<f64>>, _config: Option<&VisualizationConfig>,
+    _data: ArrayView2<f64>,
+    _labels: &Array1<i32>,
+    _centroids: Option<&Array2<f64>>,
+    _config: Option<&VisualizationConfig>,
 ) -> Result<()> {
     Err(ClusteringError::ComputationError(
         "Interactive visualization requires egui feature. Enable with --features egui".to_string(),

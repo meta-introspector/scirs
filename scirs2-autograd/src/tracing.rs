@@ -378,7 +378,7 @@ impl ExecutionTracer {
             EventType::OperationExecution { duration, .. } => {
                 *duration >= self.config.min_operation_duration
             }
-            EventType::MemoryAllocation { size, .. } => *size >= self.config.min_memory_threshold_ => true,
+            EventType::MemoryAllocation { size, .. } => *size >= self.config.min_memory_threshold,
         }
     }
 

@@ -5,7 +5,7 @@
 
 use crate::classification::curves::precision_recall_curve;
 use crate::classification::threshold::average_precision_score;
-use crate::visualization::precision__recall::precision_recall_visualization;
+use crate::visualization::precision_recall::precision_recall_visualization;
 use crate::visualization::MetricVisualizer;
 use ndarray::{Array, Ix1, IxDyn};
 use std::error::Error;

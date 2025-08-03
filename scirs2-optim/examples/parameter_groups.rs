@@ -24,10 +24,10 @@ struct SimpleNetwork {
 impl SimpleNetwork {
     fn new() -> Self {
         Self {
-            feature_layer1: Array2::fromshape_vec((10, 5), vec![0.1; 50]).unwrap(),
-            feature_layer2: Array2::fromshape_vec((8, 10), vec![0.1; 80]).unwrap(),
-            classifier_layer1: Array2::fromshape_vec((6, 8), vec![0.1; 48]).unwrap(),
-            classifier_layer2: Array2::fromshape_vec((4, 6), vec![0.1; 24]).unwrap(),
+            feature_layer1: Array2::from_shape_vec((10, 5), vec![0.1; 50]).unwrap(),
+            feature_layer2: Array2::from_shape_vec((8, 10), vec![0.1; 80]).unwrap(),
+            classifier_layer1: Array2::from_shape_vec((6, 8), vec![0.1; 48]).unwrap(),
+            classifier_layer2: Array2::from_shape_vec((4, 6), vec![0.1; 24]).unwrap(),
             output_layer: Array1::from_vec(vec![0.1; 4]),
         }
     }
@@ -54,7 +54,7 @@ impl SimpleNetwork {
 fn compute_gradients_2d(_params: &[Array2<f64>]) -> Vec<Array2<f64>> {
     _params
         .iter()
-        .map(|p| Array2::fromshape_vec(p.dim(), vec![0.01; p.len()]).unwrap())
+        .map(|p| Array2::from_shape_vec(p.dim(), vec![0.01; p.len()]).unwrap())
         .collect()
 }
 

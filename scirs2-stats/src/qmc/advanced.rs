@@ -687,7 +687,7 @@ impl AdvancedQMCGenerator {
 
             // Use Faure-Tezuka permutation pattern
             for i in 1..base {
-                let j = rng.gen_range(0..i);
+                let j = rng.random_range(0..i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -729,7 +729,7 @@ impl AdvancedQMCGenerator {
 
             // Enhanced shuffling with bias towards uniformity
             for i in (1..base).rev() {
-                let j = rng.gen_range(0..i);
+                let j = rng.random_range(0..i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -974,7 +974,7 @@ impl AdvancedQMCGenerator {
         for _ in 0..dimension {
             let mut matrix = Array2::zeros((base as usize, base as usize));
             for i in 0..base as usize {
-                let j = rng.gen_range(0..base as usize);
+                let j = rng.random_range(0..base as usize);
                 matrix[[i, j]] = 1;
             }
             matrices.push(matrix);
@@ -1075,7 +1075,7 @@ impl StratifiedSampler {
 
         // Fill remaining _samples if needed
         while sample_idx < n_samples_ {
-            let random_stratum_idx = rng.gen_range(0..total_strata);
+            let random_stratum_idx = rng.random_range(0..total_strata);
             let stratum_indices = self.linear_to_multi_index(random_stratum_idx);
             let point = self.sample_within_stratum(&stratum_indices, &mut rng)?;
 

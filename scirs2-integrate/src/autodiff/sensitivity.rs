@@ -155,7 +155,7 @@ where
             let s = y_aug
                 .slice(ndarray::s![n_states..])
                 .to_owned()
-                .intoshape_with_order((n_states,))
+                .into_shape_with_order((n_states,))
                 .unwrap();
 
             // Compute f(t, y, p)
@@ -577,7 +577,7 @@ impl<F: IntegrateFloat> EFAST<F> {
 /// Parameter sensitivity ranking
 #[allow(dead_code)]
 pub fn rank_parameters<F: IntegrateFloat>(analysis: &SensitivityAnalysis<F>) -> Vec<(String, F)> {
-    let averaged = _analysis.time_averaged_sensitivities();
+    let averaged = analysis.time_averaged_sensitivities();
     let mut rankings: Vec<(String, F)> = Vec::new();
 
     for (name, sens) in averaged {

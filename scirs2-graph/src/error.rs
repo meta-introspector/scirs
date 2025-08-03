@@ -354,7 +354,7 @@ impl GraphError {
             GraphError::Cancelled { .. } => true,
             GraphError::MemoryError { .. } => false,
             GraphError::IOError { .. } => false,
-            GraphError::CoreError(_) => false_ => false,
+            GraphError::CoreError(_) => false,
         }
     }
 
@@ -386,7 +386,8 @@ impl GraphError {
                     "Try different resolution parameters".to_string(),
                     "Ensure graph has edges".to_string(),
                     "Consider preprocessing to remove isolates".to_string(),
-                ]_ => vec!["Adjust algorithm parameters".to_string()],
+                ],
+                _ => vec!["Adjust algorithm parameters".to_string()],
             },
             GraphError::MemoryError { .. } => vec![
                 "Use streaming algorithms for large graphs".to_string(),
@@ -397,7 +398,8 @@ impl GraphError {
                 "Increase maximum iterations".to_string(),
                 "Adjust tolerance threshold".to_string(),
                 "Check for numerical stability issues".to_string(),
-            ]_ => vec!["Check input parameters and graph structure".to_string()],
+            ],
+            _ => vec!["Check input parameters and graph structure".to_string()],
         }
     }
 

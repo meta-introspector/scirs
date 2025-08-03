@@ -73,7 +73,7 @@ where
         Self {
             data,
             indices,
-            shape: shape,
+            shape,
         }
     }
 

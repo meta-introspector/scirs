@@ -793,8 +793,16 @@ fn base64_encode(_input: &[u8]) -> String {
 
     while i < _input.len() {
         let b1 = _input[i];
-        let b2 = if i + 1 < _input.len() { _input[i + 1] } else { 0 };
-        let b3 = if i + 2 < _input.len() { _input[i + 2] } else { 0 };
+        let b2 = if i + 1 < _input.len() {
+            _input[i + 1]
+        } else {
+            0
+        };
+        let b3 = if i + 2 < _input.len() {
+            _input[i + 2]
+        } else {
+            0
+        };
 
         let triple = ((b1 as u32) << 16) | ((b2 as u32) << 8) | (b3 as u32);
 

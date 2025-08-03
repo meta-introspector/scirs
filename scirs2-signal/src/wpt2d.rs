@@ -84,9 +84,9 @@ pub struct WaveletPacket2D {
 
 impl WaveletPacket2D {
     /// Creates a new wavelet packet node.
-    pub fn new(_level: usize, row: usize, col: usize, coeffs: Array2<f64>, path: String) -> Self {
+    pub fn new(level: usize, row: usize, col: usize, coeffs: Array2<f64>, path: String) -> Self {
         WaveletPacket2D {
-            _level,
+            level,
             row,
             col,
             coeffs,
@@ -235,7 +235,7 @@ impl WaveletPacketTree2D {
         selected_packets: &[(usize, usize, usize)],
     ) -> SignalResult<Array2<f64>> {
         // Create a new tree with only the selected _packets
-        let mut selective_tree = WaveletPacketTree2D::new(
+        let mut selective_tree = WaveletPacket2D::new(
             self.wavelet,
             self.max_level,
             Array2::zeros(self.originalshape),
@@ -312,7 +312,7 @@ where
                 .unwrap_or_else(|| panic!("Could not convert {:?} to f64", val))
         });
 
-        return Ok(WaveletPacketTree2D::new(wavelet, 0, root_coeffs));
+        return Ok(WaveletPacket2D::new(wavelet, 0, root_coeffs));
     }
 
     // Check if the data dimensions are sufficient for the requested _level
@@ -333,7 +333,7 @@ where
     });
 
     // Initialize the wavelet packet tree
-    let mut tree = WaveletPacketTree2D::new(wavelet, max_level, root_coeffs);
+    let mut tree = WaveletPacket2D::new(wavelet, max_level, root_coeffs);
 
     // Perform the decomposition
     decompose_node(&mut tree, 0, 0, 0, max_level, mode)?;
@@ -667,7 +667,7 @@ where
                 .unwrap_or_else(|| panic!("Could not convert {:?} to f64", val))
         });
 
-        return Ok(WaveletPacketTree2D::new(wavelet, 0, root_coeffs));
+        return Ok(WaveletPacket2D::new(wavelet, 0, root_coeffs));
     }
 
     // Convert input to f64
@@ -677,7 +677,7 @@ where
     });
 
     // Initialize the wavelet packet tree
-    let mut tree = WaveletPacketTree2D::new(wavelet, max_level, root_coeffs);
+    let mut tree = WaveletPacket2D::new(wavelet, max_level, root_coeffs);
 
     // Perform the selective decomposition
     decompose_node_selective(&mut tree, 0, 0, 0, max_level, criterion, mode)?;

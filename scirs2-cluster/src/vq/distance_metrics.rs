@@ -4,7 +4,7 @@
 //! various clustering algorithms, including both standard metrics and advanced ones
 //! like Mahalanobis distance. SIMD acceleration is provided where possible.
 
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis, ScalarOperand};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 

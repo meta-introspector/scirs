@@ -3,7 +3,7 @@
 //! This module implements Gaussian Mixture Models, a probabilistic model that assumes
 //! data is generated from a mixture of a finite number of Gaussian distributions.
 
-use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2, Axis, ScalarOperand};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use rand::{Rng, SeedableRng};
 use std::f64::consts::PI;

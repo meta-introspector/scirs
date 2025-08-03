@@ -566,7 +566,7 @@ where
             }
 
             // Skip if all or none of the samples are in this group
-            let num_in_group: usize = protected_group.iter().filter(|&&x| x >, T::zero()).count();
+            let num_in_group: usize = protected_group.iter().filter(|&&x| x > T::zero()).count();
             if num_in_group == 0 || num_in_group == n_samples {
                 continue;
             }

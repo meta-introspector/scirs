@@ -52,8 +52,6 @@
 // // let filtered = filtfilt(&b, &a, &signal).unwrap();
 // ```
 
-#[cfg(feature = "parallel")]
-use crate::wpt2d::WaveletPacket2D;
 // BLAS backend linking handled through scirs2-core
 
 // Export error types

@@ -4,7 +4,7 @@
 //! network evaluation, especially for binary classification problems.
 
 use crate::classification::curves::roc_curve;
-use crate::visualization::roc__curve::roc_curve_visualization;
+use crate::visualization::roc_curve::roc_curve_visualization;
 use crate::visualization::MetricVisualizer;
 use ndarray::{Array, Ix1, IxDyn};
 use std::error::Error;

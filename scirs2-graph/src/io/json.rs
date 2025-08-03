@@ -166,7 +166,7 @@ where
 {
     let file = File::open(_path)?;
     let reader = BufReader::new(file);
-    let json_graph: JsonGraph = serde_json:::from_reader(reader)
+    let json_graph: JsonGraph = serde_json::from_reader(reader)
         .map_err(|e| GraphError::Other(format!("Failed to parse JSON: {e}")))?;
 
     // Verify this is an undirected graph
@@ -241,7 +241,7 @@ where
 {
     let file = File::open(_path)?;
     let reader = BufReader::new(file);
-    let json_graph: JsonGraph = serde_json:::from_reader(reader)
+    let json_graph: JsonGraph = serde_json::from_reader(reader)
         .map_err(|e| GraphError::Other(format!("Failed to parse JSON: {e}")))?;
 
     let mut graph = DiGraph::new();

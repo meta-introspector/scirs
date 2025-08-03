@@ -548,7 +548,7 @@ mod tests {
 
     #[test]
     fn test_sparse_array_base() {
-        let data = Array::fromshape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0])
+        let data = Array::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0, 5.0])
             .unwrap();
         let sparse = SparseArrayBase::new(data);
 
@@ -562,8 +562,8 @@ mod tests {
 
     #[test]
     fn test_sparse_array_operations() {
-        let data1 = Array::fromshape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
-        let data2 = Array::fromshape_vec((2, 2), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
+        let data1 = Array::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let data2 = Array::from_shape_vec((2, 2), vec![5.0, 6.0, 7.0, 8.0]).unwrap();
 
         let sparse1 = SparseArrayBase::new(data1);
         let sparse2 = SparseArrayBase::new(data2);

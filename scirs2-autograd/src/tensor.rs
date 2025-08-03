@@ -439,7 +439,11 @@ impl<'graph, F: Float> Tensor<'graph, F> {
     }
 
     /// Creates a tensor from a vector of data and shape.
-    pub fn from_vec(_data: Vec<F>, shape: Vec<usize>, graph: &'graph Graph<F>) -> Tensor<'graph, F> {
+    pub fn from_vec(
+        _data: Vec<F>,
+        shape: Vec<usize>,
+        graph: &'graph Graph<F>,
+    ) -> Tensor<'graph, F> {
         let array = match NdArray::fromshape_vec(ndarray::IxDyn(&shape), _data) {
             Ok(arr) => arr,
             Err(_) => NdArray::zeros(ndarray::IxDyn(&shape)),

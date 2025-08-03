@@ -4,7 +4,7 @@
 //! which store only the upper triangular portion of a symmetric distance matrix
 //! in a flattened 1D array format for memory efficiency.
 
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
 
@@ -477,8 +477,7 @@ mod tests {
     #[test]
     fn test_error_cases() {
         // Non-square matrix
-        let non_square =
-            Array2::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let non_square = Array2::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         assert!(square_to_condensed(non_square.view()).is_err());
 
         // Too small matrix

@@ -335,7 +335,7 @@ mod tests {
         let ws = WeightStandardization::new(1e-5);
 
         // Create a simple 4D convolutional weight tensor
-        let weights = Array4::fromshape_fn((2, 2, 2, 2), |idx| {
+        let weights = Array4::from_shape_fn((2, 2, 2, 2), |idx| {
             let (a, b, c, d) = (idx.0, idx.1, idx.2, idx.3);
             (a * 8 + b * 4 + c * 2 + d) as f64
         });

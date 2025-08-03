@@ -146,7 +146,8 @@ impl<F: Float + FromPrimitive + ScalarOperand + 'static> WardCluster<F> {
 /// ```
 #[allow(dead_code)]
 pub fn optimized_ward_linkage<F>(
-    data: ArrayView2<F>, _metric: Metric, // Ward's method always uses Euclidean distance
+    data: ArrayView2<F>,
+    _metric: Metric, // Ward's method always uses Euclidean distance
 ) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd + Send + Sync + ScalarOperand + 'static,

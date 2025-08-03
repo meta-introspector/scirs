@@ -72,7 +72,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("\nBest hyperparameters found:");
         for (name, value) in result.best_params() {
             match name.as_str() {
-                "hidden_size" | "num_epochs" => println!("  {}: {}", name, *value as usize, _ => println!("  {name}: {value:.6}"),
+                "hidden_size" | "num_epochs" => println!("  {}: {}", name, *value as usize),
+                _ => println!("  {name}: {value:.6}"),
             }
         }
         println!("Best accuracy: {:.6}", result.best_metric());

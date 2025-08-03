@@ -264,7 +264,7 @@ impl CrankNicolson1D {
         // Store solutions
         let save_every = self.options.save_every.unwrap_or(1);
         let mut solutions = Vec::with_capacity((num_steps + 1) / save_every + 1);
-        solutions.push(u_current.clone().intoshape_with_order((nx, 1)).unwrap());
+        solutions.push(u_current.clone().into_shape_with_order((nx, 1)).unwrap());
 
         // Initialize matrices for Crank-Nicolson method
         let mut a_matrix = Array2::zeros((nx, nx));
@@ -301,7 +301,7 @@ impl CrankNicolson1D {
 
             // Save solution if needed
             if (step + 1) % save_every == 0 || step == num_steps - 1 {
-                solutions.push(u_current.clone().intoshape_with_order((nx, 1)).unwrap());
+                solutions.push(u_current.clone().into_shape_with_order((nx, 1)).unwrap());
             }
 
             // Print progress if verbose
@@ -880,7 +880,7 @@ impl BackwardEuler1D {
         // Store solutions
         let save_every = self.options.save_every.unwrap_or(1);
         let mut solutions = Vec::with_capacity((num_steps + 1) / save_every + 1);
-        solutions.push(u_current.clone().intoshape_with_order((nx, 1)).unwrap());
+        solutions.push(u_current.clone().into_shape_with_order((nx, 1)).unwrap());
 
         // Initialize coefficient matrix for Backward Euler method
         let mut a_matrix = Array2::zeros((nx, nx));
@@ -915,7 +915,7 @@ impl BackwardEuler1D {
 
             // Save solution if needed
             if (step + 1) % save_every == 0 || step == num_steps - 1 {
-                solutions.push(u_current.clone().intoshape_with_order((nx, 1)).unwrap());
+                solutions.push(u_current.clone().into_shape_with_order((nx, 1)).unwrap());
             }
 
             // Print progress if verbose

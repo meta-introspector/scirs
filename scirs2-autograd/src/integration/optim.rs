@@ -360,7 +360,10 @@ impl<F: Float> AutogradOptimizer<F> for SGDOptimizer<'_, F> {
 
 impl<'a, F: Float> SGDOptimizer<'a, F> {
     fn update_parameter(
-        config: &OptimizerConfig, _param: &mut Tensor<F>, _grad: &Tensor<F>, _param_state: &mut ParameterState<'a, F>,
+        config: &OptimizerConfig,
+        _param: &mut Tensor<F>,
+        _grad: &Tensor<F>,
+        _param_state: &mut ParameterState<'a, F>,
     ) -> Result<(), IntegrationError> {
         // Simplified SGD update: _param = _param - lr * _grad
         // In practice, would implement proper momentum and weight decay
@@ -499,7 +502,9 @@ impl<F: Float> AutogradOptimizer<F> for AdamOptimizer<'_, F> {
 
 impl<'a, F: Float> AdamOptimizer<'a, F> {
     fn update_parameter_adam(
-        _config: &OptimizerConfig, _param: &mut Tensor<F>, _grad: &Tensor<F>,
+        _config: &OptimizerConfig,
+        _param: &mut Tensor<F>,
+        _grad: &Tensor<F>,
         param_state: &mut ParameterState<'a, F>,
     ) -> Result<(), IntegrationError> {
         // Simplified Adam update

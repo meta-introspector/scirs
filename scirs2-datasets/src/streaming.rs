@@ -9,9 +9,9 @@ use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
 use std::collections::VecDeque;
 use std::path::Path;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::path::PathBuf;
 
 /// Configuration for streaming operations
 #[derive(Debug, Clone)]
@@ -520,7 +520,8 @@ impl StreamStats {
 
 /// Parallel streaming processor for applying operations to chunks
 pub struct StreamProcessor<T> {
-    config: StreamConfig, phantom: std::marker::PhantomData<T>,
+    config: StreamConfig,
+    phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> StreamProcessor<T>

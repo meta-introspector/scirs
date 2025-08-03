@@ -1,7 +1,7 @@
 //! Error types for the clustering module
 
-use scirs2_core::error::CoreError;
 use scirs2__linalg::error::LinalgError;
+use scirs2_core::error::CoreError;
 use thiserror::Error;
 
 /// Error type for clustering operations

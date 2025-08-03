@@ -390,6 +390,6 @@ mod tests {
 }
 
 #[allow(dead_code)]
-fn tf(_num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
-    TransferFunction::new(_num, den)
+pub fn tf(num: Vec<f64>, den: Vec<f64>) -> TransferFunction {
+    TransferFunction::new(num, den)
 }

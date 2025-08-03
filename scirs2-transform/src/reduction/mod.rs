@@ -12,13 +12,13 @@ mod umap;
 
 pub use crate::reduction::isomap::Isomap;
 pub use crate::reduction::lle::LLE;
-pub use crate::reduction::spectral__embedding::{AffinityMethod, SpectralEmbedding};
+pub use crate::reduction::spectral_embedding::{AffinityMethod, SpectralEmbedding};
 pub use crate::reduction::tsne::{trustworthiness, TSNE};
 pub use crate::reduction::umap::UMAP;
 
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
-use scirs2__linalg::svd;
+use scirs2_linalg::svd;
 
 use crate::error::{Result, TransformError};
 

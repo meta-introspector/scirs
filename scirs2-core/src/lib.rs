@@ -318,7 +318,7 @@ pub use crate::units::{
 pub use crate::utils::*;
 pub use crate::validation::production as validation_production;
 pub use crate::validation::{
-    check_finite, check_in_bounds, check_positive, checkshape, checkarray_finite,
+    check_finite, check_in_bounds, check_positive, checkarray_finite, checkshape,
 };
 
 #[cfg(feature = "data_validation")]

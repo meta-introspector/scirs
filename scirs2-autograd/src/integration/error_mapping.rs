@@ -291,7 +291,11 @@ impl ErrorMapper {
         summary.push_str(&format!("Found {} error categories:\n", by_category.len()));
 
         for (_category, error_indices) in by_category {
-            summary.push_str(&format!("  {}: {} _errors\n", _category, error_indices.len()));
+            summary.push_str(&format!(
+                "  {}: {} _errors\n",
+                _category,
+                error_indices.len()
+            ));
         }
 
         summary
@@ -357,9 +361,8 @@ pub trait ErrorMapping: Send {
 
 /// Trait for error recovery strategies
 pub trait ErrorRecovery: Send {
-    fn attempt_recovery(
-        &self_error: &IntegrationError,
-    ) -> Result<RecoveryAction, IntegrationError>;
+    fn attempt_recovery(&self_error: &IntegrationError)
+        -> Result<RecoveryAction, IntegrationError>;
 }
 
 /// Error context for tracking error origins
@@ -529,7 +532,9 @@ impl ErrorMapping for LinalgErrorMapping {
         if error_str.contains("matrix") || error_str.contains("dimension") {
             IntegrationError::TensorConversion(format!("Matrix dimension _error: {source_error}"))
         } else if error_str.contains("singular") || error_str.contains("decomposition") {
-            IntegrationError::ApiBoundary(format!("Linear algebra operation _error: {source_error}"))
+            IntegrationError::ApiBoundary(format!(
+                "Linear algebra operation _error: {source_error}"
+            ))
         } else {
             IntegrationError::ModuleCompatibility(format!(
                 "Linear algebra module _error: {source_error}"

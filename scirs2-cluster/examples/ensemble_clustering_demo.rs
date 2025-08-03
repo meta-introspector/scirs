@@ -241,7 +241,10 @@ fn demonstrate_meta_clustering_ensemble(
         },
         EnsembleConfig {
             n_estimators: 4,
-            sampling_strategy: SamplingStrategy::RandomSubspace { feature, ratio: 0.8 },
+            sampling_strategy: SamplingStrategy::RandomSubspace {
+                feature,
+                ratio: 0.8,
+            },
             diversity_strategy: Some(DiversityStrategy::AlgorithmDiversity {
                 algorithms: vec![ClusteringAlgorithm::DBSCAN {
                     eps_range: (0.3, 0.7),
@@ -304,7 +307,10 @@ fn demonstrate_advanced_ensemble_techniques(
             n_generations: 10,
             crossover_prob: 0.8,
             mutation_prob: 0.1,
-            selection_method: SelectionMethod::Tournament { tournament, size: 3 },
+            selection_method: SelectionMethod::Tournament {
+                tournament,
+                size: 3,
+            },
             elite_percentage: 0.1,
             fitness_function: FitnessFunction::Silhouette,
         },

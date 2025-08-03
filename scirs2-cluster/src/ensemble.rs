@@ -4,7 +4,7 @@
 //! clustering algorithms or multiple runs of the same algorithm to achieve
 //! more robust and stable clustering results.
 
-use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
@@ -19,8 +19,8 @@ use crate::meanshift::mean_shift;
 use crate::metrics::{adjusted_rand_index, normalized_mutual_info, silhouette_score};
 use crate::spectral::spectral_clustering;
 use crate::vq::{kmeans, kmeans2};
-use statrs::statistics::Statistics;
 use rand::seq::SliceRandom;
+use statrs::statistics::Statistics;
 
 /// Configuration for ensemble clustering
 #[derive(Debug, Clone)]
@@ -1579,7 +1579,7 @@ pub enum AggregationMethod {
 /// Advanced ensemble clustering methods with sophisticated combination strategies
 pub mod advanced_ensemble {
     use super::*;
-    use ndarray::{ArrayView1, s, Array3};
+    use ndarray::{s, Array3, ArrayView1};
     use std::cmp::Ordering;
 
     /// Configuration for advanced ensemble methods
@@ -1779,7 +1779,8 @@ pub mod advanced_ensemble {
         base_ensemble: EnsembleClusterer<F>,
         meta_learner: Option<MetaLearner>,
         bayesian_weights: Option<Array1<f64>>,
-        genetic_optimizer: Option<GeneticOptimizer>, _phantom: std::marker::PhantomData<F>,
+        genetic_optimizer: Option<GeneticOptimizer>,
+        _phantom: std::marker::PhantomData<F>,
     }
 
     impl<F> AdvancedEnsembleClusterer<F>
@@ -1801,7 +1802,8 @@ pub mod advanced_ensemble {
                 base_ensemble: EnsembleClusterer::new(base_config),
                 meta_learner: None,
                 bayesian_weights: None,
-                genetic_optimizer: None, _phantom: std::marker::PhantomData,
+                genetic_optimizer: None,
+                _phantom: std::marker::PhantomData,
             }
         }
 
@@ -2040,8 +2042,10 @@ pub mod advanced_ensemble {
         }
 
         fn train_neural_meta_learner(
-            &mut self, _meta_features: &Array2<f64>,
-            base_results: &[ClusteringResult], _hidden_layers: &[usize],
+            &mut self,
+            _meta_features: &Array2<f64>,
+            base_results: &[ClusteringResult],
+            _hidden_layers: &[usize],
         ) -> Result<Array1<f64>> {
             // Simplified neural network meta-learner
             // In practice, would implement a full neural network
@@ -2070,8 +2074,11 @@ pub mod advanced_ensemble {
         }
 
         fn train_forest_meta_learner(
-            &mut self, _meta_features: &Array2<f64>,
-            base_results: &[ClusteringResult], _n_trees: usize, _max_depth: usize,
+            &mut self,
+            _meta_features: &Array2<f64>,
+            base_results: &[ClusteringResult],
+            _n_trees: usize,
+            _max_depth: usize,
         ) -> Result<Array1<f64>> {
             // Simplified random forest meta-learner
             // Weight based on ensemble of quality scores and diversity
@@ -2096,7 +2103,8 @@ pub mod advanced_ensemble {
         }
 
         fn train_linear_meta_learner(
-            &mut self, _meta_features: &Array2<f64>,
+            &mut self,
+            _meta_features: &Array2<f64>,
             base_results: &[ClusteringResult],
             regularization: f64,
         ) -> Result<Array1<f64>> {
@@ -2158,7 +2166,7 @@ pub mod advanced_ensemble {
 
         fn mcmc_update_weights(
             &self,
-            current_weights: &Array1<f64>, 
+            current_weights: &Array1<f64>,
             _results: &EnsembleResult,
             data: ArrayView2<F>,
         ) -> Result<Array1<f64>> {
@@ -2446,7 +2454,8 @@ pub mod advanced_ensemble {
         }
 
         fn combine_boosted_learners(
-            &self_learners: &[ClusteringResult], _weights: &[f64],
+            &self_learners: &[ClusteringResult],
+            _weights: &[f64],
             n_samples: usize,
         ) -> Result<EnsembleResult> {
             // Stub implementation
@@ -2471,23 +2480,22 @@ pub mod advanced_ensemble {
         }
 
         fn train_base_algorithm(
-            &self_data: &Array2<F>, _algorithm: &ClusteringAlgorithm,
+            &self_data: &Array2<F>,
+            _algorithm: &ClusteringAlgorithm,
         ) -> Result<Array1<i32>> {
             Ok(Array1::zeros(0)) // Stub
         }
 
         fn predict_base_algorithm(
             &self,
-            data: &Array2<F>, 
+            data: &Array2<F>,
             _algorithm: &ClusteringAlgorithm,
             labels: &Array1<i32>,
         ) -> Result<Array1<i32>> {
             Ok(Array1::zeros(0)) // Stub
         }
 
-        fn train_meta_clustering_algorithm(
-            &self_predictions: &Array2<f64>,
-        ) -> Result<Array1<i32>> {
+        fn train_meta_clustering_algorithm(&self_predictions: &Array2<f64>) -> Result<Array1<i32>> {
             Ok(Array1::zeros(0)) // Stub
         }
 
@@ -2540,7 +2548,9 @@ pub mod advanced_ensemble {
         }
 
         pub fn evolve_ensemble<F>(
-            &mut self, _base_ensemble: &EnsembleClusterer<F>, _data: ArrayView2<F>,
+            &mut self,
+            _base_ensemble: &EnsembleClusterer<F>,
+            _data: ArrayView2<F>,
         ) -> Result<EnsembleClusterer<F>>
         where
             F: Float
@@ -2612,7 +2622,7 @@ pub mod advanced_ensemble {
             3 => calculate_kurtosis(_data),            // Kurtosis
             4 => calculate_outlier_ratio(_data),       // Outlier ratio
             5 => calculate_feature_correlation(_data), // Feature correlation
-            _ => 0.0,                                 // Default
+            _ => 0.0,                                  // Default
         }
     }
 
@@ -2801,7 +2811,8 @@ fn apply_differential_privacy(
 
 #[allow(dead_code)]
 fn secure_aggregate_results(
-    local_results: Vec<EnsembleResult>, _config: &FederationConfig,
+    local_results: Vec<EnsembleResult>,
+    _config: &FederationConfig,
 ) -> Result<EnsembleResult> {
     if local_results.is_empty() {
         return Err(ClusteringError::InvalidInput(

@@ -505,7 +505,8 @@ fn advanced_ml_demo() {
         (
             "Small LSTM",
             LSTMConfig {
-                base: scirs2,series: forecasting::neural::NeuralConfig {
+                base: scirs2,
+                series: forecasting::neural::NeuralConfig {
                     lookback_window: 12,
                     forecast_horizon: 5,
                     epochs: 20,
@@ -524,7 +525,8 @@ fn advanced_ml_demo() {
         (
             "Medium LSTM",
             LSTMConfig {
-                base: scirs2,series: forecasting::neural::NeuralConfig {
+                base: scirs2,
+                series: forecasting::neural::NeuralConfig {
                     lookback_window: 24,
                     forecast_horizon: 10,
                     epochs: 30,

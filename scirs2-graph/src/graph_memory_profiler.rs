@@ -1131,7 +1131,8 @@ pub fn generate_profiled_large_graph(
         "sparse" => num_nodes * 2,
         "medium" => num_nodes * 4,
         "dense" => num_nodes * 8,
-        "scale_free" => (num_nodes as f64 * 2.5) as usize_ => num_nodes * 3, // default
+        "scale_free" => (num_nodes as f64 * 2.5) as usize,
+        _ => num_nodes * 3, // default
     };
 
     profiler.record_allocation("graph_generation", target_edges * 24, "edges", true);

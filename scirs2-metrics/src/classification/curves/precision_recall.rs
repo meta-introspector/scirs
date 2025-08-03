@@ -22,7 +22,7 @@ use ndarray::{Array1, ArrayBase, Data, Dimension};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::curves::precision_recall_curve;
+/// use scirs2_metrics::classification::curves::precision_recall_curve;
 ///
 /// let y_true = array![0, 0, 1, 1, 1];
 /// let y_score = array![0.1, 0.4, 0.35, 0.8, 0.6];

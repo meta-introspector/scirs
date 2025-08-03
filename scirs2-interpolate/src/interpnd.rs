@@ -763,7 +763,8 @@ impl<
     fn idw_interpolate(&self, point: &ArrayView1<F>) -> InterpolateResult<F> {
         // Get the power parameter
         let power = match self.params {
-            ScatteredInterpolatorParams::IDW { power } => power_ => F::from_f64(2.0).unwrap(), // Default to 2.0 if wrong params
+            ScatteredInterpolatorParams::IDW { power } => power,
+            _ => F::from_f64(2.0).unwrap(), // Default to 2.0 if wrong params
         };
 
         let mut sum_weights = F::from_f64(0.0).unwrap();

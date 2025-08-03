@@ -345,7 +345,7 @@ mod tests {
         let lambda = 0.1f64;
         let ar = ActivityRegularization::l1(lambda);
 
-        let activations = Array2::fromshape_vec((2, 2), vec![1.0f64, 2.0, -3.0, 4.0]).unwrap();
+        let activations = Array2::from_shape_vec((2, 2), vec![1.0f64, 2.0, -3.0, 4.0]).unwrap();
         let penalty = ar.penalty(&activations).unwrap();
 
         // L1 penalty = lambda * sum(|x|) = 0.1 * (1 + 2 + 3 + 4) = 0.1 * 10 = 1.0

@@ -265,8 +265,7 @@ fn hardware_matrix_example() -> Result<()> {
     println!("Testing hardware-accelerated matrix operations:");
 
     // Test matrix-vector multiplication
-    let matrix =
-        Array2::fromshape_fn((1000, 500), |(i, j)| (i as f64 * 0.01) + (j as f64 * 0.001));
+    let matrix = Array2::fromshape_fn((1000, 500), |(i, j)| (i as f64 * 0.01) + (j as f64 * 0.001));
     let vector = Array1::fromshape_fn(500, |i| (i as f64).sin());
 
     println!(

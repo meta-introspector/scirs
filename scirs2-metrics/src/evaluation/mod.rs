@@ -8,7 +8,6 @@ use num_traits::NumCast;
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 
 use crate::error::{MetricsError, Result};
-use rand::seq::SliceRandom;
 
 // Re-export evaluation submodules
 pub mod advanced_statistical;
@@ -17,7 +16,7 @@ pub mod statistical;
 pub mod workflow;
 
 // Re-export common functions for backward compatibility
-pub use cross__validation::{
+pub use cross_validation::{
     grouped_k_fold, k_fold_cross_validation, leave_one_out_cv, nested_cross_validation,
     stratified_k_fold, time_series_split,
 };

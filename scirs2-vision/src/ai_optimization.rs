@@ -534,7 +534,8 @@ impl NeuralNetworkPredictor {
             .collect();
 
         Self {
-            input_weights..hidden_weights,
+            input_weights,
+            hidden_weights,
             output_weights,
             biases,
             learning_rate: 0.01,

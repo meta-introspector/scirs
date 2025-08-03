@@ -661,11 +661,14 @@ where
     Tensor::builder(g)
         .append_input(x.as_ref(), false)
         .append_input(w.as_ref(), false)
-        .build(conv_ops::conv2d, _transpose::Conv2DTranspose {
-            pad,
-            stride,
-            dilation: 1,
-        })
+        .build(
+            conv_ops::conv2d,
+            _transpose::Conv2DTranspose {
+                pad,
+                stride,
+                dilation: 1,
+            },
+        )
 }
 
 /// 2D max pooling.
@@ -692,12 +695,13 @@ where
 {
     let x = x.as_ref();
     let g = x.graph();
-    Tensor::builder(g)
-        .append_input(x.as_ref(), false)
-        .build(conv_ops::max, _pool2d::MaxPool2D {
+    Tensor::builder(g).append_input(x.as_ref(), false).build(
+        conv_ops::max,
+        _pool2d::MaxPool2D {
             pad,
             stride_size: pool_size,
-        })
+        },
+    )
 }
 
 /// Concatenates input tensors along specified axis.

@@ -1,5 +1,7 @@
 [build]
-rustflags = ["-L", "/opt/homebrew/opt/lapack/lib", "-L", "/opt/homebrew/opt/openblas/lib", "-l", "lapack", "-l", "blas"]
+rustflags = ["-framework", "Accelerate"]
 
 [env]
 DEP_LAPACK_SRC = "accelerate"
+LAPACK_SRC = "accelerate"
+BLAS_SRC = "accelerate"

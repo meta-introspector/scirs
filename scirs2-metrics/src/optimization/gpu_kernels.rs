@@ -1484,7 +1484,8 @@ impl AdvancedGpuComputer {
                         &y_true_sample,
                         &y_pred_sample,
                         &kernel_config,
-                    )?_ => F::zero(),
+                    )?,
+                    _ => F::zero(),
                 };
                 sample_results.insert(metric.to_string(), result);
             }
@@ -2147,7 +2148,8 @@ impl AdvancedGpuComputer {
                 let result = match metric {
                     "mse" => self.execute_gpu_mse(&y_true_sample, &y_pred_sample)?,
                     "mae" => self.execute_gpu_mae(&y_true_sample, &y_pred_sample)?,
-                    "r2_score" => self.execute_gpu_r2(&y_true_sample, &y_pred_sample)?_ => F::zero(),
+                    "r2_score" => self.execute_gpu_r2(&y_true_sample, &y_pred_sample)?,
+                    _ => F::zero(),
                 };
                 sample_results.insert(metric.to_string(), result);
             }

@@ -137,7 +137,7 @@ where
     }
 
     // Find source index
-    let source_idx = nodes._iter().position(|n| n == source).unwrap();
+    let source_idx = nodes.iter().position(|n| n == source).unwrap();
 
     // Get transition matrix
     let (_, trans_matrix) = transition_matrix(graph)?;
@@ -155,7 +155,7 @@ where
         let new_pr = damping * trans_matrix.t().dot(&pr) + (1.0 - damping) * &personalization;
 
         // Check convergence
-        let diff: f64 = (&new_pr - &pr)._iter().map(|x| x.abs()).sum();
+        let diff: f64 = (&new_pr - &pr).iter().map(|x| x.abs()).sum();
         if diff < tolerance {
             break;
         }
@@ -279,7 +279,7 @@ impl AliasTable {
 
 impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> BatchRandomWalker<N> {
     /// Create a new batch random walker
-    pub fn new<E..Ix>(_graph: &Graph<N, E, Ix>) -> Result<Self>
+    pub fn new<E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<Self>
     where
         E: EdgeWeight + Into<f64>,
         Ix: IndexType,
@@ -473,7 +473,7 @@ where
                 let weight = if neighbor == previous {
                     // Return to previous node
                     1.0 / p
-                } else if graph.has_edge(previous..neighbor) {
+                } else if graph.has_edge(previous, neighbor) {
                     // Move to a node connected to previous (stay local)
                     1.0
                 } else {
@@ -599,7 +599,7 @@ mod tests {
 
     #[test]
     fn test_random_walk() -> GraphResult<()> {
-        let mut graph = create_graph::<&str..()>();
+        let mut graph = create_graph::<&str, ()>();
 
         // Create a simple path graph
         graph.add_edge("A", "B", ())?;

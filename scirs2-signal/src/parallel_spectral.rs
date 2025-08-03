@@ -52,15 +52,15 @@ pub struct ParallelSpectralProcessor {
 
 impl ParallelSpectralProcessor {
     /// Create a new parallel spectral processor
-    pub fn new(_config: ParallelSpectralConfig) -> Self {
+    pub fn new(config: ParallelSpectralConfig) -> Self {
         // Note: Thread pool configuration is now handled globally by scirs2-core
         #[cfg(not(feature = "parallel"))]
-        if _config.num_threads.is_some() {
+        if config.num_threads.is_some() {
             eprintln!("Warning: Parallel feature not enabled, ignoring thread count configuration");
         }
 
         Self {
-            _config,
+            config,
             fft_planner: Arc::new(std::sync::Mutex::new(FftPlanner::new())),
         }
     }

@@ -215,7 +215,7 @@ where
         // Sample without replacement using Fisher-Yates shuffle
         let mut indices_copy = indices.clone();
         for i in 0..size {
-            let j = rng.gen_range(i..indices_copy.len());
+            let j = rng.random_range(i..indices_copy.len());
             indices_copy.swap(i, j);
             result.push(indices_copy[i]);
         }
@@ -299,7 +299,7 @@ where
         // Sample from each group proportionally
         for (_, indices) in group_indices.iter() {
             for _ in 0..indices.len() {
-                let random_idx = rng.gen_range(0..indices.len());
+                let random_idx = rng.random_range(0..indices.len());
                 let selected_idx = indices[random_idx];
                 samples[[resample_idx, sample_idx]] = x[selected_idx];
                 sample_idx += 1;
@@ -398,7 +398,7 @@ where
         // Fill the resample with blocks
         while sample_pos < data_len {
             // Choose a random starting position for the block
-            let start_pos = rng.gen_range(0..max_start_pos);
+            let start_pos = rng.random_range(0..max_start_pos);
 
             // Copy the block (with wrapping if circular)
             for block_offset in 0..block_size {
@@ -490,7 +490,7 @@ where
             }
 
             // Choose a random block
-            let block_idx = rng.gen_range(0..blocks.len());
+            let block_idx = rng.random_range(0..blocks.len());
             let selected_block = &blocks[block_idx];
 
             // Copy elements from the block
@@ -566,7 +566,7 @@ where
 
         while sample_pos < data_len {
             // Choose a random starting position
-            let start_pos = rng.gen_range(0..data_len);
+            let start_pos = rng.random_range(0..data_len);
             let mut current_pos = start_pos;
 
             // Generate a block with geometric length

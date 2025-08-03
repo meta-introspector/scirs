@@ -130,7 +130,7 @@ impl LebedevOrder {
 #[allow(dead_code)]
 pub fn lebedev_rule<F: IntegrateFloat>(order: LebedevOrder) -> IntegrateResult<LebedevRule<F>> {
     // Generate the rule based on the requested _order
-    match _order {
+    match order {
         LebedevOrder::Order6 => generate_order6(),
         LebedevOrder::Order14 => generate_order14(),
         LebedevOrder::Order26 => generate_order26(),

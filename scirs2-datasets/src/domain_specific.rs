@@ -947,7 +947,10 @@ pub mod convenience {
     }
 
     /// Load a climate dataset
-    pub fn load_climate_data(_n_stations: Option<usize>, n_years: Option<usize>) -> Result<Dataset> {
+    pub fn load_climate_data(
+        _n_stations: Option<usize>,
+        n_years: Option<usize>,
+    ) -> Result<Dataset> {
         let datasets = ClimateDatasets::new()?;
         datasets.load_temperature_timeseries(_n_stations.unwrap_or(100), n_years.unwrap_or(10))
     }

@@ -895,7 +895,9 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
         &self,
         state: &mut Array1<f64>,
         qubit: usize,
-        rx: f64, ry: f64, _rz: f64,
+        rx: f64,
+        ry: f64,
+        _rz: f64,
     ) -> Result<()> {
         // Simplified rotation application (would be more complex in practice)
         let n_states = state.len();

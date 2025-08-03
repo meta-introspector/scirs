@@ -227,7 +227,8 @@ pub struct MemoryTrackerStats {
 
 /// Memory-efficient in-place operation that reuses tensor storage when possible
 pub struct InPlaceOp<F: Float> {
-    operation: InPlaceOperation, phantom: std::marker::PhantomData<F>,
+    operation: InPlaceOperation,
+    phantom: std::marker::PhantomData<F>,
 }
 
 #[derive(Debug, Clone, Copy)]

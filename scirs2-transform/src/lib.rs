@@ -129,7 +129,7 @@ pub use reduction::{
 };
 pub use scaling::{MaxAbsScaler, QuantileTransformer};
 pub use selection::{MutualInfoSelector, RecursiveFeatureElimination, VarianceThreshold};
-pub use time__series::{FourierFeatures, LagFeatures, TimeSeriesFeatures, WaveletFeatures};
+pub use time_series::{FourierFeatures, LagFeatures, TimeSeriesFeatures, WaveletFeatures};
 
 #[cfg(feature = "simd")]
 pub use normalize__simd::{
@@ -154,12 +154,12 @@ pub use image::{
     resize_images, rgb_to_grayscale, BlockNorm, HOGDescriptor, ImageNormMethod, ImageNormalizer,
     PatchExtractor,
 };
-pub use optimization__config::{
+pub use optimization_config::{
     AdaptiveParameterTuner, AdvancedConfigOptimizer, AutoTuner, ConfigurationPredictor,
     DataCharacteristics, OptimizationConfig, OptimizationReport, PerformanceMetric, SystemMonitor,
     SystemResources, TransformationRecommendation,
 };
-pub use out_of__core::{
+pub use out_of_core::{
     csv_chunks, ChunkedArrayReader, ChunkedArrayWriter, OutOfCoreConfig, OutOfCoreNormalizer,
     OutOfCoreTransformer,
 };
@@ -188,7 +188,7 @@ pub use distributed::{
 };
 
 // Automated feature engineering exports
-pub use auto_feature__engineering::{
+pub use auto_feature_engineering::{
     AdvancedMetaLearningSystem, AutoFeatureEngineer, DatasetMetaFeatures, EnhancedMetaFeatures,
     MultiObjectiveRecommendation, TransformationConfig, TransformationType,
 };
@@ -201,7 +201,7 @@ pub use quantum_optimization::{
 };
 
 // Neuromorphic computing exports
-pub use neuromorphic__adaptation::{
+pub use neuromorphic_adaptation::{
     AdvancedNeuromorphicMetrics, AdvancedNeuromorphicProcessor, NeuromorphicAdaptationNetwork,
     NeuromorphicMemorySystem, NeuromorphicTransformationSystem, SpikingNeuron, SystemState,
     TransformationEpisode,

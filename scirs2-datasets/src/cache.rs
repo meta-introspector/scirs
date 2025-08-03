@@ -6,8 +6,8 @@ use std::cell::RefCell;
 use std::fs::{self, File};
 use std::hash::{Hash, Hasher};
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
 use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// The base directory name for caching datasets
 const CACHE_DIR_NAME: &str = "scirs2-datasets";
@@ -651,8 +651,9 @@ pub fn download_data(_url: &str, force_download: bool) -> Result<Vec<u8>> {
     }
 
     // Download the data
-    let response = reqwest::blocking::get(_url)
-        .map_err(|e| DatasetsError::DownloadError(format!("Failed to _download from {_url}: {e}")))?;
+    let response = reqwest::blocking::get(_url).map_err(|e| {
+        DatasetsError::DownloadError(format!("Failed to _download from {_url}: {e}"))
+    })?;
 
     if !response.status().is_success() {
         return Err(DatasetsError::DownloadError(format!(

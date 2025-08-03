@@ -151,9 +151,9 @@ mod tests {
             1024,
             0xdeadbeef,
         )
-        .with_context(TestContext);
+        .with_context("TestContext");
 
-        assert_eq!(event.context, Some(TestContext.to_string()));
+        assert_eq!(event.context, Some("TestContext".to_string()));
     }
 
     #[test]

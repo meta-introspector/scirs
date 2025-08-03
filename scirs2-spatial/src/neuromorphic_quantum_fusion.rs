@@ -1286,7 +1286,7 @@ impl NeuralQuantumOptimizer {
         self.initialize_neural_quantum_system(param_dim).await?;
 
         let mut best_params =
-            Array1::fromshape_fn(param_dim, |_| rand::random::<f64>() * 2.0 - 1.0);
+            Array1::from_shape_fn(param_dim, |_| rand::random::<f64>() * 2.0 - 1.0);
         let mut best_value = objective_function(&best_params);
 
         // Optimization loop
@@ -1346,7 +1346,7 @@ impl NeuralQuantumOptimizer {
         for _ in 0..5 {
             // 5 adaptive neurons
             let neuron = AdaptiveNeuron {
-                weights: Array1::fromshape_fn(_param_dim, |_| rand::random::<f64>() * 0.1 - 0.05),
+                weights: Array1::from_shape_fn(_param_dim, |_| rand::random::<f64>() * 0.1 - 0.05),
                 bias: rand::random::<f64>() * 0.1 - 0.05,
                 learning_rate: self.neural_adaptation_rate,
                 activation: 0.0,

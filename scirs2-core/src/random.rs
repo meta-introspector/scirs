@@ -216,9 +216,7 @@ pub mod sampling {
 
     /// Sample uniformly from [0, 1)
     pub fn random_uniform01<R: Rng>(rng: &mut Random<R>) -> f64 {
-        Uniform::new(0.0_f64, 1.0_f64)
-            .unwrap()
-            .sample(&mut rng.rng)
+        Uniform::new(0.0_f64, 1.0_f64).unwrap().sample(&mut rng.rng)
     }
 
     /// Sample from a standard normal distribution (mean 0, std dev 1)

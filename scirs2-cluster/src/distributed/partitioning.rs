@@ -5,12 +5,12 @@
 
 use ndarray::{Array1, Array2, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
-use std::fmt::Debug;
 use rand::seq::SliceRandom;
+use std::fmt::Debug;
 
+use super::fault_tolerance::DataPartition;
 use crate::error::{ClusteringError, Result};
 use crate::vq::euclidean_distance;
-use super::fault_tolerance::DataPartition;
 
 /// Data partitioning coordinator for distributed clustering
 #[derive(Debug)]
@@ -90,10 +90,10 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
     /// Partition data according to the configured strategy
     pub fn partition_data(&mut self, data: ArrayView2<F>) -> Result<Vec<DataPartition<F>>> {
         let start_time = std::time::Instant::now();
-        
+
         // Calculate target partition sizes
         let partition_sizes = self.calculate_partition_sizes(data.nrows())?;
-        
+
         // Apply partitioning strategy
         let partitions = match &self.config.strategy {
             PartitioningStrategy::Random => self.random_partition(data, &partition_sizes),
@@ -105,18 +105,16 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
             PartitioningStrategy::Range { feature_index } => {
                 self.range_partition(data, &partition_sizes, *feature_index)
             }
-            PartitioningStrategy::LocalityPreserving { similarity_threshold } => {
-                self.locality_preserving_partition(data, &partition_sizes, *similarity_threshold)
-            }
-            PartitioningStrategy::Custom => {
-                self.custom_partition(data, &partition_sizes)
-            }
+            PartitioningStrategy::LocalityPreserving {
+                similarity_threshold,
+            } => self.locality_preserving_partition(data, &partition_sizes, *similarity_threshold),
+            PartitioningStrategy::Custom => self.custom_partition(data, &partition_sizes),
         }?;
 
         // Update statistics
         let partitioning_time = start_time.elapsed().as_millis() as u64;
         self.update_statistics(&partitions, partitioning_time);
-        
+
         self.partitions = partitions.clone();
         Ok(partitions)
     }
@@ -131,9 +129,9 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
 
         let base_size = total_size / self.config.n_workers;
         let remainder = total_size % self.config.n_workers;
-        
+
         let mut sizes = vec![base_size; self.config.n_workers];
-        
+
         // Distribute remainder across first few workers
         for i in 0..remainder {
             sizes[i] += 1;
@@ -162,7 +160,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
     ) -> Result<Vec<DataPartition<F>>> {
         let n_samples = data.nrows();
         let n_workers = self.config.n_workers;
-        
+
         // Create random permutation of indices
         let mut indices: Vec<usize> = (0..n_samples).collect();
         let mut rng = rand::thread_rng();
@@ -173,17 +171,17 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
 
         for (worker_id, &partition_size) in partition_sizes.iter().enumerate() {
             let end_idx = (start_idx + partition_size).min(n_samples);
-            
+
             if start_idx < end_idx {
                 let mut partition_data = Array2::zeros((end_idx - start_idx, data.ncols()));
-                
+
                 for (i, &data_idx) in indices[start_idx..end_idx].iter().enumerate() {
                     partition_data.row_mut(i).assign(&data.row(data_idx));
                 }
 
                 partitions.push(DataPartition::new(worker_id, partition_data, worker_id));
             }
-            
+
             start_idx = end_idx;
             if start_idx >= n_samples {
                 break;
@@ -201,7 +199,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
         n_strata: usize,
     ) -> Result<Vec<DataPartition<F>>> {
         let n_samples = data.nrows();
-        
+
         if n_samples < n_strata {
             // Fall back to random if not enough data
             return self.random_partition(data, partition_sizes);
@@ -408,7 +406,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
             } else {
                 row_idx as u64
             };
-            
+
             let worker_id = (hash_value % n_workers as u64) as usize;
             worker_assignments[worker_id].push(row_idx);
         }
@@ -417,7 +415,10 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
         let mut partitions = Vec::new();
         for (worker_id, row_indices) in worker_assignments.into_iter().enumerate() {
             // Limit partition size if needed
-            let max_size = partition_sizes.get(worker_id).copied().unwrap_or(row_indices.len());
+            let max_size = partition_sizes
+                .get(worker_id)
+                .copied()
+                .unwrap_or(row_indices.len());
             let actual_indices = if row_indices.len() > max_size {
                 &row_indices[..max_size]
             } else {
@@ -467,17 +468,18 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
 
         for (worker_id, &partition_size) in partition_sizes.iter().enumerate() {
             let end_idx = (start_idx + partition_size).min(indexed_values.len());
-            
+
             if start_idx < end_idx {
                 let mut partition_data = Array2::zeros((end_idx - start_idx, data.ncols()));
-                
-                for (i, &(original_idx, _)) in indexed_values[start_idx..end_idx].iter().enumerate() {
+
+                for (i, &(original_idx, _)) in indexed_values[start_idx..end_idx].iter().enumerate()
+                {
                     partition_data.row_mut(i).assign(&data.row(original_idx));
                 }
 
                 partitions.push(DataPartition::new(worker_id, partition_data, worker_id));
             }
-            
+
             start_idx = end_idx;
             if start_idx >= indexed_values.len() {
                 break;
@@ -519,12 +521,14 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
                     // Find most similar unassigned point to any point in current partition
                     for &candidate_idx in &unassigned_points {
                         let candidate_point = data.row(candidate_idx);
-                        
+
                         for &partition_point_idx in &current_partition {
                             let partition_point = data.row(partition_point_idx);
-                            let distance = euclidean_distance(candidate_point, partition_point).to_f64().unwrap_or(f64::INFINITY);
+                            let distance = euclidean_distance(candidate_point, partition_point)
+                                .to_f64()
+                                .unwrap_or(f64::INFINITY);
                             let similarity = 1.0 / (1.0 + distance); // Convert distance to similarity
-                            
+
                             if similarity > best_similarity && similarity >= similarity_threshold {
                                 best_similarity = similarity;
                                 best_candidate = Some(candidate_idx);
@@ -538,7 +542,8 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
                         unassigned_points.retain(|&x| x != best_idx);
                     } else {
                         // No similar points found, add random points to fill partition
-                        while current_partition.len() < target_size && !unassigned_points.is_empty() {
+                        while current_partition.len() < target_size && !unassigned_points.is_empty()
+                        {
                             let random_idx = unassigned_points.remove(0);
                             current_partition.push(random_idx);
                             assigned[random_idx] = true;
@@ -595,15 +600,19 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
     fn update_statistics(&mut self, partitions: &[DataPartition<F>], partitioning_time_ms: u64) {
         self.partition_stats.partition_sizes = partitions.iter().map(|p| p.data.nrows()).collect();
         self.partition_stats.partitioning_time_ms = partitioning_time_ms;
-        
+
         // Calculate load balance score (1.0 = perfectly balanced, 0.0 = completely imbalanced)
         if !self.partition_stats.partition_sizes.is_empty() {
-            let avg_size = self.partition_stats.partition_sizes.iter().sum::<usize>() as f64 
+            let avg_size = self.partition_stats.partition_sizes.iter().sum::<usize>() as f64
                 / self.partition_stats.partition_sizes.len() as f64;
-            let variance = self.partition_stats.partition_sizes.iter()
+            let variance = self
+                .partition_stats
+                .partition_sizes
+                .iter()
                 .map(|&size| (size as f64 - avg_size).powi(2))
-                .sum::<f64>() / self.partition_stats.partition_sizes.len() as f64;
-            
+                .sum::<f64>()
+                / self.partition_stats.partition_sizes.len() as f64;
+
             self.partition_stats.load_balance_score = if avg_size > 0.0 {
                 1.0 - (variance.sqrt() / avg_size).min(1.0)
             } else {
@@ -612,7 +621,8 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DataPartitioner<F> {
         }
 
         // Calculate memory usage (approximate)
-        self.partition_stats.memory_usage_bytes = partitions.iter()
+        self.partition_stats.memory_usage_bytes = partitions
+            .iter()
             .map(|p| p.data.len() * std::mem::size_of::<F>())
             .sum();
     }
@@ -653,7 +663,7 @@ mod tests {
     fn test_data_partitioner_creation() {
         let config = PartitioningConfig::default();
         let partitioner = DataPartitioner::<f64>::new(config);
-        
+
         assert_eq!(partitioner.config.n_workers, 4);
         assert!(partitioner.partitions.is_empty());
     }
@@ -665,11 +675,11 @@ mod tests {
             ..Default::default()
         };
         let partitioner = DataPartitioner::<f64>::new(config);
-        
+
         let sizes = partitioner.calculate_partition_sizes(100).unwrap();
         assert_eq!(sizes.len(), 3);
         assert_eq!(sizes.iter().sum::<usize>(), 100);
-        
+
         // Should be approximately balanced
         let max_diff = sizes.iter().max().unwrap() - sizes.iter().min().unwrap();
         assert!(max_diff <= 1);
@@ -683,13 +693,13 @@ mod tests {
             ..Default::default()
         };
         let mut partitioner = DataPartitioner::new(config);
-        
+
         let data = Array2::fromshape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
         let partitions = partitioner.partition_data(data.view()).unwrap();
-        
+
         assert_eq!(partitions.len(), 2);
         assert!(partitions.iter().all(|p| p.data.nrows() > 0));
-        
+
         let total_points: usize = partitions.iter().map(|p| p.data.nrows()).sum();
         assert_eq!(total_points, 100);
     }
@@ -702,10 +712,10 @@ mod tests {
             ..Default::default()
         };
         let mut partitioner = DataPartitioner::new(config);
-        
+
         let data = Array2::fromshape_vec((99, 2), (0..198).map(|x| x as f64).collect()).unwrap();
         let partitions = partitioner.partition_data(data.view()).unwrap();
-        
+
         assert_eq!(partitions.len(), 3);
         assert_eq!(partitions[0].data.nrows(), 33);
         assert_eq!(partitions[1].data.nrows(), 33);
@@ -716,12 +726,12 @@ mod tests {
     fn test_load_balance_score() {
         let config = PartitioningConfig::default();
         let mut partitioner = DataPartitioner::<f64>::new(config);
-        
+
         // Perfect balance
         partitioner.partition_stats.partition_sizes = vec![25, 25, 25, 25];
         partitioner.update_statistics(&[], 0);
         assert!((partitioner.partition_stats.load_balance_score - 1.0).abs() < 0.01);
-        
+
         // Imbalanced
         partitioner.partition_stats.partition_sizes = vec![10, 90];
         partitioner.update_statistics(&[], 0);
@@ -737,7 +747,7 @@ mod tests {
             ..Default::default()
         };
         let partitioner = DataPartitioner::<f64>::new(config);
-        
+
         let sizes = partitioner.calculate_partition_sizes(120).unwrap();
         assert!(sizes.iter().all(|&size| size >= 10 && size <= 50));
     }

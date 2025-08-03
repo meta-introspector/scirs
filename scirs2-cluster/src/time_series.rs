@@ -4,7 +4,7 @@
 //! including dynamic time warping (DTW) distance and other temporal similarity measures.
 //! These algorithms can handle time series of different lengths and temporal alignments.
 
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 

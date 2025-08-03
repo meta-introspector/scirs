@@ -397,9 +397,9 @@ impl std::fmt::Debug for MergeStrategy {
 
 impl DistributedWriter {
     /// Create a new distributed writer
-    pub fn new<P: AsRef<Path>>(_output, dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(output_dir: P, _dir: P) -> Self {
         Self {
-            output_dir: _output_dir.as_ref().to_path_buf(),
+            output_dir: output_dir.as_ref().to_path_buf(),
             num_partitions: num_cpus::get(),
             partition_naming: Arc::new(|idx| format!("partition_{idx:04}.dat")),
             merge_strategy: MergeStrategy::None,
@@ -563,7 +563,7 @@ impl DistributedArray {
     pub fn new(shape: Vec<usize>, distribution: Distribution) -> Self {
         Self {
             partitions: Vec::new(),
-            shape: shape,
+            shape,
             distribution,
         }
     }

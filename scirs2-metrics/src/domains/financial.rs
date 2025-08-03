@@ -429,7 +429,7 @@ impl PortfolioMetrics {
         F: Float + num_traits::FromPrimitive + std::iter::Sum,
     {
         if portfolio_returns.is_empty() {
-            _return Ok(F::zero());
+            return Ok(F::zero());
         }
 
         let mean_return = portfolio_returns.iter().cloned().sum::<F>()
@@ -707,7 +707,7 @@ impl CreditRiskMetrics {
             let current_pct =
                 F::from(current_counts[i]).unwrap() / F::from(current_scores.len()).unwrap();
 
-            if baseline_pct > F::zero() && current_pct >, F::zero() {
+            if baseline_pct > F::zero() && current_pct > F::zero() {
                 let ratio = current_pct / baseline_pct;
                 psi = psi + (current_pct - baseline_pct) * ratio.ln();
             }

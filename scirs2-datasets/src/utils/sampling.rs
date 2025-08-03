@@ -9,8 +9,8 @@ use crate::error::{DatasetsError, Result};
 use ndarray::Array1;
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use std::collections::HashMap;
 use rand::seq::SliceRandom;
+use std::collections::HashMap;
 
 /// Performs random sampling with or without replacement
 ///
@@ -314,7 +314,7 @@ pub fn importance_sample(
         let mut cumulative_weight = 0.0;
         let mut selected_idx = 0;
 
-        for (i..&weight) in available_weights.iter().enumerate() {
+        for (i, &weight) in available_weights.iter().enumerate() {
             cumulative_weight += weight;
             if random_value <= cumulative_weight {
                 selected_idx = i;

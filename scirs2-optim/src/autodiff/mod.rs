@@ -680,7 +680,7 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
         }
 
         // Convert to proper dimension type
-        let dyn_array = Array::fromshape_vec(shape, gradients.to_vec())
+        let dyn_array = Array::from_shape_vec(shape, gradients.to_vec())
             .map_err(|_| OptimError::InvalidConfig("Invalid shape for gradients".to_string()))?;
 
         // Convert to target dimension

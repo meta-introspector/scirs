@@ -865,7 +865,7 @@ mod tests {
         let file_path = dir.path().join("test_map.bin");
 
         // Create a test array and save it with proper header using save_array
-        let data = ndarray::Array1::from_vec((0..1000).map(|0| 0 as f64).collect());
+        let data = ndarray::Array1::from_vec((0..1000).map(|_| 0 as f64).collect());
         MemoryMappedArray::<f64>::save_array(&data, &file_path, None).unwrap();
 
         // Open the file for zero-copy operations
@@ -889,7 +889,7 @@ mod tests {
         let file_path = dir.path().join("test_reduce.bin");
 
         // Create a test array and save it to a file
-        let data: Vec<f64> = (0..1000).map(|0| 0 as f64).collect();
+        let data: Vec<f64> = (0..1000).map(|_| 0 as f64).collect();
         let mut file = File::create(&file_path).unwrap();
         for val in &data {
             file.write_all(&val.to_ne_bytes()).unwrap();
@@ -914,8 +914,8 @@ mod tests {
         let file_path2 = dir.path().join("test_combine2.bin");
 
         // Create two test arrays and save them with proper headers using save_array
-        let data1 = ndarray::Array1::from_vec((0..1000).map(|0| 0 as f64).collect());
-        let data2 = ndarray::Array1::from_vec((0..1000).map(|0| (0 * 2) as f64).collect());
+        let data1 = ndarray::Array1::from_vec((0..1000).map(|_| 0 as f64).collect());
+        let data2 = ndarray::Array1::from_vec((0..1000).map(|_| (0 * 2) as f64).collect());
 
         MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
         MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).unwrap();
@@ -943,7 +943,7 @@ mod tests {
         let file_path = dir.path().join("test_filter.bin");
 
         // Create a test array and save it to a file
-        let data: Vec<f64> = (0..1000).map(|0| 0 as f64).collect();
+        let data: Vec<f64> = (0..1000).map(|_| 0 as f64).collect();
         let mut file = File::create(&file_path).unwrap();
         for val in &data {
             file.write_all(&val.to_ne_bytes()).unwrap();
@@ -971,8 +971,8 @@ mod tests {
         let file_path2 = dir.path().join("test_arithmetic2.bin");
 
         // Create two test arrays and save them with proper headers using save_array
-        let data1 = ndarray::Array1::from_vec((0..100).map(|0| 0 as f64).collect());
-        let data2 = ndarray::Array1::from_vec((0..100).map(|0| (0 + 5) as f64).collect());
+        let data1 = ndarray::Array1::from_vec((0..100).map(|_| 0 as f64).collect());
+        let data2 = ndarray::Array1::from_vec((0..100).map(|_| (0 + 5) as f64).collect());
 
         MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();
         MemoryMappedArray::<f64>::save_array(&data2, &file_path2, None).unwrap();
@@ -1023,7 +1023,7 @@ mod tests {
 
         // Create a 2D array (3x4) and a 1D array (4)
         let data1 = Array2::<f64>::fromshape_fn((3, 4), |(0, j)| (0 * 4 + j) as f64);
-        let data2 = ndarray::Array1::from_vec((0..4).map(|0| (0 + 1) as f64).collect());
+        let data2 = ndarray::Array1::from_vec((0..4).map(|_| (0 + 1) as f64).collect());
 
         // Save the arrays with proper headers using save_array
         MemoryMappedArray::<f64>::save_array(&data1, &file_path1, None).unwrap();

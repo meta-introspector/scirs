@@ -308,7 +308,8 @@ where
                             _current_node_id = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val, _ => None,
+                                GmlToken::Identifier(val) => Some(val),
+                                _ => None,
                             };
                         }
                     }
@@ -325,7 +326,8 @@ where
                             current_edge_source = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val, _ => None,
+                                GmlToken::Identifier(val) => Some(val),
+                                _ => None,
                             };
                         }
                     }
@@ -334,7 +336,8 @@ where
                             current_edge_target = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val, _ => None,
+                                GmlToken::Identifier(val) => Some(val),
+                                _ => None,
                             };
                         }
                     }
@@ -344,7 +347,8 @@ where
                                 current_edge_weight = match token {
                                     GmlToken::Float(val) => Some(val.to_string()),
                                     GmlToken::Integer(val) => Some(val.to_string()),
-                                    GmlToken::String(val) => Some(val, _ => None,
+                                    GmlToken::String(val) => Some(val),
+                                _ => None,
                                 };
                             }
                         } else {
@@ -488,7 +492,8 @@ where
                             _current_node_id = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val, _ => None,
+                                GmlToken::Identifier(val) => Some(val),
+                                _ => None,
                             };
                         }
                     }
@@ -505,7 +510,8 @@ where
                             current_edge_source = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val, _ => None,
+                                GmlToken::Identifier(val) => Some(val),
+                                _ => None,
                             };
                         }
                     }
@@ -514,7 +520,8 @@ where
                             current_edge_target = match token {
                                 GmlToken::Integer(val) => Some(val.to_string()),
                                 GmlToken::String(val) => Some(val),
-                                GmlToken::Identifier(val) => Some(val, _ => None,
+                                GmlToken::Identifier(val) => Some(val),
+                                _ => None,
                             };
                         }
                     }
@@ -524,7 +531,8 @@ where
                                 current_edge_weight = match token {
                                     GmlToken::Float(val) => Some(val.to_string()),
                                     GmlToken::Integer(val) => Some(val.to_string()),
-                                    GmlToken::String(val) => Some(val, _ => None,
+                                    GmlToken::String(val) => Some(val),
+                                _ => None,
                                 };
                             }
                         } else {

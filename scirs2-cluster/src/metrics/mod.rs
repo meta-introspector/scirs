@@ -14,7 +14,7 @@ pub use information__theoretic::{
     mutual_info_score, normalized_mutual_info_score, v_measure_score,
 };
 
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -833,7 +833,10 @@ pub mod information_theory {
     /// # Returns
     ///
     /// The information-theoretic quality score (higher is better)
-    pub fn information_cluster_quality<F>(_data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
+    pub fn information_cluster_quality<F>(
+        _data: ArrayView2<F>,
+        labels: ArrayView1<i32>,
+    ) -> Result<F>
     where
         F: Float + FromPrimitive + Debug + PartialOrd + 'static,
     {
@@ -1805,7 +1808,8 @@ pub mod ensemble {
 
             // Extract _bootstrap sample
             let bootstrap_data = data.select(ndarray::Axis(0)..&bootstrap_indices);
-            let _bootstrap_labels: Vec<i32> = bootstrap_indices.iter().map(|&i| labels[i]).collect();
+            let _bootstrap_labels: Vec<i32> =
+                bootstrap_indices.iter().map(|&i| labels[i]).collect();
             let bootstrap_labels_array = Array1::from_vec(bootstrap_labels);
 
             // Compute metric (using silhouette score as example)
@@ -2728,7 +2732,7 @@ pub mod advanced_stability {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{ArrayView1, Array1, Array2};
+    use ndarray::{Array1, Array2, ArrayView1};
 
     #[test]
     fn test_davies_bouldin_score() {

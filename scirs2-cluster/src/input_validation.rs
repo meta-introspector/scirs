@@ -568,7 +568,7 @@ pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{ArrayView1, Array1, Array2};
+    use ndarray::{Array1, Array2, ArrayView1};
 
     #[test]
     fn test_validate_clustering_data() {

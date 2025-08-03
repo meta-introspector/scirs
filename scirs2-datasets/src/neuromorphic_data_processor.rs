@@ -9,8 +9,8 @@ use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
 use rand::prelude::*;
 use rand::{rngs::StdRng, SeedableRng};
-use std::time::{Duration, Instant};
 use statrs::statistics::Statistics;
+use std::time::{Duration, Instant};
 
 /// Neuromorphic data processor using spiking neural networks
 #[derive(Debug, Clone)]
@@ -356,7 +356,8 @@ impl NeuromorphicProcessor {
                     let delay = Duration::from_millis(rng.gen_range(1..=5));
 
                     network[pre_idx].push(Synapse {
-                        weight..pre_neuron: pre_idx,
+                        weight,
+                        pre_neuron: pre_idx,
                         post_neuron: post_idx,
                         delay,
                         spike_trace: 0.0,
@@ -377,7 +378,8 @@ impl NeuromorphicProcessor {
         &self,
         sample: &ndarray::ArrayView1<f64>,
         network: &mut [Vec<Synapse>],
-        time_steps: usize, _rng: &mut StdRng,
+        time_steps: usize,
+        _rng: &mut StdRng,
     ) -> Result<(Array2<f64>, f64)> {
         let n_neurons = self.network_config.hidden_neurons;
         let mut spike_pattern = Array2::zeros((time_steps, n_neurons));
@@ -432,7 +434,8 @@ impl NeuromorphicProcessor {
     fn apply_input_stimulus(
         &self,
         sample: &ndarray::ArrayView1<f64>,
-        neuron_states: &mut [NeuronState], _time_idx: usize,
+        neuron_states: &mut [NeuronState],
+        _time_idx: usize,
     ) -> Result<()> {
         // Convert input features to spike trains using rate encoding
         for (feature_idx, &feature_value) in sample.iter().enumerate() {
@@ -603,8 +606,10 @@ impl NeuromorphicProcessor {
 
     fn temporal_spike_processing(
         &self,
-        input: &Array1<f64>, _network: &mut [Vec<Synapse>],
-        time_idx: usize, _rng: &mut StdRng,
+        input: &Array1<f64>,
+        _network: &mut [Vec<Synapse>],
+        time_idx: usize,
+        _rng: &mut StdRng,
     ) -> Result<Array1<f64>> {
         let n_neurons = self.network_config.hidden_neurons;
         let mut spike_response = Array1::zeros(n_neurons);
@@ -667,7 +672,8 @@ impl NeuromorphicProcessor {
                     let delay = Duration::from_millis(rng.gen_range(2..=10));
 
                     network[pre_idx].push(Synapse {
-                        weight..pre_neuron: pre_idx,
+                        weight,
+                        pre_neuron: pre_idx,
                         post_neuron: post_idx,
                         delay,
                         spike_trace: 0.0,

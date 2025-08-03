@@ -4627,7 +4627,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
         for operation in computation.operations.values() {
             for input in &operation.inputs {
                 if let Some(sourceop) = input.source_operation {
-                    let dep_key = format!("dep_{}_{}", source_op.0, operation.id.0);
+                    let dep_key = format!("dep_{}_{}", sourceop.0, operation.id.0);
                     data.insert(dep_key, AnalysisData::Boolean(true));
                     dependency_count += 1;
                 }

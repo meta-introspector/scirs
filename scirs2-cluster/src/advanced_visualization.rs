@@ -6,7 +6,7 @@
 
 use crate::advanced__clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
 use crate::error::{ClusteringError, Result};
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
 use std::collections::HashMap;
 
 #[cfg(feature = "serde")]

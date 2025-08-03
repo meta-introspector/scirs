@@ -262,14 +262,14 @@ impl NetworkClient {
 #[cfg(feature = "reqwest")]
 pub async fn download_file<P: AsRef<Path>>(url: &str, local_path: P) -> Result<()> {
     let client = NetworkClient::new();
-    client.download(_url, local_path).await
+    client.download(url, local_path).await
 }
 
 /// Upload a file to URL using default client
 #[cfg(feature = "reqwest")]
-pub async fn upload_file<P: AsRef<Path>>(_local, path: P, url: &str) -> Result<()> {
+pub async fn upload_file<P: AsRef<Path>>(local_path: P, url: &str) -> Result<()> {
     let client = NetworkClient::new();
-    client.upload(_local_path, url).await
+    client.upload(local_path, url).await
 }
 
 /// Download a file with caching support

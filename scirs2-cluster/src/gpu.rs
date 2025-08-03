@@ -5,7 +5,7 @@
 //! GPU implementations using CUDA, OpenCL, or other GPU computing frameworks.
 
 use crate::error::{ClusteringError, Result};
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 
@@ -2126,7 +2126,8 @@ impl<F: Float + FromPrimitive> GpuKMeans<F> {
     fn adapt_batch_size(
         &mut self,
         assignment_time: std::time::Duration,
-        update_time: std::time::Duration_convergence, _time: std::time::Duration,
+        update_time: std::time::Duration_convergence,
+        _time: std::time::Duration,
     ) {
         let total_time = assignment_time + update_time;
 

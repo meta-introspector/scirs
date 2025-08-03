@@ -11,9 +11,9 @@ use crate::quantum_enhanced__generators::QuantumDatasetGenerator;
 use crate::utils::Dataset;
 use ndarray::{s, Array1, Array2, Array3};
 use rand::{rngs::StdRng, Rng, SeedableRng};
+use statrs::statistics::Statistics;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
-use statrs::statistics::Statistics;
 
 /// Quantum-Neuromorphic Fusion Processor
 /// The ultimate synthesis of quantum computing and biological neural networks
@@ -523,7 +523,8 @@ impl QuantumNeuromorphicFusion {
                     Some(rng.gen_range(0..n_synapses))
                 } else {
                     None
-                }..coherence_time: self.quantum_decoherence_time,
+                },
+                coherence_time: self.quantum_decoherence_time,
                 coupling_strength: self.quantum_bio_coupling,
             });
         }
@@ -533,7 +534,10 @@ impl QuantumNeuromorphicFusion {
 
     fn evolve_quantum_states(
         &self,
-        neurons: &mut [QuantumNeuron], _synapses: &[QuantumSynapse]_time, step: usize,
+        neurons: &mut [QuantumNeuron],
+        _synapses: &[QuantumSynapse],
+        _time: f64,
+        step: usize,
         rng: &mut StdRng,
     ) -> Result<()> {
         for neuron in neurons.iter_mut() {
@@ -624,7 +628,8 @@ impl QuantumNeuromorphicFusion {
 
     fn quantum_bio_learning(
         &self,
-        synapses: &mut [QuantumSynapse], _spike_response: &Array1<f64>,
+        synapses: &mut [QuantumSynapse],
+        _spike_response: &Array1<f64>,
         time_step: usize,
     ) -> Result<f64> {
         let mut total_learning = 0.0;

@@ -955,7 +955,8 @@ impl ActivityRecognitionEngine {
             "standing" => Some("walking".to_string()),
             "walking" => Some("standing".to_string()),
             "running" => Some("walking".to_string()),
-            "gesturing" => Some("standing".to_string(), _ => None,
+            "gesturing" => Some("standing".to_string()),
+            _ => None,
         }
     }
 
@@ -1656,7 +1657,8 @@ impl TemporalActivityModeler {
             "standing" => Some("walking".to_string()),
             "walking" => Some("standing".to_string()),
             "running" => Some("walking".to_string()),
-            "gesturing" => Some("standing".to_string(), _ => None,
+            "gesturing" => Some("standing".to_string()),
+            _ => None,
         }
     }
 }

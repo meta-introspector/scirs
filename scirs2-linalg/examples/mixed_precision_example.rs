@@ -463,7 +463,7 @@ fn main() {
         let simd_mm_time = benchmark_fn(
             "SIMD-accelerated mixed precision matrix multiplication",
             || {
-                let _ = simd_mixed_precision_matmul_f32_f64: <f32>(&a_mat.view(), &b_mat.view())
+                let _ = simd_mixed_precision_matmul_f32_f64::<f32>(&a_mat.view(), &b_mat.view())
                     .unwrap();
             },
         );

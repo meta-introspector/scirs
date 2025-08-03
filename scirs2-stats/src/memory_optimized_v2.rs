@@ -15,7 +15,6 @@ use std::rc::Rc;
 
 #[cfg(feature = "memmap")]
 use memmap2::Mmap;
-use statrs::statistics::Statistics;
 
 /// Memory usage configuration
 #[derive(Debug, Clone)]

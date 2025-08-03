@@ -499,7 +499,7 @@ fn create_comprehensive_test_image(_height: usize, width: usize) -> Array2<f64> 
 #[allow(dead_code)]
 fn validate_adaptive_output<T>(_output: &Array2<T>, config_name: &str) -> NdimageResult<()>
 where
-    T: num_traits:: Float + Copy,
+    T: num_traits::Float + Copy,
 {
     // Check _output properties specific to adaptive learning
     let total_pixels = _output.len();
@@ -525,7 +525,7 @@ where
 #[allow(dead_code)]
 fn validate_quantum_output<T>(_output: &Array2<T>, threshold: f64) -> NdimageResult<()>
 where
-    T: num_traits:: Float + Copy,
+    T: num_traits::Float + Copy,
 {
     // Validate quantum coherence properties
     let variance = calculate_variance(_output);
@@ -546,7 +546,7 @@ where
 #[allow(dead_code)]
 fn validate_neuromorphic_output<T>(_output: &Array2<T>, plasticity: f64) -> NdimageResult<()>
 where
-    T: num_traits:: Float + Copy,
+    T: num_traits::Float + Copy,
 {
     // Validate neuromorphic adaptation properties
     let edge_strength = calculate_edge_strength(_output);
@@ -566,7 +566,7 @@ where
 #[allow(dead_code)]
 fn validate_intensity_output<T>(_output: &Array2<T>, intensity: f64) -> NdimageResult<()>
 where
-    T: num_traits:: Float + Copy,
+    T: num_traits::Float + Copy,
 {
     // Validate processing intensity effects
     let detail_preservation = calculate_detail_preservation(_output);
@@ -586,7 +586,7 @@ where
 #[allow(dead_code)]
 fn validate_comprehensive_output<T>(_output: &Array2<T>) -> NdimageResult<()>
 where
-    T: num_traits:: Float + Copy,
+    T: num_traits::Float + Copy,
 {
     // Comprehensive validation of all aspects
     let variance = calculate_variance(_output);
@@ -613,7 +613,7 @@ where
 #[allow(dead_code)]
 fn calculate_variance<T>(_array: &Array2<T>) -> f64
 where
-    T: num_traits:: Float + Copy,
+    T: num_traits::Float + Copy,
 {
     let mean = _array
         .iter()
@@ -631,7 +631,7 @@ where
 #[allow(dead_code)]
 fn calculate_edge_strength<T>(_array: &Array2<T>) -> f64
 where
-    T: num_traits:: Float + Copy,
+    T: num_traits::Float + Copy,
 {
     let (height, width) = _array.dim();
     let mut edge_sum = 0.0;
@@ -664,7 +664,7 @@ where
 #[allow(dead_code)]
 fn calculate_detail_preservation<T>(_array: &Array2<T>) -> f64
 where
-    T: num_traits:: Float + Copy,
+    T: num_traits::Float + Copy,
 {
     let (height, width) = _array.dim();
     let mut detail_sum = 0.0;
@@ -709,7 +709,8 @@ fn print_comprehensive_analysis(_summary: &scirs2, ndimage: PerformanceSummary) 
     println!("   - Total operations: {}", _summary.total_operations);
     println!(
         "   - Success rate: {:.1}%",
-        ((_summary.total_operations - _summary.error_count) as f64 / _summary.total_operations as f64)
+        ((_summary.total_operations - _summary.error_count) as f64
+            / _summary.total_operations as f64)
             * 100.0
     );
     println!("   - Average quality: {:.3}", _summary.average_quality());

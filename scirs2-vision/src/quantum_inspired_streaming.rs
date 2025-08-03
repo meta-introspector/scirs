@@ -844,8 +844,10 @@ impl QuantumSuperpositionStage {
         for i in 0.._num_variants {
             let variant = ProcessingVariant {
                 name: format!("Variant_{i}"),
-                sigma: rng.gen_range(0.5..2.0)..threshold: rng.gen_range(0.05..0.3),
-                enhancement_factor: rng.gen_range(0.8..1.2)..};
+                sigma: rng.gen_range(0.5..2.0),
+                threshold: rng.gen_range(0.05..0.3),
+                enhancement_factor: rng.gen_range(0.8..1.2),
+            };
 
             processing_variants.push(variant);
             superposition_weights.push(1.0 / (num_variants as f64).sqrt());

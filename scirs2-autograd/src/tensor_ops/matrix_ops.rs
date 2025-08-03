@@ -385,7 +385,9 @@ fn compute_inverse<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> Result<Array2<
 }
 
 #[allow(dead_code)]
-fn compute_pseudo_inverse<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
+fn compute_pseudo_inverse<F: Float>(
+    _matrix: &ndarray::ArrayView2<F>,
+) -> Result<Array2<F>, OpError> {
     // Simplified pseudo-inverse using transpose
     // For a full implementation, use SVD
     let m = _matrix.shape()[0];
@@ -849,7 +851,9 @@ pub fn pseudo_inverse<'g, F: Float>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
 }
 
 #[allow(dead_code)]
-pub fn determinant<'g, F: Float + ndarray::ScalarOperand>(_matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
+pub fn determinant<'g, F: Float + ndarray::ScalarOperand>(
+    _matrix: &Tensor<'g, F>,
+) -> Tensor<'g, F> {
     let g = _matrix.graph();
 
     // For determinant, we're creating a scalar output (0-dimensional tensor)

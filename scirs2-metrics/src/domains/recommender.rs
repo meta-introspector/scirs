@@ -348,7 +348,8 @@ impl RatingPredictionMetrics {
                 (1, 1) => tp += 1,
                 (0, 1) => fp += 1,
                 (0, 0) => _tn += 1,
-                (1, 0) => fn_count += 1_ => {
+                (1, 0) => fn_count += 1,
+                _ => {
                     return Err(MetricsError::InvalidInput(
                         "Invalid binary labels".to_string(),
                     ))

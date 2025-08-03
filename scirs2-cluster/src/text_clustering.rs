@@ -4,7 +4,7 @@
 //! semantic similarity measures rather than traditional distance metrics. It includes
 //! algorithms optimized for document clustering, sentence clustering, and topic modeling.
 
-use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -836,7 +836,8 @@ impl SemanticHierarchical {
                     Ok(1.0 - similarity)
                 }
             }
-            SemanticSimilarity::Euclidean => Ok(euclidean_distance(a, b).to_f64().unwrap_or(0.0), _ => {
+            SemanticSimilarity::Euclidean => Ok(euclidean_distance(a, b).to_f64().unwrap_or(0.0)),
+            _ => {
                 // For other metrics, use Euclidean as fallback
                 Ok(euclidean_distance(a, b).to_f64().unwrap_or(0.0))
             }
@@ -880,7 +881,8 @@ impl TopicBasedClustering {
     fn extract_vectors(&self, text_repr: &TextRepresentation) -> Result<Array2<f64>> {
         match text_repr {
             TextRepresentation::TfIdf { vectors, .. } => Ok(vectors.clone()),
-            TextRepresentation::DocumentTerm { matrix, .. } => Ok(matrix.clone(), _ => Err(ClusteringError::InvalidInput(
+            TextRepresentation::DocumentTerm { matrix, .. } => Ok(matrix.clone()),
+            _ => Err(ClusteringError::InvalidInput(
                 "Topic modeling requires TF-IDF or document-term matrix".to_string(),
             )),
         }

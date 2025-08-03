@@ -1243,9 +1243,7 @@ impl CostModel {
     /// Create new cost model
     pub fn new() -> Self {
         Self {
-            cost_network: Array2::fromshape_fn((1, 10), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
-            }),
+            cost_network: Array2::fromshape_fn((1, 10), |_| (rand::rng().gen::<f64>() - 0.5) * 0.1),
             base_cost: 1.0,
             scaling_factors: Array1::ones(5),
             cost_history: VecDeque::with_capacity(1000),

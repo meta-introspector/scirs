@@ -221,12 +221,13 @@ fn get_compatibility_level(_score: f64) -> &'static str {
         s if s >= 0.90 => "Very Good - Suitable for most use cases",
         s if s >= 0.80 => "Good - Some limitations, mostly compatible",
         s if s >= 0.70 => "Fair - Notable differences, careful migration needed",
-        s if s >= 0.60 => "Poor - Significant gaps, limited compatibility"_ => "Very Poor - Major incompatibilities",
+        s if s >= 0.60 => "Poor - Significant gaps, limited compatibility",
+        _ => "Very Poor - Major incompatibilities",
     }
 }
 
 #[allow(dead_code)]
-fn print_migration_guidance(_report: &scirs2, interpolate: CompatibilityReport) {
+fn print_migration_guidance(_report: &scirs2_interpolate::CompatibilityReport) {
     println!("   When migrating from SciPy to scirs2-_interpolate:");
 
     if _report.compatibility_score >= 0.90 {

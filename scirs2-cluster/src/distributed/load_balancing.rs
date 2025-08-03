@@ -5,9 +5,9 @@
 
 use ndarray::Array1;
 use num_traits::Float;
+use rand::Rng;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use rand::Rng;
 
 use crate::error::{ClusteringError, Result};
 
@@ -163,9 +163,12 @@ impl LoadBalancingCoordinator {
         if let Some(profile) = self.worker_profiles.get_mut(&worker_id) {
             // Exponential moving average for smoothing
             let alpha = 0.3;
-            profile.historical_throughput = alpha * throughput + (1.0 - alpha) * profile.historical_throughput;
-            profile.processing_efficiency = alpha * efficiency + (1.0 - alpha) * profile.processing_efficiency;
-            profile.communication_latency_ms = alpha * latency_ms + (1.0 - alpha) * profile.communication_latency_ms;
+            profile.historical_throughput =
+                alpha * throughput + (1.0 - alpha) * profile.historical_throughput;
+            profile.processing_efficiency =
+                alpha * efficiency + (1.0 - alpha) * profile.processing_efficiency;
+            profile.communication_latency_ms =
+                alpha * latency_ms + (1.0 - alpha) * profile.communication_latency_ms;
         } else {
             return Err(ClusteringError::InvalidInput(format!(
                 "Worker {} not registered",
@@ -184,7 +187,7 @@ impl LoadBalancingCoordinator {
         // Calculate current load distribution
         let current_loads = self.calculate_current_loads(current_assignments, data_size);
         let load_variance = self.calculate_load_variance(&current_loads);
-        
+
         // Record current state
         let snapshot = LoadBalanceSnapshot {
             timestamp: std::time::SystemTime::now()
@@ -205,11 +208,12 @@ impl LoadBalancingCoordinator {
         }
 
         let should_rebalance = self.should_trigger_rebalance(load_variance);
-        
+
         if should_rebalance {
             let new_assignments = self.compute_optimal_assignments(data_size)?;
             let migrations = self.plan_data_migrations(current_assignments, &new_assignments);
-            let expected_improvement = self.estimate_improvement(&current_loads, &new_assignments, data_size);
+            let expected_improvement =
+                self.estimate_improvement(&current_loads, &new_assignments, data_size);
 
             Ok(LoadBalanceDecision {
                 should_rebalance: true,
@@ -234,7 +238,7 @@ impl LoadBalancingCoordinator {
         total_data: usize,
     ) -> HashMap<usize, f64> {
         let mut loads = HashMap::new();
-        
+
         // Initialize all workers with zero load
         for &worker_id in self.worker_profiles.keys() {
             loads.insert(worker_id, 0.0);
@@ -257,16 +261,19 @@ impl LoadBalancingCoordinator {
         }
 
         let mean_load = loads.values().sum::<f64>() / loads.len() as f64;
-        let variance = loads.values()
+        let variance = loads
+            .values()
             .map(|&load| (load - mean_load).powi(2))
-            .sum::<f64>() / loads.len() as f64;
-        
+            .sum::<f64>()
+            / loads.len() as f64;
+
         variance.sqrt()
     }
 
     /// Calculate total system throughput
     fn calculate_total_throughput(&self, loads: &HashMap<usize, f64>) -> f64 {
-        loads.iter()
+        loads
+            .iter()
             .map(|(&worker_id, &load)| {
                 if let Some(profile) = self.worker_profiles.get(&worker_id) {
                     load * profile.historical_throughput
@@ -288,8 +295,9 @@ impl LoadBalancingCoordinator {
             let time_since_last = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
-                .as_millis() as u64 - last_snapshot.timestamp;
-            
+                .as_millis() as u64
+                - last_snapshot.timestamp;
+
             if time_since_last < self.config.min_rebalance_interval_ms {
                 return false;
             }
@@ -304,28 +312,37 @@ impl LoadBalancingCoordinator {
             LoadBalancingStrategy::ProportionalCapacity => {
                 self.proportional_capacity_balancing(data_size)
             }
-            LoadBalancingStrategy::GameTheoretic { convergence_threshold, max_iterations } => {
-                self.game_theoretic_balancing(data_size, *convergence_threshold, *max_iterations)
-            }
-            LoadBalancingStrategy::AdaptiveLearning { learning_rate, exploration_rate } => {
+            LoadBalancingStrategy::GameTheoretic {
+                convergence_threshold,
+                max_iterations,
+            } => self.game_theoretic_balancing(data_size, *convergence_threshold, *max_iterations),
+            LoadBalancingStrategy::AdaptiveLearning {
+                learning_rate,
+                exploration_rate,
+            } => {
                 let current_assignments = HashMap::new(); // Would get from state
-                self.adaptive_balancing(data_size, &current_assignments, *learning_rate, *exploration_rate)
+                self.adaptive_balancing(
+                    data_size,
+                    &current_assignments,
+                    *learning_rate,
+                    *exploration_rate,
+                )
             }
-            LoadBalancingStrategy::MultiObjective { objectives, weights } => {
-                self.multi_objective_balancing(data_size, objectives, weights)
-            }
+            LoadBalancingStrategy::MultiObjective {
+                objectives,
+                weights,
+            } => self.multi_objective_balancing(data_size, objectives, weights),
             LoadBalancingStrategy::WeightedRoundRobin => {
                 self.weighted_round_robin_balancing(data_size)
             }
-            LoadBalancingStrategy::LeastLoaded => {
-                self.least_loaded_balancing(data_size)
-            }
+            LoadBalancingStrategy::LeastLoaded => self.least_loaded_balancing(data_size),
         }
     }
 
     /// Proportional capacity-based load balancing
     fn proportional_capacity_balancing(&self, data_size: usize) -> Result<HashMap<usize, usize>> {
-        let worker_efficiency: Vec<(usize, f64)> = self.worker_profiles
+        let worker_efficiency: Vec<(usize, f64)> = self
+            .worker_profiles
             .iter()
             .map(|(&id, profile)| {
                 let capacity_score = profile.cpu_cores as f64 * profile.memory_gb;
@@ -385,8 +402,7 @@ impl LoadBalancingCoordinator {
 
             // Each worker adjusts their load based on others' decisions
             for &worker_id in &worker_ids {
-                let optimal_load =
-                    self.compute_best_response(worker_id, &assignments, data_size);
+                let optimal_load = self.compute_best_response(worker_id, &assignments, data_size);
                 let current_load = assignments[&worker_id];
 
                 if (optimal_load as f64 - current_load as f64).abs() / current_load as f64
@@ -467,8 +483,8 @@ impl LoadBalancingCoordinator {
         let reliability_utility = profile.reliability_score * (1.0 - load_factor * 0.5);
 
         // Communication overhead (increases with imbalance)
-        let avg_assignment: f64 = all_assignments.values().map(|&v| v as f64).sum::<f64>()
-            / all_assignments.len() as f64;
+        let avg_assignment: f64 =
+            all_assignments.values().map(|&v| v as f64).sum::<f64>() / all_assignments.len() as f64;
         let imbalance = (assignment as f64 - avg_assignment).abs() / avg_assignment;
         let communication_penalty = imbalance * 0.2;
 
@@ -549,7 +565,7 @@ impl LoadBalancingCoordinator {
                     let assignment = rng.gen_range(0..=max_assignment);
                     assignment.min(remaining_data)
                 };
-                
+
                 trial_assignment.insert(worker_id, assignment);
                 remaining_data = remaining_data.saturating_sub(assignment);
             }
@@ -573,9 +589,15 @@ impl LoadBalancingCoordinator {
     /// Weighted round-robin balancing
     fn weighted_round_robin_balancing(&self, data_size: usize) -> Result<HashMap<usize, usize>> {
         let mut assignments = HashMap::new();
-        let worker_weights: Vec<(usize, f64)> = self.worker_profiles
+        let worker_weights: Vec<(usize, f64)> = self
+            .worker_profiles
             .iter()
-            .map(|(&id, profile)| (id, profile.processing_efficiency * profile.reliability_score))
+            .map(|(&id, profile)| {
+                (
+                    id,
+                    profile.processing_efficiency * profile.reliability_score,
+                )
+            })
             .collect();
 
         if worker_weights.is_empty() {
@@ -621,7 +643,11 @@ impl LoadBalancingCoordinator {
                 if let Some(profile) = self.worker_profiles.get(&worker_id) {
                     let current_load = assignments[&worker_id] as f64;
                     let capacity = profile.cpu_cores as f64 * profile.memory_gb;
-                    let normalized_load = if capacity > 0.0 { current_load / capacity } else { current_load };
+                    let normalized_load = if capacity > 0.0 {
+                        current_load / capacity
+                    } else {
+                        current_load
+                    };
 
                     if normalized_load < min_normalized_load {
                         min_normalized_load = normalized_load;
@@ -643,7 +669,7 @@ impl LoadBalancingCoordinator {
             let capacity_ratio = (profile.cpu_cores as f64 * profile.memory_gb) / 100.0; // Normalize
             let efficiency_factor = profile.processing_efficiency * profile.reliability_score;
             let optimal_ratio = capacity_ratio * efficiency_factor;
-            
+
             (total_data as f64 * optimal_ratio / self.worker_profiles.len() as f64).round() as usize
         } else {
             total_data / self.worker_profiles.len()
@@ -689,7 +715,8 @@ impl LoadBalancingCoordinator {
 
     /// Evaluate total time objective
     fn evaluate_total_time_objective(&self, assignment: &HashMap<usize, usize>) -> f64 {
-        let max_time = assignment.iter()
+        let max_time = assignment
+            .iter()
             .map(|(&worker_id, &load)| {
                 if let Some(profile) = self.worker_profiles.get(&worker_id) {
                     if profile.historical_throughput > 0.0 {
@@ -708,7 +735,8 @@ impl LoadBalancingCoordinator {
 
     /// Evaluate throughput objective
     fn evaluate_throughput_objective(&self, assignment: &HashMap<usize, usize>) -> f64 {
-        assignment.iter()
+        assignment
+            .iter()
             .map(|(&worker_id, &load)| {
                 if let Some(profile) = self.worker_profiles.get(&worker_id) {
                     load as f64 * profile.historical_throughput
@@ -722,16 +750,19 @@ impl LoadBalancingCoordinator {
     /// Evaluate communication objective (simplified)
     fn evaluate_communication_objective(&self, assignment: &HashMap<usize, usize>) -> f64 {
         let avg_load = assignment.values().sum::<usize>() as f64 / assignment.len() as f64;
-        let variance = assignment.values()
+        let variance = assignment
+            .values()
             .map(|&load| (load as f64 - avg_load).powi(2))
-            .sum::<f64>() / assignment.len() as f64;
-        
+            .sum::<f64>()
+            / assignment.len() as f64;
+
         1.0 / (1.0 + variance.sqrt()) // Lower variance = better communication
     }
 
     /// Evaluate reliability objective
     fn evaluate_reliability_objective(&self, assignment: &HashMap<usize, usize>) -> f64 {
-        assignment.iter()
+        assignment
+            .iter()
             .map(|(&worker_id, &load)| {
                 if let Some(profile) = self.worker_profiles.get(&worker_id) {
                     load as f64 * profile.reliability_score
@@ -744,7 +775,8 @@ impl LoadBalancingCoordinator {
 
     /// Evaluate energy objective (simplified)
     fn evaluate_energy_objective(&self, assignment: &HashMap<usize, usize>) -> f64 {
-        assignment.iter()
+        assignment
+            .iter()
             .map(|(&worker_id, &load)| {
                 if let Some(profile) = self.worker_profiles.get(&worker_id) {
                     // Simplified energy model: quadratic in load
@@ -759,7 +791,8 @@ impl LoadBalancingCoordinator {
 
     /// Evaluate resource utilization objective
     fn evaluate_utilization_objective(&self, assignment: &HashMap<usize, usize>) -> f64 {
-        assignment.iter()
+        assignment
+            .iter()
             .map(|(&worker_id, &load)| {
                 if let Some(profile) = self.worker_profiles.get(&worker_id) {
                     let capacity = profile.cpu_cores as f64 * profile.memory_gb;
@@ -772,7 +805,8 @@ impl LoadBalancingCoordinator {
                     0.0
                 }
             })
-            .sum::<f64>() / assignment.len() as f64
+            .sum::<f64>()
+            / assignment.len() as f64
     }
 
     /// Plan data migrations between workers
@@ -788,7 +822,7 @@ impl LoadBalancingCoordinator {
         // Identify workers with surplus or deficit
         for (&worker_id, &current_load) in current {
             let target_load = target.get(&worker_id).copied().unwrap_or(0);
-            
+
             if current_load > target_load {
                 surplus_workers.push((worker_id, current_load - target_load));
             } else if current_load < target_load {
@@ -804,7 +838,9 @@ impl LoadBalancingCoordinator {
             let (surplus_worker, mut surplus_amount) = surplus_workers[surplus_idx];
             let (deficit_worker, mut deficit_amount) = deficit_workers[deficit_idx];
 
-            let migration_size = surplus_amount.min(deficit_amount).min(self.config.max_migration_size);
+            let migration_size = surplus_amount
+                .min(deficit_amount)
+                .min(self.config.max_migration_size);
 
             if migration_size > 0 {
                 let priority = if migration_size > self.config.max_migration_size / 2 {
@@ -850,7 +886,7 @@ impl LoadBalancingCoordinator {
         total_data: usize,
     ) -> f64 {
         let current_variance = self.calculate_load_variance(current_loads);
-        
+
         let new_loads = self.calculate_current_loads(new_assignments, total_data);
         let new_variance = self.calculate_load_variance(&new_loads);
 
@@ -859,10 +895,11 @@ impl LoadBalancingCoordinator {
 
         // Weighted improvement score
         let variance_improvement = (current_variance - new_variance) / current_variance.max(0.001);
-        let throughput_improvement = (new_throughput - current_throughput) / current_throughput.max(0.001);
+        let throughput_improvement =
+            (new_throughput - current_throughput) / current_throughput.max(0.001);
 
-        self.config.efficiency_weight * throughput_improvement + 
-        self.config.fairness_weight * variance_improvement
+        self.config.efficiency_weight * throughput_improvement
+            + self.config.fairness_weight * variance_improvement
     }
 
     /// Set load balancing strategy
@@ -889,7 +926,7 @@ mod tests {
     fn test_load_balancing_coordinator_creation() {
         let config = LoadBalancingConfig::default();
         let coordinator = LoadBalancingCoordinator::new(config);
-        
+
         assert!(coordinator.worker_profiles.is_empty());
         assert!(coordinator.load_history.is_empty());
     }
@@ -898,7 +935,7 @@ mod tests {
     fn test_worker_profile_registration() {
         let config = LoadBalancingConfig::default();
         let mut coordinator = LoadBalancingCoordinator::new(config);
-        
+
         let profile = WorkerProfile {
             worker_id: 1,
             cpu_cores: 4,
@@ -909,7 +946,7 @@ mod tests {
             processing_efficiency: 0.8,
             communication_latency_ms: 10.0,
         };
-        
+
         coordinator.register_worker(profile);
         assert!(coordinator.worker_profiles.contains_key(&1));
     }
@@ -918,14 +955,14 @@ mod tests {
     fn test_load_variance_calculation() {
         let config = LoadBalancingConfig::default();
         let coordinator = LoadBalancingCoordinator::new(config);
-        
+
         let mut loads = HashMap::new();
         loads.insert(1, 0.5);
         loads.insert(2, 0.5);
-        
+
         let variance = coordinator.calculate_load_variance(&loads);
         assert!((variance - 0.0).abs() < 0.001); // Perfect balance
-        
+
         loads.insert(2, 0.7);
         loads.insert(1, 0.3);
         let variance = coordinator.calculate_load_variance(&loads);
@@ -936,7 +973,7 @@ mod tests {
     fn test_proportional_capacity_balancing() {
         let config = LoadBalancingConfig::default();
         let mut coordinator = LoadBalancingCoordinator::new(config);
-        
+
         // Add workers with different capacities
         let profile1 = WorkerProfile {
             worker_id: 1,
@@ -948,7 +985,7 @@ mod tests {
             processing_efficiency: 0.8,
             communication_latency_ms: 10.0,
         };
-        
+
         let profile2 = WorkerProfile {
             worker_id: 2,
             cpu_cores: 4,
@@ -959,14 +996,14 @@ mod tests {
             processing_efficiency: 0.9,
             communication_latency_ms: 5.0,
         };
-        
+
         coordinator.register_worker(profile1);
         coordinator.register_worker(profile2);
-        
+
         let assignments = coordinator.proportional_capacity_balancing(1000).unwrap();
         assert_eq!(assignments.len(), 2);
         assert!(assignments.values().sum::<usize>() == 1000);
-        
+
         // Worker 2 should get more work due to higher capacity
         assert!(assignments[&2] > assignments[&1]);
     }

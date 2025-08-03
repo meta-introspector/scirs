@@ -243,11 +243,8 @@ fn test_reduction_stability() {
 
         // Test mean with extreme values
         let extreme_values = T::convert_to_tensor(
-            Array::<f32, ndarray::Ix1>::fromshape_vec(
-                6,
-                vec![1e-20, 1e-10, 1.0, 1e10, 1e20, 1e30],
-            )
-            .unwrap(),
+            Array::<f32, ndarray::Ix1>::fromshape_vec(6, vec![1e-20, 1e-10, 1.0, 1e10, 1e20, 1e30])
+                .unwrap(),
             ctx,
         );
 

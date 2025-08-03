@@ -155,7 +155,8 @@ use std::any::TypeId;
 use std::fmt;
 
 /// A primitive type in this crate, which is actually a decorated `num_traits::Float`.
-pub trait Float: num_traits::Float
+pub trait Float:
+    num_traits::Float
     + num_traits::NumAssignOps
     + Copy
     + Send

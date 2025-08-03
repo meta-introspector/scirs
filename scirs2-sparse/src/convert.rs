@@ -25,7 +25,7 @@ use ndarray::Array2;
 /// use ndarray::Array2;
 /// use scirs2_sparse::convert::dense_to_csr;
 ///
-/// let dense = Array2::fromshape_vec((3, 3), vec![
+/// let dense = Array2::from_shape_vec((3, 3), vec![
 ///     1.0, 0.0, 2.0,
 ///     0.0, 0.0, 3.0,
 ///     4.0, 5.0, 0.0,
@@ -367,7 +367,7 @@ mod tests {
     fn test_dense_to_csr_to_dense() {
         // Create a dense matrix
         let dense =
-            Array2::fromshape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
+            Array2::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
                 .unwrap();
 
         // Convert to CSR
@@ -388,7 +388,7 @@ mod tests {
     fn test_dense_to_csc_to_dense() {
         // Create a dense matrix
         let dense =
-            Array2::fromshape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
+            Array2::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
                 .unwrap();
 
         // Convert to CSC
@@ -409,7 +409,7 @@ mod tests {
     fn test_dense_to_coo_to_dense() {
         // Create a dense matrix
         let dense =
-            Array2::fromshape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
+            Array2::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
                 .unwrap();
 
         // Convert to COO

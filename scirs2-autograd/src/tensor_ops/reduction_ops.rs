@@ -1,9 +1,9 @@
-use crate::ndarray_ext;
 use crate::ndarray__ext::{NdArray, NdArrayView};
+use crate::ndarray_ext;
 use crate::op;
 use crate::tensor::Tensor;
-use crate::tensor_ops;
 use crate::tensor__ops::*;
+use crate::tensor_ops;
 use crate::Float;
 use ndarray;
 use std::f32;

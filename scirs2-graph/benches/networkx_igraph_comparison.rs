@@ -151,7 +151,8 @@ impl ExternalBenchmarkRunner {
         let graph_generation = match graph_type {
             "erdos_renyi" => format!("G = nx.erdos_renyi_graph({}, 0.01)", graph_size),
             "barabasi_albert" => format!("G = nx.barabasi_albert_graph({}, 3)", graph_size),
-            "watts_strogatz" => format!("G = nx.watts_strogatz_graph({}, 6, 0.3)", graph_size, _ => format!("G = nx.erdos_renyi_graph({}, 0.01)", graph_size),
+            "watts_strogatz" => format!("G = nx.watts_strogatz_graph({}, 6, 0.3)", graph_size),
+            _ => format!("G = nx.erdos_renyi_graph({}, 0.01)", graph_size),
         };
 
         let algorithm_code = match algorithm {
@@ -163,7 +164,8 @@ impl ExternalBenchmarkRunner {
             "pagerank" => "nx.pagerank(G)".to_string(),
             "connected_components" => "list(nx.connected_components(G))".to_string(),
             "louvain_communities" => "community.greedy_modularity_communities(G)".to_string(),
-            "minimum_spanning_tree" => "nx.minimum_spanning_tree(G)".to_string(, _ => "pass".to_string(),
+            "minimum_spanning_tree" => "nx.minimum_spanning_tree(G)".to_string(),
+            _ => "pass".to_string(),
         };
 
         format!(
@@ -578,7 +580,8 @@ fn measure_scirs2_algorithm(_algorithm: &str, size: usize, graph_type: &str) -> 
     let graph = match graph_type {
         "erdos_renyi" => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
         "barabasi_albert" => barabasi_albert_graph(size, 3, &mut rng).unwrap(),
-        "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(, _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
+        "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(),
+        _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
     };
 
     let start = Instant::now();
@@ -819,7 +822,8 @@ fn bench_advanced_comprehensive_comparison(c: &mut Criterion) {
         let test_graph = match graph_type {
             "erdos_renyi" => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
             "barabasi_albert" => barabasi_albert_graph(size, 3, &mut rng).unwrap(),
-            "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(, _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
+            "watts_strogatz" => watts_strogatz_graph(size, 6, 0.3, &mut rng).unwrap(),
+            _ => erdos_renyi_graph(size, 0.01, &mut rng).unwrap(),
         };
 
         for algorithm in algorithms {

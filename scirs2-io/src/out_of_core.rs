@@ -1001,8 +1001,8 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
             2 => {
                 for i in 0..(overlap_end[0] - overlap_start[0]) {
                     for j in 0..(overlap_end[1] - overlap_start[1]) {
-                        let chunk_idx = (chunk_local_start[0] + i) * chunkshape[1]
-                            + (chunk_local_start[1] + j);
+                        let chunk_idx =
+                            (chunk_local_start[0] + i) * chunkshape[1] + (chunk_local_start[1] + j);
                         let source_idx = [source_local_start[0] + i, source_local_start[1] + j];
                         chunk_data[chunk_idx] = source_data[&source_idx[..]];
                     }

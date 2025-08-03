@@ -8,7 +8,6 @@ use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use std::collections::{HashMap, HashSet};
 
 use crate::error::{MetricsError, Result};
-use rand::seq::SliceRandom;
 
 /// Type alias for nested cross-validation result
 /// Represents outer train indices, outer test indices, and inner fold splits
@@ -33,7 +32,7 @@ pub type NestedCVResult = Vec<(Vec<usize>, Vec<usize>, Vec<(Vec<usize>, Vec<usiz
 /// # Examples
 ///
 /// ```
-/// use scirs2__metrics::evaluation::cross_validation::k_fold_cross_validation;
+/// use scirs2_metrics::evaluation::cross_validation::k_fold_cross_validation;
 ///
 /// let splits = k_fold_cross_validation(10, 3, false, None).unwrap();
 /// assert_eq!(splits.len(), 3); // 3 folds
@@ -127,7 +126,7 @@ pub fn k_fold_cross_validation(
 /// # Examples
 ///
 /// ```
-/// use scirs2__metrics::evaluation::cross_validation::leave_one_out_cv;
+/// use scirs2_metrics::evaluation::cross_validation::leave_one_out_cv;
 ///
 /// let splits = leave_one_out_cv(5).unwrap();
 /// assert_eq!(splits.len(), 5); // 5 splits for 5 samples
@@ -185,7 +184,7 @@ pub fn leave_one_out_cv(n: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::evaluation::cross_validation::stratified_k_fold;
+/// use scirs2_metrics::evaluation::cross_validation::stratified_k_fold;
 ///
 /// let y = array![0, 0, 0, 1, 1, 1, 2, 2, 2];
 /// let splits = stratified_k_fold(&y, 3, true, Some(42)).unwrap();
@@ -315,7 +314,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__metrics::evaluation::cross_validation::time_series_split;
+/// use scirs2_metrics::evaluation::cross_validation::time_series_split;
 ///
 /// let splits = time_series_split(10, 3, 2, 0, None).unwrap();
 /// assert_eq!(splits.len(), 3); // 3 splits
@@ -416,7 +415,7 @@ pub fn time_series_split(
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::evaluation::grouped_k_fold;
+/// use scirs2_metrics::evaluation::grouped_k_fold;
 ///
 /// // Each sample belongs to one of three groups: A, B, or C
 /// let groups = array!["A", "A", "A", "B", "B", "C", "C", "C"];
@@ -563,7 +562,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use scirs2__metrics::evaluation::nested_cross_validation;
+/// use scirs2_metrics::evaluation::nested_cross_validation;
 ///
 /// let nested_cv = nested_cross_validation(20, 5, 3, true, Some(42)).unwrap();
 /// assert_eq!(nested_cv.len(), 5); // 5 outer folds

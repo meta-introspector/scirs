@@ -59,10 +59,10 @@ mod tests {
         let (chi2, p_value) = friedman(&data.view()).unwrap();
 
         // With such clear differences, chi2 should be high
-        assert!(chi2 > 5.0, "Expected high chi2 value, got {}", chi2);
+        assert!(chi2 > 5.0, "Expected high chi2 value, got {chi2}");
 
         // p-value should be significant (less than 0.05)
-        assert!(p_value < 0.05, "Expected p-value < 0.05, got {}", p_value);
+        assert!(p_value < 0.05, "Expected p-value < 0.05, got {p_value}");
     }
 
     #[test]
@@ -78,11 +78,11 @@ mod tests {
         let (chi2, p_value) = friedman(&data.view()).unwrap();
 
         // For this data, we expect a significantly higher treatment in the third column
-        assert!(chi2 > 0.0, "Expected positive chi2 value, got {}", chi2);
+        assert!(chi2 > 0.0, "Expected positive chi2 value, got {chi2}");
 
         // Check that the implementation correctly handles ties
         // The example is constructed to have a significant result despite ties
-        assert!(p_value < 0.05, "Expected p-value < 0.05, got {}", p_value);
+        assert!(p_value < 0.05, "Expected p-value < 0.05, got {p_value}");
     }
 
     #[test]

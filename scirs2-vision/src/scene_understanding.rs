@@ -615,12 +615,12 @@ impl SceneUnderstandingEngine {
         Ok(Array2::zeros((1, 640))) // Placeholder
     }
 
-    fn classify_from_features(&self_features: &Array2<f32>) -> Result<(String, f32)> {
+    fn classify_from_features(&self, _features: &Array2<f32>) -> Result<(String, f32)> {
         Ok(("indoor_scene".to_string(), 0.85)) // Placeholder
     }
 
     fn apply_reasoning_rule(
-        &self_rule: &ReasoningRule, _objects: &[DetectedObject], _relationships: &[SpatialRelation]_scene, class: &str,
+        &self, _rule: &ReasoningRule, _objects: &[DetectedObject], _relationships: &[SpatialRelation], _scene: &str, _class: &str,
     ) -> Result<Option<ReasoningResult>> {
         Ok(None) // Placeholder
     }

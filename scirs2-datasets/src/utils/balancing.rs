@@ -8,8 +8,8 @@ use crate::error::{DatasetsError, Result};
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use std::collections::HashMap;
 use rand::seq::SliceRandom;
+use std::collections::HashMap;
 
 /// Balancing strategies for handling imbalanced datasets
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
@@ -291,7 +291,7 @@ pub fn generate_synthetic_samples(
         let base_sample = data.row(base_idx);
 
         // Find k nearest _neighbors within the same _class
-        let mut distances: Vec<(usize..f64)> = class_indices
+        let mut distances: Vec<(usize, f64)> = class_indices
             .iter()
             .filter(|&&idx| idx != base_idx)
             .map(|&idx| {

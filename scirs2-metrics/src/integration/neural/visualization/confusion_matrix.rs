@@ -4,7 +4,7 @@
 //! network evaluation, especially for classification problems.
 
 use crate::classification::confusion_matrix;
-use crate::visualization::confusion__matrix::confusion_matrix_visualization;
+use crate::visualization::confusion_matrix::confusion_matrix_visualization;
 use crate::visualization::MetricVisualizer;
 use ndarray::{Array, Ix1, IxDyn};
 use std::error::Error;

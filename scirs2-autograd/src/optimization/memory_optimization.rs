@@ -13,7 +13,8 @@ pub struct MemoryOptimizer<F: Float> {
     /// Configuration for memory optimization
     config: MemoryOptimizationConfig,
     /// Analysis results
-    analysis: Option<MemoryAnalysis>, _phantom: std::marker::PhantomData<F>,
+    analysis: Option<MemoryAnalysis>,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> MemoryOptimizer<F> {
@@ -140,7 +141,8 @@ impl<F: Float> MemoryOptimizer<F> {
 
     /// Insert a checkpoint at a specific location
     fn insert_checkpoint(
-        &self_graph: &mut Graph<F>, _candidate: &CheckpointCandidate<F>,
+        &self_graph: &mut Graph<F>,
+        _candidate: &CheckpointCandidate<F>,
     ) -> Result<(), OptimizationError> {
         // Insert a checkpoint operation that:
         // 1. Saves the forward pass result
@@ -233,7 +235,8 @@ impl<F: Float> MemoryOptimizer<F> {
 
     /// Convert an operation to in-place
     fn convert_to_in_place(
-        &self_graph: &mut Graph<F>, _candidate: &InPlaceCandidate<F>,
+        &self_graph: &mut Graph<F>,
+        _candidate: &InPlaceCandidate<F>,
     ) -> Result<(), OptimizationError> {
         // Replace the operation with an in-place version
         Ok(())
@@ -270,7 +273,8 @@ impl<F: Float> MemoryOptimizer<F> {
 
     /// Apply tensor reuse for a group of tensors
     fn apply_tensor_reuse_group(
-        &self_graph: &mut Graph<F>, _group: &TensorReuseGroup<F>,
+        &self_graph: &mut Graph<F>,
+        _group: &TensorReuseGroup<F>,
     ) -> Result<(), OptimizationError> {
         // Modify the _graph to reuse memory for tensors in the _group
         Ok(())

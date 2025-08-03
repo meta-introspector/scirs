@@ -223,8 +223,8 @@ mod tests {
         cache.insert(1, "one");
         cache.insert(2, "two");
 
-        assert_eq!(cache.get(&1), Some(one));
-        assert_eq!(cache.get(&2), Some(two));
+        assert_eq!(cache.get(&1), Some("one"));
+        assert_eq!(cache.get(&2), Some("two"));
         assert_eq!(cache.get(&3), None);
 
         // Test TTL expiration
@@ -235,16 +235,16 @@ mod tests {
 
         // Test size limit
         for i in 0..10 {
-            cache.insert(0, value);
+            cache.insert(i, "test");
         }
 
         // Only the last 5 should be in the cache due to size limit
         for i in 0..5 {
-            assert_eq!(cache.get(&0), None);
+            assert_eq!(cache.get(&i), None);
         }
 
         for i in 5..10 {
-            assert_eq!(cache.get(&0), Some(value));
+            assert_eq!(cache.get(&i), Some("test"));
         }
     }
 

@@ -349,7 +349,8 @@ impl<F: Float> StabilityMetrics<F> {
 
     fn create_random_perturbation<'a>(
         &self,
-        input: &Tensor<'a, F>, _magnitude: f64,
+        input: &Tensor<'a, F>,
+        _magnitude: f64,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create random perturbation with specified _magnitude
         let perturbed = *input;
@@ -491,7 +492,8 @@ impl<F: Float> StabilityMetrics<F> {
     }
 
     fn estimate_local_condition_number<Func>(
-        &self_function: &Func, _input: &Tensor<F>,
+        &self_function: &Func,
+        _input: &Tensor<F>,
     ) -> Result<f64, StabilityError>
     where
         Func: for<'b> Fn(&'b Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError> + ?Sized,
@@ -533,7 +535,8 @@ impl<F: Float> StabilityMetrics<F> {
             x if x < 1.1 => StabilityGrade::Excellent,
             x if x < 10.0 => StabilityGrade::Good,
             x if x < 100.0 => StabilityGrade::Fair,
-            x if x < 1000.0 => StabilityGrade::Poor_ => StabilityGrade::Unstable,
+            x if x < 1000.0 => StabilityGrade::Poor,
+            _ => StabilityGrade::Critical,
         }
     }
 
@@ -545,7 +548,8 @@ impl<F: Float> StabilityMetrics<F> {
             x if x < 1e-14 => StabilityGrade::Excellent,
             x if x < 1e-10 => StabilityGrade::Good,
             x if x < 1e-6 => StabilityGrade::Fair,
-            x if x < 1e-2 => StabilityGrade::Poor_ => StabilityGrade::Unstable,
+            x if x < 1e-2 => StabilityGrade::Poor,
+            _ => StabilityGrade::Critical,
         }
     }
 
@@ -553,7 +557,8 @@ impl<F: Float> StabilityMetrics<F> {
         match metrics.combined_stability_score {
             x if x < 1e-12 => StabilityClassification::NumericallyStable,
             x if x < 1e-6 => StabilityClassification::WeaklyStable,
-            x if x < 1e-2 => StabilityClassification::MarginallyStable_ => StabilityClassification::Unstable,
+            x if x < 1e-2 => StabilityClassification::MarginallyStable,
+            _ => StabilityClassification::Unstable,
         }
     }
 
@@ -575,7 +580,8 @@ impl<F: Float> StabilityMetrics<F> {
             x if x < 1.0 => StabilityGrade::Excellent,
             x if x < 10.0 => StabilityGrade::Good,
             x if x < 100.0 => StabilityGrade::Fair,
-            x if x < 1000.0 => StabilityGrade::Poor_ => StabilityGrade::Unstable,
+            x if x < 1000.0 => StabilityGrade::Poor,
+            _ => StabilityGrade::Critical,
         }
     }
 
@@ -584,7 +590,8 @@ impl<F: Float> StabilityMetrics<F> {
             x if x < 1e-12 => StabilityGrade::Excellent,
             x if x < 1e-8 => StabilityGrade::Good,
             x if x < 1e-4 => StabilityGrade::Fair,
-            x if x < 1e-1 => StabilityGrade::Poor_ => StabilityGrade::Unstable,
+            x if x < 1e-1 => StabilityGrade::Poor,
+            _ => StabilityGrade::Critical,
         }
     }
 }

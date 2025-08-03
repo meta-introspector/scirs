@@ -118,10 +118,7 @@ pub fn validate_fft_size(input_size: usize, n: Option<usize>) -> FFTResult<usize
 ///
 /// Returns an error if the dimensions don't match
 #[allow(dead_code)]
-pub fn validate_fftshapes(
-    inputshape: &[usize],
-    shape: Option<&[usize]>,
-) -> FFTResult<Vec<usize>> {
+pub fn validate_fftshapes(inputshape: &[usize], shape: Option<&[usize]>) -> FFTResult<Vec<usize>> {
     match shape {
         Some(outputshape) => {
             if outputshape.len() != inputshape.len() {

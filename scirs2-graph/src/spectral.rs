@@ -503,7 +503,7 @@ pub fn laplacian<N, E, Ix>(
 ) -> Result<Array2<f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
     let n = graph.node_count();
@@ -607,7 +607,7 @@ pub fn laplacian_digraph<N, E, Ix>(
 ) -> Result<Array2<f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
     let n = graph.node_count();
@@ -753,7 +753,7 @@ where
 pub fn spectral_radius<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<f64>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
     let n = _graph.node_count();
@@ -833,7 +833,7 @@ where
 pub fn normalized_cut<N, E, Ix>(_graph: &Graph<N, E, Ix>, partition: &[bool]) -> Result<f64>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
     let n = _graph.node_count();
@@ -1020,7 +1020,7 @@ pub fn parallel_laplacian<N, E, Ix>(
 ) -> Result<Array2<f64>>
 where
     N: Node + std::fmt::Debug,
-    E: EdgeWeight + num_traits::Zero + num, _traits::One + PartialOrd + Into<f64> + std::marker::Copy,
+    E: EdgeWeight + num_traits::Zero + num_traits::One + PartialOrd + Into<f64> + std::marker::Copy,
     Ix: petgraph::graph::IndexType,
 {
     let n = graph.node_count();
@@ -1278,7 +1278,7 @@ mod tests {
 
     #[test]
     fn test_laplacian_matrix() {
-        let mut graph: Graph<i32..f64> = Graph::new();
+        let mut graph: Graph<i32, f64> = Graph::new();
 
         // Create a simple graph:
         // 0 -- 1 -- 2

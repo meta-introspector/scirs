@@ -387,7 +387,8 @@ impl MLPipeline {
         // In a full implementation, you'd use the actual balancing utilities
         match strategy {
             BalancingStrategy::RandomUndersample => self.random_undersample(dataset, None),
-            BalancingStrategy::RandomOversample => self.random_oversample(dataset, None, _ => Ok(dataset.clone()), // Placeholder for other strategies
+            BalancingStrategy::RandomOversample => self.random_oversample(dataset, None),
+            _ => Ok(dataset.clone()), // Placeholder for other strategies
         }
     }
 

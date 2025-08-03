@@ -27,7 +27,7 @@
 //! println!("Labels: {:?}", labels);
 //! ```
 
-use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 

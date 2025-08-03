@@ -5,7 +5,7 @@
 //! information theory and measure how well the clustering preserves the information
 //! in the true class structure.
 
-use ndarray::{ArrayView1, Array1, ArrayView1};
+use ndarray::{Array1, ArrayView1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
 use rand::prelude::*;
 use rand::rng;
@@ -14,9 +14,9 @@ use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
 use ndarray::Array2;
+use rand::seq::SliceRandom;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::Rng;
-use rand::seq::SliceRandom;
 
 /// Calculate mutual information between two label assignments
 ///
@@ -46,7 +46,10 @@ use rand::seq::SliceRandom;
 /// assert!(mi > 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn mutual_info_score<F>(_labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
+pub fn mutual_info_score<F>(
+    _labels_true: ArrayView1<i32>,
+    labels_pred: ArrayView1<i32>,
+) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -287,7 +290,10 @@ where
 ///
 /// The homogeneity score (0 to 1, higher is better)
 #[allow(dead_code)]
-pub fn homogeneity_score<F>(_labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
+pub fn homogeneity_score<F>(
+    _labels_true: ArrayView1<i32>,
+    labels_pred: ArrayView1<i32>,
+) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
 {
@@ -993,7 +999,7 @@ mod tests {
 /// Advanced information-theoretic clustering validation methods
 pub mod advanced_validation {
     use super::*;
-    use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
+    use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
     use scirs2_core::parallel_ops::*;
     use std::collections::HashMap;
 
@@ -1015,7 +1021,8 @@ pub mod advanced_validation {
             Self {
                 _n_bootstrap,
                 sample_fraction,
-                rng: rng(), _phantom: std::marker::PhantomData,
+                rng: rng(),
+                _phantom: std::marker::PhantomData,
             }
         }
 
@@ -1584,7 +1591,8 @@ pub mod advanced_validation {
             for solution in clustering_solutions {
                 if solution.len() != n_samples {
                     return Err(ClusteringError::InvalidInput(
-                        "All clustering _solutions must have the same number of samples".to_string(),
+                        "All clustering _solutions must have the same number of samples"
+                            .to_string(),
                     ));
                 }
             }

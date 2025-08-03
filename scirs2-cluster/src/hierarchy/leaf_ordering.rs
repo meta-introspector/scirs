@@ -4,7 +4,7 @@
 //! to minimize the sum of distances between adjacent leaves, improving
 //! the visual interpretability of hierarchical clustering results.
 
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;

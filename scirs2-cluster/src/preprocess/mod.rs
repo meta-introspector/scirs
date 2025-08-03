@@ -462,9 +462,8 @@ mod tests {
 
     #[test]
     fn test_whiten() {
-        let data =
-            Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-                .unwrap();
+        let data = Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
+            .unwrap();
 
         let whitened = whiten(data.view(), true).unwrap();
 
@@ -477,9 +476,8 @@ mod tests {
 
     #[test]
     fn test_standardize() {
-        let data =
-            Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-                .unwrap();
+        let data = Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
+            .unwrap();
 
         let standardized = standardize(data.view(), true).unwrap();
 
@@ -498,9 +496,8 @@ mod tests {
 
     #[test]
     fn test_normalize_l2() {
-        let data =
-            Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-                .unwrap();
+        let data = Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
+            .unwrap();
 
         let normalized = normalize(data.view(), NormType::L2, true).unwrap();
 
@@ -515,9 +512,8 @@ mod tests {
 
     #[test]
     fn test_min_max_scale() {
-        let data =
-            Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
-                .unwrap();
+        let data = Array2::fromshape_vec((3, 3), vec![1.9, 2.3, 1.7, 1.5, 2.5, 2.2, 0.8, 0.6, 1.7])
+            .unwrap();
 
         let scaled = min_max_scale(data.view(), (0.0, 1.0), true).unwrap();
 

@@ -428,7 +428,9 @@ fn compute_matrix_exp<F: Float + ndarray::ScalarOperand + FromPrimitive>(
 
 /// Compute matrix inverse
 #[allow(dead_code)]
-fn compute_matrix_inverse<F: Float>(_matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
+fn compute_matrix_inverse<F: Float>(
+    _matrix: &ndarray::ArrayView2<F>,
+) -> Result<Array2<F>, OpError> {
     let n = _matrix.shape()[0];
     let mut a = _matrix.to_owned();
     let mut inv = Array2::<F>::eye(n);

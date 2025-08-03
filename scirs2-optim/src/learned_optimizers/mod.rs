@@ -1573,7 +1573,7 @@ where
         Dim: Dimension + Clone,
     {
         // Simplified reshape - in practice would handle arbitrary dimensions
-        Array::fromshape_vec(shape, flat_array.to_vec())
+        Array::from_shape_vec(shape, flat_array.to_vec())
             .map_err(|_| OptimError::InvalidConfig("Reshape error".to_string()))
     }
 

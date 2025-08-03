@@ -1,5 +1,5 @@
-use crate::ndarray_ext;
 use crate::ndarray__ext::NdArray;
+use crate::ndarray_ext;
 use crate::op;
 use crate::Float;
 use ndarray;

@@ -393,7 +393,7 @@ impl TrajectoryOptimizer {
         let t5 = t4 * t;
 
         // Coefficient matrix for the linear system (for reference)
-        let _a_matrix = Array2::fromshape_vec(
+        let _a_matrix = Array2::from_shape_vec(
             (6, 6),
             vec![
                 1.0,

@@ -97,8 +97,8 @@ where
     D: Dimension,
 {
     fn step(&mut self, params: &Array<A, D>, gradients: &Array<A, D>) -> Result<Array<A, D>> {
-        let params_flat = params.to_owned().intoshape_with_order(params.len()).unwrap();
-        let grad_flat = gradients.to_owned().intoshape_with_order(gradients.len()).unwrap();
+        let params_flat = params.to_owned().into_shape_with_order(params.len()).unwrap();
+        let grad_flat = gradients.to_owned().into_shape_with_order(gradients.len()).unwrap();
         
         // Update history if we have previous values
         if let (Some(prev_p), Some(prev_g)) = (&self.prev_params, &self.prev_grad) {
@@ -128,7 +128,7 @@ where
         self.prev_grad = Some(grad_flat);
         
         // Reshape and return
-        Ok(new_params_flat.intoshape_with_order(params.raw_dim()).unwrap())
+        Ok(new_params_flat.into_shape_with_order(params.raw_dim()).unwrap())
     }
 
     fn get_learning_rate(&self) -> A {

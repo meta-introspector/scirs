@@ -7,7 +7,7 @@
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_positive, checkshape};
-use scirs2__linalg::{eigh, solve};
+use scirs2_linalg::{eigh, solve};
 use std::collections::BinaryHeap;
 
 use crate::error::{Result, TransformError};

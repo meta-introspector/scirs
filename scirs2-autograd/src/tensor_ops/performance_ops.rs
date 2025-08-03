@@ -232,7 +232,8 @@ pub fn simd_sigmoid<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 #[allow(dead_code)]
 pub fn cache_friendly_matmul<'g, F: Float>(
     left: &Tensor<'g, F>,
-    right: &Tensor<'g, F>, _block_size: Option<usize>,
+    right: &Tensor<'g, F>,
+    _block_size: Option<usize>,
 ) -> Tensor<'g, F> {
     crate::tensor_ops::matmul(left, right)
 }
@@ -241,7 +242,8 @@ pub fn cache_friendly_matmul<'g, F: Float>(
 #[allow(dead_code)]
 pub fn parallel_sum<'g, F: Float>(
     tensor: &Tensor<'g, F>,
-    axes: &[usize], _keep_dims: bool,
+    axes: &[usize],
+    _keep_dims: bool,
 ) -> Tensor<'g, F> {
     let axis = axes.first().copied().unwrap_or(0);
     let g = tensor.graph();

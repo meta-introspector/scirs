@@ -665,7 +665,7 @@ impl<
 
                 // Deflate matrix
                 let outer_prod =
-                    Array2::fromshape_fn((m, n), |(i, j)| u[[i, k]] * s[k] * vt[[k, j]]);
+                    Array2::from_shape_fn((m, n), |(i, j)| u[[i, k]] * s[k] * vt[[k, j]]);
                 a = a - outer_prod;
             }
         }
@@ -3618,8 +3618,8 @@ mod tests {
         kfac.register_layer(layer_info).unwrap();
 
         let activations =
-            Array2::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        let gradients = Array2::fromshape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).unwrap();
+            Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let gradients = Array2::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).unwrap();
 
         assert!(kfac
             .update_covariance_matrices("test_layer", &activations, &gradients)
@@ -3681,9 +3681,9 @@ mod tests {
     #[test]
     fn test_kfac_utils() {
         let input_patches =
-            Array2::fromshape_vec((4, 6), (0..24).map(|x| x as f64).collect()).unwrap();
+            Array2::from_shape_vec((4, 6), (0..24).map(|x| x as f64).collect()).unwrap();
         let output_grads =
-            Array2::fromshape_vec((4, 3), (0..12).map(|x| x as f64 * 0.1).collect()).unwrap();
+            Array2::from_shape_vec((4, 3), (0..12).map(|x| x as f64 * 0.1).collect()).unwrap();
 
         let groups = 2;
         let result = kfac_utils::grouped_conv_kfac(groups, &input_patches, &output_grads);

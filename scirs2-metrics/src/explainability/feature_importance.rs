@@ -894,7 +894,7 @@ fn compute_mutual_information_improved<F: Float + num_traits::FromPrimitive + st
             let p_x = x_hist[i] / n_total;
             let p_y = y_hist[j] / n_total;
 
-            if p_xy > F::zero() && p_x > F::zero() && p_y >, F::zero() {
+            if p_xy > F::zero() && p_x > F::zero() && p_y > F::zero() {
                 let ratio: F = p_xy / (p_x * p_y);
                 mi = mi + p_xy * ratio.ln();
             }

@@ -2212,11 +2212,11 @@ fn generate_stability_test_data(min_val: f64, max_val: f64, size: usize) -> Arra
     for i in 0..size {
         // Mix of different value types for comprehensive testing
         match i % 5 {
-            0 => data[i] = rng.gen_range(min_val..max_val), // Random in range
-            1 => data[i] = min_val,                         // Minimum value
-            2 => data[i] = max_val,                         // Maximum value
-            3 => data[i] = (min_val + max_val) / 2.0,       // Midpoint
-            4 => data[i] = rng.gen_range(min_val..max_val) * 1e-10, // Very small values
+            0 => data[i] = rng.random_range(min_val..max_val), // Random in range
+            1 => data[i] = min_val,                            // Minimum value
+            2 => data[i] = max_val,                            // Maximum value
+            3 => data[i] = (min_val + max_val) / 2.0,          // Midpoint
+            4 => data[i] = rng.random_range(min_val..max_val) * 1e-10, // Very small values
             _ => unreachable!(),
         }
     }

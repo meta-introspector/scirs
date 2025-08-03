@@ -1175,7 +1175,8 @@ impl AdaptiveParameterTuner {
 
     /// Exploit best known parameters from Q-table
     fn exploit_best_parameters(
-        &self..config: OptimizationConfig,
+        &self,
+        config: OptimizationConfig,
         state: &str,) -> Result<OptimizationConfig> {
         // Find best action for current state from Q-table
         let _best_action = self.find_best_action(state);

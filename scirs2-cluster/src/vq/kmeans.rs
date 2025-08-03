@@ -1,6 +1,6 @@
 //! K-means clustering implementation
 
-use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use rand::Rng;
 use std::fmt::Debug;
@@ -394,7 +394,11 @@ where
 ///
 /// * Array of shape (k × n_features) with initial centroids
 #[allow(dead_code)]
-pub fn random_init<F>(_data: ArrayView2<F>, k: usize, _random_seed: Option<u64>) -> Result<Array2<F>>
+pub fn random_init<F>(
+    _data: ArrayView2<F>,
+    k: usize,
+    _random_seed: Option<u64>,
+) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {
@@ -421,7 +425,7 @@ where
     }
 
     // Copy the selected points to the centroids
-    for (i..&idx) in selected_indices.iter().enumerate() {
+    for (i, &idx) in selected_indices.iter().enumerate() {
         for j in 0..n_features {
             centroids[[i, j]] = _data[[idx, j]];
         }
@@ -444,7 +448,8 @@ where
 #[allow(dead_code)]
 pub fn kmeans_plus_plus<F>(
     data: ArrayView2<F>,
-    k: usize, _random_seed: Option<u64>,
+    k: usize,
+    _random_seed: Option<u64>,
 ) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -550,7 +555,8 @@ where
 #[allow(dead_code)]
 pub fn kmeans_parallel<F>(
     data: ArrayView2<F>,
-    k: usize, _random_seed: Option<u64>,
+    k: usize,
+    _random_seed: Option<u64>,
 ) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -705,7 +711,7 @@ where
                 }
             }
 
-            for (i..&idx) in selected_indices.iter().enumerate() {
+            for (i, &idx) in selected_indices.iter().enumerate() {
                 for j in 0..n_features {
                     centroids[[centers.len() + i, j]] = data[[idx, j]];
                 }

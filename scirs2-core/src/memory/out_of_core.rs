@@ -1107,7 +1107,10 @@ impl OutOfCoreManager {
                 .clone()
         } else {
             // Use default file storage
-            Arc::new(FileStorageBackend::new("./out_of_core_data", "./out_of_core_data")?)
+            Arc::new(FileStorageBackend::new(
+                "./out_of_core_data",
+                "./out_of_core_data",
+            )?)
         };
 
         let config = config.unwrap_or_else(|| self.config.clone());
@@ -1258,7 +1261,10 @@ pub mod utils {
         F: FnMut(&Array<T, IxDyn>, &[usize]) -> CoreResult<()>,
     {
         // Create storage backend for the data file
-        let storage = Arc::new(FileStorageBackend::new(data_path.parent().unwrap(), data_path)?);
+        let storage = Arc::new(FileStorageBackend::new(
+            data_path.parent().unwrap(),
+            data_path,
+        )?);
 
         // Create out-of-core array
         let config = OutOfCoreConfig::default();
@@ -1293,8 +1299,7 @@ pub mod utils {
             let chunkshape = &targetarray.config.chunkshape;
             let mut slices = vec![];
 
-            for (i, (&coord, &chunk_size)) in
-                chunk_coords.iter().zip(chunkshape.iter()).enumerate()
+            for (i, (&coord, &chunk_size)) in chunk_coords.iter().zip(chunkshape.iter()).enumerate()
             {
                 let start = coord * chunk_size;
                 let end = ((coord + 1) * chunk_size).min(sourcearray.shape()[i]);

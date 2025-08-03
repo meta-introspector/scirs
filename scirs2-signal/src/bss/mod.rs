@@ -172,10 +172,10 @@ pub fn sort_components(
     for (new_idx, (old_idx_)) in variances.into_iter().enumerate() {
         sorted_sources
             .slice_mut(s![new_idx, ..])
-            .assign(&sources.slice(s![old_idx, ..]));
+            .assign(&sources.slice(s![old_idx_, ..]));
         sorted_mixing
             .slice_mut(s![.., new_idx])
-            .assign(&mixing.slice(s![.., old_idx]));
+            .assign(&mixing.slice(s![.., old_idx_]));
     }
 
     Ok((sorted_sources, sorted_mixing))
@@ -324,7 +324,7 @@ pub fn estimate_source_count(_signals: &Array2<f64>, threshold: f64) -> SignalRe
 
     // Perform eigendecomposition
     let eigvals = match eigh(&cov.view(), None) {
-        Ok((vals_)) => vals,
+        Ok((vals_)) => vals_,
         Err(_) => {
             return Err(SignalError::ComputationError(
                 "Failed to compute eigendecomposition".to_string(),

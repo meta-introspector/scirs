@@ -120,21 +120,21 @@ pub mod quantum_acceleration;
 pub mod simd_gpu;
 
 // Re-export common functionality
-pub use advanced_memory__optimization::{
+pub use advanced_memory_optimization::{
     AdvancedMemoryPool, AllocationStrategy, BlockType, MemoryBlock, MemoryPoolConfig, MemoryStats,
     StrategyBenchmark,
 };
 pub use distributed::{
     DistributedConfig, DistributedMetricsBuilder, DistributedMetricsCoordinator,
 };
-pub use distributed__advanced::{
+pub use distributed_advanced::{
     AdvancedClusterConfig, AdvancedDistributedCoordinator, AutoScalingConfig, ClusterState,
     ConsensusAlgorithm, ConsensusConfig, DistributedTask, FaultToleranceConfig, LocalityConfig,
     NodeInfo, NodeRole, NodeStatus, OptimizationConfig, ResourceRequirements, ShardingConfig,
     ShardingStrategy, TaskPriority, TaskType,
 };
-pub use gpu__acceleration::{BenchmarkResults, GpuAccelConfig, GpuInfo, GpuMetricsComputer};
-pub use gpu__kernels::{
+pub use gpu_acceleration::{BenchmarkResults, GpuAccelConfig, GpuInfo, GpuMetricsComputer};
+pub use gpu_kernels::{
     AdvancedGpuComputer, BatchSettings, CudaContext, ErrorHandling, GpuApi, GpuComputeConfig,
     GpuComputeResults, GpuPerformanceStats, KernelMetrics, KernelOptimization, MemoryStrategy,
     OpenClContext, TransferMetrics, VectorizationLevel,
@@ -146,8 +146,8 @@ pub use hardware::{
 pub use memory::{ChunkedMetrics, StreamingMetric};
 pub use numeric::{StableMetric, StableMetrics};
 pub use parallel::ParallelConfig;
-pub use quantum__acceleration::{
+pub use quantum_acceleration::{
     InterferencePatterns, QuantumBenchmarkResults, QuantumConfig, QuantumMetricsComputer,
     QuantumProcessor, SuperpositionManager, VqeParameters,
 };
-pub use simd__gpu::SimdMetrics;
+pub use simd_gpu::SimdMetrics;

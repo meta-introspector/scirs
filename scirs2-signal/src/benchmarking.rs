@@ -11,6 +11,7 @@
 // - Detailed reporting and visualization
 
 use crate::dwt::{dwt_decompose, Wavelet};
+use num_cpus::get;
 use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, butter_bandpass_bandstop, filtfilt, firwin};
 use crate::lombscargle::lombscargle;
@@ -362,7 +363,7 @@ fn benchmark_memory_optimization(_config: &BenchmarkConfig) -> SignalResult<Vec<
     // Test memory-optimized operations with large signals
     for &size in &_config.signal_sizes {
         if size >= 10000 {
-            results.push(benchmark_memory_optimized_filter(size_config)?);
+            results.push(benchmark_memory_optimized_filter(size)?);
         }
     }
 
@@ -406,13 +407,13 @@ fn benchmark_complete_workflows(_config: &BenchmarkConfig) -> SignalResult<Vec<B
 
     for &size in &_config.signal_sizes {
         // Audio processing workflow
-        results.push(benchmark_audio_processing_workflow(size_config)?);
+        results.push(benchmark_audio_processing_workflow(size)?);
 
         // Biomedical signal analysis workflow
-        results.push(benchmark_biomedical_workflow(size_config)?);
+        results.push(benchmark_biomedical_workflow(size)?);
 
         // Communications workflow
-        results.push(benchmark_communications_workflow(size_config)?);
+        results.push(benchmark_communications_workflow(size)?);
     }
 
     Ok(results)
@@ -1102,7 +1103,7 @@ fn gather_config_info() -> ConfigInfo {
             "AVX: {}, AVX2: {}, AVX512: {}",
             capabilities.simd_available, capabilities.avx2_available, capabilities.avx512_available
         ),
-        cpu_cores: num,
+        cpu_cores: get(),
         _cpus: get(),
         cache_sizes: vec![32768, 262144, 8388608], // L1: 32KB, L2: 256KB, L3: 8MB
         memory_bandwidth: 25.6,                    // GB/s

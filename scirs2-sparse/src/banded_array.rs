@@ -78,7 +78,7 @@ where
             data,
             kl,
             ku,
-            shape: shape,
+            shape,
         }
     }
 
@@ -898,7 +898,7 @@ mod tests {
 
     #[test]
     fn test_banded_array_creation() {
-        let data = Array2::fromshape_vec(
+        let data = Array2::from_shape_vec(
             (3, 4),
             vec![
                 0.0, 1.0, 2.0, 3.0, // Upper diagonal

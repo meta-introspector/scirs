@@ -562,7 +562,8 @@ fn calculate_max_centroid_movement(
 fn interpolate_frames(
     frame1: &AnimationFrame,
     frame2: &AnimationFrame,
-    t: f64, config: &IterativeAnimationConfig,
+    t: f64,
+    config: &IterativeAnimationConfig,
 ) -> Result<AnimationFrame> {
     let t = apply_easing(t, EasingFunction::EaseInOut);
 

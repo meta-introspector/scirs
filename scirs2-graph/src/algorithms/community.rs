@@ -1831,12 +1831,10 @@ where
     E: EdgeWeight + Into<f64> + Send + Sync + Copy,
     Ix: IndexType + Send + Sync,
 {
-    let nodes: Vec<N> = graph.nodesmodularity: 0.0,
-        };
-    }
+    let nodes: Vec<N> = graph.node_indices().map(|idx| graph[idx].clone()).collect();
 
     // Calculate total edge weight
-    let m: f64 = graph.edges(.iter().map(|e| e.weight.into()).sum::<f64>() / 2.0;
+    let m: f64 = graph.edge_indices().map(|idx| graph[idx].into()).sum::<f64>() / 2.0;
 
     if m == 0.0 {
         // No edges, each node is its own community

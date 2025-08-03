@@ -12,8 +12,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::error::{ClusteringError, Result};
 use super::message_passing::RecoveryStrategy;
+use crate::error::{ClusteringError, Result};
 
 /// Worker health monitoring and fault tolerance coordinator
 #[derive(Debug)]
@@ -218,14 +218,14 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
 
         for (&worker_id, health) in &mut self.worker_health {
             let time_since_heartbeat = current_time.saturating_sub(health.last_heartbeat);
-            
+
             if time_since_heartbeat > self.fault_config.worker_timeout_ms {
                 if health.status != WorkerStatus::Failed {
                     health.status = WorkerStatus::Failed;
                     health.consecutive_failures += 1;
                     health.total_failures += 1;
                     newly_failed_workers.push(worker_id);
-                    
+
                     if !self.failed_workers.contains(&worker_id) {
                         self.failed_workers.push(worker_id);
                     }
@@ -240,7 +240,7 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
     fn update_worker_status(&mut self, worker_id: usize) -> Result<()> {
         if let Some(health) = self.worker_health.get_mut(&worker_id) {
             let performance_score = self.calculate_performance_score(health);
-            
+
             let new_status = if performance_score >= self.fault_config.degraded_threshold {
                 WorkerStatus::Healthy
             } else if performance_score >= self.fault_config.failed_threshold {
@@ -252,16 +252,16 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
             // Update status and handle transitions
             if health.status != new_status {
                 match (health.status, new_status) {
-                    (WorkerStatus::Healthy, WorkerStatus::Failed) |
-                    (WorkerStatus::Degraded, WorkerStatus::Failed) => {
+                    (WorkerStatus::Healthy, WorkerStatus::Failed)
+                    | (WorkerStatus::Degraded, WorkerStatus::Failed) => {
                         health.consecutive_failures += 1;
                         health.total_failures += 1;
                         if !self.failed_workers.contains(&worker_id) {
                             self.failed_workers.push(worker_id);
                         }
                     }
-                    (WorkerStatus::Failed, WorkerStatus::Healthy) |
-                    (WorkerStatus::Failed, WorkerStatus::Degraded) => {
+                    (WorkerStatus::Failed, WorkerStatus::Healthy)
+                    | (WorkerStatus::Failed, WorkerStatus::Degraded) => {
                         health.consecutive_failures = 0;
                         self.failed_workers.retain(|&id| id != worker_id);
                     }
@@ -280,19 +280,22 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
 
         // CPU usage component (lower is better)
         if !health.cpu_usage_history.is_empty() {
-            let avg_cpu = health.cpu_usage_history.iter().sum::<f64>() / health.cpu_usage_history.len() as f64;
+            let avg_cpu = health.cpu_usage_history.iter().sum::<f64>()
+                / health.cpu_usage_history.len() as f64;
             score *= (1.0 - (avg_cpu - 0.7).max(0.0) * 2.0); // Penalty for >70% CPU
         }
 
         // Memory usage component (lower is better)
         if !health.memory_usage_history.is_empty() {
-            let avg_memory = health.memory_usage_history.iter().sum::<f64>() / health.memory_usage_history.len() as f64;
+            let avg_memory = health.memory_usage_history.iter().sum::<f64>()
+                / health.memory_usage_history.len() as f64;
             score *= (1.0 - (avg_memory - 0.8).max(0.0) * 3.0); // Penalty for >80% memory
         }
 
         // Response time component (lower is better)
         if !health.response_times.is_empty() {
-            let avg_response = health.response_times.iter().sum::<u64>() as f64 / health.response_times.len() as f64;
+            let avg_response = health.response_times.iter().sum::<u64>() as f64
+                / health.response_times.len() as f64;
             let normalized_response = (avg_response / 1000.0).min(2.0); // Normalize to 0-2 seconds
             score *= (1.0 - normalized_response * 0.3); // Penalty for slow response
         }
@@ -556,7 +559,8 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
         let total_workers = self.worker_health.len();
         let healthy_workers = self.get_healthy_workers().len();
         let failed_workers = self.failed_workers.len();
-        let degraded_workers = self.worker_health
+        let degraded_workers = self
+            .worker_health
             .values()
             .filter(|h| h.status == WorkerStatus::Degraded)
             .count();
@@ -565,7 +569,8 @@ impl<F: Float + Debug> FaultToleranceCoordinator<F> {
             self.worker_health
                 .values()
                 .map(|h| self.calculate_performance_score(h))
-                .sum::<f64>() / self.worker_health.len() as f64
+                .sum::<f64>()
+                / self.worker_health.len() as f64
         } else {
             0.0
         };
@@ -590,7 +595,7 @@ impl WorkerHealthInfo {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_millis() as u64;
-        
+
         let time_since_heartbeat = current_time.saturating_sub(self.last_heartbeat);
         self.status != WorkerStatus::Failed && time_since_heartbeat <= timeout_ms
     }
@@ -654,7 +659,7 @@ mod tests {
     fn test_fault_tolerance_coordinator_creation() {
         let config = FaultToleranceConfig::default();
         let coordinator = FaultToleranceCoordinator::<f64>::new(config);
-        
+
         assert!(coordinator.worker_health.is_empty());
         assert!(coordinator.failed_workers.is_empty());
         assert!(coordinator.fault_config.enabled);
@@ -664,10 +669,13 @@ mod tests {
     fn test_worker_registration() {
         let config = FaultToleranceConfig::default();
         let mut coordinator = FaultToleranceCoordinator::<f64>::new(config);
-        
+
         coordinator.register_worker(1);
         assert!(coordinator.worker_health.contains_key(&1));
-        assert_eq!(coordinator.get_worker_status(1), Some(WorkerStatus::Healthy));
+        assert_eq!(
+            coordinator.get_worker_status(1),
+            Some(WorkerStatus::Healthy)
+        );
     }
 
     #[test]
@@ -697,10 +705,10 @@ mod tests {
     fn test_health_report() {
         let config = FaultToleranceConfig::default();
         let mut coordinator = FaultToleranceCoordinator::<f64>::new(config);
-        
+
         coordinator.register_worker(1);
         coordinator.register_worker(2);
-        
+
         let report = coordinator.get_health_report();
         assert_eq!(report.total_workers, 2);
         assert_eq!(report.healthy_workers, 2);

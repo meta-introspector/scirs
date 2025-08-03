@@ -9,6 +9,7 @@ use scirs2_stats::distributions::{
     beta, binom, chi2, expon, f, gamma, norm, poisson, t, uniform, Beta, Binomial, ChiSquare,
     Exponential, Gamma, Normal, Poisson, StudentT, Uniform, F,
 };
+use scirs2_stats::Distribution;
 use statrs::statistics::Statistics;
 
 /// Benchmark PDF calculations for continuous distributions
@@ -105,7 +106,7 @@ fn bench_random_generation(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("normal", n), &n, |b, &n| {
             let dist = norm(0.0, 1.0).unwrap();
             b.iter(|| {
-                black_box(dist.rvs(n, None));
+                black_box(dist.rvs(n));
             });
         });
 
@@ -113,7 +114,7 @@ fn bench_random_generation(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("uniform", n), &n, |b, &n| {
             let dist = uniform(0.0, 1.0).unwrap();
             b.iter(|| {
-                black_box(dist.rvs(n, None));
+                black_box(dist.rvs(n));
             });
         });
 
@@ -121,7 +122,7 @@ fn bench_random_generation(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("exponential", n), &n, |b, &n| {
             let dist = expon(1.0, 0.0).unwrap();
             b.iter(|| {
-                black_box(dist.rvs(n, None));
+                black_box(dist.rvs(n));
             });
         });
 
@@ -129,7 +130,7 @@ fn bench_random_generation(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("poisson", n), &n, |b, &n| {
             let dist = poisson(3.0, 0.0).unwrap();
             b.iter(|| {
-                black_box(dist.rvs(n, None));
+                black_box(dist.rvs(n));
             });
         });
     }

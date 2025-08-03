@@ -333,7 +333,8 @@ impl TransformerClusterEmbedder {
 
     fn single_head_attention(
         &self,
-        embeddings: &Array2<f64>, _layer_idx: usize,
+        embeddings: &Array2<f64>,
+        _layer_idx: usize,
         head: usize,
         head_dim: usize,
     ) -> Result<Array2<f64>> {
@@ -944,7 +945,8 @@ impl DeepEnsembleCoordinator {
     pub fn coordinate_ensemble(
         &mut self,
         data: &ArrayView2<f64>,
-        embeddings: &Array2<f64>, _base_result: &AdvancedClusteringResult,
+        embeddings: &Array2<f64>,
+        _base_result: &AdvancedClusteringResult,
     ) -> Result<EnsembleConsensus> {
         // Create ensemble predictions
         let mut ensemble_predictions = Vec::new();
@@ -1000,7 +1002,8 @@ impl DeepEnsembleCoordinator {
 
     fn generate_ensemble_prediction(
         &self,
-        data: &ArrayView2<f64>, _embeddings: &Array2<f64>,
+        data: &ArrayView2<f64>,
+        _embeddings: &Array2<f64>,
         seed: usize,
     ) -> Result<Array1<usize>> {
         let n_samples = data.nrows();

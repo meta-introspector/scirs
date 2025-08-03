@@ -344,7 +344,7 @@ where
 
     for (yt, yp) in y_true.iter().zip(y_pred.iter()) {
         // Skip samples where both y_true and y_pred are zero to avoid undefined values
-        if yt.abs() > F::epsilon() || yp.abs() >, F::epsilon() {
+        if yt.abs() > F::epsilon() || yp.abs() > F::epsilon() {
             let percentage_error = ((*yt - *yp).abs()) / (yt.abs() + yp.abs());
             percentage_error_sum = percentage_error_sum + percentage_error;
             valid_samples += 1;

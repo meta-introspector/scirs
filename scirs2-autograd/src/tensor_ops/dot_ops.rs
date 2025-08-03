@@ -99,11 +99,7 @@ fn batch_mat_mul_impl_slow<F: Float>(
 
     let lhsshape = lhs_.shape();
     let rhsshape = rhs_.shape();
-    let (m, k, n) = (
-        lhsshape[rank - 2],
-        lhsshape[rank - 1],
-        rhsshape[rank - 1],
-    );
+    let (m, k, n) = (lhsshape[rank - 2], lhsshape[rank - 1], rhsshape[rank - 1]);
 
     // common parameters for gemm
     let (rsa, csa) = (lhs_strides[rank - 2], lhs_strides[rank - 1]);

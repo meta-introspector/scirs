@@ -16,9 +16,9 @@ mod fowlkes_mallows;
 mod homogeneity;
 mod mutual_information;
 
-pub use adjusted__rand::*;
-pub use fowlkes__mallows::*;
+pub use adjusted_rand::*;
+pub use fowlkes_mallows::*;
 pub use homogeneity::*;
-pub use mutual__information::*;
+pub use mutual_information::*;
 
 // Re-export all public items for backward compatibility

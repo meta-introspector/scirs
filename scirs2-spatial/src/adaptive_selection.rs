@@ -718,7 +718,7 @@ impl AdaptiveAlgorithmSelector {
         }
 
         // Analyze data characteristics
-        let data_characteristics = self.analyze_data_characteristics(data)?;
+        let data_characteristics = self.analyzedata_characteristics(data)?;
 
         // Update resource monitoring
         self.update_resource_monitor().await?;
@@ -883,7 +883,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Analyze data characteristics for pattern matching
-    fn analyze_data_characteristics(
+    fn analyzedata_characteristics(
         &mut self,
         data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<DataCharacteristics> {
@@ -907,7 +907,7 @@ impl AdaptiveAlgorithmSelector {
         };
 
         // Estimate density
-        let density = self.estimate_data_density(data)?;
+        let density = self.estimatedata_density(data)?;
         let density_category = if density < 0.3 {
             DensityCategory::Sparse
         } else if density < 0.7 {
@@ -950,8 +950,8 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Estimate data density
-    fn estimate_data_density(&self, _data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points_, _n_dims) = _data.dim();
+    fn estimatedata_density(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points_, _n_dims) = data.dim();
 
         if n_points_ < 2 {
             return Ok(0.0);
@@ -966,10 +966,10 @@ impl AdaptiveAlgorithmSelector {
 
             for j in 0..n_points_ {
                 if i != j {
-                    let dist: f64 = _data
+                    let dist: f64 = data
                         .row(i)
                         .iter()
-                        .zip(_data.row(j).iter())
+                        .zip(data.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -994,8 +994,8 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Estimate clustering tendency (Hopkins-like statistic)
-    fn estimate_clustering_tendency(&self, _data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points, n_dims) = _data.dim();
+    fn estimate_clustering_tendency(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points, n_dims) = data.dim();
 
         if n_points < 10 {
             return Ok(0.5);
@@ -1010,10 +1010,10 @@ impl AdaptiveAlgorithmSelector {
             let mut min_dist = f64::INFINITY;
             for j in 0..n_points {
                 if i != j {
-                    let dist: f64 = _data
+                    let dist: f64 = data
                         .row(i)
                         .iter()
-                        .zip(_data.row(j).iter())
+                        .zip(data.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -1024,9 +1024,9 @@ impl AdaptiveAlgorithmSelector {
         }
 
         // Random point distances
-        let bounds = self.get_data_bounds(_data);
+        let bounds = self.getdata_bounds(data);
         for _ in 0..sample_size {
-            let random_point: Array1<f64> = Array1::fromshape_fn(n_dims, |i| {
+            let random_point: Array1<f64> = Array1::from_shape_fn(n_dims, |i| {
                 rand::random::<f64>() * (bounds[i].1 - bounds[i].0) + bounds[i].0
             });
 
@@ -1034,7 +1034,7 @@ impl AdaptiveAlgorithmSelector {
             for j in 0..n_points {
                 let dist: f64 = random_point
                     .iter()
-                    .zip(_data.row(j).iter())
+                    .zip(data.row(j).iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum::<f64>()
                     .sqrt();
@@ -1051,8 +1051,8 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Estimate noise level in data
-    fn estimate_noise_level(&self, _data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
-        let (n_points_, n_dims) = _data.dim();
+    fn estimate_noise_level(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points_, n_dims) = data.dim();
 
         if n_points_ < 10 {
             return Ok(0.0);
@@ -1069,10 +1069,10 @@ impl AdaptiveAlgorithmSelector {
 
             for j in 0..n_points_ {
                 if i != j {
-                    let dist: f64 = _data
+                    let dist: f64 = data
                         .row(i)
                         .iter()
-                        .zip(_data.row(j).iter())
+                        .zip(data.row(j).iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
@@ -1160,12 +1160,12 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Get data bounds for each dimension
-    fn get_data_bounds(&self, _data: &ArrayView2<'_, f64>) -> Vec<(f64, f64)> {
-        let (_, n_dims) = _data.dim();
+    fn getdata_bounds(&self, data: &ArrayView2<'_, f64>) -> Vec<(f64, f64)> {
+        let (_, n_dims) = data.dim();
         let mut bounds = Vec::new();
 
         for dim in 0..n_dims {
-            let column = _data.column(dim);
+            let column = data.column(dim);
             let min_val = column.fold(f64::INFINITY, |a, &b| a.min(b));
             let max_val = column.fold(f64::NEG_INFINITY, |a, &b| a.max(b));
             bounds.push((min_val, max_val));
@@ -1470,7 +1470,7 @@ impl AdaptiveAlgorithmSelector {
         tokio::time::sleep(Duration::from_millis(100)).await;
 
         Ok(AlgorithmResult {
-            result_data: data.to_owned(),
+            resultdata: data.to_owned(),
             memory_usage: 1000000,
             accuracy: 0.85,
             execution_details: HashMap::new(),
@@ -1484,7 +1484,7 @@ impl AdaptiveAlgorithmSelector {
         data: &ArrayView2<'_, f64>,
         actual_performance: &ActualPerformance,
     ) -> SpatialResult<()> {
-        let data_characteristics = self.analyze_data_characteristics(data)?;
+        let data_characteristics = self.analyzedata_characteristics(data)?;
 
         let record = PerformanceRecord {
             data_characteristics,
@@ -1585,7 +1585,7 @@ pub struct AlgorithmEvaluation {
 /// Algorithm execution result
 #[derive(Debug)]
 pub struct AlgorithmResult {
-    pub result_data: Array2<f64>,
+    pub resultdata: Array2<f64>,
     pub memory_usage: usize,
     pub accuracy: f64,
     pub execution_details: HashMap<String, String>,
@@ -1638,12 +1638,12 @@ mod tests {
     }
 
     #[test]
-    fn test_data_characteristics() {
+    fn testdata_characteristics() {
         let selector = AdaptiveAlgorithmSelector::new();
         let data = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
 
         let mut selector_mut = selector;
-        let characteristics = selector_mut.analyze_data_characteristics(&data.view());
+        let characteristics = selector_mut.analyzedata_characteristics(&data.view());
         assert!(characteristics.is_ok());
 
         let chars = characteristics.unwrap();

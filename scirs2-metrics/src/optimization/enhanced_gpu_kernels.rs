@@ -807,7 +807,8 @@ impl EnhancedGpuEngine {
         match backend.get_name() {
             "CUDA" => self.generate_cuda_correlation_kernel(n),
             "OpenCL" => self.generate_opencl_correlation_kernel(n),
-            "WebGPU" => self.generate_webgpu_correlation_kernel(n, _ => Err(MetricsError::ComputationError(
+            "WebGPU" => self.generate_webgpu_correlation_kernel(n),
+            _ => Err(MetricsError::ComputationError(
                 "Unsupported backend for kernel generation".to_string(),
             )),
         }
@@ -1589,19 +1590,19 @@ impl GpuBackend for CudaBackend {
         })
     }
 
-    fn copy_to_gpu(&self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
         // Simulate memory copy
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn copy_from_gpu(&self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
         // Simulate memory copy
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn execute_kernel(&self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
+    fn execute_kernel(self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
         // Simulate _kernel execution
         std::thread::sleep(Duration::from_micros(10));
         Ok(())
@@ -1691,17 +1692,17 @@ impl GpuBackend for OpenClBackend {
         })
     }
 
-    fn copy_to_gpu(&self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn copy_from_gpu(&self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(1));
         Ok(())
     }
 
-    fn execute_kernel(&self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
+    fn execute_kernel(self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
         std::thread::sleep(Duration::from_micros(10));
         Ok(())
     }
@@ -1785,17 +1786,17 @@ impl GpuBackend for WebGpuBackend {
         })
     }
 
-    fn copy_to_gpu(&self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
+    fn copy_to_gpu(self_handle: &GpuMemoryHandle, _data: &[f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(2));
         Ok(())
     }
 
-    fn copy_from_gpu(&self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
+    fn copy_from_gpu(self_handle: &GpuMemoryHandle, _data: &mut [f32]) -> Result<()> {
         std::thread::sleep(Duration::from_micros(2));
         Ok(())
     }
 
-    fn execute_kernel(&self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
+    fn execute_kernel(self_kernel: &ComputeKernel, _params: &KernelParams) -> Result<()> {
         std::thread::sleep(Duration::from_micros(15));
         Ok(())
     }

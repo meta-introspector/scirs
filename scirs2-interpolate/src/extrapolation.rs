@@ -687,7 +687,8 @@ impl<T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign>
             ExtrapolationMethod::Cubic => T::from(3.0).unwrap_or_default(),
             ExtrapolationMethod::Akima => T::from(1.5).unwrap_or_default(), // Good stability
             ExtrapolationMethod::Exponential => T::from(4.0).unwrap_or_default(),
-            ExtrapolationMethod::PowerLaw => T::from(4.0).unwrap_or_default(, _ => T::from(5.0).unwrap_or_default(), // Other methods
+            ExtrapolationMethod::PowerLaw => T::from(4.0).unwrap_or_default(),
+            _ => T::from(5.0).unwrap_or_default(), // Other methods
         };
 
         // Penalize methods more as distance increases
@@ -1453,7 +1454,8 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
                     }
                 }
                 ExtrapolationMethod::Cubic => self.cubic_extrapolation(x, direction)?,
-                ExtrapolationMethod::Exponential => self.exponential_extrapolation(x, direction)?_ => self.linear_extrapolation(x, direction)?, // fallback
+                ExtrapolationMethod::Exponential => self.exponential_extrapolation(x, direction)?,
+                _ => self.linear_extrapolation(x, direction)?, // fallback
             };
 
             weighted_sum = weighted_sum + value * (*weight);

@@ -5,8 +5,8 @@
 
 use super::Dataset;
 use ndarray::{Array1, Array2};
-use std::error::Error;
 use statrs::statistics::Statistics;
+use std::error::Error;
 
 /// Correlation insights from dataset analysis
 #[derive(Debug, Clone)]

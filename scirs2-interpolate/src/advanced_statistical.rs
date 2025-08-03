@@ -175,7 +175,8 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
         match self.config.basis_type {
             BasisType::BSpline => self.generate_bspline_basis()?,
             BasisType::Fourier => self.generate_fourier_basis()?,
-            BasisType::Polynomial => self.generate_polynomial_basis()?_ => {
+            BasisType::Polynomial => self.generate_polynomial_basis()?,
+            _ => {
                 return Err(InterpolateError::ComputationError(
                     "Basis type not implemented".to_string(),
                 ))

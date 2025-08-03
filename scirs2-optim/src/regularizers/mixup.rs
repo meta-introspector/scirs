@@ -459,7 +459,7 @@ mod tests {
         let cutmix = CutMix::new(1.0).unwrap();
 
         // Create 2 5x5 images with 1 channel (larger for more reliable mixing)
-        let images = Array4::fromshape_fn(
+        let images = Array4::from_shape_fn(
             (2, 1, 5, 5),
             |(i_y_x)| {
                 if i == 0 {

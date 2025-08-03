@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let a = 10.0;
         let two_pi = 2.0 * std::f64::consts::PI;
 
-        Array1::fromshape_fn(x.len(), |i| 2.0 * x[i] + a * two_pi * (two_pi * x[i]).sin())
+        Array1::from_shape_fn(x.len(), |i| 2.0 * x[i] + a * two_pi * (two_pi * x[i]).sin())
     };
 
     // Initial parameters (starting away from the minimum)

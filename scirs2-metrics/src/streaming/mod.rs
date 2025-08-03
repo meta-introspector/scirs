@@ -56,7 +56,7 @@ use std::collections::VecDeque;
 
 // Re-export advanced streaming capabilities
 pub mod advanced_streaming;
-pub use advanced__streaming::{
+pub use advanced_streaming::{
     AdaptiveStreamingMetrics, AdwinDetector, AlertSeverity, AnomalyDetectionAlgorithm,
     AnomalySummary, ConceptDriftDetector, DdmDetector, DriftDetectionMethod, DriftStatus,
     PageHinkleyDetector, StreamingConfig, UpdateResult, WindowAdaptationStrategy,
@@ -105,7 +105,8 @@ impl StreamingClassificationMetrics {
             (1, 1) => self.true_positives += 1,
             (0, 1) => self.false_positives += 1,
             (0, 0) => self.true_negatives += 1,
-            (1, 0) => self.false_negatives += 1_ => {} // Handle multi-class later
+            (1, 0) => self.false_negatives += 1,
+            _ => {} // Handle multi-class later
         }
     }
 

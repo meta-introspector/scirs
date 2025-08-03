@@ -63,9 +63,9 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
             ));
         }
 
-        let degree = control_points.shape()[0] - 1;
+        let degree = _control_points.shape()[0] - 1;
         Ok(BezierCurve {
-            control_points: control_points.to_owned(),
+            control_points: _control_points.to_owned(),
             degree,
         })
     }
@@ -90,7 +90,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     ///
     /// A point on the Bezier curve at parameter t
     pub fn evaluate(&self, t: F) -> InterpolateResult<Array1<F>> {
-        if t < F::zero() || t >, F::one() {
+        if t < F::zero() || t > F::one() {
             return Err(InterpolateError::OutOfBounds(format!(
                 "Parameter t must be in [0, 1], got {}",
                 t
@@ -183,7 +183,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierCurve<F> {
     ///
     /// A tuple of two Bezier curves: (left part, right part)
     pub fn split(&self, t: F) -> InterpolateResult<(Self, Self)> {
-        if t < F::zero() || t >, F::one() {
+        if t < F::zero() || t > F::one() {
             return Err(InterpolateError::OutOfBounds(format!(
                 "Parameter t must be in [0, 1], got {}",
                 t
@@ -316,20 +316,20 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
             ));
         }
 
-        if control_points.shape()[0] != nu * nv {
+        if _control_points.shape()[0] != nu * nv {
             return Err(InterpolateError::invalid_input(format!(
                 "Expected {} control _points for a {}x{} grid, got {}",
                 nu * nv,
                 nu,
                 nv,
-                control_points.shape()[0]
+                _control_points.shape()[0]
             )));
         }
 
-        let dim = control_points.shape()[1];
+        let dim = _control_points.shape()[1];
 
         Ok(BezierSurface {
-            control_points: control_points.to_owned(),
+            control_points: _control_points.to_owned(),
             nu,
             nv,
             dim,
@@ -357,7 +357,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
     ///
     /// A point on the Bezier surface at parameters (u, v)
     pub fn evaluate(&self, u: F, v: F) -> InterpolateResult<Array1<F>> {
-        if u < F::zero() || u > F::one() || v < F::zero() || v >, F::one() {
+        if u < F::zero() || u > F::one() || v < F::zero() || v > F::one() {
             return Err(InterpolateError::OutOfBounds(format!(
                 "Parameters (u,v) must be in [0, 1]x[0, 1], got ({}, {})",
                 u, v
@@ -534,7 +534,7 @@ pub fn bernstein<F: Float + FromPrimitive + std::fmt::Display>(
         )));
     }
 
-    if t < F::zero() || t >, F::one() {
+    if t < F::zero() || t > F::one() {
         return Err(InterpolateError::OutOfBounds(format!(
             "Parameter t must be in [0, 1], got {}",
             t

@@ -5,7 +5,7 @@
 //! graph representations where nodes represent data points and edges represent
 //! similarities or connections between them.
 
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Debug;
@@ -216,7 +216,11 @@ impl<F: Float + FromPrimitive + Debug> Graph<F> {
 /// let communities = louvain(&graph, 1.0, 100).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn louvain<F>(_graph: &Graph<F>, resolution: f64, max_iterations: usize) -> Result<Array1<usize>>
+pub fn louvain<F>(
+    _graph: &Graph<F>,
+    resolution: f64,
+    max_iterations: usize,
+) -> Result<Array1<usize>>
 where
     F: Float + FromPrimitive + Debug + 'static,
     f64: From<F>,

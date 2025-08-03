@@ -22,7 +22,6 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "serde-support")]
 use serde_json;
-use std::path::PathBuf;
 
 /// Hugging Face model configuration format
 #[derive(Debug, Clone)]

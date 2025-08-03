@@ -777,7 +777,7 @@ where
     /// Perform local RBF interpolation
     fn interpolate_local_rbf(
         &self,
-        neighbors: &[(usize, F)]_rbf_type: &LocalRBFType,
+        neighbors: &[(usize, F)], _rbf_type: &LocalRBFType,
     ) -> InterpolateResult<F> {
         // Simplified RBF interpolation
         let mut sum = F::zero();

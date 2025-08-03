@@ -97,8 +97,7 @@ mod tests {
     fn test_chunked_lazy_disk_workflow() {
         // Create a larger test matrix
         let n = 20;
-        let data =
-            Array2::fromshape_fn((n, n), |(i, j)| if i == j { (i + 1) as f64 } else { 0.0 });
+        let data = Array2::fromshape_fn((n, n), |(i, j)| if i == j { (i + 1) as f64 } else { 0.0 });
 
         // Workflow test:
         // 1. Process in chunks

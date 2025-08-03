@@ -87,7 +87,7 @@ impl PatchExtractor {
             for patch_idx in 0..n_patches {
                 let i = rng.gen_range(0..n_patches_h);
                 let j = rng.gen_range(0..n_patches_w);
-                let patch = image.slice(s![i..i + patch_height..j..j + patch_width]);
+                let patch = image.slice(s![i..i + patch_height, j..j + patch_width]);
                 patches.slice_mut(s![patch_idx, .., ..]).assign(&patch);
             }
         }

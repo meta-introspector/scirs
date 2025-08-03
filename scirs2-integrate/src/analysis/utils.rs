@@ -8,7 +8,7 @@ use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 
 /// Compute determinant of a square matrix using LU decomposition
-pub fn compute_determinant(_matrix: &Array2<f64>) -> f64 {
+pub fn compute_determinant(matrix: &Array2<f64>) -> f64 {
     let n = matrix.nrows();
     if n != matrix.ncols() {
         return 0.0; // Not square
@@ -60,13 +60,13 @@ pub fn compute_determinant(_matrix: &Array2<f64>) -> f64 {
 }
 
 /// Compute trace of a matrix (sum of diagonal elements)
-pub fn compute_trace(_matrix: &Array2<f64>) -> f64 {
+pub fn compute_trace(matrix: &Array2<f64>) -> f64 {
     let n = std::cmp::min(matrix.nrows(), matrix.ncols());
     (0..n).map(|i| matrix[[i, i]]).sum()
 }
 
 /// Estimate the rank of a matrix using QR-like decomposition
-pub fn estimate_matrix_rank(_matrix: &Array2<f64>, tolerance: f64) -> usize {
+pub fn estimate_matrix_rank(matrix: &Array2<f64>, tolerance: f64) -> usize {
     // Simplified rank estimation using QR decomposition
     let (m, n) = matrix.dim();
     let mut a = matrix.clone();

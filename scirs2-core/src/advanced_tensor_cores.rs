@@ -4404,12 +4404,12 @@ mod gpu_implementation {
 
             // Add bipartite entanglement
             let result =
-                optimizer.add_entanglement_pattern(vec![0, 1], 0.5, EntanglementType::Bipartite);
+                optimizer.add_entanglement(vec![0, 1], 0.5, EntanglementType::Bipartite);
             assert!(result.is_ok());
 
             // Add GHZ entanglement
             let result =
-                optimizer.add_entanglement_pattern(vec![2, 3, 4], 0.8, EntanglementType::GHZ);
+                optimizer.add_entanglement(vec![2, 3, 4], 0.8, EntanglementType::GHZ);
             assert!(result.is_ok());
 
             assert_eq!(optimizer.entanglement_patterns.len(), 2);

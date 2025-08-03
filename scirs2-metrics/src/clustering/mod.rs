@@ -34,7 +34,7 @@ pub mod validation;
 pub use self::density::*;
 pub use self::distance::*;
 pub use self::evaluation::{dunn_index_enhanced, elbow_method};
-pub use self::external__metrics::*;
+pub use self::external_metrics::*;
 pub use self::internal__metrics::*;
 pub use self::validation::*;
 

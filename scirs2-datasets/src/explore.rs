@@ -321,7 +321,8 @@ impl DatasetExplorer {
                 }
                 "5" => self.display_quality_assessment(&summary.quality_assessment)?,
                 "6" => self.export_summary(&summary)?,
-                "q" | "quit" | "exit" => break_ => println!("Invalid command. Please try again."),
+                "q" | "quit" | "exit" => break,
+                _ => println!("Invalid command. Please try again."),
             }
         }
 
@@ -491,7 +492,8 @@ impl DatasetExplorer {
             match unique_values.len() {
                 1 => InferredDataType::Unknown, // Constant
                 2 => InferredDataType::Binary,
-                3..=20 => InferredDataType::Categorical_ => InferredDataType::Numerical,
+                3..=20 => InferredDataType::Categorical,
+                _ => InferredDataType::Numerical,
             }
         } else {
             InferredDataType::Numerical
@@ -690,7 +692,10 @@ impl DatasetExplorer {
             issues.push(QualityIssue {
                 issue_type: IssueType::MissingData,
                 severity,
-                description: format!("{:.1}% of _data is missing", missing_data.missing_percentage),
+                description: format!(
+                    "{:.1}% of _data is missing",
+                    missing_data.missing_percentage
+                ),
                 affected_features: missing_data
                     .feature_missing
                     .iter()
@@ -1052,7 +1057,7 @@ impl DatasetExplorer {
 
         if let Ok(index) = input.parse::<usize>() {
             if index > 0 && index <= statistics.features.len() {
-                let feature = ""&statistics.features[index - 1];
+                let feature = "" & statistics.features[index - 1];
                 self.display_feature_detail(feature, dataset)?;
             } else {
                 println!("Invalid feature number.");
@@ -1211,10 +1216,11 @@ pub mod convenience {
 
         let content = match output_format {
             OutputFormat::Json => serde_json::to_string_pretty(&summary)
-                .map_err(|e| DatasetsError::SerdeError(e.to_string()))?_ => {
+                .map_err(|e| DatasetsError::SerdeError(e.to_string()))?,
+            _ => {
                 return Err(DatasetsError::InvalidFormat(
                     "Only JSON export is currently supported in convenience function".to_string(),
-                ))
+                ));
             }
         };
 

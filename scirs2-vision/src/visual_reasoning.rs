@@ -927,7 +927,8 @@ impl VisualReasoningEngine {
             match object.class.as_str() {
                 "person" => activities.push("human_activity".to_string()),
                 "car" => activities.push("transportation".to_string()),
-                "chair" => activities.push("sitting_area".to_string(), _ => {}
+                "chair" => activities.push("sitting_area".to_string()),
+                _ => {}
             }
         }
 

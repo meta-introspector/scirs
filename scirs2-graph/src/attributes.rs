@@ -31,7 +31,7 @@ pub enum AttributeValue {
 impl AttributeValue {
     /// Create a string attribute
     pub fn string<S: Into<String>>(value: S) -> Self {
-        AttributeValue::String(_value.into())
+        AttributeValue::String(value.into())
     }
 
     /// Create an integer attribute
@@ -52,7 +52,7 @@ impl AttributeValue {
     /// Create a JSON attribute from any serializable type
     pub fn json<T: Serialize>(value: &T) -> Result<Self> {
         let json_value =
-            serde_json::to_value(_value).map_err(|_| GraphError::SerializationError {
+            serde_json::to_value(value).map_err(|_| GraphError::SerializationError {
                 format: "JSON".to_string(),
                 details: "Failed to serialize to JSON".to_string(),
             })?;
@@ -62,28 +62,32 @@ impl AttributeValue {
     /// Get the attribute as a string
     pub fn as_string(&self) -> Option<&str> {
         match self {
-            AttributeValue::String(s) => Some(s, _ => None,
+            AttributeValue::String(s) => Some(s),
+            _ => None,
         }
     }
 
     /// Get the attribute as an integer
     pub fn as_integer(&self) -> Option<i64> {
         match self {
-            AttributeValue::Integer(i) => Some(*i, _ => None,
+            AttributeValue::Integer(i) => Some(*i),
+            _ => None,
         }
     }
 
     /// Get the attribute as a float
     pub fn as_float(&self) -> Option<f64> {
         match self {
-            AttributeValue::Float(f) => Some(*f, _ => None,
+            AttributeValue::Float(f) => Some(*f),
+            _ => None,
         }
     }
 
     /// Get the attribute as a boolean
     pub fn as_boolean(&self) -> Option<bool> {
         match self {
-            AttributeValue::Boolean(b) => Some(*b, _ => None,
+            AttributeValue::Boolean(b) => Some(*b),
+            _ => None,
         }
     }
 
@@ -198,10 +202,10 @@ impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType
     /// Create an attributed graph from an existing graph
     pub fn from_graph(_graph: Graph<N, E, Ix>) -> Self {
         AttributedGraph {
-            _graph,
+            graph,
             node_attributes: HashMap::new(),
             edge_attributes: HashMap::new(),
-            _graph_attributes: HashMap::new(),
+            graph_attributes: HashMap::new(),
         }
     }
 
@@ -520,10 +524,10 @@ impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType
     /// Create an attributed directed graph from an existing directed graph
     pub fn from_digraph(_graph: DiGraph<N, E, Ix>) -> Self {
         AttributedDiGraph {
-            _graph,
+            graph,
             node_attributes: HashMap::new(),
             edge_attributes: HashMap::new(),
-            _graph_attributes: HashMap::new(),
+            graph_attributes: HashMap::new(),
         }
     }
 
@@ -688,7 +692,7 @@ pub struct AttributeView<'a, N: Node> {
 impl<'a, N: Node> AttributeView<'a, N> {
     /// Create a new attribute view
     pub fn new(_attributes: &'a HashMap<N, Attributes>) -> Self {
-        AttributeView { _attributes }
+        AttributeView { attributes: _attributes }
     }
 
     /// Find nodes with numeric attributes in a range
@@ -699,7 +703,8 @@ impl<'a, N: Node> AttributeView<'a, N> {
                 if let Some(attr_value) = attrs.get(key) {
                     let numeric_value = match attr_value {
                         AttributeValue::Integer(i) => Some(*i as f64),
-                        AttributeValue::Float(f) => Some(*f, _ => None,
+                        AttributeValue::Float(f) => Some(*f),
+                        _ => None,
                     };
 
                     if let Some(value) = numeric_value {

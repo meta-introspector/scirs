@@ -25,7 +25,7 @@ impl QuantumVisualizer {
         Ok(HeatMapPlot {
             x: x.clone(),
             y: Array1::from_elem(1, 0.0), // 1D visualization
-            z: Array2::fromshape_vec((1, probability_density.len()), probability_density.to_vec())
+            z: Array2::from_shape_vec((1, probability_density.len()), probability_density.to_vec())
                 .map_err(|e| IntegrateError::ComputationError(format!("Shape error: {e}")))?,
             metadata,
         })

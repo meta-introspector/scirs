@@ -9,7 +9,6 @@ use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 use std::collections::HashMap;
 
 use crate::error::{MetricsError, Result};
-use rand::seq::SliceRandom;
 
 /// Type alias for the train-test split result
 pub type TrainTestSplitResult<T> = (Vec<Array1<T>>, Vec<Array1<T>>);

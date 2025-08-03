@@ -12,8 +12,8 @@ use crate::gpu::GpuBackend as LocalGpuBackend;
 // Parallel operations will be added as needed
 // #[cfg(feature = "parallel")]
 // use scirs2_core::parallel_ops::*;
-use std::f64::consts::PI;
 use rand::seq::SliceRandom;
+use std::f64::consts::PI;
 
 /// Generate a random classification dataset with clusters
 #[allow(dead_code)]
@@ -1672,7 +1672,8 @@ fn generate_classification_chunk_gpu(
     n_classes: usize,
     n_clusters_per_class: usize,
     n_informative: usize,
-    random_seed: Option<u64>, _use_single_precision: bool,
+    random_seed: Option<u64>,
+    _use_single_precision: bool,
 ) -> Result<(Vec<f64>, Vec<f64>)> {
     // For now, implement using GPU matrix operations
     // In a real implementation, this would use custom GPU kernels
@@ -1703,7 +1704,8 @@ fn generate_classification_chunk_gpu(
             n_classes,
             n_clusters_per_class,
             n_informative,
-            &mut rng,);
+            &mut rng,
+        );
     }
 
     // CPU fallback: Generate _samples in parallel chunks
@@ -2945,9 +2947,12 @@ pub fn make_manifold(_config: ManifoldConfig) -> Result<Dataset> {
         ManifoldType::TwinPeaks => {
             make_twin_peaks(_config.n_samples, _config.noise, _config.random_seed)
         }
-        ManifoldType::Helix { n_turns } => {
-            make_helix(_config.n_samples, n_turns, _config.noise, _config.random_seed)
-        }
+        ManifoldType::Helix { n_turns } => make_helix(
+            _config.n_samples,
+            n_turns,
+            _config.noise,
+            _config.random_seed,
+        ),
         ManifoldType::IntersectingManifolds => {
             make_intersecting_manifolds(_config.n_samples, _config.noise, _config.random_seed)
         }
@@ -3259,8 +3264,7 @@ mod tests {
 
     #[test]
     fn test_inject_missing_data_mcar() {
-        let mut data =
-            Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+        let mut data = Array2::fromshape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let original_data = data.clone();
 
         let missing_mask =

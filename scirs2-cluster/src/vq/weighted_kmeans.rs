@@ -3,7 +3,7 @@
 //! This module provides K-means clustering with support for weighted samples,
 //! where each data point can have a different importance weight.
 
-use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use rand::Rng;
 use std::fmt::Debug;
@@ -299,7 +299,8 @@ where
 pub fn weighted_kmeans_plus_plus<F>(
     data: ArrayView2<F>,
     weights: ArrayView1<F>,
-    k: usize, _random_seed: Option<u64>,
+    k: usize,
+    _random_seed: Option<u64>,
 ) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -413,7 +414,7 @@ where
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
-    use ndarray::{ArrayView1, Array1, Array2};
+    use ndarray::{Array1, Array2, ArrayView1};
 
     #[test]
     fn test_weighted_kmeans_simple() {

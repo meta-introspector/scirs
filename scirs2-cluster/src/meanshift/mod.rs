@@ -1,4 +1,4 @@
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -6,12 +6,12 @@ use std::hash::{Hash, Hasher};
 use std::marker::{Send, Sync};
 
 use crate::error::ClusteringError;
+use scirs2__spatial::distance::EuclideanDistance;
+use scirs2__spatial::kdtree::KDTree;
 use scirs2_core::validation::{
     check_array_finite, check_positive, clustering::validate_clustering_data,
     parameters::check_unit_interval,
 };
-use scirs2__spatial::distance::EuclideanDistance;
-use scirs2__spatial::kdtree::KDTree;
 
 /// Configuration options for Mean Shift algorithm
 pub struct MeanShiftOptions<T: Float> {
@@ -123,7 +123,8 @@ impl<T: Float> Hash for FloatPoint<T> {
 pub fn estimate_bandwidth<T: Float + Display + FromPrimitive + Send + Sync + 'static>(
     data: &ArrayView2<T>,
     quantile: Option<T>,
-    n_samples: Option<usize>, _random_state: Option<u64>,
+    n_samples: Option<usize>,
+    _random_state: Option<u64>,
 ) -> Result<T, ClusteringError> {
     // Check that all data is finite
     check_array_finite(data, "data")?;
@@ -652,7 +653,7 @@ impl<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{ArrayView1, array, Array2};
+    use ndarray::{array, Array2, ArrayView1};
     use std::collections::HashSet;
 
     #[test]

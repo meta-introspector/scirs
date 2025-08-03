@@ -1379,7 +1379,7 @@ pub fn save_leader<P: AsRef<Path>>(
 
 /// Convenience function to save Leader tree results directly
 #[allow(dead_code)]
-pub fn save_leader_tree<P: AsRef<Path>, F: num_traits:: Float>(
+pub fn save_leader_tree<P: AsRef<Path>, F: num_traits::Float>(
     path: P,
     tree: &LeaderTree<F>,
 ) -> Result<()>
@@ -1826,7 +1826,7 @@ pub mod compatibility {
 
         let metadata = model.get_metadata();
         let model_data = model.export_to_string(ExportFormat::Json)?;
-        let model_json: serde_json:: Value = serde_json::from_str(&model_data)?;
+        let model_json: serde_json::Value = serde_json::from_str(&model_data)?;
 
         Ok(_json!({
             "sklearn_version": "1.0.0",
@@ -1906,7 +1906,7 @@ pub mod compatibility {
     }
 
     /// Convert from NumPy-compatible format
-    pub fn from_numpy_format(_numpy_data: &serde_json:: Value) -> Result<Array2<f64>> {
+    pub fn from_numpy_format(_numpy_data: &serde_json::Value) -> Result<Array2<f64>> {
         let _data: Vec<f64> = _numpy_data["_data"]
             .as_array()
             .ok_or_else(|| ClusteringError::InvalidInput("Missing _data field".to_string()))?
@@ -2038,7 +2038,7 @@ pub mod compatibility {
 
     /// Import from scikit-learn compatible format
     pub fn from_sklearn_format<T: SerializableModel>(
-        sklearn_data: &serde_json:: Value,
+        sklearn_data: &serde_json::Value,
     ) -> Result<T> {
         if let Some(model_data) = sklearn_data.get("model_data") {
             let model_str = serde_json::to_string(model_data)?;
@@ -2086,7 +2086,7 @@ pub mod compatibility {
 
         let metadata = model.get_metadata();
         let model_data = model.export_to_string(ExportFormat::Json)?;
-        let model_json: serde_json:: Value = serde_json::from_str(&model_data)?;
+        let model_json: serde_json::Value = serde_json::from_str(&model_data)?;
 
         Ok(_json!({
             "pytorch_lightning_version": "1.6.0",
@@ -2309,7 +2309,8 @@ pub mod compatibility {
         model: &T,
         compress: bool,
     ) -> Result<Vec<u8>> {
-        let sklearn_data = compatibility::crate::serialization::compatibility::to_sklearn_format(model)?;
+        let sklearn_data =
+            compatibility::crate::serialization::compatibility::to_sklearn_format(model)?;
 
         if compress {
             enhanced::serialize_with_format(&sklearn_data, ExportFormat::CompressedJson)
@@ -2326,7 +2327,7 @@ pub mod compatibility {
             ExportFormat::Json
         };
 
-        let sklearn_data: serde_json:: Value = enhanced::deserialize_with_format(_data, format)?;
+        let sklearn_data: serde_json::Value = enhanced::deserialize_with_format(_data, format)?;
         from_sklearn_format(&sklearn_data)
     }
 
@@ -2402,7 +2403,8 @@ pub mod compatibility {
     ) -> Result<Vec<u8>> {
         // Create a pickle-like format using binary serialization
         // This is a simplified version - real pickle compatibility would need more work
-        let sklearn_data = compatibility::crate::serialization::compatibility::to_sklearn_format(model)?;
+        let sklearn_data =
+            compatibility::crate::serialization::compatibility::to_sklearn_format(model)?;
         enhanced::serialize_with_format(&sklearn_data, ExportFormat::Binary)
     }
 
@@ -2741,7 +2743,11 @@ pub mod persistence {
 
     impl BatchModelProcessor {
         /// Create a new batch processor
-        pub fn new<P: Into<PathBuf>>(target_directory: P, directory: P, config: BatchConfig) -> Self {
+        pub fn new<P: Into<PathBuf>>(
+            target_directory: P,
+            directory: P,
+            config: BatchConfig,
+        ) -> Self {
             Self {
                 target_directory: _target_directory.into(),
                 config,
@@ -2887,7 +2893,8 @@ pub mod persistence {
         pub fn convert_batch(
             &self,
             input_dir: &Path,
-            from_format: ExportFormat_to, _format: ExportFormat,
+            from_format: ExportFormat_to,
+            _format: ExportFormat,
         ) -> Result<usize> {
             let mut converted_count = 0;
 
@@ -2904,7 +2911,10 @@ pub mod persistence {
                         if extension == format_extension(from_format) {
                             // Read and convert
                             let _content = std::fs::read(&path).map_err(|e| {
-                                ClusteringError::InvalidInput(_format!("Failed to read file: {}", e))
+                                ClusteringError::InvalidInput(_format!(
+                                    "Failed to read file: {}",
+                                    e
+                                ))
                             })?;
 
                             // This is a simplified conversion - in practice, you'd need to know the model type
@@ -3268,7 +3278,7 @@ pub enum AlgorithmState {
         parameters: HashMap<String, serde_json::Value>,
         iteration: usize,
         completed: bool,
-        state_data: serde_json:: Value,
+        state_data: serde_json::Value,
     },
 }
 
@@ -3316,7 +3326,7 @@ impl ClusteringWorkflow {
                 parameters: HashMap::new(),
                 iteration: 0,
                 completed: false,
-                state_data: serde_json:: Value::Null,
+                state_data: serde_json::Value::Null,
             },
             data_hash: String::new(),
             training_history: Vec::new(),
@@ -3574,7 +3584,7 @@ impl HierarchicalModel {
 
     /// Build JSON tree structure for dendrogram
     fn build_json_tree_structure(&self) -> Result<serde_json::Value> {
-        use serde__json::{_json, Value};
+        use serde__json::{Value, _json};
 
         let n_samples = self.n_observations;
         let linkage = &self.linkage;
@@ -3686,7 +3696,7 @@ pub mod compatibility {
         let content = std::fs::read_to_string(_path)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to read file: {}", e)))?;
 
-        let json_value: serde_json:: Value = serde_json::from_str(&content)
+        let json_value: serde_json::Value = serde_json::from_str(&content)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to parse JSON: {}", e)))?;
 
         parse_sklearn_json_format(&json_value)
@@ -3697,7 +3707,7 @@ pub mod compatibility {
         let content = std::fs::read_to_string(_path)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to read file: {}", e)))?;
 
-        let json_value: serde_json:: Value = serde_json::from_str(&content)
+        let json_value: serde_json::Value = serde_json::from_str(&content)
             .map_err(|e| ClusteringError::InvalidInput(format!("Failed to parse JSON: {}", e)))?;
 
         parse_scipy_json_format(&json_value)
@@ -3708,7 +3718,8 @@ pub mod compatibility {
         model: &T,
         path: &Path,
     ) -> Result<()> {
-        let sklearn_format = compatibility::crate::serialization::compatibility::to_sklearn_format(model)?;
+        let sklearn_format =
+            compatibility::crate::serialization::compatibility::to_sklearn_format(model)?;
         let json_string = serde_json::to_string_pretty(&sklearn_format).map_err(|e| {
             ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e))
         })?;
@@ -3747,7 +3758,10 @@ fn parse_sklearn_json_format(_json: &serde, json: Value) -> Result<KMeansModel> 
 
     let n_iter = _json.get("n_iter_").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
 
-    let inertia = _json.get("inertia_").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let inertia = _json
+        .get("inertia_")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
 
     // Parse centroids array
     let centroids_data = cluster_centers.as_array().ok_or_else(|| {

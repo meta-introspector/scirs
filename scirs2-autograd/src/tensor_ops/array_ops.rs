@@ -1,8 +1,8 @@
 use crate::ndarray;
-use crate::ndarray_ext;
 #[cfg(feature = "blas")]
 use crate::ndarray__ext::NdArrayViewMut;
 use crate::ndarray__ext::{NdArray, NdArrayView};
+use crate::ndarray_ext;
 use crate::op;
 use crate::tensor::Tensor;
 use crate::tensor__ops::*;

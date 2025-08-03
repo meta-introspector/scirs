@@ -1234,7 +1234,7 @@ mod tests {
             points_data.push(rng.gen_range(0.0..1.0));
         }
 
-        let points = Array2::fromshape_vec((n, 2), points_data).unwrap();
+        let points = Array2::from_shape_vec((n, 2), points_data).unwrap();
 
         let tri = Delaunay::new(&points).unwrap();
 

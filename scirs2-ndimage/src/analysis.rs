@@ -156,7 +156,7 @@ where
         ));
     }
 
-    let twenty: T = safe_f64, _to_float: <T>(20.0)?;
+    let twenty: T = safe_f64_to_float::<T>(20.0)?;
     let psnr = twenty * (max_val * max_val / mse).log10();
     Ok(psnr)
 }
@@ -179,8 +179,8 @@ where
         + 'static,
 {
     // SSIM constants
-    let k1: T = safe_f64, _to_float: <T>(0.01)?;
-    let k2: T = safe_f64, _to_float: <T>(0.03)?;
+    let k1: T = safe_f64_to_float::<T>(0.01)?;
+    let k2: T = safe_f64_to_float::<T>(0.03)?;
     let c1: T = k1 * k1; // (K1 * L)^2
     let c2: T = k2 * k2; // (K2 * L)^2
 
@@ -204,7 +204,7 @@ where
         / safe_usize_to_float(reference.len())?;
 
     // Compute SSIM
-    let two: T = safe_f64, _to_float: <T>(2.0)?;
+    let two: T = safe_f64_to_float::<T>(2.0)?;
     let numerator = (two * mu1_mu2 + c1) * (two * covar + c2);
     let denominator = (mu1_sq + mu2_sq + c1) * (ref_var + test_var + c2);
 
@@ -325,7 +325,7 @@ where
 
     for &count in &histogram {
         if count > 0 {
-            let probability: T = safe_usize, _to_float: <T>(count)? / total_pixels;
+            let probability: T = safe_usize_to_float::<T>(count)? / total_pixels;
             entropy = entropy - probability * probability.log2();
         }
     }
@@ -355,7 +355,7 @@ where
             -T::one(),
             T::zero(),
             -T::one(),
-            safe_f64, _to_float: <T>(4.0)?,
+            safe_f64_to_float::<T>(4.0)?,
             -T::one(),
             T::zero(),
             -T::one(),
@@ -568,7 +568,7 @@ where
         }
     }
 
-    Ok(safe_usize, _to_float: <T>(uniform_patterns)? / safe_usize, _to_float: <T>(total_patterns)?)
+    Ok(safe_usize_to_float::<T>(uniform_patterns)? / safe_usize_to_float::<T>(total_patterns)?)
 }
 
 /// Compute Gabor filter texture features
@@ -597,10 +597,10 @@ where
 
     for &orientation in &orientations {
         let params = crate::filters::advanced::GaborParams {
-            wavelength: safe_f64_to, float: <T>(8.0)?,
-            orientation: safe_f64_to, float: <T>(orientation)?,
-            sigma_x: safe_f64_to, _float: <T>(2.0)?,
-            sigma_y: safe_f64_to, _float: <T>(2.0)?,
+            wavelength: safe_f64_to_float::<T>(8.0)?,
+            orientation: safe_f64_to_float::<T>(orientation)?,
+            sigma_x: safe_f64_to_float::<T>(2.0)?,
+            sigma_y: safe_f64_to_float::<T>(2.0)?,
             phase: T::zero(),
             aspect_ratio: None,
         };
@@ -644,7 +644,7 @@ where
     // Convert to binary edge _image for fractal analysis
     let edges = sobel(&_image.to_owned(), 0, None)?;
     let threshold = (edges.sum() / safe_usize_to_float(edges.len())?)
-        * crate::utils::safe_f64, _to_float: <T>(2.0)?;
+        * crate::utils::safe_f64_to_float::<T>(2.0)?;
 
     let (height, width) = edges.dim();
     let min_dim = height.min(width);
@@ -689,7 +689,7 @@ where
 
     // Linear regression to estimate fractal dimension
     if log_scales.len() < 2 {
-        return Ok(safe_f64, _to_float: <T>(1.5)?); // Default fractal dimension
+        return Ok(safe_f64_to_float::<T>(1.5)?); // Default fractal dimension
     }
 
     let n = log_scales.len() as f64;
@@ -705,7 +705,7 @@ where
     let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
     let fractal_dim = -slope; // Negative of slope gives fractal dimension
 
-    Ok(safe_f64, _to_float: <T>(fractal_dim)?)
+    Ok(safe_f64_to_float::<T>(fractal_dim)?)
 }
 
 /// High-performance SIMD-optimized image quality assessment for large arrays
@@ -1098,7 +1098,7 @@ where
                     // Simplified entropy calculation
                     let normalized_variance =
                         variance / ((max_val - min_val) * (max_val - min_val));
-                    normalized_variance.ln() * safe_f64, _to_float: <T>(0.5)?
+                    normalized_variance.ln() * safe_f64_to_float::<T>(0.5)?
                 } else {
                     T::zero()
                 };

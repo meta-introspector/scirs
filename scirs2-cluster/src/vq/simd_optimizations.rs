@@ -5,7 +5,7 @@
 //! and centroid calculations. All functions provide automatic fallback to scalar
 //! implementations when SIMD is not available.
 
-use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
@@ -111,7 +111,10 @@ where
 ///
 /// * Whitened array with the same shape as input
 #[allow(dead_code)]
-pub fn whiten_simd<F>(_obs: &Array2<F>, config: Option<&SimdOptimizationConfig>) -> Result<Array2<F>>
+pub fn whiten_simd<F>(
+    _obs: &Array2<F>,
+    config: Option<&SimdOptimizationConfig>,
+) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
 {

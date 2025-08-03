@@ -724,7 +724,7 @@ pub mod opencl {
     }
 
     fn cl_get_device_ids(
-        _platform: ClPlatformId_device, type: ClULong,
+        _platform: ClPlatformId_device, r#type: ClULong,
     ) -> (ClInt, Vec<ClDeviceId>) {
         (CL_SUCCESS, vec![])
     }
@@ -1037,7 +1037,8 @@ pub mod opencl {
 
                     let device_type = match opencl_device.device_type {
                         CL_DEVICE_TYPE_GPU => GpuDeviceType::OpenCl,
-                        CL_DEVICE_TYPE_CPU => GpuDeviceType::OpenCl_ => GpuDeviceType::OpenCl,
+                        CL_DEVICE_TYPE_CPU => GpuDeviceType::OpenCl,
+                        _ => GpuDeviceType::OpenCl,
                     };
 
                     GpuDeviceInfo {

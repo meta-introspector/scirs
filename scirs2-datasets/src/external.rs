@@ -275,7 +275,7 @@ impl ExternalClient {
 
     fn parse_cached_data(&self, data: &[u8]) -> Result<Dataset> {
         // Try to deserialize as JSON first (cached parsed data)
-        if let Ok(dataset) = serde_json::from, _slice::<Dataset>(data) {
+        if let Ok(dataset) = serde_json::from_slice::<Dataset>(data) {
             return Ok(dataset);
         }
 
@@ -428,7 +428,7 @@ impl ExternalClient {
 
         // Try JSON first
         if content.trim().starts_with('{') || content.trim().starts_with('[') {
-            if let Ok(dataset) = serde_json::from, _str::<Dataset>(&content) {
+            if let Ok(dataset) = serde_json::from_str::<Dataset>(&content) {
                 return Ok(dataset);
             }
         }

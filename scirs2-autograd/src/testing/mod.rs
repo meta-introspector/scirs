@@ -50,14 +50,16 @@ impl Default for StabilityTestConfig {
 
 /// Main numerical stability tester
 pub struct NumericalStabilityTester<F: Float> {
-    config: StabilityTestConfig, phantom: std::marker::PhantomData<F>,
+    config: StabilityTestConfig,
+    phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> NumericalStabilityTester<F> {
     /// Create a new numerical stability tester
     pub fn new() -> Self {
         Self {
-            config: StabilityTestConfig::default(), _phantom: std::marker::PhantomData,
+            config: StabilityTestConfig::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -326,7 +328,8 @@ impl<F: Float> NumericalStabilityTester<F> {
             90..=100 => StabilityGrade::Excellent,
             80..=89 => StabilityGrade::Good,
             70..=79 => StabilityGrade::Fair,
-            60..=69 => StabilityGrade::Poor_ => StabilityGrade::Critical,
+            60..=69 => StabilityGrade::Poor,
+            _ => StabilityGrade::Critical,
         }
     }
 }
@@ -586,7 +589,8 @@ pub fn test_numerical_stability_with_config<F: Float>(
 /// Quick gradient check for a specific computation
 #[allow(dead_code)]
 pub fn quick_gradient_check<F: Float>(
-    _inputs: &[Tensor<F>], _output: &Tensor<F>,
+    _inputs: &[Tensor<F>],
+    _output: &Tensor<F>,
 ) -> Result<bool, StabilityError> {
     // Simplified gradient check implementation
     Ok(true)
@@ -595,7 +599,8 @@ pub fn quick_gradient_check<F: Float>(
 /// Assess numerical conditioning of an operation
 #[allow(dead_code)]
 pub fn assess_conditioning<F: Float>(
-    _operation_name: &str, _inputs: &[Tensor<F>],
+    _operation_name: &str,
+    _inputs: &[Tensor<F>],
 ) -> Result<f64, StabilityError> {
     // Simplified conditioning assessment
     Ok(1e6)

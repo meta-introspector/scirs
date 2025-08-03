@@ -802,13 +802,13 @@ fn gaussian_elimination<F: IntegrateFloat>(
 
 /// Transpose solution from row-major to column-major format
 #[allow(dead_code)]
-fn transpose_solution<F: IntegrateFloat>(_y, solution: Array2<F>) -> Vec<Array1<F>> {
-    let n_points = _y_solution.nrows();
-    let _n_dim = _y_solution.ncols();
+fn transpose_solution<F: IntegrateFloat>(solution: Array2<F>) -> Vec<Array1<F>> {
+    let n_points = solution.nrows();
+    let _n_dim = solution.ncols();
 
     let mut result = Vec::with_capacity(n_points);
     for i in 0..n_points {
-        result.push(_y_solution.row(i).to_owned());
+        result.push(solution.row(i).to_owned());
     }
 
     result

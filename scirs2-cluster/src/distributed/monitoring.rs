@@ -228,7 +228,7 @@ impl PerformanceMonitor {
             last_update: SystemTime::now(),
             health_score: 1.0,
         };
-        
+
         self.worker_metrics.insert(worker_id, worker_metrics);
     }
 
@@ -312,19 +312,22 @@ impl PerformanceMonitor {
 
         // CPU usage component
         if !metrics.cpu_usage_history.is_empty() {
-            let avg_cpu = metrics.cpu_usage_history.iter().sum::<f64>() / metrics.cpu_usage_history.len() as f64;
+            let avg_cpu = metrics.cpu_usage_history.iter().sum::<f64>()
+                / metrics.cpu_usage_history.len() as f64;
             score *= (1.0 - (avg_cpu - 0.8).max(0.0) * 2.0).max(0.0);
         }
 
         // Memory usage component
         if !metrics.memory_usage_history.is_empty() {
-            let avg_memory = metrics.memory_usage_history.iter().sum::<f64>() / metrics.memory_usage_history.len() as f64;
+            let avg_memory = metrics.memory_usage_history.iter().sum::<f64>()
+                / metrics.memory_usage_history.len() as f64;
             score *= (1.0 - (avg_memory - 0.85).max(0.0) * 3.0).max(0.0);
         }
 
         // Latency component
         if !metrics.latency_history.is_empty() {
-            let avg_latency = metrics.latency_history.iter().sum::<f64>() / metrics.latency_history.len() as f64;
+            let avg_latency =
+                metrics.latency_history.iter().sum::<f64>() / metrics.latency_history.len() as f64;
             let latency_penalty = (avg_latency / 1000.0).min(1.0) * 0.3;
             score *= (1.0 - latency_penalty).max(0.0);
         }
@@ -353,7 +356,9 @@ impl PerformanceMonitor {
 
         if let Some(latest_metrics) = metrics_history.back() {
             // Check convergence time
-            if latest_metrics.total_computation_time_ms > self.alert_thresholds.max_convergence_time_ms {
+            if latest_metrics.total_computation_time_ms
+                > self.alert_thresholds.max_convergence_time_ms
+            {
                 alerts.push(PerformanceAlert {
                     alert_type: AlertType::ConvergenceTimeout,
                     severity: AlertSeverity::Warning,
@@ -495,7 +500,8 @@ impl PerformanceMonitor {
             let avg_efficiency = recent_metrics
                 .iter()
                 .map(|m| m.worker_efficiency)
-                .sum::<f64>() / recent_metrics.len() as f64;
+                .sum::<f64>()
+                / recent_metrics.len() as f64;
             avg_efficiency
         } else {
             0.0
@@ -509,7 +515,10 @@ impl PerformanceMonitor {
         if let Some(latest_usage) = resource_usage.back() {
             resource_utilization.insert("cpu".to_string(), latest_usage.cpu_utilization);
             resource_utilization.insert("memory".to_string(), latest_usage.memory_utilization);
-            resource_utilization.insert("network".to_string(), latest_usage.network_throughput_mbps / 1000.0);
+            resource_utilization.insert(
+                "network".to_string(),
+                latest_usage.network_throughput_mbps / 1000.0,
+            );
             resource_utilization.insert("disk".to_string(), latest_usage.disk_io_rate);
         }
 
@@ -549,27 +558,50 @@ impl PerformanceMonitor {
         // Analyze resource usage patterns
         if !resource_usage.is_empty() {
             let recent_usage: Vec<_> = resource_usage.iter().rev().take(10).collect();
-            
-            let avg_cpu = recent_usage.iter().map(|u| u.cpu_utilization).sum::<f64>() / recent_usage.len() as f64;
-            let avg_memory = recent_usage.iter().map(|u| u.memory_utilization).sum::<f64>() / recent_usage.len() as f64;
-            let avg_network = recent_usage.iter().map(|u| u.network_throughput_mbps).sum::<f64>() / recent_usage.len() as f64;
+
+            let avg_cpu = recent_usage.iter().map(|u| u.cpu_utilization).sum::<f64>()
+                / recent_usage.len() as f64;
+            let avg_memory = recent_usage
+                .iter()
+                .map(|u| u.memory_utilization)
+                .sum::<f64>()
+                / recent_usage.len() as f64;
+            let avg_network = recent_usage
+                .iter()
+                .map(|u| u.network_throughput_mbps)
+                .sum::<f64>()
+                / recent_usage.len() as f64;
 
             bottleneck_scores.insert(BottleneckType::Cpu, avg_cpu);
             bottleneck_scores.insert(BottleneckType::Memory, avg_memory);
-            bottleneck_scores.insert(BottleneckType::Network, avg_network / 1000.0); // Normalize
+            bottleneck_scores.insert(BottleneckType::Network, avg_network / 1000.0);
+            // Normalize
         }
 
         // Analyze performance metrics patterns
         if !metrics_history.is_empty() {
             let recent_metrics: Vec<_> = metrics_history.iter().rev().take(10).collect();
-            
-            let avg_sync_overhead = recent_metrics.iter().map(|m| m.sync_overhead_ms).sum::<f64>() / recent_metrics.len() as f64;
-            let avg_message_latency = recent_metrics.iter().map(|m| m.message_latency_ms).sum::<f64>() / recent_metrics.len() as f64;
-            let avg_load_balance = recent_metrics.iter().map(|m| m.load_balance_score).sum::<f64>() / recent_metrics.len() as f64;
+
+            let avg_sync_overhead = recent_metrics
+                .iter()
+                .map(|m| m.sync_overhead_ms)
+                .sum::<f64>()
+                / recent_metrics.len() as f64;
+            let avg_message_latency = recent_metrics
+                .iter()
+                .map(|m| m.message_latency_ms)
+                .sum::<f64>()
+                / recent_metrics.len() as f64;
+            let avg_load_balance = recent_metrics
+                .iter()
+                .map(|m| m.load_balance_score)
+                .sum::<f64>()
+                / recent_metrics.len() as f64;
 
             bottleneck_scores.insert(BottleneckType::Synchronization, avg_sync_overhead / 1000.0); // Normalize
             bottleneck_scores.insert(BottleneckType::MessagePassing, avg_message_latency / 1000.0); // Normalize
-            bottleneck_scores.insert(BottleneckType::LoadImbalance, 1.0 - avg_load_balance); // Invert score
+            bottleneck_scores.insert(BottleneckType::LoadImbalance, 1.0 - avg_load_balance);
+            // Invert score
         }
 
         // Find primary bottleneck
@@ -580,7 +612,8 @@ impl PerformanceMonitor {
             .unwrap_or((BottleneckType::None, 0.0));
 
         // Identify affected workers (simplified)
-        let affected_workers: Vec<usize> = self.worker_metrics
+        let affected_workers: Vec<usize> = self
+            .worker_metrics
             .iter()
             .filter(|(_, metrics)| metrics.health_score < 0.7)
             .map(|(&id, _)| id)
@@ -612,9 +645,17 @@ impl PerformanceMonitor {
         let older_metrics: Vec<_> = metrics_history.iter().rev().skip(5).take(10).collect();
 
         // Calculate trend for worker efficiency
-        let recent_efficiency = recent_metrics.iter().map(|m| m.worker_efficiency).sum::<f64>() / recent_metrics.len() as f64;
+        let recent_efficiency = recent_metrics
+            .iter()
+            .map(|m| m.worker_efficiency)
+            .sum::<f64>()
+            / recent_metrics.len() as f64;
         let older_efficiency = if !older_metrics.is_empty() {
-            older_metrics.iter().map(|m| m.worker_efficiency).sum::<f64>() / older_metrics.len() as f64
+            older_metrics
+                .iter()
+                .map(|m| m.worker_efficiency)
+                .sum::<f64>()
+                / older_metrics.len() as f64
         } else {
             recent_efficiency
         };
@@ -628,9 +669,17 @@ impl PerformanceMonitor {
         };
 
         // Calculate trend for message latency
-        let recent_latency = recent_metrics.iter().map(|m| m.message_latency_ms).sum::<f64>() / recent_metrics.len() as f64;
+        let recent_latency = recent_metrics
+            .iter()
+            .map(|m| m.message_latency_ms)
+            .sum::<f64>()
+            / recent_metrics.len() as f64;
         let older_latency = if !older_metrics.is_empty() {
-            older_metrics.iter().map(|m| m.message_latency_ms).sum::<f64>() / older_metrics.len() as f64
+            older_metrics
+                .iter()
+                .map(|m| m.message_latency_ms)
+                .sum::<f64>()
+                / older_metrics.len() as f64
         } else {
             recent_latency
         };
@@ -670,20 +719,32 @@ impl PerformanceMonitor {
         // Bottleneck-based recommendations
         match bottleneck_analysis.primary_bottleneck {
             BottleneckType::Cpu => {
-                recommendations.push("Consider adding more CPU cores or reducing computational load per worker".to_string());
-                recommendations.push("Optimize algorithms to reduce CPU-intensive operations".to_string());
+                recommendations.push(
+                    "Consider adding more CPU cores or reducing computational load per worker"
+                        .to_string(),
+                );
+                recommendations
+                    .push("Optimize algorithms to reduce CPU-intensive operations".to_string());
             }
             BottleneckType::Memory => {
-                recommendations.push("Increase memory allocation or implement more efficient memory management".to_string());
-                recommendations.push("Consider data compression or streaming techniques".to_string());
+                recommendations.push(
+                    "Increase memory allocation or implement more efficient memory management"
+                        .to_string(),
+                );
+                recommendations
+                    .push("Consider data compression or streaming techniques".to_string());
             }
             BottleneckType::Network => {
                 recommendations.push("Optimize network communication patterns".to_string());
                 recommendations.push("Consider message batching or compression".to_string());
             }
             BottleneckType::Synchronization => {
-                recommendations.push("Reduce synchronization frequency or implement asynchronous patterns".to_string());
-                recommendations.push("Consider lockless data structures where possible".to_string());
+                recommendations.push(
+                    "Reduce synchronization frequency or implement asynchronous patterns"
+                        .to_string(),
+                );
+                recommendations
+                    .push("Consider lockless data structures where possible".to_string());
             }
             BottleneckType::LoadImbalance => {
                 recommendations.push("Implement dynamic load balancing".to_string());
@@ -699,12 +760,16 @@ impl PerformanceMonitor {
         // Trend-based recommendations
         match performance_trends.efficiency_trend {
             TrendDirection::Degrading => {
-                recommendations.push("Performance is degrading - investigate recent changes".to_string());
-                recommendations.push("Consider scaling up resources or optimizing algorithms".to_string());
+                recommendations
+                    .push("Performance is degrading - investigate recent changes".to_string());
+                recommendations
+                    .push("Consider scaling up resources or optimizing algorithms".to_string());
             }
             TrendDirection::Stable => {
                 if overall_efficiency < 0.7 {
-                    recommendations.push("Performance is stable but suboptimal - consider optimization".to_string());
+                    recommendations.push(
+                        "Performance is stable but suboptimal - consider optimization".to_string(),
+                    );
                 }
             }
             _ => {}
@@ -712,13 +777,17 @@ impl PerformanceMonitor {
 
         // Overall efficiency recommendations
         if overall_efficiency < 0.5 {
-            recommendations.push("Overall efficiency is very low - comprehensive system review needed".to_string());
+            recommendations.push(
+                "Overall efficiency is very low - comprehensive system review needed".to_string(),
+            );
         } else if overall_efficiency < 0.7 {
-            recommendations.push("Moderate efficiency - targeted optimizations recommended".to_string());
+            recommendations
+                .push("Moderate efficiency - targeted optimizations recommended".to_string());
         }
 
         // Worker-specific recommendations
-        let unhealthy_workers = self.worker_metrics
+        let unhealthy_workers = self
+            .worker_metrics
             .iter()
             .filter(|(_, metrics)| metrics.health_score < 0.6)
             .count();
@@ -731,7 +800,8 @@ impl PerformanceMonitor {
         }
 
         if recommendations.is_empty() {
-            recommendations.push("System performance is optimal - no immediate action required".to_string());
+            recommendations
+                .push("System performance is optimal - no immediate action required".to_string());
         }
 
         recommendations
@@ -770,11 +840,9 @@ impl PerformanceMonitor {
         if !resource_usage.is_empty() {
             let recent_usage: Vec<_> = resource_usage.iter().rev().take(10).collect();
 
-            report.avg_cpu_utilization = recent_usage
-                .iter()
-                .map(|r| r.cpu_utilization)
-                .sum::<f64>()
-                / recent_usage.len() as f64;
+            report.avg_cpu_utilization =
+                recent_usage.iter().map(|r| r.cpu_utilization).sum::<f64>()
+                    / recent_usage.len() as f64;
 
             report.avg_memory_utilization = recent_usage
                 .iter()
@@ -863,8 +931,7 @@ impl PerformanceMonitor {
 
             if latest_resources.failed_workers > 0 {
                 recommendations.push(
-                    "Worker failures detected - check fault tolerance configuration"
-                        .to_string(),
+                    "Worker failures detected - check fault tolerance configuration".to_string(),
                 );
             }
 
@@ -888,9 +955,8 @@ impl PerformanceMonitor {
         use std::fs::File;
         use std::io::Write;
 
-        let mut file = File::create(filepath).map_err(|e| {
-            ClusteringError::InvalidInput(format!("Failed to create file: {}", e))
-        })?;
+        let mut file = File::create(filepath)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to create file: {}", e)))?;
 
         // Write CSV header
         writeln!(file, "timestamp,iteration,global_inertia,convergence_rate,worker_efficiency,message_latency_ms,sync_overhead_ms,memory_pressure")
@@ -911,9 +977,7 @@ impl PerformanceMonitor {
                 metrics.sync_overhead_ms,
                 metrics.memory_pressure_score
             )
-            .map_err(|e| {
-                ClusteringError::InvalidInput(format!("Failed to write data: {}", e))
-            })?;
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write data: {}", e)))?;
         }
 
         Ok(())
@@ -956,7 +1020,7 @@ mod tests {
     fn test_performance_monitor_creation() {
         let config = MonitoringConfig::default();
         let monitor = PerformanceMonitor::new(config);
-        
+
         assert!(monitor.worker_metrics.is_empty());
         assert!(monitor.metrics_history.lock().unwrap().is_empty());
     }
@@ -965,7 +1029,7 @@ mod tests {
     fn test_worker_registration() {
         let config = MonitoringConfig::default();
         let mut monitor = PerformanceMonitor::new(config);
-        
+
         monitor.register_worker(1);
         assert!(monitor.worker_metrics.contains_key(&1));
         assert_eq!(monitor.worker_metrics[&1].worker_id, 1);
@@ -975,7 +1039,7 @@ mod tests {
     fn test_performance_metrics_recording() {
         let config = MonitoringConfig::default();
         let monitor = PerformanceMonitor::new(config);
-        
+
         let metrics = PerformanceMetrics {
             timestamp: SystemTime::now(),
             iteration: 1,
@@ -989,7 +1053,7 @@ mod tests {
             load_balance_score: 0.8,
             network_utilization: 0.5,
         };
-        
+
         let result = monitor.record_performance_metrics(metrics);
         assert!(result.is_ok());
         assert_eq!(monitor.metrics_history.lock().unwrap().len(), 1);
@@ -999,7 +1063,7 @@ mod tests {
     fn test_worker_health_score_calculation() {
         let config = MonitoringConfig::default();
         let monitor = PerformanceMonitor::new(config);
-        
+
         let mut metrics = WorkerMetrics {
             worker_id: 1,
             cpu_usage_history: VecDeque::from(vec![0.5, 0.6, 0.4]),
@@ -1010,14 +1074,14 @@ mod tests {
             last_update: SystemTime::now(),
             health_score: 0.0,
         };
-        
+
         let score = monitor.calculate_worker_health_score(&metrics);
         assert!(score > 0.5 && score <= 1.0);
-        
+
         // Test with high resource usage
         metrics.cpu_usage_history = VecDeque::from(vec![0.95, 0.98, 0.92]);
         metrics.memory_usage_history = VecDeque::from(vec![0.9, 0.95, 0.88]);
-        
+
         let degraded_score = monitor.calculate_worker_health_score(&metrics);
         assert!(degraded_score < score);
     }
@@ -1026,14 +1090,14 @@ mod tests {
     fn test_alert_generation() {
         let config = MonitoringConfig::default();
         let monitor = PerformanceMonitor::new(config);
-        
+
         // Record metrics that should trigger alerts
         let metrics = PerformanceMetrics {
             timestamp: SystemTime::now(),
             iteration: 1,
             global_inertia: 100.0,
-            convergence_rate: 0.1, // Low convergence
-            worker_efficiency: 0.3, // Low efficiency
+            convergence_rate: 0.1,      // Low convergence
+            worker_efficiency: 0.3,     // Low efficiency
             message_latency_ms: 2000.0, // High latency
             sync_overhead_ms: 100.0,
             total_computation_time_ms: 400000, // Long computation time
@@ -1041,15 +1105,19 @@ mod tests {
             load_balance_score: 0.8,
             network_utilization: 0.5,
         };
-        
+
         monitor.record_performance_metrics(metrics).unwrap();
-        
+
         let alerts = monitor.check_alerts().unwrap();
         assert!(!alerts.is_empty());
-        
+
         // Check if we got expected alert types
         let alert_types: Vec<_> = alerts.iter().map(|a| &a.alert_type).collect();
-        assert!(alert_types.iter().any(|t| matches!(t, AlertType::ConvergenceTimeout)));
-        assert!(alert_types.iter().any(|t| matches!(t, AlertType::LowThroughput)));
+        assert!(alert_types
+            .iter()
+            .any(|t| matches!(t, AlertType::ConvergenceTimeout)));
+        assert!(alert_types
+            .iter()
+            .any(|t| matches!(t, AlertType::LowThroughput)));
     }
 }

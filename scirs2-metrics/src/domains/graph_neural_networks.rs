@@ -1355,7 +1355,7 @@ impl GraphNeuralNetworkMetrics {
         y_pred: &ArrayView1<F>, _graph_features: Option<&ArrayView2<F>>,
     ) -> Result<GraphLevelResults>
     where
-        F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd, _ops::SimdUnifiedOps,
+        F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     {
         // Calculate regression RMSE
         let mse = crate::regression::mean_squared_error(y_true, y_pred)?;
@@ -1413,7 +1413,7 @@ impl GraphNeuralNetworkMetrics {
         admet_predictions: Option<(&ArrayView1<i32>, &ArrayView1<i32>)>,
     ) -> Result<MolecularGraphResults>
     where
-        F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd, _ops::SimdUnifiedOps,
+        F: Float + num_traits::NumCast + std::fmt::Debug + scirs2_core::simd_ops::SimdUnifiedOps,
     {
         // Calculate property prediction RMSE
         let mse = crate::regression::mean_squared_error(y_true, y_pred)?;
@@ -2547,7 +2547,8 @@ impl MolecularGraphMetrics {
             1 => 0.8,
             2 => 0.6,
             3 => 0.4,
-            4 => 0.2_ => 0.0,
+            4 => 0.2,
+            _ => 0.0,
         })
     }
 

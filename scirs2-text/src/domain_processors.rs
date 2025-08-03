@@ -2060,8 +2060,7 @@ mod tests {
     fn test_domain_detection() {
         let processor = UnifiedDomainProcessor::new();
 
-        let scientifictext =
-            "This study analyzes the methodology used in the research hypothesis.";
+        let scientifictext = "This study analyzes the methodology used in the research hypothesis.";
         assert_eq!(processor.detect_domain(scientifictext), Domain::Scientific);
 
         let legaltext = "The court ruled that the defendant violated the contract law.";

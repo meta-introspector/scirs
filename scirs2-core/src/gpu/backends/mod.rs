@@ -285,7 +285,7 @@ fn detect_metal_devices() -> Result<Vec<GpuInfo>, GpuError> {
                     // Pre-compile regex outside loop for performance
                     #[cfg(feature = "validation")]
                     let vram_regex = regex::Regex::new(r"(\d+)\s*(GB|MB)").ok();
-                    
+
                     for display in displays {
                         // Extract GPU information from each display
                         if let Some(model) = display.get("sppci_model").and_then(|v| v.as_str()) {
@@ -305,9 +305,8 @@ fn detect_metal_devices() -> Result<Vec<GpuInfo>, GpuError> {
                             {
                                 // Parse VRAM string like "8 GB" or "8192 MB"
                                 #[cfg(feature = "validation")]
-                                if let Some(captures) = vram_regex
-                                    .as_ref()
-                                    .and_then(|re| re.captures(vram_str))
+                                if let Some(captures) =
+                                    vram_regex.as_ref().and_then(|re| re.captures(vram_str))
                                 {
                                     if let (Some(value), Some(unit)) =
                                         (captures.get(1), captures.get(2))

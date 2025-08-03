@@ -113,7 +113,8 @@ impl<F: Float> GraphOptimizer<F> {
     /// Create a new graph optimizer with default configuration
     pub fn new() -> Self {
         Self {
-            config: OptimizationConfig::default(), _phantom: std::marker::PhantomData,
+            config: OptimizationConfig::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -128,7 +129,8 @@ impl<F: Float> GraphOptimizer<F> {
     /// Create a new graph optimizer with specified optimization level
     pub fn with_level(_level: OptimizationLevel) -> Self {
         Self {
-            config: _level.config(), _phantom: std::marker::PhantomData,
+            config: _level.config(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -388,7 +390,8 @@ impl<F: Float> PatternMatcher<F> {
     /// Check if a tensor matches a pattern for simplification
     #[allow(dead_code)]
     pub(crate) fn matches_simplification_pattern(
-        &self, _tensor_internal: &TensorInternal<F>,
+        &self,
+        _tensor_internal: &TensorInternal<F>,
     ) -> Option<SimplificationPattern> {
         // Temporarily disabled - would be implemented with expression_simplification module
         None
@@ -415,7 +418,9 @@ impl<F: Float> PatternMatcher<F> {
     /// Check if a tensor is dead (unreachable from outputs)
     #[allow(dead_code)]
     pub(crate) fn is_dead(
-        &self, _tensor_internal: &TensorInternal<F>, _reachable: &HashSet<TensorID>,
+        &self,
+        _tensor_internal: &TensorInternal<F>,
+        _reachable: &HashSet<TensorID>,
     ) -> bool {
         // Temporarily disabled - would be implemented with reachability analysis
         false

@@ -42,42 +42,40 @@
 //! ```
 
 pub mod core;
-pub mod message_passing;
 pub mod fault_tolerance;
-pub mod partitioning;
 pub mod load_balancing;
+pub mod message_passing;
 pub mod monitoring;
+pub mod partitioning;
 
 // Re-export main types for convenience
 pub use core::{
-    DistributedKMeans, DistributedKMeansConfig, ClusteringResult, 
-    ConvergenceInfo, InitializationMethod, PerformanceStatistics
+    ClusteringResult, ConvergenceInfo, DistributedKMeans, DistributedKMeansConfig,
+    InitializationMethod, PerformanceStatistics,
 };
 
 pub use message_passing::{
-    MessagePassingCoordinator, ClusteringMessage, MessagePriority,
-    RecoveryStrategy, MessageEnvelope, WorkerStatus as MessageWorkerStatus
+    ClusteringMessage, MessageEnvelope, MessagePassingCoordinator, MessagePriority,
+    RecoveryStrategy, WorkerStatus as MessageWorkerStatus,
 };
 
 pub use fault_tolerance::{
-    FaultToleranceCoordinator, WorkerHealthInfo, WorkerStatus,
-    FaultToleranceConfig, ClusteringCheckpoint, DataPartition
+    ClusteringCheckpoint, DataPartition, FaultToleranceConfig, FaultToleranceCoordinator,
+    WorkerHealthInfo, WorkerStatus,
 };
 
 pub use partitioning::{
-    DataPartitioner, PartitioningConfig, PartitioningStrategy,
-    PartitioningStatistics
+    DataPartitioner, PartitioningConfig, PartitioningStatistics, PartitioningStrategy,
 };
 
 pub use load_balancing::{
-    LoadBalancingCoordinator, WorkerProfile, LoadBalancingConfig,
-    LoadBalancingStrategy, OptimizationObjective, LoadBalanceDecision
+    LoadBalanceDecision, LoadBalancingConfig, LoadBalancingCoordinator, LoadBalancingStrategy,
+    OptimizationObjective, WorkerProfile,
 };
 
 pub use monitoring::{
-    PerformanceMonitor, MonitoringConfig, PerformanceMetrics,
-    ResourceUsage, WorkerMetrics, PerformanceAlert, AlertType,
-    AlertSeverity, EfficiencyAnalysis, MonitoringReport
+    AlertSeverity, AlertType, EfficiencyAnalysis, MonitoringConfig, MonitoringReport,
+    PerformanceAlert, PerformanceMetrics, PerformanceMonitor, ResourceUsage, WorkerMetrics,
 };
 
 /// Convenient type alias for f64-based distributed K-means

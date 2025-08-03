@@ -4,7 +4,7 @@
 //! processes data points sequentially, creating clusters on-the-fly.
 
 use crate::error::{ClusteringError, Result};
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::Float;
 use std::fmt::Debug;
 

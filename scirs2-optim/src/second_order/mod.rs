@@ -463,7 +463,7 @@ mod tests {
 
     #[test]
     fn test_gauss_newton_approximation() {
-        let jacobian = Array2::fromshape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let jacobian = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let hessian_approx = hessian_approximation::gauss_newton_approximation(&jacobian).unwrap();
 
         // Should be a 2x2 matrix (J^T * J)

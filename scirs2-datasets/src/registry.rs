@@ -161,7 +161,8 @@ impl DatasetRegistry {
                 feature_names: None,
                 url: None,
                 checksum: None,
-            }, _ => Err(DatasetsError::Other(format!("Unknown dataset: {name}"))),
+            }),
+            _ => Err(DatasetsError::Other(format!("Unknown dataset: {name}"))),
         }
     }
 
@@ -245,7 +246,8 @@ impl DatasetRegistry {
             "digits" => "builtin://digits",
             "wine" => "builtin://wine",
             "breast_cancer" => "builtin://breast_cancer",
-            "diabetes" => "builtin://diabetes"_ => "builtin://unknown",
+            "diabetes" => "builtin://diabetes",
+            _ => "builtin://unknown",
         };
 
         self.register(
@@ -280,7 +282,8 @@ pub fn load_dataset_by_name(_name: &str, force_download: bool) -> Result<crate::
                 "digits" => crate::toy::load_digits(),
                 "wine" => crate::sample::load_wine(false),
                 "breast_cancer" => crate::toy::load_breast_cancer(),
-                "diabetes" => crate::toy::load_diabetes(, _ => Err(DatasetsError::Other(format!(
+                "diabetes" => crate::toy::load_diabetes(),
+                _ => Err(DatasetsError::Other(format!(
                     "Built-in dataset '{}' not implemented",
                     _name
                 ))),
@@ -294,7 +297,8 @@ pub fn load_dataset_by_name(_name: &str, force_download: bool) -> Result<crate::
                 "california_housing" => crate::sample::load_california_housing(force_download),
                 "electrocardiogram" => crate::time_series::electrocardiogram(),
                 "stock_market" => crate::time_series::stock_market(false),
-                "weather" => crate::time_series::weather(None, _ => Err(DatasetsError::Other(format!(
+                "weather" => crate::time_series::weather(None),
+                _ => Err(DatasetsError::Other(format!(
                     "Remote dataset '{}' not yet implemented for loading",
                     _name
                 ))),

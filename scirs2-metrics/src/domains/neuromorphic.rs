@@ -9,9 +9,9 @@
 #![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};
-use crate::optimization::quantum__acceleration::QuantumMetricsComputer;
+use crate::optimization::quantum_acceleration::QuantumMetricsComputer;
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num__complex::Complex;
+use num_complex::Complex;
 use num_traits::Float;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -1280,7 +1280,8 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
             "correlation" => self.compute_spike_correlation(result),
             "mutual_information" => self.compute_mutual_information(result),
             "synchrony" => self.compute_network_synchrony(result),
-            "complexity" => self.compute_neural_complexity(result, _ => Err(MetricsError::InvalidInput(format!(
+            "complexity" => self.compute_neural_complexity(result),
+            _ => Err(MetricsError::InvalidInput(format!(
                 "Unknown neuromorphic metric: {}",
                 metric_type
             ))),
@@ -2398,7 +2399,7 @@ impl<F: Float> SynapticConnections<F> {
 
                             let synapse_type = match pre_neuron.neuron_type {
                                 NeuronType::Excitatory => SynapseType::Excitatory,
-                                NeuronType::Inhibitory => SynapseType::Inhibitory_ => SynapseType::Excitatory,
+                                NeuronType::Inhibitory => SynapseType::Inhibitory,
                             };
 
                             let synapse = Synapse {
@@ -2686,7 +2687,8 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static> AdaptiveLearningControll
         for objective in &mut self.objectives {
             match objective.name.as_str() {
                 "accuracy" => objective.current = F::one() - error,
-                "efficiency" => objective.current = metric_value_ => {}
+                "efficiency" => objective.current = metric_value,
+                _ => {}
             }
         }
 

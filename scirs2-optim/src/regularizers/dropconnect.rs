@@ -79,7 +79,7 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
 
         // Sample mask
         let mut rng = scirs2_core::random::rng();
-        let mask = Array::fromshape_fn(weights.raw_dim(), |_| {
+        let mask = Array::from_shape_fn(weights.raw_dim(), |_| {
             rng.random_bool_with_chance(keep_prob_f64)
         });
 
@@ -117,7 +117,7 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
 
         // Create mask with same shape as weights
         let mut rng = scirs2_core::random::rng();
-        let mask = Array::fromshape_fn(weightsshape, |_| {
+        let mask = Array::from_shape_fn(weightsshape, |_| {
             rng.random_bool_with_chance(keep_prob_f64)
         });
 

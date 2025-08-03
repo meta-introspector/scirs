@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Configure out-of-core processing
     let config = OutOfCoreConfig {
-        chunkshape: vec![100, 100],    // 100x100 chunks
+        chunkshape: vec![100, 100],     // 100x100 chunks
         max_cached_chunks: 4,           // Keep up to 4 chunks in memory
         max_cache_memory: 10_000_000,   // 10MB cache limit
         cache_policy: CachePolicy::Lru, // Least Recently Used eviction

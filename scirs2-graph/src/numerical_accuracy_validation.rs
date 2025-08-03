@@ -743,7 +743,8 @@ impl AdvancedNumericalValidator {
     fn compare_results(
         &self,
         standard: &AlgorithmOutput,
-        advanced: &AlgorithmOutput, algorithm: &ValidationAlgorithm,
+        advanced: &AlgorithmOutput,
+        algorithm: &ValidationAlgorithm,
     ) -> Result<ValidationMetrics> {
         match (standard, advanced) {
             (AlgorithmOutput::ScoreMap(std_scores), AlgorithmOutput::ScoreMap(ut_scores)) => {
@@ -758,11 +759,12 @@ impl AdvancedNumericalValidator {
             (
                 AlgorithmOutput::AllPairsDistances(std_all),
                 AlgorithmOutput::AllPairsDistances(ut_all),
-            ) => self.compare_all_pairs_distances(std_all, ut_all, _ => Err(crate::error::GraphError::InvalidParameter {
+            ) => self.compare_all_pairs_distances(std_all, ut_all),
+            _ => Err(crate::error::GraphError::InvalidParameter {
                 param: "algorithm_outputs".to_string(),
                 value: "mismatched types".to_string(),
                 expected: "matching output types".to_string(),
-                context: "Mismatched _algorithm output types".to_string(),
+                context: "Mismatched algorithm output types".to_string(),
             }),
         }
     }

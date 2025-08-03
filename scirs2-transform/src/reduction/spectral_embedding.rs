@@ -7,7 +7,7 @@
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_positive, checkshape};
-use scirs2__linalg::eigh;
+use scirs2_linalg::eigh;
 
 use crate::error::{Result, TransformError};
 

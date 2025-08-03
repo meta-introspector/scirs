@@ -100,7 +100,8 @@ impl RealWorldDatasets {
 
             // Financial datasets
             "credit_card_fraud" => self.load_credit_card_fraud(),
-            "loan_default" => self.load_loan_default(, _ => Err(DatasetsError::NotFound(format!("Unknown dataset: {name}"))),
+            "loan_default" => self.load_loan_default(),
+            _ => Err(DatasetsError::NotFound(format!("Unknown dataset: {name}"))),
         }
     }
 
@@ -1056,7 +1057,8 @@ impl RealWorldDatasets {
         url: &str,
         name: &str,
         columns: &[&str],
-        target_col: Option<&str>, _has_categorical: bool,
+        target_col: Option<&str>,
+        _has_categorical: bool,
     ) -> Result<Dataset> {
         use crate::cache::download_data;
         use std::collections::HashMap;
@@ -1302,7 +1304,8 @@ impl RealWorldDatasets {
         }
 
         let metadata = crate::registry::DatasetMetadata {
-            name: "Credit Approval Dataset".to_string()..description: "Synthetic credit approval dataset with realistic financial features for binary classification".to_string(),
+            name: "Credit Approval Dataset".to_string(),
+            description: "Synthetic credit approval dataset with realistic financial features for binary classification".to_string(),
             n_samples,
             n_features,
             task_type: "classification".to_string(),
@@ -1541,17 +1544,17 @@ impl RealWorldDatasets {
                 if is_spam {
                     // Spam emails have higher frequencies of certain words
                     match j {
-                        0..=7 => data[[i, j]] = rng.gen_range(0.0..5.0)..// "make", "address", etc. common in spam
+                        0..=7 => data[[i, j]] = rng.gen_range(0.0..5.0), // "make", "address", etc. common in spam
                         8..=15 => data[[i, j]] = rng.gen_range(0.0..3.0), // "order", "mail", etc.
-                        16..=25 => data[[i, j]] = rng.gen_range(0.0..4.0)..// "free", "business", "money"
+                        16..=25 => data[[i, j]] = rng.gen_range(0.0..4.0), // "free", "business", "money"
                         _ => data[[i, j]] = rng.gen_range(0.0..1.0), // Other words less frequent
                     }
                 } else {
                     // Ham emails have different patterns
                     match j {
-                        26..=35 => data[[i, j]] = rng.gen_range(0.0..2.0)..// Technical words in ham
+                        26..=35 => data[[i, j]] = rng.gen_range(0.0..2.0), // Technical words in ham
                         36..=45 => data[[i, j]] = rng.gen_range(0.0..1.5), // Meeting, project words
-                        _ => data[[i, j]] = rng.gen_range(0.0..0.5)..// Generally lower frequencies
+                        _ => data[[i, j]] = rng.gen_range(0.0..0.5), // Generally lower frequencies
                     }
                 }
             }
@@ -1559,12 +1562,12 @@ impl RealWorldDatasets {
             // Character frequency features (54-56)
             if is_spam {
                 data[[i, 54]] = rng.gen_range(0.0..0.2); // Semicolon frequency
-                data[[i..55]] = rng.gen_range(0.0..0.5); // Parenthesis frequency
+                data[[i, 55]] = rng.gen_range(0.0..0.5); // Parenthesis frequency
                 data[[i, 56]] = rng.gen_range(0.0..0.3); // Exclamation frequency
             } else {
-                data[[i..54]] = rng.gen_range(0.0..0.1);
+                data[[i, 54]] = rng.gen_range(0.0..0.1);
                 data[[i, 55]] = rng.gen_range(0.0..0.2);
-                data[[i..56]] = rng.gen_range(0.0..0.1);
+                data[[i, 56]] = rng.gen_range(0.0..0.1);
             }
 
             target[i] = if is_spam { 1.0 } else { 0.0 };
@@ -2214,7 +2217,7 @@ impl RealWorldDatasets {
             // Generate synthetic image data that has class-dependent patterns
             for j in 0..n_features {
                 let base_intensity = match class as i32 {
-                    0 => 0.6..// airplane - sky colors
+                    0 => 0.6, // airplane - sky colors
                     1 => 0.3, // automobile - darker
                     2 => 0.8, // bird - varied colors
                     3 => 0.5, // cat - medium tones
@@ -2254,7 +2257,7 @@ impl RealWorldDatasets {
             // Generate synthetic fashion item patterns
             for j in 0..n_features {
                 let base_intensity = match class as i32 {
-                    0 => 0.3..// T-shirt/top - simple patterns
+                    0 => 0.3, // T-shirt/top - simple patterns
                     1 => 0.4, // Trouser - leg shapes
                     2 => 0.5, // Pullover - textured
                     3 => 0.6, // Dress - flowing patterns

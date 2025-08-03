@@ -66,13 +66,13 @@ fn main() -> InterpolateResult<()> {
 
             println!("\n=== ANALYSIS SUMMARY ===");
             match report.overall_readiness {
-                scirs2_interpolate::api_stabilization, _enhanced::StableReleaseReadiness::Ready => {
+                scirs2_interpolate::api_stabilization_enhanced::StableReleaseReadiness::Ready => {
                     println!("✅ API is READY for 0.1.0 stable release!");
                 }
-                scirs2_interpolate::api_stabilization, _enhanced::StableReleaseReadiness::NearlyReady => {
+                scirs2_interpolate::api_stabilization_enhanced::StableReleaseReadiness::NearlyReady => {
                     println!("⚠️  API is NEARLY READY - address remaining issues");
                 }
-                scirs2_interpolate::api_stabilization, _enhanced::StableReleaseReadiness::NotReady => {
+                scirs2_interpolate::api_stabilization_enhanced::StableReleaseReadiness::NotReady => {
                     println!("❌ API is NOT READY - significant work required");
                 }
             }

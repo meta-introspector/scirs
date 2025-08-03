@@ -137,7 +137,7 @@ where
         DiaArray {
             data: Vec::new(),
             offsets: Vec::new(),
-            shape: shape,
+            shape,
         }
     }
 
@@ -688,7 +688,7 @@ where
                 }
 
                 // Convert to a sparse array
-                match Array2::fromshape_vec((1, self.shape.1), result.to_vec()) {
+                match Array2::from_shape_vec((1, self.shape.1), result.to_vec()) {
                     Ok(result_2d) => {
                         // Find non-zero elements
                         let mut row_indices = Vec::new();
@@ -748,7 +748,7 @@ where
                 }
 
                 // Convert to a sparse array
-                match Array2::fromshape_vec((self.shape.0, 1), result.to_vec()) {
+                match Array2::from_shape_vec((self.shape.0, 1), result.to_vec()) {
                     Ok(result_2d) => {
                         // Find non-zero elements
                         let mut row_indices = Vec::new();
@@ -1021,7 +1021,7 @@ mod tests {
         // println!("Dense array: {:?}", dense);
 
         let expected =
-            Array2::fromshape_vec((3, 3), vec![1.0, 4.0, 0.0, 0.0, 3.0, 5.0, 0.0, 2.0, 7.0])
+            Array2::from_shape_vec((3, 3), vec![1.0, 4.0, 0.0, 0.0, 3.0, 5.0, 0.0, 2.0, 7.0])
                 .unwrap();
         assert_eq!(dense, expected);
     }

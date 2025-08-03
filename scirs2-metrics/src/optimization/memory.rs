@@ -347,7 +347,7 @@ pub trait MemoryMappedMetric<T> {
     fn finalize(&self, state: &Self::State) -> Result<f64>;
 }
 
-use crossbeam__utils::CachePadded;
+use crossbeam_utils::CachePadded;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2};
 use num_traits::Float;
 /// Zero-copy memory operations and custom allocators for high-performance metrics computation

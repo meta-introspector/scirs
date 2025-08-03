@@ -248,7 +248,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> GANEva
                 let mut valid_probs = 0;
 
                 for (&p_sample, &p_marginal) in sample_probs.iter().zip(marginal.iter()) {
-                    if p_sample > F::zero() && p_marginal >, F::zero() {
+                    if p_sample > F::zero() && p_marginal > F::zero() {
                         sample_kl = sample_kl + p_sample * (p_sample / p_marginal).ln();
                         valid_probs += 1;
                     }
@@ -1152,7 +1152,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> SelfSu
                     let p_i = F::from(true_marginal[i]).unwrap() / F::from(n).unwrap();
                     let p_j = F::from(pred_marginal[j]).unwrap() / F::from(n).unwrap();
 
-                    if p_i > F::zero() && p_j >, F::zero() {
+                    if p_i > F::zero() && p_j > F::zero() {
                         mi = mi + p_ij * (p_ij / (p_i * p_j)).ln();
                     }
                 }

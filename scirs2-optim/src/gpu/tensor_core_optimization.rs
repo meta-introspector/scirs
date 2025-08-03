@@ -2090,7 +2090,7 @@ mod tests {
     fn test_sparse_tensor_core_matrix() {
         use ndarray::Array2;
 
-        let dense = Array2::fromshape_vec((4, 8), (0..32).map(|x| x as f32).collect()).unwrap();
+        let dense = Array2::from_shape_vec((4, 8), (0..32).map(|x| x as f32).collect()).unwrap();
         let sparse = SparseTensorCoreMatrix::from_dense(&dense);
 
         assert_eq!(sparse.denseshape(), (4, 8));

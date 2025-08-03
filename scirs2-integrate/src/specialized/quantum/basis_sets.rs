@@ -344,7 +344,7 @@ mod tests {
         basis.parameters[1].center_x = 1.0;
 
         let coordinates =
-            Array2::fromshape_vec((3, 3), vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0])
+            Array2::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.5, 0.5, 0.0])
                 .unwrap();
 
         let basis_functions = basis.generate_basis_functions(&coordinates);
@@ -359,7 +359,7 @@ mod tests {
     fn test_overlap_matrix_calculation() {
         let mut basis = AdvancedBasisSets::new(2, BasisSetType::Gaussian);
 
-        let coordinates = Array2::fromshape_vec(
+        let coordinates = Array2::from_shape_vec(
             (10, 3),
             vec![
                 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.2, 0.0, 0.0, 0.3, 0.0, 0.0, 0.4, 0.0, 0.0, 0.5,

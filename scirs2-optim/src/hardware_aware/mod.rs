@@ -930,7 +930,7 @@ impl<
             HardwarePlatform::CPU { .. } => HardwareOptimizationConfig {
                 batch_size: 64,
                 memory_strategy: MemoryStrategy::Standard,
-                parallelization: ParallelizationStrategy::DataParallel { num, workers: 4 },
+                parallelization: ParallelizationStrategy::DataParallel { num_workers: 4 },
                 precision: PrecisionStrategy::FP32,
                 optimizer_params: HashMap::new(),
                 communication: None,
@@ -938,7 +938,7 @@ impl<
             HardwarePlatform::GPU { .. } => HardwareOptimizationConfig {
                 batch_size: 128,
                 memory_strategy: MemoryStrategy::Standard,
-                parallelization: ParallelizationStrategy::DataParallel { num, workers: 1 },
+                parallelization: ParallelizationStrategy::DataParallel { num_workers: 1 },
                 precision: PrecisionStrategy::FP16,
                 optimizer_params: HashMap::new(),
                 communication: None,
@@ -970,7 +970,7 @@ impl<
             HardwarePlatform::Distributed { .. } => HardwareOptimizationConfig {
                 batch_size: 512,
                 memory_strategy: MemoryStrategy::Standard,
-                parallelization: ParallelizationStrategy::DataParallel { num, workers: 8 },
+                parallelization: ParallelizationStrategy::DataParallel { num_workers: 8 },
                 precision: PrecisionStrategy::FP16,
                 optimizer_params: HashMap::new(),
                 communication: Some(CommunicationStrategy::AllReduce {
@@ -1035,7 +1035,7 @@ impl<A: Float> AdaptiveTuner<A> {
             tuning_history: Vec::new(),
             current_params: HashMap::new(),
             performance_target: A::from(100.0).unwrap(),
-            strategy: TuningStrategy::BayesianOptimization { num, samples: 50 },
+            strategy: TuningStrategy::BayesianOptimization { num_samples: 50 },
         }
     }
 }

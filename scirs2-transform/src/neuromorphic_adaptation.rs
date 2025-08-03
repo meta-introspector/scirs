@@ -3,7 +3,7 @@
 //! This module implements brain-inspired computing paradigms for adaptive
 //! data transformation with spiking neural networks and plasticity mechanisms.
 
-use crate::auto_feature__engineering::{
+use crate::auto_feature_engineering::{
     DatasetMetaFeatures, TransformationConfig, TransformationType,
 };
 use crate::error::{Result, TransformError};

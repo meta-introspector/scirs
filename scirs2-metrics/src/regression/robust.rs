@@ -400,7 +400,8 @@ where
         None => match method {
             "huber" => F::from(1.345).unwrap(),
             "bisquare" => F::from(4.685).unwrap(),
-            "cauchy" => F::from(2.385).unwrap(, _ => F::from(1.345).unwrap(), // Default to huber
+            "cauchy" => F::from(2.385).unwrap(),
+            _ => F::from(1.345).unwrap(), // Default to huber
         },
     };
 
@@ -426,7 +427,8 @@ where
                     F::zero()
                 }
             }
-            "cauchy" => F::one() / (F::one() + u * u, _ => {
+            "cauchy" => F::one() / (F::one() + u * u),
+            _ => {
                 return Err(MetricsError::InvalidInput(format!(
                     "Unknown weight method: {}. Valid options are 'huber', 'bisquare', 'cauchy'.",
                     method

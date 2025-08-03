@@ -1121,10 +1121,8 @@ impl PositionwiseFeedForward {
         let scale1 = (2.0 / _d_model as f64).sqrt();
         let scale2 = (2.0 / d_ff as f64).sqrt();
 
-        let w1 =
-            Array2::fromshape_fn((d_ff, _d_model), |_| rand::rng().gen_range(-scale1..scale1));
-        let w2 =
-            Array2::fromshape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale2..scale2));
+        let w1 = Array2::fromshape_fn((d_ff, _d_model), |_| rand::rng().gen_range(-scale1..scale1));
+        let w2 = Array2::fromshape_fn((_d_model, d_ff), |_| rand::rng().gen_range(-scale2..scale2));
         let b1 = Array1::zeros(d_ff);
         let b2 = Array1::zeros(_d_model);
 

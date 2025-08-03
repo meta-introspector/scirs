@@ -85,10 +85,8 @@ fn test_optimization_pathological_cases() {
             T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![1.0]).unwrap(), ctx);
 
         for _i in 0..500 {
-            let constant = T::convert_to_tensor(
-                Array::fromshape_vec(IxDyn(&[1]), vec![0.001]).unwrap(),
-                ctx,
-            );
+            let constant =
+                T::convert_to_tensor(Array::fromshape_vec(IxDyn(&[1]), vec![0.001]).unwrap(), ctx);
             chain = chain + constant;
         }
 

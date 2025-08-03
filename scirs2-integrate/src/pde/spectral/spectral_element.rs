@@ -925,7 +925,7 @@ impl From<SpectralElementResult> for PDESolution<f64> {
         // Create solution values as a 2D array for each grid point
         let mut values = Vec::new();
         let n_points = _result.u.len();
-        let u_reshaped = _result.u.intoshape_with_order((n_points, 1)).unwrap();
+        let u_reshaped = _result.u.into_shape_with_order((n_points, 1)).unwrap();
         values.push(u_reshaped);
 
         // Create solver info

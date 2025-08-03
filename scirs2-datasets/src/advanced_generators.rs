@@ -450,7 +450,9 @@ impl AdvancedGenerator {
         n_episodes: usize,
         n_features: usize,
     ) -> Result<FewShotDataset> {
-        println!("Generating few-_shot dataset: {n_way}-_way {k_shot}-_shot, {n_episodes} _episodes");
+        println!(
+            "Generating few-_shot dataset: {n_way}-_way {k_shot}-_shot, {n_episodes} _episodes"
+        );
 
         let mut _episodes = Vec::new();
 
@@ -856,7 +858,8 @@ impl AdvancedGenerator {
         &self,
         n_way: usize,
         n_query: usize,
-        n_features: usize_support, _set: &Dataset,
+        n_features: usize_support,
+        _set: &Dataset,
         episode_id: usize,
     ) -> Result<Dataset> {
         let n_samples = n_way * n_query;

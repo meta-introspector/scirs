@@ -5,7 +5,7 @@
 //! It's particularly useful when the number of clusters is not known in advance,
 //! and works well for non-flat geometries.
 
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::cmp::Ordering;
 use std::fmt::Debug;

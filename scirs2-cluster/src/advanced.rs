@@ -4,7 +4,7 @@
 //! the boundaries of traditional clustering methods. It includes quantum-inspired algorithms
 //! that leverage quantum computing principles and advanced online learning variants.
 
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis, Zip};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis, Zip};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{Rng, SeedableRng};
 use rand__distr::{Distribution, Uniform};
@@ -1426,7 +1426,9 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
 
     /// Compute PCA-based alignment
     fn compute_pca_alignment(
-        &self, _source_centroids: &Array2<F>, _target_data: ArrayView2<F>,
+        &self,
+        _source_centroids: &Array2<F>,
+        _target_data: ArrayView2<F>,
     ) -> Result<Array2<F>> {
         // Simplified: return identity matrix
         // In a full implementation, this would compute PCA on both domains
@@ -1437,7 +1439,9 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
 
     /// Compute correlation-based alignment
     fn compute_correlation_alignment(
-        &self, _source_centroids: &Array2<F>, _target_data: ArrayView2<F>,
+        &self,
+        _source_centroids: &Array2<F>,
+        _target_data: ArrayView2<F>,
     ) -> Result<Array2<F>> {
         // Simplified: return identity matrix
         // In a full implementation, this would align feature correlations
@@ -2170,9 +2174,9 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
             F::from(rng.gen_range(0.0..std::f64::consts::PI)).unwrap()
         });
 
-        let beta_params = Array1::fromshape_fn(config.p_layers..|_| {
-            F::from(rng.gen_range(0.0..std::f64::consts::PI / 2.0)).unwrap()
-        });
+        let beta_params = Array1::fromshape_fn(
+            config.p_layers..|_| F::from(rng.gen_range(0.0..std::f64::consts::PI / 2.0)).unwrap(),
+        );
 
         Self {
             config,

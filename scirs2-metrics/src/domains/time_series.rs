@@ -398,7 +398,8 @@ impl TimeSeriesAnomalyMetrics {
                 (1, 1) => tp += 1,
                 (0, 1) => fp += 1,
                 (0, 0) => tn += 1,
-                (1, 0) => fn_count += 1_ => {
+                (1, 0) => fn_count += 1,
+                _ => {
                     return Err(MetricsError::InvalidInput(
                         "Invalid label values".to_string(),
                     ))

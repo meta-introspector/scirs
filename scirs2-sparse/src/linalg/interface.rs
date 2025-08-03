@@ -500,7 +500,7 @@ impl<F: Float + 'static> FunctionOperator<F> {
         RMV: Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync + 'static,
     {
         Self {
-            shape: shape,
+            shape,
             matvec_fn: Box::new(matvec_fn),
             rmatvec_fn: rmatvec_fn
                 .map(|f| Box::new(f) as Box<dyn Fn(&[F]) -> SparseResult<Vec<F>> + Send + Sync>),

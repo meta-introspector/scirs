@@ -714,8 +714,7 @@ where
 
     // Reconstruct the full spectrum by using Hermitian symmetry
     // This is complex for arbitrary N-D arrays, so we'll delegate to a specialized function
-    let full_spectrum =
-        reconstruct_hermitian_symmetry(x, &outshape, axes_to_transform.as_slice())?;
+    let full_spectrum = reconstruct_hermitian_symmetry(x, &outshape, axes_to_transform.as_slice())?;
 
     // Compute the inverse FFT
     let complex_output = crate::fft::ifftn(

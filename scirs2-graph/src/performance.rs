@@ -142,7 +142,7 @@ where
         + std::default::Default,
     Ix: petgraph::graph::IndexType + Send + Sync,
 {
-    use crate::algorithms::shortest__path::dijkstra_path;
+    use crate::algorithms::shortest_path::dijkstra_path;
 
     // Note: Thread pool configuration is handled globally by scirs2-core
     // The num_threads _config parameter is preserved for future use but currently ignored

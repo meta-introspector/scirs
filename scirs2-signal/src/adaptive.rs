@@ -51,16 +51,16 @@ impl LmsFilter {
     /// # Returns
     ///
     /// * A new LMS filter instance
-    pub fn new(_num_taps: usize, step_size: f64, initial_weight: f64) -> SignalResult<Self> {
-        if _num_taps == 0 {
+    pub fn new(num_taps: usize, step_size: f64, initial_weight: f64) -> SignalResult<Self> {
+        if num_taps == 0 {
             return Err(SignalError::ValueError(
-                "Number of _taps must be positive".to_string(),
+                "Number of taps must be positive".to_string(),
             ));
         }
 
         if step_size <= 0.0 {
             return Err(SignalError::ValueError(
-                "Step _size must be positive".to_string(),
+                "Step size must be positive".to_string(),
             ));
         }
 
@@ -165,7 +165,7 @@ impl LmsFilter {
     pub fn set_step_size(&mut self, step_size: f64) -> SignalResult<()> {
         if step_size <= 0.0 {
             return Err(SignalError::ValueError(
-                "Step _size must be positive".to_string(),
+                "Step size must be positive".to_string(),
             ));
         }
         self.step_size = step_size;
@@ -213,10 +213,10 @@ impl RlsFilter {
     /// # Returns
     ///
     /// * A new RLS filter instance
-    pub fn new(_num_taps: usize, lambda: f64, delta: f64) -> SignalResult<Self> {
-        if _num_taps == 0 {
+    pub fn new(num_taps: usize, lambda: f64, delta: f64) -> SignalResult<Self> {
+        if num_taps == 0 {
             return Err(SignalError::ValueError(
-                "Number of _taps must be positive".to_string(),
+                "Number of taps must be positive".to_string(),
             ));
         }
 
@@ -420,8 +420,8 @@ impl NlmsFilter {
     /// # Returns
     ///
     /// * A new NLMS filter instance
-    pub fn new(_num_taps: usize, step_size: f64, epsilon: f64) -> SignalResult<Self> {
-        if _num_taps == 0 {
+    pub fn new(num_taps: usize, step_size: f64, epsilon: f64) -> SignalResult<Self> {
+        if num_taps == 0 {
             return Err(SignalError::ValueError(
                 "Number of _taps must be positive".to_string(),
             ));
@@ -429,7 +429,7 @@ impl NlmsFilter {
 
         if step_size <= 0.0 {
             return Err(SignalError::ValueError(
-                "Step _size must be positive".to_string(),
+                "Step size must be positive".to_string(),
             ));
         }
 
@@ -537,8 +537,8 @@ impl VsLmsFilter {
     /// # Returns
     ///
     /// * A new VS-LMS filter instance
-    pub fn new(_num_taps: usize, initial_step_size: f64, alpha: f64) -> SignalResult<Self> {
-        if _num_taps == 0 {
+    pub fn new(num_taps: usize, initial_step_size: f64, alpha: f64) -> SignalResult<Self> {
+        if num_taps == 0 {
             return Err(SignalError::ValueError(
                 "Number of _taps must be positive".to_string(),
             ));
@@ -691,7 +691,7 @@ impl ApaFilter {
 
         if step_size <= 0.0 {
             return Err(SignalError::ValueError(
-                "Step _size must be positive".to_string(),
+                "Step size must be positive".to_string(),
             ));
         }
 
@@ -820,16 +820,16 @@ impl FdlmsFilter {
     /// # Returns
     ///
     /// * A new FDLMS filter instance
-    pub fn new(_filter_length: usize, step_size: f64, leakage: f64) -> SignalResult<Self> {
-        if _filter_length == 0 {
+    pub fn new(filter_length: usize, step_size: f64, leakage: f64) -> SignalResult<Self> {
+        if filter_length == 0 {
             return Err(SignalError::ValueError(
-                "Filter _length must be positive".to_string(),
+                "Filter length must be positive".to_string(),
             ));
         }
 
         if step_size <= 0.0 {
             return Err(SignalError::ValueError(
-                "Step _size must be positive".to_string(),
+                "Step size must be positive".to_string(),
             ));
         }
 
@@ -996,8 +996,8 @@ pub struct LmfFilter {
 
 impl LmfFilter {
     /// Create a new LMF filter
-    pub fn new(_num_taps: usize, step_size: f64) -> SignalResult<Self> {
-        if _num_taps == 0 {
+    pub fn new(num_taps: usize, step_size: f64) -> SignalResult<Self> {
+        if num_taps == 0 {
             return Err(SignalError::ValueError(
                 "Number of _taps must be positive".to_string(),
             ));
@@ -1005,7 +1005,7 @@ impl LmfFilter {
 
         if step_size <= 0.0 {
             return Err(SignalError::ValueError(
-                "Step _size must be positive".to_string(),
+                "Step size must be positive".to_string(),
             ));
         }
 
@@ -1091,8 +1091,8 @@ impl SmLmsFilter {
     /// # Returns
     ///
     /// * A new SM-LMS filter instance
-    pub fn new(_num_taps: usize, step_size: f64, error_bound: f64) -> SignalResult<Self> {
-        if _num_taps == 0 {
+    pub fn new(num_taps: usize, step_size: f64, error_bound: f64) -> SignalResult<Self> {
+        if num_taps == 0 {
             return Err(SignalError::ValueError(
                 "Number of _taps must be positive".to_string(),
             ));
@@ -1100,7 +1100,7 @@ impl SmLmsFilter {
 
         if step_size <= 0.0 {
             return Err(SignalError::ValueError(
-                "Step _size must be positive".to_string(),
+                "Step size must be positive".to_string(),
             ));
         }
 

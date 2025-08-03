@@ -7,8 +7,8 @@ use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Debug;
-use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "serde")]
@@ -303,7 +303,11 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
     }
 
     /// Create synchronization barrier
-    pub fn create_sync_barrier(&mut self, round: usize, expected_participants: usize) -> Result<()> {
+    pub fn create_sync_barrier(
+        &mut self,
+        round: usize,
+        expected_participants: usize,
+    ) -> Result<()> {
         let barrier = SynchronizationBarrier {
             round,
             expected_participants,
@@ -319,8 +323,9 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
     /// Wait for workers to reach synchronization barrier
     pub fn wait_for_barrier(&mut self, round: usize) -> Result<bool> {
         if let Some(barrier) = self.sync_barriers.get_mut(&round) {
-            let timeout_reached = barrier.barrier_start_time.elapsed().as_millis() as u64 > barrier.timeout_ms;
-            
+            let timeout_reached =
+                barrier.barrier_start_time.elapsed().as_millis() as u64 > barrier.timeout_ms;
+
             if timeout_reached {
                 // Remove timed-out barrier
                 self.sync_barriers.remove(&round);
@@ -359,9 +364,9 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
     fn cleanup_timed_out_messages(&mut self) {
         let now = Instant::now();
         let timeout_duration = Duration::from_millis(self.config.message_timeout_ms);
-        
+
         let mut timed_out_messages = Vec::new();
-        
+
         for (&message_id, &send_time) in &self.message_timeouts {
             if now.duration_since(send_time) > timeout_duration {
                 timed_out_messages.push(message_id);
@@ -371,18 +376,19 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
         for message_id in timed_out_messages {
             if let Some(envelope) = self.pending_messages.remove(&message_id) {
                 self.message_timeouts.remove(&message_id);
-                
+
                 // Retry if under retry limit
                 if envelope.retry_count < self.config.max_retry_attempts {
                     let mut retry_envelope = envelope;
                     retry_envelope.retry_count += 1;
-                    
+
                     if let Some(sender) = self.worker_channels.get(&retry_envelope.receiver_id) {
                         let _ = sender.send(retry_envelope);
                     }
                 } else {
                     // Mark worker as failed after max retries
-                    self.worker_status.insert(envelope.receiver_id, WorkerStatus::Failed);
+                    self.worker_status
+                        .insert(envelope.receiver_id, WorkerStatus::Failed);
                 }
             }
         }
@@ -420,7 +426,7 @@ impl<F: Float + Debug + Send + Sync + 'static> MessagePassingCoordinator<F> {
     pub fn shutdown(&mut self) {
         // Send terminate message to all workers
         let _ = self.broadcast_message(ClusteringMessage::Terminate, MessagePriority::Critical);
-        
+
         // Clear all state
         self.worker_channels.clear();
         self.pending_messages.clear();
@@ -456,7 +462,7 @@ mod tests {
     fn test_message_passing_coordinator_creation() {
         let config = MessagePassingConfig::default();
         let coordinator = MessagePassingCoordinator::<f64>::new(0, config);
-        
+
         assert_eq!(coordinator.coordinator_id, 0);
         assert!(coordinator.worker_channels.is_empty());
         assert!(coordinator.pending_messages.is_empty());
@@ -466,7 +472,7 @@ mod tests {
     fn test_worker_registration() {
         let config = MessagePassingConfig::default();
         let mut coordinator = MessagePassingCoordinator::<f64>::new(0, config);
-        
+
         let _receiver = coordinator.register_worker(1);
         assert!(coordinator.worker_channels.contains_key(&1));
         assert_eq!(coordinator.get_worker_status(1), Some(WorkerStatus::Active));
@@ -476,7 +482,7 @@ mod tests {
     fn test_sync_barrier_creation() {
         let config = MessagePassingConfig::default();
         let mut coordinator = MessagePassingCoordinator::<f64>::new(0, config);
-        
+
         let result = coordinator.create_sync_barrier(1, 3);
         assert!(result.is_ok());
         assert!(coordinator.sync_barriers.contains_key(&1));

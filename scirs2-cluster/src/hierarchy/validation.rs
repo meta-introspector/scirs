@@ -458,7 +458,7 @@ pub fn validate_cluster_consistency<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{ArrayView1, Array1, Array2};
+    use ndarray::{Array1, Array2, ArrayView1};
 
     #[test]
     fn test_validate_linkage_matrix_valid() {

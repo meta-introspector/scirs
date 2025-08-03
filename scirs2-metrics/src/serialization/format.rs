@@ -48,7 +48,7 @@ where
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
 
             // First convert to YAML value
-            let yaml_value = serde_yaml::from, _str::<serde_yaml::Value>(&yaml_str)
+            let yaml_value = serde_yaml::from_str::<serde_yaml::Value>(&yaml_str)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
 
             // Then convert to a generic serializable form
@@ -78,7 +78,8 @@ where
             let value: ciborium::Value = ciborium::de::from_reader(&serialized[..])
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
 
-            // Convert ciborium::Value to serde_json::Value (intermediate step), serde_json::to_value(value)
+            // Convert ciborium::Value to serde_json::Value (intermediate step)
+            serde_json::to_value(value)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?
         }
     };
@@ -96,7 +97,7 @@ where
             // Convert through JSON for TOML
             let json = serde_json::to_string(&json_value)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
-            let toml_value: toml::Value = serde_json:::from_str(&json)
+            let toml_value: toml::Value = serde_json::from_str(&json)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;
             let toml_str = toml::to_string_pretty(&toml_value)
                 .map_err(|e| MetricsError::SerializationError(e.to_string()))?;

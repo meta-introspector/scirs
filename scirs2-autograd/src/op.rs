@@ -91,7 +91,8 @@ impl<F: Float> OpInputGetter<'_, F> {
     #[allow(dead_code)]
     pub fn new(_: F) -> Self {
         Self {
-            f: F::zero(), _marker: PhantomData,
+            f: F::zero(),
+            _marker: PhantomData,
         }
     }
 }
@@ -100,7 +101,8 @@ impl<'a, 'graph, F: Float> From<&'a OpInput<'graph, F>> for OpInputGetter<'a, F>
     fn from(x: &'a OpInput<'graph, F>) -> Self {
         let _ = x;
         Self {
-            f: F::zero(), _marker: PhantomData,
+            f: F::zero(),
+            _marker: PhantomData,
         }
     }
 }

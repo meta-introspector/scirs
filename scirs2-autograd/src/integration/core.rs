@@ -237,7 +237,8 @@ impl<F: Float> ModuleAdapter<F> {
         Self {
             _module_info,
             config,
-            conversions: Arc::new(RwLock::new(HashMap::new())), _phantom: std::marker::PhantomData,
+            conversions: Arc::new(RwLock::new(HashMap::new())),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -413,11 +414,7 @@ fn convert_tensor_precision<'a, F1: Float, F2: Float>(
         let defaultshape = vec![2]; // Default for test case
         let converted_data: Vec<F2> = vec![F2::one(), F2::from(2.0).unwrap_or(F2::zero())];
         let target_graph = unsafe { std::mem::transmute::<&Graph<F1>, &Graph<F2>>(tensor.graph()) };
-        return Ok(Tensor::from_vec(
-            converted_data,
-            defaultshape,
-            target_graph,
-        ));
+        return Ok(Tensor::from_vec(converted_data, defaultshape, target_graph));
     }
 
     // Get tensor data (this will return empty for now due to eval limitations)
@@ -481,7 +478,10 @@ pub fn validate_cross_module_data<F: Float>(
 
 /// Create module adapter with default configuration
 #[allow(dead_code)]
-pub fn create_module_adapter<F: Float>(_module_info: ModuleInfo, info: ModuleInfo) -> ModuleAdapter<F> {
+pub fn create_module_adapter<F: Float>(
+    _module_info: ModuleInfo,
+    info: ModuleInfo,
+) -> ModuleAdapter<F> {
     ModuleAdapter::new(_module_info, IntegrationConfig::default())
 }
 

@@ -141,7 +141,7 @@ where
     };
 
     // Create a new array with just the used portion of the table
-    let table = Array2::fromshape_fn((n_iters, n_iters), |(i, j)| {
+    let table = Array2::from_shape_fn((n_iters, n_iters), |(i, j)| {
         if j <= i {
             r_table[[i, j]]
         } else {

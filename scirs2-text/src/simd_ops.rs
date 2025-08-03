@@ -494,8 +494,7 @@ impl SimdTextAnalyzer {
             return text.chars().all(|c| !c.is_lowercase());
         }
 
-        text
-            .bytes()
+        text.bytes()
             .all(|b| !b.is_ascii_lowercase() || !b.is_ascii_alphabetic())
     }
 
@@ -505,8 +504,7 @@ impl SimdTextAnalyzer {
             return text.chars().all(|c| !c.is_uppercase());
         }
 
-        text
-            .bytes()
+        text.bytes()
             .all(|b| !b.is_ascii_uppercase() || !b.is_ascii_alphabetic())
     }
 }
@@ -1426,8 +1424,7 @@ impl SimdTextNormalizer {
 
         // For non-ASCII text, use Unicode normalization
         use unicode__normalization::UnicodeNormalization;
-        text
-            .nfd()
+        text.nfd()
             .filter(|c| !unicode_normalization::char::is_combining_mark(*c))
             .collect()
     }

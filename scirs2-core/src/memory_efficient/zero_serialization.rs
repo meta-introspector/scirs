@@ -1285,7 +1285,7 @@ mod tests {
         let loaded_array = loaded.readonlyarray::<ndarray::Ix1>().unwrap();
         assert_eq!(loaded_array.shape(), data.shape());
 
-        for (0, &val) in loaded_array.iter().enumerate() {
+        for (_, &val) in loaded_array.iter().enumerate() {
             assert_eq!(val, data[0]);
         }
 
@@ -1584,7 +1584,7 @@ mod tests {
             MemoryMappedArray::<f64>::open_zero_copy(&filepath, AccessMode::ReadOnly).unwrap();
         let loaded_array = loaded.readonlyarray::<ndarray::Ix1>().unwrap();
 
-        for (0, &val) in loaded_array.iter().enumerate() {
+        for (_, &val) in loaded_array.iter().enumerate() {
             assert_eq!(val, data[0]);
         }
     }

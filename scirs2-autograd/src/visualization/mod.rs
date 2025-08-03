@@ -53,14 +53,16 @@ pub enum OutputFormat {
 
 /// Graph visualizer for creating visual representations of computation graphs
 pub struct GraphVisualizer<F: Float> {
-    config: VisualizationConfig, phantom: std::marker::PhantomData<F>,
+    config: VisualizationConfig,
+    phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> GraphVisualizer<F> {
     /// Create a new graph visualizer with default configuration
     pub fn new() -> Self {
         Self {
-            config: VisualizationConfig::default(), _phantom: std::marker::PhantomData,
+            config: VisualizationConfig::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -168,7 +170,7 @@ impl<F: Float> GraphVisualizer<F> {
             write!(
                 output,
                 "    {{\"id\": {i}, \"label\": \"{}\"}}",
-                label.replace(", "\\\"")
+                label.replace(", ", "\"")
             )?;
         }
 
@@ -250,7 +252,9 @@ impl<F: Float> GraphVisualizer<F> {
     /// Traverse the graph to collect tensor IDs
     #[allow(dead_code)]
     fn traverse_graph(
-        &self_graph: &Graph<F>, _tensor_ids: &mut [TensorID], _visited: &mut HashSet<TensorID>,
+        self_graph: &Graph<F>,
+        _tensor_ids: &mut [TensorID],
+        _visited: &mut HashSet<TensorID>,
     ) -> Result<(), VisualizationError> {
         // This is a simplified traversal - in a real implementation,
         // we would need access to the _graph's internal structure
@@ -291,7 +295,7 @@ impl<F: Float> GraphVisualizer<F> {
 
     /// Collect nodes from the graph
     #[allow(dead_code)]
-    fn collect_nodes(&self_graph: &Graph<F>) -> Result<Vec<TensorID>, VisualizationError> {
+    fn collect_nodes(self_graph: &Graph<F>) -> Result<Vec<TensorID>, VisualizationError> {
         // Simplified - would collect actual nodes from _graph
         Ok(vec![0, 1, 2])
     }
@@ -322,7 +326,8 @@ impl<F: Float> GraphVisualizer<F> {
     #[allow(dead_code)]
     fn generate_tensor_label(
         &self,
-        tensor_id: TensorID, _analysis: &NodeAnalysis,
+        tensor_id: TensorID,
+        _analysis: &NodeAnalysis,
     ) -> Result<String, VisualizationError> {
         let mut label = String::new();
 
@@ -382,7 +387,7 @@ impl<F: Float> GraphDebugger<F> {
     }
 
     /// Print graph statistics
-    pub fn print_stats(&self_graph: &Graph<F>) -> Result<(), VisualizationError> {
+    pub fn print_stats(self_graph: &Graph<F>) -> Result<(), VisualizationError> {
         println!("Graph Statistics:");
         println!("================");
 
@@ -396,7 +401,7 @@ impl<F: Float> GraphDebugger<F> {
     }
 
     /// Validate graph structure
-    pub fn validate_graph(&self_graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
+    pub fn validate_graph(self_graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
         let issues = Vec::new();
 
         // Check for common _graph issues
@@ -409,9 +414,7 @@ impl<F: Float> GraphDebugger<F> {
     }
 
     /// Find potential optimization opportunities
-    pub fn analyze_optimizations(
-        &self_graph: &Graph<F>,
-    ) -> Result<Vec<String>, VisualizationError> {
+    pub fn analyze_optimizations(self_graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
         // Look for optimization opportunities:
         // - Common subexpressions
         // - Constant folding opportunities
@@ -447,7 +450,7 @@ impl<F: Float> GraphExplorer<F> {
     }
 
     /// Start an interactive session for exploring the graph
-    pub fn start_interactive(&self_graph: &Graph<F>) -> Result<(), VisualizationError> {
+    pub fn start_interactive(self_graph: &Graph<F>) -> Result<(), VisualizationError> {
         println!("Starting interactive _graph exploration...");
         println!("Commands: help, stats, visualize, quit");
 

@@ -50,14 +50,16 @@ pub enum FiniteDifferenceScheme {
 
 /// Finite difference gradient computer
 pub struct FiniteDifferenceComputer<F: Float> {
-    config: FiniteDifferenceConfig, phantom: std::marker::PhantomData<F>,
+    config: FiniteDifferenceConfig,
+    phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> FiniteDifferenceComputer<F> {
     /// Create a new finite difference computer
     pub fn new() -> Self {
         Self {
-            config: FiniteDifferenceConfig::default(), _phantom: std::marker::PhantomData,
+            config: FiniteDifferenceConfig::default(),
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -154,11 +156,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
         let gradient_vec = gradient.into_raw_vec_and_offset().0;
         let gradientshape = inputshape.to_vec();
-        Ok(Tensor::from_vec(
-            gradient_vec,
-            gradientshape,
-            input.graph(),
-        ))
+        Ok(Tensor::from_vec(gradient_vec, gradientshape, input.graph()))
     }
 
     /// Backward difference implementation
@@ -187,11 +185,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
         let gradient_vec = gradient.into_raw_vec_and_offset().0;
         let gradientshape = inputshape.to_vec();
-        Ok(Tensor::from_vec(
-            gradient_vec,
-            gradientshape,
-            input.graph(),
-        ))
+        Ok(Tensor::from_vec(gradient_vec, gradientshape, input.graph()))
     }
 
     /// Central difference implementation
@@ -224,11 +218,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
         let gradient_vec = gradient.into_raw_vec_and_offset().0;
         let gradientshape = inputshape.to_vec();
-        Ok(Tensor::from_vec(
-            gradient_vec,
-            gradientshape,
-            input.graph(),
-        ))
+        Ok(Tensor::from_vec(gradient_vec, gradientshape, input.graph()))
     }
 
     /// High-order central difference with O(h^4) accuracy
@@ -262,11 +252,7 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
         let gradient_vec = gradient.into_raw_vec_and_offset().0;
         let gradientshape = inputshape.to_vec();
-        Ok(Tensor::from_vec(
-            gradient_vec,
-            gradientshape,
-            input.graph(),
-        ))
+        Ok(Tensor::from_vec(gradient_vec, gradientshape, input.graph()))
     }
 
     /// Helper methods
@@ -309,7 +295,9 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
     #[allow(dead_code)]
     fn estimate_truncation_error<Func>(
-        &self_function: &Func, _input: &Tensor<F>, _step: F,
+        &self_function: &Func,
+        _input: &Tensor<F>,
+        _step: F,
     ) -> Result<F, StabilityError>
     where
         Func: for<'b> Fn(&Tensor<'b, F>) -> Result<Tensor<'b, F>, StabilityError>,
@@ -338,7 +326,9 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
     #[allow(dead_code)]
     fn compute_partial_derivative(
-        &self, _f_perturbed: &Tensor<F>, _f_original: &Tensor<F>,
+        &self,
+        _f_perturbed: &Tensor<F>,
+        _f_original: &Tensor<F>,
         step: F,
     ) -> F {
         // Simplified - would compute actual difference between tensor values
@@ -348,7 +338,9 @@ impl<F: Float> FiniteDifferenceComputer<F> {
 
     #[allow(dead_code)]
     fn compute_central_partial_derivative(
-        &self, _f_plus: &Tensor<F>, _f_minus: &Tensor<F>,
+        &self,
+        _f_plus: &Tensor<F>,
+        _f_minus: &Tensor<F>,
         step: F,
     ) -> F {
         // Simplified - would compute actual difference between tensor values
@@ -469,7 +461,9 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     #[allow(dead_code)]
     fn create_single_perturbation<'a>(
         &self,
-        input: &Tensor<'a, F>, _index: usize, delta: F,
+        input: &Tensor<'a, F>,
+        _index: usize,
+        delta: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with a single component perturbed
         let perturbed = *input;
@@ -480,7 +474,11 @@ impl<F: Float> FiniteDifferenceComputer<F> {
     #[allow(dead_code)]
     fn create_double_perturbation<'a>(
         &self,
-        input: &Tensor<'a, F>, _i: usize, j: usize_delta, _i: F_delta, j: F,
+        input: &Tensor<'a, F>,
+        _i: usize,
+        j: usize_delta,
+        _i: F_delta,
+        j: F,
     ) -> Result<Tensor<'a, F>, StabilityError> {
         // Create a copy of input with two components perturbed
         let perturbed = *input;

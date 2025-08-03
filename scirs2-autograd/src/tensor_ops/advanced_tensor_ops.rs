@@ -308,7 +308,8 @@ fn solve_square_system<F: Float>(
 
 #[allow(dead_code)]
 fn compute_solutionshape(
-    ashape: &[usize], _bshape: &[usize],
+    ashape: &[usize],
+    _bshape: &[usize],
     axes: &Option<Vec<i32>>,
 ) -> Result<Vec<usize>, OpError> {
     let ndim_a = ashape.len();
@@ -360,7 +361,8 @@ fn reshape_solution<F: Float>(
 #[allow(dead_code)]
 fn compute_grad_b<F: Float>(
     _a: &ArrayD<F>,
-    grad_x: &ArrayD<F>, _axes: &Option<Vec<i32>>,
+    grad_x: &ArrayD<F>,
+    _axes: &Option<Vec<i32>>,
 ) -> ArrayD<F> {
     // Simplified: return grad_x with appropriate shape
     grad_x.clone()
@@ -368,8 +370,10 @@ fn compute_grad_b<F: Float>(
 
 #[allow(dead_code)]
 fn compute_grad_a<F: Float>(
-    _grad_x: &ArrayD<F>, _x: &ArrayD<F>,
-    ashape: &[usize], _axes: &Option<Vec<i32>>,
+    _grad_x: &ArrayD<F>,
+    _x: &ArrayD<F>,
+    ashape: &[usize],
+    _axes: &Option<Vec<i32>>,
 ) -> ArrayD<F> {
     // Simplified: return negative outer product with appropriate shape
     // This is a placeholder - actual implementation would compute proper tensor product
@@ -445,7 +449,10 @@ fn compute_elementwise_mul<F: Float>(
 
 #[allow(dead_code)]
 fn compute_general_einsum<F: Float>(
-    a: &ndarray::ArrayViewD<F>, _b: &ndarray::ArrayViewD<F>, _input_specs: &[String], _output_spec: &str,
+    a: &ndarray::ArrayViewD<F>,
+    _b: &ndarray::ArrayViewD<F>,
+    _input_specs: &[String],
+    _output_spec: &str,
 ) -> Result<ArrayD<F>, OpError> {
     // Simplified implementation - just return first input for now
     Ok(a.to_owned())

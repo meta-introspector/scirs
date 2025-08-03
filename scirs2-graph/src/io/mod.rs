@@ -17,12 +17,12 @@ pub mod graphml;
 pub mod json;
 pub mod matrix_market;
 
-use adjacency__list::{
+use adjacency_list::{
     read_adjacency_list_format, read_adjacency_list_format_digraph, write_adjacency_list_format,
     write_adjacency_list_format_digraph,
 };
 use dot::{read_dot_format, read_dot_format_digraph, write_dot_format, write_dot_format_digraph};
-use edge__list::{
+use edge_list::{
     read_edge_list_format, read_edge_list_format_digraph, write_edge_list_format,
     write_edge_list_format_digraph,
 };
@@ -34,7 +34,7 @@ use graphml::{
 use json::{
     read_json_format, read_json_format_digraph, write_json_format, write_json_format_digraph,
 };
-use matrix__market::{
+use matrix_market::{
     read_matrix_market_format, read_matrix_market_format_digraph, write_matrix_market_format,
     write_matrix_market_format_digraph,
 };

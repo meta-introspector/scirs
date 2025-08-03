@@ -350,8 +350,7 @@ pub mod data_validation {
             .into_error());
         }
 
-        for (i, (&actual, &expected)) in actualshape.iter().zip(expectedshape.iter()).enumerate()
-        {
+        for (i, (&actual, &expected)) in actualshape.iter().zip(expectedshape.iter()).enumerate() {
             if let Some(expected_dim) = expected {
                 if actual != expected_dim {
                     return Err(EnhancedError::new(

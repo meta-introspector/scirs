@@ -66,7 +66,7 @@ where
     pub fn new(shape: (usize, usize)) -> Self {
         Self {
             data: HashMap::new(),
-            shape: shape,
+            shape,
         }
     }
 
@@ -603,7 +603,7 @@ mod tests {
         let dense = array.to_array();
 
         let expected =
-            Array::fromshape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
+            Array::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
                 .unwrap();
 
         assert_eq!(dense, expected);
@@ -611,9 +611,8 @@ mod tests {
 
     #[test]
     fn test_dok_array_from_array() {
-        let dense =
-            Array::fromshape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
-                .unwrap();
+        let dense = Array::from_shape_vec((3, 3), vec![1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 4.0, 5.0, 0.0])
+            .unwrap();
 
         let array = DokArray::from_array(&dense);
 

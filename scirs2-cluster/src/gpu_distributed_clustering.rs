@@ -6,7 +6,7 @@
 
 use crate::advanced__clustering::{AdvancedClusterer, AdvancedClusteringResult};
 use crate::error::{ClusteringError, Result};
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread;

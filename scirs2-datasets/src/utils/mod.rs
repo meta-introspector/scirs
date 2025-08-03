@@ -95,8 +95,7 @@ mod tests {
         assert_eq!(indices.len(), 3);
 
         // Test balancing
-        let (balanced_data_balanced_targets) =
-            random_oversample(&data, &target, Some(42)).unwrap();
+        let (balanced_data_balanced_targets) = random_oversample(&data, &target, Some(42)).unwrap();
         assert!(balanced_data.nrows() > data.nrows()); // Should have more samples after oversampling
 
         // Test scaling

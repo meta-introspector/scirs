@@ -213,7 +213,8 @@ pub mod optional_array1 {
             value: Array1<f64>,
         }
 
-        Option::<Wrapper>::deserialize(_deserializer).map(|opt_wrapper| opt_wrapper.map(|w| w.value))
+        Option::<Wrapper>::deserialize(_deserializer)
+            .map(|opt_wrapper| opt_wrapper.map(|w| w.value))
     }
 }
 

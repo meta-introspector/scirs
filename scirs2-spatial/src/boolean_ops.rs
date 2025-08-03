@@ -83,7 +83,7 @@ struct Edge {
     start: Point2D,
     end: Point2D,
     polygon_id: usize, // 0 for first polygon, 1 for second
-    intersection_points: Vec<IntersectionPoint>,
+    intersectionpoints: Vec<IntersectionPoint>,
 }
 
 /// Intersection point with metadata
@@ -131,7 +131,7 @@ impl LabeledPolygon {
                 start,
                 end,
                 polygon_id: 0,
-                intersection_points: Vec::new(),
+                intersectionpoints: Vec::new(),
             });
         }
 
@@ -148,10 +148,10 @@ impl LabeledPolygon {
             data.push(vertex.x);
             data.push(vertex.y);
         }
-        Array2::fromshape_vec((self.vertices.len(), 2), data).unwrap()
+        Array2::from_shape_vec((self.vertices.len(), 2), data).unwrap()
     }
 
-    fn is_point_inside(&self, _point: &Point2D) -> bool {
+    fn ispoint_inside(&self, point: &Point2D) -> bool {
         let mut inside = false;
         let n = self.vertices.len();
 
@@ -160,8 +160,8 @@ impl LabeledPolygon {
             let vi = &self.vertices[i];
             let vj = &self.vertices[j];
 
-            if ((vi.y > _point.y) != (vj.y > _point.y))
-                && (_point.x < (vj.x - vi.x) * (_point.y - vi.y) / (vj.y - vi.y) + vi.x)
+            if ((vi.y > point.y) != (vj.y > point.y))
+                && (point.x < (vj.x - vi.x) * (point.y - vi.y) / (vj.y - vi.y) + vi.x)
             {
                 inside = !inside;
             }
@@ -211,7 +211,7 @@ impl LabeledPolygon {
                 start,
                 end,
                 polygon_id: self.edges[0].polygon_id,
-                intersection_points: Vec::new(),
+                intersectionpoints: Vec::new(),
             });
         }
         self.edges = edges;
@@ -381,18 +381,18 @@ fn find_intersections(
 ) -> SpatialResult<()> {
     for (i, edge1) in _poly1.edges.iter_mut().enumerate() {
         for (j, edge2) in poly2.edges.iter_mut().enumerate() {
-            if let Some((intersection_point, t1, t2)) =
+            if let Some((intersectionpoint, t1, t2)) =
                 line_segment_intersection(&edge1.start, &edge1.end, &edge2.start, &edge2.end)
             {
                 // Add intersection to both edges
-                edge1.intersection_points.push(IntersectionPoint {
-                    point: intersection_point,
+                edge1.intersectionpoints.push(IntersectionPoint {
+                    point: intersectionpoint,
                     t: t1,
                     other_edge_id: j,
                 });
 
-                edge2.intersection_points.push(IntersectionPoint {
-                    point: intersection_point,
+                edge2.intersectionpoints.push(IntersectionPoint {
+                    point: intersectionpoint,
                     t: t2,
                     other_edge_id: i,
                 });
@@ -402,11 +402,11 @@ fn find_intersections(
 
     // Sort intersection points along each edge
     for edge in &mut _poly1.edges {
-        edge.intersection_points
+        edge.intersectionpoints
             .sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap_or(Ordering::Equal));
     }
     for edge in &mut poly2.edges {
-        edge.intersection_points
+        edge.intersectionpoints
             .sort_by(|a, b| a.t.partial_cmp(&b.t).unwrap_or(Ordering::Equal));
     }
 
@@ -511,7 +511,7 @@ fn sutherland_hodgman_clip(
             start,
             end,
             polygon_id: 0,
-            intersection_points: Vec::new(),
+            intersectionpoints: Vec::new(),
         });
     }
 
@@ -524,9 +524,9 @@ fn sutherland_hodgman_clip(
 
 /// Check if a point is inside relative to a directed edge
 #[allow(dead_code)]
-fn is_inside(_point: &Point2D, edge_start: &Point2D, edge_end: &Point2D) -> bool {
+fn is_inside(point: &Point2D, edge_start: &Point2D, edge_end: &Point2D) -> bool {
     let edge_vector = Point2D::new(edge_end.x - edge_start.x, edge_end.y - edge_start.y);
-    let point_vector = Point2D::new(_point.x - edge_start.x, _point.y - edge_start.y);
+    let point_vector = Point2D::new(point.x - edge_start.x, point.y - edge_start.y);
     edge_vector.cross_product(&point_vector) >= 0.0
 }
 
@@ -577,13 +577,13 @@ fn weiler_atherton_difference(
 fn polygons_intersect(_poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
     // Quick check: if any vertex of one polygon is inside the other
     for vertex in &_poly1.vertices {
-        if poly2.is_point_inside(vertex) {
+        if poly2.ispoint_inside(vertex) {
             return true;
         }
     }
 
     for vertex in &poly2.vertices {
-        if _poly1.is_point_inside(vertex) {
+        if _poly1.ispoint_inside(vertex) {
             return true;
         }
     }
@@ -724,7 +724,7 @@ mod tests {
     use ndarray::arr2;
 
     #[test]
-    fn test_point2d_operations() {
+    fn testpoint2d_operations() {
         let p1 = Point2D::new(0.0, 0.0);
         let p2 = Point2D::new(1.0, 1.0);
 
@@ -747,15 +747,15 @@ mod tests {
     }
 
     #[test]
-    fn test_point_inside_polygon() {
+    fn testpoint_inside_polygon() {
         let vertices = arr2(&[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]]);
         let polygon = LabeledPolygon::from_array(&vertices.view()).unwrap();
 
-        let inside_point = Point2D::new(0.5, 0.5);
-        let outside_point = Point2D::new(1.5, 1.5);
+        let insidepoint = Point2D::new(0.5, 0.5);
+        let outsidepoint = Point2D::new(1.5, 1.5);
 
-        assert!(polygon.is_point_inside(&inside_point));
-        assert!(!polygon.is_point_inside(&outside_point));
+        assert!(polygon.ispoint_inside(&insidepoint));
+        assert!(!polygon.ispoint_inside(&outsidepoint));
     }
 
     #[test]

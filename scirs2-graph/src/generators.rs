@@ -394,7 +394,7 @@ where
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A forest containing the specified trees
 #[allow(dead_code)]
-pub fn forest_graph<R: Rng>(_tree, sizes: &[usize], rng: &mut R) -> Result<Graph<usize, f64>> {
+pub fn forest_graph<R: Rng>(_tree_sizes: &[usize], sizes: &[usize], rng: &mut R) -> Result<Graph<usize, f64>> {
     let mut forest = Graph::new();
     let mut node_offset = 0;
 
@@ -905,7 +905,7 @@ pub fn planted_partition_model<R: Rng>(
 
     // Create block matrix
     let mut block_matrix = vec![vec![p_out; k]; k];
-    for (i, row) _in block_matrix.iter_mut().enumerate().take(k) {
+    for (i, row) in block_matrix.iter_mut().enumerate().take(k) {
         row[i] = p_in;
     }
 

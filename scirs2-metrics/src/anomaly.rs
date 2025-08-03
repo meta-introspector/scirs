@@ -12,7 +12,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::anomaly::{
+//! use scirs2_metrics::anomaly::{
 //!     detection_accuracy, false_alarm_rate, miss_detection_rate,
 //!     anomaly_auc_score, anomaly_average_precision_score
 //! };
@@ -47,7 +47,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::anomaly::{
+//! use scirs2_metrics::anomaly::{
 //!     kl_divergence, js_divergence, wasserstein_distance, maximum_mean_discrepancy
 //! };
 //!
@@ -79,7 +79,7 @@
 //!
 //! ```
 //! use ndarray::array;
-//! use scirs2__metrics::anomaly::{
+//! use scirs2_metrics::anomaly::{
 //!     precision_recall_with_tolerance, point_adjusted_precision_recall, nab_score
 //! };
 //!
@@ -124,7 +124,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::detection_accuracy;
+/// use scirs2_metrics::anomaly::detection_accuracy;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// let y_pred = array![0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0];
@@ -190,7 +190,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::false_alarm_rate;
+/// use scirs2_metrics::anomaly::false_alarm_rate;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// let y_pred = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
@@ -265,7 +265,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::miss_detection_rate;
+/// use scirs2_metrics::anomaly::miss_detection_rate;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// let y_pred = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
@@ -340,7 +340,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::anomaly_auc_score;
+/// use scirs2_metrics::anomaly::anomaly_auc_score;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// let y_score = array![0.1, 0.2, 0.9, 0.3, 0.8, 0.2, 0.4, 0.95, 0.1, 0.05];
@@ -453,7 +453,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::anomaly_average_precision_score;
+/// use scirs2_metrics::anomaly::anomaly_average_precision_score;
 ///
 /// let y_true = array![0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 /// let y_score = array![0.1, 0.2, 0.9, 0.3, 0.8, 0.2, 0.4, 0.95, 0.1, 0.05];
@@ -553,7 +553,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::kl_divergence;
+/// use scirs2_metrics::anomaly::kl_divergence;
 ///
 /// // Two probability distributions
 /// let p = array![0.5, 0.3, 0.2];
@@ -630,7 +630,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::js_divergence;
+/// use scirs2_metrics::anomaly::js_divergence;
 ///
 /// // Two probability distributions
 /// let p = array![0.5, 0.3, 0.2];
@@ -724,7 +724,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::wasserstein_distance;
+/// use scirs2_metrics::anomaly::wasserstein_distance;
 ///
 /// // Two sets of samples
 /// let u_values = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -819,7 +819,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::maximum_mean_discrepancy;
+/// use scirs2_metrics::anomaly::maximum_mean_discrepancy;
 ///
 /// // Two similar sample sets
 /// let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -977,7 +977,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::precision_recall_with_tolerance;
+/// use scirs2_metrics::anomaly::precision_recall_with_tolerance;
 ///
 /// // Ground truth: anomalies at positions 3-4 and 9
 /// let y_true = array![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0];
@@ -1124,7 +1124,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::point_adjusted_precision_recall;
+/// use scirs2_metrics::anomaly::point_adjusted_precision_recall;
 ///
 /// // Ground truth: anomaly sequences at positions 3-4 and 9
 /// let y_true = array![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0];
@@ -1277,7 +1277,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::anomaly::nab_score;
+/// use scirs2_metrics::anomaly::nab_score;
 ///
 /// // Ground truth: anomalies at positions 20 and 50
 /// let mut y_true = vec![0.0; 100];

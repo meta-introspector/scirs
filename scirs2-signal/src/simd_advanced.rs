@@ -26,7 +26,6 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(unused_imports)]
-#[cfg(target_arch = "x86_64")]
 /// Configuration for SIMD operations
 #[derive(Debug, Clone)]
 pub struct SimdConfig {
@@ -2036,8 +2035,8 @@ pub mod advanced_simd_matrix {
 
 /// Advanced-high-performance real-time signal processing operations
 pub mod advanced_simd_realtime {
-    #[cfg(target_arch = "x86_64")]
-
+    use super::SimdConfig;
+    
     /// Real-time SIMD FIR filter state
     #[derive(Debug, Clone)]
     pub struct RealtimeSimdFirFilter {
@@ -2049,10 +2048,10 @@ pub mod advanced_simd_realtime {
 
     impl RealtimeSimdFirFilter {
         /// Create new real-time SIMD FIR filter
-        pub fn new(_coefficients: Vec<f64>, config: SimdConfig) -> Self {
-            let delay_line = vec![0.0; _coefficients.len()];
+        pub fn new(coefficients: Vec<f64>, config: SimdConfig) -> Self {
+            let delay_line = vec![0.0; coefficients.len()];
             Self {
-                _coefficients,
+                coefficients,
                 delay_line,
                 position: 0,
                 config,

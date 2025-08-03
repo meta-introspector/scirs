@@ -219,7 +219,7 @@ where
 fn calculate_error<F: IntegrateFloat>(residual: &Array1<F>, _params: &NewtonParameters<F>) -> F {
     // Use L-infinity norm (max absolute value)
     let mut max_abs = F::zero();
-    for &r in _residual.iter() {
+    for &r in residual.iter() {
         max_abs = max_abs.max(r.abs());
     }
     max_abs

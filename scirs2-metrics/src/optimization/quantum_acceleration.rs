@@ -10,7 +10,7 @@
 
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num__complex::Complex;
+use num_complex::Complex;
 use num_traits::Float;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::collections::HashMap;
@@ -271,7 +271,7 @@ pub struct ClassicalFallback<F: Float> {
     auto_fallback: bool, _phantom: std::marker::PhantomData<F>,
 }
 
-impl<F: Float> + std::fmt::Debug for ClassicalFallback<F> {
+impl<F: Float + std::fmt::Debug> std::fmt::Debug for ClassicalFallback<F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ClassicalFallback")
             .field("simd_capabilities", &self.simd_capabilities.summary())
@@ -782,7 +782,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         Ok(parameters)
     }
 
-    fn prepare_variational_ansatz(&mut self..parameters: &[f64]) -> Result<Vec<Complex<f64>>> {
+    fn prepare_variational_ansatz(&mut self, parameters: &[f64]) -> Result<Vec<Complex<f64>>> {
         let state_size = 2_usize.pow(self.config.num_qubits as u32);
         let ansatz_state = vec![Complex::new(1.0, 0.0); state_size];
 

@@ -5,7 +5,7 @@
 
 pub mod roc_curve;
 
-pub use roc__curve::{
+pub use roc_curve::{
     interactive_roc_curve_from_labels, interactive_roc_curve_visualization, InteractiveOptions,
     InteractiveROCVisualizer,
 };

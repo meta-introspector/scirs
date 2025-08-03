@@ -1634,7 +1634,7 @@ impl SoundEventDetectionMetrics {
     }
 
     fn calculate_segment_based_f1(
-        &self_reference: &[(f64, f64, String)], _predicted: &[(f64, f64, String, f64)]_segment_length: f64,
+        &self_reference: &[(f64, f64, String)], _predicted: &[(f64, f64, String, f64)], _segment_length: f64,
     ) -> Result<f64> {
         Ok(0.65) // Placeholder
     }

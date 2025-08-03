@@ -18,7 +18,7 @@ use crate::vq::euclidean_distance;
 
 use super::fault_tolerance::{DataPartition, FaultToleranceCoordinator};
 use super::load_balancing::LoadBalancingCoordinator;
-use super::message_passing::{MessagePassingCoordinator, ClusteringMessage, MessagePriority};
+use super::message_passing::{ClusteringMessage, MessagePassingCoordinator, MessagePriority};
 use super::monitoring::PerformanceMonitor;
 use super::partitioning::{DataPartitioner, PartitioningConfig};
 
@@ -240,31 +240,33 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
 
         while self.current_iteration < self.config.max_iterations && !converged {
             let iteration_start = Instant::now();
-            
+
             // Perform one iteration of distributed K-means
             converged = self.perform_iteration(&mut stats)?;
-            
+
             // Update convergence history
             let iteration_time = iteration_start.elapsed().as_millis() as u64;
             self.update_convergence_history(iteration_time)?;
 
             // Check for rebalancing if needed
-            if self.config.enable_load_balancing && 
-               self.current_iteration % 10 == 0 {
+            if self.config.enable_load_balancing && self.current_iteration % 10 == 0 {
                 self.check_and_rebalance(data, &mut stats)?;
             }
 
             // Create checkpoint if configured
-            if self.config.enable_fault_tolerance && 
-               self.current_iteration % self.config.checkpoint_interval == 0 {
+            if self.config.enable_fault_tolerance
+                && self.current_iteration % self.config.checkpoint_interval == 0
+            {
                 self.create_checkpoint()?;
             }
 
             self.current_iteration += 1;
 
             if self.config.verbose && self.current_iteration % 10 == 0 {
-                println!("Iteration {}: inertia = {:.6}", 
-                        self.current_iteration, self.global_inertia);
+                println!(
+                    "Iteration {}: inertia = {:.6}",
+                    self.current_iteration, self.global_inertia
+                );
             }
         }
 
@@ -274,16 +276,18 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         stats.load_balance_score = self.calculate_load_balance_score();
 
         let final_labels = self.collect_final_labels()?;
-        let final_convergence = self.convergence_history.last()
-            .cloned()
-            .unwrap_or_else(|| ConvergenceInfo {
-                iteration: self.current_iteration,
-                inertia: self.global_inertia,
-                centroid_movement: 0.0,
-                converged,
-                timestamp: SystemTime::now(),
-                computation_time_ms: 0,
-            });
+        let final_convergence =
+            self.convergence_history
+                .last()
+                .cloned()
+                .unwrap_or_else(|| ConvergenceInfo {
+                    iteration: self.current_iteration,
+                    inertia: self.global_inertia,
+                    centroid_movement: 0.0,
+                    converged,
+                    timestamp: SystemTime::now(),
+                    computation_time_ms: 0,
+                });
 
         Ok(ClusteringResult {
             centroids: self.centroids.as_ref().unwrap().clone(),
@@ -310,17 +314,19 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         }
 
         if data.nrows() < self.k {
-            return Err(ClusteringError::InvalidInput(
-                format!("Number of samples ({}) must be at least k ({})", 
-                       data.nrows(), self.k)
-            ));
+            return Err(ClusteringError::InvalidInput(format!(
+                "Number of samples ({}) must be at least k ({})",
+                data.nrows(),
+                self.k
+            )));
         }
 
         if data.nrows() < self.config.n_workers {
-            return Err(ClusteringError::InvalidInput(
-                format!("Number of samples ({}) must be at least number of workers ({})", 
-                       data.nrows(), self.config.n_workers)
-            ));
+            return Err(ClusteringError::InvalidInput(format!(
+                "Number of samples ({}) must be at least number of workers ({})",
+                data.nrows(),
+                self.config.n_workers
+            )));
         }
 
         Ok(())
@@ -355,10 +361,9 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                         "Custom centroids dimensions don't match".to_string(),
                     ));
                 }
-                let converted_centroids = Array2::fromshape_fn(
-                    (self.k, data.ncols()),
-                    |(i, j)| F::from(centroids[[i, j]]).unwrap_or_else(F::zero)
-                );
+                let converted_centroids = Array2::fromshape_fn((self.k, data.ncols()), |(i, j)| {
+                    F::from(centroids[[i, j]]).unwrap_or_else(F::zero)
+                });
                 Ok(converted_centroids)
             }
         }
@@ -367,7 +372,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
     /// Random centroid initialization
     fn random_initialization(&self, data: ArrayView2<F>) -> Result<Array2<F>> {
         use rand::seq::SliceRandom;
-        
+
         let mut rng = rand::thread_rng();
         let data_indices: Vec<usize> = (0..data.nrows()).collect();
         let selected_indices: Vec<_> = data_indices
@@ -386,7 +391,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
     /// K-means++ centroid initialization
     fn kmeans_plus_plus_initialization(&self, data: ArrayView2<F>) -> Result<Array2<F>> {
         use rand::Rng;
-        
+
         let mut rng = rand::thread_rng();
         let mut centroids = Array2::zeros((self.k, data.ncols()));
 
@@ -397,7 +402,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         // Choose remaining centroids using K-means++ method
         for k in 1..self.k {
             let mut distances = Array1::zeros(data.nrows());
-            
+
             // Calculate distance to nearest centroid for each point
             for (i, point) in data.rows().into_iter().enumerate() {
                 let mut min_dist = F::infinity();
@@ -419,7 +424,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             } else {
                 let mut cumulative = 0.0;
                 let threshold = rng.gen::<f64>() * total_dist;
-                
+
                 let mut selected_idx = 0;
                 for (i, &dist) in distances.iter().enumerate() {
                     cumulative += dist * dist;
@@ -474,9 +479,9 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
 
     /// Broadcast current centroids to all workers
     fn broadcast_centroids(&mut self) -> Result<()> {
-        if let (Some(ref centroids), Some(ref mut coordinator)) = 
-           (&self.centroids, &mut self.message_coordinator) {
-            
+        if let (Some(ref centroids), Some(ref mut coordinator)) =
+            (&self.centroids, &mut self.message_coordinator)
+        {
             let message = ClusteringMessage::UpdateCentroids {
                 round: self.current_iteration,
                 centroids: centroids.clone(),
@@ -495,7 +500,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         if let Some(ref centroids) = self.centroids {
             for partition in &self.partitions {
                 let worker_start = Instant::now();
-                
+
                 // Assign points to nearest centroids
                 let mut labels = Array1::zeros(partition.data.nrows());
                 let mut local_inertia = F::zero();
@@ -523,7 +528,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
                 for (i, point) in partition.data.rows().into_iter().enumerate() {
                     let cluster = labels[i];
                     point_counts[cluster] += 1;
-                    
+
                     for (j, &value) in point.iter().enumerate() {
                         local_centroids[[cluster, j]] = local_centroids[[cluster, j]] + value;
                     }
@@ -585,14 +590,14 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         // Aggregate weighted centroids and counts
         for result in worker_results {
             global_inertia += result.local_inertia;
-            
+
             for k in 0..self.k {
                 let count = F::from(result.point_counts[k]).unwrap();
                 global_counts[k] += result.point_counts[k];
-                
+
                 for j in 0..n_features {
-                    global_centroids[[k, j]] = global_centroids[[k, j]] + 
-                        result.local_centroids[[k, j]] * count;
+                    global_centroids[[k, j]] =
+                        global_centroids[[k, j]] + result.local_centroids[[k, j]] * count;
                 }
             }
         }
@@ -623,9 +628,11 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             }
 
             // Check convergence criteria
-            let movement_converged = max_movement.to_f64().unwrap_or(f64::INFINITY) < self.config.tolerance;
+            let movement_converged =
+                max_movement.to_f64().unwrap_or(f64::INFINITY) < self.config.tolerance;
             let inertia_change = (self.global_inertia - new_inertia).abs();
-            let inertia_converged = inertia_change < self.config.tolerance * self.global_inertia.abs();
+            let inertia_converged =
+                inertia_change < self.config.tolerance * self.global_inertia.abs();
 
             Ok(movement_converged || inertia_converged)
         } else {
@@ -646,8 +653,8 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             0.0
         };
 
-        let converged = self.current_iteration >= self.config.max_iterations || 
-                       centroid_movement < self.config.tolerance;
+        let converged = self.current_iteration >= self.config.max_iterations
+            || centroid_movement < self.config.tolerance;
 
         let convergence_info = ConvergenceInfo {
             iteration: self.current_iteration,
@@ -676,15 +683,18 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         // Check if rebalancing is needed
         if self.fault_coordinator.should_rebalance() {
             let rebalance_start = Instant::now();
-            
+
             // Re-partition data
             self.partitions = self.partitioner.partition_data(data)?;
-            
+
             stats.communication_time_ms += rebalance_start.elapsed().as_millis() as u64;
             stats.fault_tolerance_events += 1;
 
             if self.config.verbose {
-                println!("Load rebalancing performed at iteration {}", self.current_iteration);
+                println!(
+                    "Load rebalancing performed at iteration {}",
+                    self.current_iteration
+                );
             }
         }
 
@@ -697,7 +707,8 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             return Ok(());
         }
 
-        let worker_assignments = self.partitions
+        let worker_assignments = self
+            .partitions
             .iter()
             .map(|p| (p.worker_id, vec![p.partition_id]))
             .collect();
@@ -720,10 +731,8 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             return 0.0;
         }
 
-        let avg_health_score = worker_metrics
-            .values()
-            .map(|m| m.health_score)
-            .sum::<f64>() / worker_metrics.len() as f64;
+        let avg_health_score = worker_metrics.values().map(|m| m.health_score).sum::<f64>()
+            / worker_metrics.len() as f64;
 
         avg_health_score
     }
@@ -736,14 +745,16 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
 
         let partition_sizes: Vec<usize> = self.partitions.iter().map(|p| p.data.nrows()).collect();
         let avg_size = partition_sizes.iter().sum::<usize>() as f64 / partition_sizes.len() as f64;
-        
+
         if avg_size == 0.0 {
             return 1.0;
         }
 
-        let variance = partition_sizes.iter()
+        let variance = partition_sizes
+            .iter()
             .map(|&size| (size as f64 - avg_size).powi(2))
-            .sum::<f64>() / partition_sizes.len() as f64;
+            .sum::<f64>()
+            / partition_sizes.len() as f64;
 
         let coefficient_of_variation = variance.sqrt() / avg_size;
         1.0 / (1.0 + coefficient_of_variation)
@@ -760,7 +771,9 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         for partition in &self.partitions {
             if let Some(ref partition_labels) = partition.labels {
                 let end_offset = offset + partition_labels.len();
-                labels.slice_mut(s![offset..end_offset]).assign(partition_labels);
+                labels
+                    .slice_mut(s![offset..end_offset])
+                    .assign(partition_labels);
                 offset = end_offset;
             }
         }
@@ -830,14 +843,14 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
     use approx::assert_relative_eq;
+    use ndarray::Array2;
 
     #[test]
     fn test_distributed_kmeans_creation() {
         let config = DistributedKMeansConfig::default();
         let kmeans = DistributedKMeans::<f64>::new(3, config);
-        
+
         assert!(kmeans.is_ok());
         let kmeans = kmeans.unwrap();
         assert_eq!(kmeans.k, 3);
@@ -848,15 +861,15 @@ mod tests {
     fn test_input_validation() {
         let config = DistributedKMeansConfig::default();
         let kmeans = DistributedKMeans::<f64>::new(3, config).unwrap();
-        
+
         // Empty data
         let empty_data = Array2::<f64>::zeros((0, 2));
         assert!(kmeans.validate_input(empty_data.view()).is_err());
-        
+
         // Too few samples
         let small_data = Array2::<f64>::zeros((2, 2));
         assert!(kmeans.validate_input(small_data.view()).is_err());
-        
+
         // Valid data
         let valid_data = Array2::<f64>::zeros((10, 2));
         assert!(kmeans.validate_input(valid_data.view()).is_ok());
@@ -866,12 +879,9 @@ mod tests {
     fn test_random_initialization() {
         let config = DistributedKMeansConfig::default();
         let kmeans = DistributedKMeans::<f64>::new(3, config).unwrap();
-        
-        let data = Array2::fromshape_vec(
-            (10, 2),
-            (0..20).map(|x| x as f64).collect(),
-        ).unwrap();
-        
+
+        let data = Array2::fromshape_vec((10, 2), (0..20).map(|x| x as f64).collect()).unwrap();
+
         let centroids = kmeans.random_initialization(data.view()).unwrap();
         assert_eq!(centroids.shape(), &[3, 2]);
     }
@@ -880,15 +890,18 @@ mod tests {
     fn test_kmeans_plus_plus_initialization() {
         let config = DistributedKMeansConfig::default();
         let kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
-        
+
         let data = Array2::fromshape_vec(
             (6, 2),
-            vec![0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0, 5.0, 5.0, 6.0, 6.0],
-        ).unwrap();
-        
+            vec![
+                0.0, 0.0, 1.0, 1.0, 10.0, 10.0, 11.0, 11.0, 5.0, 5.0, 6.0, 6.0,
+            ],
+        )
+        .unwrap();
+
         let centroids = kmeans.kmeans_plus_plus_initialization(data.view()).unwrap();
         assert_eq!(centroids.shape(), &[2, 2]);
-        
+
         // Centroids should be different (with high probability)
         let dist = euclidean_distance(centroids.row(0), centroids.row(1));
         assert!(dist > 0.0);
@@ -898,23 +911,19 @@ mod tests {
     fn test_predict() {
         let config = DistributedKMeansConfig::default();
         let mut kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
-        
+
         // Set known centroids
-        let centroids = Array2::fromshape_vec(
-            (2, 2),
-            vec![0.0, 0.0, 10.0, 10.0],
-        ).unwrap();
+        let centroids = Array2::fromshape_vec((2, 2), vec![0.0, 0.0, 10.0, 10.0]).unwrap();
         kmeans.centroids = Some(centroids);
-        
+
         // Test prediction
-        let test_data = Array2::fromshape_vec(
-            (4, 2),
-            vec![1.0, 1.0, 9.0, 9.0, -1.0, -1.0, 11.0, 11.0],
-        ).unwrap();
-        
+        let test_data =
+            Array2::fromshape_vec((4, 2), vec![1.0, 1.0, 9.0, 9.0, -1.0, -1.0, 11.0, 11.0])
+                .unwrap();
+
         let labels = kmeans.predict(test_data.view()).unwrap();
         assert_eq!(labels.len(), 4);
-        
+
         // Points should be assigned to nearest centroids
         assert_eq!(labels[0], 0); // (1,1) closer to (0,0)
         assert_eq!(labels[1], 1); // (9,9) closer to (10,10)
@@ -929,58 +938,65 @@ mod tests {
             ..Default::default()
         };
         let kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
-        
-        let old_centroids = Array2::fromshape_vec(
-            (2, 2),
-            vec![0.0, 0.0, 1.0, 1.0],
-        ).unwrap();
-        
+
+        let old_centroids = Array2::fromshape_vec((2, 2), vec![0.0, 0.0, 1.0, 1.0]).unwrap();
+
         let new_centroids_converged = Array2::fromshape_vec(
             (2, 2),
             vec![0.05, 0.05, 1.05, 1.05], // Small movement
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         let new_centroids_not_converged = Array2::fromshape_vec(
             (2, 2),
             vec![0.5, 0.5, 1.5, 1.5], // Large movement
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         // Set up kmeans with old centroids
         let mut kmeans_converged = kmeans;
         kmeans_converged.centroids = Some(old_centroids.clone());
         kmeans_converged.global_inertia = 100.0;
-        
+
         // Test convergence
-        assert!(kmeans_converged.check_convergence(&new_centroids_converged, 99.0).unwrap());
-        
-        let mut kmeans_not_converged = DistributedKMeans::<f64>::new(2, DistributedKMeansConfig {
-            tolerance: 0.1,
-            ..Default::default()
-        }).unwrap();
+        assert!(kmeans_converged
+            .check_convergence(&new_centroids_converged, 99.0)
+            .unwrap());
+
+        let mut kmeans_not_converged = DistributedKMeans::<f64>::new(
+            2,
+            DistributedKMeansConfig {
+                tolerance: 0.1,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         kmeans_not_converged.centroids = Some(old_centroids);
         kmeans_not_converged.global_inertia = 100.0;
-        
-        assert!(!kmeans_not_converged.check_convergence(&new_centroids_not_converged, 50.0).unwrap());
+
+        assert!(!kmeans_not_converged
+            .check_convergence(&new_centroids_not_converged, 50.0)
+            .unwrap());
     }
 
     #[test]
     fn test_load_balance_score() {
         let config = DistributedKMeansConfig::default();
         let mut kmeans = DistributedKMeans::<f64>::new(2, config).unwrap();
-        
+
         // Balanced partitions
         let partition1 = DataPartition::new(0, Array2::zeros((100, 2)), 0);
         let partition2 = DataPartition::new(1, Array2::zeros((100, 2)), 1);
         kmeans.partitions = vec![partition1, partition2];
-        
+
         let balanced_score = kmeans.calculate_load_balance_score();
         assert!(balanced_score > 0.9);
-        
+
         // Imbalanced partitions
         let partition1 = DataPartition::new(0, Array2::zeros((10, 2)), 0);
         let partition2 = DataPartition::new(1, Array2::zeros((190, 2)), 1);
         kmeans.partitions = vec![partition1, partition2];
-        
+
         let imbalanced_score = kmeans.calculate_load_balance_score();
         assert!(imbalanced_score < balanced_score);
     }

@@ -502,7 +502,8 @@ fn calculate_node_positions<F: Float + FromPrimitive>(
 fn calculate_positions_recursive<F: Float + FromPrimitive>(
     node: &TreeNode<F>,
     positions: &mut HashMap<usize, (F, F)>,
-    leaf_counter: &mut usize, _n_samples: usize,
+    leaf_counter: &mut usize,
+    _n_samples: usize,
     orientation: DendrogramOrientation,
 ) -> F {
     if node.is_leaf {
@@ -629,7 +630,8 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd>(
 fn create_leaves<F: Float>(
     positions: &HashMap<usize, (F, F)>,
     labels: Option<&[String]>,
-    n_samples: usize, _orientation: DendrogramOrientation,
+    n_samples: usize,
+    _orientation: DendrogramOrientation,
 ) -> Vec<Leaf> {
     let mut leaves = Vec::new();
 
@@ -1122,7 +1124,8 @@ pub mod interactive {
 
         /// Generate tooltip information for each node
         fn generate_tooltips(
-            linkage_matrix: &ArrayView2<F>, _plot: &DendrogramPlot<F>,
+            linkage_matrix: &ArrayView2<F>,
+            _plot: &DendrogramPlot<F>,
         ) -> Result<Vec<TooltipInfo>> {
             let mut tooltips = Vec::new();
             let n_samples = linkage_matrix.shape()[0] + 1;

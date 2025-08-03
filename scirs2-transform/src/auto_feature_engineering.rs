@@ -331,7 +331,7 @@ impl MetaLearningModel {
             6 => TransformationType::VarianceThreshold,
             7 => TransformationType::QuantileTransformer,
             8 => TransformationType::BinaryEncoder,
-            9 => TransformationType::TargetEncoder_ => TransformationType::StandardScaler,
+            _ => TransformationType::StandardScaler,
         }
     }
 
@@ -2195,7 +2195,8 @@ impl AdvancedMetaLearningSystem {
                 let feature_penalty = (base_features.n_features as f64 / 100.0).min(0.5);
                 0.5 - feature_penalty - (log_size / 15.0).min(0.3)
             }
-            TransformationType::PowerTransformer => 0.8 - (log_size / 25.0).min(0.2, _ => 0.7, // Default efficiency
+            TransformationType::PowerTransformer => 0.8 - (log_size / 25.0).min(0.2),
+            _ => 0.7, // Default efficiency
         };
 
         Ok(score.max(0.1).min(1.0))
@@ -2230,13 +2231,13 @@ impl AdvancedMetaLearningSystem {
             TransformationType::MinMaxScaler => 0.6,
             TransformationType::PowerTransformer => 0.8,
             TransformationType::PCA => 0.7,
-            TransformationType::PolynomialFeatures => 0.5_ => 0.7,
+            TransformationType::PolynomialFeatures => 0.7,
         };
 
         // Adjust based on data characteristics
         let outlier_penalty = if base_features.outlier_ratio > 0.1 {
             match t_type {
-                TransformationType::RobustScaler | TransformationType::QuantileTransformer => 0.0_ => base_features.outlier_ratio * 0.3,
+                TransformationType::RobustScaler | TransformationType::QuantileTransformer => 0.0,
             }
         } else {
             0.0

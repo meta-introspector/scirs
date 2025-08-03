@@ -370,7 +370,7 @@ pub enum Pattern<F: IntegrateFloat> {
 /// Pattern matching for common mathematical expressions
 #[allow(dead_code)]
 pub fn match_pattern<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Option<Pattern<F>> {
-    match _expr {
+    match expr {
         // Match a^2 + b^2 (sum of squares)
         Add(a, b) => {
             if let (Pow(base_a, exp_a), Pow(base_b, exp_b)) = (a.as_ref(), b.as_ref()) {
@@ -434,7 +434,7 @@ fn match_expressions<F: IntegrateFloat>(
 /// Apply pattern-based simplifications
 #[allow(dead_code)]
 pub fn pattern_simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
-    if let Some(pattern) = match_pattern(_expr) {
+    if let Some(pattern) = match_pattern(expr) {
         match pattern {
             Pattern::DifferenceOfSquares(a, b) => {
                 // a^2 - b^2 = (a + b)(a - b)
@@ -444,11 +444,11 @@ pub fn pattern_simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Symb
                 // sin^2(x) + cos^2(x) = 1
                 Constant(F::one())
             }
-            _ => _expr.clone(),
+            _ => expr.clone(),
         }
     } else {
         // Try recursive pattern simplification
-        match _expr {
+        match expr {
             Add(a, b) => {
                 let a_simp = pattern_simplify(a);
                 let b_simp = pattern_simplify(b);
@@ -464,7 +464,7 @@ pub fn pattern_simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Symb
                 let b_simp = pattern_simplify(b);
                 Mul(Box::new(a_simp), Box::new(b_simp))
             }
-            _ => _expr.clone(),
+            _ => expr.clone(),
         }
     }
 }
@@ -472,7 +472,7 @@ pub fn pattern_simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Symb
 /// Simplify a symbolic expression
 #[allow(dead_code)]
 pub fn simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
-    match _expr {
+    match expr {
         // Identity simplifications
         Add(a, b) => {
             let a_simp = simplify(a);
@@ -600,7 +600,7 @@ pub fn simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpr
                 _ => Abs(Box::new(a_simp)),
             }
         }
-        _ => _expr.clone(),
+        _ => expr.clone(),
     }
 }
 
@@ -608,7 +608,7 @@ pub fn simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpr
 #[allow(dead_code)]
 pub fn deep_simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
     // First apply algebraic simplification
-    let algebraic_simplified = simplify(_expr);
+    let algebraic_simplified = simplify(expr);
     // Then apply pattern-based simplification
     pattern_simplify(&algebraic_simplified)
 }

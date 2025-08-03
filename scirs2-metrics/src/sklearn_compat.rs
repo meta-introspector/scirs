@@ -248,10 +248,10 @@ fn calculate_class_metrics(
 
 /// Equivalent to sklearn.metrics.accuracy_score
 #[allow(dead_code)]
-pub fn accuracy_score_sklearn(_y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Result<f64> {
-    if _y_true.len() != y_pred.len() {
+pub fn accuracy_score_sklearn(y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Result<f64> {
+    if y_true.len() != y_pred.len() {
         return Err(MetricsError::InvalidInput(
-            "_y_true and y_pred must have the same length".to_string(),
+            "y_true and y_pred must have the same length".to_string(),
         ));
     }
 
@@ -295,9 +295,9 @@ pub fn precision_recall_fscore_support_sklearn(
     let mut fscores = Vec::new();
     let mut supports = Vec::new();
 
-    _for &_label in &target_labels {
-        let (precision, recall_f1, support) =
-            calculate_class_metrics(y_true, y_pred, _label, zero_division)?;
+    for &label in &target_labels {
+        let (precision, recall, f1, support) =
+            calculate_class_metrics(y_true, y_pred, label, zero_division)?;
 
         // Calculate F-beta score
         let fbeta = if precision + recall > 0.0 {
@@ -497,7 +497,8 @@ pub fn multilabel_confusion_matrix_sklearn(
                 (1, 1) => tp += _weight,
                 (0, 1) => fp += _weight,
                 (0, 0) => tn += _weight,
-                (1, 0) => fn_count += weight_ => {
+                (1, 0) => fn_count += _weight,
+                _ => {
                     return Err(MetricsError::InvalidInput(
                         "Labels must be 0 or 1 for multilabel classification".to_string(),
                     ))

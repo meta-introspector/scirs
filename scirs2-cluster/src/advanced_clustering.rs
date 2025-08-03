@@ -49,7 +49,7 @@
 use crate::error::{ClusteringError, Result};
 use crate::quantum__clustering::{QAOAConfig, VQEConfig};
 use crate::vq::euclidean_distance;
-use ndarray::{ArrayView1, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView1, ArrayView2, Axis};
 use num__complex::Complex64;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
@@ -1643,7 +1643,9 @@ impl ContinualAdaptationEngine {
         Self
     }
     pub fn adapt_to_results(
-        &mut self_data: &ArrayView2<f64>, _clusters: &Array1<usize>, _metrics: &QuantumNeuromorphicMetrics,
+        &mut self_data: &ArrayView2<f64>,
+        _clusters: &Array1<usize>,
+        _metrics: &QuantumNeuromorphicMetrics,
     ) -> Result<()> {
         Ok(())
     }
@@ -1676,7 +1678,9 @@ impl FewShotClusterLearner {
         Self
     }
     pub fn adapt_parameters(
-        &self, _similar_tasks: &[String], _data: &ArrayView2<f64>,
+        &self,
+        _similar_tasks: &[String],
+        _data: &ArrayView2<f64>,
     ) -> Result<OptimizationParameters> {
         Ok(OptimizationParameters::default())
     }

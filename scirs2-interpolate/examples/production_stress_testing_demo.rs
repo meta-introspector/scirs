@@ -224,7 +224,7 @@ fn analyze_by_category(_report: &scirs2, interpolate: StressTestReport) {
         match result.status {
             TestStatus::Passed => stats.0 += 1,
             TestStatus::Failed | TestStatus::Error | TestStatus::TimedOut => stats.1 += 1,
-            TestStatus::PassedWithWarnings => stats.2 += 1_ => {}
+            TestStatus::PassedWithWarnings => stats.2 += 1,
         }
     }
 

@@ -124,19 +124,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             for result in &report.analysis_results {
                 match result.stability.level {
-                    scirs2_interpolate::api_stabilization, _enhanced::ApiStabilityLevel::Stable => {
+                    scirs2_interpolate::api_stabilization_enhanced::ApiStabilityLevel::Stable => {
                         stable_items.push(&result.item_name);
                     }
-                    scirs2_interpolate::api_stabilization, _enhanced::ApiStabilityLevel::MostlyStable => {
+                    scirs2_interpolate::api_stabilization_enhanced::ApiStabilityLevel::MostlyStable => {
                         stable_items.push(&result.item_name);
                     }
-                    scirs2_interpolate::api_stabilization, _enhanced::ApiStabilityLevel::Unstable => {
+                    scirs2_interpolate::api_stabilization_enhanced::ApiStabilityLevel::Unstable => {
                         unstable_items.push(&result.item_name);
                     }
-                    scirs2_interpolate::api_stabilization, _enhanced::ApiStabilityLevel::Experimental => {
+                    scirs2_interpolate::api_stabilization_enhanced::ApiStabilityLevel::Experimental => {
                         experimental_items.push(&result.item_name);
                     }
-                    scirs2_interpolate::api_stabilization, _enhanced::ApiStabilityLevel::Deprecated => {
+                    scirs2_interpolate::api_stabilization_enhanced::ApiStabilityLevel::Deprecated => {
                         // Skip deprecated items
                     }
                 }

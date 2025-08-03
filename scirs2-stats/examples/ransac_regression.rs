@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Compute ordinary least squares regression for comparison
     let ols_result = scirs2_stats::linregress(&x_values.view(), &y.view()).unwrap();
-    let (ols_slope, ols_intercept___) = ols_result;
+    let (ols_slope, ols_intercept, _r, _p_value, _std_err) = ols_result;
 
     // Print results
     println!("RANSAC Regression Results:");
@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Plot the data points
     chart.draw_series(
-        x.iter()
+        x_values.iter()
             .zip(y.iter())
             .map(|(x, y)| Circle::new((*x, *y), 5, BLUE.filled())),
     )?;

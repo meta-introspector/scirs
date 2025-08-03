@@ -71,17 +71,17 @@ use std::f64::consts::PI;
 /// ```
 #[allow(dead_code)]
 pub fn point_in_polygon<T: Float>(point: &[T], polygon: &ArrayView2<T>) -> bool {
-    let x = _point[0];
-    let y = _point[1];
+    let x = point[0];
+    let y = point[1];
     let n = polygon.shape()[0];
 
     if n < 3 {
         return false; // A polygon must have at least 3 vertices
     }
 
-    // First check if the _point is on the boundary
+    // First check if the point is on the boundary
     let epsilon = T::from(1e-10).unwrap();
-    if point_on_boundary(_point, polygon, epsilon) {
+    if point_on_boundary(point, polygon, epsilon) {
         return true;
     }
 
@@ -100,7 +100,7 @@ pub fn point_in_polygon<T: Float>(point: &[T], polygon: &ArrayView2<T>) -> bool 
             let vi_x = polygon[[i, 0]];
             let vj_x = polygon[[j, 0]];
 
-            // Check if intersection is to the right of the _point
+            // Check if intersection is to the right of the point
             let slope = (vj_x - vi_x) / (vj_y - vi_y);
             let intersect_x = vi_x + (y - vi_y) * slope;
 
@@ -152,8 +152,8 @@ pub fn point_in_polygon<T: Float>(point: &[T], polygon: &ArrayView2<T>) -> bool 
 /// ```
 #[allow(dead_code)]
 pub fn point_on_boundary<T: Float>(point: &[T], polygon: &ArrayView2<T>, epsilon: T) -> bool {
-    let x = _point[0];
-    let y = _point[1];
+    let x = point[0];
+    let y = point[1];
     let n = polygon.shape()[0];
 
     if n < 2 {
@@ -168,33 +168,33 @@ pub fn point_on_boundary<T: Float>(point: &[T], polygon: &ArrayView2<T>, epsilon
         let x2 = polygon[[j, 0]];
         let y2 = polygon[[j, 1]];
 
-        // Calculate distance from _point to line segment
+        // Calculate distance from point to line segment
         let length_squared = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
 
         if length_squared.is_zero() {
-            // The segment is a _point
+            // The segment is a point
             let dist = ((x - x1) * (x - x1) + (y - y1) * (y - y1)).sqrt();
             if dist < epsilon {
                 return true;
             }
         } else {
-            // Calculate the projection of the _point onto the line
+            // Calculate the projection of the point onto the line
             let t = ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / length_squared;
 
             if t < T::zero() {
-                // Closest _point is the start of the segment
+                // Closest point is the start of the segment
                 let dist = ((x - x1) * (x - x1) + (y - y1) * (y - y1)).sqrt();
                 if dist < epsilon {
                     return true;
                 }
             } else if t > T::one() {
-                // Closest _point is the end of the segment
+                // Closest point is the end of the segment
                 let dist = ((x - x2) * (x - x2) + (y - y2) * (y - y2)).sqrt();
                 if dist < epsilon {
                     return true;
                 }
             } else {
-                // Closest _point is along the segment
+                // Closest point is along the segment
                 let projection_x = x1 + t * (x2 - x1);
                 let projection_y = y1 + t * (y2 - y1);
                 let dist = ((x - projection_x) * (x - projection_x)
@@ -241,10 +241,10 @@ pub fn point_on_boundary<T: Float>(point: &[T], polygon: &ArrayView2<T>, epsilon
 /// ```
 #[allow(dead_code)]
 pub fn polygon_area<T: Float>(polygon: &ArrayView2<T>) -> T {
-    let n = _polygon.shape()[0];
+    let n = polygon.shape()[0];
 
     if n < 3 {
-        return T::zero(); // A _polygon must have at least 3 vertices
+        return T::zero(); // A polygon must have at least 3 vertices
     }
 
     let mut area = T::zero();
@@ -252,10 +252,10 @@ pub fn polygon_area<T: Float>(polygon: &ArrayView2<T>) -> T {
     for i in 0..n {
         let j = (i + 1) % n;
 
-        let xi = _polygon[[i, 0]];
-        let yi = _polygon[[i, 1]];
-        let xj = _polygon[[j, 0]];
-        let yj = _polygon[[j, 1]];
+        let xi = polygon[[i, 0]];
+        let yi = polygon[[i, 1]];
+        let xj = polygon[[j, 0]];
+        let yj = polygon[[j, 1]];
 
         area = area + (xi * yj - xj * yi);
     }
@@ -293,7 +293,7 @@ pub fn polygon_area<T: Float>(polygon: &ArrayView2<T>) -> T {
 /// ```
 #[allow(dead_code)]
 pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
-    let n = _polygon.shape()[0];
+    let n = polygon.shape()[0];
 
     if n < 3 {
         // Return the average of points for degenerate cases
@@ -301,8 +301,8 @@ pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
         let mut y_sum = T::zero();
 
         for i in 0..n {
-            x_sum = x_sum + _polygon[[i, 0]];
-            y_sum = y_sum + _polygon[[i, 1]];
+            x_sum = x_sum + polygon[[i, 0]];
+            y_sum = y_sum + polygon[[i, 1]];
         }
 
         if n > 0 {
@@ -319,10 +319,10 @@ pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
     for i in 0..n {
         let j = (i + 1) % n;
 
-        let xi = _polygon[[i, 0]];
-        let yi = _polygon[[i, 1]];
-        let xj = _polygon[[j, 0]];
-        let yj = _polygon[[j, 1]];
+        let xi = polygon[[i, 0]];
+        let yi = polygon[[i, 1]];
+        let xj = polygon[[j, 0]];
+        let yj = polygon[[j, 1]];
 
         let cross = xi * yj - xj * yi;
 
@@ -339,8 +339,8 @@ pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
         let mut y_sum = T::zero();
 
         for i in 0..n {
-            x_sum = x_sum + _polygon[[i, 0]];
-            y_sum = y_sum + _polygon[[i, 1]];
+            x_sum = x_sum + polygon[[i, 0]];
+            y_sum = y_sum + polygon[[i, 1]];
         }
 
         return vec![x_sum / T::from(n).unwrap(), y_sum / T::from(n).unwrap()];
@@ -350,7 +350,7 @@ pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
     cx = cx / (six * area);
     cy = cy / (six * area);
 
-    // The formula can give negative coordinates if the _polygon is
+    // The formula can give negative coordinates if the polygon is
     // oriented clockwise, so we take the absolute value
     vec![cx.abs(), cy.abs()]
 }
@@ -492,9 +492,9 @@ fn segments_intersect<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T]) -> bool 
             && q[1] >= p[1].min(r[1])
     };
 
-    let o1 = orientation(_a1, a2, b1);
-    let o2 = orientation(_a1, a2, b2);
-    let o3 = orientation(b1, b2, _a1);
+    let o1 = orientation(a1, a2, b1);
+    let o2 = orientation(a1, a2, b2);
+    let o3 = orientation(b1, b2, a1);
     let o4 = orientation(b1, b2, a2);
 
     // General case
@@ -503,15 +503,15 @@ fn segments_intersect<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T]) -> bool 
     }
 
     // Special cases
-    if o1 == 0 && on_segment(_a1, b1, a2) {
+    if o1 == 0 && on_segment(a1, b1, a2) {
         return true;
     }
 
-    if o2 == 0 && on_segment(_a1, b2, a2) {
+    if o2 == 0 && on_segment(a1, b2, a2) {
         return true;
     }
 
-    if o3 == 0 && on_segment(b1, _a1, b2) {
+    if o3 == 0 && on_segment(b1, a1, b2) {
         return true;
     }
 
@@ -536,17 +536,17 @@ fn segments_intersect<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T]) -> bool 
 #[allow(dead_code)]
 fn segments_overlap<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T], epsilon: T) -> bool {
     // Check if the segments are collinear
-    let cross = (a2[0] - _a1[0]) * (b2[1] - b1[1]) - (a2[1] - _a1[1]) * (b2[0] - b1[0]);
+    let cross = (a2[0] - a1[0]) * (b2[1] - b1[1]) - (a2[1] - a1[1]) * (b2[0] - b1[0]);
 
     if cross.abs() > epsilon {
         return false; // Not collinear
     }
 
     // Check if the segments overlap on the x-axis
-    let overlap_x = !(a2[0] < b1[0].min(b2[0]) - epsilon || _a1[0] > b1[0].max(b2[0]) + epsilon);
+    let overlap_x = !(a2[0] < b1[0].min(b2[0]) - epsilon || a1[0] > b1[0].max(b2[0]) + epsilon);
 
     // Check if the segments overlap on the y-axis
-    let overlap_y = !(a2[1] < b1[1].min(b2[1]) - epsilon || _a1[1] > b1[1].max(b2[1]) + epsilon);
+    let overlap_y = !(a2[1] < b1[1].min(b2[1]) - epsilon || a1[1] > b1[1].max(b2[1]) + epsilon);
 
     overlap_x && overlap_y
 }
@@ -588,7 +588,7 @@ fn segments_overlap<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T], epsilon: T
 /// ```
 #[allow(dead_code)]
 pub fn is_simple_polygon<T: Float>(polygon: &ArrayView2<T>) -> bool {
-    let n = _polygon.shape()[0];
+    let n = polygon.shape()[0];
 
     if n < 3 {
         return true; // Degenerate cases are considered simple
@@ -598,8 +598,8 @@ pub fn is_simple_polygon<T: Float>(polygon: &ArrayView2<T>) -> bool {
     for i in 0..n {
         let i1 = (i + 1) % n;
 
-        let a1 = [_polygon[[i, 0]], _polygon[[i, 1]]];
-        let a2 = [_polygon[[i1, 0]], _polygon[[i1, 1]]];
+        let a1 = [polygon[[i, 0]], polygon[[i, 1]]];
+        let a2 = [polygon[[i1, 0]], polygon[[i1, 1]]];
 
         for j in i + 2..i + n - 1 {
             let j_mod = j % n;
@@ -610,8 +610,8 @@ pub fn is_simple_polygon<T: Float>(polygon: &ArrayView2<T>) -> bool {
                 continue;
             }
 
-            let b1 = [_polygon[[j_mod, 0]], _polygon[[j_mod, 1]]];
-            let b2 = [_polygon[[j1, 0]], _polygon[[j1, 1]]];
+            let b1 = [polygon[[j_mod, 0]], polygon[[j_mod, 1]]];
+            let b2 = [polygon[[j1, 0]], polygon[[j1, 1]]];
 
             if segments_intersect(&a1, &a2, &b1, &b2) {
                 return false; // Self-intersection found
@@ -654,33 +654,33 @@ pub fn is_simple_polygon<T: Float>(polygon: &ArrayView2<T>) -> bool {
 /// ```
 #[allow(dead_code)]
 pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) -> Array2<T> {
-    let n = _points.shape()[0];
+    let n = points.shape()[0];
 
     if n <= 3 {
-        // For 3 or fewer _points, all _points are on the convex hull
-        return _points.to_owned();
+        // For 3 or fewer points, all points are on the convex hull
+        return points.to_owned();
     }
 
     // Find the point with the lowest y-coordinate (and leftmost if tied)
     let mut lowest = 0;
     for i in 1..n {
-        if _points[[i, 1]] < _points[[lowest, 1]]
-            || (_points[[i, 1]] == _points[[lowest, 1]] && _points[[i, 0]] < _points[[lowest, 0]])
+        if points[[i, 1]] < points[[lowest, 1]]
+            || (points[[i, 1]] == points[[lowest, 1]] && points[[i, 0]] < points[[lowest, 0]])
         {
             lowest = i;
         }
     }
 
     // Pivot point
-    let pivot_x = _points[[lowest, 0]];
-    let pivot_y = _points[[lowest, 1]];
+    let pivot_x = points[[lowest, 0]];
+    let pivot_y = points[[lowest, 1]];
 
     // Function to compute polar angle of a point relative to the pivot
     let polar_angle = |x: T, y: T| -> T {
         let dx = x - pivot_x;
         let dy = y - pivot_y;
 
-        // Handle special case where _points are the same
+        // Handle special case where points are the same
         if dx.is_zero() && dy.is_zero() {
             return T::neg_infinity();
         }
@@ -689,21 +689,21 @@ pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) ->
         dy.atan2(dx)
     };
 
-    // Sort _points by polar angle
-    let mut indexed_points: Vec<(usize, T)> = (0..n)
-        .map(|i| (i, polar_angle(_points[[i, 0]], _points[[i, 1]])))
+    // Sort points by polar angle
+    let mut indexedpoints: Vec<(usize, T)> = (0..n)
+        .map(|i| (i, polar_angle(points[[i, 0]], points[[i, 1]])))
         .collect();
 
-    indexed_points.sort_by(|a, b| {
+    indexedpoints.sort_by(|a, b| {
         // First by polar angle
         let angle_cmp = a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal);
 
         if angle_cmp == std::cmp::Ordering::Equal {
             // Break ties by distance from pivot
             let dist_a =
-                (_points[[a.0, 0]] - pivot_x).powi(2) + (_points[[a.0, 1]] - pivot_y).powi(2);
+                (points[[a.0, 0]] - pivot_x).powi(2) + (points[[a.0, 1]] - pivot_y).powi(2);
             let dist_b =
-                (_points[[b.0, 0]] - pivot_x).powi(2) + (_points[[b.0, 1]] - pivot_y).powi(2);
+                (points[[b.0, 0]] - pivot_x).powi(2) + (points[[b.0, 1]] - pivot_y).powi(2);
             dist_a
                 .partial_cmp(&dist_b)
                 .unwrap_or(std::cmp::Ordering::Equal)
@@ -712,14 +712,14 @@ pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) ->
         }
     });
 
-    // Function to check if three _points make a right turn
+    // Function to check if three points make a right turn
     let ccw = |i1: usize, i2: usize, i3: usize| -> bool {
-        let p1_x = _points[[i1, 0]];
-        let p1_y = _points[[i1, 1]];
-        let p2_x = _points[[i2, 0]];
-        let p2_y = _points[[i2, 1]];
-        let p3_x = _points[[i3, 0]];
-        let p3_y = _points[[i3, 1]];
+        let p1_x = points[[i1, 0]];
+        let p1_y = points[[i1, 1]];
+        let p2_x = points[[i2, 0]];
+        let p2_y = points[[i2, 1]];
+        let p3_x = points[[i3, 0]];
+        let p3_y = points[[i3, 1]];
 
         let val = (p2_x - p1_x) * (p3_y - p1_y) - (p2_y - p1_y) * (p3_x - p1_x);
         val > T::zero()
@@ -728,10 +728,10 @@ pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) ->
     // Graham scan algorithm
     let mut hull_indices = Vec::new();
 
-    // Add first three _points
+    // Add first three points
     hull_indices.push(lowest);
 
-    for &(index_, _) in &indexed_points {
+    for &(index_, _) in &indexedpoints {
         // Skip pivot point
         if index_ == lowest {
             continue;
@@ -751,8 +751,8 @@ pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) ->
     // Create the hull array
     let mut hull = Array2::zeros((hull_indices.len(), 2));
     for (i, &idx) in hull_indices.iter().enumerate() {
-        hull[[i, 0]] = _points[[idx, 0]];
-        hull[[i, 1]] = _points[[idx, 1]];
+        hull[[i, 0]] = points[[idx, 0]];
+        hull[[i, 1]] = points[[idx, 1]];
     }
 
     hull
@@ -781,7 +781,7 @@ pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) ->
 /// use scirs2_spatial::polygon::douglas_peucker_simplify;
 ///
 /// // A polygon with many points
-/// let complex_polygon = array![
+/// let complexpolygon = array![
 ///     [0.0, 0.0],
 ///     [1.0, 0.1],  // Close to the line from (0,0) to (2,0)
 ///     [2.0, 0.0],
@@ -789,10 +789,10 @@ pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) ->
 ///     [0.0, 2.0],
 /// ];
 ///
-/// let simplified = douglas_peucker_simplify(&complex_polygon.view(), 0.2);
+/// let simplified = douglas_peucker_simplify(&complexpolygon.view(), 0.2);
 ///
 /// // Should remove the intermediate point at (1.0, 0.1) since it's close to the line
-/// assert!(simplified.shape()[0] < complex_polygon.shape()[0]);
+/// assert!(simplified.shape()[0] < complexpolygon.shape()[0]);
 /// ```
 #[allow(dead_code)]
 pub fn douglas_peucker_simplify<T: Float + std::fmt::Debug>(
@@ -850,12 +850,12 @@ fn douglas_peucker_recursive<T: Float>(
     let mut max_dist = T::zero();
     let mut max_idx = start;
 
-    let start_point = [polygon[[start, 0]], polygon[[start, 1]]];
-    let end_point = [polygon[[end, 0]], polygon[[end, 1]]];
+    let startpoint = [polygon[[start, 0]], polygon[[start, 1]]];
+    let endpoint = [polygon[[end, 0]], polygon[[end, 1]]];
 
     for i in start + 1..end {
         let point = [polygon[[i, 0]], polygon[[i, 1]]];
-        let dist = perpendicular_distance(&point, &start_point, &end_point);
+        let dist = perpendicular_distance(&point, &startpoint, &endpoint);
 
         if dist > max_dist {
             max_dist = dist;
@@ -877,15 +877,15 @@ fn perpendicular_distance<T: Float>(point: &[T; 2], line_start: &[T; 2], line_en
     let dx = line_end[0] - line_start[0];
     let dy = line_end[1] - line_start[1];
 
-    // If the line segment is actually a _point, return distance to that _point
+    // If the line segment is actually a point, return distance to that point
     if dx.is_zero() && dy.is_zero() {
-        let px = _point[0] - line_start[0];
-        let py = _point[1] - line_start[1];
+        let px = point[0] - line_start[0];
+        let py = point[1] - line_start[1];
         return (px * px + py * py).sqrt();
     }
 
     // Calculate the perpendicular distance using the cross product formula
-    let numerator = ((dy * (_point[0] - line_start[0])) - (dx * (_point[1] - line_start[1]))).abs();
+    let numerator = ((dy * (point[0] - line_start[0])) - (dx * (point[1] - line_start[1]))).abs();
     let denominator = (dx * dx + dy * dy).sqrt();
 
     numerator / denominator
@@ -1019,7 +1019,7 @@ fn calculate_triangle_area<T: Float>(
 /// Calculate the area of a triangle given three points
 #[allow(dead_code)]
 fn triangle_area<T: Float>(p1: &[T; 2], p2: &[T; 2], p3: &[T; 2]) -> T {
-    ((_p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - _p1[1]) + p3[0] * (_p1[1] - p2[1]))
+    ((p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1]))
         / (T::one() + T::one()))
     .abs()
 }
@@ -1080,7 +1080,7 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_point_in_polygon() {
+    fn testpoint_in_polygon() {
         // Simple square
         let square = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0],];
 
@@ -1117,7 +1117,7 @@ mod tests {
     }
 
     #[test]
-    fn test_point_on_boundary() {
+    fn testpoint_on_boundary() {
         // Simple square
         let square = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0],];
 
@@ -1146,7 +1146,7 @@ mod tests {
     }
 
     #[test]
-    fn test_polygon_area() {
+    fn testpolygon_area() {
         // Square with area 1
         let square = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0],];
 
@@ -1176,7 +1176,7 @@ mod tests {
     }
 
     #[test]
-    fn test_polygon_centroid() {
+    fn testpolygon_centroid() {
         // Square with centroid at (0.5, 0.5)
         let square = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0],];
 
@@ -1200,7 +1200,7 @@ mod tests {
     }
 
     #[test]
-    fn test_polygon_contains_polygon() {
+    fn testpolygon_contains_polygon() {
         // Outer square
         let outer = array![[0.0, 0.0], [3.0, 0.0], [3.0, 3.0], [0.0, 3.0],];
 
@@ -1269,15 +1269,15 @@ mod tests {
         assert!(!found_inside);
 
         // Test with points in a circle-like arrangement
-        let mut circle_points = Array2::zeros((8, 2));
+        let mut circlepoints = Array2::zeros((8, 2));
         for i in 0..8 {
             let angle = 2.0 * std::f64::consts::PI * (i as f64) / 8.0;
-            circle_points[[i, 0]] = angle.cos();
-            circle_points[[i, 1]] = angle.sin();
+            circlepoints[[i, 0]] = angle.cos();
+            circlepoints[[i, 1]] = angle.sin();
         }
 
         // Add some interior points
-        let all_points = array![
+        let allpoints = array![
             [0.0, 0.0],  // Center point
             [0.5, 0.0],  // Interior point
             [0.0, 0.5],  // Interior point
@@ -1306,7 +1306,7 @@ mod tests {
             ],
         ];
 
-        let hull = convex_hull_graham(&all_points.view());
+        let hull = convex_hull_graham(&allpoints.view());
 
         // The hull should have 8 points (the circle points)
         assert_eq!(hull.shape()[0], 8);

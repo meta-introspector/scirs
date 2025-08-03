@@ -1885,7 +1885,7 @@ impl AdvancedDistributedCoordinator {
                         "accuracy" => 0.9123,
                         "precision" => 0.8934,
                         "recall" => 0.9012,
-                        "f1_score" => 0.8967_ => 0.5,
+                        "f1_score" => 0.8967,
                     };
                     metrics.insert(metric_name.clone(), simulated_value);
                 }
@@ -1894,7 +1894,7 @@ impl AdvancedDistributedCoordinator {
                     DataRange::Index {
                         start_index,
                         end_index,
-                    } => end_index - start_index_ => 100, // Default sample count
+                    } => end_index - start_index, // Default sample count
                 };
 
                 Ok(TaskOutput::MetricsResult {
@@ -2133,7 +2133,8 @@ impl ConsensusManager for RaftConsensus {
                 task_id: task.task_id.clone(),
                 data_shard,
                 metrics: metric_names,
-            }_ => {
+            },
+            _ => {
                 return Err(MetricsError::ComputationError(
                     "Unsupported task type".to_string(),
                 ));
@@ -2602,7 +2603,7 @@ impl ConsensusManager for PbftConsensus {
             let state = if node == &self.node_id {
                 match self.node_state {
                     PbftNodeState::Normal => NodeState::Leader, // Simplified
-                    PbftNodeState::ViewChange => NodeState::Candidate_ => NodeState::Follower,
+                    PbftNodeState::ViewChange => NodeState::Follower,
                 }
             } else {
                 NodeState::Follower
@@ -3433,7 +3434,7 @@ impl ConsensusManager for SimpleMajorityConsensus {
                         NodeState::Follower
                     }
                 }
-                Some(NodeHealthStatus::Degraded) => NodeState::Candidate_ => NodeState::Follower,
+                Some(NodeHealthStatus::Degraded) => NodeState::Follower,
             };
             node_states.insert(node.clone(), state);
         }
@@ -4534,7 +4535,7 @@ impl DistributedClusterOrchestrator {
         let strategy = match job.job_type {
             JobType::Classification | JobType::Regression => DataDistributionStrategy::ByBatch,
             JobType::Clustering => DataDistributionStrategy::ByFeature,
-            JobType::CrossValidation => DataDistributionStrategy::ByFold_ => DataDistributionStrategy::ByBatch,
+            JobType::CrossValidation => DataDistributionStrategy::ByBatch,
         };
 
         Ok(DataDistribution {

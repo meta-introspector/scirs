@@ -111,7 +111,7 @@ where
             if let std::collections::hash_map::Entry::Vacant(e) =
                 reverse_matching.entry(neighbor.clone())
             {
-                _matching.insert(node.clone(), neighbor.clone());
+                matching.insert(node.clone(), neighbor.clone());
                 e.insert(node.clone());
                 return true;
             }
@@ -122,13 +122,13 @@ where
                 && augment_path(
                     graph,
                     &matched_node,
-                    _matching,
+                    matching,
                     reverse_matching,
                     visited,
                     coloring,
                 )
             {
-                _matching.insert(node.clone(), neighbor.clone());
+                matching.insert(node.clone(), neighbor.clone());
                 reverse_matching.insert(neighbor, node.clone());
                 return true;
             }
@@ -312,7 +312,7 @@ fn next_permutation(_perm: &mut [usize]) -> bool {
     _perm.swap(k, l);
 
     // Reverse the sequence from _perm[k + 1] to the end
-    _perm[k + 1, ].reverse();
+    _perm[k + 1..].reverse();
 
     true
 }
@@ -457,13 +457,13 @@ pub fn stable_marriage(
     }
 
     // Validate preference lists
-    for (i_prefs) in left_prefs.iter().enumerate() {
-        if _prefs.len() != n {
+    for (i, prefs) in left_prefs.iter().enumerate() {
+        if prefs.len() != n {
             return Err(GraphError::InvalidGraph(format!(
                 "Left preference list {i} has wrong length"
             )));
         }
-        let mut sorted_prefs = _prefs.clone();
+        let mut sorted_prefs = prefs.clone();
         sorted_prefs.sort_unstable();
         if sorted_prefs != (0..n).collect::<Vec<_>>() {
             return Err(GraphError::InvalidGraph(format!(
@@ -472,13 +472,13 @@ pub fn stable_marriage(
         }
     }
 
-    for (i_prefs) in right_prefs.iter().enumerate() {
-        if _prefs.len() != n {
+    for (i, prefs) in right_prefs.iter().enumerate() {
+        if prefs.len() != n {
             return Err(GraphError::InvalidGraph(format!(
                 "Right preference list {i} has wrong length"
             )));
         }
-        let mut sorted_prefs = _prefs.clone();
+        let mut sorted_prefs = prefs.clone();
         sorted_prefs.sort_unstable();
         if sorted_prefs != (0..n).collect::<Vec<_>>() {
             return Err(GraphError::InvalidGraph(format!(
@@ -489,8 +489,8 @@ pub fn stable_marriage(
 
     // Create inverse preference mappings for right set for efficiency
     let mut right_inv_prefs = vec![vec![0; n]; n];
-    for (i_prefs) in right_prefs.iter().enumerate() {
-        for (rank, &person) in _prefs.iter().enumerate() {
+    for (i, prefs) in right_prefs.iter().enumerate() {
+        for (rank, &person) in prefs.iter().enumerate() {
             right_inv_prefs[i][person] = rank;
         }
     }

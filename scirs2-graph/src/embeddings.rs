@@ -378,7 +378,7 @@ impl Embedding {
     }
 
     /// Calculate cosine similarity with another embedding (SIMD optimized)
-    pub fn cosine_similarity(&self..other: &Embedding) -> Result<f64> {
+    pub fn cosine_similarity(&self, other: &Embedding) -> Result<f64> {
         if self.vector.len() != other.vector.len() {
             return Err(GraphError::InvalidGraph(
                 "Embeddings must have same dimensions".to_string(),
@@ -1086,7 +1086,7 @@ impl<N: Node> EmbeddingModel<N> {
             .map_err(|e| GraphError::ComputationError(format!("Failed to open file: {e}")))?;
         let reader = BufReader::new(file);
 
-        let serializable_data: SerializableEmbeddingModel<N> = serde_json:::from_reader(reader)
+        let serializable_data: SerializableEmbeddingModel<N> = serde_json::from_reader(reader)
             .map_err(|e| {
                 GraphError::ComputationError(format!("Failed to deserialize embeddings: {e}"))
             })?;

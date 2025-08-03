@@ -273,7 +273,8 @@ impl<F: Float> LoopFusionOptimizer<F> {
 
     /// Classify an operation as fusable or not
     fn classify_operation(
-        &self_op_idx: TensorID, _graph: &Graph<F>,
+        &self_op_idx: TensorID,
+        _graph: &Graph<F>,
     ) -> Option<FusableOperation<F>> {
         // In practice, would inspect the actual operation type
         // For this example, return a sample operation
@@ -282,7 +283,8 @@ impl<F: Float> LoopFusionOptimizer<F> {
 
     /// Find the next operation that can be fused with the current one
     fn find_next_fusable_operation(
-        &self_current_op: TensorID, _graph: &Graph<F>,
+        &self_current_op: TensorID,
+        _graph: &Graph<F>,
     ) -> Option<TensorID> {
         // In practice, would traverse _graph dependencies
         None
@@ -324,7 +326,10 @@ impl<F: Float> FusedKernel<F> {
     pub fn from_chain(_chain: FusionChain<F>) -> Result<Self, OpError> {
         let kernel_func = Self::compile_kernel(&_chain)?;
 
-        Ok(Self { _chain, kernel_func })
+        Ok(Self {
+            _chain,
+            kernel_func,
+        })
     }
 
     /// Compile the fusion chain into an executable kernel
@@ -472,7 +477,8 @@ impl<F: crate::Float> Default for FusionStats<F> {
             chains_identified: 0,
             total_operations_fused: 0,
             memory_bandwidth_reduction: 0.0,
-            estimated_speedup: 0.0, _phantom: std::marker::PhantomData,
+            estimated_speedup: 0.0,
+            _phantom: std::marker::PhantomData,
         }
     }
 }

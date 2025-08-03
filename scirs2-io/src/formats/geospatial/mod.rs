@@ -1034,8 +1034,7 @@ impl KMLDocument {
 /// Simple XML escaping function
 #[allow(dead_code)]
 fn xml_escape(text: &str) -> String {
-    text
-        .replace('&', "&amp;")
+    text.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('"', "&quot;")

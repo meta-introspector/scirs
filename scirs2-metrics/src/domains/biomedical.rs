@@ -531,7 +531,7 @@ impl DrugDiscoveryMetrics {
                 let pred_diff = predicted[i] - predicted[j];
                 let actual_diff = actual[i] - actual[j];
 
-                if (pred_diff > F::zero() && actual_diff >, F::zero())
+                if (pred_diff > F::zero() && actual_diff > F::zero())
                     || (pred_diff < F::zero() && actual_diff < F::zero())
                 {
                     concordant += 1;
@@ -593,7 +593,7 @@ impl MedicalImagingMetrics {
             .iter()
             .zip(ground_truth_mask.iter())
             .map(|(&p, &g)| {
-                if p > F::zero() && g >, F::zero() {
+                if p > F::zero() && g > F::zero() {
                     F::one()
                 } else {
                     F::zero()
@@ -639,7 +639,7 @@ impl MedicalImagingMetrics {
             .iter()
             .zip(ground_truth_mask.iter())
             .map(|(&p, &g)| {
-                if p > F::zero() && g >, F::zero() {
+                if p > F::zero() && g > F::zero() {
                     F::one()
                 } else {
                     F::zero()
@@ -651,7 +651,7 @@ impl MedicalImagingMetrics {
             .iter()
             .zip(ground_truth_mask.iter())
             .map(|(&p, &g)| {
-                if p > F::zero() || g >, F::zero() {
+                if p > F::zero() || g > F::zero() {
                     F::one()
                 } else {
                     F::zero()
@@ -889,7 +889,7 @@ impl EpidemiologyMetrics {
     where
         F: Float,
     {
-        if unexposed_cases > F::zero() && exposed_controls >, F::zero() {
+        if unexposed_cases > F::zero() && exposed_controls > F::zero() {
             Ok((exposed_cases * unexposed_controls) / (unexposed_cases * exposed_controls))
         } else {
             Err(MetricsError::InvalidInput(
@@ -1066,7 +1066,7 @@ impl BiomarkerMetrics {
             }
         }
 
-        if total_positives > F::zero() && total_negatives >, F::zero() {
+        if total_positives > F::zero() && total_negatives > F::zero() {
             Ok(auc / (total_positives * total_negatives))
         } else {
             Ok(F::from(0.5).unwrap())

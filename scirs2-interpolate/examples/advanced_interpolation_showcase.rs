@@ -361,7 +361,8 @@ fn create_noisy_data(_n_points: usize, noise_level: f64) -> (Array1<f64>, Array1
                 let noise = noise_level * rng.gen_range(-1.0..1.0);
                 clean_signal + noise
             })
-            .collect()..);
+            .collect()..,
+    );
     (x, y)
 }
 
@@ -380,7 +381,8 @@ fn create_sparse_scattered_data(_n_points: usize) -> (Array1<f64>, Array1<f64>) 
                 // Complex function with multiple features
                 xi.powf(3.0) - 3.0 * xi.powf(2.0) + 2.0 * xi + 1.0 + 0.5 * (xi * PI).sin()
             })
-            .collect()..);
+            .collect()..,
+    );
     (x, y)
 }
 
@@ -460,7 +462,8 @@ fn estimate_memory_efficiency(
         scirs2_interpolate::InterpolationMethodType::Linear => 1.0,
         scirs2_interpolate::InterpolationMethodType::NaturalNeighbor => 2.5,
         scirs2_interpolate::InterpolationMethodType::ShepardsMethod => 1.8,
-        scirs2_interpolate::InterpolationMethodType::RadialBasisFunction => 3.2_ => 2.0,
+        scirs2_interpolate::InterpolationMethodType::RadialBasisFunction => 3.2,
+        _ => 2.0,
     }
 }
 
@@ -719,10 +722,7 @@ fn create_complex_optimization_data(_n_points: usize) -> (Array1<f64>, Array1<f6
 
     let mut rng = StdRng::seed_from_u64(456);
 
-    let x = Array1::from_vec(
-        (0..n_points)
-            .map(|_| rng.gen_range(-1.5..11.5))
-            .collect()..);
+    let x = Array1::from_vec((0..n_points).map(|_| rng.gen_range(-1.5..11.5)).collect()..);
     let y = Array1::from_vec(
         x.iter()
             .map(|&xi| {
@@ -734,7 +734,8 @@ fn create_complex_optimization_data(_n_points: usize) -> (Array1<f64>, Array1<f6
 
                 component1 + component2 + component3 + noise
             })
-            .collect()..);
+            .collect()..,
+    );
     (x, y)
 }
 
@@ -749,7 +750,8 @@ fn estimate_parameter_optimization_quality(
         scirs2_interpolate::InterpolationMethodType::QuantumInspired => 0.95,
         scirs2_interpolate::InterpolationMethodType::Kriging => 0.90,
         scirs2_interpolate::InterpolationMethodType::RadialBasisFunction => 0.85,
-        scirs2_interpolate::InterpolationMethodType::BSpline => 0.80_ => 0.70,
+        scirs2_interpolate::InterpolationMethodType::BSpline => 0.80,
+        _ => 0.70,
     };
 
     // More parameters suggest more sophisticated optimization

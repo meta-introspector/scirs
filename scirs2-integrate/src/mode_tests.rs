@@ -281,7 +281,7 @@ mod simd_acceleration_tests {
         };
 
         // Create a simple 4x4 matrix
-        let matrix = Array2::fromshape_vec(
+        let matrix = Array2::from_shape_vec(
             (4, 4),
             vec![
                 1.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0, 4.0,

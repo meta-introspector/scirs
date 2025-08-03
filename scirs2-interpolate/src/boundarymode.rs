@@ -641,13 +641,15 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 0.0, _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 0.0),
+            _ => panic!("Expected MappedPoint result"),
         }
 
         // Test point above upper boundary
         let result = boundary.map_point(15.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 10.0, _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 10.0),
+            _ => panic!("Expected MappedPoint result"),
         }
     }
 
@@ -658,13 +660,15 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::DirectValue(v) => assert_abs_diff_eq!(v, 0.0, _ => panic!("Expected DirectValue result"),
+            BoundaryResult::DirectValue(v) => assert_abs_diff_eq!(v, 0.0),
+            _ => panic!("Expected DirectValue result"),
         }
 
         // Test point above upper boundary
         let result = boundary.map_point(15.0, None, None).unwrap();
         match result {
-            BoundaryResult::DirectValue(v) => assert_abs_diff_eq!(v, 0.0, _ => panic!("Expected DirectValue result"),
+            BoundaryResult::DirectValue(v) => assert_abs_diff_eq!(v, 0.0),
+            _ => panic!("Expected DirectValue result"),
         }
     }
 
@@ -675,19 +679,22 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
+            _ => panic!("Expected MappedPoint result"),
         }
 
         // Test point above upper boundary
         let result = boundary.map_point(15.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
+            _ => panic!("Expected MappedPoint result"),
         }
 
         // Test multiple periods
         let result = boundary.map_point(25.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
+            _ => panic!("Expected MappedPoint result"),
         }
     }
 
@@ -698,19 +705,22 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
+            _ => panic!("Expected MappedPoint result"),
         }
 
         // Test point above upper boundary
         let result = boundary.map_point(15.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
+            _ => panic!("Expected MappedPoint result"),
         }
 
         // Test multiple reflections
         let result = boundary.map_point(-15.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPoint result"),
+            BoundaryResult::MappedPoint(x) => assert_abs_diff_eq!(x, 5.0),
+            _ => panic!("Expected MappedPoint result"),
         }
     }
 
@@ -721,7 +731,8 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::MappedPointWithSignChange(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected MappedPointWithSignChange result"),
+            BoundaryResult::MappedPointWithSignChange(x) => assert_abs_diff_eq!(x, 5.0),
+            _ => panic!("Expected MappedPointWithSignChange result"),
         }
 
         // Test with provided values
@@ -782,7 +793,8 @@ mod tests {
         // Test point inside domain
         let result = boundary.map_point(5.0, None, None).unwrap();
         match result {
-            BoundaryResult::InsideDomain(x) => assert_abs_diff_eq!(x, 5.0, _ => panic!("Expected InsideDomain result"),
+            BoundaryResult::InsideDomain(x) => assert_abs_diff_eq!(x, 5.0),
+            _ => panic!("Expected InsideDomain result"),
         }
     }
 
@@ -798,13 +810,15 @@ mod tests {
         // Test point below lower boundary
         let result = boundary.map_point(-5.0, None, None).unwrap();
         match result {
-            BoundaryResult::AllowExtrapolation(x) => assert_abs_diff_eq!(x, -5.0, _ => panic!("Expected AllowExtrapolation result"),
+            BoundaryResult::AllowExtrapolation(x) => assert_abs_diff_eq!(x, -5.0),
+            _ => panic!("Expected AllowExtrapolation result"),
         }
 
         // Test point above upper boundary
         let result = boundary.map_point(15.0, None, None).unwrap();
         match result {
-            BoundaryResult::AllowExtrapolation(x) => assert_abs_diff_eq!(x, 15.0, _ => panic!("Expected AllowExtrapolation result"),
+            BoundaryResult::AllowExtrapolation(x) => assert_abs_diff_eq!(x, 15.0),
+            _ => panic!("Expected AllowExtrapolation result"),
         }
     }
 }

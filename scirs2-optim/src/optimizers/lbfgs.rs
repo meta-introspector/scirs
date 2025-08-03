@@ -203,11 +203,11 @@ where
         // Convert to 1D for computation
         let params_flat = params
             .to_owned()
-            .intoshape_with_order(params.len())
+            .into_shape_with_order(params.len())
             .unwrap();
         let gradients_flat = gradients
             .to_owned()
-            .intoshape_with_order(gradients.len())
+            .into_shape_with_order(gradients.len())
             .unwrap();
 
         // Check convergence
@@ -254,7 +254,7 @@ where
 
         // Reshape back to original dimensions
         let new_params = new_params_flat
-            .intoshape_with_order(params.raw_dim())
+            .into_shape_with_order(params.raw_dim())
             .unwrap();
 
         Ok(new_params)

@@ -483,7 +483,7 @@ mod tests {
         }
 
         // Check sample mean is close to expected mean: E[X_i] = alpha_i / sum(alpha)
-        let mut sample_mean = vec![0.0; 3];
+        let mut sample_mean = [0.0; 3];
         for sample in &samples {
             for i in 0..3 {
                 sample_mean[i] += sample[i];

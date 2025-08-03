@@ -6,5 +6,5 @@
 mod dictionary_learning;
 mod nmf;
 
-pub use self::dictionary__learning::DictionaryLearning;
+pub use self::dictionary_learning::DictionaryLearning;
 pub use self::nmf::NMF;

@@ -2752,7 +2752,7 @@ impl DefaultConflictResolver {
 
 impl ConflictResolver for DefaultConflictResolver {
     fn resolve_conflict(
-        &self_base: &SharedState, _local: &SharedState,
+        self_base: &SharedState, _local: &SharedState,
         remote: &SharedState,
     ) -> Result<SharedState> {
         // Last writer wins strategy

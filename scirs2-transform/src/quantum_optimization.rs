@@ -3,7 +3,7 @@
 //! This module implements quantum-inspired algorithms for optimizing
 //! data transformation pipelines with advanced metaheuristics.
 
-use crate::auto_feature__engineering::{TransformationConfig, TransformationType};
+use crate::auto_feature_engineering::{TransformationConfig, TransformationType};
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::Rng;
@@ -229,7 +229,7 @@ impl QuantumInspiredOptimizer {
     }
 
     /// Decay superposition over time
-    fn decay_superposition(&mut self..iteration: usize) {
+    fn decay_superposition(&mut self, iteration: usize) {
         let decay_factor = self.decay_rate.powi(iteration as i32);
 
         for particle in &mut self.particles {
@@ -980,7 +980,7 @@ impl AdvancedQuantumOptimizer {
     /// ✅ Advanced MODE: Fast quantum superposition
     #[allow(dead_code)]
     fn apply_quantum_superposition_advanced(
-        &self..particle: &QuantumParticle,) -> Result<Array1<f64>> {
+        &self, particle: &QuantumParticle,) -> Result<Array1<f64>> {
         let mut quantum_position = particle.position.clone();
 
         // ✅ Advanced OPTIMIZATION: SIMD quantum wave function

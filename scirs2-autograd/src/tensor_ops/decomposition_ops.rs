@@ -912,7 +912,8 @@ fn compute_symmetric_eigenvalues<F: Float + ndarray::ScalarOperand>(
 /// Compute eigenvectors for symmetric matrix
 #[allow(dead_code)]
 fn compute_symmetric_eigenvectors<F: Float + ndarray::ScalarOperand>(
-    matrix: &ndarray::ArrayView2<F>, _eigenvalues: &Array1<F>,
+    matrix: &ndarray::ArrayView2<F>,
+    _eigenvalues: &Array1<F>,
 ) -> Array2<F> {
     let n = matrix.shape()[0];
     let mut eigenvectors = Array2::<F>::eye(n); // Start with identity matrix

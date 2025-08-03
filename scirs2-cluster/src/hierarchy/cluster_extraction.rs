@@ -4,7 +4,7 @@
 //! hierarchical clustering results, including automatic cluster count estimation
 //! and distance-based cluster pruning.
 
-use ndarray::{ArrayView1, Array1, ArrayView1, ArrayView2};
+use ndarray::{Array1, ArrayView1, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
@@ -377,7 +377,9 @@ fn extract_clusters_by_count<F: Float + FromPrimitive + Debug + PartialOrd>(
 /// Calculate WCSS approximation using linkage matrix
 #[allow(dead_code)]
 fn calculate_wcss_approximation<F: Float + FromPrimitive + Debug + PartialOrd>(
-    linkage_matrix: ArrayView2<F>, _clusters: &Array1<usize>, _k: usize,
+    linkage_matrix: ArrayView2<F>,
+    _clusters: &Array1<usize>,
+    _k: usize,
 ) -> F {
     // Simplified WCSS calculation using merge distances
     // In a proper implementation, this would calculate the actual within-cluster sum of squares

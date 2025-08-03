@@ -592,7 +592,7 @@ impl NeuralArchitectureSearch {
             layers,
             globalconfig: GlobalConfig {
                 inputshape: vec![224, 224, 3], // Default image size
-                output_size: 1000,              // ImageNet classes
+                output_size: 1000,             // ImageNet classes
                 learning_rate: 0.001,
                 batch_size: 32,
                 optimizer: self.search_space.optimizers[optimizer_idx],

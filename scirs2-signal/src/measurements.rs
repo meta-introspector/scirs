@@ -213,7 +213,7 @@ where
     }
 
     // Convert to f64 for internal processing
-    let _signal_f64: Vec<f64> = _signal
+    let signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {
@@ -239,9 +239,9 @@ where
         .collect();
 
     // Calculate power of _signal and _noise
-    let _signal_power: f64 =
+    let signal_power: f64 =
         signal_f64.iter().map(|&x| x * x).sum::<f64>() / signal_f64.len() as f64;
-    let _noise_power: f64 = _noise.iter().map(|&x| x * x).sum::<f64>() / _noise.len() as f64;
+    let noise_power: f64 = _noise.iter().map(|&x| x * x).sum::<f64>() / _noise.len() as f64;
 
     // Avoid division by zero
     if noise_power.abs() < f64::EPSILON {
@@ -322,7 +322,7 @@ where
     let n_harmonics = n_harmonics.unwrap_or(5);
 
     // Convert to f64 for internal processing
-    let _signal_f64: Vec<f64> = _signal
+    let signal_f64: Vec<f64> = _signal
         .iter()
         .map(|&val| {
             num_traits::cast::cast::<T, f64>(val).ok_or_else(|| {

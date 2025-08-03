@@ -982,7 +982,7 @@ pub mod checkpointing {
                         .collect::<Result<Vec<_>>>()?;
 
                     // Create array from shape and data with dynamic dimensions
-                    let array: Array<A, ndarray::IxDyn> = Array::fromshape_vec(shape, data)
+                    let array: Array<A, ndarray::IxDyn> = Array::from_shape_vec(shape, data)
                         .map_err(|e| {
                             OptimError::InvalidConfig(format!("Failed to create array: {e}"))
                         })?;
@@ -1071,7 +1071,7 @@ pub mod checkpointing {
                             .collect::<Result<Vec<_>>>()?;
 
                         // Create array with dynamic dimensions
-                        let array = Array::fromshape_vec(shape, data).map_err(|e| {
+                        let array = Array::from_shape_vec(shape, data).map_err(|e| {
                             OptimError::InvalidConfig(format!("Failed to create state array: {e}"))
                         })?;
                         state_arrays.push(array);

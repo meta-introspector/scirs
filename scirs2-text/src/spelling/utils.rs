@@ -23,8 +23,7 @@ pub fn normalize_string(text: &str, case_sensitive: bool) -> String {
 /// Extract words from text, normalizing and filtering empty words
 #[allow(dead_code)]
 pub fn extract_words(text: &str) -> Vec<String> {
-    text
-        .split_whitespace()
+    text.split_whitespace()
         .map(|s| {
             s.trim_matches(|c: char| !c.is_alphanumeric())
                 .to_lowercase()
@@ -36,8 +35,7 @@ pub fn extract_words(text: &str) -> Vec<String> {
 /// Split text into sentences
 #[allow(dead_code)]
 pub fn split_sentences(text: &str) -> Vec<&str> {
-    text
-        .split(['.', '?', '!'])
+    text.split(['.', '?', '!'])
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .collect()

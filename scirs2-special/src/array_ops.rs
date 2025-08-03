@@ -111,11 +111,7 @@ pub mod memory_efficient {
     }
 
     /// Check if operation fits within memory limits
-    pub fn check_memory_limit<T>(
-        shape: &[usize],
-        num_arrays: usize,
-        config: &ArrayConfig,
-    ) -> bool {
+    pub fn check_memory_limit<T>(shape: &[usize], num_arrays: usize, config: &ArrayConfig) -> bool {
         estimate_memory_usage::<T>(shape, num_arrays) <= config.memory_limit
     }
 }
@@ -622,10 +618,7 @@ pub mod broadcasting {
     }
 
     /// Compute the broadcast shape of two arrays
-    pub fn broadcastshape(
-        shape1: &[usize],
-        shape2: &[usize],
-    ) -> Result<Vec<usize>, SpecialError> {
+    pub fn broadcastshape(shape1: &[usize], shape2: &[usize]) -> Result<Vec<usize>, SpecialError> {
         if !can_broadcast(shape1, shape2) {
             return Err(SpecialError::DomainError(
                 "Arrays cannot be broadcast together".to_string(),

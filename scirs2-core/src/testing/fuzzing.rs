@@ -238,7 +238,7 @@ pub struct FloatFuzzingGenerator {
 
 impl FloatFuzzingGenerator {
     /// Create a new float fuzzing generator
-    pub fn value(f64) -> Self {
+    pub fn value(val: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
             rng: StdRng::from_seed(Default::default()),
@@ -340,7 +340,7 @@ pub struct VectorFuzzingGenerator {
 
 impl VectorFuzzingGenerator {
     /// Create a new vector fuzzing generator
-    pub fn value(f64) -> Self {
+    pub fn value(val: f64) -> Self {
         Self {
             #[cfg(feature = "random")]
             rng: StdRng::from_seed(Default::default()),

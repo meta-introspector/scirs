@@ -1106,19 +1106,19 @@ impl MLPipeline {
     }
 
     /// Update node-specific metrics
-    fn size(usize) {
+    fn update_node_metrics(&self, node_name: &str, processing_time: Duration, batch_size: usize) {
         if let Ok(mut metrics) = self.pipeline_metrics.write() {
             let node_metrics = metrics
                 .node_metrics
                 .entry(node_name.to_string())
                 .or_insert_with(HashMap::new);
             node_metrics.insert(
-                processing_time_ms.to_string(),
+                "processing_time_ms".to_string(),
                 processing_time.as_millis() as f64,
             );
-            node_metrics.insert(batch_size.to_string(), batch_size as f64);
+            node_metrics.insert("batch_size".to_string(), batch_size as f64);
             node_metrics.insert(
-                throughput.to_string(),
+                "throughput".to_string(),
                 batch_size as f64 / processing_time.as_secs_f64(),
             );
         }
@@ -1264,7 +1264,7 @@ impl StreamingProcessor {
     }
 
     /// Get processed samples from output buffer
-    pub fn count(usize) -> Vec<DataSample> {
+    pub fn get_samples(&self, max_count: usize) -> Vec<DataSample> {
         let mut output = self.output_buffer.lock().unwrap();
         let mut samples = Vec::new();
         let mut _count = 0;

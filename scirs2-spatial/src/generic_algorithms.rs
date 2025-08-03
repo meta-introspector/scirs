@@ -1294,9 +1294,9 @@ impl GenericConvexHull {
     /// Calculate polar angle from start to point
     fn polar_angle<T: SpatialScalar>(start: &Point<T>, point: &Point<T>) -> T {
         let dx =
-            point.coordinate(0).unwrap_or(T::zero()) - _start.coordinate(0).unwrap_or(T::zero());
+            point.coordinate(0).unwrap_or(T::zero()) - start.coordinate(0).unwrap_or(T::zero());
         let dy =
-            point.coordinate(1).unwrap_or(T::zero()) - _start.coordinate(1).unwrap_or(T::zero());
+            point.coordinate(1).unwrap_or(T::zero()) - start.coordinate(1).unwrap_or(T::zero());
         dy.atan2(dx)
     }
 

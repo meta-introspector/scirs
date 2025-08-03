@@ -8,10 +8,10 @@ use ndarray;
 use ndarray::Axis;
 
 // Import SIMD operations from scirs2-core
-#[cfg(feature = "simd")]
-use scirs2_core::simd::{simd_add_f32, simd_add_f64, simd_mul_f32, simd_mul_f64};
 #[allow(unused_imports)]
 use ndarray::ArrayView1;
+#[cfg(feature = "simd")]
+use scirs2_core::simd::{simd_add_f32, simd_add_f64, simd_mul_f32, simd_mul_f64};
 
 pub struct AddOp;
 pub struct SubOp;
@@ -77,8 +77,7 @@ impl<T: Float> op::Op<T> for MaybeReduceSum {
         // Reduce each dim as necessary
         let mut folded: Option<NdArray<T>> = None;
 
-        for (i, (&orig_ith_dim_size, &gy_ith_dim_size)) in
-            origshape.iter().zip(gyshape).enumerate()
+        for (i, (&orig_ith_dim_size, &gy_ith_dim_size)) in origshape.iter().zip(gyshape).enumerate()
         {
             if orig_ith_dim_size == 1 && 1 < gy_ith_dim_size {
                 // broadcast occurred for this dim, so do reduction

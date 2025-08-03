@@ -4,7 +4,7 @@
 //! large datasets that don't fit entirely in memory, using streaming and
 //! progressive processing techniques.
 
-use ndarray::{ArrayView1, Array1, Array2, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
@@ -409,7 +409,8 @@ impl<F: Float + FromPrimitive + Debug> ProgressiveHierarchical<F> {
 /// distance matrix in memory.
 pub struct ChunkedDistanceMatrix<F: Float> {
     chunk_size: usize,
-    n_samples: usize, _phantom: std::marker::PhantomData<F>,
+    n_samples: usize,
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + FromPrimitive> ChunkedDistanceMatrix<F> {
@@ -634,7 +635,8 @@ pub mod memory_management {
     pub struct DiskBackedStorage<F: Float> {
         temp_files: Vec<PathBuf>,
         temp_dir: PathBuf,
-        buffer_size: usize, _phantom: std::marker::PhantomData<F>,
+        buffer_size: usize,
+        _phantom: std::marker::PhantomData<F>,
     }
 
     impl<F: Float + FromPrimitive> DiskBackedStorage<F> {

@@ -8,8 +8,7 @@ use scirs2__cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
 #[test]
 #[allow(dead_code)]
 fn test_whiten() {
-    let data =
-        Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
+    let data = Array2::fromshape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
 
     let whitened = whiten(&data).unwrap();
 

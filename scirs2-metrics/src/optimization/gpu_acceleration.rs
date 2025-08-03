@@ -399,11 +399,12 @@ impl GpuMetricsComputer {
                 11.. => 68,   // RTX 2080 Ti
                 8..=10 => 46, // RTX 2080
                 _ => 36,      // RTX 2070
-            }_ => match memory_gb {
+            },
+            _ => match memory_gb {
                 // Conservative estimates
                 16.. => 80,
                 8..=15 => 60,
-                4..=7 => 40_ => 20,
+                4..=7 => 20,
             },
         }
     }
@@ -545,7 +546,8 @@ impl GpuMetricsComputer {
                         "mae" => self
                             .gpu_mae_kernel(&y_true_sample.to_owned(), &y_pred_sample.to_owned())?,
                         "r2_score" => self
-                            .gpu_r2_kernel(&y_true_sample.to_owned(), &y_pred_sample.to_owned())?_ => F::zero(),
+                            .gpu_r2_kernel(&y_true_sample.to_owned(), &y_pred_sample.to_owned())?,
+                        _ => F::zero(),
                     };
                 sample_results.insert(metric.to_string(), result);
             }
@@ -593,7 +595,8 @@ impl GpuMetricsComputer {
                         let result = match metric {
                             "mse" => self.simd_mse(&y_true_sample, &y_pred_sample)?,
                             "mae" => self.simd_mae(&y_true_sample, &y_pred_sample)?,
-                            "r2_score" => self.simd_r2_score(&y_true_sample, &y_pred_sample)?_ => F::zero(),
+                            "r2_score" => self.simd_r2_score(&y_true_sample, &y_pred_sample)?,
+                        _ => F::zero(),
                         };
                         sample_results.insert(metric.to_string(), result);
                     }
@@ -634,7 +637,8 @@ impl GpuMetricsComputer {
                 let result = match metric {
                     "mse" => self.cpu_mse(&y_true_sample, &y_pred_sample)?,
                     "mae" => self.cpu_mae(&y_true_sample, &y_pred_sample)?,
-                    "r2_score" => self.cpu_r2_score(&y_true_sample, &y_pred_sample)?_ => F::zero(),
+                    "r2_score" => self.cpu_r2_score(&y_true_sample, &y_pred_sample)?,
+                _ => F::zero(),
                 };
                 sample_results.insert(metric.to_string(), result);
             }

@@ -389,7 +389,8 @@ pub fn weather(_feature: Option<&str>) -> Result<Dataset> {
                             "humidity" => record.humidity,
                             "pressure" => record.pressure,
                             "wind_speed" => record.wind_speed,
-                            "precipitation" => record.precipitation_ => 0.0, // Should never happen due to validation above
+                            "precipitation" => record.precipitation,
+                            _ => 0.0, // Should never happen due to validation above
                         };
                     }
                 }

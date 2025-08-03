@@ -831,8 +831,7 @@ fn main() {
     let vocab_size = word_to_idx.len();
     println!("Vocabulary size: {vocab_size}");
     // Split dataset
-    let (traintexts, testtexts, train_labels, test_labels) =
-        train_test_split(&texts, &labels, 0.2);
+    let (traintexts, testtexts, train_labels, test_labels) = train_test_split(&texts, &labels, 0.2);
     // Tokenize texts
     let max_len = 30;
     let x_train = tokenizetexts(&traintexts, &word_to_idx, max_len);

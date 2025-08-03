@@ -17,7 +17,7 @@
 //! ```
 //! use scirs2__metrics::domains::quantum_ml::QuantumMLSuite;
 //! use ndarray::array;
-//! use num__complex::Complex64;
+//! use num_complex::Complex64;
 //!
 //! let mut qml_suite = QuantumMLSuite::new();
 //!
@@ -40,7 +40,7 @@
 use crate::domains::{DomainEvaluationResult, DomainMetrics};
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num__complex::Complex64;
+use num_complex::Complex64;
 use num_traits::{Float, One, Zero};
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -805,7 +805,7 @@ impl Default for QuantumMLSuite {
 mod tests {
     use super::*;
     use ndarray::array;
-    use num__complex::Complex64;
+    use num_complex::Complex64;
 
     #[test]
     fn test_quantum_state_fidelity() {

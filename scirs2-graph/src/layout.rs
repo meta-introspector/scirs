@@ -245,7 +245,7 @@ where
 pub fn spectral_layout<N, E, Ix>(_graph: &Graph<N, E, Ix>) -> Result<HashMap<N, Position>>
 where
     N: Node + Clone + std::fmt::Debug,
-    E: EdgeWeight + Into<f64> + num_traits::Zero + num, _traits::One + PartialOrd + Copy,
+    E: EdgeWeight + Into<f64> + num_traits::Zero + num_traits::One + PartialOrd + Copy,
     Ix: petgraph::graph::IndexType,
 {
     use crate::spectral::{laplacian, LaplacianType};

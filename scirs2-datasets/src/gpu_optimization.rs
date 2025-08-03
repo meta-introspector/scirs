@@ -228,7 +228,8 @@ impl AdvancedGpuOptimizer {
         // Determine optimal block size based on GPU architecture
         let optimal_block_size = match backend {
             GpuBackend::Cuda { .. } => self.tune_cuda_block_size(datashape),
-            GpuBackend::OpenCl { .. } => self.tune_opencl_work_group_size(datashape, _ => 256, // Default for other backends
+            GpuBackend::OpenCl { .. } => self.tune_opencl_work_group_size(datashape),
+            _ => 256, // Default for other backends
         };
 
         // Estimate memory bandwidth requirements
@@ -265,7 +266,8 @@ impl AdvancedGpuOptimizer {
             0..=1_000 => 32,
             1_001..=10_000 => 64,
             10_001..=100_000 => 128,
-            100_001..=1_000_000 => 256_ => 512,
+            100_001..=1_000_000 => 256,
+            _ => 512,
         }
     }
 
@@ -278,7 +280,8 @@ impl AdvancedGpuOptimizer {
             0..=1_000 => 16,
             1_001..=10_000 => 32,
             10_001..=100_000 => 64,
-            100_001..=1_000_000 => 128_ => 256,
+            100_001..=1_000_000 => 128,
+            _ => 256,
         }
     }
 
@@ -307,10 +310,10 @@ impl AdvancedGpuOptimizer {
         // Different operations have different compute intensities
         let compute_intensity = match operation {
             "matrix_multiply" => 2.0 * datashape.0 as f64, // O(n^3) for n x n matrices
-            "element_wise" => 1.0,                          // O(n) operations
-            "reduction" => (total_elements as f64).log2(),  // O(log n) depth
-            "trigonometric" => 10.0,                        // High compute intensity
-            _ => 1.0,                                       // Default
+            "element_wise" => 1.0,                         // O(n) operations
+            "reduction" => (total_elements as f64).log2(), // O(log n) depth
+            "trigonometric" => 10.0,                       // High compute intensity
+            _ => 1.0,                                      // Default
         };
 
         // Normalize to [0, 1] range
@@ -329,7 +332,8 @@ impl AdvancedGpuOptimizer {
                 }
             }
             "transpose" => DataLayout::ColumnMajor,
-            "element_wise" => DataLayout::RowMajor_ => DataLayout::Adaptive,
+            "element_wise" => DataLayout::RowMajor,
+            _ => DataLayout::Adaptive,
         }
     }
 
@@ -343,7 +347,8 @@ impl AdvancedGpuOptimizer {
         // Heuristic scoring based on multiple factors
         let block_efficiency = match block_size {
             32..=256 => 1.0,
-            257..=512 => 0.9_ => 0.7,
+            257..=512 => 0.9,
+            _ => 0.7,
         };
 
         let bandwidth_efficiency = (memory_bandwidth / (memory_bandwidth + 1e9)).min(1.0);
@@ -410,7 +415,8 @@ impl AdvancedGpuOptimizer {
                 vectorization: VectorizationStrategy::Vector2,
                 load_balancing: LoadBalancingMethod::Static,
                 block_size: 256,
-            }_ => AdvancedKernelConfig {
+            },
+            _ => AdvancedKernelConfig {
                 specialization_level: SpecializationLevel::Basic,
                 memory_pattern: MemoryAccessPattern::Sequential,
                 vectorization: VectorizationStrategy::Scalar,
@@ -510,7 +516,8 @@ impl AdvancedGpuOptimizer {
         let kernel_name = match distribution {
             "normal" => "curand_normal_kernel",
             "uniform" => "curand_uniform_kernel",
-            "exponential" => "curand_exponential_kernel"_ => "curand_uniform_kernel", // Default
+            "exponential" => "curand_exponential_kernel",
+            _ => "curand_uniform_kernel", // Default
         };
 
         // Simulate kernel execution with realistic timing
@@ -553,7 +560,8 @@ impl AdvancedGpuOptimizer {
         let base_time_per_element = match kernel_name {
             "curand_normal_kernel" => 0.001, // microseconds per element
             "curand_uniform_kernel" => 0.0008,
-            "curand_exponential_kernel" => 0.0012_ => 0.001,
+            "curand_exponential_kernel" => 0.0012,
+            _ => 0.001,
         };
 
         // GPU parallel efficiency factor
@@ -592,7 +600,8 @@ impl AdvancedGpuOptimizer {
             0..=1024 => 32,
             1025..=16384 => 64,
             16385..=262144 => 128,
-            262145..=1048576 => 256_ => 512,
+            262145..=1048576 => 256,
+            _ => 512,
         }
     }
 
@@ -757,7 +766,8 @@ impl AdvancedGpuOptimizer {
         let base_time_per_element = match distribution {
             "normal" => 0.0015, // microseconds per element (more complex than CUDA)
             "uniform" => 0.0012,
-            "exponential" => 0.0018_ => 0.0012,
+            "exponential" => 0.0018,
+            _ => 0.0012,
         };
 
         // OpenCL typically has more overhead than CUDA
@@ -920,7 +930,8 @@ impl AdvancedGpuOptimizer {
             "matrix_multiply" => 0.001,
             "element_wise" => 0.0001,
             "reduction" => 0.0005,
-            "trigonometric" => 0.01_ => 0.001,
+            "trigonometric" => 0.01,
+            _ => 0.001,
         };
 
         total_elements as f64 * base_time_per_element
@@ -1363,7 +1374,9 @@ impl RealTimePerformanceMonitor {
     /// Create with custom configuration
     pub fn with_config(_config: MonitoringConfig) -> Self {
         Self {
-            performance_history: std::collections::VecDeque::with_capacity(_config.max_history_size),
+            performance_history: std::collections::VecDeque::with_capacity(
+                _config.max_history_size,
+            ),
             current_optimization: AdaptiveOptimizationState {
                 trend: PerformanceTrend::Unknown,
                 adjustments: Vec::new(),
@@ -1386,9 +1399,9 @@ impl RealTimePerformanceMonitor {
         // Add training data to AI predictor
         let features = vec![
             (snapshot.datashape.0 * snapshot.datashape.1) as f64, // Problem size
-            snapshot.memory_bandwidth_utilization,                  // Memory access pattern
-            snapshot.gpu_utilization,                               // Compute intensity
-            1.0, // Parallelism factor (simplified)
+            snapshot.memory_bandwidth_utilization,                // Memory access pattern
+            snapshot.gpu_utilization,                             // Compute intensity
+            1.0,                                                  // Parallelism factor (simplified)
         ];
 
         let performance_score = 1.0 / (1.0 + snapshot.execution_time_ms / 1000.0); // Normalized performance

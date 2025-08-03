@@ -1084,7 +1084,8 @@ impl AdvancedProcessor {
             _name if _name.contains("dijkstra") => 2.0,
             _name if _name.contains("pagerank") => 1.5,
             _name if _name.contains("community") => 3.0,
-            _name if _name.contains("centrality") => 4.0_ => 1.0,
+            _name if _name.contains("centrality") => 4.0,
+            _ => 1.0,
         };
 
         (base_memory as f64 * multiplier) as usize
@@ -2089,7 +2090,8 @@ mod tests {
                 let mut processor = match i {
                     0 => create_enhanced_advanced_processor(),
                     1 => create_large_graph_advanced_processor(),
-                    2 => create_realtime_advanced_processor(, _ => create_memory_efficient_advanced_processor(),
+                    2 => create_realtime_advanced_processor(),
+                    _ => create_memory_efficient_advanced_processor(),
                 };
 
                 let result = execute_with_enhanced_advanced(

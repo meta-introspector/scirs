@@ -1213,7 +1213,7 @@ mod distributed_tests {
 
     #[test]
     fn test_node_id_creation() {
-        let node = NodeId::new(worker1.to_string(), pid123.to_string());
+        let node = NodeId::new("worker1".to_string(), "pid123".to_string());
         assert_eq!(node.name(), "worker1");
         assert_eq!(node.instance_id(), "pid123");
         assert_eq!(node.to_string(), "worker1:pid123");
@@ -1221,13 +1221,13 @@ mod distributed_tests {
 
     #[test]
     fn test_log_aggregator() {
-        let node_id = NodeId::new(test_node.to_string(), 1.to_string());
+        let node_id = NodeId::new("test_node".to_string(), 1.to_string());
         let aggregator = LogAggregator::new(node_id.clone(), 100, Duration::from_secs(60));
 
         let entry = DistributedLogEntry::new(
             node_id,
             LogLevel::Info,
-            test_logger.to_string(),
+            "test_logger".to_string(),
             "Test message".to_string(),
             HashMap::new(),
         );
@@ -1257,7 +1257,7 @@ mod distributed_tests {
 
     #[test]
     fn test_distributed_logger() {
-        let node_id = NodeId::new(test_node.to_string(), 1.to_string());
+        let node_id = NodeId::new("test_node".to_string(), 1.to_string());
         let logger =
             DistributedLogger::new(node_id, "test_logger", 1000, Duration::from_secs(60), 100.0);
 
@@ -1302,7 +1302,7 @@ mod distributed_tests {
 
     #[test]
     fn test_log_export() {
-        let node_id = NodeId::new(export_test.to_string(), 1.to_string());
+        let node_id = NodeId::new("export_test".to_string(), 1.to_string());
         let logger = DistributedLogger::new(
             node_id,
             "export_logger",
@@ -1314,7 +1314,7 @@ mod distributed_tests {
         logger.info_adaptive("Export test message");
 
         let json_export = logger.export_logs_json().unwrap();
-        assert!(json_export.contains(export_test));
+        assert!(json_export.contains("export_test"));
         assert!(json_export.contains("Export test message"));
     }
 }

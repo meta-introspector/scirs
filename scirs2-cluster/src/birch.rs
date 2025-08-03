@@ -4,7 +4,7 @@
 //! (Clustering Feature tree) to summarize the data and then applies a global clustering
 //! algorithm on the leaf nodes.
 
-use ndarray::{ArrayView1, s, Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 

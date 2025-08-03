@@ -329,7 +329,9 @@ pub(crate) fn weighted_linkage<F: Float + FromPrimitive>(
 
 /// Updates the centroid for centroid-based methods
 pub(crate) fn update_centroid<F: Float + FromPrimitive>(
-    centroids: &mut Array2<F>, _method: LinkageMethod, n_samples: usize,
+    centroids: &mut Array2<F>,
+    _method: LinkageMethod,
+    n_samples: usize,
     new_cluster_id: usize,
 ) {
     // This is a simplified placeholder. For a complete implementation,

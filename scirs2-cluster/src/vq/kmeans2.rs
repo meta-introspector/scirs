@@ -40,7 +40,8 @@ impl MinitMethod {
         match s.to_lowercase().as_str() {
             "random" => Ok(MinitMethod::Random),
             "points" => Ok(MinitMethod::Points),
-            "k-means++" | "kmeans++" | "plusplus" => Ok(MinitMethod::PlusPlus, _ => Err(ClusteringError::InvalidInput(format!(
+            "k-means++" | "kmeans++" | "plusplus" => Ok(MinitMethod::PlusPlus),
+            _ => Err(ClusteringError::InvalidInput(format!(
                 "Unknown initialization method: '{}'. Valid options are: 'random', 'points', 'k-means++'",
                 s
             ))),
@@ -288,7 +289,8 @@ where
     let missing_method = if let Some(missing_str) = missing {
         match missing_str.to_lowercase().as_str() {
             "warn" => Some(MissingMethod::Warn),
-            "raise" => Some(MissingMethod::Raise, _ => {
+            "raise" => Some(MissingMethod::Raise),
+            _ => {
                 return Err(ClusteringError::InvalidInput(format!(
                     "Unknown missing method: '{}'. Valid options are: 'warn', 'raise'",
                     missing_str
@@ -407,7 +409,11 @@ where
 
 /// K-means++ initialization
 #[allow(dead_code)]
-fn kmeans_plus_plus<F>(_data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
+fn kmeans_plus_plus<F>(
+    _data: ArrayView2<F>,
+    k: usize,
+    random_seed: Option<u64>,
+) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
 {

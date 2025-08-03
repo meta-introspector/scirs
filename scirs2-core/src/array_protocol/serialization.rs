@@ -541,8 +541,7 @@ impl ModelSerializer {
                         file.read_to_string(&mut json_str)?;
 
                         let load_data: serde_json::Value = serde_json::from_str(&json_str)?;
-                        let shape: Vec<usize> =
-                            serde_json::from_value(load_data["shape"].clone())?;
+                        let shape: Vec<usize> = serde_json::from_value(load_data["shape"].clone())?;
                         let _data: Vec<f64> = serde_json::from_value(load_data["data"].clone())?;
 
                         // Load data into the parameter

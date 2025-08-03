@@ -4,8 +4,7 @@
 //! including interactive HTML visualizations, export utilities, and comparison views.
 
 use ndarray::{Array2, ArrayView2};
-use scirs2__ndimage::{
-use statrs::statistics::Statistics;
+use scirs2_ndimage::{
     error::NdimageResult,
     filters::gaussian_filter,
     visualization::{
@@ -14,6 +13,7 @@ use statrs::statistics::Statistics;
         plot_heatmap, plot_histogram, plot_surface, ColorMap, PlotConfig, ReportFormat,
     },
 };
+use statrs::statistics::Statistics;
 
 #[allow(dead_code)]
 fn main() -> NdimageResult<()> {

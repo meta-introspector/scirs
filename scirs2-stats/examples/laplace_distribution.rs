@@ -235,7 +235,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("  PPF at p=0.75 (trait): {}", q_trait);
     println!("  PPF at p=0.75 (direct): {}", q_direct);
 
-    let sf_trait = ContinuousDistribution::sf(&standard_laplace, 0.0);
+    let sf_trait = 1.0 - ContinuousDistribution::cdf(&standard_laplace, 0.0);
     println!("  Survival function at x=0 (trait): {}", sf_trait);
     println!(
         "  Survival function computed manually: {}",

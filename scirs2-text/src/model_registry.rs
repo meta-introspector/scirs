@@ -13,7 +13,6 @@ use std::path::{Path, PathBuf};
 
 #[cfg(feature = "serde-support")]
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 /// Supported model types in the registry
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -200,8 +199,8 @@ pub struct ModelRegistry {
 
 impl ModelRegistry {
     /// Create new model registry
-    pub fn new<P: AsRef<Path>>(_registry, dir: P) -> Result<Self> {
-        let _registry_dir = _registry_dir.as_ref().to_path_buf();
+    pub fn new<P: AsRef<Path>>(registry_dir: P, _dir: P) -> Result<Self> {
+        let _registry_dir = registry_dir.as_ref().to_path_buf();
 
         // Create registry directory if it doesn't exist
         if !_registry_dir.exists() {
@@ -1291,13 +1290,11 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             _data.weights.get("output_projection"),
             _data.shapes.get("output_projection"),
         ) {
-            let _output_array = ndarray::Array::fromshape_vec(
-                ndarray::IxDyn(outputshape),
-                output_weights.clone(),
-            )
-            .map_err(|e| {
-                TextError::InvalidInput(format!("Invalid output projection shape: {e}"))
-            })?;
+            let _output_array =
+                ndarray::Array::fromshape_vec(ndarray::IxDyn(outputshape), output_weights.clone())
+                    .map_err(|e| {
+                        TextError::InvalidInput(format!("Invalid output projection shape: {e}"))
+                    })?;
             // model.output_projection.set_weights(output_array)?;
         }
 

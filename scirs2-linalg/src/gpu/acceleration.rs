@@ -987,7 +987,8 @@ where
         // Estimate operation time based on historical data
         match operation {
             "matmul" => problem_size as f64 * 1e-9, // Rough estimate
-            "matvec" => problem_size as f64 * 5e-10_ => problem_size as f64 * 1e-9,
+            "matvec" => problem_size as f64 * 5e-10,
+            _ => problem_size as f64 * 1e-9,
         }
     }
 

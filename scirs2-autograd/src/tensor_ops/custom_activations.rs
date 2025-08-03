@@ -191,7 +191,8 @@ impl<F: Float> CustomActivation<F> for BuiltCustomActivation<F> {
 /// Register a custom activation function (simplified implementation)
 #[allow(dead_code)]
 pub fn register_activation<F: Float + 'static>(
-    _name: &str, activation: impl CustomActivation<F> + 'static,
+    _name: &str,
+    activation: impl CustomActivation<F> + 'static,
 ) {
     // Simplified registration
 }

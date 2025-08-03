@@ -9,7 +9,7 @@ use num_traits::{Float, NumCast};
 use rand::Rng;
 
 use crate::error::{Result, TransformError};
-use statrs::statistics::Statistics;
+// use statrs::statistics::Statistics; // TODO: Add statrs dependency
 
 /// Non-negative Matrix Factorization (NMF)
 ///

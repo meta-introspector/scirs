@@ -403,7 +403,7 @@ where
             let mut indices: Vec<usize> = (0..n).collect();
 
             for i in 0..size {
-                let j = rng.gen_range(i..n);
+                let j = rng.random_range(i..n);
                 indices.swap(i, j);
                 result.push(a[indices[i]]);
             }
@@ -470,7 +470,7 @@ where
 
     // Fisher-Yates shuffle
     for i in (1..n).rev() {
-        let j = rng.gen_range(0..i);
+        let j = rng.random_range(0..i);
         result.swap(i, j);
     }
 
@@ -527,7 +527,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
 
     // Fisher-Yates shuffle
     for i in (1..n).rev() {
-        let j = rng.gen_range(0..i);
+        let j = rng.random_range(0..i);
         result.swap(i, j);
     }
 

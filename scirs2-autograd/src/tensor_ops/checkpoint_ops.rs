@@ -302,7 +302,8 @@ where
 /// This struct allows for checkpointing multiple operations as a group,
 /// which can lead to more optimal recomputation during backpropagation.
 pub struct CheckpointGroup<'g, F: Float> {
-    _ctx: &'g crate::graph::Context<'g, F>, _phantom: PhantomData<F>,
+    _ctx: &'g crate::graph::Context<'g, F>,
+    _phantom: PhantomData<F>,
 }
 
 impl<'g, F: Float> CheckpointGroup<'g, F> {
@@ -315,7 +316,8 @@ impl<'g, F: Float> CheckpointGroup<'g, F> {
     /// A new CheckpointGroup instance
     pub fn new(_ctx: &'g crate::graph::Context<'g, F>) -> Self {
         Self {
-            _ctx: _ctx, phantom: PhantomData,
+            _ctx,
+            phantom: PhantomData,
         }
     }
 

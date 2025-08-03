@@ -478,7 +478,8 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
             0 => Ok(a + dx * (b + dx * (c + dx * d))),
             1 => Ok(b + dx * (T::from(2.0).unwrap() * c + T::from(3.0).unwrap() * dx * d)),
             2 => Ok(T::from(2.0).unwrap() * c + T::from(6.0).unwrap() * dx * d),
-            3 => Ok(T::from(6.0).unwrap() * d, _ => Ok(T::zero()), // Higher derivatives are zero for cubic splines
+            3 => Ok(T::from(6.0).unwrap() * d),
+            _ => Ok(T::zero()), // Higher derivatives are zero for cubic splines
         }
     }
 

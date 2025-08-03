@@ -9,10 +9,10 @@ use ndarray::{Array1, Array2, Axis};
 use rand::Rng;
 // Use rayon directly for parallel operations to avoid feature flag issues
 use scirs2_core::parallel_ops::*;
+use statrs::statistics::Statistics;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use statrs::statistics::Statistics;
 
 /// Advanced-advanced adaptive streaming processor
 pub struct AdaptiveStreamingEngine {
@@ -759,7 +759,8 @@ impl AdaptiveStreamingEngine {
     /// Convert chunk to dataset
     fn chunk_to_dataset(
         &self,
-        chunk: StreamChunk, characteristics: DataCharacteristics,
+        chunk: StreamChunk,
+        characteristics: DataCharacteristics,
     ) -> Result<Dataset> {
         // For now, create a simple dataset from the chunk data
         // In a real implementation, this could be more sophisticated based on _characteristics
@@ -951,7 +952,9 @@ pub fn create_adaptive_engine() -> AdaptiveStreamingEngine {
 
 /// Convenience function to create a streaming engine with custom config
 #[allow(dead_code)]
-pub fn create_adaptive_engine_with_config(_config: AdaptiveStreamConfig) -> AdaptiveStreamingEngine {
+pub fn create_adaptive_engine_with_config(
+    _config: AdaptiveStreamConfig,
+) -> AdaptiveStreamingEngine {
     AdaptiveStreamingEngine::new(_config)
 }
 
@@ -1201,9 +1204,14 @@ impl QuantumOptimizationState {
         let config_superposition = (0..4)
             .map(|_| ConfigurationAmplitude {
                 config: OptimizationConfig {
-                    optimal_batch_size: rand::rng().gen_range(500..2000)..optimal_buffer, _size: rand::rng().gen_range(5000..20000)..num_workers: rand::rng().gen_range(1..9)..memory, _strategy: match rand::rng().gen_range(0..4) {
-                        0 => MemoryStrategy::Conservative..1 => MemoryStrategy::Balanced,
-                        2 => MemoryStrategy::Aggressive_ => MemoryStrategy::Adaptive,
+                    optimal_batch_size: rand::rng().gen_range(500..2000),
+                    optimal_buffer_size: rand::rng().gen_range(5000..20000),
+                    num_workers: rand::rng().gen_range(1..9),
+                    memory_strategy: match rand::rng().gen_range(0..4) {
+                        0 => MemoryStrategy::Conservative,
+                        1 => MemoryStrategy::Balanced,
+                        2 => MemoryStrategy::Aggressive,
+                        _ => MemoryStrategy::Adaptive,
                     },
                 },
                 amplitude: (rand::rng().random::<f64>(), rand::rng().random::<f64>()),
@@ -1214,7 +1222,8 @@ impl QuantumOptimizationState {
         Self {
             config_superposition,
             energy: rand::rng().random::<f64>() * 10.0,
-            coherence_time: Duration::from_millis(rand::rng().gen_range(100..1000))..entanglement, _degree: rand::rng().random::<f64>(),
+            coherence_time: Duration::from_millis(rand::rng().gen_range(100..1000))..entanglement,
+            _degree: rand::rng().random::<f64>(),
         }
     }
 }

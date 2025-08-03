@@ -246,7 +246,7 @@ impl AStarPlanner {
         while let Some(current) = open_set.pop() {
             // Check if we've reached the goal
             if current.state == goal {
-                return Ok(Some(AStarPlanner::reconstruct_path(current)));
+                return Ok(Some(AStarPlanner::reconstruct_path(goal.clone(), current)));
             }
 
             // Check if we've exceeded the maximum number of iterations
@@ -303,9 +303,9 @@ impl AStarPlanner {
     }
 
     // Reconstruct the path from the goal node to the start node
-    fn reconstruct_path<N: Clone + Eq + Hash>(_goal, node: Rc<Node<N>>) -> Path<N> {
+    fn reconstruct_path<N: Clone + Eq + Hash>(goal: N, node: Rc<Node<N>>) -> Path<N> {
         let mut path = Vec::new();
-        let mut current = Some(_goal_node);
+        let mut current = Some(node);
         let mut cost = 0.0;
 
         while let Some(_node) = current {

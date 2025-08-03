@@ -76,19 +76,19 @@ use crate::error::{SpatialError, SpatialResult};
 /// ```
 #[allow(dead_code)]
 pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
-    let n = _values.len();
+    let n = values.len();
 
     if weights.shape()[0] != n || weights.shape()[1] != n {
         return Err(SpatialError::DimensionError(
-            "Weights matrix dimensions must match number of _values".to_string(),
+            "Weights matrix dimensions must match number of values".to_string(),
         ));
     }
 
     // Calculate mean
-    let mean = _values.sum() / T::from(n).unwrap();
+    let mean = values.sum() / T::from(n).unwrap();
 
     // Calculate deviations from mean
-    let deviations: Array1<T> = _values.map(|&x| x - mean);
+    let deviations: Array1<T> = values.map(|&x| x - mean);
 
     // Calculate sum of weights
     let w_sum = weights.sum();
@@ -159,16 +159,16 @@ pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
 /// ```
 #[allow(dead_code)]
 pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
-    let n = _values.len();
+    let n = values.len();
 
     if weights.shape()[0] != n || weights.shape()[1] != n {
         return Err(SpatialError::DimensionError(
-            "Weights matrix dimensions must match number of _values".to_string(),
+            "Weights matrix dimensions must match number of values".to_string(),
         ));
     }
 
     // Calculate mean
-    let mean = _values.sum() / T::from(n).unwrap();
+    let mean = values.sum() / T::from(n).unwrap();
 
     // Calculate sum of weights
     let w_sum = weights.sum();
@@ -184,14 +184,14 @@ pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
     for i in 0..n {
         for j in 0..n {
             if i != j {
-                let diff = _values[i] - _values[j];
+                let diff = values[i] - values[j];
                 numerator = numerator + weights[[i, j]] * diff * diff;
             }
         }
     }
 
     // Calculate denominator: 2 * W * sum of (x_i - mean)^2
-    let variance_sum: T = _values
+    let variance_sum: T = values
         .map(|&x| {
             let diff = x - mean;
             diff * diff
@@ -207,7 +207,7 @@ pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
     let denominator = (T::one() + T::one()) * w_sum * variance_sum;
 
     // Geary's C = ((n-1) / 2W) * (numerator / variance_sum)
-    let gearys_c = (T::from(n - 1).unwrap() / denominator) * numerator;
+    let gearys_c = (T::from((n - 1) as i32).unwrap() / denominator) * numerator;
 
     Ok(gearys_c)
 }

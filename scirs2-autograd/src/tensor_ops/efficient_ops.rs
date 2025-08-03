@@ -357,7 +357,10 @@ impl<F: Float> Op<F> for EfficientConcatOp {
 #[allow(dead_code)]
 fn copy_slice_data<F: Float>(
     output: &mut Array<F, IxDyn>,
-    input: &NdArrayView<F>, _slice_start: &[usize], _slice_end: &[usize], _axis: usize,
+    input: &NdArrayView<F>,
+    _slice_start: &[usize],
+    _slice_end: &[usize],
+    _axis: usize,
 ) {
     // This is a simplified implementation
     // In practice, this would use optimized memory copying operations
@@ -378,7 +381,8 @@ fn copy_slice_data<F: Float>(
 /// Efficient reshape operation with optional zero-copy optimization
 #[allow(dead_code)]
 pub fn efficient_reshape<'g, F: Float>(
-    tensor: &Tensor<'g, F>, _newshape: &Tensor<'g, F>,
+    tensor: &Tensor<'g, F>,
+    _newshape: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {
     let g = tensor.graph();
 
@@ -448,7 +452,8 @@ pub fn efficient_concat<'g, F: Float>(tensors: &[&Tensor<'g, F>], axis: usize) -
 /// Efficient transpose operation with cache-friendly memory access
 #[allow(dead_code)]
 pub fn efficient_transpose<'g, F: Float>(
-    tensor: &Tensor<'g, F>, _axes: Option<&[usize]>,
+    tensor: &Tensor<'g, F>,
+    _axes: Option<&[usize]>,
 ) -> Tensor<'g, F> {
     // For now, use the standard transpose operation
     // In a full implementation, this would be optimized for cache efficiency

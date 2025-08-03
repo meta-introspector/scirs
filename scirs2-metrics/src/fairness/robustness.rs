@@ -11,7 +11,6 @@ use rand::{random, rngs::StdRng, seq::SliceRandom, SeedableRng};
 use std::collections::HashMap;
 
 use crate::error::{MetricsError, Result};
-use rand::seq::SliceRandom;
 
 /// Measures how invariant model performance is across different protected groups.
 ///
@@ -36,8 +35,8 @@ use rand::seq::SliceRandom;
 /// ```
 /// use ndarray::{array, Array2};
 /// use std::collections::HashMap;
-/// use scirs2__metrics::fairness::robustness::performance_invariance;
-/// use scirs2__metrics::classification::accuracy_score;
+/// use scirs2_metrics::fairness::robustness::performance_invariance;
+/// use scirs2_metrics::classification::accuracy_score;
 ///
 /// // Sample data
 /// let y_true = array![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0];
@@ -233,8 +232,8 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::fairness::robustness::influence_function;
-/// use scirs2__metrics::fairness::demographic_parity_difference;
+/// use scirs2_metrics::fairness::robustness::influence_function;
+/// use scirs2_metrics::fairness::demographic_parity_difference;
 ///
 /// // Sample data
 /// let y_true = array![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0];
@@ -350,10 +349,10 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::fairness::robustness::{
+/// use scirs2_metrics::fairness::robustness::{
 ///     perturbation_sensitivity, PerturbationType, SensitivityResult
 /// };
-/// use scirs2__metrics::fairness::demographic_parity_difference;
+/// use scirs2_metrics::fairness::demographic_parity_difference;
 ///
 /// // Sample data
 /// let y_true = array![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0];

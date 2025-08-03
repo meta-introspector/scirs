@@ -401,9 +401,7 @@ fn analyze_scaling_behavior() {
     // Set layout
     scaling_plot.set_layout(
         Layout::new()
-            .title(Title::withtext(
-                "<b>Algorithm Scaling with Signal Size</b>",
-            ))
+            .title(Title::withtext("<b>Algorithm Scaling with Signal Size</b>"))
             .x_axis(
                 plotly::layout::Axis::new()
                     .title(Title::withtext("Signal Size (samples)"))

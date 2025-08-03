@@ -635,7 +635,7 @@ mod tests {
     #[test]
     fn test_type_converter() {
         let data = Array2::<f32>::ones((10, 5));
-        let result = TypeConverter:: f32, _to_f64_simd(&data.view()).unwrap();
+        let result = TypeConverter::f32_to_f64_simd(&data.view()).unwrap();
         assert_eq!(result.shape(), &[10, 5]);
         assert!((result[(0, 0)] - 1.0).abs() < 1e-10);
     }

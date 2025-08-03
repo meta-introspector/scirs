@@ -238,8 +238,8 @@ impl HybridSpatialOptimizer {
         let start_time = Instant::now();
 
         // Initialize parameters
-        let param_dim = 10; // Default dimension
-        self.initialize_parameters(param_dim);
+        let paramdim = 10; // Default dimension
+        self.initialize_parameters(paramdim);
 
         let mut best_solution = self.classical_state.parameters.clone();
         let mut best_value = f64::INFINITY;
@@ -317,14 +317,14 @@ impl HybridSpatialOptimizer {
     }
 
     /// Initialize optimization parameters
-    fn initialize_parameters(&mut self, _dim: usize) {
+    fn initialize_parameters(&mut self, dim: usize) {
         self.classical_state.parameters =
-            Array1::fromshape_fn(_dim, |_| rand::random::<f64>() * 2.0 - 1.0);
-        self.classical_state.gradients = Array1::zeros(_dim);
-        self.classical_state.hessian_approx = Array2::eye(_dim);
-        self.classical_state.momentum = Array1::zeros(_dim);
-        self.classical_state.adam_state.m = Array1::zeros(_dim);
-        self.classical_state.adam_state.v = Array1::zeros(_dim);
+            Array1::from_shape_fn(dim, |_| rand::random::<f64>() * 2.0 - 1.0);
+        self.classical_state.gradients = Array1::zeros(dim);
+        self.classical_state.hessian_approx = Array2::eye(dim);
+        self.classical_state.momentum = Array1::zeros(dim);
+        self.classical_state.adam_state.m = Array1::zeros(dim);
+        self.classical_state.adam_state.v = Array1::zeros(dim);
         self.classical_state.adam_state.t = 0;
     }
 
@@ -399,7 +399,7 @@ impl HybridSpatialOptimizer {
         } else {
             // Fallback to quantum-inspired classical algorithm
             let mut quantum_clusterer = QuantumClusterer::new(2);
-            let dummy_data = Array2::fromshape_fn((10, 2), |(i, j)| {
+            let dummy_data = Array2::from_shape_fn((10, 2), |(i, j)| {
                 self.classical_state.parameters[i.min(self.classical_state.parameters.len() - 1)]
                     + j as f64
             });
@@ -502,9 +502,9 @@ impl HybridSpatialOptimizer {
     /// Encode optimization problem as spatial data for quantum processing
     fn encode_optimization_problem_as_spatial_data(&self) -> Array2<f64> {
         let n_points = 20;
-        let n_dims = self.classical_state.parameters.len().min(4); // Limit dimensions for quantum
+        let ndims = self.classical_state.parameters.len().min(4); // Limit dimensions for quantum
 
-        Array2::fromshape_fn((n_points, n_dims), |(i, j)| {
+        Array2::from_shape_fn((n_points, ndims), |(i, j)| {
             let param_idx = j % self.classical_state.parameters.len();
             self.classical_state.parameters[param_idx] + (i as f64 / n_points as f64 - 0.5) * 0.1
             // Small perturbations around current parameters
@@ -516,11 +516,11 @@ impl HybridSpatialOptimizer {
         &self,
         quantum_state: &QuantumState,
     ) -> SpatialResult<Array1<f64>> {
-        let target_dim = self.classical_state.parameters.len();
-        let mut parameters = Array1::zeros(target_dim);
+        let targetdim = self.classical_state.parameters.len();
+        let mut parameters = Array1::zeros(targetdim);
 
         // Use quantum _state amplitudes to generate parameters
-        for i in 0..target_dim {
+        for i in 0..targetdim {
             let amplitude_idx = i % quantum_state.amplitudes.len();
             let amplitude = quantum_state.amplitudes[amplitude_idx];
 
@@ -835,7 +835,7 @@ impl HybridClusterer {
         points: &ArrayView2<'_, f64>,
         initial_centroids: &Array2<f64>,
     ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
-        let (n_points, n_dims) = points.dim();
+        let (n_points, ndims) = points.dim();
         let mut _centroids = initial_centroids.clone();
         let mut assignments = Array1::zeros(n_points);
 
@@ -865,14 +865,14 @@ impl HybridClusterer {
             }
 
             // Update step
-            let mut new_centroids = Array2::zeros((self.num_clusters, n_dims));
+            let mut new_centroids = Array2::zeros((self.num_clusters, ndims));
             let mut cluster_counts = vec![0; self.num_clusters];
 
             for (i, point) in points.outer_iter().enumerate() {
                 let cluster = assignments[i];
                 cluster_counts[cluster] += 1;
 
-                for j in 0..n_dims {
+                for j in 0..ndims {
                     new_centroids[[cluster, j]] += point[j];
                 }
             }
@@ -880,7 +880,7 @@ impl HybridClusterer {
             // Normalize by cluster sizes
             for i in 0..self.num_clusters {
                 if cluster_counts[i] > 0 {
-                    for j in 0..n_dims {
+                    for j in 0..ndims {
                         new_centroids[[i, j]] /= cluster_counts[i] as f64;
                     }
                 }

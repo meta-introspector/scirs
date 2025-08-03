@@ -282,8 +282,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a low-rank matrix for demonstration
     let rank_true = 10;
-    let u_true =
-        Array2::fromshape_fn((300, rank_true), |(i, j)| ((i + j + 1) as f64).sin() / 10.0);
+    let u_true = Array2::fromshape_fn((300, rank_true), |(i, j)| ((i + j + 1) as f64).sin() / 10.0);
     let s_true = Array1::fromshape_fn(rank_true, |i| {
         10.0 * (-(i as f64) / 2.0).exp() // Exponentially decaying singular values
     });

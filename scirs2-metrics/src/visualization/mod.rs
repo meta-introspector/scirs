@@ -79,7 +79,7 @@ pub mod precision_recall;
 pub mod roc_curve;
 
 // Re-export common functionality
-pub use advanced__interactive::{
+pub use advanced_interactive::{
     CollaborationConfig, CollaborationManager, DashboardConfig, DashboardState, DataSource,
     EventResponse, EventSystem, ExportConfig, InteractionConfig, InteractiveDashboard,
     InteractiveWidget, LayoutConfig, LayoutManager, RealtimeConfig, RenderingEngine, ThemeConfig,
@@ -87,15 +87,15 @@ pub use advanced__interactive::{
 };
 pub use backends::PlottingBackend;
 pub use calibration::CalibrationVisualizer;
-pub use confusion__matrix::ConfusionMatrixVisualizer;
+pub use confusion_matrix::ConfusionMatrixVisualizer;
 pub use helpers::*;
 pub use interactive::{
     interactive_roc_curve_from_labels, interactive_roc_curve_visualization, InteractiveOptions,
     InteractiveROCVisualizer,
 };
-pub use learning__curve::LearningCurveVisualizer;
-pub use precision__recall::PrecisionRecallVisualizer;
-pub use roc__curve::ROCCurveVisualizer;
+pub use learning_curve::LearningCurveVisualizer;
+pub use precision_recall::PrecisionRecallVisualizer;
+pub use roc_curve::ROCCurveVisualizer;
 
 use std::collections::HashMap;
 use std::error::Error;

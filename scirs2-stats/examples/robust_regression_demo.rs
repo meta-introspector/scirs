@@ -84,7 +84,7 @@ fn main() {
     let y_pred_theilsen = x.dot(&theilsen_coeffs);
     let residuals_theilsen = &y - &y_pred_theilsen;
     let ss_res = residuals_theilsen.mapv(|r| r * r).sum();
-    let y_mean = y.mean();
+    let y_mean = y.mean().unwrap_or(0.0);
     let ss_tot = y.mapv(|yi| (yi - y_mean).powi(2)).sum();
     let r_squared_theilsen = 1.0 - (ss_res / ss_tot);
     let _mse_theilsen = ss_res / y.len() as f64;

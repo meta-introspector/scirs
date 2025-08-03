@@ -527,7 +527,8 @@ impl AdvancedMemoryPool {
         match chosen_strategy {
             AllocationStrategy::FirstFit => self.allocate_first_fit(size, block_type),
             AllocationStrategy::BestFit => self.allocate_best_fit(size, block_type),
-            AllocationStrategy::BuddySystem => self.allocate_buddy_system(size, block_type, _ => self.allocate_new_block(size, block_type),
+            AllocationStrategy::BuddySystem => self.allocate_buddy_system(size, block_type),
+            _ => self.allocate_new_block(size, block_type),
         }
     }
 

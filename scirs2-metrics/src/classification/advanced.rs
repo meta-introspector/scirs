@@ -32,7 +32,7 @@ use std::collections::BTreeSet;
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::advanced::matthews_corrcoef;
+/// use scirs2_metrics::classification::advanced::matthews_corrcoef;
 ///
 /// let y_true = array![1, 0, 1, 1, 0, 0];
 /// let y_pred = array![1, 0, 1, 0, 0, 1];
@@ -182,7 +182,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::advanced::balanced_accuracy_score;
+/// use scirs2_metrics::classification::advanced::balanced_accuracy_score;
 ///
 /// let y_true = array![0, 0, 0, 1, 1, 1];
 /// let y_pred = array![0, 0, 1, 1, 0, 1];
@@ -291,7 +291,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::advanced::cohen_kappa_score;
+/// use scirs2_metrics::classification::advanced::cohen_kappa_score;
 ///
 /// let y_true = array![0, 1, 2, 0, 1, 2];
 /// let y_pred = array![0, 0, 2, 0, 0, 2];
@@ -407,7 +407,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::advanced::brier_score_loss;
+/// use scirs2_metrics::classification::advanced::brier_score_loss;
 ///
 /// let y_true = array![0, 1, 1, 0];
 /// let y_prob = array![0.1, 0.9, 0.8, 0.4];
@@ -495,7 +495,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::advanced::jaccard_score;
+/// use scirs2_metrics::classification::advanced::jaccard_score;
 ///
 /// let y_true = array![0, 1, 1, 0, 1];
 /// let y_pred = array![0, 0, 1, 1, 1];
@@ -576,7 +576,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::advanced::hamming_loss;
+/// use scirs2_metrics::classification::advanced::hamming_loss;
 ///
 /// let y_true = array![0, 1, 0, 1];
 /// let y_pred = array![1, 1, 0, 0];
@@ -954,7 +954,7 @@ where
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2__metrics::classification::advanced::calibration_curve;
+/// use scirs2_metrics::classification::advanced::calibration_curve;
 ///
 /// let y_true = array![0, 0, 0, 0, 1, 1, 1, 1, 1];
 /// let y_prob = array![0.1, 0.2, 0.3, 0.4, 0.65, 0.7, 0.8, 0.9, 0.99];

@@ -233,7 +233,7 @@ impl PlottingBackend for PlotlyBackend {
     }
 
     fn render_svg(
-        &self_data: &VisualizationData, _metadata: &VisualizationMetadata, options: &VisualizationOptions,
+        self_data: &VisualizationData, _metadata: &VisualizationMetadata, options: &VisualizationOptions,
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         // Plotly doesn't directly support SVG generation in the Rust crate
         // We'll return an error indicating this limitation
@@ -244,7 +244,7 @@ impl PlottingBackend for PlotlyBackend {
     }
 
     fn render_png(
-        &self_data: &VisualizationData, _metadata: &VisualizationMetadata, options: &VisualizationOptions,
+        self_data: &VisualizationData, _metadata: &VisualizationMetadata, options: &VisualizationOptions,
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         // Plotly doesn't directly support PNG generation in the Rust crate
         // We'll return an error indicating this limitation

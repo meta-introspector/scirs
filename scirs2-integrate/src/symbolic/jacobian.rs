@@ -13,17 +13,17 @@ use std::collections::HashMap;
 // Helper functions for creating symbolic expressions
 #[allow(dead_code)]
 fn var<F: IntegrateFloat>(name: &str) -> SymbolicExpression<F> {
-    SymbolicExpression::var(_name)
+    SymbolicExpression::var(name)
 }
 
 #[allow(dead_code)]
 fn indexed_var<F: IntegrateFloat>(name: &str, index: usize) -> SymbolicExpression<F> {
-    SymbolicExpression::indexed_var(_name, index)
+    SymbolicExpression::indexed_var(name, index)
 }
 
 #[allow(dead_code)]
 fn constant<F: IntegrateFloat>(value: F) -> SymbolicExpression<F> {
-    SymbolicExpression::constant(_value)
+    SymbolicExpression::constant(value)
 }
 
 /// Represents a symbolic Jacobian matrix
@@ -204,7 +204,7 @@ pub fn example_van_der_pol<F: IntegrateFloat>(mu: F) -> IntegrateResult<Symbolic
     let expr2 = Sub(
         Box::new(Mul(
             Box::new(Mul(
-                Box::new(Constant(_mu)),
+                Box::new(Constant(mu)),
                 Box::new(Sub(
                     Box::new(Constant(F::one())),
                     Box::new(Pow(

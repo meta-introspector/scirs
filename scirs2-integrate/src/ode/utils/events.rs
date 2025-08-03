@@ -382,7 +382,7 @@ impl<F: IntegrateFloat> EventHandler<F> {
 #[allow(dead_code)]
 pub fn terminal_event<F: IntegrateFloat>(id: &str, direction: EventDirection) -> EventSpec<F> {
     EventSpec {
-        id: _id.to_string(),
+        id: id.to_string(),
         direction,
         action: EventAction::Stop,
         threshold: F::from_f64(1e-6).unwrap(),

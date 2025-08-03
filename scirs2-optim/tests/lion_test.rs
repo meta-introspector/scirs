@@ -130,8 +130,8 @@ fn test_lion_multiple_dimensions() {
     let mut optimizer: Lion<f64> = Lion::new(0.1);
 
     // Test with 2D array
-    let params_2d = Array2::fromshape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-    let gradients_2d = Array2::fromshape_vec((2, 3), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6]).unwrap();
+    let params_2d = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+    let gradients_2d = Array2::from_shape_vec((2, 3), vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6]).unwrap();
 
     let updated_2d = optimizer.step(&params_2d, &gradients_2d).unwrap();
 

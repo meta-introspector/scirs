@@ -1,5 +1,5 @@
-use crate::ndarray_ext;
 use crate::ndarray__ext::{NdArray, NdArrayView};
+use crate::ndarray_ext;
 use crate::op;
 use crate::same_type;
 use crate::tensor__ops::*;
